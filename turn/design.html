@@ -22,8 +22,8 @@
       </div>
       <div class="system-meta" aria-label="Reference baseline">
         <strong>Production reference</strong>
-        <span>TURN 1.17.4</span>
-        <span>Build 2026.09.06-r204</span>
+        <span>TURN 1.17.5</span>
+        <span>Build 2026.09.06-r205</span>
       </div>
     </div>
   </header>
@@ -227,7 +227,7 @@
               <tr data-semantic="--turn-control-drift"><td><span class="mapping-preview" style="--mapping:var(--turn-control-drift)"></span><code>--turn-control-drift</code></td><td><code>var(--turn-blue-500)</code></td><td>DRIFT and handling accents.</td></tr>
               <tr data-semantic="--turn-control-boost"><td><span class="mapping-preview" style="--mapping:var(--turn-control-boost)"></span><code>--turn-control-boost</code></td><td><code>var(--turn-yellow-400)</code></td><td>BOOST available charge.</td></tr>
               <tr data-semantic="--turn-control-boost-empty"><td><span class="mapping-preview" style="--mapping:var(--turn-control-boost-empty)"></span><code>--turn-control-boost-empty</code></td><td><code>var(--turn-yellow-200)</code></td><td>BOOST empty remainder.</td></tr>
-              <tr data-semantic="--turn-control-brake"><td><span class="mapping-preview" style="--mapping:var(--turn-control-brake)"></span><code>--turn-control-brake</code></td><td><code>var(--turn-orange-500)</code></td><td>BRAKE / REVERSE.</td></tr>
+              <tr data-semantic="--turn-control-brake"><td><span class="mapping-preview" style="--mapping:var(--turn-control-brake)"></span><code>--turn-control-brake</code></td><td><code>var(--turn-orange-500)</code></td><td>BRAKE and its attached REVERSE control.</td></tr>
               <tr class="mapping-group"><td colspan="3">Social racer identity</td></tr>
               <tr data-semantic="--turn-social-racer-1"><td><span class="mapping-preview" style="--mapping:var(--turn-social-racer-1)"></span><code>--turn-social-racer-1</code></td><td><code>var(--turn-pink-100)</code></td><td>Join order 1.</td></tr>
               <tr data-semantic="--turn-social-racer-2"><td><span class="mapping-preview" style="--mapping:var(--turn-social-racer-2)"></span><code>--turn-social-racer-2</code></td><td><code>var(--turn-blue-100)</code></td><td>Join order 2.</td></tr>
@@ -362,14 +362,15 @@
           <div class="drive-demo" aria-label="Unified drive pad">
             <span class="drive-demo__lock">Lock</span>
             <button class="drive-demo__shift" type="button">Shift</button>
+            <button class="drive-demo__reverse" type="button">R</button>
             <div class="drive-demo__top"><button class="drive-demo__drift" type="button">Drift</button><button class="drive-demo__boost" type="button">Boost</button></div>
             <button class="drive-demo__gas" type="button">Gas</button>
-            <button class="drive-demo__brake" type="button">Brake · Reverse</button>
+            <button class="drive-demo__brake" type="button">Brake</button>
           </div>
         </div>
 
         <div class="gameplay-notes">
-          <article class="gameplay-note"><h3>Unified drive pad</h3><p>DRIFT, BOOST, GAS and BRAKE/REVERSE share one physical block. LOCK and SHIFT slide out contextually rather than becoming permanent extra buttons.</p></article>
+          <article class="gameplay-note"><h3>Unified drive pad</h3><p>DRIFT, BOOST, GAS and stopping-only BRAKE share one physical block. LOCK, SHIFT and REVERSE slide out contextually rather than becoming permanent extra buttons.</p></article>
           <article class="gameplay-note"><h3>Scorekeeper paper</h3><p>DRIFT and FLOW use fixed-height Paper rows with attached horizontal gauges. Numbers update on a throttled presentation path; scoring logic does not depend on HUD visibility.</p></article>
           <article class="gameplay-note"><h3>Feedback hierarchy</h3><p>Loss, bank, multiplier, SHIFT roll and achievement feedback are brief overlays. They should never outrank steering, pace notes or immediate race safety information.</p></article>
           <article class="gameplay-note"><h3>One-handed and mirrored play</h3><p>The control cluster and utility group can mirror for left-handed play. Device steering keeps the mirrored driving actions without inventing an unnecessary steering pad.</p></article>
@@ -421,7 +422,7 @@
         <article class="layout-specimen">
           <div class="layout-caption"><strong>Home / track selection</strong><span>Yellow header · Paper canvas · tracks + menu</span></div>
           <div class="home-mini">
-            <div class="home-mini__head"><div class="home-mini__logo">TURN</div><div class="home-mini__pitch">A tiny racing game with a lot going on.</div><div class="home-mini__build">TURN 1.17.4 · 2026.09.06-r204</div></div>
+            <div class="home-mini__head"><div class="home-mini__logo">TURN</div><div class="home-mini__pitch">A tiny racing game with a lot going on.</div><div class="home-mini__build">TURN 1.17.5 · 2026.09.06-r205</div></div>
             <div class="home-mini__main">
               <div>
                 <h3 style="margin:0 0 12px">TRACKS</h3>

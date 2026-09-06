@@ -203,8 +203,8 @@ assert.ok(
   'The topbar position override must load after the legacy gameplay HUD rules'
 );
 assert.match(app, /race-position-layout\.js/, 'The production module graph must install the position layout after gameplay controls');
-assert.match(app, /gameplay-controls\.js\?revision=r233-graduated/,
-  'The layered SHIFT attribute feedback must bypass stale production module caches');
+assert.match(app, /gameplay-controls\.js\?revision=r245-separate-reverse/,
+  'The attached REVERSE control must bypass stale production module caches');
 assert.match(app, /installRaceSpeech\(\)/, 'The production graph must install concise race speech before the runtime starts');
 assert.ok(
   app.indexOf('./ui/gameplay-controls.js') < app.indexOf('./ui/race-speech.js')
@@ -235,16 +235,20 @@ assert.doesNotMatch(raceSpeech, /LAP_RESULT_HANDOFF_MS|suppressPositionUntil/, '
 assert.match(raceSpeech, /reason === 'lap-started'/, 'Rival count must remain tied to crossing the start line');
 assert.doesNotMatch(raceSpeech, /VoiceOver|screenReader|blindMode|userAgent/i, 'The same race information must remain available without detecting disability');
 assert.match(controls, /className = 'drive-pad'/, 'Gameplay controls must create one unified drive pad');
-assert.match(controls, /Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE or REVERSE/, 'The drive group must explain its continuous VoiceOver gesture');
+assert.match(controls, /Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE/, 'The drive group must explain its continuous VoiceOver gesture');
+assert.match(controls, /While holding BRAKE, slide outward into REVERSE/,
+  'The drive group must explain the separate attached REVERSE gesture');
 assert.match(controls, /DRIFT charges BOOST and builds OVERCHARGE after the bar is full/);
 assert.match(controls, /GAS catches and holds OVERCHARGE/);
 assert.match(controls, /BOOST spends OVERCHARGE before normal BOOST/);
 assert.match(controls, /caught and held with GAS/,
   'The accessible meter must use the same catch-and-hold vocabulary as the guide');
-assert.match(controls, /drivePad\.append\(driveTop, gasButton, brakeButton\)/, 'Brake and Reverse must live inside the same continuous drive surface');
+assert.match(controls, /drivePad\.append\(driveTop, gasButton, brakeButton\)/, 'BRAKE must remain inside the same continuous drive surface');
+assert.match(controls, /driveStack\.append\(driftLockBubble, drivePad, reverseBubble, shiftBubble, shiftStatus\)/,
+  'REVERSE must attach outside the drive surface alongside its contextual controls');
 assert.match(controls, /topDriveZoneAt\(x, controlHandedness\)/,
   'Top drive pad must split into Drift and Boost according to the selected handedness');
-assert.match(controls, /y >= BRAKE_ZONE_START\) return 'brake'/, 'Bottom drive pad must map to Brake and Reverse');
+assert.match(controls, /y >= BRAKE_ZONE_START\) return 'brake'/, 'Bottom drive pad must map to stopping-only BRAKE');
 assert.match(controls, /return 'gas'/, 'Middle drive pad must map to Gas');
 assert.match(controls, /const forwardDrive = nextZone === 'gas' \|\| nextZone === 'drift' \|\| nextZone === 'boost'/, 'Only forward-driving zones may keep gas engaged');
 assert.match(controls, /globalThis\.__turnAnalogGas = forwardDrive \? forwardThrottle : 0/,
@@ -254,7 +258,7 @@ assert.match(controls, /pointerUsesDriftLock\(\{/,
   'The external bubble must own a dedicated forgiving hit target');
 assert.match(controls, /driftActive: driveZone === 'drift'/,
   'LOCK must only become available after the player has engaged DRIFT');
-assert.match(controls, /if \(lockRequested\) return \{ zone: 'drift', lockRequested: true, shiftRequested: false \}/,
+assert.match(controls, /if \(lockRequested\) return \{ zone: 'drift', lockRequested: true, shiftRequested: false, reverseRequested: false \}/,
   'Entering the bubble must keep DRIFT held while switching binary LOCK on');
 assert.match(controls, /advanceDriftLockAmount\(/,
   'The binary target must use a short mechanical transition instead of snapping');
@@ -275,7 +279,8 @@ assert.doesNotMatch(controls, /__turnDriftHeld \? getDriftRechargeMultiplier\(\)
 assert.doesNotMatch(controls, /Advanced DRIFT|turn:advanced-drift-change/,
   'Binary LOCK must be standard behavior without an experimental setting');
 assert.match(controls, /boostRequested = nextZone === 'boost'/, 'Boost zone must add boost to gas');
-assert.match(controls, /runtimeState\.touchBrake = Boolean\(active\)/, 'The unified Brake zone must drive the existing brake and reverse physics');
+assert.match(controls, /runtimeState\.touchBrake = Boolean\(active\)/, 'The unified BRAKE zone must drive stopping physics');
+assert.match(controls, /runtimeState\.touchReverse = Boolean\(active\)/, 'The attached R control must own explicit reverse input');
 assert.match(controls, /brakeButton\.classList\.toggle\('is-active', nextZone === 'brake'\)/, 'Brake must receive the same active-state treatment as every other zone');
 assert.match(controls, /pointerdown'[\s\S]*capture: true/, 'The unified pad must own the gesture before the legacy standalone brake listener');
 assert.match(controls, /event\.stopPropagation\(\)/, 'The continuous pad gesture must not leak into the old per-button pointer handler');
@@ -283,7 +288,7 @@ assert.match(controls, /boostRequested && !boostExhausted/, 'Boost must stay loc
 assert.match(controls, /boostOvercharge > 0 \|\| boostCharge > 0\.001/,
   'Tiny Overcharge remainders must keep flowing through the state machine until they reach zero');
 assert.match(controls, /previousZone === 'boost' && nextZone !== 'boost'\) boostExhausted = false/, 'Leaving Boost for any other drive zone must re-arm Boost without requiring pointer release');
-assert.match(controls, /Brake · Reverse/, 'The integrated brake control must advertise reverse');
+assert.match(controls, /brakeButton\.textContent = 'Brake'/, 'The integrated BRAKE control must no longer imply automatic reverse');
 assert.match(controls, /function refillBoost\(\)/, 'Gameplay controls must expose one reset-safe boost refill path');
 assert.match(controls, /let boostCharge = 1;/, 'Boost must still begin full even though passive recharge is removed');
 assert.match(controls, /boostCharge = 1;\s*previousBoostCharge = 1;\s*boostExhausted = false;/s, 'Restarting must fully refill and unlock boost without creating a recharge transition');
@@ -297,7 +302,7 @@ assert.match(controls, /flashBoostHud\('is-boost-full-flash'\)/, 'Full boost mus
 assert.match(css, /grid-template-rows: 32% 44% 24%/, 'The integrated surface must preserve a large Gas zone and a reachable bottom Brake zone');
 assert.match(css, /place-items: center/, 'Drive-zone labels must be vertically and horizontally centered');
 assert.match(css, /content: "LEAVE"/, 'Boost lock hint must explain that leaving the Boost zone re-arms it');
-assert.match(css, /\.drive-pad \.drive-brake-zone \{/, 'Brake and Reverse must be styled as an internal drive-pad zone');
+assert.match(css, /\.drive-pad \.drive-brake-zone \{/, 'BRAKE must be styled as an internal drive-pad zone');
 assert.match(css, /\.drive-brake-zone\.is-active/, 'Brake must have visible active feedback');
 assert.match(css, /\.drive-lock-bubble \{[\s\S]*right: calc\(100% - 4px\);[\s\S]*background: #748ffc/,
   'LOCK must be a separate bubble attached outside the left edge of the pad');
@@ -344,8 +349,8 @@ const forward = new Vec3(0, 0, 1);
 const right = new Vec3(1, 0, 0);
 const trackSample = { point: new Vec3(), tangent: forward.clone(), normal: right.clone() };
 const state = {
-  position: new Vec3(), velocity: new Vec3(0, 0, 5), touchGas: true, touchBrake: true,
-  throttle: 0, brake: 0, steering: 0, driftAmount: 0, heading: 0, progress: 0,
+  position: new Vec3(), velocity: new Vec3(0, 0, 5), touchGas: true, touchBrake: true, touchReverse: false,
+  throttle: 0, brake: 0, reverse: 0, steering: 0, driftAmount: 0, heading: 0, progress: 0,
   lastProgress: 0, nearestTrackIndex: 0, trackDistance: 0, offRoad: false, speed: 5
 };
 const physicsArgs = {
@@ -357,9 +362,12 @@ const physicsArgs = {
 };
 
 updateVehiclePhysicsState(physicsArgs);
-assert.ok(state.velocity.z <= 0.001, 'Brake must stop forward motion before reverse begins');
+assert.equal(state.velocity.z, 0, 'BRAKE must stop forward motion at zero');
 updateVehiclePhysicsState(physicsArgs);
-assert.ok(state.velocity.z < -0.1, 'Holding Brake after stopping must engage reverse');
+assert.equal(state.velocity.z, 0, 'Holding BRAKE after stopping must not engage reverse');
+state.touchReverse = true;
+updateVehiclePhysicsState(physicsArgs);
+assert.ok(state.velocity.z < -0.1, 'The explicit R control must engage reverse');
 for (let i = 0; i < 100; i += 1) updateVehiclePhysicsState(physicsArgs);
 assert.ok(state.velocity.z >= -(80 * 0.32 + 0.5), 'Reverse must stay capped well below forward top speed');
 
@@ -397,4 +405,4 @@ assert.ok(
   'Full LOCK must release gas and add modest handbrake drag'
 );
 
-console.log(`TURN ${release.id} connected DRIFT LOCK, 50% larger Boost tanks, 2.4x→3.6x recharge balance, reliable LOCK gradient, restart refill and reverse passed.`);
+console.log(`TURN ${release.id} connected DRIFT LOCK, 50% larger Boost tanks, 2.4x→3.6x recharge balance, reliable LOCK gradient, restart refill and separate reverse passed.`);

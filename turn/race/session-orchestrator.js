@@ -89,6 +89,7 @@ export function createRaceSessionOrchestrator({
   function stopDrivingInputs() {
     state.touchGas = false;
     state.touchBrake = false;
+    state.touchReverse = false;
     state.manualSteering = 0;
     environment.__turnAnalogGas = 0;
     environment.__turnBoostActive = false;

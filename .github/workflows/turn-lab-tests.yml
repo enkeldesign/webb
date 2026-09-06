@@ -130,6 +130,9 @@ jobs:
       - name: Run left-handed controls regression
         run: node turn-tests/control-handedness-production.mjs
 
+      - name: Run separate Brake and Reverse regression
+        run: node turn-tests/brake-reverse-production.mjs
+
       - name: Run production garage regression
         run: node turn-lab/tests/garage-production.mjs
 

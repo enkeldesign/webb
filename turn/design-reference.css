@@ -355,9 +355,11 @@ td code { font-size: .78rem; font-weight: 850; }
 .drive-demo__gas { border-top: 4px solid var(--turn-ink) !important; background: var(--turn-control-gas); }
 .drive-demo__brake { border-top: 4px solid var(--turn-ink) !important; background: var(--turn-control-brake); }
 .drive-demo__lock,
-.drive-demo__shift { position: absolute; right: calc(100% - 4px); width: 62px; display: grid; place-items: center; border: 4px solid var(--turn-ink); border-right: 0; border-radius: 999px 0 0 999px; font-size: .65rem; font-weight: 950; text-transform: uppercase; writing-mode: vertical-rl; transform: rotate(180deg); }
+.drive-demo__shift,
+.drive-demo__reverse { position: absolute; right: calc(100% - 4px); width: 62px; display: grid; place-items: center; border: 4px solid var(--turn-ink); border-right: 0; border-radius: 999px 0 0 999px; font-size: .65rem; font-weight: 950; text-transform: uppercase; writing-mode: vertical-rl; transform: rotate(180deg); }
 .drive-demo__lock { top: 0; height: 32%; background: #748ffc; }
 .drive-demo__shift { top: 32%; height: 44%; background: var(--turn-green-500); }
+.drive-demo__reverse { bottom: 0; height: 24%; background: var(--turn-control-brake); }
 
 .score-demo { position: absolute; top: 66px; left: 18px; width: min(230px, calc(100% - 36px)); color: var(--turn-ink); }
 .score-row { position: relative; width: 185px; height: 96px; }

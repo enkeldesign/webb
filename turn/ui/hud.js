@@ -29,12 +29,16 @@ export function updateHudState({
   setText(bestTimeEl, formatTime(state.bestTime));
   lapTimeEl.closest?.('.chip')?.classList.toggle('is-invalid-lap', lapInvalid);
 
-  const driveDisplay = state.throttle >= state.brake ? state.throttle : -state.brake;
+  const brakeOrReverse = Math.max(Number(state.brake) || 0, Number(state.reverse) || 0);
+  const driveDisplay = brakeOrReverse > 0 ? -brakeOrReverse : state.throttle;
   const drivePercent = Math.round(driveDisplay * 100);
   const needleLeft = `${50 + driveDisplay * 46}%`;
   if (tiltNeedle.style.left !== needleLeft) tiltNeedle.style.left = needleLeft;
   if (drivePercent > 2) setText(tiltValue, `gas ${drivePercent}%`);
-  else if (drivePercent < -2) setText(tiltValue, `brake ${Math.abs(drivePercent)}%`);
+  else if (drivePercent < -2) {
+    const label = Number(state.reverse) > 0 ? 'reverse' : 'brake';
+    setText(tiltValue, `${label} ${Math.abs(drivePercent)}%`);
+  }
   else setText(tiltValue, 'neutral');
 
   drawMap({

@@ -33,7 +33,9 @@ assert.ok(
 );
 
 assert.match(guide, /GUIDE_VERSION = 'r241-learning-achievements'/);
-assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE · REVERSE<\/strong>/);
+assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE<\/strong>/);
+assert.match(guide, /BRAKE stops at zero without reversing/);
+assert.match(guide, /slide outward into <strong>REVERSE<\/strong>/);
 assert.match(guide, /slide outward past it into <strong>LOCK<\/strong>/);
 assert.match(guide, /<strong>DRIFT<\/strong> charges <strong>BOOST<\/strong> as you slide/);
 assert.match(guide, /With BOOST full, keep using DRIFT to build purple <strong>OVERCHARGE<\/strong>/);

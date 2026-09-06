@@ -93,6 +93,7 @@
 }
 
 .drive-pad .drive-brake-zone,
+.drive-reverse-bubble,
 .brake {
   background: var(--turn-control-brake) !important;
 }

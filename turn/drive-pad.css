@@ -46,6 +46,8 @@ body .m8-feedback-content * {
   --drive-pad-height: clamp(190px, 26vw, 268px);
   --drift-lock-bubble-width: clamp(52px, 7.2vw, 74px);
   --shift-bubble-width: clamp(58px, 7.8vw, 80px);
+  --reverse-bubble-width: clamp(52px, 7.2vw, 74px);
+  --drive-brake-color: var(--turn-control-brake, #ff7b54);
   position: relative;
   isolation: isolate;
   width: clamp(190px, 24vw, 260px);
@@ -159,6 +161,63 @@ body .m8-feedback-content * {
   font-style: normal;
   line-height: 1;
   transition: width 100ms ease, opacity 100ms ease;
+}
+
+.controls .drive-reverse-bubble {
+  position: absolute;
+  z-index: 1;
+  right: calc(100% - 4px);
+  bottom: 0;
+  width: var(--reverse-bubble-width);
+  height: calc(24% + 2.08px);
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 4px solid var(--ink);
+  border-radius: 999px 0 0 999px;
+  background: var(--drive-brake-color);
+  color: var(--ink);
+  box-shadow: none;
+  opacity: 0;
+  transform: translateX(62%) scaleX(0.38);
+  transform-origin: right center;
+  transition:
+    opacity 80ms ease-out,
+    transform 140ms cubic-bezier(.2,.88,.25,1),
+    background-color 100ms ease;
+  pointer-events: none;
+  touch-action: none;
+  font-size: clamp(0.78rem, 2vw, 1.12rem);
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.drive-stack.is-brake-ready .drive-reverse-bubble,
+.drive-stack.is-reversing .drive-reverse-bubble,
+.drive-reverse-bubble:focus-visible {
+  opacity: 1;
+  transform: translateX(0) scaleX(1);
+  pointer-events: auto;
+}
+
+.drive-stack.is-brake-ready .drive-pad {
+  border-bottom-left-radius: 0;
+}
+
+.drive-stack.is-reversing .drive-reverse-bubble,
+.drive-reverse-bubble.is-active {
+  background: var(--turn-orange-200, #ffb89f);
+  box-shadow: inset 0 0 0 5px rgb(255 248 232 / 0.62);
+}
+
+.drive-reverse-bubble:focus-visible {
+  outline: 4px solid var(--paper);
+  outline-offset: 3px;
 }
 
 .drive-stack.is-shift-available.is-gas-ready .drive-shift-bubble,
@@ -275,7 +334,7 @@ body .m8-feedback-content * {
   place-items: center;
   padding: 6px 12px;
   border-top: 4px solid var(--ink);
-  background: var(--pink);
+  background: var(--drive-brake-color);
   font-size: clamp(0.6rem, 1.45vw, 0.82rem);
   letter-spacing: 0.035em;
   white-space: nowrap;
@@ -297,7 +356,7 @@ body .m8-feedback-content * {
 }
 
 .drive-brake-zone.is-active {
-  background: #ff7ab7;
+  background: var(--drive-brake-color);
 }
 
 .drive-pad.is-boosting .drive-boost-zone {
@@ -350,9 +409,23 @@ body .m8-feedback-content * {
   transform-origin: left center;
 }
 
+:root.turn-left-handed-controls .drive-reverse-bubble {
+  right: auto;
+  left: calc(100% - 4px);
+  border-radius: 0 999px 999px 0;
+  transform: translateX(-62%) scaleX(0.38);
+  transform-origin: left center;
+}
+
 :root.turn-left-handed-controls .drive-stack.is-shift-available.is-gas-ready .drive-shift-bubble,
 :root.turn-left-handed-controls .drive-stack.is-shift-active .drive-shift-bubble,
 :root.turn-left-handed-controls .drive-shift-bubble:focus-visible {
+  transform: translateX(0) scaleX(1);
+}
+
+:root.turn-left-handed-controls .drive-stack.is-brake-ready .drive-reverse-bubble,
+:root.turn-left-handed-controls .drive-stack.is-reversing .drive-reverse-bubble,
+:root.turn-left-handed-controls .drive-reverse-bubble:focus-visible {
   transform: translateX(0) scaleX(1);
 }
 
@@ -363,6 +436,11 @@ body .m8-feedback-content * {
 :root.turn-left-handed-controls .drive-stack.is-drift-ready .drive-pad {
   border-top-left-radius: 30px;
   border-top-right-radius: 0;
+}
+
+:root.turn-left-handed-controls .drive-stack.is-brake-ready .drive-pad {
+  border-bottom-left-radius: 30px;
+  border-bottom-right-radius: 0;
 }
 
 :root.turn-left-handed-controls .drive-boost-zone {
@@ -393,6 +471,7 @@ body .m8-feedback-content * {
     --drive-pad-height: clamp(174px, 23.5vw, 205px);
     --drift-lock-bubble-width: clamp(48px, 6.8vw, 64px);
     --shift-bubble-width: clamp(52px, 7.2vw, 70px);
+    --reverse-bubble-width: clamp(48px, 6.8vw, 64px);
     width: clamp(174px, 23vw, 224px);
   }
 
@@ -428,6 +507,12 @@ body .m8-feedback-content * {
     border-width: 3px;
   }
 
+  .controls .drive-reverse-bubble {
+    right: calc(100% - 3px);
+    height: calc(24% + 1.56px);
+    border-width: 3px;
+  }
+
   :root.turn-left-handed-controls .drive-lock-bubble {
     right: auto;
     left: calc(100% - 3px);
@@ -438,8 +523,17 @@ body .m8-feedback-content * {
     left: calc(100% - 3px);
   }
 
+  :root.turn-left-handed-controls .drive-reverse-bubble {
+    right: auto;
+    left: calc(100% - 3px);
+  }
+
   :root.turn-left-handed-controls .drive-stack.is-drift-ready .drive-pad {
     border-top-left-radius: 24px;
+  }
+
+  :root.turn-left-handed-controls .drive-stack.is-brake-ready .drive-pad {
+    border-bottom-left-radius: 24px;
   }
 
   :root.turn-left-handed-controls .drive-boost-zone {
@@ -460,6 +554,7 @@ body .m8-feedback-content * {
 @media (prefers-reduced-motion: reduce) {
   .drive-lock-bubble,
   .controls .drive-shift-bubble,
+  .controls .drive-reverse-bubble,
   .drive-shift-bubble i {
     transition: none;
   }

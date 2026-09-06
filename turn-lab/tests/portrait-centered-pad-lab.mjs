@@ -46,7 +46,8 @@ assert.match(productionControls, /const BRAKE_ZONE_START = 0\.76/);
 assert.match(productionControls, /if \(y < TOP_ZONE_SHARE\) return x < 0\.5 \? 'drift' : 'boost'/);
 assert.match(productionControls, /drivePad\.setPointerCapture/);
 assert.match(productionControls, /drivePad\.dataset\.driveZone/);
-assert.match(productionControls, /brakeButton\.textContent = 'Brake · Reverse'/);
+assert.match(productionControls, /brakeButton\.textContent = 'Brake'/);
+assert.match(productionControls, /className = 'drive-reverse-bubble'/);
 assert.match(productionControls, /driftZone\.setAttribute\('aria-label', 'Gas and drift'\)/);
 assert.match(productionControls, /boostZone\.setAttribute\('aria-label', 'Gas and boost'\)/);
 

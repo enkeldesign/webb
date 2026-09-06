@@ -118,7 +118,7 @@ export function createRecoveryGuidanceFrame(runtime, frame = {}) {
   const wrongWay = !offRoad
     && headingAlignment < -0.42
     && speed > 7
-    && finiteNumber(state.brake, 0) < 0.1;
+    && Math.max(finiteNumber(state.brake, 0), finiteNumber(state.reverse, 0)) < 0.1;
 
   if (offRoad) {
     return createOffRoadRecoveryFrame({
