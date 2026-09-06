@@ -4,7 +4,6 @@ export const TRACTION_MIN_OFFROAD_PENALTY = 0.22;
 export const TRACTION_SHALLOW_DEPTH_RATIO = 0.08;
 export const TRACTION_DEEP_DEPTH_RATIO = 0.42;
 export const TORQUE_BUILD_SECONDS = 3.2;
-export const TORQUE_DECAY_SECONDS = 1.4;
 export const CARRY_ON_LOCK_DRAG_ADD = 0.07;
 export const STANDARD_LOCK_DRAG_ADD = 0.18;
 export const FULL_TANK_BUILD_SECONDS = 8;
@@ -133,21 +132,28 @@ export function resolveVehicleLockDragAdd({
 export function advanceVehiclePerkRuntimeState({
   state,
   dt = 0,
-  gasHeld = false,
   driftHeld = false,
   offRoad = false,
   collided = false,
-  speed = state?.speed || 0
+  speed = state?.speed || 0,
+  overcharge = 0,
+  boostActive = false
 } = {}) {
   if (!state) return 0;
   syncVehiclePerkRuntimeState(state);
 
   const elapsed = clamp(dt, 0, 0.1);
   if (activePerk(state, 'truck')) {
-    const delta = gasHeld
-      ? elapsed / TORQUE_BUILD_SECONDS
-      : -elapsed / TORQUE_DECAY_SECONDS;
-    state.vehiclePerkProgress = clampProgress(state.vehiclePerkProgress + delta);
+    if ((Number(overcharge) || 0) > 0) {
+      state.vehiclePerkProgress = clampProgress(
+        state.vehiclePerkProgress + elapsed / TORQUE_BUILD_SECONDS
+      );
+    } else if (boostActive !== true) {
+      // If OVERCHARGE is spent through BOOST, keep the built tank for that
+      // continuous BOOST use. Leaking/ending OVERCHARGE or releasing BOOST
+      // restores the active STANDARD/SHIFT baseline immediately.
+      state.vehiclePerkProgress = 0;
+    }
   } else if (activePerk(state, 'suv')) {
     if (offRoad || collided) {
       state.vehiclePerkProgress = 0;
@@ -199,9 +205,9 @@ export function resolveVehiclePerkTuning({ state, tuning } = {}) {
     ? { ...baseTuning }
     : Object.assign(state.vehicleEffectiveTuning, baseTuning);
   if (torqueActive) {
-    effective.accelerationMultiplier = lerp(
-      Number(baseTuning.accelerationMultiplier) || 1,
-      MAX_ATTRIBUTE_TUNING.accelerationMultiplier,
+    effective.boostDurationSeconds = lerp(
+      Number(baseTuning.boostDurationSeconds) || MAX_ATTRIBUTE_TUNING.boostDurationSeconds,
+      MAX_ATTRIBUTE_TUNING.boostDurationSeconds,
       progress
     );
   }

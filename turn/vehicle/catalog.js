@@ -132,7 +132,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
   }),
   race: Object.freeze({
     title: 'APEX GRIP',
-    description: 'Increased CONTROL when OVERCHARGED.'
+    description: 'OVERCHARGE increases CONTROL and ACCELERATION beyond their ordinary limits.'
   }),
   'sedan-sports': Object.freeze({
     title: 'DRIFT DEMON',
@@ -154,7 +154,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
   }),
   truck: Object.freeze({
     title: 'TORQUE',
-    description: 'ACCELERATION builds while GAS is held, up to 5/5.',
+    description: 'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.',
     rewardId: 'truck-torque',
     threshold: 800
   }),
@@ -185,7 +185,11 @@ const TUNING_OVERRIDE_BY_ID = Object.freeze({
     driftBoostRechargeMultiplier: 3.6
   }),
   race: Object.freeze({
-    overchargeControlMultiplier: 1.21
+    overchargeControlMultiplier: 1.21,
+    overchargeAccelerationMultiplier: 1.24
+  }),
+  truck: Object.freeze({
+    overchargeAccelerationMultiplier: 1.24
   }),
   van: Object.freeze({
     lockDragAdd: 0.07

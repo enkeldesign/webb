@@ -9,6 +9,7 @@ import {
   getVehicleSpeedLimit,
   resolveDriftSpeedMultiplier,
   resolveOverchargedControlMultiplier,
+  resolveVehicleOverchargedAccelerationMultiplier,
   updateVehicleOverdriveState,
   vehicleHasOverdrive,
   vehicleIgnoresOffRoadPenalty
@@ -286,11 +287,16 @@ const raceCar = CAR_CATALOG.find((car) => car.id === 'race');
 assert.ok(raceCar, 'Race Car must remain in the vehicle catalog');
 assert.equal(raceCar.defaultColor, '#5d503f', 'Race Car factory paint must be the current brown');
 assert.equal(raceCar.perk?.title, 'APEX GRIP');
-assert.equal(raceCar.perk?.description, 'Increased CONTROL when OVERCHARGED.');
+assert.equal(raceCar.perk?.description,
+  'OVERCHARGE increases CONTROL and ACCELERATION beyond their ordinary limits.');
 assert.equal(raceCar.tuning.controlMultiplier, 1.07,
   'Race Car must retain its ordinary 4/5 CONTROL tuning when it is not OVERCHARGED');
 assert.equal(raceCar.tuning.overchargeControlMultiplier, 1.21,
   'APEX GRIP must extend the established CONTROL curve one tier beyond its visible 5/5 ceiling');
+assert.equal(raceCar.tuning.accelerationMultiplier, 1.08,
+  'Race Car must retain its ordinary 4/5 ACCELERATION tuning outside OVERCHARGE');
+assert.equal(raceCar.tuning.overchargeAccelerationMultiplier, 1.24,
+  'APEX GRIP ACCELERATION must extend the established curve one tier beyond visible 5/5');
 assert.equal(resolveOverchargedControlMultiplier({
   controlMultiplier: raceCar.tuning.controlMultiplier,
   overchargeControlMultiplier: raceCar.tuning.overchargeControlMultiplier,
@@ -301,22 +307,75 @@ assert.equal(resolveOverchargedControlMultiplier({
   overchargeControlMultiplier: raceCar.tuning.overchargeControlMultiplier,
   overcharge: 0.001
 }), 1.21,
-  'Any live OVERCHARGE must activate APEX GRIP without requiring a separate catch flag');
+  'Any live OVERCHARGE must activate APEX GRIP CONTROL without requiring a separate catch flag');
+assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
+  vehicleId: raceCar.id,
+  accelerationMultiplier: raceCar.tuning.accelerationMultiplier,
+  overchargeAccelerationMultiplier: raceCar.tuning.overchargeAccelerationMultiplier,
+  overcharge: 0
+}), 1.08);
+assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
+  vehicleId: raceCar.id,
+  accelerationMultiplier: raceCar.tuning.accelerationMultiplier,
+  overchargeAccelerationMultiplier: raceCar.tuning.overchargeAccelerationMultiplier,
+  overcharge: 0.001
+}), 1.24,
+  'Any live OVERCHARGE must immediately activate APEX GRIP ACCELERATION');
+const visibleFiveAcceleration = deriveVehicleTuning({ ...raceCar.stats, acceleration: 5 }).accelerationMultiplier;
+assert.equal(visibleFiveAcceleration, 1.16);
+assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
+  vehicleId: raceCar.id,
+  accelerationMultiplier: visibleFiveAcceleration,
+  overchargeAccelerationMultiplier: raceCar.tuning.overchargeAccelerationMultiplier,
+  overcharge: 1
+}), 1.24,
+  'APEX GRIP ACCELERATION must still exceed a visible 5/5 STANDARD or SHIFT baseline');
 for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race')) {
   assert.equal(resolveOverchargedControlMultiplier({
     controlMultiplier: car.tuning.controlMultiplier,
     overchargeControlMultiplier: car.tuning.overchargeControlMultiplier,
     overcharge: 1
-  }), car.tuning.controlMultiplier, `${car.name} must not inherit APEX GRIP`);
+  }), car.tuning.controlMultiplier, `${car.name} must not inherit APEX GRIP CONTROL`);
 }
 assert.match(mainSource, /boostOvercharge: globalThis\.__turnBoostOvercharge \|\| 0/,
   'The current OVERCHARGE amount must reach vehicle physics every frame');
-assert.match(physicsSource, /state\.apexGripActive = controlMultiplier > baseControlMultiplier/,
-  'Physics must expose whether the selected tuning is actively receiving APEX GRIP');
+assert.match(physicsSource, /state\.apexGripActive = String\(state\.vehicleId \|\| ''\) === 'race'/,
+  'Physics must expose whether Race Car is actively receiving APEX GRIP');
 
 const truck = CAR_CATALOG.find((car) => car.id === 'truck');
 assert.ok(truck, 'Truck must remain in the vehicle catalog');
 assert.equal(truck.defaultColor, '#b93632', 'Truck factory paint must be the former Race Car red');
+assert.equal(truck.perk?.description,
+  'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.');
+assert.equal(truck.tuning.overchargeAccelerationMultiplier, 1.24,
+  'TORQUE must use the same beyond-5/5 ACCELERATION target as APEX GRIP');
+assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
+  vehicleId: truck.id,
+  perkUnlocked: false,
+  accelerationMultiplier: truck.tuning.accelerationMultiplier,
+  overchargeAccelerationMultiplier: truck.tuning.overchargeAccelerationMultiplier,
+  overcharge: 1
+}), truck.tuning.accelerationMultiplier,
+  'Locked TORQUE must not change ACCELERATION');
+assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
+  vehicleId: truck.id,
+  perkUnlocked: true,
+  accelerationMultiplier: truck.tuning.accelerationMultiplier,
+  overchargeAccelerationMultiplier: truck.tuning.overchargeAccelerationMultiplier,
+  overcharge: 0.001
+}), 1.24,
+  'Unlocked TORQUE must immediately apply the APEX-style ACCELERATION buff on any live OVERCHARGE');
+for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race' && candidate.id !== 'truck')) {
+  assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
+    vehicleId: car.id,
+    perkUnlocked: true,
+    accelerationMultiplier: car.tuning.accelerationMultiplier,
+    overchargeAccelerationMultiplier: car.tuning.overchargeAccelerationMultiplier,
+    overcharge: 1
+  }), car.tuning.accelerationMultiplier, `${car.name} must not inherit the OVERCHARGE ACCELERATION perk`);
+}
+assert.match(physicsSource, /state\.torqueActive = String\(state\.vehicleId \|\| ''\) === 'truck'/,
+  'Physics must expose whether unlocked TORQUE is actively receiving its OVERCHARGE ACCELERATION buff');
 
 assert.match(
   showcaseSource,
@@ -468,4 +527,4 @@ for (const car of CAR_CATALOG) {
   }
 }
 
-console.log('TURN all-car attribute-to-physics integrity, APEX GRIP, DRIFTAGE, TWITCHY TURNY, OVERSIZED and OVERDRIVE contracts passed for all 15 cars.');
+console.log('TURN all-car attribute-to-physics integrity, APEX GRIP, TORQUE, DRIFTAGE, TWITCHY TURNY, OVERSIZED and OVERDRIVE contracts passed for all 15 cars.');

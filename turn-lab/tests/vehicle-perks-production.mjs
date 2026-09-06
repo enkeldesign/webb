@@ -18,7 +18,6 @@ import {
   GRADUATED_TOTAL_SECONDS,
   STANDARD_LOCK_DRAG_ADD,
   TORQUE_BUILD_SECONDS,
-  TORQUE_DECAY_SECONDS,
   TRACTION_MIN_OFFROAD_PENALTY,
   advanceVehiclePerkRuntimeState,
   resetVehiclePerkRuntimeState,
@@ -65,6 +64,8 @@ assert.ok(awd && truck && van && suv && sportsCar && learner,
   'Every dynamic-perk car must remain in the canonical catalog');
 assert.equal(awd.perk?.title, 'TRACTION');
 assert.equal(truck.perk?.title, 'TORQUE');
+assert.equal(truck.perk?.description,
+  'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.');
 assert.equal(van.perk?.title, 'CARRY ON');
 
 // TRACTION is a partial shoulder-depth curve, never an OVERSIZED-style exemption.
@@ -124,37 +125,71 @@ const partialLimit = getVehicleSpeedLimit({
 assert.ok(Math.abs(partialLimit - (100 + (73 - 100) * shallowPenalty)) < 1e-12,
   'The AWD shoulder factor must blend the real speed ceiling rather than toggle a cosmetic state');
 
-// TORQUE is runtime-only, builds under ordinary GAS, decays on release and always
-// recomposes from the currently active STANDARD/SHIFT tuning.
+// TORQUE is activated by OVERCHARGE, not sustained GAS. OVERCHARGE immediately
+// unlocks the acceleration perk in physics while runtime progress grows only the
+// normalized BOOST TANK capacity toward 5/5 from the active STANDARD/SHIFT base.
 const lockedTruck = perkState(truck.id, false, truck.tuning);
 lockedTruck.vehiclePerkProgress = 1;
-advanceVehiclePerkRuntimeState({ state: lockedTruck, dt: 0.1, gasHeld: true });
+advanceVehiclePerkRuntimeState({ state: lockedTruck, dt: 0.1, overcharge: 0.4 });
 assert.equal(lockedTruck.vehiclePerkProgress, 0);
 assert.equal(resolveVehiclePerkTuning({ state: lockedTruck, tuning: truck.tuning }), truck.tuning,
   'Locked TORQUE must return the exact ordinary tuning object');
 
 const torqueTruck = perkState(truck.id, true, truck.tuning);
 advanceForSeconds(torqueTruck, TORQUE_BUILD_SECONDS, { gasHeld: true });
+assert.equal(torqueTruck.vehiclePerkProgress, 0,
+  'Holding GAS by itself must no longer build TORQUE');
+advanceForSeconds(torqueTruck, TORQUE_BUILD_SECONDS, { overcharge: 0.4 });
 assert.equal(torqueTruck.vehiclePerkProgress, 1);
-assert.equal(
-  resolveVehiclePerkTuning({ state: torqueTruck, tuning: truck.tuning }).accelerationMultiplier,
-  deriveVehicleTuning({ ...truck.stats, acceleration: 5 }).accelerationMultiplier,
-  'Sustained GAS must build Truck acceleration to the canonical 5/5 effect'
-);
-advanceForSeconds(torqueTruck, TORQUE_DECAY_SECONDS, { gasHeld: false });
-assert.ok(torqueTruck.vehiclePerkProgress <= 1e-12, 'Releasing GAS must smoothly remove TORQUE');
+const maxTorqueTank = resolveVehiclePerkTuning({ state: torqueTruck, tuning: truck.tuning });
+assert.equal(maxTorqueTank.accelerationMultiplier, truck.tuning.accelerationMultiplier,
+  'TORQUE tank progress must not recreate the old gradual ACCELERATION ramp');
+assert.equal(maxTorqueTank.boostDurationSeconds, 3.74,
+  'TORQUE must progressively grow BOOST TANK capacity to the canonical 5/5 ceiling');
 
-const shiftOneTuning = deriveVehicleTuning({ ...truck.stats, acceleration: 1 });
-const shiftFourTuning = deriveVehicleTuning({ ...truck.stats, acceleration: 4 });
-const shiftingTruck = perkState(truck.id, true, shiftOneTuning);
-advanceForSeconds(shiftingTruck, TORQUE_BUILD_SECONDS / 2, { gasHeld: true });
+advanceVehiclePerkRuntimeState({
+  state: torqueTruck,
+  dt: 0.1,
+  overcharge: 0,
+  boostActive: true
+});
+assert.equal(torqueTruck.vehiclePerkProgress, 1,
+  'Spending OVERCHARGE through one continuous BOOST must retain the built tank reserve');
+advanceVehiclePerkRuntimeState({
+  state: torqueTruck,
+  dt: 0.1,
+  overcharge: 0,
+  boostActive: false
+});
+assert.equal(torqueTruck.vehiclePerkProgress, 0,
+  'Once OVERCHARGE and its continuous BOOST spend are over, TORQUE must return to baseline');
+assert.equal(resolveVehiclePerkTuning({ state: torqueTruck, tuning: truck.tuning }), truck.tuning);
+
+const shiftOneTankTuning = deriveVehicleTuning({ ...truck.stats, boostDuration: 1 });
+const shiftFourTankTuning = deriveVehicleTuning({ ...truck.stats, boostDuration: 4 });
+const shiftingTruck = perkState(truck.id, true, shiftOneTankTuning);
+advanceForSeconds(shiftingTruck, TORQUE_BUILD_SECONDS / 2, { overcharge: 0.3 });
 const retainedProgress = shiftingTruck.vehiclePerkProgress;
-const fromOne = resolveVehiclePerkTuning({ state: shiftingTruck, tuning: shiftOneTuning }).accelerationMultiplier;
-const fromFour = resolveVehiclePerkTuning({ state: shiftingTruck, tuning: shiftFourTuning }).accelerationMultiplier;
+const fromOneTank = resolveVehiclePerkTuning({
+  state: shiftingTruck,
+  tuning: shiftOneTankTuning
+}).boostDurationSeconds;
+const fromFourTank = resolveVehiclePerkTuning({
+  state: shiftingTruck,
+  tuning: shiftFourTankTuning
+}).boostDurationSeconds;
 assert.equal(shiftingTruck.vehiclePerkProgress, retainedProgress,
-  'Changing SHIFT baseline must preserve the live TORQUE progress fraction');
-assert.ok(fromFour > fromOne && fromFour < 1.16,
-  'TORQUE must immediately recompose from the new active base without a stale multiplier');
+  'Changing SHIFT baseline must preserve the live TORQUE tank-build fraction');
+assert.ok(fromFourTank > fromOneTank && fromFourTank < 3.74,
+  'TORQUE must immediately recompose tank growth from the new active STANDARD/SHIFT base');
+assert.match(physicsSource,
+  /advanceVehiclePerkRuntimeState\(\{[\s\S]*overcharge: boostOvercharge,[\s\S]*boostActive: effectiveBoostActive/,
+  'Vehicle physics must feed live OVERCHARGE and BOOST-spend state into TORQUE');
+assert.match(controlsSource,
+  /vehicleEffectiveTuning\?\.boostDurationSeconds[\s\S]*__turnVehicleTuning\?\.boostDurationSeconds/,
+  'Boost consumption must read TORQUE’s effective tank capacity before the ordinary base capacity');
+assert.match(controlsSource, /globalThis\.__turnBoostCharge = boostCharge/,
+  'Growing TORQUE capacity must preserve normalized charge instead of manufacturing Boost');
 
 // CARRY ON changes only the explicit LOCK drag term. Rotation, grip, slide and
 // ordinary DRIFT stay in the shared physics path.

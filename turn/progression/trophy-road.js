@@ -54,8 +54,8 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     vehicleIds: Object.freeze(['race']),
     icon: 'race',
     perkTitle: 'APEX GRIP',
-    perkDescription: 'Increased CONTROL when OVERCHARGED.',
-    description: 'Unlock the Race Car: high-speed handling built for precise lines.<br><strong>APEX GRIP:</strong> Increased CONTROL when OVERCHARGED.'
+    perkDescription: 'OVERCHARGE increases CONTROL and ACCELERATION beyond their ordinary limits.',
+    description: 'Unlock the Race Car: high-speed handling built for precise lines.<br><strong>APEX GRIP:</strong> OVERCHARGE increases CONTROL and ACCELERATION beyond their ordinary limits.'
   }),
   Object.freeze({
     id: 'emergency-pack',
@@ -138,8 +138,8 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     vehicleId: 'truck',
     icon: 'perk',
     perkTitle: 'TORQUE',
-    perkDescription: 'ACCELERATION builds while GAS is held, up to 5/5.',
-    description: 'Unlock <strong>TORQUE</strong> for Truck. ACCELERATION builds while GAS is held, up to 5/5.'
+    perkDescription: 'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.',
+    description: 'Unlock <strong>TORQUE</strong> for Truck. OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.'
   }),
   Object.freeze({
     id: 'van-carry-on',
