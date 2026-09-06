@@ -38,7 +38,7 @@
   padding-bottom: 10px;
   padding-right: 25px;
   column-gap: clamp(14px, 1.4vw, 16px);
-  row-gap: clamp(14px, 1.4vw, 16px);
+  row-gap: clamp(13px, calc(1.4vw - 1px), 15px);
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
