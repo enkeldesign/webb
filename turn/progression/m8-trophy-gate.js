@@ -68,7 +68,7 @@ export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
       'aria-label',
       isLocked
         ? `${entry.reward.shortTitle}, locked. Unlocks at ${entry.reward.threshold} trophies. Select for unlock information.`
-        : entry.originalLabel
+        : (entry.card.dataset.trackAccessibleLabel || entry.originalLabel)
     );
     syncChoiceLockIcon(entry, isLocked);
   }

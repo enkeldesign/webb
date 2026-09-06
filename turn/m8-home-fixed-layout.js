@@ -1,6 +1,6 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-fixed-home-styles';
 const SHORT_VIEWPORT_STYLE_ID = 'turn-m8-short-viewport-race-dock';
-const LAYOUT_ID = 'fixed-grid-v7';
+const LAYOUT_ID = 'fixed-grid-v8-shared-track-bests';
 const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
 const MUSIC_LAST_VOLUME_STORAGE_KEY = 'turn-racing-music-last-volume-v1';
 const POST_HOME_IDLE_TIMEOUT_MS = 900;
@@ -91,7 +91,7 @@ function installStylesheet() {
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn/m8-home-fixed-layout.css?build=${buildKey}-m8.7-home-polish`;
+  stylesheet.href = `/turn/m8-home-fixed-layout.css?build=${buildKey}-r206-shared-track-bests`;
   stylesheet.setAttribute(STYLE_ATTRIBUTE, '');
   document.head.appendChild(stylesheet);
 }
@@ -265,9 +265,10 @@ export async function installM8HomeFixedLayout() {
     driveByEarTrainingModule
   ] = await Promise.all([
     import(`/turn/pwa-short-viewport-repair-r184.js?build=${buildKey}&revision=r184-start-settle-first-activation`),
-    // Historical regression marker for the previous aligned-title bundle:
+    // Historical regression markers for the previous aligned-title bundles:
     // /turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.9-track-title-alignment
-    import(`/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.10-card-gap-rim`),
+    // /turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.10-card-gap-rim
+    import(`/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-r206-shared-track-bests`),
     import(`/turn/progression/m8-trophy-gate.js?build=${buildKey}-r157-paint-monster`),
     import(`/turn/achievements.js?build=${buildKey}-r166-bella-records&robustness=r164-long-session`),
     import(`/turn/achievements/unread-markers.js?build=${buildKey}-r219-unified-filters`),

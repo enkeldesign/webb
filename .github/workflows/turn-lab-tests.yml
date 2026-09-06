@@ -67,6 +67,9 @@ jobs:
       - name: Run TURN NEXT home navigation regression
         run: node turn-tests/home-navigation-production.mjs
 
+      - name: Run shared Home track-record regression
+        run: node turn-tests/home-track-records-production.mjs
+
       - name: Run startup cover and unread achievement regression
         run: node turn-tests/startup-and-unread-production.mjs
 

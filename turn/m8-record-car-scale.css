@@ -1,27 +1,22 @@
-.m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-best {
-  grid-template-columns: max-content max-content;
-  justify-content: start;
-  column-gap: clamp(8px, 1vw, 14px);
-  width: fit-content;
-  max-width: 100%;
+.m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-record {
+  grid-template-columns: minmax(0, 1fr) minmax(92px, 40%);
 }
 
-.m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-model {
-  justify-self: start;
-  width: clamp(92px, 9vw, 126px);
-  height: clamp(54px, 8vh, 74px);
+.m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-record-model {
+  justify-self: end;
+  width: clamp(88px, 9vw, 122px);
+  height: clamp(48px, 7vh, 66px);
   margin: 0;
-  object-position: left center;
+  object-position: right center;
 }
 
 @media (max-height: 560px) and (orientation: landscape) {
-  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-best {
-    grid-template-columns: max-content max-content;
-    column-gap: clamp(6px, 0.8vw, 10px);
+  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-record {
+    grid-template-columns: minmax(0, 1fr) minmax(76px, 37%);
   }
 
-  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-model {
-    width: clamp(82px, 10vw, 112px);
-    height: 58px;
+  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-record-model {
+    width: clamp(72px, 9vw, 102px);
+    height: 46px;
   }
 }

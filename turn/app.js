@@ -358,7 +358,7 @@ installStylesheet(
 );
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
 const { installM8HomeNavigation } = await import(
-  withBuild('./m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r200')
+  withBuild('./m8-home.js?revision=r206-shared-track-bests&trophy-road=r159&showroom=r200')
 );
 const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
@@ -381,7 +381,7 @@ if (buildLabel) {
 // Historical regression marker for the paint and Monster Home bundle:
 // m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r157
 const { installM8HomeFixedLayout } = await import(
-  withBuild('./m8-home-fixed-layout.js?revision=m8.10-card-gap-rim&trophy-road=r159&achievements=r166-bella-records&bella-rescue=r174-siren-zone&music=warm-v2&robustness=r164-long-session')
+  withBuild('./m8-home-fixed-layout.js?revision=r206-shared-track-bests&trophy-road=r159&achievements=r166-bella-records&bella-rescue=r174-siren-zone&music=warm-v2&robustness=r164-long-session')
 );
 await installM8HomeFixedLayout();
 installStylesheet(
@@ -393,7 +393,7 @@ const { installHomeFeedback } = await import(
 );
 installHomeFeedback();
 installStylesheet(
-  './m8-record-car-scale.css?revision=r124-balanced-crop',
+  './m8-record-car-scale.css?revision=r206-three-records',
   'data-turn-m8-record-car-scale'
 );
 document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
