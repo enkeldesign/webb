@@ -1,8 +1,31 @@
+.m8-home-card-scroll-fixes .m8-home-tracks {
+  --m8-track-compact-card-min-block-size: clamp(108px, calc(20vh - 24px), 152px);
+  --m8-track-card-min-block-size: var(--m8-track-compact-card-min-block-size);
+}
+
+.m8-home-card-scroll-fixes.is-showing-track-bests .m8-home-tracks {
+  /* Expanded rows are content-sized. The compact frame has its own stable size below. */
+  --m8-track-card-min-block-size: 0px;
+}
+
 .m8-home-card-scroll-fixes .m8-track-scroll-viewport {
+  --m8-track-row-gap: clamp(13px, calc(1.4vw - 1px), 15px);
+  --m8-track-card-border-width: 5px;
+  --m8-track-card-block-padding: 3px;
+  --m8-track-compact-card-block-size: max(
+    var(--m8-track-compact-card-min-block-size),
+    calc((100cqh - 13px - (2 * var(--m8-track-row-gap))) / 3)
+  );
+  --m8-track-compact-card-content-block-size: calc(
+    var(--m8-track-compact-card-block-size)
+    - (2 * var(--m8-track-card-border-width))
+    - (2 * var(--m8-track-card-block-padding))
+  );
   position: relative;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  container-type: size;
 }
 
 .m8-home-card-scroll-fixes .m8-track-scroll-viewport::before,
@@ -38,7 +61,9 @@
   padding-bottom: 10px;
   padding-right: 25px;
   column-gap: clamp(14px, 1.4vw, 16px);
-  row-gap: clamp(13px, calc(1.4vw - 1px), 15px);
+  row-gap: var(--m8-track-row-gap);
+  grid-auto-rows: minmax(var(--m8-track-card-min-block-size), auto);
+  align-content: start;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
@@ -50,9 +75,15 @@
   -webkit-user-select: none;
 }
 
-.m8-home-card-scroll-fixes .m8-track-scroll-viewport:not(.has-track-overflow) .m8-track-rail {
+.m8-home-card-scroll-fixes:not(.is-showing-track-bests)
+  .m8-track-scroll-viewport:not(.has-track-overflow) .m8-track-rail {
+  grid-auto-rows: var(--m8-track-compact-card-block-size);
   overflow-y: hidden;
   overscroll-behavior-y: none;
+}
+
+.m8-home-card-scroll-fixes.is-showing-track-bests .m8-track-rail {
+  grid-auto-rows: max-content;
 }
 
 .m8-home-card-scroll-fixes .m8-track-rail .track-card,
@@ -120,19 +151,46 @@
   opacity: 0.25;
 }
 
+/*
+ * A track card has one canonical compact frame plus an optional records block.
+ * The compact frame is the same size in both disclosure states, so the marker,
+ * name, difficulty and map never need to be measured or reconstructed in JS.
+ */
 .m8-home-card-scroll-fixes .m8-track-rail .track-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+  align-content: stretch;
+  gap: 0;
+  overflow: hidden;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-compact {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(108px, 39%);
   grid-template-rows: auto auto;
   align-items: start;
   align-content: center;
   gap: 5px clamp(8px, 1vw, 13px);
-  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .m8-home-card-scroll-fixes.is-showing-track-bests .m8-track-rail .track-card {
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: var(--m8-track-compact-card-content-block-size) max-content;
   align-content: start;
+  row-gap: calc(
+    var(--m8-track-row-gap)
+    + var(--m8-track-card-border-width)
+    + var(--m8-track-card-block-padding)
+  );
+}
+
+.m8-home-card-scroll-fixes.is-showing-track-bests .m8-track-rail .track-card-compact {
+  height: var(--m8-track-compact-card-content-block-size);
 }
 
 .m8-home-card-scroll-fixes .m8-track-rail .track-card-summary {
@@ -187,30 +245,42 @@
   width: 100%;
   min-width: 0;
   min-height: 0;
-  height: clamp(76px, 12vh, 112px);
+  height: clamp(72px, 11vh, 104px);
   margin: 0;
 }
 
 .m8-home-card-scroll-fixes .m8-track-rail .track-card-best {
-  grid-column: 1 / -1;
-  grid-row: 3;
+  grid-column: 1;
+  grid-row: 2;
   align-self: stretch;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto repeat(3, auto);
   align-items: stretch;
-  gap: clamp(5px, 0.7vh, 8px);
+  row-gap: var(--m8-track-row-gap);
+  column-gap: 0;
   min-width: 0;
   min-height: 0;
   width: 100%;
   max-width: none;
-  margin-top: clamp(5px, 0.8vh, 9px);
-  column-gap: 0;
+  margin: 0;
   text-align: left;
 }
 
 .m8-home-card-scroll-fixes .m8-track-rail .track-card-best[hidden] {
   display: none !important;
+}
+
+.m8-home-card-scroll-fixes:not(.is-showing-track-bests)
+  .m8-track-rail .track-card-coming-soon {
+  display: none;
+}
+
+.m8-home-card-scroll-fixes.is-showing-track-bests
+  .m8-track-rail .track-card-coming-soon {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
 }
 
 .m8-home-card-scroll-fixes .m8-track-rail .track-card-records-title {
@@ -307,40 +377,62 @@
   display: none;
 }
 
-.m8-home-card-scroll-fixes .m8-track-rail .track-card-coming-soon {
-  align-self: end;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
-}
-
 .m8-home-card-scroll-fixes .m8-track-rail .track-card-coming-soon .track-card-best-copy > * {
   display: block;
 }
 
-@media (max-height: 560px) and (orientation: landscape) {
+/*
+ * Landscape has a dedicated gap between the track browser and MENU. Put the custom
+ * scroll indicator there in every state so showing records never changes card width.
+ */
+@media (orientation: landscape) {
+  .m8-home-card-scroll-fixes .m8-track-scroll-viewport {
+    overflow: visible;
+  }
+
   .m8-home-card-scroll-fixes .m8-track-rail {
-    padding-right: 22px;
+    padding-right: 10px;
   }
 
   .m8-home-card-scroll-fixes .m8-track-scroll-viewport::before,
   .m8-home-card-scroll-fixes .m8-track-scroll-viewport::after {
-    right: 22px;
+    right: 10px;
   }
 
   .m8-home-card-scroll-fixes .m8-track-scroll-indicator {
+    right: -11px;
+  }
+
+  .m8-home-card-scroll-fixes:not(.is-showing-track-bests) .m8-track-continue {
+    margin-bottom: 7px;
+  }
+}
+
+@media (max-height: 820px) and (orientation: landscape) {
+  .m8-home-card-scroll-fixes .m8-track-scroll-viewport {
+    --m8-track-card-border-width: 4px;
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .m8-home-card-scroll-fixes .m8-home-tracks {
+    --m8-track-compact-card-min-block-size: 96px;
+  }
+
+  .m8-home-card-scroll-fixes .m8-track-scroll-viewport {
+    --m8-track-row-gap: 13px;
+  }
+
+  .m8-home-card-scroll-fixes .m8-track-scroll-indicator {
+    right: -8px;
     bottom: 10px;
     width: 13px;
     border-width: 2px;
   }
 
-  .m8-home-card-scroll-fixes .m8-track-rail .track-card {
+  .m8-home-card-scroll-fixes .m8-track-rail .track-card-compact {
     grid-template-columns: minmax(0, 1fr) minmax(94px, 38%);
     gap: 3px 8px;
-  }
-
-  .m8-home-card-scroll-fixes.is-showing-track-bests .m8-track-rail .track-card {
-    grid-template-rows: auto auto minmax(0, 1fr);
   }
 
   .m8-home-card-scroll-fixes .m8-track-rail .track-card-name {
@@ -349,11 +441,7 @@
   }
 
   .m8-home-card-scroll-fixes .m8-track-rail .track-card-preview {
-    height: 70px;
-  }
-
-  .m8-home-card-scroll-fixes .m8-track-rail .track-card-best {
-    gap: 4px;
+    height: 66px;
   }
 
   .m8-home-card-scroll-fixes .m8-track-rail .track-card-record {
@@ -366,9 +454,24 @@
   .m8-home-card-scroll-fixes .m8-track-rail .track-card-record-model {
     height: 46px;
   }
+
+  .m8-home-card-scroll-fixes:not(.is-showing-track-bests) .m8-track-continue {
+    margin-bottom: 5px;
+  }
 }
 
 @media (max-width: 760px) and (orientation: portrait) {
+  .m8-home-card-scroll-fixes .m8-home-tracks {
+    --m8-track-compact-card-min-block-size: 142px;
+  }
+
+  .m8-home-card-scroll-fixes .m8-track-scroll-viewport {
+    --m8-track-compact-card-block-size: max(
+      var(--m8-track-compact-card-min-block-size),
+      calc((100cqh - 13px - (5 * var(--m8-track-row-gap))) / 6)
+    );
+  }
+
   .m8-home-card-scroll-fixes .m8-track-rail {
     padding-right: 22px;
   }
@@ -378,7 +481,7 @@
     right: 22px;
   }
 
-  .m8-home-card-scroll-fixes .m8-track-rail .track-card {
+  .m8-home-card-scroll-fixes .m8-track-rail .track-card-compact {
     grid-template-columns: minmax(0, 1fr) minmax(104px, 38%);
   }
 }
