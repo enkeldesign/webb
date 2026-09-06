@@ -144,18 +144,24 @@ export function createFlowScorer({ onState = null, onTechnique = null } = {}) {
   }
 
   function completeLap(now = 0) {
+    const timestamp = finiteNumber(now);
+    const carriedPhase = feedbackState.phase;
     const result = Object.freeze({
       score: Math.max(0, Math.round(lapScore)),
       maxMultiplier,
       maxChain,
       techniqueCount
     });
-    // TURN laps continue immediately across the finish line. Match the DRIFT
-    // scorer by arming the next attempt here instead of waiting for another
-    // explicit race-start event that will not fire between ordinary laps.
+
+    // A lap boundary closes only the score ledger. Keep the live chain,
+    // multiplier, technique history and intensity so FLOW feels continuous
+    // through the line while the new lap starts counting from zero.
     attemptActive = true;
-    resetLapValues();
-    syncFeedback(now, 0, 'quiet');
+    lapScore = 0;
+    maxMultiplier = Math.max(1, multiplier);
+    maxChain = Math.max(0, chainLength);
+    techniqueCount = 0;
+    syncFeedback(timestamp, 0, carriedPhase);
     return result;
   }
 
