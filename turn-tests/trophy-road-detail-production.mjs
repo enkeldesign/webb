@@ -67,7 +67,7 @@ assert.match(feedback, /function renderedSelection\(\)/,
   'The enhanced Trophy Road must adopt the reward selected by the canonical view');
 assert.match(feedback, /trophy-road-showcase\.js\?revision=r243-mountain-1300/,
   'The reward preview must use the current vehicle catalog through a fresh module identity');
-assert.match(feedback, /trophy-road-r157\.css\?build=\$\{buildKey\}-r243-reward-modal/,
+assert.match(feedback, /trophy-road-r157\.css\?build=\$\{buildKey\}-r244-reward-toast-guide/,
   'The detail enhancement must share the current serpentine stylesheet identity');
 assert.match(feedback, /syncRenderedSelection: \(\) => preserveUserSelection\(\{ adoptRendered: true \}\)/,
   'Opening Achievements must preserve the already rendered first reward card');

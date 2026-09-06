@@ -608,7 +608,7 @@ assert.match(view, /data-trophy-reward-type="\$\{reward\.type\}"/,
 assert.doesNotMatch(feedback, /requestAnimationFrame|scrollLeft|scrollBy|scrollWidth|clientWidth/,
   'Trophy Road must not maintain carousel geometry or a layout animation path');
 assert.match(app, /trophy-road\.js\?revision=r243-mountain-1300/);
-assert.match(app, /trophy-road-r157\.css\?revision=r243-reward-modal/);
+assert.match(app, /trophy-road-r157\.css\?revision=r244-reward-toast-guide/);
 assert.match(workflow, /Run Trophy Road progression regression/);
 assert.match(workflow, /node turn-lab\/tests\/trophy-road-production\.mjs/);
 assert.match(perkWrapper, /export \* from '\.\/trophy-road\.js\?revision=r243-mountain-1300'/,

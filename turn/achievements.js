@@ -1,4 +1,4 @@
-import './achievements/home-reward-replay-r225.js?revision=r243-mountain-1300';
+import './achievements/home-reward-replay-r225.js?revision=r244-reward-toast-guide';
 
 export {
   ACHIEVEMENTS,
@@ -48,4 +48,4 @@ export {
   isPaintUnlocked,
   prepareTrophyRoadProfile
 } from './progression/trophy-road-perks-r164.js?revision=r243-mountain-1300';
-export { installAchievements } from './achievements/runtime.js?revision=r243-reward-modal';
+export { installAchievements } from './achievements/runtime.js?revision=r244-reward-toast-guide';

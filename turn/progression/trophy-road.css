@@ -708,7 +708,44 @@
 }
 
 .turn-trophy-reward-toast {
+  appearance: none;
   background: var(--turn-action-warning, #ffd43b);
+  color: var(--turn-ink, #08090a);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.turn-trophy-reward-toast:focus-visible {
+  outline: 5px solid var(--turn-action-information, #38d9ff);
+  outline-offset: 4px;
+}
+
+.turn-trophy-reward-guide {
+  display: flex;
+  margin-top: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  color: var(--turn-ink, #08090a);
+  font-size: .62rem;
+  font-weight: 950;
+  letter-spacing: .055em;
+  line-height: 1;
+}
+
+.turn-trophy-reward-guide[hidden] {
+  display: none;
+}
+
+.turn-trophy-reward-guide mark {
+  padding: 3px 6px;
+  border: 2px solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-pill, 999px);
+  background: var(--turn-action-information, #38d9ff);
+  color: inherit;
 }
 
 .turn-achievements-filters [data-achievement-filter="unlocked"][aria-pressed="true"] {

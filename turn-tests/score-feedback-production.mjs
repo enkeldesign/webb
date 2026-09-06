@@ -104,6 +104,8 @@ assert.equal(fixture.root.hidden, false, 'An available scoring row remains visib
 assert.equal(element(fixture, '[data-score-feedback-state]').hidden, false);
 assert.equal(element(fixture, '[data-score-feedback-current]').textContent, '0');
 assert.equal(fixture.root.dataset.driftGaugeVisible, 'true');
+assert.equal(fixture.root.dataset.driftGaugeExtended, 'false',
+  'An available zero-state DRIFT row keeps its paper but retracts its gauge');
 
 const driftState = {
   active: true,
@@ -129,7 +131,10 @@ assert.equal(
   'The future FLOW gauge stays dormant while only DRIFT is active'
 );
 assert.equal(fixture.root.dataset.driftGaugeVisible, 'true');
+assert.equal(fixture.root.dataset.driftGaugeExtended, 'true',
+  'The DRIFT gauge extends as soon as it has a non-zero fill');
 assert.equal(fixture.root.dataset.flowGaugeVisible, 'false');
+assert.equal(fixture.root.dataset.flowGaugeExtended, 'false');
 assert.equal(fixture.root.dataset.gaugeChannel, 'drift');
 assert.equal(fixture.root.dataset.gaugeHeat, 'warm');
 
@@ -206,6 +211,8 @@ assert.equal(
   'FLOW can drive the same gauge contract independently'
 );
 assert.equal(fixture.root.dataset.flowGaugeVisible, 'true');
+assert.equal(fixture.root.dataset.flowGaugeExtended, 'true',
+  'FLOW owns an independently extending gauge');
 assert.equal(fixture.root.dataset.flowHeat, 'hot');
 
 feedback.publishEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, SCORE_FEEDBACK_EVENT.BANK, {
@@ -220,6 +227,7 @@ feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.DRIFT, false, 3100);
 assert.equal(element(fixture, '[data-score-feedback-callout]').hidden, true);
 assert.equal(fixture.root.hidden, false, 'Hiding DRIFT presentation leaves active FLOW context visible');
 assert.equal(fixture.root.dataset.driftGaugeVisible, 'false');
+assert.equal(fixture.root.dataset.driftGaugeExtended, 'false');
 assert.equal(fixture.root.dataset.flowGaugeVisible, 'true');
 assert.equal(feedback.publishEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, SCORE_FEEDBACK_EVENT.BANK, {
   score: 9999
@@ -258,6 +266,8 @@ feedback.updateState(SCORE_FEEDBACK_CHANNEL.DRIFT, {
 assert.equal(fixture.root.hidden, false, 'The DRIFT instrument does not flicker out between drifts');
 assert.equal(element(fixture, '[data-score-feedback-current]').textContent, '0');
 assert.equal(element(fixture, '[data-score-feedback-total]').textContent, '4,820');
+assert.equal(fixture.root.dataset.driftGaugeExtended, 'false',
+  'A quiet DRIFT row preserves its lap total while retracting only the black gauge');
 assert.equal(
   element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
   '0'
@@ -319,15 +329,31 @@ for (const [mountName, markup] of [
     `${mountName} includes the fixed FLOW paper row`);
   assert.equal((markup.match(/data-score-feedback-flow-techniques/g) || []).length, 1,
     `${mountName} includes one fixed FLOW technique pool`);
+  assert.equal((markup.match(/class="score-feedback-gauge-shell"/g) || []).length, 2,
+    `${mountName} mounts one compositor shell for each scoring gauge`);
+  assert.match(
+    markup,
+    /class="score-feedback-gauge-shell" data-score-channel="drift" aria-hidden="true">\s*<div class="score-feedback-meter">/,
+    `${mountName} keeps the DRIFT gauge decorative and nested inside its retracting shell`
+  );
   assert.ok(
-    markup.indexOf('class="score-feedback-meter"') < markup.indexOf('class="score-feedback-state"'),
+    markup.indexOf('class="score-feedback-gauge-shell" data-score-channel="drift"') < markup.indexOf('class="score-feedback-state"'),
     `${mountName} keeps the gauge behind the paper as a sibling stacking layer`
   );
 }
 assert.match(css, /\.score-feedback-state \{[\s\S]*?z-index: 1;/,
   'The paper owns the foreground stacking layer');
-assert.match(css, /\.score-feedback-meter,[\s\S]*?z-index: 0;/,
+assert.match(css, /\.score-feedback-gauge-shell \{[\s\S]*?z-index: 0;/,
   'The attached gauge sits behind the paper instead of intruding into it');
+assert.match(css, /\.score-feedback-gauge-shell \{[\s\S]*?opacity: \.75;/,
+  'Extended DRIFT and FLOW instruments retain the requested translucent weight');
+assert.match(css, /\.score-feedback-gauge-shell \{[\s\S]*?transform: translateZ\(0\) scaleX\(1\)/,
+  'A live gauge expands to its complete horizontal footprint');
+assert.match(
+  css,
+  /data-drift-gauge-extended="false"[\s\S]*?data-flow-gauge-extended="false"[\s\S]*?transform: translateZ\(0\) scaleX\(0\);[\s\S]*?transition-delay: 180ms;/,
+  'Zero-state gauges retract after a slight compositor-only delay'
+);
 assert.match(css, /\.score-feedback-row \{[\s\S]*?height: var\(--score-feedback-paper-height\)/,
   'DRIFT and FLOW each retain one fixed-height scoring row');
 assert.match(css, /--score-feedback-gauge-track: var\(--turn-ink\);/,
@@ -350,6 +376,8 @@ assert.doesNotMatch(css, /filter\s*:/,
   'ScoreFeedback buildup avoids filter effects on the low-end hot path');
 assert.doesNotMatch(css, /transition:[^;]*(?:width|height|top|left)/);
 assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.score-feedback-gauge-shell,[\s\S]*?transition: none;/,
+  'Reduced-motion mode removes gauge extension and retraction transitions');
 assert.match(index, /id="scoreFeedback"/);
 assert.match(nextIndex, /id="scoreFeedback"/,
   'TURN NEXT must provide the fixed ScoreFeedback DOM expected by the canonical runtime');

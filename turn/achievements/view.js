@@ -20,6 +20,7 @@ import {
   HOW_TO_PLAY_DISCLOSURE_IDS,
   LEARN_TO_PLAY_ACHIEVEMENT_ID
 } from './learning-progress.js?revision=r1-learning-achievements';
+import { rewardBatchNeedsHowToPlay } from './reward-toast-guide.js?revision=r244-reward-toast-guide';
 import {
   LOCK_ICON,
   TROPHY_ICON,
@@ -348,17 +349,26 @@ function createDialog() {
   return dialog;
 }
 
-function createToast(className, label) {
-  const toast = document.createElement('div');
+function createToast(className, label, { actionTitle = '', showGuide = false } = {}) {
+  const toast = document.createElement(actionTitle ? 'button' : 'div');
   toast.className = className;
   toast.hidden = true;
-  toast.setAttribute('role', 'status');
+  if (actionTitle) {
+    toast.type = 'button';
+    toast.title = actionTitle;
+  } else {
+    toast.setAttribute('role', 'status');
+  }
   toast.setAttribute('aria-live', 'polite');
   toast.setAttribute('aria-atomic', 'true');
   toast.innerHTML = `
     <div class="turn-achievement-toast-icon" aria-hidden="true"></div>
-    <div><span>${label}</span><strong></strong></div>
-    <b></b>`;
+    <div class="turn-achievement-toast-copy">
+      <span data-achievement-toast-label>${label}</span>
+      <strong data-achievement-toast-title></strong>
+      ${showGuide ? '<small class="turn-trophy-reward-guide" data-trophy-reward-guide hidden><mark>HOW TO PLAY</mark><span>FOR INSTRUCTIONS</span></small>' : ''}
+    </div>
+    <b data-achievement-toast-badge></b>`;
   document.body.appendChild(toast);
   return toast;
 }
@@ -416,7 +426,11 @@ export function createAchievementView({ store, session, utilityGroup }) {
 
   const dialog = createDialog();
   const toast = createToast('turn-achievement-toast', 'ACHIEVEMENT UNLOCKED');
-  const rewardToast = createToast('turn-achievement-toast turn-trophy-reward-toast', 'TROPHY ROAD REWARD');
+  const rewardToast = createToast(
+    'turn-achievement-toast turn-trophy-reward-toast',
+    'TROPHY ROAD REWARD',
+    { actionTitle: 'Open Achievements', showGuide: true }
+  );
   const list = dialog.querySelector('.turn-achievements-list');
   const totalTitle = dialog.querySelector('#turnAchievementsSummaryTitle');
   const trophyRoad = dialog.querySelector('.turn-trophy-road-progress');
@@ -703,6 +717,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
 
   homeTrigger.addEventListener('click', () => open(homeTrigger));
   raceTrigger.addEventListener('click', () => open(raceTrigger));
+  rewardToast.addEventListener('click', openRewardToast);
   closeButton.addEventListener('click', close);
   trophyRoadDetailClose.addEventListener('click', () => closeTrophyRoadDetail());
   trophyRoadDetailLayer.addEventListener('click', (event) => {
@@ -763,21 +778,24 @@ export function createAchievementView({ store, session, utilityGroup }) {
     const total = reward
       ? 0
       : batch.reduce((sum, achievement) => sum + achievement.trophies, 0);
+    const needsHowToPlay = reward && rewardBatchNeedsHowToPlay(batch);
     toastElement.querySelector('.turn-achievement-toast-icon').innerHTML = reward
       ? TROPHY_ROAD_REWARD_ICONS[first.icon]
       : (batch.length === 1 ? ICONS[first.icon] : ICONS.trophy);
-    toastElement.querySelector('span').textContent = reward
+    toastElement.querySelector('[data-achievement-toast-label]').textContent = reward
       ? (batch.length === 1 ? 'TROPHY ROAD REWARD' : `${batch.length} TROPHY ROAD REWARDS`)
       : (batch.length === 1 ? 'ACHIEVEMENT UNLOCKED' : `${batch.length} ACHIEVEMENTS UNLOCKED`);
-    toastElement.querySelector('strong').textContent = batch.length === 1
+    toastElement.querySelector('[data-achievement-toast-title]').textContent = batch.length === 1
       ? first.title
       : `${first.title} + ${batch.length - 1} MORE`;
-    toastElement.querySelector('b').textContent = reward
+    toastElement.querySelector('[data-achievement-toast-badge]').textContent = reward
       ? 'UNLOCKED'
       : `+${total} TROPHIES`;
+    const guide = toastElement.querySelector('[data-trophy-reward-guide]');
+    if (guide) guide.hidden = !needsHowToPlay;
     toastElement.setAttribute('aria-label', reward
-      ? `${batch.length === 1 ? 'Trophy Road reward unlocked' : `${batch.length} Trophy Road rewards unlocked`} . ${batch.map((item) => item.shortTitle).join(', ')} .`.replaceAll(' .', '.')
-      : `${batch.length === 1 ? 'Achievement unlocked' : `${batch.length} achievements unlocked`} . ${batch.map((achievement) => achievement.title).join(', ')} . ${total} trophies.`.replaceAll(' .', '.'));
+      ? `${batch.length === 1 ? 'Trophy Road reward unlocked' : `${batch.length} Trophy Road rewards unlocked`}. ${batch.map((item) => item.shortTitle).join(', ')}.${needsHowToPlay ? ' See How to Play for instructions.' : ''} Open Achievements.`
+      : `${batch.length === 1 ? 'Achievement unlocked' : `${batch.length} achievements unlocked`}. ${batch.map((achievement) => achievement.title).join(', ')}. ${total} trophies.`);
 
     const alreadyVisible = !toastElement.hidden && toastElement.classList.contains('is-visible');
     toastElement.hidden = false;
@@ -812,6 +830,22 @@ export function createAchievementView({ store, session, utilityGroup }) {
 
   function showRewardToastBatch(batch) {
     showToast(rewardToast, batch, { reward: true });
+  }
+
+  function hideRewardToast() {
+    window.clearTimeout(rewardToastHideTimer);
+    window.clearTimeout(rewardToastConcealTimer);
+    rewardToastHideTimer = 0;
+    rewardToastConcealTimer = 0;
+    if (rewardToastShowFrame) window.cancelAnimationFrame(rewardToastShowFrame);
+    rewardToastShowFrame = 0;
+    rewardToast.classList.remove('is-visible');
+    rewardToast.hidden = true;
+  }
+
+  function openRewardToast() {
+    hideRewardToast();
+    open(raceTrigger.hidden === false ? raceTrigger : homeTrigger);
   }
 
   render();

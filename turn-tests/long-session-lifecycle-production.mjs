@@ -150,7 +150,7 @@ assert.match(
 );
 assert.match(
   achievementsFacade,
-  /achievements\/runtime\.js\?revision=r243-reward-modal/,
+  /achievements\/runtime\.js\?revision=r244-reward-toast-guide/,
   'The achievement facade must cache-bust the race-scoped sampler and Trophy Road implementation'
 );
 

@@ -10,7 +10,7 @@ import {
 import {
   allOnboardingComplete,
   createAchievementView
-} from './view.js?revision=r243-reward-modal';
+} from './view.js?revision=r244-reward-toast-guide';
 import {
   completedNightShiftSheriff,
   createNightShiftAttempt,
