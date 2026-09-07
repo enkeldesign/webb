@@ -5,7 +5,7 @@ import {
 
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
 export const TROPHY_ROAD_STORAGE_VERSION = 9;
-export const TROPHY_ROAD_MAX_THRESHOLD = 2200;
+export const TROPHY_ROAD_MAX_THRESHOLD = 2300;
 
 export const TROPHY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>';
 export const LOCK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"></path></svg>';
@@ -23,6 +23,7 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   monster: authoredRewardIcon('monster-truck'),
   vintage: authoredRewardIcon('vintage-racer'),
   rally: authoredRewardIcon('rally-racer'),
+  supercar: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 32 13 22l14-6h16l9 7 7 3v10H5Z"></path><path d="m20 22 9-4h12l6 5H20Z"></path><circle cx="17" cy="36" r="6"></circle><circle cx="49" cy="36" r="6"></circle><path d="M43 15h13v4H45M50 15v8"></path></svg>',
   mountain: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 42 23 13l8 12L40 8l20 34Z"></path><path d="m17 22 6-9 5 8 4-6 8-7 7 13"></path><path d="M39 42c5-8 9-11 15-13M43 35l4 2-2 4 5 2"></path></svg>',
   shift: authoredRewardIcon('shift'),
   drift: AUTHORED_DRIFT_ICON,
@@ -123,6 +124,17 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     perkTitle: 'TWITCHY TURNY',
     perkDescription: 'DRIFT fills BOOST even faster than normal.',
     description: 'Unlock the Rally Racer: twitchy and perfect for curvy tracks.<br><strong>TWITCHY TURNY:</strong> DRIFT fills BOOST even faster than normal.'
+  }),
+  Object.freeze({
+    id: 'supercar',
+    title: 'SUPERCAR',
+    shortTitle: 'Supercar',
+    type: 'vehicle',
+    vehicleIds: Object.freeze(['supercar']),
+    icon: 'supercar',
+    perkTitle: 'FLOW SHIFT',
+    perkDescription: 'At FLOW ×2 or higher, SHIFT adds three attribute points without reductions. SHIFT again moves the boost to the other three attributes.',
+    description: 'Unlock the Supercar: a low, wide road-going machine with a powerful boost package.<br><strong>FLOW SHIFT:</strong> At FLOW ×2 or higher, SHIFT adds three attribute points without reductions. SHIFT again moves the boost to the other three attributes. Lose FLOW ×2 and the current SHIFT returns to its normal 18-point balance.'
   }),
   Object.freeze({
     id: 'awd-traction',
@@ -249,7 +261,8 @@ const REWARD_ORDER = Object.freeze([
   Object.freeze(['sedan-double-shift', 1900]),
   Object.freeze(['rally-racer', 2000]),
   Object.freeze(['sports-car-drift-demon', 2100]),
-  Object.freeze(['learner-graduated', 2200])
+  Object.freeze(['learner-graduated', 2200]),
+  Object.freeze(['supercar', 2300])
 ]);
 const MAJOR_REWARD_IDS = new Set([
   'drift-attack',
