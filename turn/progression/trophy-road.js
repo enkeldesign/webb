@@ -1,4 +1,7 @@
-import { AUTHORED_DRIFT_ICON } from '../ui/authored-icons.js?revision=r245-shared-drift-safety-icons';
+import {
+  AUTHORED_DRIFT_ICON,
+  AUTHORED_PAINT_ICON
+} from '../ui/authored-icons.js?revision=r247-paintjob-icon';
 
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
 export const TROPHY_ROAD_STORAGE_VERSION = 9;
@@ -15,7 +18,7 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   skyline: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M3 43h58M8 43V24h10v19M21 43V13h13v30M37 43V20h8v23M48 43V9h10v34"></path><path d="M11 29h3M11 35h3M25 19h4M25 26h4M25 33h4M51 15h3M51 22h3M51 29h3"></path><path d="M8 8a8 8 0 1 0 9 9A7 7 0 0 1 8 8Z"></path></svg>',
   race: authoredRewardIcon('race-car'),
   future: authoredRewardIcon('future-racer'),
-  paint: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M10 7h29v13H10Z"></path><path d="M39 11h8c5 0 7 3 7 7v4H31v8"></path><path d="M27 28h8v16h-8Z"></path><path d="M15 12h18M15 16h12"></path></svg>',
+  paint: AUTHORED_PAINT_ICON,
   emergency: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M18 35V21a14 14 0 0 1 28 0v14"></path><path d="M12 35h40v9H12Z"></path><path d="M32 2v7M9 9l6 6M55 9l-6 6M3 25h8M53 25h8"></path><path d="M24 34V22a8 8 0 0 1 16 0v12"></path></svg>',
   monster: authoredRewardIcon('monster-truck'),
   vintage: authoredRewardIcon('vintage-racer'),
