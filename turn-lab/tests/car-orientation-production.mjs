@@ -52,7 +52,8 @@ const expectedVisualScales = new Map([
 
 const expectedGlobalSizeMultipliers = new Map([
   ['vintage-racer', 0.75],
-  ['police', 1.15]
+  ['police', 1.15],
+  ['supercar', 1.35]
 ]);
 
 const expectedFeaturedSizeMultipliers = new Map([
@@ -150,7 +151,7 @@ assertClose(rallyRacer.visualScale * rallyRacer.visualSizeMultiplier, 0.98, 'Ral
 assertClose(hatchback.visualScale * hatchback.visualSizeMultiplier, 0.98, 'Hatchback effective visual scale');
 assertClose(policeCar.visualScale * policeCar.visualSizeMultiplier, 1.127, 'Police Car effective visual scale');
 assertClose(monsterTruck.visualScale * monsterTruck.visualSizeMultiplier, 0.83, 'Monster Truck compact visual scale');
-assertClose(supercar.visualScale * supercar.visualSizeMultiplier, 0.98, 'Supercar effective visual scale');
+assertClose(supercar.visualScale * supercar.visualSizeMultiplier, 1.323, 'Supercar effective visual scale');
 assertClose(
   monsterTruck.visualScale * monsterTruck.visualSizeMultiplier * monsterTruck.featuredVisualSizeMultiplier,
   0.996,
@@ -198,6 +199,8 @@ assert.match(carModels, /turnVisualSizeMultiplier = car\.visualSizeMultiplier/);
 assert.match(carModels, /turnFeaturedVisualSizeMultiplier = featuredVisualSizeMultiplier/);
 assert.match(carModels, /turnFeaturedVisualSurface = featuredSurface/);
 assert.match(carModels, /turnEffectiveVisualScale = effectiveVisualScale/);
+assert.match(carModels, /installLearnerCarLivery\(model, car, \{ ghost \}\)/,
+  'The shared car factory must preserve the Learner Car door livery and authentic roof sign on every surface');
 assert.match(carModels, /REVERSED_FRONT_WHEEL_LABEL_IDS = new Set\(\['vintage-racer'\]\)/,
   'Vintage Racer must keep its verified authored wheel-label reversal');
 assert.match(carModels, /installFrontWheelSteeringRig\(model, car\)/,

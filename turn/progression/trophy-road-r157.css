@@ -12,6 +12,18 @@
   --turn-reward-scoring-unlocked: var(--turn-pink-200, #ff8caf);
 }
 
+/* The 2300 reward uses Erik's supplied Supercar silhouette rather than the
+   temporary generic car drawing shipped with the first implementation. */
+.turn-trophy-road-marker[data-trophy-reward="supercar"] .turn-trophy-road-marker-icon {
+  background: currentColor;
+  -webkit-mask: url('../assets/trophy-road/supercar.svg') center / contain no-repeat;
+  mask: url('../assets/trophy-road/supercar.svg') center / contain no-repeat;
+}
+
+.turn-trophy-road-marker[data-trophy-reward="supercar"] .turn-trophy-road-marker-icon > svg {
+  display: none;
+}
+
 .turn-trophy-road-marker:is(
   [data-trophy-reward-type="vehicle"],
   [data-trophy-reward-type="vehicle-pack"]

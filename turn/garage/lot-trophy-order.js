@@ -13,7 +13,8 @@ export const LOT_TROPHY_ORDER = Object.freeze([
   'police',
   'race-future',
   'monster-truck',
-  'toy-racer'
+  'toy-racer',
+  'supercar'
 ]);
 
 function findLotScreen(root) {
