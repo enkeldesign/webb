@@ -294,3 +294,41 @@
     backdrop-filter: none;
   }
 }
+
+/*
+ * The track card itself is a button, so the SHARE button must stay its sibling rather
+ * than becoming an invalid interactive descendant. Scope a CSS anchor to each wrapper
+ * and visually attach that sibling to the TIME record only while records are open.
+ */
+.turn-yourturn-track-slot {
+  anchor-scope: --turn-yourturn-time-copy;
+}
+
+.m8-home.is-showing-track-bests
+  .turn-yourturn-track-slot:has(> .turn-yourturn-track-share:not([hidden]))
+  .track-card-record.is-time .track-card-record-copy {
+  width: fit-content;
+  max-width: calc(100% - clamp(62px, 6vw, 78px));
+  anchor-name: --turn-yourturn-time-copy;
+}
+
+.m8-home:not(.is-showing-track-bests) .turn-yourturn-track-share {
+  display: none !important;
+}
+
+.m8-home.is-showing-track-bests .turn-yourturn-track-share {
+  right: auto;
+  bottom: auto;
+  left: 42%;
+  top: 50%;
+  translate: -50% -50%;
+}
+
+@supports (anchor-name: --turn-yourturn-time-copy) {
+  .m8-home.is-showing-track-bests .turn-yourturn-track-share {
+    position-anchor: --turn-yourturn-time-copy;
+    left: calc(anchor(right) + clamp(10px, 1vw, 14px));
+    top: anchor(center);
+    translate: 0 -50%;
+  }
+}
