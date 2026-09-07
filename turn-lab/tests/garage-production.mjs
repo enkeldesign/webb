@@ -9,12 +9,19 @@ const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogS
 const expectedIds = [
   'convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck',
   'race-future', 'race', 'sedan-sports', 'sedan', 'suv', 'firetruck',
-  'police', 'ambulance', 'truck', 'van'
+  'police', 'ambulance', 'truck', 'van', 'supercar'
 ];
 
-assert.equal(catalog.CAR_CATALOG.length, 15, 'The Lot must contain exactly 15 cars');
+assert.equal(catalog.CAR_CATALOG.length, 16, 'The Lot must contain exactly 16 cars');
 assert.deepEqual(catalog.CAR_CATALOG.map((car) => car.id), expectedIds, 'The Lot car order changed unexpectedly');
 for (const car of catalog.CAR_CATALOG) {
+  if (car.id === 'supercar') {
+    await fs.access(path.join(turnDir, 'assets/cars/supercar-model-data.js'));
+    for (let chunk = 1; chunk <= 5; chunk += 1) {
+      await fs.access(path.join(turnDir, `assets/cars/supercar-data-${chunk}.js`));
+    }
+    continue;
+  }
   await fs.access(path.join(turnDir, car.asset.replace(/^\.\//, '')));
 }
 const brickFiles = (await fs.readdir(path.join(turnDir, 'assets/lot-bricks'))).filter((file) => file.endsWith('.glb'));
@@ -28,6 +35,7 @@ const vintageRacer = catalog.getCarDefinition('vintage-racer');
 const rallyRacer = catalog.getCarDefinition('toy-racer');
 const futureRacer = catalog.getCarDefinition('race-future');
 const learnerCar = catalog.getCarDefinition('classic');
+const supercar = catalog.getCarDefinition('supercar');
 assert.equal(catalog.DEFAULT_VEHICLE_ID, 'classic');
 assert.equal(learnerCar.name, 'Learner Car');
 assert.equal(learnerCar.pack, 'car');
@@ -42,6 +50,13 @@ assert.equal(rallyRacer.name, 'Rally Racer');
 assert.equal(rallyRacer.perk?.title, 'TWITCHY TURNY');
 assert.equal(monsterTruck.perk?.title, 'OVERSIZED');
 assert.equal(futureRacer.perk?.title, 'OVERDRIVE');
+assert.equal(supercar.name, 'Supercar');
+assert.equal(supercar.pack, 'cosmo');
+assert.equal(supercar.perk?.title, 'FLOW SHIFT');
+assert.deepEqual(
+  supercar.stats,
+  { speed: 4, acceleration: 4, control: 2, drift: 2, boostPower: 3, boostDuration: 3 }
+);
 for (const id of ['firetruck', 'police', 'ambulance']) {
   assert.equal(catalog.getCarDefinition(id).perk?.title, 'SIRENS');
 }
