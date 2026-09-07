@@ -10,6 +10,17 @@ import {
   LEARN_TO_PLAY_ACHIEVEMENT_ID
 } from './learning-progress.js?revision=r1-learning-achievements';
 
+function authoredAchievementIcon(name) {
+  const source = `/turn/assets/achievements/${name}.svg`;
+  return `<span class="turn-authored-achievement-icon is-${name}" aria-hidden="true" style="display:block;width:100%;height:100%;background:currentColor;-webkit-mask:url('${source}') center/contain no-repeat;mask:url('${source}') center/contain no-repeat"></span>`;
+}
+
+export const ICONS = Object.freeze({
+  ...base.ICONS,
+  drift: authoredAchievementIcon('drift'),
+  safety: authoredAchievementIcon('safety')
+});
+
 const CHROMATIC_CAMOUFLAGE = Object.freeze({
   id: 'chromatic-camouflage',
   category: base.CATEGORY.EXPLORATION,
@@ -101,11 +112,17 @@ export const TRACK_SAFETY_ACHIEVEMENTS = Object.freeze(
     trophies: 75,
     title: `${base.TRACK_NAMES[trackId].toUpperCase()} SAFETY`,
     description: `Finish ${base.TRACK_NAMES[trackId]} without going off-road in under ${SAFETY_TARGET_LABELS[trackId]}.`,
-    icon: 'route'
+    icon: 'safety'
   }))
 );
 
 const rebalancedBaseAchievements = base.ACHIEVEMENTS.map((achievement) => {
+  if (achievement.id === 'around-the-turn') {
+    return Object.freeze({
+      ...achievement,
+      icon: 'safety'
+    });
+  }
   if (achievement.id === 'on-course-of-course') {
     return Object.freeze({
       ...achievement,
