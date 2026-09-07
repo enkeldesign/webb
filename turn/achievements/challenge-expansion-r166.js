@@ -221,7 +221,10 @@ export function installAchievementChallengeExpansion({
 
   const handleUiState = (event) => {
     const reason = event.detail?.reason;
-    if (reason === 'lap-started') beginLap();
+    // TURN immediately starts the next timed lap after a finish. `lap-completed`
+    // is published after that reset and after the just-finished lap has joined the
+    // rival list, so it is the correct boundary for the next achievement attempt.
+    if (reason === 'lap-started' || reason === 'lap-completed') beginLap();
     if (reason === 'race-reset') resetLap();
     if (Object.prototype.hasOwnProperty.call(event.detail || {}, 'running')
         && event.detail.running === false) {
