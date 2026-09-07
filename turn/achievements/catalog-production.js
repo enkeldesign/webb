@@ -20,6 +20,13 @@ export const ICONS = Object.freeze({
   safety: AUTHORED_SAFETY_ICON
 });
 
+const DRIVE_BY_EAR_FAMILY_ICON = 'blind';
+const DRIVE_BY_EAR_FAMILY_ACHIEVEMENT_IDS = Object.freeze([
+  'trust-your-ears',
+  'listen-closely',
+  'beyond-sight'
+]);
+
 const CHROMATIC_CAMOUFLAGE = Object.freeze({
   id: 'chromatic-camouflage',
   category: base.CATEGORY.EXPLORATION,
@@ -75,7 +82,7 @@ export const DRIVE_BY_EAR_ACHIEVEMENT = Object.freeze({
   trophies: 50,
   title: 'DRIVE BY EAR',
   description: 'Finish all five parts of Drive By Ear 101.',
-  icon: 'listen',
+  icon: DRIVE_BY_EAR_FAMILY_ICON,
   progressMax: DRIVE_BY_EAR_PART_IDS.length
 });
 
@@ -116,6 +123,12 @@ export const TRACK_SAFETY_ACHIEVEMENTS = Object.freeze(
 );
 
 const rebalancedBaseAchievements = base.ACHIEVEMENTS.map((achievement) => {
+  if (DRIVE_BY_EAR_FAMILY_ACHIEVEMENT_IDS.includes(achievement.id)) {
+    return Object.freeze({
+      ...achievement,
+      icon: DRIVE_BY_EAR_FAMILY_ICON
+    });
+  }
   if (achievement.id === 'around-the-turn') {
     return Object.freeze({
       ...achievement,
