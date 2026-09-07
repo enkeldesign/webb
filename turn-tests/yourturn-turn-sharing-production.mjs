@@ -100,8 +100,11 @@ assert.match(shareCss, /anchor-scope: --turn-yourturn-time-copy/,
   'Each card wrapper must scope its own TIME-row anchor');
 assert.match(shareCss, /\.track-card-record\.is-time \.track-card-record-copy \{[\s\S]*anchor-name: --turn-yourturn-time-copy/,
   'The share control must be visually anchored to the TIME record copy, not the card corner');
-assert.match(shareCss, /\.m8-home\.is-showing-track-bests \.turn-yourturn-track-share \{[\s\S]*right: auto;[\s\S]*bottom: auto/,
-  'Expanded Home must explicitly retire the old bottom-right placement that covered FLOW');
+const trackShareRule = shareCss.match(/\.turn-yourturn-track-share \{[\s\S]*?\n\}/)?.[0] || '';
+assert.match(trackShareRule, /left: 42%;[\s\S]*top: 50%/,
+  'Browsers without CSS anchor positioning must still keep SHARE in the TIME-record area');
+assert.doesNotMatch(trackShareRule, /right:|bottom:/,
+  'The Home SHARE control must not retain the old bottom-right corner placement');
 assert.match(shareCss, /position-anchor: --turn-yourturn-time-copy;[\s\S]*left: calc\(anchor\(right\) \+ clamp\(10px, 1vw, 14px\)\);[\s\S]*top: anchor\(center\)/,
   'Supporting browsers must place SHARE directly beside the TIME record');
 
