@@ -9,11 +9,11 @@ import {
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor,
   normalizeVehicleSelection
-} from '../vehicle/catalog.js?build=20260720-r20&revision=r246-lot-saved-paint';
-import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
+} from '../vehicle/catalog.js?revision=r248-supercar';
+import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?revision=r248-supercar';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
-import { isPaintUnlocked, LOCK_ICON } from '../progression/trophy-road.js?revision=r243-mountain-1300';
+import { isPaintUnlocked, LOCK_ICON } from '../progression/trophy-road.js?revision=r248-supercar';
 import {
   getSavedLotPaint,
   lotPaintMatches,
@@ -48,7 +48,8 @@ export const LOT_CAR_ORDER = Object.freeze([
   'ambulance',
   'police',
   'monster-truck',
-  'toy-racer'
+  'toy-racer',
+  'supercar'
 ]);
 
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
@@ -62,6 +63,7 @@ const CAR_DESCRIPTIONS = Object.freeze({
   'monster-truck': 'A tall off-road truck with oversized tyres, exposed suspension and a rugged roll cage.',
   'race-future': 'A sleek futuristic racer with a low cockpit, central aero spine and contrasting rear deck trim.',
   race: 'A low single-seat race car with exposed wheels and a large rear wing.',
+  supercar: 'A low, wide road-going supercar with strong acceleration, high top speed and a powerful boost package.',
   'sedan-sports': 'A compact sporty hatchback with a short wheelbase, rear hatch and practical everyday shape.',
   sedan: 'A balanced four-door family car with a conventional three-box shape.',
   suv: 'A road-focused luxury SUV with a broad body, high cabin and strong acceleration.',
@@ -89,7 +91,7 @@ export function showTheLot({ initialSelection } = {}) {
         <div class="lot-progress-summary" aria-live="polite">
           <span class="lot-progress-lock" aria-hidden="true">${LOCK_ICON}</span>
           <span>
-            <strong data-lot-available>15 / 15 AVAILABLE</strong>
+            <strong data-lot-available>16 / 16 AVAILABLE</strong>
             <small data-lot-next-unlock>All cars available</small>
           </span>
         </div>
