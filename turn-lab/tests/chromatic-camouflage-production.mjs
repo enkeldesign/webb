@@ -165,7 +165,7 @@ assert.equal(
   4575,
   'The learning and balance pass must expose the complete trophy supply'
 );
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2200);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300);
 assert.deepEqual(
   TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
   [
@@ -187,7 +187,8 @@ assert.deepEqual(
     ['sedan-double-shift', 1900],
     ['rally-racer', 2000],
     ['sports-car-drift-demon', 2100],
-    ['learner-graduated', 2200]
+    ['learner-graduated', 2200],
+    ['supercar', 2300]
   ]
 );
 assert.deepEqual(TRACK_IDS, [
@@ -208,6 +209,8 @@ for (const [icon, authoredClass, file] of [
 }
 assert.match(TROPHY_ROAD_REWARD_ICONS.drift, /<svg/);
 assert.match(TROPHY_ROAD_REWARD_ICONS.flow, /<svg/);
+assert.match(trophyRoadCss, /data-trophy-reward="supercar"[\s\S]*assets\/trophy-road\/supercar\.svg/,
+  'The Supercar marker must use the supplied authored SVG asset');
 
 for (const variable of [
   '--turn-reward-vehicle-locked',
