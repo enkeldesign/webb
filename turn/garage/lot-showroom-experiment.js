@@ -9,11 +9,18 @@ import {
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor,
   normalizeVehicleSelection
-} from '../vehicle/catalog.js?build=20260720-r20&revision=r588-canonical-attributes';
+} from '../vehicle/catalog.js?build=20260720-r20&revision=r246-lot-saved-paint';
 import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
-import { LOCK_ICON } from '../progression/trophy-road.js?revision=r243-mountain-1300';
+import { isPaintUnlocked, LOCK_ICON } from '../progression/trophy-road.js?revision=r243-mountain-1300';
+import {
+  getSavedLotPaint,
+  lotPaintMatches,
+  resetLotPaint,
+  resolveLotPaint,
+  saveLotPaint
+} from './lot-saved-paint.js?revision=r246-lot-saved-paint';
 import {
   hasTriedTrainingCar,
   installTrainingCarGuide,
@@ -153,8 +160,9 @@ export function showTheLot({ initialSelection } = {}) {
       button.className = 'lot-car-option';
       button.setAttribute('role', 'radio');
       button.dataset.carId = car.id;
-      button.style.setProperty('--lot-car-color', getVehicleDefaultColor(car.id));
-      button.style.setProperty('--lot-car-secondary', getVehicleDefaultSecondaryColor(car.id));
+      const thumbnailPaint = resolveLotPaint(car.id);
+      button.style.setProperty('--lot-car-color', thumbnailPaint.color);
+      button.style.setProperty('--lot-car-secondary', thumbnailPaint.secondaryColor);
 
       const preview = document.createElement('span');
       preview.className = 'lot-car-option-preview';
@@ -256,6 +264,7 @@ export function showTheLot({ initialSelection } = {}) {
             }
           }));
         }
+        if (isPaintUnlocked()) paintControls.push(makePaintAction());
         colors.replaceChildren(...paintControls);
         colors.hidden = false;
         colors.removeAttribute('aria-hidden');
@@ -288,8 +297,9 @@ export function showTheLot({ initialSelection } = {}) {
       const changedCar = carId !== selectedCarId;
       selectedCarId = carId;
       if (changedCar) {
-        selectedColor = getVehicleDefaultColor(carId);
-        selectedSecondaryColor = getVehicleDefaultSecondaryColor(carId);
+        const paint = resolveLotPaint(carId);
+        selectedColor = paint.color;
+        selectedSecondaryColor = paint.secondaryColor;
       }
       updateSelectionUi({ reveal });
       if (focus) carButtons.get(carId)?.focus();
@@ -363,9 +373,92 @@ export function showTheLot({ initialSelection } = {}) {
       return control;
     }
 
+    function selectedPaint() {
+      return { color: selectedColor, secondaryColor: selectedSecondaryColor };
+    }
+
+    function syncPaintAction(button = colors.querySelector('.lot-paint-save-action')) {
+      if (!button) return;
+      const car = getCarDefinition(selectedCarId);
+      const current = selectedPaint();
+      const saved = getSavedLotPaint(selectedCarId);
+      const factory = {
+        color: getVehicleDefaultColor(selectedCarId),
+        secondaryColor: getVehicleDefaultSecondaryColor(selectedCarId)
+      };
+      const matchesSaved = Boolean(saved && lotPaintMatches(current, saved));
+      const matchesFactory = lotPaintMatches(current, factory);
+      const resetMode = Boolean(saved && (matchesSaved || matchesFactory));
+
+      button.dataset.mode = resetMode ? 'reset' : 'save';
+      button.textContent = resetMode ? 'RESET' : 'SAVE';
+      button.disabled = !resetMode && !saved && matchesFactory;
+      button.setAttribute(
+        'aria-label',
+        resetMode
+          ? `Reset ${car.name} colors to factory colors`
+          : `Save ${car.name} colors for The Lot`
+      );
+    }
+
+    function updatePaintInputs(paint) {
+      const controls = [...colors.querySelectorAll('.lot-color-control')];
+      const body = controls.find((control) => control.dataset.paintLabel?.toLowerCase() === 'body')
+        ?.querySelector('input[type="color"]');
+      const secondary = controls.find((control) => control.dataset.paintLabel?.toLowerCase() !== 'body')
+        ?.querySelector('input[type="color"]');
+      for (const [input, value] of [[body, paint.color], [secondary, paint.secondaryColor]]) {
+        if (!input || input.value.toLowerCase() === value.toLowerCase()) continue;
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    function refreshThumbnail(carId) {
+      const car = getCarDefinition(carId);
+      const button = carButtons.get(carId);
+      if (!car || !button) return;
+      const paint = resolveLotPaint(carId);
+      button.style.setProperty('--lot-car-color', paint.color);
+      button.style.setProperty('--lot-car-secondary', paint.secondaryColor);
+      void thumbnailRenderer.renderOne(car, button, paint);
+    }
+
+    function makePaintAction() {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'lot-paint-save-action';
+      button.addEventListener('click', () => {
+        if (button.dataset.mode === 'reset') {
+          const factory = resetLotPaint(selectedCarId);
+          selectedColor = factory.color;
+          selectedSecondaryColor = factory.secondaryColor;
+          updatePaintInputs(factory);
+          viewer.recolor(selectedColor, selectedSecondaryColor);
+          syncPaintAction(button);
+          refreshThumbnail(selectedCarId);
+          return;
+        }
+
+        saveLotPaint(selectedCarId, selectedPaint());
+        syncPaintAction(button);
+        refreshThumbnail(selectedCarId);
+      });
+      syncPaintAction(button);
+      return button;
+    }
+
     function applySelectedPaint() {
       viewer.recolor(selectedColor, selectedSecondaryColor);
+      syncPaintAction();
     }
+
+    const handlePaintUnlocked = () => {
+      if (getCarDefinition(selectedCarId).fixedLivery) return;
+      updateSelectionUi({ refreshViewer: false, reveal: false });
+    };
+    window.addEventListener('turn:paint-controls-unlocked', handlePaintUnlocked);
 
     raceButton.addEventListener('click', () => finish({
       carId: selectedCarId,
@@ -382,6 +475,7 @@ export function showTheLot({ initialSelection } = {}) {
       disposed = true;
       lockObserver.disconnect();
       window.removeEventListener('turn:trophy-road-updated', syncAvailabilitySummary);
+      window.removeEventListener('turn:paint-controls-unlocked', handlePaintUnlocked);
       resizeObserver.disconnect();
       thumbnailRenderer.cancel();
       viewer.dispose();
@@ -395,7 +489,7 @@ export function showTheLot({ initialSelection } = {}) {
     requestAnimationFrame(() => {
       viewer.resize();
       revealSelectedCar();
-      void thumbnailRenderer.renderAll(LOT_CARS, carButtons);
+      void thumbnailRenderer.renderAll(LOT_CARS, carButtons, resolveLotPaint);
     });
   });
 }
@@ -568,8 +662,9 @@ function createThumbnailRenderer() {
   let cancelled = false;
   let renderer = null;
   let activeVisual = null;
+  let pending = Promise.resolve();
 
-  async function renderAll(cars, carButtons) {
+  async function renderBatch(cars, carButtons, paintForCar) {
     if (cancelled) return;
 
     const scene = new THREE.Scene();
@@ -603,12 +698,16 @@ function createThumbnailRenderer() {
         const button = carButtons.get(car.id);
         const canvas = button?.querySelector('.lot-car-option-thumbnail');
         if (!canvas) continue;
+        const paint = paintForCar?.(car.id) || {
+          color: getVehicleDefaultColor(car.id),
+          secondaryColor: getVehicleDefaultSecondaryColor(car.id)
+        };
 
         try {
           const visual = await createCarVisual({
             carId: car.id,
-            color: getVehicleDefaultColor(car.id),
-            secondaryColor: getVehicleDefaultSecondaryColor(car.id),
+            color: paint.color,
+            secondaryColor: paint.secondaryColor,
             targetLength: 5.8,
             outline: true
           });
@@ -651,8 +750,19 @@ function createThumbnailRenderer() {
     }
   }
 
+  function enqueue(cars, carButtons, paintForCar) {
+    const job = pending.then(() => renderBatch(cars, carButtons, paintForCar));
+    pending = job.catch(() => {});
+    return job;
+  }
+
   return {
-    renderAll,
+    renderAll(cars, carButtons, paintForCar) {
+      return enqueue(cars, carButtons, paintForCar);
+    },
+    renderOne(car, button, paint) {
+      return enqueue([car], new Map([[car.id, button]]), () => paint);
+    },
     cancel() {
       cancelled = true;
       if (activeVisual) disposeVisualMaterials(activeVisual);
