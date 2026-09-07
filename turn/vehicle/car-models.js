@@ -374,10 +374,28 @@ export function recolorCarVisual(root, color, secondaryColor = root?.userData?.t
   }
 }
 
+async function loadEmbeddedSupercarSource(car) {
+  if (typeof globalThis.DecompressionStream !== 'function') {
+    throw new Error('TURN: this browser cannot decompress the Supercar model.');
+  }
+  const { SUPERCAR_GLB_GZIP_BASE64 } = await import(
+    assetUrl('./assets/cars/supercar-model-data.js')
+  );
+  const binary = globalThis.atob(SUPERCAR_GLB_GZIP_BASE64);
+  const compressed = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'));
+  const arrayBuffer = await new Response(stream).arrayBuffer();
+  const gltf = await loaderForPack(car.pack).parseAsync(arrayBuffer, '');
+  return gltf.scene;
+}
+
 async function loadCarSource(carId) {
   const car = getCarDefinition(carId);
   if (!sourceCache.has(car.id)) {
-    sourceCache.set(car.id, loaderForPack(car.pack).loadAsync(assetUrl(car.asset)).then((gltf) => gltf.scene));
+    const sourcePromise = car.id === 'supercar'
+      ? loadEmbeddedSupercarSource(car)
+      : loaderForPack(car.pack).loadAsync(assetUrl(car.asset)).then((gltf) => gltf.scene);
+    sourceCache.set(car.id, sourcePromise);
   }
   return sourceCache.get(car.id);
 }
