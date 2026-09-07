@@ -18,6 +18,7 @@ import {
   installSemanticCarFinish,
   recolorSemanticCarFinish
 } from './semantic-car-finish.js';
+import { installLearnerCarLivery } from './learner-car-livery.js?revision=r223-training-car-taxi';
 
 const loadersByPack = new Map();
 const sourceCache = new Map();
@@ -180,6 +181,7 @@ export async function createCarVisual({
     targetLength * effectiveVisualScale,
     `${car.id}|${outline ? 1 : 0}`
   );
+  if (car.id === 'classic') installLearnerCarLivery(model, car, { ghost });
   if (car.emergencyService && !ghost) installEmergencyLightRig(root, model, car.emergencyService);
 
   root.userData.turnCarId = car.id;
