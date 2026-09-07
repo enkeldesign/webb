@@ -71,7 +71,6 @@ export function gateLotPaintNow(root = document.body) {
   if (!colors || !raceButton || !picker) return () => {};
 
   let syncing = false;
-  let lastCarId = selectedCarId(screen);
   let paintWasUnlocked = isPaintUnlocked();
 
   function paintControl(label = 'body') {
@@ -290,7 +289,6 @@ export function gateLotPaintNow(root = document.body) {
         window.dispatchEvent(new CustomEvent('turn:paint-controls-unlocked'));
       }
       paintWasUnlocked = paintUnlocked;
-      lastCarId = carId;
       screen.dataset.turnPaintUnlocked = String(paintUnlocked);
     } finally {
       syncing = false;
