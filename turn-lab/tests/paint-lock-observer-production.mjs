@@ -157,7 +157,8 @@ const lockedTail = [
   'ambulance',
   'police',
   'monster-truck',
-  'toy-racer'
+  'toy-racer',
+  'supercar'
 ];
 assert.deepEqual(order.slice(order.indexOf('race')), lockedTail,
   'The horizontal Lot and its keyboard/VoiceOver order must put every reward car after the standard starting cars');
