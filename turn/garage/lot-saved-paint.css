@@ -1,0 +1,57 @@
+.lot-showroom .lot-paint-save-action {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-width: 76px;
+  height: 34px;
+  margin: 0 1px;
+  padding: 0 13px;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 999px;
+  background: var(--cyan, #38d9ff);
+  box-shadow: 3px 3px 0 var(--ink, #08090a);
+  color: var(--ink, #08090a);
+  font: inherit;
+  font-size: .58rem;
+  font-weight: 950;
+  letter-spacing: .08em;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lot-showroom .lot-paint-save-action[data-mode='reset'] {
+  background: var(--paper, #fff8e8);
+}
+
+.lot-showroom .lot-paint-save-action:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink, #08090a);
+}
+
+.lot-showroom .lot-paint-save-action:focus-visible {
+  outline: 4px solid var(--cyan, #38d9ff);
+  outline-offset: 3px;
+}
+
+.lot-showroom .lot-paint-save-action:disabled {
+  opacity: .42;
+  box-shadow: none;
+  cursor: default;
+}
+
+.lot-showroom .lot-colors[data-paint-state='locked'] .lot-paint-save-action,
+.lot-showroom .lot-colors[data-vehicle-color-mode='fixed'] .lot-paint-save-action {
+  display: none;
+}
+
+@media (max-height: 520px) {
+  .lot-showroom .lot-paint-save-action {
+    min-width: 68px;
+    height: 30px;
+    padding-inline: 10px;
+    font-size: .51rem;
+  }
+}
