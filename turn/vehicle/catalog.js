@@ -74,7 +74,8 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
 
 const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
   'vintage-racer': 0.75,
-  police: 1.15
+  police: 1.15,
+  supercar: 1.35
 });
 const FEATURED_VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({ 'monster-truck': 1.2 });
 const EMERGENCY_SERVICE_BY_ID = Object.freeze({ firetruck: 'firetruck', police: 'police', ambulance: 'ambulance' });
@@ -137,7 +138,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
   }),
   supercar: Object.freeze({
     title: 'FLOW SHIFT',
-    description: 'At FLOW ×2 or higher, SHIFT adds three attribute points without reductions. SHIFT again moves the boost to the other three attributes.'
+    description: 'At FLOW ×2 or higher, SHIFT adds its three attribute points without reductions. SHIFT again moves the boost to the other three attributes.'
   }),
   'sedan-sports': Object.freeze({
     title: 'DRIFT DEMON',
