@@ -12,7 +12,7 @@ const catalogSource = await fs.readFile(new URL('../../turn/vehicle/catalog.js',
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 
 assert.equal(catalog.VEHICLE_STAT_BUDGET, 18, 'TURN vehicle stat budget must remain 18');
-assert.equal(catalog.CAR_CATALOG.length, 15, 'all 15 Lot cars must remain in the catalog');
+assert.equal(catalog.CAR_CATALOG.length, 16, 'all 16 Lot cars must remain in the catalog');
 for (const car of catalog.CAR_CATALOG) {
   assert.equal(
     catalog.getVehicleStatTotal(car.stats),
