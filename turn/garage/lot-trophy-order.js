@@ -11,8 +11,8 @@ export const LOT_TROPHY_ORDER = Object.freeze([
   'firetruck',
   'ambulance',
   'police',
-  'monster-truck',
   'race-future',
+  'monster-truck',
   'toy-racer'
 ]);
 
