@@ -71,7 +71,6 @@ export function gateLotPaintNow(root = document.body) {
   if (!colors || !raceButton || !picker) return () => {};
 
   let syncing = false;
-  let lastCarId = selectedCarId(screen);
   let paintWasUnlocked = isPaintUnlocked();
 
   function paintControl(label = 'body') {
@@ -249,7 +248,6 @@ export function gateLotPaintNow(root = document.body) {
       const carId = selectedCarId(screen);
       const car = CAR_BY_ID.get(carId);
       const paintUnlocked = isPaintUnlocked();
-      const changedCar = Boolean(carId) && carId !== lastCarId;
       const carLocked = selectedCarIsLocked(screen);
       const freeColor = Boolean(car && !car.fixedLivery);
       const controls = [...colors.querySelectorAll('.lot-color-control:not(.lot-fixed-livery)')];
@@ -264,7 +262,7 @@ export function gateLotPaintNow(root = document.body) {
       ensureVisibleLabel(car);
       syncNativeSwatchFaces();
 
-      if (freeColor && (!paintUnlocked || changedCar)) forceFactoryPaint(carId);
+      if (freeColor && !paintUnlocked) forceFactoryPaint(carId);
 
       const paintLocked = Boolean(freeColor && !paintUnlocked);
       colors.classList.toggle('is-paint-locked', paintLocked);
@@ -291,7 +289,6 @@ export function gateLotPaintNow(root = document.body) {
         window.dispatchEvent(new CustomEvent('turn:paint-controls-unlocked'));
       }
       paintWasUnlocked = paintUnlocked;
-      lastCarId = carId;
       screen.dataset.turnPaintUnlocked = String(paintUnlocked);
     } finally {
       syncing = false;

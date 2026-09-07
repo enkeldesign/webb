@@ -1,7 +1,7 @@
 import {
   enhanceLotNow,
   prepareLotEnhancements
-} from './lot-enhancement-runtime.js?revision=r243-mountain-1300';
+} from './lot-enhancement-runtime.js?revision=r246-lot-saved-paint';
 import { installLotPwaColorSwatches } from './lot-pwa-color-swatch.js?revision=r206-pwa-color';
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
@@ -34,6 +34,7 @@ const SHOWROOM_THUMBNAIL_STYLE_ID = 'turn-lot-thumbnail-r211-composition';
 const SHOWROOM_INFO_STYLE_ID = 'turn-lot-info-r212-fit';
 const SHOWROOM_TYPOGRAPHY_STYLE_ID = 'turn-lot-info-r214-worst-case-fit';
 const SHOWROOM_SHIFT_STYLE_ID = 'turn-lot-shift-r228';
+const SHOWROOM_SAVED_PAINT_STYLE_ID = 'turn-lot-saved-paint-r246';
 let showroomStylePromise = null;
 let originalLotPromise = null;
 let originalLotModule = null;
@@ -87,6 +88,10 @@ function prepareShowroomStyles() {
     prepareStylesheet(
       SHOWROOM_SHIFT_STYLE_ID,
       './lot-shift.css?revision=r229-shift-feedback'
+    ),
+    prepareStylesheet(
+      SHOWROOM_SAVED_PAINT_STYLE_ID,
+      './lot-saved-paint.css?revision=r246-lot-saved-paint'
     )
   ]);
   return showroomStylePromise;
@@ -94,7 +99,7 @@ function prepareShowroomStyles() {
 
 function loadOriginalLot() {
   if (!originalLotPromise) {
-    originalLotPromise = import('./lot-showroom-experiment.js?revision=r243-mountain-1300')
+    originalLotPromise = import('./lot-showroom-experiment.js?revision=r246-lot-saved-paint')
       .then((module) => {
         originalLotModule = module;
         return module;
