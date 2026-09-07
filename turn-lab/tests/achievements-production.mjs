@@ -100,8 +100,8 @@ assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
   'GOT STARTED must remain the master of the eleven prerequisite Getting Started achievements, not recursively require itself');
 assert.equal(totalAvailableTrophies(), 4575,
   'The learning and balance pass must expose the complete 4,575-trophy supply');
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2200,
-  'Trophy Road uses the first 2200 trophies while the full catalog retains headroom');
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300,
+  'Trophy Road uses the first 2300 trophies while the full catalog retains headroom');
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
   4575
