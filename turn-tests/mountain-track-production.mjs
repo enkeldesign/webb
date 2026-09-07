@@ -185,7 +185,7 @@ const reward = rewardForTrack('mountain');
 assert.equal(reward?.id, 'mountain');
 assert.equal(reward?.threshold, 1300);
 assert.equal(TROPHY_ROAD_REWARDS.find(({ id }) => id === 'rally-racer')?.threshold, 2000);
-assert.equal(TROPHY_ROAD_REWARDS.at(-1)?.id, 'learner-graduated');
+assert.equal(TROPHY_ROAD_REWARDS.at(-1)?.id, 'supercar');
 assert.match(trophyGate, /rewardForTrack\(trackId\)/);
 assert.doesNotMatch(trophyGate, /trackId === ['"]mountain['"]/);
 assert.equal(TRACK_COLOR_CUES.mountain, 'blue');
