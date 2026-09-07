@@ -43,6 +43,7 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
   'monster-truck': Object.freeze({ fallback: '#3f5a3c', p3: Object.freeze([0.21, 0.35, 0.19]) }),
   'race-future': Object.freeze({ fallback: '#222222' }),
   race: Object.freeze({ fallback: '#5d503f' }),
+  supercar: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
   'sedan-sports': Object.freeze({ fallback: '#5e3c87', p3: Object.freeze([0.36, 0.19, 0.56]) }),
   sedan: Object.freeze({ fallback: '#2b6a70', p3: Object.freeze([0.12, 0.41, 0.43]) }),
   suv: Object.freeze({ fallback: '#0555aa', p3: Object.freeze([0.02, 0.333, 0.667]) }),
@@ -134,6 +135,10 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
     title: 'APEX GRIP',
     description: 'OVERCHARGE increases CONTROL and ACCELERATION beyond their ordinary limits.'
   }),
+  supercar: Object.freeze({
+    title: 'FLOW SHIFT',
+    description: 'At FLOW ×2 or higher, SHIFT adds three attribute points without reductions. SHIFT again moves the boost to the other three attributes.'
+  }),
   'sedan-sports': Object.freeze({
     title: 'DRIFT DEMON',
     description: 'DRIFT builds during sustained DRIFT or LOCK, up to 5/5.',
@@ -211,7 +216,8 @@ const RAW_CARS = [
   ['police', 'Police Car', 'car', { speed: 4, acceleration: 3, control: 3, drift: 2, boostPower: 1, boostDuration: 5 }, 0.98, 0, 1.10],
   ['ambulance', 'Ambulance', 'car', { speed: 3, acceleration: 2, control: 3, drift: 4, boostPower: 1, boostDuration: 5 }, 1.05, 0, 0.78],
   ['truck', 'Truck', 'car', { speed: 3, acceleration: 2, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }, 1.12, 0, 0.68],
-  ['van', 'Van', 'car', { speed: 2, acceleration: 3, control: 3, drift: 5, boostPower: 1, boostDuration: 4 }, 1.08, 0, 0.80]
+  ['van', 'Van', 'car', { speed: 2, acceleration: 3, control: 3, drift: 5, boostPower: 1, boostDuration: 4 }, 1.08, 0, 0.80],
+  ['supercar', 'Supercar', 'cosmo', { speed: 4, acceleration: 4, control: 2, drift: 2, boostPower: 3, boostDuration: 3 }, 0.98, 0, 1.58]
 ];
 
 const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({

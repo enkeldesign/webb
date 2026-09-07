@@ -1,3 +1,5 @@
+import { installFlowShiftRuntime } from './flow-shift.js?revision=r248-supercar';
+
 export const VEHICLE_SHIFT_FEATURE_ID = 'vehicle-shift';
 export const VEHICLE_SHIFT_REWARD_ID = 'shift';
 export const VEHICLE_SHIFT_STORAGE_KEY = 'turn-vehicle-shift-v1';
@@ -242,3 +244,5 @@ export function setVehicleShiftProfileEnabled(
     shiftAmount
   });
 }
+
+installFlowShiftRuntime();

@@ -91,6 +91,7 @@ const through1900 = [...through1800, 'sedan-double-shift'];
 const through2000 = [...through1900, 'rally-racer'];
 const through2100 = [...through2000, 'sports-car-drift-demon'];
 const through2200 = [...through2100, 'learner-graduated'];
+const through2300 = [...through2200, 'supercar'];
 const legacyGrandfatheredRewardIds = [
   'vintage-racer',
   'midnight-city',
@@ -106,9 +107,9 @@ const legacyGrandfatheredRewardIds = [
 assert.equal(TROPHY_ROAD_STORAGE_KEY, 'turn-achievements-v1');
 assert.equal(TROPHY_ROAD_STORAGE_VERSION, 9,
   'Trophy Road reward order and grandfathering require a versioned migration');
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2200,
-  'Trophy Road must end at the Learner Car reward');
-assert.equal(PRODUCTION_TROPHY_ROAD_MAX_THRESHOLD, 2200,
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300,
+  'Trophy Road must end at the Supercar reward');
+assert.equal(PRODUCTION_TROPHY_ROAD_MAX_THRESHOLD, 2300,
   'Every production wrapper must expose the canonical Trophy Road endpoint');
 
 assert.deepEqual(
@@ -132,7 +133,8 @@ assert.deepEqual(
     ['sedan-double-shift', 1900],
     ['rally-racer', 2000],
     ['sports-car-drift-demon', 2100],
-    ['learner-graduated', 2200]
+    ['learner-graduated', 2200],
+    ['supercar', 2300]
   ]
 );
 
@@ -160,6 +162,8 @@ assert.deepEqual(productionRewardIdsForTrophies(1900), through1900);
 assert.deepEqual(productionRewardIdsForTrophies(2000), through2000);
 assert.deepEqual(productionRewardIdsForTrophies(2100), through2100);
 assert.deepEqual(productionRewardIdsForTrophies(2200), through2200);
+assert.deepEqual(productionRewardIdsForTrophies(2299), through2200);
+assert.deepEqual(productionRewardIdsForTrophies(2300), through2300);
 assert.deepEqual(productionRewardIdsForTrophies(4575), productionRewardIds);
 
 assert.equal(getProductionTrophyRoadReward('mountain')?.threshold, 1300);
@@ -171,6 +175,7 @@ assert.equal(getProductionTrophyRoadReward('awd-traction')?.threshold, 500);
 assert.equal(getProductionTrophyRoadReward('drift-attack')?.threshold, 600);
 assert.equal(getProductionTrophyRoadReward('flow')?.threshold, 1500);
 assert.equal(getProductionTrophyRoadReward('learner-graduated')?.threshold, 2200);
+assert.equal(getProductionTrophyRoadReward('supercar')?.threshold, 2300);
 assert.equal(getProductionTrophyRoadReward('invented'), null);
 
 assert.equal(rewardForTrack('midnight-city')?.id, 'midnight-city');
@@ -181,6 +186,7 @@ assert.equal(rewardForVehicle('race-future')?.id, 'future-racer');
 assert.equal(rewardForVehicle('monster-truck')?.id, 'monster');
 assert.equal(rewardForVehicle('vintage-racer')?.id, 'vintage-racer');
 assert.equal(rewardForVehicle('toy-racer')?.id, 'rally-racer');
+assert.equal(rewardForVehicle('supercar')?.id, 'supercar');
 assert.equal(rewardForFeature('vehicle-paint')?.id, 'paintjob');
 assert.equal(rewardForFeature('vehicle-shift')?.id, 'shift');
 assert.equal(rewardForVehicle('convertible'), null,
@@ -260,8 +266,16 @@ assert.match(rallyPerk?.perkDescription || '', /fills BOOST even faster/i);
 assert.equal(getCarDefinition('toy-racer').name, 'Rally Racer');
 assert.equal(getCarDefinition('toy-racer').perk?.title, 'TWITCHY TURNY');
 
+const supercarPerk = getProductionTrophyRoadReward('supercar');
+assert.equal(supercarPerk?.threshold, 2300);
+assert.equal(supercarPerk?.perkTitle, 'FLOW SHIFT');
+assert.match(supercarPerk?.perkDescription || '', /FLOW ×2 or higher/);
+assert.match(supercarPerk?.perkDescription || '', /adds three attribute points without reductions/);
+assert.equal(getCarDefinition('supercar').perk?.title, 'FLOW SHIFT');
+assert.match(supercarPerk?.description || '', /<strong>FLOW SHIFT:<\/strong>/);
+
 assert.equal(getCarDefinition('race-future').perk?.title, 'OVERDRIVE');
-for (const reward of [racePerk, futurePerk, emergencyPerk, monsterPerk, vintagePerk, rallyPerk]) {
+for (const reward of [racePerk, futurePerk, emergencyPerk, monsterPerk, vintagePerk, rallyPerk, supercarPerk]) {
   assert.doesNotMatch(reward?.description || '', /<strong>PERK:<\/strong>/,
     'Unlock details must lead with the actual perk title rather than the generic word PERK');
 }
@@ -383,6 +397,7 @@ assert.equal(isVehicleUnlocked('firetruck', freshStorage), false);
 assert.equal(isVehicleUnlocked('monster-truck', freshStorage), false);
 assert.equal(isVehicleUnlocked('vintage-racer', freshStorage), false);
 assert.equal(isVehicleUnlocked('toy-racer', freshStorage), false);
+assert.equal(isVehicleUnlocked('supercar', freshStorage), false);
 assert.equal(isPaintUnlocked(freshStorage), false);
 assert.equal(isFeatureUnlocked('vehicle-shift', freshStorage), false);
 assert.equal(isFeatureUnlocked('drift-attack', freshStorage), false);
@@ -580,6 +595,7 @@ assert.equal(isVehicleUnlocked('race', progressionStorage), true);
 assert.equal(isVehicleUnlocked('monster-truck', progressionStorage), false);
 assert.equal(isVehicleUnlocked('vintage-racer', progressionStorage), true);
 assert.equal(isVehicleUnlocked('toy-racer', progressionStorage), false);
+assert.equal(isVehicleUnlocked('supercar', progressionStorage), false);
 assert.equal(isPaintUnlocked(progressionStorage), true);
 assert.equal(isVehiclePerkUnlocked('convertible', progressionStorage), true);
 assert.equal(isVehiclePerkUnlocked('truck', progressionStorage), true);
@@ -598,7 +614,7 @@ assert.deepEqual(overviewAt600.newRewards.map(({ id }) => id), ['awd-traction', 
 assert.equal(overviewAt600.next?.id, 'midnight-city');
 assert.equal(overviewAt600.remaining, 100);
 assert.equal(overviewAt600.horizon?.id, 'shift');
-assert.equal(overviewAt600.progress, 600 / 2200);
+assert.equal(overviewAt600.progress, 600 / 2300);
 
 assert.match(roadSource, /TROPHY_ROAD_STORAGE_VERSION = 9/);
 assert.match(roadSource, /migrateStoredRewardIdsForVersion/);
@@ -660,4 +676,4 @@ assert.match(enhancementRuntime, /installLotPerkDisclosure/);
 assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r243-mountain-1300/);
 assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r243-mountain-1300/);
 
-console.log('TURN Trophy Road Race Car slot migration, APEX GRIP, TORQUE, reward order and perk presentation regression passed.');
+console.log('TURN Trophy Road 2300 Supercar, FLOW SHIFT, reward order and perk presentation regression passed.');

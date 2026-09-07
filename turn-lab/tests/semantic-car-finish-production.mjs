@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
+import { gunzipSync } from 'node:zlib';
 
 const [
   catalogSource,
@@ -9,7 +10,8 @@ const [
   emergencyBridgeSource,
   releaseSource,
   kenneyLicense,
-  rgsdevLicense
+  rgsdevLicense,
+  cosmoLicense
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8'),
@@ -17,7 +19,8 @@ const [
   fs.readFile(new URL('../../turn/vehicle/emergency-livery-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/assets/KENNEY-ASSETS.md', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/assets/cars/RGSDEV-MONSTER-TRUCK.md', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/assets/cars/RGSDEV-MONSTER-TRUCK.md', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/assets/cars/COSMO-LOW-POLY-CARS.md', import.meta.url), 'utf8')
 ]);
 
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
@@ -30,12 +33,16 @@ assert.ok(
   'Semantic native car finishes must remain part of TURN 1.10.4 or later'
 );
 assert.match(release.id, /^\d{4}\.\d{2}\.\d{2}-r\d+$/);
-assert.equal(catalog.CAR_CATALOG.length, 15);
+assert.equal(catalog.CAR_CATALOG.length, 16);
 assert.deepEqual(
-  catalog.CAR_CATALOG.filter((car) => !car.fixedLivery && !car.secondaryPaint).map((car) => car.id),
+  catalog.CAR_CATALOG
+    .filter((car) => car.id !== 'supercar' && !car.fixedLivery && !car.secondaryPaint)
+    .map((car) => car.id),
   [],
-  'Every non-emergency car must expose its native secondary surface'
+  'Every established non-emergency car must expose its native secondary surface'
 );
+assert.equal(catalog.getCarDefinition('supercar').secondaryPaint, null,
+  'Supercar must preserve the Cosmo model as a primary-paint-only car');
 
 const paletteContracts = new Map([
   ['car', {
@@ -60,7 +67,7 @@ for (const contract of new Map([...paletteContracts.values()].map((value) => [va
   assert.equal(sha256(png), contract.sha256, `${contract.file} must remain the verified source atlas`);
 }
 
-for (const car of catalog.CAR_CATALOG.filter((candidate) => candidate.pack !== 'rgsdev')) {
+for (const car of catalog.CAR_CATALOG.filter((candidate) => !['rgsdev', 'cosmo'].includes(candidate.pack))) {
   assert.ok(paletteContracts.has(car.pack), `${car.name} must resolve to a known Kenney palette family`);
   const glb = await fs.readFile(new URL(`../../turn/${car.asset.replace(/^\.\//, '')}`, import.meta.url));
   const json = readGlbJson(glb, car.id);
@@ -76,6 +83,30 @@ for (const car of catalog.CAR_CATALOG.filter((candidate) => candidate.pack !== '
   assert.ok(primitives.every((primitive) => primitive.attributes?.COLOR_0 === undefined),
     `${car.name} must not depend on fabricated vertex colours`);
 }
+
+const supercarGlb = await readEmbeddedSupercarGlb();
+const supercarJson = readGlbJson(supercarGlb, 'supercar');
+assert.equal(supercarJson.images?.length, 1, 'Supercar must preserve its one embedded Cosmo palette image');
+assert.equal(supercarJson.images?.[0]?.name, 'texture-palette');
+assert.equal(supercarJson.images?.[0]?.mimeType, 'image/png');
+assert.ok(Number.isInteger(supercarJson.images?.[0]?.bufferView),
+  'Supercar palette must remain embedded so loading has no external texture dependency');
+assert.deepEqual(
+  (supercarJson.nodes || []).map((node) => node.name).filter((name) => /^wheel-(?:front|back)/.test(name || '')),
+  ['wheel-front-left', 'wheel-back-left', 'wheel-back-right', 'wheel-front-right'],
+  'Supercar must preserve TURN-compatible independently steerable axle names'
+);
+assert.ok((supercarJson.nodes || []).some((node) => node.name === 'chrome-rim-fl'));
+assert.ok((supercarJson.nodes || []).some((node) => node.name === 'tire-fl'));
+const supercarPrimitives = (supercarJson.meshes || []).flatMap((mesh) => mesh.primitives || []);
+assert.ok(supercarPrimitives.length > 0, 'Supercar must contain renderable primitives');
+assert.ok(supercarPrimitives.every((primitive) => Number.isInteger(primitive.attributes?.TEXCOORD_0)),
+  'Supercar must preserve the Cosmo authored UVs');
+assert.ok(supercarPrimitives.every((primitive) => primitive.attributes?.COLOR_0 === undefined),
+  'Supercar must not depend on fabricated vertex colours');
+assert.match(carModelsSource, /loadEmbeddedSupercarSource/);
+assert.match(carModelsSource, /DecompressionStream\('gzip'\)/);
+assert.match(carModelsSource, /loaderForPack\(car\.pack\)\.parseAsync\(arrayBuffer, ''\)/);
 
 assert.match(carModelsSource, /new THREE\.LoadingManager\(\)/);
 assert.match(carModelsSource, /setURLModifier/);
@@ -203,11 +234,26 @@ assert.match(kenneyLicense, /Creative Commons CC0 1\.0/);
 assert.match(kenneyLicense, /Player paint is applied at render time to selected palette cells on the existing surfaces/);
 assert.match(rgsdevLicense, /rgsdev\.itch\.io\/free-low-poly-vehicles-pack/);
 assert.match(rgsdevLicense, /CC0/);
+assert.match(cosmoLicense, /Low Poly Cars/);
+assert.match(cosmoLicense, /Cosmo/);
+assert.match(cosmoLicense, /CC0 1\.0 Universal/);
 
 console.log(`TURN ${release.id} semantic native-surface contract passed with authored UV orientation and live paint-cell coverage.`);
 
 function sha256(buffer) {
   return crypto.createHash('sha256').update(buffer).digest('hex');
+}
+
+async function readEmbeddedSupercarGlb() {
+  const chunkSources = await Promise.all(
+    Array.from({ length: 5 }, (_, index) => fs.readFile(
+      new URL(`../../turn/assets/cars/supercar-data-${index + 1}.js`, import.meta.url),
+      'utf8'
+    ))
+  );
+  const encoded = chunkSources.map((source) => source.match(/export default '([^']+)'/)?.[1] || '').join('');
+  assert.ok(encoded.length > 0, 'Supercar embedded GLB data must remain available');
+  return gunzipSync(Buffer.from(encoded, 'base64'));
 }
 
 function readGlbJson(buffer, carId) {

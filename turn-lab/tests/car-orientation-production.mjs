@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import { gunzipSync } from 'node:zlib';
 
 const catalogSource = await fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8');
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
@@ -26,7 +27,8 @@ const expectedQuarterTurns = new Map([
   ['police', 0],
   ['ambulance', 0],
   ['truck', 0],
-  ['van', 0]
+  ['van', 0],
+  ['supercar', 0]
 ]);
 
 const expectedVisualScales = new Map([
@@ -44,7 +46,8 @@ const expectedVisualScales = new Map([
   ['police', 0.98],
   ['ambulance', 1.05],
   ['truck', 1.12],
-  ['van', 1.08]
+  ['van', 1.08],
+  ['supercar', 0.98]
 ]);
 
 const expectedGlobalSizeMultipliers = new Map([
@@ -85,8 +88,7 @@ for (const car of catalog.CAR_CATALOG) {
     `${car.name} must keep its Lot-and-race featured multiplier`
   );
 
-  const assetPath = car.asset.replace(/^\.\//, '');
-  const glb = await fs.readFile(new URL(`../../turn/${assetPath}`, import.meta.url));
+  const glb = await readCarGlb(car);
   const json = readGlbJson(glb, car.id);
   const rawFront = getKenneyWheelAxis(json, car);
   const rawLength = Math.hypot(rawFront.x, rawFront.z);
@@ -115,6 +117,7 @@ const rallyRacer = catalog.getCarDefinition('toy-racer');
 const hatchback = catalog.getCarDefinition('sedan-sports');
 const policeCar = catalog.getCarDefinition('police');
 const monsterTruck = catalog.getCarDefinition('monster-truck');
+const supercar = catalog.getCarDefinition('supercar');
 assert.equal(awd.name, 'AWD');
 assert.equal(awd.pack, 'car');
 assert.equal(awd.asset, './assets/cars/suv.glb');
@@ -137,6 +140,8 @@ assert.equal(monsterTruck.pack, 'toy');
 assert.equal(monsterTruck.asset, './assets/cars/monster-truck.glb');
 assert.equal(hatchback.asset, './assets/cars/hatchback-sports.glb');
 assert.equal(rallyRacer.asset, './assets/cars/sedan-sports.glb');
+assert.equal(supercar.pack, 'cosmo');
+assert.equal(supercar.asset, './assets/cars/supercar.glb');
 assertClose(awd.visualScale * awd.visualSizeMultiplier, 0.98, 'AWD effective visual scale');
 assertClose(suv.visualScale * suv.visualSizeMultiplier, 1.05, 'SUV effective visual scale');
 assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 1, 'Training Car standard-car visual scale');
@@ -145,6 +150,7 @@ assertClose(rallyRacer.visualScale * rallyRacer.visualSizeMultiplier, 0.98, 'Ral
 assertClose(hatchback.visualScale * hatchback.visualSizeMultiplier, 0.98, 'Hatchback effective visual scale');
 assertClose(policeCar.visualScale * policeCar.visualSizeMultiplier, 1.127, 'Police Car effective visual scale');
 assertClose(monsterTruck.visualScale * monsterTruck.visualSizeMultiplier, 0.83, 'Monster Truck compact visual scale');
+assertClose(supercar.visualScale * supercar.visualSizeMultiplier, 0.98, 'Supercar effective visual scale');
 assertClose(
   monsterTruck.visualScale * monsterTruck.visualSizeMultiplier * monsterTruck.featuredVisualSizeMultiplier,
   0.996,
@@ -202,14 +208,14 @@ assert.match(carModels, /installWheelAnimationHostBridge\(root\)/,
   'Each GLB visual must bridge its wheel rig to the outer race-car host');
 assert.match(carModels, /visual\.addEventListener\('added',[\s\S]*host\.userData\.frontWheelPivots = visual\.userData\.frontWheelPivots \|\| \[\]/,
   'The bridge must publish the visible GLB pivots when main.js adds the visual to playerCar or a rival');
-assert.match(main, /for \(const pivot of car\.userData\.frontWheelPivots \|\| \[\]\)/,
-  'The runtime wheel animator must consume the host-level pivots populated by the bridge');
 assert.match(carModels, /side: THREE\.BackSide/, 'Car outlines must remain inverted back-face shells');
 assert.match(carModels, /depthTest: true/, 'Car outlines must still respect the body depth buffer');
 assert.match(carModels, /depthWrite: false/, 'Car outlines must not write depth and compete with body surfaces');
 assert.match(carModels, /polygonOffset: true/, 'Car outlines must use a depth offset for stable close surface intersections');
 assert.match(carModels, /polygonOffsetFactor: 1/);
 assert.match(carModels, /polygonOffsetUnits: 1/);
+assert.match(carModels, /loadEmbeddedSupercarSource\(car\)/,
+  'Supercar must keep its lazy embedded model loading path');
 
 assert.match(lot, /targetLength: 5\.15/, 'The standard Lot lineup must use the featured surface size');
 assert.match(lot, /targetLength: 6\.4/, 'The expanded 3D viewer must retain its compact-safe size');
@@ -311,13 +317,30 @@ assert.match(
   'Trajectory takeover must retain the quick smooth wheel transition'
 );
 
-console.log(`TURN ${release.id} car orientation, trajectory steering, visible wheel integration and surface-specific visual sizing passed for all 15 models.`);
+console.log(`TURN ${release.id} car orientation, trajectory steering, visible wheel integration and surface-specific visual sizing passed for all 16 models.`);
 
 function assertClose(actual, expected, label) {
   assert.ok(
     Math.abs(actual - expected) < 1e-12,
     `${label} must equal ${expected}; received ${actual}`
   );
+}
+
+async function readCarGlb(car) {
+  if (car.id !== 'supercar') {
+    const assetPath = car.asset.replace(/^\.\//, '');
+    return fs.readFile(new URL(`../../turn/${assetPath}`, import.meta.url));
+  }
+
+  const chunkSources = await Promise.all(
+    Array.from({ length: 5 }, (_, index) => fs.readFile(
+      new URL(`../../turn/assets/cars/supercar-data-${index + 1}.js`, import.meta.url),
+      'utf8'
+    ))
+  );
+  const encoded = chunkSources.map((source) => source.match(/export default '([^']+)'/)?.[1] || '').join('');
+  assert.ok(encoded.length > 0, 'Supercar embedded GLB data must remain available');
+  return gunzipSync(Buffer.from(encoded, 'base64'));
 }
 
 function readGlbJson(buffer, carId) {

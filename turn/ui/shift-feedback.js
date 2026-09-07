@@ -16,6 +16,13 @@ function naturalList(items) {
   return `${items.slice(0, -1).join(', ')}, and ${items.at(-1)}`;
 }
 
+function supercarFlowShiftActive() {
+  const state = globalThis.__turnRuntime?.state;
+  return state?.vehicleId === 'supercar'
+    && state?.vehiclePerkUnlocked === true
+    && Number(state?.flowMultiplier) >= 2;
+}
+
 export function resolveVehicleShiftFeedback(profile, active) {
   const reducers = canonicalKeys(profile?.reducedStats);
   if (reducers.length !== 3) return null;
@@ -34,17 +41,22 @@ export function resolveVehicleShiftFeedback(profile, active) {
     return index === 0 ? `${spoken.charAt(0).toUpperCase()}${spoken.slice(1)}` : spoken;
   });
   const activeState = active === true;
-  const stateAnnouncement = activeState ? 'SHIFT on.' : 'SHIFT off.';
+  const flowShift = supercarFlowShiftActive();
+  const stateAnnouncement = flowShift
+    ? 'FLOW SHIFT.'
+    : activeState ? 'SHIFT on.' : 'SHIFT off.';
   const amount = Number(profile?.shiftAmount) === 2 ? 2 : 1;
   const points = amount === 1 ? 'one point' : 'two points';
 
   return Object.freeze({
-    active: activeState,
-    title: 'SHIFT',
+    active: flowShift ? true : activeState,
+    title: flowShift ? 'FLOW SHIFT' : 'SHIFT',
     amount,
     gainKeys: Object.freeze(gainKeys),
     labels: Object.freeze(labels),
     briefAnnouncement: stateAnnouncement,
-    announcement: `${stateAnnouncement} ${naturalList(spokenLabels)} gain ${points}.`
+    announcement: flowShift
+      ? `${stateAnnouncement} ${naturalList(spokenLabels)} gain ${points} with no reductions.`
+      : `${stateAnnouncement} ${naturalList(spokenLabels)} gain ${points}.`
   });
 }
