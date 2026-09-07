@@ -109,7 +109,10 @@ assert.match(showroomCleanupCss, /\.lot-showroom \.lot-color-control\[hidden\][\
 // The existing paint state model still owns the value and state, not the PWA face.
 assert.match(paintGate, /function applyNativeSwatchFace\(control\)/);
 assert.match(paintGate, /control\.style\.setProperty\('--lot-color-swatch', input\.value\)/);
-assert.match(syncBody, /if \(freeColor && \(!paintUnlocked \|\| changedCar\)\) forceFactoryPaint\(carId\)/);
+assert.match(syncBody, /if \(freeColor && !paintUnlocked\) forceFactoryPaint\(carId\)/,
+  'Factory paint may be forced only while PAINTJOB is locked');
+assert.doesNotMatch(syncBody, /changedCar/,
+  'Changing cars after PAINTJOB unlock must preserve the per-car saved paint selected by the showroom');
 assert.match(syncBody, /control\.hidden = paintLocked/);
 assert.match(syncBody, /input\.disabled = paintLocked/);
 assert.match(syncBody, /if \(paintLocked\) ensureLockButton\(carId\);[\s\S]*else removeLockPresentation\(\)/);
@@ -160,18 +163,22 @@ assert.deepEqual(order.slice(order.indexOf('race')), lockedTail,
   'The horizontal Lot and its keyboard/VoiceOver order must put every reward car after the standard starting cars');
 
 // --- Fresh module identities for already-installed PWAs -----------------------
-assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r243-mountain-1300/,
-  'The app-level enhancement runtime must load the current Trophy Road paint threshold');
-assert.match(lotWrapper, /lot-enhancement-runtime\.js\?revision=r243-mountain-1300/,
-  'The showroom wrapper must use the current Trophy Road enhancement-runtime identity');
+assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r246-lot-saved-paint/,
+  'The app-level enhancement runtime must load the saved-paint-aware PAINTJOB gate');
+assert.match(lotWrapper, /lot-enhancement-runtime\.js\?revision=r246-lot-saved-paint/,
+  'The showroom wrapper must bypass the cached enhancement runtime for per-car paint');
 assert.match(lotWrapper, /lot-pwa-color-swatch\.js\?revision=r206-pwa-color/);
-assert.match(lotWrapper, /lot-showroom-experiment\.js\?revision=r243-mountain-1300/);
+assert.match(lotWrapper, /lot-showroom-experiment\.js\?revision=r246-lot-saved-paint/,
+  'The wrapper must load the saved-paint-aware showroom under a fresh URL');
+assert.match(lotWrapper, /lot-saved-paint\.css\?revision=r246-lot-saved-paint/,
+  'The SAVE/RESET action must load with the same fresh showroom revision');
 assert.match(lotWrapper, /SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r206-polish'/);
 assert.match(lotWrapper, /lot-showroom-cleanup-r201\.css\?revision=r206-pwa-color/);
 assert.match(index, /\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r164-post-soak&build=20260826-r184"\s*:\s*"\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r243-mountain-1300/,
-  'Old installed app runtime URLs must bridge to the current Lot runtime');
+  'Old installed app runtime URLs must retain their existing bridge');
 assert.match(index, /\/turn\/m8-home\.js\?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r200&build=20260818-r175"\s*:\s*"\/turn\/m8-home\.js\?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r206-pwa-color&build=20260818-r175/);
-assert.match(index, /\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate"\s*:\s*"\/turn\/garage\/lot-track-select\.js\?revision=r243-mountain-1300/);
+assert.match(index, /\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate"\s*:\s*"\/turn\/garage\/lot-track-select\.js\?revision=r246-lot-saved-paint/,
+  'Existing Home callers must cross a fresh cache boundary into the saved-paint wrapper');
 assert.match(
   index,
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click[^\"]*-pwa-color-r206`),
@@ -191,7 +198,7 @@ assert.equal(
 assert.equal(
   imports['/turn/garage/lot-showroom-experiment.js?revision=r206-race-before-locks'],
   '/turn/garage/lot-showroom-experiment.js?revision=r243-mountain-1300',
-  'Installed PWAs must refetch the showroom module when the visible Trophy Road order changes'
+  'Installed PWAs must retain the previous showroom cache bridge while new callers use r246'
 );
 for (const staleCatalogSpecifier of [
   '/turn/vehicle/catalog.js?build=20260804-r157-factory-colors',
@@ -214,4 +221,4 @@ assert.match(perkPresentation, /getCarDefinition\(vehicleId\)\?\.perk/);
 assert.doesNotMatch(perkPresentation, /observer\.observe\(screen,/);
 assert.match(app, /trophy-road-r157\.css\?revision=r244-reward-toast-guide/);
 
-console.log('TURN Lot PWA swatch compositing, factory-color imports, reward-car catalog coherence, state matrix, cue geometry, cache bridge, car order and observer safety regressions passed.');
+console.log('TURN Lot PWA swatch compositing, saved per-car paint, reward-car catalog coherence, state matrix, cue geometry, cache bridge, car order and observer safety regressions passed.');
