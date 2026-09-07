@@ -5,6 +5,7 @@
 // Historical regression marker: lot-paint-reward.js?revision=r203-color-label
 // Historical regression marker: lot-paint-reward.js?revision=r204-color-control-rebuild
 // Historical regression marker: lot-paint-reward.js?revision=r205-color-baseline
+// Historical regression marker: lot-paint-reward.js?revision=r243-mountain-1300
 // Historical regression marker: lot-accessibility-r118.js?build=20260729-r118
 
 // Historical regression markers for the established enhancement layers:
@@ -31,7 +32,7 @@ export function prepareLotEnhancements() {
     import('./lot-vehicle-copy.js?revision=r223-training-car-taxi'),
     import('./lot-trophy-order.js'),
     import('../progression/lot-trophy-gate.js?revision=r243-mountain-1300'),
-    import('../progression/lot-paint-reward.js?revision=r243-mountain-1300')
+    import('../progression/lot-paint-reward.js?revision=r246-lot-saved-paint')
   ]).then(([
     statLegend,
     layout,
