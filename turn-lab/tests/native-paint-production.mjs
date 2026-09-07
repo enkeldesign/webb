@@ -206,7 +206,73 @@ assert.deepEqual(
   'A saved custom rival PAINTJOB must survive the factory migration'
 );
 
-console.log(`TURN ${release.id} Hatchback, Rally Racer and native secondary paint passed.`);
+const savedLotPaint = await import(new URL(
+  `../../turn/garage/lot-saved-paint.js?saved-paint-test=${Date.now()}`,
+  import.meta.url
+));
+const futureFactoryPaint = {
+  color: catalog.getVehicleDefaultColor('race-future'),
+  secondaryColor: catalog.getVehicleDefaultSecondaryColor('race-future')
+};
+assert.equal(savedLotPaint.getSavedLotPaint('race-future'), null,
+  'A car without an explicit SAVE must keep its factory thumbnail paint');
+assert.deepEqual(savedLotPaint.resolveLotPaint('race-future'), futureFactoryPaint);
+assert.deepEqual(
+  savedLotPaint.saveLotPaint('race-future', { color: '#f8f9fa', secondaryColor: '#8ce99a' }),
+  { color: '#f8f9fa', secondaryColor: '#8ce99a' },
+  'SAVE must persist both paint channels for one specific car'
+);
+assert.deepEqual(
+  savedLotPaint.resolveLotPaint('race-future'),
+  { color: '#f8f9fa', secondaryColor: '#8ce99a' },
+  'The saved paint pair must become the Future Racer thumbnail and selection paint'
+);
+assert.equal(savedLotPaint.getSavedLotPaint('monster-truck'), null,
+  'Saving Future Racer paint must not bleed into another car');
+assert.deepEqual(savedLotPaint.resetLotPaint('race-future'), futureFactoryPaint,
+  'RESET must return the selected car to its current factory paint');
+assert.equal(savedLotPaint.getSavedLotPaint('race-future'), null,
+  'RESET must remove the per-car saved override');
+assert.equal(
+  savedLotPaint.saveLotPaint('police', { color: '#123456', secondaryColor: '#654321' }),
+  null,
+  'Fixed emergency liveries must never gain player-saved paint'
+);
+
+const [showroomSource, paintGateSource, wrapperSource, enhancementSource, savedPaintCss] = await Promise.all([
+  fs.readFile(new URL('../../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-saved-paint.css', import.meta.url), 'utf8')
+]);
+assert.match(showroomSource, /const thumbnailPaint = resolveLotPaint\(car\.id\)/,
+  'Thumbnail loading fallbacks must start from saved paint instead of factory paint');
+assert.match(showroomSource, /thumbnailRenderer\.renderAll\(LOT_CARS, carButtons, resolveLotPaint\)/,
+  'The initial 3D thumbnail pass must render every remembered per-car paint pair');
+assert.match(showroomSource, /thumbnailRenderer\.renderOne\(car, button, paint\)/,
+  'SAVE and RESET must refresh only the affected thumbnail');
+assert.match(showroomSource, /className = 'lot-paint-save-action'/);
+assert.match(showroomSource, /button\.textContent = resetMode \? 'RESET' : 'SAVE'/,
+  'The paint action must visibly switch between SAVE and RESET');
+assert.match(showroomSource, /saveLotPaint\(selectedCarId, selectedPaint\(\)\)/);
+assert.match(showroomSource, /resetLotPaint\(selectedCarId\)/);
+assert.match(showroomSource, /let pending = Promise\.resolve\(\)/,
+  'Single-thumbnail refreshes must serialize behind the initial low-power render rather than open concurrent WebGL contexts');
+assert.match(paintGateSource, /if \(freeColor && !paintUnlocked\) forceFactoryPaint\(carId\)/,
+  'The paint gate may force factory paint only while PAINTJOB is locked');
+assert.doesNotMatch(paintGateSource, /!paintUnlocked \|\| changedCar/,
+  'Changing cars after PAINTJOB unlock must not erase a remembered paint pair');
+assert.match(wrapperSource, /lot-enhancement-runtime\.js\?revision=r246-lot-saved-paint/);
+assert.match(wrapperSource, /lot-showroom-experiment\.js\?revision=r246-lot-saved-paint/);
+assert.match(wrapperSource, /lot-saved-paint\.css\?revision=r246-lot-saved-paint/);
+assert.match(enhancementSource, /lot-paint-reward\.js\?revision=r246-lot-saved-paint/);
+assert.match(savedPaintCss, /\.lot-paint-save-action\[data-mode='reset'\]/,
+  'RESET must have a distinct paper treatment while SAVE remains the cyan action');
+assert.match(index, /"\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate": "\/turn\/garage\/lot-track-select\.js\?revision=r246-lot-saved-paint"/,
+  'Production must route existing Home callers through the fresh saved-paint wrapper URL');
+
+console.log(`TURN ${release.id} Hatchback, Rally Racer, native secondary paint and saved Lot paint passed.`);
 
 function readGlbJson(buffer, label) {
   assert.equal(buffer.toString('utf8', 0, 4), 'glTF');
