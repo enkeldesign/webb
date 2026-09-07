@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { trophyRoadDetailPlacement } from '../turn/achievements/view.js';
+import {
+  ICONS,
+  TRACK_IDS,
+  getAchievement
+} from '../turn/achievements/catalog.js';
+import { TROPHY_ROAD_REWARD_ICONS } from '../turn/progression/trophy-road.js';
+import {
+  AUTHORED_DRIFT_ICON,
+  AUTHORED_SAFETY_ICON
+} from '../turn/ui/authored-icons.js';
 
 const [view, feedback, styles] = await Promise.all([
   fs.readFile(new URL('../turn/achievements/view.js', import.meta.url), 'utf8'),
@@ -33,6 +43,26 @@ assert.deepEqual(trophyRoadDetailPlacement({
   left: 10,
   width: 980
 }, 'A lower selected row must place the modal above and clamp it to viewport edges');
+
+assert.equal(ICONS.drift, AUTHORED_DRIFT_ICON,
+  'Achievement DRIFT artwork must come from the shared authored SVG source');
+assert.equal(ICONS.safety, AUTHORED_SAFETY_ICON,
+  'Achievement SAFETY artwork must come from the shared authored SVG source');
+assert.equal(getAchievement('around-the-turn')?.icon, 'safety');
+assert.equal(getAchievement('on-course-of-course')?.icon, 'safety',
+  'ON COURSE, OF COURSE belongs to the SAFETY artwork family');
+for (const trackId of TRACK_IDS) {
+  assert.equal(getAchievement(`${trackId}-safety`)?.icon, 'safety',
+    `${trackId} SAFETY must use the shared SAFETY artwork`);
+}
+assert.equal(TROPHY_ROAD_REWARD_ICONS.drift, AUTHORED_DRIFT_ICON,
+  'The DRIFT ATTACK Trophy Road reward must reuse the authored DRIFT SVG');
+assert.match(AUTHORED_DRIFT_ICON, /currentColor/);
+assert.match(AUTHORED_SAFETY_ICON, /currentColor/);
+assert.match(AUTHORED_DRIFT_ICON, /aria-hidden="true"/);
+assert.match(AUTHORED_SAFETY_ICON, /aria-hidden="true"/);
+assert.doesNotMatch(AUTHORED_DRIFT_ICON, /mask/i);
+assert.doesNotMatch(AUTHORED_SAFETY_ICON, /mask/i);
 
 assert.match(view, /data-trophy-road-detail-layer hidden/);
 assert.match(view, /role="dialog"[\s\S]*aria-modal="true"[\s\S]*aria-labelledby="turnTrophyRoadDetailTitle"/,
@@ -88,4 +118,4 @@ assert.match(feedback, /turn:trophy-road-detail-closed[\s\S]*handleDetailClosed/
 assert.doesNotMatch(feedback, /requestAnimationFrame|scrollLeft|scrollBy|scrollWidth|clientWidth/,
   'The complete road grid must not retain carousel geometry or an animation-frame layout path');
 
-console.log('TURN Trophy Road anchored reward modal, focus, placement and showcase lifecycle passed.');
+console.log('TURN Trophy Road anchored reward modal, focus, placement, shared icon mapping and showcase lifecycle passed.');

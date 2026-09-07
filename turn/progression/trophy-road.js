@@ -1,3 +1,5 @@
+import { AUTHORED_DRIFT_ICON } from '../ui/authored-icons.js?revision=r245-shared-drift-safety-icons';
+
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
 export const TROPHY_ROAD_STORAGE_VERSION = 9;
 export const TROPHY_ROAD_MAX_THRESHOLD = 2200;
@@ -20,7 +22,7 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   rally: authoredRewardIcon('rally-racer'),
   mountain: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 42 23 13l8 12L40 8l20 34Z"></path><path d="m17 22 6-9 5 8 4-6 8-7 7 13"></path><path d="M39 42c5-8 9-11 15-13M43 35l4 2-2 4 5 2"></path></svg>',
   shift: authoredRewardIcon('shift'),
-  drift: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M7 10c24 2 35 13 32 33"></path><path d="M21 6c25 5 37 19 31 37"></path><path d="M5 21h8M17 29h8M31 38h8"></path></svg>',
+  drift: AUTHORED_DRIFT_ICON,
   flow: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 24c8-16 18-16 28 0s20 16 28 0"></path><path d="M4 34c8-16 18-16 28 0s20 16 28 0"></path></svg>',
   perk: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M35 3 14 28h15l-3 17 24-28H35Z"></path><path d="M8 11h12M5 18h10M46 35h11"></path></svg>'
 });
