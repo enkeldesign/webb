@@ -44,10 +44,11 @@
 .turn-yourturn-track-share {
   position: absolute;
   z-index: 4;
-  right: 16px;
-  bottom: 16px;
+  left: 42%;
+  top: 50%;
   width: clamp(46px, 4.6vw, 58px);
   height: clamp(46px, 4.6vw, 58px);
+  translate: -50% -50%;
 }
 
 .turn-yourturn-track-share[hidden],
@@ -282,11 +283,6 @@
   .turn-yourturn-share-actions button {
     min-height: 40px;
   }
-
-  .turn-yourturn-track-share {
-    right: 11px;
-    bottom: 11px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -314,14 +310,6 @@
 
 .m8-home:not(.is-showing-track-bests) .turn-yourturn-track-share {
   display: none !important;
-}
-
-.m8-home.is-showing-track-bests .turn-yourturn-track-share {
-  right: auto;
-  bottom: auto;
-  left: 42%;
-  top: 50%;
-  translate: -50% -50%;
 }
 
 @supports (anchor-name: --turn-yourturn-time-copy) {
