@@ -64,6 +64,13 @@ assert.match(AUTHORED_SAFETY_ICON, /aria-hidden="true"/);
 assert.doesNotMatch(AUTHORED_DRIFT_ICON, /mask/i);
 assert.doesNotMatch(AUTHORED_SAFETY_ICON, /mask/i);
 
+const trustYourEarsIcon = getAchievement('trust-your-ears')?.icon;
+assert.equal(trustYourEarsIcon, 'blind');
+for (const achievementId of ['drive-by-ear', 'listen-closely', 'beyond-sight']) {
+  assert.equal(getAchievement(achievementId)?.icon, trustYourEarsIcon,
+    `${achievementId} must use the same non-visual-driving icon as TRUST YOUR EARS`);
+}
+
 assert.match(view, /data-trophy-road-detail-layer hidden/);
 assert.match(view, /role="dialog"[\s\S]*aria-modal="true"[\s\S]*aria-labelledby="turnTrophyRoadDetailTitle"/,
   'Reward details must be exposed as a labelled modal within the one Achievements top-layer dialog');
