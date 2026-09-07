@@ -9,6 +9,7 @@ import {
 import { TROPHY_ROAD_REWARD_ICONS } from '../turn/progression/trophy-road.js';
 import {
   AUTHORED_DRIFT_ICON,
+  AUTHORED_PAINT_ICON,
   AUTHORED_SAFETY_ICON
 } from '../turn/ui/authored-icons.js';
 
@@ -57,12 +58,21 @@ for (const trackId of TRACK_IDS) {
 }
 assert.equal(TROPHY_ROAD_REWARD_ICONS.drift, AUTHORED_DRIFT_ICON,
   'The DRIFT ATTACK Trophy Road reward must reuse the authored DRIFT SVG');
+assert.equal(TROPHY_ROAD_REWARD_ICONS.paint, AUTHORED_PAINT_ICON,
+  'The PAINTJOB Trophy Road reward must reuse the optimized authored spray-can SVG');
 assert.match(AUTHORED_DRIFT_ICON, /currentColor/);
 assert.match(AUTHORED_SAFETY_ICON, /currentColor/);
+assert.match(AUTHORED_PAINT_ICON, /currentColor/);
 assert.match(AUTHORED_DRIFT_ICON, /aria-hidden="true"/);
 assert.match(AUTHORED_SAFETY_ICON, /aria-hidden="true"/);
+assert.match(AUTHORED_PAINT_ICON, /aria-hidden="true"/);
+assert.match(AUTHORED_PAINT_ICON, /viewBox="150 160 700 1335"/,
+  'The supplied PAINTJOB artwork must use its cropped production viewBox instead of the oversized source canvas');
+assert.doesNotMatch(AUTHORED_PAINT_ICON, /<\?xml|<!DOCTYPE|width="958px"|height="1571px"|fill="#(?:000000|ffffff)"/i,
+  'The production PAINTJOB icon must drop source-document boilerplate, fixed dimensions and hard-coded black/white fills');
 assert.doesNotMatch(AUTHORED_DRIFT_ICON, /mask/i);
 assert.doesNotMatch(AUTHORED_SAFETY_ICON, /mask/i);
+assert.doesNotMatch(AUTHORED_PAINT_ICON, /mask/i);
 
 const trustYourEarsIcon = getAchievement('trust-your-ears')?.icon;
 assert.equal(trustYourEarsIcon, 'blind');
