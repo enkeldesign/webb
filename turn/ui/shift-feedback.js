@@ -2,6 +2,9 @@ import {
   VEHICLE_SHIFT_STAT_FIELDS,
   vehicleShiftReceiversForReducers
 } from '../vehicle/shift-profile.js?revision=r232-double-shift';
+import { installFlowShiftRuntime } from '../vehicle/flow-shift.js?revision=r248-supercar-flow-shift';
+
+installFlowShiftRuntime();
 
 function canonicalKeys(keys) {
   const requested = new Set(Array.isArray(keys) ? keys : []);
