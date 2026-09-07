@@ -94,6 +94,16 @@ assert.match(shareCss, /\.turn-yourturn-share-back[\s\S]*#ff9b66/,
   'Back remains the navigation orange');
 assert.match(shareCss, /\.turn-yourturn-track-slot[\s\S]*position: relative/,
   'The separate share button must use a valid sibling wrapper rather than nesting a button inside the track button');
+assert.match(shareCss, /\.m8-home:not\(\.is-showing-track-bests\) \.turn-yourturn-track-share \{[\s\S]*display: none !important/,
+  'Closed track cards must never show the Home SHARE control over the map');
+assert.match(shareCss, /anchor-scope: --turn-yourturn-time-copy/,
+  'Each card wrapper must scope its own TIME-row anchor');
+assert.match(shareCss, /\.track-card-record\.is-time \.track-card-record-copy \{[\s\S]*anchor-name: --turn-yourturn-time-copy/,
+  'The share control must be visually anchored to the TIME record copy, not the card corner');
+assert.match(shareCss, /\.m8-home\.is-showing-track-bests \.turn-yourturn-track-share \{[\s\S]*right: auto;[\s\S]*bottom: auto/,
+  'Expanded Home must explicitly retire the old bottom-right placement that covered FLOW');
+assert.match(shareCss, /position-anchor: --turn-yourturn-time-copy;[\s\S]*left: calc\(anchor\(right\) \+ clamp\(10px, 1vw, 14px\)\);[\s\S]*top: anchor\(center\)/,
+  'Supporting browsers must place SHARE directly beside the TIME record');
 
 assert.match(profileSource, /turn-social-racer-id-v1/);
 assert.match(profileSource, /turn-social-racer-name-v1/);
@@ -123,4 +133,4 @@ assert.match(yourTurnUi, /adoptSocialRacerIdentity\(\{ id: existing\.id, name: t
 assert.match(yourTurnUi, /challenge\.racers\.some\(\(racer\) => racer\.id === sessionState\.racerId\)/,
   'A recognized racer ID must bypass unnecessary identity confirmation');
 
-console.log('TURN → YOUR TURN seed sharing, short transport, remembered names and returning-racer claim regression passed.');
+console.log('TURN → YOUR TURN seed sharing, time-record Home placement, short transport, remembered names and returning-racer claim regression passed.');
