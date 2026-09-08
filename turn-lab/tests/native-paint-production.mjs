@@ -293,18 +293,20 @@ assert.match(showroomSource, /saveLotPaint\(selectedCarId, selectedPaint\(\)\)/)
 assert.match(showroomSource, /resetLotPaint\(selectedCarId\)/);
 assert.match(showroomSource, /let pending = Promise\.resolve\(\)/,
   'Single-thumbnail refreshes must serialize behind the initial low-power render rather than open concurrent WebGL contexts');
+assert.match(showroomSource, /car-models\.js\?revision=r252-supercar-outward-rims/,
+  'The Lot must cross a fresh cache boundary into the corrected Supercar model factory');
 assert.match(paintGateSource, /if \(freeColor && !paintUnlocked\) forceFactoryPaint\(carId\)/,
   'The paint gate may force factory paint only while PAINTJOB is locked');
 assert.doesNotMatch(paintGateSource, /!paintUnlocked \|\| changedCar/,
   'Changing cars after PAINTJOB unlock must not erase a remembered paint pair');
 assert.match(wrapperSource, /lot-enhancement-runtime\.js\?revision=r246-lot-saved-paint/);
-assert.match(wrapperSource, /lot-showroom-experiment\.js\?revision=r246-lot-saved-paint/);
+assert.match(wrapperSource, /import\('\.\/lot-showroom-experiment\.js\?revision=r252-supercar-outward-rims'\)/);
 assert.match(wrapperSource, /lot-saved-paint\.css\?revision=r246-lot-saved-paint/);
 assert.match(enhancementSource, /lot-paint-reward\.js\?revision=r246-lot-saved-paint/);
 assert.match(savedPaintCss, /\.lot-paint-save-action\[data-mode='reset'\]/,
   'RESET must have a distinct paper treatment while SAVE remains the cyan action');
-assert.match(index, /"\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate": "\/turn\/garage\/lot-track-select\.js\?revision=r246-lot-saved-paint"/,
-  'Production must route existing Home callers through the fresh saved-paint wrapper URL');
+assert.match(index, /"\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate": "\/turn\/garage\/lot-track-select\.js\?revision=r252-supercar-outward-rims"/,
+  'Production must route existing Home callers through the corrected Supercar wheel wrapper URL');
 
 console.log(`TURN ${release.id} Hatchback, Rally Racer, native secondary paint and saved Lot paint passed.`);
 

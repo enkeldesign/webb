@@ -46,7 +46,7 @@ assert.match(
 assert.match(index, new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent`));
 assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
-  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r223-training-car-taxi`,
+  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r252-supercar-outward-rims`,
   'Production must request the optimized Lot wrapper under a fresh cache identity'
 );
 assert.equal(

@@ -169,8 +169,8 @@ assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r246-lot-saved-paint/,
 assert.match(lotWrapper, /lot-enhancement-runtime\.js\?revision=r246-lot-saved-paint/,
   'The showroom wrapper must bypass the cached enhancement runtime for per-car paint');
 assert.match(lotWrapper, /lot-pwa-color-swatch\.js\?revision=r206-pwa-color/);
-assert.match(lotWrapper, /lot-showroom-experiment\.js\?revision=r246-lot-saved-paint/,
-  'The wrapper must load the saved-paint-aware showroom under a fresh URL');
+assert.match(lotWrapper, /import\('\.\/lot-showroom-experiment\.js\?revision=r252-supercar-outward-rims'\)/,
+  'The wrapper must load the corrected Supercar showroom under a fresh URL');
 assert.match(lotWrapper, /lot-saved-paint\.css\?revision=r246-lot-saved-paint/,
   'The SAVE/RESET action must load with the same fresh showroom revision');
 assert.match(lotWrapper, /SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r206-polish'/);
@@ -178,8 +178,8 @@ assert.match(lotWrapper, /lot-showroom-cleanup-r201\.css\?revision=r206-pwa-colo
 assert.match(index, /\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r164-post-soak&build=20260826-r184"\s*:\s*"\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r243-mountain-1300/,
   'Old installed app runtime URLs must retain their existing bridge');
 assert.match(index, /\/turn\/m8-home\.js\?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r200&build=20260818-r175"\s*:\s*"\/turn\/m8-home\.js\?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r206-pwa-color&build=20260818-r175/);
-assert.match(index, /\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate"\s*:\s*"\/turn\/garage\/lot-track-select\.js\?revision=r246-lot-saved-paint/,
-  'Existing Home callers must cross a fresh cache boundary into the saved-paint wrapper');
+assert.match(index, /\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate"\s*:\s*"\/turn\/garage\/lot-track-select\.js\?revision=r252-supercar-outward-rims/,
+  'Existing Home callers must cross a fresh cache boundary into the corrected Supercar wrapper');
 assert.match(
   index,
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click[^\"]*-pwa-color-r206`),

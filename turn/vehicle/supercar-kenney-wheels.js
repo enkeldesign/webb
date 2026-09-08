@@ -1,25 +1,35 @@
 import * as THREE from 'three';
 
-const KENNEY_RIM_CELLS = new Set(['3,4', '3,5']);
+// The Learner Car wheel mesh has exactly two authored U columns. Its 118
+// central hub/rim triangles use 15 / 32 while its 214 tyre triangles use
+// 11 / 32. Classify the faces themselves instead of inferring them from the
+// wider Car Kit palette contract.
+const KENNEY_RIM_U = 15 / 32;
+const KENNEY_TIRE_U = 11 / 32;
+const KENNEY_U_EPSILON = 1e-6;
 const SUPERCAR_TIRE_COLOR = 0x070809;
 const WHEEL_ROLES = Object.freeze([
   Object.freeze({
     role: 'wheel-front-left',
+    donorRole: 'wheel-front-right',
     rim: 'supercar-rim-front-left',
     tire: 'supercar-dark-foot-front-left'
   }),
   Object.freeze({
     role: 'wheel-front-right',
+    donorRole: 'wheel-front-left',
     rim: 'supercar-rim-front-right',
     tire: 'supercar-dark-foot-front-right'
   }),
   Object.freeze({
     role: 'wheel-back-left',
+    donorRole: 'wheel-back-right',
     rim: 'supercar-rim-back-left',
     tire: 'supercar-dark-foot-back-left'
   }),
   Object.freeze({
     role: 'wheel-back-right',
+    donorRole: 'wheel-back-left',
     rim: 'supercar-rim-back-right',
     tire: 'supercar-dark-foot-back-right'
   })
@@ -31,7 +41,10 @@ export function installSupercarKenneyWheels(model, trainingCarSource) {
 
   for (const spec of WHEEL_ROLES) {
     const target = model.getObjectByName(spec.role);
-    const donor = trainingCarSource.getObjectByName(spec.role);
+    // The source files use opposite left/right naming conventions. Ghini's
+    // left wheel mounts sit on -X; Kenney's left wheels sit on +X. Selecting
+    // the opposite donor side keeps the authored rim face pointing outwards.
+    const donor = trainingCarSource.getObjectByName(spec.donorRole);
     if (!target || !donor?.isMesh || !donor.geometry) continue;
 
     const targetBox = localBounds(target);
@@ -55,6 +68,7 @@ export function installSupercarKenneyWheels(model, trainingCarSource) {
     replacement.position.copy(targetCenter).addScaledVector(donorCenter, -scale);
     replacement.scale.setScalar(scale);
     replacement.userData.turnWheelSource = 'Kenney Car Kit 3.1';
+    replacement.userData.turnWheelDonorRole = spec.donorRole;
 
     const tireMaterial = new THREE.MeshStandardMaterial({
       color: SUPERCAR_TIRE_COLOR,
@@ -68,19 +82,11 @@ export function installSupercarKenneyWheels(model, trainingCarSource) {
     const rimMaterial = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.74,
-      metalness: 0.04,
-      polygonOffset: true,
-      polygonOffsetFactor: -2,
-      polygonOffsetUnits: -2
+      metalness: 0.04
     });
     rimMaterial.name = 'secondary-paint supercar-rim';
     const rim = new THREE.Mesh(rimGeometry, rimMaterial);
     rim.name = spec.rim;
-    // Kenney's wheel contains overlapping/coplanar face layers. Keep the
-    // separately painted rim layer visibly above the dark tire face without
-    // changing the authored wheel geometry.
-    rim.renderOrder = 2;
-    rim.userData.turnSecondaryPaintSurface = true;
 
     replacement.add(tire, rim);
     target.clear();
@@ -103,10 +109,9 @@ function splitKenneyWheelGeometry(sourceGeometry) {
     const a = index.getX(offset);
     const b = index.getX(offset + 1);
     const c = index.getX(offset + 2);
-    const u = (uv.getX(a) + uv.getX(b) + uv.getX(c)) / 3;
-    const v = (uv.getY(a) + uv.getY(b) + uv.getY(c)) / 3;
-    const cell = `${paletteCell(u)},${paletteCell(v)}`;
-    const destination = KENNEY_RIM_CELLS.has(cell) ? rimIndices : tireIndices;
+    const surface = kenneyWheelSurface(uv, a, b, c);
+    if (!surface) return { tireGeometry: null, rimGeometry: null };
+    const destination = surface === 'rim' ? rimIndices : tireIndices;
     destination.push(a, b, c);
   }
 
@@ -126,8 +131,14 @@ function geometryRegion(sourceGeometry, indices) {
   return geometry;
 }
 
-function paletteCell(value) {
-  return Math.max(0, Math.min(7, Math.floor(value * 8)));
+function kenneyWheelSurface(uv, ...indices) {
+  if (indices.every((index) => near(uv.getX(index), KENNEY_RIM_U))) return 'rim';
+  if (indices.every((index) => near(uv.getX(index), KENNEY_TIRE_U))) return 'tire';
+  return null;
+}
+
+function near(left, right) {
+  return Math.abs(left - right) <= KENNEY_U_EPSILON;
 }
 
 function localBounds(object) {

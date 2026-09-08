@@ -1,0 +1,60 @@
+name: TURN Supercar Lot visual smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn/vehicle/car-models.js'
+      - 'turn/vehicle/supercar-kenney-wheels.js'
+      - 'turn/assets/cars/training-car.glb'
+      - 'turn/garage/lot-showroom-experiment.js'
+      - 'turn-lab/supercar-lot-visual.html'
+      - 'turn-tests/supercar-lot-visual-smoke.mjs'
+      - '.github/workflows/turn-supercar-lot-visual-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  visual-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Validate the authored Supercar wheel contract
+        run: node turn-lab/tests/semantic-car-finish-production.mjs
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0 pngjs@7.0.0
+          npx playwright install chromium
+
+      - name: Start static TURN server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/turn-supercar-http.log 2>&1 &
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:8000/turn-lab/supercar-lot-visual.html >/dev/null && exit 0
+            sleep 0.5
+          done
+          cat /tmp/turn-supercar-http.log
+          exit 1
+
+      - name: Render and validate the actual Lot preview
+        run: node turn-tests/supercar-lot-visual-smoke.mjs
+
+      - name: Upload Supercar Lot inspection frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supercar-lot-visual-smoke
+          path: supercar-lot-visual-artifact
+          if-no-files-found: warn
+          retention-days: 7
