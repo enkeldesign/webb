@@ -3,7 +3,7 @@ export const LEGACY_VEHICLE_ID = 'sedan';
 export const DEFAULT_VEHICLE_COLOR = '#ffcc00';
 export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
-export const VEHICLE_SELECTION_VERSION = 4;
+export const VEHICLE_SELECTION_VERSION = 5;
 export const VEHICLE_STAT_BUDGET = 18;
 export const SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666';
 export const MAXED_VEHICLE_STATS = Object.freeze({
@@ -43,7 +43,7 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
   'monster-truck': Object.freeze({ fallback: '#3f5a3c', p3: Object.freeze([0.21, 0.35, 0.19]) }),
   'race-future': Object.freeze({ fallback: '#222222' }),
   race: Object.freeze({ fallback: '#5d503f' }),
-  supercar: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
+  supercar: Object.freeze({ fallback: '#000000' }),
   'sedan-sports': Object.freeze({ fallback: '#5e3c87', p3: Object.freeze([0.36, 0.19, 0.56]) }),
   sedan: Object.freeze({ fallback: '#2b6a70', p3: Object.freeze([0.12, 0.41, 0.43]) }),
   suv: Object.freeze({ fallback: '#0555aa', p3: Object.freeze([0.02, 0.333, 0.667]) }),
@@ -99,6 +99,9 @@ const REPLACED_FACTORY_PAINT_BY_ID = Object.freeze({
   ]),
   suv: Object.freeze([
     Object.freeze({ color: '#7d123e', secondaryColor: '#2f0918' })
+  ]),
+  supercar: Object.freeze([
+    Object.freeze({ color: '#f8f9fa', secondaryColor: '#f8f9fa' })
   ])
 });
 
