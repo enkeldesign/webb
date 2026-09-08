@@ -32,6 +32,8 @@ let visualFailure = null;
 let metrics = null;
 let factoryPixels = 0;
 let customPixels = 0;
+let factoryBrightNeutralPixels = 0;
+let whiteBodyPixels = 0;
 try {
   const response = await page.goto(`${baseUrl}/turn-lab/supercar-lot-visual.html`, {
     waitUntil: 'domcontentloaded',
@@ -50,12 +52,21 @@ try {
   const canvas = page.locator('.lot-view-host canvas');
   const factory = await canvas.screenshot({ path: path.join(outputDir, 'factory-yellow-rims.png') });
   factoryPixels = countPixels(factory, ({ r, g, b }) => r > 135 && g > 85 && b < 95);
+  factoryBrightNeutralPixels = countPixels(factory, brightNeutralPixel);
 
   const rimInput = page.getByLabel('Rims colour');
   await rimInput.fill('#ff00ff');
   await page.waitForTimeout(250);
   const custom = await canvas.screenshot({ path: path.join(outputDir, 'custom-magenta-rims.png') });
   customPixels = countPixels(custom, ({ r, g, b }) => r > 125 && g < 105 && b > 115);
+
+  await rimInput.fill('#ffcc00');
+  const bodyInput = page.getByLabel('Body colour');
+  await bodyInput.fill('#ffffff');
+  await page.waitForTimeout(250);
+  const whiteBody = await canvas.screenshot({ path: path.join(outputDir, 'custom-white-body.png') });
+  whiteBodyPixels = countPixels(whiteBody, brightNeutralPixel);
+
   await page.screenshot({ path: path.join(outputDir, 'lot-preview.png'), fullPage: true });
 } catch (error) {
   visualFailure = String(error?.stack || error?.message || error);
@@ -66,7 +77,15 @@ try {
 
 await fs.writeFile(
   path.join(outputDir, 'metrics.json'),
-  `${JSON.stringify({ metrics, factoryPixels, customPixels, browserErrors, visualFailure }, null, 2)}\n`
+  `${JSON.stringify({
+    metrics,
+    factoryPixels,
+    customPixels,
+    factoryBrightNeutralPixels,
+    whiteBodyPixels,
+    browserErrors,
+    visualFailure
+  }, null, 2)}\n`
 );
 
 if (visualFailure) throw new Error(visualFailure);
@@ -81,8 +100,17 @@ assert.ok(factoryPixels >= 20,
   `Factory Lot preview must expose visible TURN-yellow pixels, found ${factoryPixels}`);
 assert.ok(customPixels >= 20,
   `Changing the actual Rims picker must expose visible magenta rim pixels, found ${customPixels}`);
+assert.ok(
+  whiteBodyPixels >= factoryBrightNeutralPixels + 500,
+  `Changing the actual Body picker to white must visibly brighten the Supercar lacquer; `
+    + `factory had ${factoryBrightNeutralPixels} bright neutral pixels and white had ${whiteBodyPixels}`
+);
 
-console.log('TURN Supercar outward-facing Kenney rims passed in the actual Lot 3D preview.');
+console.log('TURN Supercar Kenney rims and direct TURN-like body paint passed in the actual Lot 3D preview.');
+
+function brightNeutralPixel({ r, g, b }) {
+  return r > 175 && g > 175 && b > 175 && Math.max(r, g, b) - Math.min(r, g, b) < 24;
+}
 
 function countPixels(buffer, predicate) {
   const image = PNG.sync.read(buffer);
