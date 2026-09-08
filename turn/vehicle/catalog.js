@@ -3,7 +3,7 @@ export const LEGACY_VEHICLE_ID = 'sedan';
 export const DEFAULT_VEHICLE_COLOR = '#ffcc00';
 export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
-export const VEHICLE_SELECTION_VERSION = 5;
+export const VEHICLE_SELECTION_VERSION = 6;
 export const VEHICLE_STAT_BUDGET = 18;
 export const SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666';
 export const MAXED_VEHICLE_STATS = Object.freeze({
@@ -66,6 +66,7 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
   'monster-truck': Object.freeze({ fallback: '#4f5504' }),
   'race-future': Object.freeze({ fallback: '#332244' }),
   race: Object.freeze({ fallback: '#222222' }),
+  supercar: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   'sedan-sports': Object.freeze({ fallback: '#252a35', p3: Object.freeze([0.13, 0.15, 0.21]) }),
   firetruck: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   police: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
@@ -101,7 +102,8 @@ const REPLACED_FACTORY_PAINT_BY_ID = Object.freeze({
     Object.freeze({ color: '#7d123e', secondaryColor: '#2f0918' })
   ]),
   supercar: Object.freeze([
-    Object.freeze({ color: '#f8f9fa', secondaryColor: '#f8f9fa' })
+    Object.freeze({ color: '#f8f9fa', secondaryColor: '#f8f9fa' }),
+    Object.freeze({ color: '#000000', secondaryColor: '#f8f9fa' })
   ])
 });
 
@@ -260,6 +262,17 @@ const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({
   }),
   'toy-racer': Object.freeze({
     secondaryPaint: Object.freeze({ label: 'Rally trim', meshNames: Object.freeze(['spoiler']) })
+  }),
+  supercar: Object.freeze({
+    secondaryPaint: Object.freeze({
+      label: 'Rims',
+      meshNames: Object.freeze([
+        'supercar-rim-front-left',
+        'supercar-rim-front-right',
+        'supercar-rim-back-left',
+        'supercar-rim-back-right'
+      ])
+    })
   })
 });
 
