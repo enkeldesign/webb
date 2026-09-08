@@ -28,7 +28,7 @@ import {
 } from './training-car-guide.js?revision=r1';
 
 const LOT_FRAME_INTERVAL_MS = 1000 / 30;
-const VIEWER_INITIAL_YAW = Math.PI - 0.34;
+const VIEWER_INITIAL_YAW = THREE.MathUtils.degToRad(200);
 const THUMBNAIL_INITIAL_YAW = Math.PI - 0.55;
 const THUMBNAIL_WIDTH = 240;
 const THUMBNAIL_HEIGHT = 108;
