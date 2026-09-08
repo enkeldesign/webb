@@ -177,7 +177,7 @@ function ensurePresentationStyles() {
     .drive-shift-bubble i {
       flex: 0 0 auto;
       width: 0;
-      height: .58em;
+      height: .56rem;
       overflow: hidden;
       border-radius: 999px;
       background: currentColor;
@@ -186,7 +186,7 @@ function ensurePresentationStyles() {
     }
 
     .drive-stack.is-shift-active .drive-shift-bubble i {
-      width: .58em;
+      width: .56rem;
       opacity: 1;
     }
 
