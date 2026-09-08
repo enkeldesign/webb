@@ -16,6 +16,7 @@ const FLOW_SHIFT_STAT_KEYS = Object.freeze([
 ]);
 const FLOW_SHIFT_STAT_KEY_SET = new Set(FLOW_SHIFT_STAT_KEYS);
 const INSTALL_MARKER = '__turnFlowShiftRuntime';
+const PRESENTATION_STYLE_ID = 'turn-flow-shift-button-r249';
 const RESET_REASONS = new Set(['race-started', 'race-reset', 'track-changed', 'home-open']);
 
 function runtimeState() {
@@ -126,27 +127,138 @@ function defaultShiftLabel(state) {
     : 'SHIFT ready. Activate alternate attributes.';
 }
 
+function ensurePresentationStyles() {
+  const documentRef = globalThis.document;
+  if (!documentRef?.head || documentRef.getElementById(PRESENTATION_STYLE_ID)) return;
+  const style = documentRef.createElement('style');
+  style.id = PRESENTATION_STYLE_ID;
+  style.textContent = `
+    .controls .drive-shift-bubble[data-flow-shift="great"] {
+      background: #8ce99a;
+    }
+
+    .controls .drive-shift-bubble[data-flow-shift="great"][data-flow-shift-gear="base"] {
+      background: #b2f2bb;
+    }
+
+    .controls .drive-shift-bubble[data-flow-shift="great"][data-flow-shift-gear="up"] {
+      background: #8ce99a;
+    }
+
+    .drive-shift-bubble[data-flow-shift="great"] span {
+      gap: .22em;
+      font-size: clamp(.54rem, 1.36vw, .75rem);
+    }
+
+    .drive-shift-bubble[data-flow-shift="great"] span b {
+      font: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+    }
+
+    .drive-stack.is-flow-shift-engaged .drive-shift-bubble {
+      opacity: 1;
+      transform: translateX(0) scaleX(1);
+      pointer-events: auto;
+    }
+
+    :root.turn-left-handed-controls .drive-stack.is-flow-shift-engaged .drive-shift-bubble {
+      transform: translateX(0) scaleX(1);
+    }
+
+    .drive-shift-bubble.is-flow-shift-bump {
+      --turn-flow-shift-bump-x: -7px;
+      animation: turn-flow-shift-bump 260ms cubic-bezier(.2,.88,.25,1);
+    }
+
+    :root.turn-left-handed-controls .drive-shift-bubble.is-flow-shift-bump {
+      --turn-flow-shift-bump-x: 7px;
+    }
+
+    @keyframes turn-flow-shift-bump {
+      0%, 100% { transform: translateX(0) scaleX(1); }
+      38% { transform: translateX(var(--turn-flow-shift-bump-x)) scaleX(1.07); }
+      68% { transform: translateX(calc(var(--turn-flow-shift-bump-x) * -.24)) scaleX(.985); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .drive-shift-bubble.is-flow-shift-bump {
+        animation: none;
+      }
+    }
+  `;
+  documentRef.head.appendChild(style);
+}
+
+function setFlowShiftButtonText(bubble, active) {
+  const mode = active ? 'flow' : 'shift';
+  if (bubble.dataset.flowShiftText === mode) return;
+  bubble.dataset.flowShiftText = mode;
+  bubble.innerHTML = active
+    ? '<span><b>FLOW</b><b>SHIFT</b><i aria-hidden="true">●</i></span>'
+    : '<span>SHIFT<i aria-hidden="true">●</i></span>';
+}
+
+function bumpFlowShiftButton() {
+  const bubble = globalThis.document?.querySelector?.('.drive-shift-bubble');
+  if (!bubble) return;
+  bubble.classList.remove('is-flow-shift-bump');
+  void bubble.offsetWidth;
+  bubble.classList.add('is-flow-shift-bump');
+  globalThis.setTimeout?.(() => bubble.classList.remove('is-flow-shift-bump'), 320);
+}
+
+function resetPresentation(bubble, stack) {
+  bubble.dataset.flowShift = 'idle';
+  bubble.dataset.flowShiftGear = 'none';
+  setFlowShiftButtonText(bubble, false);
+  bubble.classList.remove('is-flow-shift-bump');
+  stack?.classList?.remove('is-flow-shift-engaged');
+}
+
 function syncPresentation(state) {
   const bubble = globalThis.document?.querySelector?.('.drive-shift-bubble');
-  if (!bubble || !flowShiftAvailable(state)) return;
+  if (!bubble) return;
   const stack = bubble.closest?.('.drive-stack');
+  ensurePresentationStyles();
+
+  if (!flowShiftAvailable(state)) {
+    resetPresentation(bubble, stack);
+    return;
+  }
+
   const gains = normalizedGainKeys(state.flowShiftGainKeys);
   const greatFlow = isGreatFlow(state.flowMultiplier);
   const specialEngaged = gains.length === 3;
+  const flowShiftEngaged = greatFlow && specialEngaged;
+  const upGear = state.shiftActive === true;
+  const pressed = greatFlow
+    ? upGear
+    : specialEngaged || upGear;
 
   bubble.dataset.flowShift = greatFlow ? 'great' : specialEngaged ? 'carried' : 'idle';
-  stack?.classList?.toggle('is-shift-active', specialEngaged || state.shiftActive === true);
-  bubble.setAttribute('aria-pressed', String(specialEngaged || state.shiftActive === true));
+  bubble.dataset.flowShiftGear = greatFlow
+    ? (specialEngaged ? (upGear ? 'up' : 'base') : 'ready')
+    : 'none';
+  setFlowShiftButtonText(bubble, greatFlow);
+  stack?.classList?.toggle('is-flow-shift-engaged', flowShiftEngaged);
+  stack?.classList?.toggle('is-shift-active', pressed);
+  bubble.setAttribute('aria-pressed', String(pressed));
 
-  if (greatFlow && specialEngaged) {
+  if (greatFlow && specialEngaged && upGear) {
     bubble.setAttribute(
       'aria-label',
-      'FLOW SHIFT active. Activate to move the three-point boost to the other three attributes.'
+      'FLOW SHIFT. UP gear active. Activate to move the three-point boost to the default gear.'
+    );
+  } else if (greatFlow && specialEngaged) {
+    bubble.setAttribute(
+      'aria-label',
+      'FLOW SHIFT. Default gear active. Activate to move the three-point boost to the UP gear.'
     );
   } else if (greatFlow) {
     bubble.setAttribute(
       'aria-label',
-      'FLOW SHIFT ready. Activate to add three attribute points without reductions.'
+      'FLOW SHIFT ready. Activate to add its three attribute points without reductions.'
     );
   } else if (specialEngaged) {
     bubble.setAttribute(
@@ -205,7 +317,8 @@ function onShiftChange(event) {
     return;
   }
 
-  if (isGreatFlow(state.flowMultiplier)) {
+  const greatFlow = isGreatFlow(state.flowMultiplier);
+  if (greatFlow) {
     const gains = normalizedGainKeys(event.detail?.gainKeys);
     if (gains.length === 3) {
       state.flowShiftGainKeys = Object.freeze([...gains]);
@@ -218,6 +331,9 @@ function onShiftChange(event) {
     state.vehicleEffectiveTuning = state.vehicleTuning || null;
   }
   syncPresentation(state);
+  if (greatFlow && normalizedGainKeys(state.flowShiftGainKeys).length === 3) {
+    bumpFlowShiftButton();
+  }
 }
 
 function onUiState(event) {
