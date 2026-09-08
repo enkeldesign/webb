@@ -207,7 +207,7 @@ installStylesheet(
   'data-turn-trophy-road'
 );
 const { prepareTrophyRoadProfile } = await import(
-  withBuild('./progression/trophy-road.js?revision=r243-mountain-1300')
+  withBuild('./progression/trophy-road.js?revision=r253-supercar-release')
 );
 prepareTrophyRoadProfile();
 
@@ -307,7 +307,7 @@ const { installLotEnhancementRuntime } = await import(
 installLotEnhancementRuntime();
 
 await import(withBuild('./input/analog-gas.js'));
-await import(withBuild('./ui/gameplay-controls.js?revision=r245-separate-reverse'));
+await import(withBuild('./ui/gameplay-controls.js?revision=r253-supercar-release'));
 const { installRaceSpeech } = await import(withBuild('./ui/race-speech.js'));
 installRaceSpeech();
 const { installRacePositionLayout } = await import(withBuild('./ui/race-position-layout.js'));

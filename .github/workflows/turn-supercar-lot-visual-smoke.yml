@@ -5,13 +5,35 @@ on:
     branches:
       - main
     paths:
+      - 'turn/assets/cars/supercar-data-*.js'
+      - 'turn/assets/cars/supercar-model-data.js'
       - 'turn/vehicle/car-models.js'
+      - 'turn/vehicle/catalog.js'
+      - 'turn/vehicle/learner-car-livery.js'
+      - 'turn/vehicle/semantic-car-finish.js'
       - 'turn/vehicle/supercar-kenney-wheels.js'
+      - 'turn/vehicle/wide-gamut.js'
       - 'turn/assets/cars/training-car.glb'
+      - 'turn/design-tokens.css'
+      - 'turn/styles.css'
+      - 'turn/garage/lot-info-panel-r212.css'
+      - 'turn/garage/lot-info-typography-r213.css'
+      - 'turn/garage/lot-layout-r60.css'
+      - 'turn/garage/lot-r10.css'
+      - 'turn/garage/lot-saved-paint.js'
+      - 'turn/garage/lot-saved-paint.css'
       - 'turn/garage/lot-showroom-experiment.js'
+      - 'turn/garage/lot-showroom-cleanup-r201.css'
+      - 'turn/garage/lot-showroom-experiment.css'
+      - 'turn/garage/lot-thumbnail-composition-r211.css'
+      - 'turn/progression/trophy-road.js'
       - 'turn-lab/supercar-lot-visual.html'
       - 'turn-tests/supercar-lot-visual-smoke.mjs'
       - '.github/workflows/turn-supercar-lot-visual-smoke.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

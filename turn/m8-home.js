@@ -10,7 +10,7 @@ import { prepareEnhancedLot, showEnhancedLot as showTheLot } from '/turn/garage/
 import { showTrackIntro } from '/turn/ui/track-intro.js?source=20260729-r118-m8';
 import { getStoredBestLap } from '/turn/race/rival-storage.js?source=20260729-r118-m8';
 import { getCarDefinition } from '/turn/vehicle/catalog.js?source=20260729-r118-m8';
-import { renderBestCarThumbnail } from '/turn/ui/track-best-car.js?source=20260729-r118-m8';
+import { renderBestCarThumbnail } from '/turn/ui/track-best-car.js?revision=r253-supercar-release';
 import { getBestDriftRecord } from '/turn/scoring/drift-records.js?revision=r206-home-track-records';
 import { getBestFlowRecord } from '/turn/scoring/flow-records.js?revision=r206-home-track-records';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';

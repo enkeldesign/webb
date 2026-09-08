@@ -58,7 +58,7 @@ assert.equal(
 );
 assert.equal(
   imports['./vehicle/catalog.js?build=20260720-r19'],
-  '/turn/vehicle/catalog.js?revision=r243-mountain-1300',
+  '/turn/vehicle/catalog.js?revision=r253-supercar-release',
   'Production must publish fresh shared stat definitions through the canonical vehicle catalog'
 );
 assert.match(wrapper, /const lotResult = showOriginalLot\(options\)/, 'The verified Lot must mount synchronously before enhancement');

@@ -1,12 +1,12 @@
 import { CATEGORY } from './catalog.js?revision=r241-learning-achievements';
-import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r243-mountain-1300';
+import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r253-supercar-release';
 import {
   achievementCardMatchesFilters
 } from './filter-state.js?revision=r219-unified-achievement-filters';
 import {
   TROPHY_ROAD_REWARD_ICONS,
   getTrophyRoadReward
-} from '../progression/trophy-road.js?revision=r243-mountain-1300';
+} from '../progression/trophy-road.js?revision=r253-supercar-release';
 
 const TAG_FILTERS = Object.freeze([
   Object.freeze({ id: 'new', label: 'NEW' }),

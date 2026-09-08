@@ -190,7 +190,7 @@ assert.match(
 // HTTP/module-cache snapshots. All selected-car consumers must now converge on one
 // fresh vehicle-catalog module, and the state/showroom modules themselves get fresh
 // identities without requiring a reinstall or clearing site data.
-const canonicalLotCatalog = '/turn/vehicle/catalog.js?revision=r243-mountain-1300';
+const canonicalLotCatalog = '/turn/vehicle/catalog.js?revision=r253-supercar-release';
 assert.equal(
   imports['/turn/progression/lot-paint-reward.js?revision=r206-pwa-color'],
   '/turn/progression/lot-paint-reward.js?revision=r243-mountain-1300',

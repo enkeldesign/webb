@@ -1,7 +1,7 @@
 import {
   deriveVehicleTuningForCar,
   getCarDefinition
-} from './catalog.js?revision=r248-supercar';
+} from './catalog.js?revision=r253-supercar-release';
 
 export const FLOW_SHIFT_VEHICLE_ID = 'supercar';
 export const FLOW_SHIFT_MIN_MULTIPLIER = 2;

@@ -6,9 +6,16 @@ on:
       - main
     paths:
       - 'turn/accessibility/**'
-      - 'turn/index.html'
-      - 'turn/release.json'
       - 'turn/content/about-history.js'
+      - 'turn/audio/audio-system.js'
+      - 'turn/drive-pad.css'
+      - 'turn/garage/lot-layout-r60.js'
+      - 'turn/garage/lot-r10.css'
+      - 'turn/garage/lot-r10.js'
+      - 'turn/manual-steering.css'
+      - 'turn/orientation-compat.js'
+      - 'turn/progression/lot-paint-reward.js'
+      - 'turn/styles.css'
       - 'turn-lab/tests/color-accessibility-production.mjs'
       - '.github/workflows/turn-color-accessibility.yml'
   push:
@@ -16,11 +23,22 @@ on:
       - main
     paths:
       - 'turn/accessibility/**'
-      - 'turn/index.html'
-      - 'turn/release.json'
       - 'turn/content/about-history.js'
+      - 'turn/audio/audio-system.js'
+      - 'turn/drive-pad.css'
+      - 'turn/garage/lot-layout-r60.js'
+      - 'turn/garage/lot-r10.css'
+      - 'turn/garage/lot-r10.js'
+      - 'turn/manual-steering.css'
+      - 'turn/orientation-compat.js'
+      - 'turn/progression/lot-paint-reward.js'
+      - 'turn/styles.css'
       - 'turn-lab/tests/color-accessibility-production.mjs'
       - '.github/workflows/turn-color-accessibility.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

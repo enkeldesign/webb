@@ -66,7 +66,7 @@ assert.ok(
 
 assert.match(selector, /track-card-best-model/, 'Every playable Best row must reserve a model thumbnail');
 assert.match(selector, /renderBestCarThumbnail\(bestLap\)/, 'Best rows must request the stored record car');
-assert.match(selector, /track-best-car\.js\?build=20260801-r123-crop/, 'The selector must refresh the transparent-cropped renderer');
+assert.match(selector, /track-best-car\.js\?revision=r253-supercar-release/, 'The selector must refresh the complete SUPERCAR-aware renderer');
 assert.match(selector, /bestLap\.carColor/, 'The thumbnail identity must include the stored body paint');
 assert.match(selector, /bestLap\.carSecondaryColor/, 'The thumbnail identity must include stored secondary paint');
 assert.match(selector, /aria-hidden="true"/, 'The decorative model must not duplicate the readable car name');

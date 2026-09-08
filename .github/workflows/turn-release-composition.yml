@@ -1,0 +1,74 @@
+name: TURN release composition
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      # This graph check is cheap and intentionally owns broad release inputs.
+      - 'turn/**/*.css'
+      - 'turn/**/*.html'
+      - 'turn/**/*.js'
+      - 'turn/**/*.mjs'
+      - 'turn/release.json'
+      - 'turn/site.webmanifest'
+      - 'turn-lab/index.html'
+      - 'turn-next/index.html'
+      - 'turn-next/app.js'
+      - 'turn-next/main.js'
+      - 'turn-next/scripts/**'
+      - 'yourturn/index.html'
+      - 'turn-tests/release-*.mjs'
+      - '.github/workflows/turn-release-composition.yml'
+  push:
+    branches:
+      - main
+    paths:
+      # Keep the deployed graph checked after every matching merge.
+      - 'turn/**/*.css'
+      - 'turn/**/*.html'
+      - 'turn/**/*.js'
+      - 'turn/**/*.mjs'
+      - 'turn/release.json'
+      - 'turn/site.webmanifest'
+      - 'turn-lab/index.html'
+      - 'turn-next/index.html'
+      - 'turn-next/app.js'
+      - 'turn-next/main.js'
+      - 'turn-next/scripts/**'
+      - 'yourturn/index.html'
+      - 'turn-tests/release-*.mjs'
+      - '.github/workflows/turn-release-composition.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  composition:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Verify release source of truth
+        run: node turn/scripts/release.mjs --check
+
+      - name: Verify release entrypoint contract
+        run: node turn-tests/release-production.mjs
+
+      - name: Verify active release composition
+        env:
+          TURN_COMPOSITION_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: node turn-tests/release-composition-production.mjs --base "$TURN_COMPOSITION_BASE"

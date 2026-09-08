@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      # This is the canonical full static suite, so broad TURN paths are intentional.
       - 'turn/**'
       - 'turn-next/**'
       - 'turn-tests/**'
@@ -15,12 +16,17 @@ on:
     branches:
       - main
     paths:
+      # Keep main verification equivalent to pull requests after merges.
       - 'turn/**'
       - 'turn-next/**'
       - 'turn-tests/**'
       - 'turn-lab/**'
       - 'eslint.config.mjs'
       - '.github/workflows/turn-lab-tests.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -45,6 +51,9 @@ jobs:
 
       - name: Verify release source of truth
         run: node turn/scripts/release.mjs --check
+
+      - name: Verify active release composition
+        run: node turn-tests/release-composition-production.mjs
 
       - name: Verify TURN NEXT generated parity bootstrap
         run: node turn-next/scripts/build-parity-app.mjs --check

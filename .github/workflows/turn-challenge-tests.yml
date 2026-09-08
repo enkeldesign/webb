@@ -8,7 +8,6 @@ on:
     paths:
       - 'turn-next/**'
       - 'yourturn/**'
-      - 'turn/index.html'
       - 'turn/ui/r411-race-controls.js'
       - 'turn/social/**'
       - 'turn/telemetry/**'
@@ -28,7 +27,6 @@ on:
     paths:
       - 'turn-next/**'
       - 'yourturn/**'
-      - 'turn/index.html'
       - 'turn/ui/r411-race-controls.js'
       - 'turn/social/**'
       - 'turn/telemetry/**'
@@ -42,6 +40,10 @@ on:
       - 'turn-tests/yourturn-*.mjs'
       - 'turn-tests/telemetry-production.mjs'
       - '.github/workflows/turn-challenge-tests.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

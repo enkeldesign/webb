@@ -392,7 +392,7 @@ assert.match(
   /'rally-racer': Object\.freeze\(\[[\s\S]*carId: 'toy-racer'/,
   'Rally Racer Trophy Road detail must use the stable Toy Racer 3D asset'
 );
-assert.match(showcaseSource, /catalog\.js\?revision=r243-mountain-1300/,
+assert.match(showcaseSource, /catalog\.js\?revision=r253-supercar-release/,
   'Trophy Road models must use the refreshed factory colours');
 assert.doesNotMatch(trophyRoadSource, /tank is tiny|tiny tank/i,
   'Trophy Road must not describe the ordinary 1\/5 Rally tank as an extra penalty');
