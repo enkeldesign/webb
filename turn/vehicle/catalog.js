@@ -66,7 +66,7 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
   'monster-truck': Object.freeze({ fallback: '#4f5504' }),
   'race-future': Object.freeze({ fallback: '#332244' }),
   race: Object.freeze({ fallback: '#222222' }),
-  supercar: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
+  supercar: Object.freeze({ fallback: '#ffbb00', p3: Object.freeze([1, 0.69, 0]) }),
   'sedan-sports': Object.freeze({ fallback: '#252a35', p3: Object.freeze([0.13, 0.15, 0.21]) }),
   firetruck: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   police: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
@@ -103,7 +103,8 @@ const REPLACED_FACTORY_PAINT_BY_ID = Object.freeze({
   ]),
   supercar: Object.freeze([
     Object.freeze({ color: '#f8f9fa', secondaryColor: '#f8f9fa' }),
-    Object.freeze({ color: '#000000', secondaryColor: '#f8f9fa' })
+    Object.freeze({ color: '#000000', secondaryColor: '#f8f9fa' }),
+    Object.freeze({ color: '#000000', secondaryColor: '#ffcc00' })
   ])
 });
 
