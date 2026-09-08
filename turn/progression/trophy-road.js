@@ -23,7 +23,7 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   monster: authoredRewardIcon('monster-truck'),
   vintage: authoredRewardIcon('vintage-racer'),
   rally: authoredRewardIcon('rally-racer'),
-  supercar: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 32 13 22l14-6h16l9 7 7 3v10H5Z"></path><path d="m20 22 9-4h12l6 5H20Z"></path><circle cx="17" cy="36" r="6"></circle><circle cx="49" cy="36" r="6"></circle><path d="M43 15h13v4H45M50 15v8"></path></svg>',
+  supercar: authoredRewardIcon('supercar'),
   mountain: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 42 23 13l8 12L40 8l20 34Z"></path><path d="m17 22 6-9 5 8 4-6 8-7 7 13"></path><path d="M39 42c5-8 9-11 15-13M43 35l4 2-2 4 5 2"></path></svg>',
   shift: authoredRewardIcon('shift'),
   drift: AUTHORED_DRIFT_ICON,
