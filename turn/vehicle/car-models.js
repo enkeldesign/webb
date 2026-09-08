@@ -26,6 +26,8 @@ const normalizationMetricsCache = new Map();
 const competitorGhostTemplateCache = new Map();
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const TIRE_COLOR = 0x17191c;
+const SUPERCAR_MATTE_ROUGHNESS = 0.78;
+const SUPERCAR_MATTE_METALNESS = 0.04;
 const FEATURED_SURFACE_TARGET_LENGTHS = new Set([5.15, 5.5]);
 const REVERSED_FRONT_WHEEL_LABEL_IDS = new Set(['vintage-racer']);
 const COMPETITOR_GHOST_TARGET_LENGTH = 5.5;
@@ -156,6 +158,15 @@ export async function createCarVisual({
     } else if (paintable && material.color) {
       setThreeColor(material.color, ghost ? ghostColor : requestedColorSpec);
       primaryPaintMaterials.push(material);
+    }
+
+    if (car.id === 'supercar' && paintable) {
+      if ('roughness' in material) material.roughness = Math.max(
+        Number(material.roughness) || 0,
+        SUPERCAR_MATTE_ROUGHNESS
+      );
+      if ('metalness' in material) material.metalness = SUPERCAR_MATTE_METALNESS;
+      material.needsUpdate = true;
     }
 
     if (ghost) {

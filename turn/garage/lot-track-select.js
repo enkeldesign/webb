@@ -14,6 +14,7 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 // lot-enhancement-runtime.js?revision=r214-future-racer-fit
 // lot-enhancement-runtime.js?revision=r217-stable-perk-slot&build=20260804-r157
 // lot-showroom-experiment.js?revision=r200-production-candidate
+// lot-showroom-experiment.js?revision=r246-lot-saved-paint
 // export async function showEnhancedLot
 // SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r203-polish'
 // lot-showroom-cleanup-r201.css?revision=r203-thumbnail-color-polish
@@ -99,7 +100,7 @@ function prepareShowroomStyles() {
 
 function loadOriginalLot() {
   if (!originalLotPromise) {
-    originalLotPromise = import('./lot-showroom-experiment.js?revision=r246-lot-saved-paint')
+    originalLotPromise = import('./lot-showroom-experiment.js?revision=r250-supercar-finish')
       .then((module) => {
         originalLotModule = module;
         return module;

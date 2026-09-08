@@ -9,8 +9,8 @@ import {
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor,
   normalizeVehicleSelection
-} from '../vehicle/catalog.js?revision=r248-supercar';
-import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?revision=r248-supercar';
+} from '../vehicle/catalog.js?revision=r250-supercar-finish';
+import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?revision=r250-supercar-finish';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 import { isPaintUnlocked, LOCK_ICON } from '../progression/trophy-road.js?revision=r248-supercar';
@@ -28,7 +28,8 @@ import {
 } from './training-car-guide.js?revision=r1';
 
 const LOT_FRAME_INTERVAL_MS = 1000 / 30;
-const VIEWER_INITIAL_YAW = Math.PI - 0.55;
+const VIEWER_INITIAL_YAW = Math.PI - 0.34;
+const THUMBNAIL_INITIAL_YAW = Math.PI - 0.55;
 const THUMBNAIL_WIDTH = 240;
 const THUMBNAIL_HEIGHT = 108;
 let paintControlSerial = 0;
@@ -679,7 +680,7 @@ function createThumbnailRenderer() {
     scene.add(rim);
 
     const stage = new THREE.Group();
-    stage.rotation.y = VIEWER_INITIAL_YAW;
+    stage.rotation.y = THUMBNAIL_INITIAL_YAW;
     scene.add(stage);
     const camera = new THREE.PerspectiveCamera(36, THUMBNAIL_WIDTH / THUMBNAIL_HEIGHT, 0.1, 80);
 
