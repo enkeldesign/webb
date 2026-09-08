@@ -19,6 +19,7 @@ import {
   recolorSemanticCarFinish
 } from './semantic-car-finish.js';
 import { installLearnerCarLivery } from './learner-car-livery.js?revision=r223-training-car-taxi';
+import { installSupercarKenneyWheels } from './supercar-kenney-wheels.js?revision=r251-supercar-kenney-rims';
 
 const loadersByPack = new Map();
 const sourceCache = new Map();
@@ -90,6 +91,10 @@ export async function createCarVisual({
   const source = await loadCarSource(car.id);
   const root = new THREE.Group();
   const model = source.clone(true);
+  if (car.id === 'supercar') {
+    const trainingCarSource = await loadCarSource('classic');
+    installSupercarKenneyWheels(model, trainingCarSource);
+  }
   model.rotation.y = Math.PI + car.modelYawQuarterTurns * Math.PI / 2;
   root.add(model);
 
