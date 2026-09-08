@@ -6,16 +6,20 @@ import {
   TRACK_IDS,
   getAchievement
 } from '../turn/achievements/catalog.js';
-import { TROPHY_ROAD_REWARD_ICONS } from '../turn/progression/trophy-road.js';
+import {
+  TROPHY_ROAD_REWARDS,
+  TROPHY_ROAD_REWARD_ICONS
+} from '../turn/progression/trophy-road.js';
 import {
   AUTHORED_DRIFT_ICON,
   AUTHORED_PAINT_ICON,
   AUTHORED_SAFETY_ICON
 } from '../turn/ui/authored-icons.js';
 
-const [view, feedback, styles] = await Promise.all([
+const [view, feedback, showcase, styles] = await Promise.all([
   fs.readFile(new URL('../turn/achievements/view.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/trophy-road-feedback.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/achievements/trophy-road-showcase.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/progression/trophy-road.css', import.meta.url), 'utf8')
 ]);
 
@@ -135,4 +139,17 @@ assert.match(feedback, /turn:trophy-road-detail-closed[\s\S]*handleDetailClosed/
 assert.doesNotMatch(feedback, /requestAnimationFrame|scrollLeft|scrollBy|scrollWidth|clientWidth/,
   'The complete road grid must not retain carousel geometry or an animation-frame layout path');
 
-console.log('TURN Trophy Road anchored reward modal, focus, placement, shared icon mapping and showcase lifecycle passed.');
+const vehicleRewards = TROPHY_ROAD_REWARDS.filter((reward) => (
+  reward.type === 'vehicle' || reward.type === 'vehicle-pack'
+));
+for (const reward of vehicleRewards) {
+  const keyPattern = reward.id.includes('-')
+    ? `['\"]${reward.id}['\"]`
+    : `(?:['\"]${reward.id}['\"]|${reward.id})`;
+  assert.match(showcase, new RegExp(`${keyPattern}\\s*:\\s*Object\\.freeze\\(\\[`),
+    `${reward.id} must have a 3D Trophy Road reward-description showcase`);
+}
+assert.match(showcase, /supercar:\s*Object\.freeze\(\[[\s\S]*carId: 'supercar'/,
+  'The 2300 SUPERCAR reward must load the actual Supercar vehicle model rather than stop at its line-art icon');
+
+console.log('TURN Trophy Road anchored reward modal, focus, placement, shared icon mapping and complete vehicle showcase coverage passed.');
