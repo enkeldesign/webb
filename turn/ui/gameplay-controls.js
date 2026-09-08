@@ -32,9 +32,13 @@ import {
   loadVehicleShiftProfile,
   vehicleShiftAmount
 } from '../vehicle/shift-profile.js?revision=r253-supercar-release';
-import { resolveVehiclePerkTuning } from '../vehicle/perk-runtime.js?revision=r233-graduated';
 import {
-  advanceShiftTopSpeedMultiplier,
+  advanceVehicleShiftTuning,
+  applyVehicleShiftTuning,
+  clearVehicleShiftTuningTransition,
+  isVehicleShiftResetReason
+} from '../vehicle/shift-tuning.js?revision=r254-flow-shift-authority';
+import {
   enteredShiftToggle,
   pointerUsesShiftToggle
 } from '../input/shift-toggle.js?revision=r227-shift-feedback';
@@ -235,7 +239,6 @@ function installGameplayUi() {
   let shiftAvailable = false;
   let shiftActive = false;
   let shiftPointerInside = false;
-  let shiftTuningTarget = null;
   let shiftOutcomeAttempt = null;
   let shiftOutcomeTimer = 0;
   let boostOutcomeAttempt = null;
@@ -459,7 +462,10 @@ function installGameplayUi() {
       && globalThis.__turnBoostOverchargeCaught === true;
   }
 
-  function applyShiftMode(active, { announce = true } = {}) {
+  function applyShiftMode(active, {
+    announce = true,
+    easeTopSpeedReduction = true
+  } = {}) {
     const { runtime, vehicleId, car, profile } = shiftContext();
     const canActivate = Boolean(
       shiftAvailable &&
@@ -474,24 +480,14 @@ function installGameplayUi() {
       : car?.tuning;
 
     if (runtime?.state && target) {
-      const currentTopSpeed = Number(runtime.state.vehicleTuning?.topSpeedMultiplier);
-      const targetTopSpeed = Number(target.topSpeedMultiplier);
-      const loweringTopSpeed = Number.isFinite(currentTopSpeed) &&
-        Number.isFinite(targetTopSpeed) &&
-        targetTopSpeed < currentTopSpeed;
-      const appliedTuning = loweringTopSpeed
-        ? { ...target, topSpeedMultiplier: currentTopSpeed }
-        : target;
-      runtime.state.vehicleTuning = appliedTuning;
-      runtime.state.vehicleStats = nextActive ? profile.shiftedStats : car.stats;
-      runtime.state.vehicleEffectiveTuning = resolveVehiclePerkTuning({
+      applyVehicleShiftTuning({
         state: runtime.state,
-        tuning: appliedTuning
+        stats: nextActive ? profile.shiftedStats : car.stats,
+        tuning: target,
+        easeTopSpeedReduction
       });
-      globalThis.__turnVehicleTuning = appliedTuning;
-      shiftTuningTarget = target;
     } else {
-      shiftTuningTarget = null;
+      clearVehicleShiftTuningTransition(runtime?.state);
     }
 
     shiftActive = nextActive;
@@ -507,7 +503,7 @@ function installGameplayUi() {
     } catch (_) {}
     shiftAvailable = Boolean(unlocked && car && profile?.enabled && profile.shiftedStats);
     if (reset || !shiftAvailable) {
-      applyShiftMode(false, { announce });
+      applyShiftMode(false, { announce, easeTopSpeedReduction: !reset });
       return;
     }
     syncShiftVisual();
@@ -539,30 +535,7 @@ function installGameplayUi() {
   }
 
   function advanceShiftTuning(dt) {
-    const runtimeState = globalThis.__turnRuntime?.state;
-    if (!runtimeState?.vehicleTuning || !shiftTuningTarget) return;
-    const current = Number(runtimeState.vehicleTuning.topSpeedMultiplier);
-    const target = Number(shiftTuningTarget.topSpeedMultiplier);
-    const next = advanceShiftTopSpeedMultiplier(current, target, dt);
-    if (Math.abs(next - target) <= 0.000001) {
-      runtimeState.vehicleTuning = shiftTuningTarget;
-      runtimeState.vehicleEffectiveTuning = resolveVehiclePerkTuning({
-        state: runtimeState,
-        tuning: shiftTuningTarget
-      });
-      globalThis.__turnVehicleTuning = shiftTuningTarget;
-      shiftTuningTarget = null;
-      return;
-    }
-    if (Object.isFrozen(runtimeState.vehicleTuning)) {
-      runtimeState.vehicleTuning = { ...runtimeState.vehicleTuning };
-    }
-    runtimeState.vehicleTuning.topSpeedMultiplier = next;
-    runtimeState.vehicleEffectiveTuning = resolveVehiclePerkTuning({
-      state: runtimeState,
-      tuning: runtimeState.vehicleTuning
-    });
-    globalThis.__turnVehicleTuning = runtimeState.vehicleTuning;
+    advanceVehicleShiftTuning(globalThis.__turnRuntime?.state, dt);
   }
 
   function flashBoostHud(className) {
@@ -949,7 +922,7 @@ function installGameplayUi() {
     if (reason === 'lap-started' || reason === 'lap-completed') {
       resetScoringOutcomeTracking({ continueBoost: true });
     }
-    if (reason === 'runtime-ready' || reason === 'race-started' || reason === 'race-reset') {
+    if (isVehicleShiftResetReason(reason)) {
       resetShiftAnnouncementCycle();
       syncShiftAvailability({ reset: true });
     }

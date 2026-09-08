@@ -2,6 +2,11 @@ import {
   deriveVehicleTuningForCar,
   getCarDefinition
 } from './catalog.js?revision=r253-supercar-release';
+import {
+  applyVehicleShiftTuning,
+  clearVehicleShiftTuningTransition,
+  isVehicleShiftResetReason
+} from './shift-tuning.js?revision=r254-flow-shift-authority';
 
 export const FLOW_SHIFT_VEHICLE_ID = 'supercar';
 export const FLOW_SHIFT_MIN_MULTIPLIER = 2;
@@ -17,7 +22,6 @@ const FLOW_SHIFT_STAT_KEYS = Object.freeze([
 const FLOW_SHIFT_STAT_KEY_SET = new Set(FLOW_SHIFT_STAT_KEYS);
 const INSTALL_MARKER = '__turnFlowShiftRuntime';
 const PRESENTATION_STYLE_ID = 'turn-flow-shift-button-r250';
-const RESET_REASONS = new Set(['race-started', 'race-reset', 'track-changed', 'home-open']);
 
 function runtimeState() {
   return globalThis.__turnRuntime?.state || null;
@@ -87,11 +91,7 @@ export function resolveFlowShiftStats({
 function applyStats(state, stats) {
   if (!state || !stats) return false;
   const tuning = deriveVehicleTuningForCar(FLOW_SHIFT_VEHICLE_ID, stats);
-  state.vehicleStats = stats;
-  state.vehicleTuning = tuning;
-  state.vehicleEffectiveTuning = tuning;
-  globalThis.__turnVehicleTuning = tuning;
-  return true;
+  return applyVehicleShiftTuning({ state, stats, tuning });
 }
 
 function currentGainKeys(state) {
@@ -117,6 +117,7 @@ function applyCurrentFlowShift(state, { greatFlow = isGreatFlow(state?.flowMulti
 
 function clearFlowShiftState(state) {
   if (!state) return;
+  clearVehicleShiftTuningTransition(state);
   state.flowMultiplier = 1;
   state.flowShiftGainKeys = null;
 }
@@ -373,7 +374,7 @@ function onShiftChange(event) {
 }
 
 function onUiState(event) {
-  if (!RESET_REASONS.has(event?.detail?.reason)) return;
+  if (!isVehicleShiftResetReason(event?.detail?.reason)) return;
   const state = runtimeState();
   clearFlowShiftState(state);
   syncPresentation(state);
