@@ -8,7 +8,7 @@ import {
   makeGhostColor,
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor
-} from './catalog.js?revision=r250-supercar-finish';
+} from './catalog.js';
 import {
   makeWideGamutSpec,
   setThreeColor
