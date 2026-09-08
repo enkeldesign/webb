@@ -27,6 +27,9 @@ const REWARD_CARS = Object.freeze({
   ]),
   'rally-racer': Object.freeze([
     Object.freeze({ carId: 'toy-racer', x: 0, targetLength: 5.8, yaw: Math.PI - 0.55 })
+  ]),
+  supercar: Object.freeze([
+    Object.freeze({ carId: 'supercar', x: 0, targetLength: 6.2, yaw: Math.PI - 0.55 })
   ])
 });
 
