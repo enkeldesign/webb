@@ -7,6 +7,7 @@ const [
   catalogSource,
   semanticSource,
   carModelsSource,
+  supercarWheelsSource,
   emergencyBridgeSource,
   releaseSource,
   kenneyLicense,
@@ -16,6 +17,7 @@ const [
   fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/vehicle/supercar-kenney-wheels.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/emergency-livery-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/assets/KENNEY-ASSETS.md', import.meta.url), 'utf8'),
@@ -36,13 +38,23 @@ assert.match(release.id, /^\d{4}\.\d{2}\.\d{2}-r\d+$/);
 assert.equal(catalog.CAR_CATALOG.length, 16);
 assert.deepEqual(
   catalog.CAR_CATALOG
-    .filter((car) => car.id !== 'supercar' && !car.fixedLivery && !car.secondaryPaint)
+    .filter((car) => !car.fixedLivery && !car.secondaryPaint)
     .map((car) => car.id),
   [],
-  'Every established non-emergency car must expose its native secondary surface'
+  'Every non-emergency car must expose its native or deliberately mounted secondary surface'
 );
-assert.equal(catalog.getCarDefinition('supercar').secondaryPaint, null,
-  'Supercar must preserve the Cosmo model as a primary-paint-only car');
+const supercarDefinition = catalog.getCarDefinition('supercar');
+assert.equal(supercarDefinition.secondaryPaint?.label, 'Rims',
+  'Supercar secondary paint must be its deliberately mounted Kenney rims');
+assert.deepEqual(supercarDefinition.secondaryPaint?.meshNames, [
+  'supercar-rim-front-left',
+  'supercar-rim-front-right',
+  'supercar-rim-back-left',
+  'supercar-rim-back-right'
+]);
+assert.equal(supercarDefinition.defaultSecondaryColor, '#ffcc00');
+assert.deepEqual(supercarDefinition.defaultSecondaryColorP3, [1, 0.76, 0],
+  'Supercar factory rims must use TURN’s Display-P3 yellow');
 
 const paletteContracts = new Map([
   ['car', {
@@ -107,6 +119,8 @@ assert.ok(supercarPrimitives.every((primitive) => primitive.attributes?.COLOR_0 
 assert.match(carModelsSource, /loadEmbeddedSupercarSource/);
 assert.match(carModelsSource, /DecompressionStream\('gzip'\)/);
 assert.match(carModelsSource, /loaderForPack\(car\.pack\)\.parseAsync\(arrayBuffer, ''\)/);
+assert.match(carModelsSource, /installSupercarKenneyWheels\(model, trainingCarSource\)/,
+  'Supercar visuals must replace the Cosmo wheels with the verified Kenney donor geometry before paint traversal');
 
 assert.match(carModelsSource, /new THREE\.LoadingManager\(\)/);
 assert.match(carModelsSource, /setURLModifier/);
@@ -160,8 +174,12 @@ assert.ok(cellHits(classicBody, classicPrimary) > 0,
   'Training Car primary paint cells must intersect authored body triangles');
 assert.ok(cellHits(classicBody, classicSecondary) > 0,
   'Training Car secondary trim cells must intersect authored body triangles');
-assert.ok(cellHits(classicWheels, classicRims) > 0,
+const classicRimTriangles = cellHits(classicWheels, classicRims);
+const classicWheelTriangles = [...classicWheels.values()].reduce((sum, count) => sum + count, 0);
+assert.ok(classicRimTriangles > 0,
   'Training Car rim paint cells must intersect authored wheel triangles');
+assert.ok(classicRimTriangles < classicWheelTriangles,
+  'The Kenney donor wheel must contain both rim and tire triangles for the Supercar transplant');
 assert.equal(cellHits(classicBodyDoubleFlipped, classicPrimary), 0,
   'The retired double-V-flip must not accidentally become the semantic coordinate contract again');
 assert.equal(cellHits(classicBodyDoubleFlipped, classicSecondary), 0,
@@ -170,6 +188,17 @@ assert.equal(cellHits(classicWheelsDoubleFlipped, classicRims), 0,
   'The retired double-V-flip must miss the Training Car rim cells');
 assert.match(semanticSource, /'training-car': profile\(\{ primary: \[\[4, 2\], \[4, 3\]\], secondary: \[\[3, 4\], \[3, 5\]\], rims: \[\[3, 4\], \[3, 5\]\] \}\)/,
   'Training Car must use the verified Taxi-derived Car Kit palette cells');
+assert.match(supercarWheelsSource, /KENNEY_RIM_CELLS = new Set\(\['3,4', '3,5'\]\)/,
+  'Supercar rims must be split from the exact verified Kenney rim UV cells');
+assert.match(supercarWheelsSource, /SUPERCAR_TIRE_COLOR = 0x070809/,
+  'Supercar tires must stay deliberately near-black');
+assert.match(supercarWheelsSource, /roughness: 0\.96/);
+assert.match(supercarWheelsSource, /turnWheelSource = 'Kenney Car Kit 3\.1'/,
+  'The mounted wheels must retain explicit source provenance');
+assert.match(supercarWheelsSource, /splitKenneyWheelGeometry\(donor\.geometry\)/,
+  'The transplant must reuse the exact donor mesh geometry rather than draw replacement wheels');
+assert.doesNotMatch(supercarWheelsSource, /CylinderGeometry|TorusGeometry|LatheGeometry|SphereGeometry/,
+  'Supercar wheel transplant must not synthesize substitute wheel geometry');
 
 const luxurySuvCar = catalog.getCarDefinition('suv');
 assert.equal(luxurySuvCar.surfaceProfileId, 'suv-luxury',
