@@ -45,8 +45,17 @@ assert.deepEqual(
     color: '#000000',
     secondaryColor: '#f8f9fa'
   }, { migrateReplacedFactoryPaint: true }),
-  { carId: 'supercar', color: '#000000', secondaryColor: '#ffcc00', factoryPaint: true },
-  'The shipped black Supercar must gain its new yellow factory rims without rewriting custom paint'
+  { carId: 'supercar', color: '#000000', secondaryColor: '#ffbb00', factoryPaint: true },
+  'The shipped black Supercar must gain its current factory rims without rewriting custom paint'
+);
+assert.deepEqual(
+  catalog.normalizeStoredVehiclePaint({
+    carId: 'supercar',
+    color: '#000000',
+    secondaryColor: '#ffcc00'
+  }, { migrateReplacedFactoryPaint: true }),
+  { carId: 'supercar', color: '#000000', secondaryColor: '#ffbb00', factoryPaint: true },
+  'The previous Supercar factory yellow must migrate to the warmer #fb0 rims'
 );
 assert.deepEqual(
   catalog.normalizeStoredVehiclePaint({
@@ -98,9 +107,9 @@ assert.deepEqual(secondaryCars[7].secondaryPaint.meshNames, []);
 assert.ok(secondaryCars.slice(8, 12).every((car) => car.secondaryPaint.label === 'Lower body trim'));
 const supercar = catalog.getCarDefinition('supercar');
 assert.equal(supercar.defaultColor, '#000000');
-assert.equal(supercar.defaultSecondaryColor, '#ffcc00');
-assert.deepEqual(supercar.defaultSecondaryColorP3, [1, 0.76, 0],
-  'Supercar factory rims must use TURN’s Display-P3 yellow');
+assert.equal(supercar.defaultSecondaryColor, '#ffbb00');
+assert.deepEqual(supercar.defaultSecondaryColorP3, [1, 0.69, 0],
+  'Supercar factory rims must use the warmer Display-P3 #fb0 yellow');
 assert.equal(supercar.secondaryPaint?.label, 'Rims');
 assert.deepEqual(supercar.secondaryPaint?.meshNames, [
   'supercar-rim-front-left',
@@ -233,8 +242,8 @@ assert.deepEqual(
     carSecondaryColor: '#f8f9fa',
     frames: replayFrames
   })),
-  { carId: 'supercar', carColor: '#000000', carSecondaryColor: '#ffcc00', factoryPaint: true },
-  'Saved factory Supercar ghosts must gain the new yellow rim color'
+  { carId: 'supercar', carColor: '#000000', carSecondaryColor: '#ffbb00', factoryPaint: true },
+  'Saved factory Supercar ghosts must gain the current #fb0 rim color'
 );
 assert.deepEqual(
   (({ carColor, carSecondaryColor, factoryPaint }) => ({ carColor, carSecondaryColor, factoryPaint }))(
