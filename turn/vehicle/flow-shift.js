@@ -16,7 +16,7 @@ const FLOW_SHIFT_STAT_KEYS = Object.freeze([
 ]);
 const FLOW_SHIFT_STAT_KEY_SET = new Set(FLOW_SHIFT_STAT_KEYS);
 const INSTALL_MARKER = '__turnFlowShiftRuntime';
-const PRESENTATION_STYLE_ID = 'turn-flow-shift-button-r249';
+const PRESENTATION_STYLE_ID = 'turn-flow-shift-button-r250';
 const RESET_REASONS = new Set(['race-started', 'race-reset', 'track-changed', 'home-open']);
 
 function runtimeState() {
@@ -146,14 +146,48 @@ function ensurePresentationStyles() {
     }
 
     .drive-shift-bubble[data-flow-shift="great"] span {
-      gap: .22em;
+      gap: .28em;
       font-size: clamp(.54rem, 1.36vw, .75rem);
     }
 
-    .drive-shift-bubble[data-flow-shift="great"] span b {
+    .drive-shift-bubble[data-flow-shift="great"] .flow-shift-copy {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .1em;
       font: inherit;
       font-weight: inherit;
       letter-spacing: inherit;
+      line-height: .88;
+    }
+
+    .drive-shift-bubble[data-flow-shift="great"] .flow-shift-copy em {
+      display: block;
+      font: inherit;
+      font-style: normal;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      line-height: inherit;
+    }
+
+    /* The old text bullet was intentionally width-animated from zero, but its
+       active width was narrower than the glyph on iOS and clipped its edge.
+       Keep the same dot convention while drawing it as a real circle instead. */
+    .drive-shift-bubble i {
+      flex: 0 0 auto;
+      width: 0;
+      height: .58em;
+      overflow: hidden;
+      border-radius: 999px;
+      background: currentColor;
+      font-size: 0;
+      line-height: 0;
+    }
+
+    .drive-stack.is-shift-active .drive-shift-bubble i {
+      width: .58em;
+      opacity: 1;
     }
 
     .drive-stack.is-flow-shift-engaged .drive-shift-bubble {
@@ -197,7 +231,7 @@ function setFlowShiftButtonText(bubble, active) {
   if (bubble.dataset.flowShiftText === mode) return;
   bubble.dataset.flowShiftText = mode;
   bubble.innerHTML = active
-    ? '<span><b>FLOW</b><b>SHIFT</b><i aria-hidden="true">●</i></span>'
+    ? '<span><b class="flow-shift-copy"><em>FLOW</em><em>SHIFT</em></b><i aria-hidden="true">●</i></span>'
     : '<span>SHIFT<i aria-hidden="true">●</i></span>';
 }
 
