@@ -60,7 +60,7 @@ try {
   const custom = await canvas.screenshot({ path: path.join(outputDir, 'custom-magenta-rims.png') });
   customPixels = countPixels(custom, ({ r, g, b }) => r > 125 && g < 105 && b > 115);
 
-  await rimInput.fill('#ffcc00');
+  await rimInput.fill('#ffbb00');
   const bodyInput = page.getByLabel('Body colour');
   await bodyInput.fill('#ffffff');
   await page.waitForTimeout(250);
@@ -91,7 +91,7 @@ await fs.writeFile(
 if (visualFailure) throw new Error(visualFailure);
 assert.equal(metrics?.selected, 'Supercar');
 assert.equal(metrics?.bodyColor, '#000000');
-assert.equal(metrics?.rimColor, '#ffcc00');
+assert.equal(metrics?.rimColor, '#ffbb00');
 assert.ok(metrics.canvasWidth >= 400 && metrics.canvasHeight >= 200,
   'The test must inspect the real large Lot canvas rather than a static thumbnail');
 assert.equal(browserErrors.length, 0,
