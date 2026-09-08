@@ -121,6 +121,8 @@ assert.match(carModelsSource, /DecompressionStream\('gzip'\)/);
 assert.match(carModelsSource, /loaderForPack\(car\.pack\)\.parseAsync\(arrayBuffer, ''\)/);
 assert.match(carModelsSource, /installSupercarKenneyWheels\(model, trainingCarSource\)/,
   'Supercar visuals must replace the Cosmo wheels with the verified Kenney donor geometry before paint traversal');
+assert.match(carModelsSource, /supercar-kenney-wheels\.js\?revision=r252-supercar-outward-rims/,
+  'Returning clients must fetch the corrected outward-facing donor mapping');
 
 assert.match(carModelsSource, /new THREE\.LoadingManager\(\)/);
 assert.match(carModelsSource, /setURLModifier/);
@@ -180,6 +182,10 @@ assert.ok(classicRimTriangles > 0,
   'Training Car rim paint cells must intersect authored wheel triangles');
 assert.ok(classicRimTriangles < classicWheelTriangles,
   'The Kenney donor wheel must contain both rim and tire triangles for the Supercar transplant');
+assert.equal(classicRimTriangles, 4 * 118,
+  'Each exact Kenney wheel must retain its 118 authored central rim triangles');
+assert.equal(classicWheelTriangles, 4 * (118 + 214),
+  'Each exact Kenney wheel must retain all 118 rim and 214 tire triangles');
 assert.equal(cellHits(classicBodyDoubleFlipped, classicPrimary), 0,
   'The retired double-V-flip must not accidentally become the semantic coordinate contract again');
 assert.equal(cellHits(classicBodyDoubleFlipped, classicSecondary), 0,
@@ -188,17 +194,63 @@ assert.equal(cellHits(classicWheelsDoubleFlipped, classicRims), 0,
   'The retired double-V-flip must miss the Training Car rim cells');
 assert.match(semanticSource, /'training-car': profile\(\{ primary: \[\[4, 2\], \[4, 3\]\], secondary: \[\[3, 4\], \[3, 5\]\], rims: \[\[3, 4\], \[3, 5\]\] \}\)/,
   'Training Car must use the verified Taxi-derived Car Kit palette cells');
-assert.match(supercarWheelsSource, /KENNEY_RIM_CELLS = new Set\(\['3,4', '3,5'\]\)/,
-  'Supercar rims must be split from the exact verified Kenney rim UV cells');
+assert.match(supercarWheelsSource, /KENNEY_RIM_U = 15 \/ 32/,
+  'Supercar rims must use the exact U coordinate found on the authored central faces');
+assert.match(supercarWheelsSource, /KENNEY_TIRE_U = 11 \/ 32/,
+  'Supercar tires must use the exact U coordinate found on the authored outer faces');
+assert.doesNotMatch(supercarWheelsSource, /paletteCell|KENNEY_RIM_CELLS/,
+  'The transplant must classify the inspected faces themselves rather than assume palette cells');
 assert.match(supercarWheelsSource, /SUPERCAR_TIRE_COLOR = 0x070809/,
   'Supercar tires must stay deliberately near-black');
 assert.match(supercarWheelsSource, /roughness: 0\.96/);
+assert.match(supercarWheelsSource, /metalness: 0\s*\n\s*\}\)/,
+  'Supercar tires must remain fully matte rather than inherit the rim finish');
 assert.match(supercarWheelsSource, /turnWheelSource = 'Kenney Car Kit 3\.1'/,
   'The mounted wheels must retain explicit source provenance');
 assert.match(supercarWheelsSource, /splitKenneyWheelGeometry\(donor\.geometry\)/,
   'The transplant must reuse the exact donor mesh geometry rather than draw replacement wheels');
+assert.match(supercarWheelsSource, /target\.clear\(\)[\s\S]*target\.add\(replacement\)/,
+  'The transplant must remove the Ghini wheel contents while preserving its animation host node');
+assert.doesNotMatch(supercarWheelsSource, /polygonOffset|renderOrder|turnSecondaryPaintSurface/,
+  'The correctly outward-facing authored rim must need no depth or render-order workaround');
 assert.doesNotMatch(supercarWheelsSource, /CylinderGeometry|TorusGeometry|LatheGeometry|SphereGeometry/,
   'Supercar wheel transplant must not synthesize substitute wheel geometry');
+
+const kenneyWheelProfiles = new Map(
+  (classic.json.nodes || [])
+    .filter((node) => /wheel/.test(node.name || ''))
+    .map((node) => [node.name, authoredKenneyWheelProfile(classic, node.name)])
+);
+for (const [name, profile] of kenneyWheelProfiles) {
+  assert.equal(profile.rimTriangles, 118, `${name} must expose the 118 authored rim faces`);
+  assert.equal(profile.tireTriangles, 214, `${name} must expose the 214 authored tire faces`);
+  assert.ok(profile.rimRadiusMax <= 0.165,
+    `${name} rim faces must stay inside the authored tire opening`);
+  assert.ok(profile.tireRadiusMax >= 0.3,
+    `${name} tire faces must reach the full authored wheel radius`);
+  assert.equal(Math.sign(profile.rimOutwardX), Math.sign(profile.nodeX),
+    `${name} visible rim face must point toward the wheel node's authored outside`);
+}
+
+const wheelDonorPairs = [...supercarWheelsSource.matchAll(
+  /role: '(wheel-(?:front|back)-(?:left|right))',\s+donorRole: '(wheel-(?:front|back)-(?:left|right))'/g
+)].map((match) => [match[1], match[2]]);
+assert.deepEqual(wheelDonorPairs, [
+  ['wheel-front-left', 'wheel-front-right'],
+  ['wheel-front-right', 'wheel-front-left'],
+  ['wheel-back-left', 'wheel-back-right'],
+  ['wheel-back-right', 'wheel-back-left']
+], 'Ghini targets must use the opposite-side Kenney donor while preserving each axle');
+for (const [targetName, donorName] of wheelDonorPairs) {
+  const targetNode = supercarJson.nodes.find((node) => node.name === targetName);
+  const donorProfile = kenneyWheelProfiles.get(donorName);
+  assert.ok(targetNode && donorProfile, `Missing inspected wheel mapping ${targetName} <- ${donorName}`);
+  assert.equal(
+    Math.sign(targetNode.translation?.[0] || 0),
+    Math.sign(donorProfile.rimOutwardX),
+    `${targetName} must mount a donor whose painted rim faces away from the Ghini chassis`
+  );
+}
 
 const luxurySuvCar = catalog.getCarDefinition('suv');
 assert.equal(luxurySuvCar.surfaceProfileId, 'suv-luxury',
@@ -357,6 +409,43 @@ function readAccessor(glb, accessorIndex) {
       readComponent(dataView, base + component * bytes, accessor.componentType)
     ));
   });
+}
+
+function authoredKenneyWheelProfile(glb, nodeName) {
+  const node = glb.json.nodes?.find((candidate) => candidate.name === nodeName);
+  assert.ok(node && Number.isInteger(node.mesh), `Missing authored wheel node ${nodeName}`);
+  const primitive = glb.json.meshes?.[node.mesh]?.primitives?.[0];
+  assert.ok(primitive, `Missing authored wheel primitive ${nodeName}`);
+  const positions = readAccessor(glb, primitive.attributes.POSITION);
+  const uvs = readAccessor(glb, primitive.attributes.TEXCOORD_0);
+  const indices = readAccessor(glb, primitive.indices).map((value) => value[0]);
+  const profile = {
+    nodeX: node.translation?.[0] || 0,
+    rimTriangles: 0,
+    tireTriangles: 0,
+    rimRadiusMax: 0,
+    tireRadiusMax: 0,
+    rimOutwardX: 0
+  };
+
+  for (let offset = 0; offset + 2 < indices.length; offset += 3) {
+    const triangle = indices.slice(offset, offset + 3);
+    const rim = triangle.every((index) => Math.abs(uvs[index][0] - 15 / 32) <= 1e-6);
+    const tire = triangle.every((index) => Math.abs(uvs[index][0] - 11 / 32) <= 1e-6);
+    assert.notEqual(rim, tire,
+      `${nodeName} triangle ${offset / 3} must belong to exactly one inspected authored surface`);
+    const surface = rim ? 'rim' : 'tire';
+    profile[`${surface}Triangles`] += 1;
+    for (const index of triangle) {
+      const [x, y, z] = positions[index];
+      profile[`${surface}RadiusMax`] = Math.max(profile[`${surface}RadiusMax`], Math.hypot(y, z));
+      if (surface === 'rim' && Math.abs(x) > Math.abs(profile.rimOutwardX)) {
+        profile.rimOutwardX = x;
+      }
+    }
+  }
+
+  return profile;
 }
 
 function readComponent(view, offset, componentType) {

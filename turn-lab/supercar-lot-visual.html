@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TURN Supercar Lot visual regression</title>
+  <link rel="stylesheet" href="/turn/design-tokens.css">
+  <link rel="stylesheet" href="/turn/styles.css">
+  <link rel="stylesheet" href="/turn/garage/lot-r10.css">
+  <link rel="stylesheet" href="/turn/garage/lot-showroom-experiment.css">
+  <link rel="stylesheet" href="/turn/garage/lot-showroom-cleanup-r201.css">
+  <link rel="stylesheet" href="/turn/garage/lot-thumbnail-composition-r211.css">
+  <link rel="stylesheet" href="/turn/garage/lot-info-panel-r212.css">
+  <link rel="stylesheet" href="/turn/garage/lot-info-typography-r213.css">
+  <link rel="stylesheet" href="/turn/garage/lot-layout-r60.css">
+  <link rel="stylesheet" href="/turn/garage/lot-saved-paint.css">
+  <script>
+    globalThis.__TURN_BUILD__ = Object.freeze({
+      version: '1.17.7',
+      id: '2026.09.06-r207',
+      cacheKey: '20260906-r207'
+    });
+  </script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <script type="module">
+    import { showTheLot } from '/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims';
+
+    globalThis.__supercarLotVisualReady = false;
+    globalThis.__supercarLotVisualFailure = null;
+    void showTheLot({
+      initialSelection: {
+        carId: 'supercar',
+        color: '#000000',
+        secondaryColor: '#ffcc00'
+      }
+    });
+
+    const startedAt = performance.now();
+    const timer = globalThis.setInterval(() => {
+      const loading = document.querySelector('.lot-loading');
+      const canvas = document.querySelector('.lot-view-host canvas');
+      const selected = document.querySelector('.lot-car-title strong')?.textContent?.trim();
+      if (loading?.classList.contains('is-done') && canvas?.width > 0 && canvas?.height > 0) {
+        globalThis.clearInterval(timer);
+        globalThis.__supercarLotVisualMetrics = Object.freeze({
+          selected,
+          canvasWidth: canvas.width,
+          canvasHeight: canvas.height,
+          bodyColor: document.querySelector('input[aria-label="Body colour"]')?.value || '',
+          rimColor: document.querySelector('input[aria-label="Rims colour"]')?.value || ''
+        });
+        globalThis.__supercarLotVisualReady = true;
+      } else if (performance.now() - startedAt > 60000) {
+        globalThis.clearInterval(timer);
+        globalThis.__supercarLotVisualFailure = 'Timed out waiting for the Supercar Lot preview.';
+      }
+    }, 50);
+  </script>
+</body>
+</html>

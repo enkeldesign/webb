@@ -10,7 +10,7 @@ import {
   normalizeVehicleSecondaryColor,
   normalizeVehicleSelection
 } from '../vehicle/catalog.js?revision=r250-supercar-finish';
-import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?revision=r250-supercar-finish';
+import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?revision=r252-supercar-outward-rims';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 import { isPaintUnlocked, LOCK_ICON } from '../progression/trophy-road.js?revision=r248-supercar';

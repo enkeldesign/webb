@@ -100,7 +100,7 @@ function prepareShowroomStyles() {
 
 function loadOriginalLot() {
   if (!originalLotPromise) {
-    originalLotPromise = import('./lot-showroom-experiment.js?revision=r250-supercar-finish')
+    originalLotPromise = import('./lot-showroom-experiment.js?revision=r252-supercar-outward-rims')
       .then((module) => {
         originalLotModule = module;
         return module;
