@@ -431,8 +431,8 @@ assert.match(controls, /enteredShiftToggle\(shiftPointerInside, input\.shiftRequ
   'Every new GAS-to-SHIFT crossing must toggle the setup');
 assert.doesNotMatch(controls, /shiftToggledThisGesture/,
   'SHIFT must not stay locked out until finger-up');
-assert.match(controls, /reason === 'race-started'[\s\S]*syncShiftAvailability\(\{ reset: true \}\)/,
-  'Every race must begin in the standard setup');
+assert.match(controls, /isVehicleShiftResetReason\(reason\)[\s\S]*syncShiftAvailability\(\{ reset: true \}\)/,
+  'Every race, track and UI reset must begin in the standard setup');
 assert.match(controls, /globalThis\.__turnBoostCharge = boostCharge/,
   'Boost remains normalized as a charge percentage while SHIFT changes tank duration');
 assert.match(controls, /className = 'shift-change-feedback'/,

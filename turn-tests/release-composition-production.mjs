@@ -25,7 +25,8 @@ const productionCompatibilityRoutes = Object.freeze({
   '/turn/progression/trophy-road.js?revision=r248-supercar': '/turn/progression/trophy-road.js?revision=r253-supercar-release',
   '/turn/achievements/trophy-road-showcase.js?revision=r243-mountain-1300': '/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release',
   '/turn/vehicle/shift-profile.js?revision=r232-double-shift': '/turn/vehicle/shift-profile.js?revision=r253-supercar-release',
-  '/turn/vehicle/flow-shift.js?revision=r248-supercar': '/turn/vehicle/flow-shift.js?revision=r253-supercar-release',
+  '/turn/vehicle/flow-shift.js?revision=r248-supercar': '/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority',
+  '/turn/vehicle/flow-shift.js?revision=r253-supercar-release': '/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority',
   '/turn/ui/shift-feedback.js?revision=r232-double-shift': '/turn/ui/shift-feedback.js?revision=r253-supercar-release'
 });
 
@@ -39,6 +40,7 @@ const requiredActiveModules = Object.freeze([
   'turn/vehicle/catalog.js',
   'turn/vehicle/car-models.js',
   'turn/vehicle/flow-shift.js',
+  'turn/vehicle/shift-tuning.js',
   'turn/vehicle/shift-profile.js',
   'turn/achievements/trophy-road-feedback.js',
   'turn/achievements/trophy-road-showcase.js',
