@@ -41,6 +41,15 @@ assert.deepEqual(
 );
 assert.deepEqual(
   catalog.normalizeStoredVehiclePaint({
+    carId: 'supercar',
+    color: '#000000',
+    secondaryColor: '#f8f9fa'
+  }, { migrateReplacedFactoryPaint: true }),
+  { carId: 'supercar', color: '#000000', secondaryColor: '#ffcc00', factoryPaint: true },
+  'The shipped black Supercar must gain its new yellow factory rims without rewriting custom paint'
+);
+assert.deepEqual(
+  catalog.normalizeStoredVehiclePaint({
     carId: 'convertible',
     color: '#0555aa',
     secondaryColor: '#abcdef'
@@ -72,7 +81,7 @@ assert.deepEqual(JSON.parse(selectionStorage.getItem(catalog.VEHICLE_SELECTION_K
 const secondaryCars = catalog.CAR_CATALOG.filter((car) => car.secondaryPaint);
 assert.deepEqual(
   secondaryCars.map((car) => car.id),
-  ['convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck', 'race-future', 'race', 'sedan-sports', 'sedan', 'suv', 'truck', 'van'],
+  ['convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck', 'race-future', 'race', 'sedan-sports', 'sedan', 'suv', 'truck', 'van', 'supercar'],
   'Every player-repaintable car should expose a semantic second picker'
 );
 assert.equal(secondaryCars[0].secondaryPaint.label, 'Lower body trim');
@@ -86,7 +95,19 @@ assert.equal(secondaryCars[5].secondaryPaint.label, 'Aero accents');
 assert.equal(secondaryCars[6].secondaryPaint.label, 'Aero trim');
 assert.equal(secondaryCars[7].secondaryPaint.label, 'Sport trim');
 assert.deepEqual(secondaryCars[7].secondaryPaint.meshNames, []);
-assert.ok(secondaryCars.slice(8).every((car) => car.secondaryPaint.label === 'Lower body trim'));
+assert.ok(secondaryCars.slice(8, 12).every((car) => car.secondaryPaint.label === 'Lower body trim'));
+const supercar = catalog.getCarDefinition('supercar');
+assert.equal(supercar.defaultColor, '#000000');
+assert.equal(supercar.defaultSecondaryColor, '#ffcc00');
+assert.deepEqual(supercar.defaultSecondaryColorP3, [1, 0.76, 0],
+  'Supercar factory rims must use TURN’s Display-P3 yellow');
+assert.equal(supercar.secondaryPaint?.label, 'Rims');
+assert.deepEqual(supercar.secondaryPaint?.meshNames, [
+  'supercar-rim-front-left',
+  'supercar-rim-front-right',
+  'supercar-rim-back-left',
+  'supercar-rim-back-right'
+]);
 
 const rallyGlb = await fs.readFile(new URL('../../turn/assets/cars/sedan-sports.glb', import.meta.url));
 const rallyJson = readGlbJson(rallyGlb, 'Rally Racer');
@@ -191,6 +212,19 @@ assert.deepEqual(
   })),
   { carId: 'suv', carColor: '#0555aa', carSecondaryColor: '#163f7a', factoryPaint: true },
   'Saved pink Luxury SUV ghosts from the swapped release must follow the repaired blue factory paint'
+);
+assert.deepEqual(
+  (({ carId, carColor, carSecondaryColor, factoryPaint }) => ({
+    carId, carColor, carSecondaryColor, factoryPaint
+  }))(storedReplay({
+    time: 10,
+    carId: 'supercar',
+    carColor: '#000000',
+    carSecondaryColor: '#f8f9fa',
+    frames: replayFrames
+  })),
+  { carId: 'supercar', carColor: '#000000', carSecondaryColor: '#ffcc00', factoryPaint: true },
+  'Saved factory Supercar ghosts must gain the new yellow rim color'
 );
 assert.deepEqual(
   (({ carColor, carSecondaryColor, factoryPaint }) => ({ carColor, carSecondaryColor, factoryPaint }))(
