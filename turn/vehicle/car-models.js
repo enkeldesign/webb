@@ -19,7 +19,7 @@ import {
   recolorSemanticCarFinish
 } from './semantic-car-finish.js';
 import { installLearnerCarLivery } from './learner-car-livery.js?revision=r223-training-car-taxi';
-import { installSupercarKenneyWheels } from './supercar-kenney-wheels.js?revision=r252-supercar-outward-rims';
+import { installSupercarKenneyWheels } from './supercar-kenney-wheels.js?revision=r253-supercar-release';
 
 const loadersByPack = new Map();
 const sourceCache = new Map();

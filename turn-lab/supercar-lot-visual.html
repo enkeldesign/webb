@@ -16,23 +16,28 @@
   <link rel="stylesheet" href="/turn/garage/lot-saved-paint.css">
   <script>
     globalThis.__TURN_BUILD__ = Object.freeze({
-      version: '1.17.7',
-      id: '2026.09.06-r207',
-      cacheKey: '20260906-r207'
+      version: '1.17.8',
+      id: '2026.09.08-r208',
+      cacheKey: '20260908-r208'
     });
   </script>
   <script type="importmap">
     {
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
+        "/turn/vehicle/catalog.js": "/turn/vehicle/catalog.js?revision=r253-supercar-release",
+        "/turn/vehicle/catalog.js?revision=r250-supercar-finish": "/turn/vehicle/catalog.js?revision=r253-supercar-release",
+        "/turn/vehicle/car-models.js": "/turn/vehicle/car-models.js?revision=r253-supercar-release",
+        "/turn/vehicle/car-models.js?revision=r252-supercar-outward-rims": "/turn/vehicle/car-models.js?revision=r253-supercar-release",
+        "/turn/progression/trophy-road.js?revision=r248-supercar": "/turn/progression/trophy-road.js?revision=r253-supercar-release"
       }
     }
   </script>
 </head>
 <body>
   <script type="module">
-    import { showTheLot } from '/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims';
+    import { showTheLot } from '/turn/garage/lot-showroom-experiment.js?revision=r253-supercar-release';
 
     globalThis.__supercarLotVisualReady = false;
     globalThis.__supercarLotVisualFailure = null;

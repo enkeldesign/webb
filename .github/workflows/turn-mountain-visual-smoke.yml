@@ -28,6 +28,10 @@ on:
       - 'turn-tests/mountain-spotlight-headlight-production.mjs'
       - '.github/workflows/turn-mountain-visual-smoke.yml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 

@@ -141,7 +141,7 @@ assert.match(semantic, /turnPoliceGreyMask/,
   'Police grey treatment must target neutral mid-grey pixels instead of flattening the service livery');
 assert.match(semantic, /car: '\.\/assets\/cars\/palettes\/car-kit\.png'/);
 
-const canonicalCatalogTarget = '/turn/vehicle/catalog.js?revision=r243-mountain-1300';
+const canonicalCatalogTarget = '/turn/vehicle/catalog.js?revision=r253-supercar-release';
 const expectedCatalogTargets = [
   ['/turn/vehicle/catalog.js', canonicalCatalogTarget],
   ['/turn/vehicle/catalog.js?build=20260804-r157-factory-colors', canonicalCatalogTarget],
@@ -152,7 +152,7 @@ const expectedCatalogTargets = [
 ];
 const expectedEmergencyTargets = [
   ['/turn/vehicle/semantic-car-finish.js', '/turn/vehicle/semantic-car-finish.js?revision=r223-training-car-taxi'],
-  ['/turn/vehicle/car-models.js', '/turn/vehicle/car-models.js?revision=r252-supercar-outward-rims'],
+  ['/turn/vehicle/car-models.js', '/turn/vehicle/car-models.js?revision=r253-supercar-release'],
   ['/turn/vehicle/emergency-livery-models.js', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi'],
   ['./vehicle/car-models.js?build=20260720-r19', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi'],
   ['./vehicle/car-models.js?build=20260720-r22', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi']

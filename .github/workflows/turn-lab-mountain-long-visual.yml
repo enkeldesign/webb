@@ -5,9 +5,6 @@ on:
     branches:
       - main
     paths:
-      - 'turn-lab/index.html'
-      - 'turn-lab/lab-bootstrap.js'
-      - 'turn-lab/site.webmanifest'
       - 'turn-lab/tracks/**'
       - 'turn-lab/race/**'
       - 'turn-lab/mountain-long-visual.html'
@@ -16,6 +13,10 @@ on:
   push:
     branches:
       - turn-lab-mountain-long-r1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

@@ -166,7 +166,7 @@ assert.match(trophyWrapper, /export \* from '\.\/trophy-road\.js\?revision=r243-
 for (const index of [productionIndex, labIndex]) {
   assert.match(
     index,
-    /\/turn\/progression\/trophy-road-chromatic-r183\.js\?revision=r243-mountain-1300/,
+    /\/turn\/progression\/trophy-road-chromatic-r183\.js\?revision=r253-supercar-release/,
     'Production and LAB must load the canonical Trophy Road reward catalog'
   );
   assert.match(index, /app\.js\?build=[^"']*r164-long-session-robustness-post-soak/);

@@ -306,7 +306,7 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   ]
 },
 {
-  period: '5–6 September',
+  period: '5–8 September',
   title: 'Trophy Road becomes a legible journey',
   paragraphs: [
     'Trophy Road reshapes progression into nineteen rewards at steady one-hundred-trophy intervals from 400 to 2,200. DRIFT ATTACK joins the road at 600 trophies and FLOW at 1,500, so each scoring system activates automatically as a layer of normal racing rather than asking the player to choose a mode.',
@@ -318,7 +318,9 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Reward messages now open Achievements directly and point new DRIFT ATTACK, SHIFT and FLOW owners to How to Play. The scorekeeper keeps its stable paper rows while idle black gauge bodies retract, then quickly extend when scoring resumes.',
     'BRAKE now settles the car at zero instead of automatically becoming reverse. Holding BRAKE reveals a matching attached R control; sliding outward into it supplies reverse power, and the complete control mirrors for left-handed play.',
     'Home keeps all six track choices compact by default. One shared SHOW RECORDS control expands every card into matching TIME, DRIFT and FLOW rows with each record-setting car; HIDE RECORDS restores the overview. The track grid now enables scrolling only when its measured content actually exceeds the available viewport.',
-    'Outlined TIME, DRIFT and FLOW stripes stay distinct against every track card colour. Tighter row spacing preserves the established horizontal rhythm while giving the six-card default view more opportunity to fit without scrolling.'
+    'Outlined TIME, DRIFT and FLOW stripes stay distinct against every track card colour. Tighter row spacing preserves the established horizontal rhythm while giving the six-card default view more opportunity to fit without scrolling.',
+    'SUPERCAR extends Trophy Road to 2,300 trophies with an adapted authored Cosmo body, real Kenney donor wheels and direct matte TURN paint. At Great FLOW, FLOW SHIFT keeps all three SHIFT gains without applying the complementary reductions; losing Great FLOW preserves the chosen orientation while restoring the normal eighteen-point trade-off.',
+    'The release graph now gives the accumulated SUPERCAR, FLOW SHIFT, record-thumbnail and rival-onboarding work one coherent cache identity. A fast composition check follows active modules and rejects changed runtime bytes behind an unchanged URL, while specialist CI responds to real subsystem dependencies and cancels obsolete runs on the same pull request.'
   ],
   milestones: [
     'Nineteen Trophy Road rewards from 400–2,200 trophies',
@@ -332,7 +334,9 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Stopping-only BRAKE with an explicit attached REVERSE control',
     'One shared compact/expanded view for every per-track record',
     'Outlined record accents and independently tuned track-card row spacing',
-    'TURN 1.17.0–1.17.7 · 2026.09.05-r200–2026.09.06-r207 Trophy Road release, balance and interface refinement'
+    'SUPERCAR at 2,300 trophies with FLOW SHIFT, authored Kenney wheels and TURN paint',
+    'Coherent release identities with domain-scoped, supersession-aware pull-request CI',
+    'TURN 1.17.0–1.17.8 · 2026.09.05-r200–2026.09.08-r208 Trophy Road, SUPERCAR and release-composition refinement'
   ]
 }
 ]);
@@ -653,11 +657,19 @@ export const CHANGELOG = Object.freeze([
       ['1.17.6 r206', 'Keeps track cards compact until one shared SHOW RECORDS control reveals every TIME, DRIFT and FLOW record, and removes the chooser scroll surface whenever all six cards fit.'],
       ['1.17.7 r207', 'Outlines each record stripe for contrast, gives record copy more breathing room and tightens only the vertical gap between track cards.']
     ]
+  },
+  {
+    date: '8 September',
+    entries: [
+      ['1.17.8 r208', 'Publishes SUPERCAR, FLOW SHIFT, record-car thumbnails and rival onboarding through one coherent release and cache graph for returning players.'],
+      ['Release composition', 'Checks production, TURN LAB, TURN NEXT and YOUR TURN routes, follows active local modules and rejects changed runtime files that keep an old effective URL.'],
+      ['Leaner pull-request CI', 'Keeps specialist and visual workflows on their real dependencies, cancels superseded runs on the same pull request and preserves every main validation run.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.17.7',
-  build: '2026.09.06-r207',
-  note: 'TURN 1.17.7 sharpens record contrast and fits the compact track grid more comfortably.'
+  version: '1.17.8',
+  build: '2026.09.08-r208',
+  note: 'TURN 1.17.8 publishes SUPERCAR and FLOW SHIFT through one coherent release graph.'
 });

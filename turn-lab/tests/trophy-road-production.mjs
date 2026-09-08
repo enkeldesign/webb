@@ -634,7 +634,7 @@ assert.match(view, /data-trophy-reward-type="\$\{reward\.type\}"/,
   'Reward styling must be driven by semantic reward type');
 assert.doesNotMatch(feedback, /requestAnimationFrame|scrollLeft|scrollBy|scrollWidth|clientWidth/,
   'Trophy Road must not maintain carousel geometry or a layout animation path');
-assert.match(app, /trophy-road\.js\?revision=r243-mountain-1300/);
+assert.match(app, /trophy-road\.js\?revision=r253-supercar-release/);
 assert.match(app, /trophy-road-r157\.css\?revision=r244-reward-toast-guide/);
 assert.match(workflow, /Run Trophy Road progression regression/);
 assert.match(workflow, /node turn-lab\/tests\/trophy-road-production\.mjs/);

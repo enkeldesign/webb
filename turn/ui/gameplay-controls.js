@@ -21,17 +21,17 @@ import {
 import {
   deriveVehicleTuningForCar,
   getCarDefinition
-} from '../vehicle/catalog.js?revision=r243-mountain-1300';
+} from '../vehicle/catalog.js?revision=r253-supercar-release';
 import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked
-} from '../progression/trophy-road.js?revision=r243-mountain-1300';
+} from '../progression/trophy-road.js?revision=r253-supercar-release';
 import {
   VEHICLE_SHIFT_STAT_FIELDS,
   VEHICLE_SHIFT_FEATURE_ID,
   loadVehicleShiftProfile,
   vehicleShiftAmount
-} from '../vehicle/shift-profile.js?revision=r232-double-shift';
+} from '../vehicle/shift-profile.js?revision=r253-supercar-release';
 import { resolveVehiclePerkTuning } from '../vehicle/perk-runtime.js?revision=r233-graduated';
 import {
   advanceShiftTopSpeedMultiplier,
@@ -44,7 +44,7 @@ import {
 } from '../input/brake-reverse.js?revision=r245-separate-reverse';
 import {
   resolveVehicleShiftFeedback
-} from './shift-feedback.js?revision=r232-double-shift';
+} from './shift-feedback.js?revision=r253-supercar-release';
 
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;

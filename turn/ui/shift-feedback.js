@@ -1,7 +1,7 @@
 import {
   VEHICLE_SHIFT_STAT_FIELDS,
   vehicleShiftReceiversForReducers
-} from '../vehicle/shift-profile.js?revision=r232-double-shift';
+} from '../vehicle/shift-profile.js?revision=r253-supercar-release';
 
 function canonicalKeys(keys) {
   const requested = new Set(Array.isArray(keys) ? keys : []);

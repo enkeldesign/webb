@@ -121,7 +121,7 @@ assert.match(carModelsSource, /DecompressionStream\('gzip'\)/);
 assert.match(carModelsSource, /loaderForPack\(car\.pack\)\.parseAsync\(arrayBuffer, ''\)/);
 assert.match(carModelsSource, /installSupercarKenneyWheels\(model, trainingCarSource\)/,
   'Supercar visuals must replace the Cosmo wheels with the verified Kenney donor geometry before paint traversal');
-assert.match(carModelsSource, /supercar-kenney-wheels\.js\?revision=r252-supercar-outward-rims/,
+assert.match(carModelsSource, /supercar-kenney-wheels\.js\?revision=r253-supercar-release/,
   'Returning clients must fetch the corrected outward-facing donor mapping');
 
 assert.match(carModelsSource, /new THREE\.LoadingManager\(\)/);
