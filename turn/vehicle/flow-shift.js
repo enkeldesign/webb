@@ -168,17 +168,19 @@ function ensurePresentationStyles() {
 
     .drive-shift-bubble.is-flow-shift-bump {
       --turn-flow-shift-bump-x: -7px;
+      --turn-flow-shift-rebound-x: 2px;
       animation: turn-flow-shift-bump 260ms cubic-bezier(.2,.88,.25,1);
     }
 
     :root.turn-left-handed-controls .drive-shift-bubble.is-flow-shift-bump {
       --turn-flow-shift-bump-x: 7px;
+      --turn-flow-shift-rebound-x: -2px;
     }
 
     @keyframes turn-flow-shift-bump {
       0%, 100% { transform: translateX(0) scaleX(1); }
       38% { transform: translateX(var(--turn-flow-shift-bump-x)) scaleX(1.07); }
-      68% { transform: translateX(calc(var(--turn-flow-shift-bump-x) * -.24)) scaleX(.985); }
+      68% { transform: translateX(var(--turn-flow-shift-rebound-x)) scaleX(.985); }
     }
 
     @media (prefers-reduced-motion: reduce) {
