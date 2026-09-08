@@ -99,7 +99,7 @@ function prepareShowroomStyles() {
 
 function loadOriginalLot() {
   if (!originalLotPromise) {
-    originalLotPromise = import('./lot-showroom-experiment.js?revision=r246-lot-saved-paint')
+    originalLotPromise = import('./lot-showroom-experiment.js?revision=r250-supercar-finish')
       .then((module) => {
         originalLotModule = module;
         return module;
