@@ -166,6 +166,13 @@ export async function createCarVisual({
     }
 
     if (car.id === 'supercar' && paintable) {
+      // Cosmo's Ghini bakes a dark grey body colour into its base-color map.
+      // Multiplying TURN's picker colour by that map makes every paint choice
+      // much darker than the rest of the garage. The model geometry already
+      // supplies the panel shading we need, so treat paintable body surfaces
+      // like TURN lacquer: direct colour + lighting, with no baked dark tint.
+      material.map = null;
+      material.userData.turnSupercarDirectPaint = true;
       if ('roughness' in material) material.roughness = Math.max(
         Number(material.roughness) || 0,
         SUPERCAR_MATTE_ROUGHNESS

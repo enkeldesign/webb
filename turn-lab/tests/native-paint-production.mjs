@@ -149,6 +149,16 @@ assert.doesNotMatch(css, /\.lot-color\[aria-pressed=/, 'The retired custom swatc
 assert.match(carModels, /turnSecondaryPaintMaterials/);
 assert.match(carModels, /turnSemanticPaintRecords/);
 assert.match(carModels, /recolorSemanticCarFinish/);
+assert.match(
+  carModels,
+  /if \(car\.id === 'supercar' && paintable\) \{[\s\S]*material\.map = null;[\s\S]*turnSupercarDirectPaint = true;/,
+  'Supercar lacquer must use the picker colour directly instead of multiplying it by Cosmo’s dark body texture'
+);
+assert.match(
+  carModels,
+  /SUPERCAR_MATTE_ROUGHNESS = 0\.78[\s\S]*SUPERCAR_MATTE_METALNESS = 0\.04/,
+  'Supercar direct paint must keep the matte TURN-like finish'
+);
 assert.match(semanticFinish, /surfaceProfileId \|\| car\.id/,
   'Semantic paint must follow the mounted source model rather than assuming gameplay ID equals mesh identity');
 assert.match(semanticFinish, /material\.onBeforeCompile/,
