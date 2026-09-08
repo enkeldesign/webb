@@ -13,6 +13,7 @@ const THUMBNAIL_HEIGHT = 140;
 const THUMBNAIL_ALPHA_THRESHOLD = 8;
 const THUMBNAIL_CROP_PADDING = 5;
 const HOME_THUMBNAIL_IDLE_TIMEOUT_MS = 700;
+const RECORD_CAR_INITIAL_YAW = THREE.MathUtils.degToRad(200);
 const thumbnailCache = new Map();
 let renderQueue = Promise.resolve();
 
@@ -113,7 +114,7 @@ async function renderThumbnail({ carId, color, secondaryColor }) {
       targetLength: 6.4,
       outline: true
     });
-    visual.rotation.y = Math.PI - 0.55;
+    visual.rotation.y = RECORD_CAR_INITIAL_YAW;
     scene.add(visual);
     renderer.render(scene, camera);
     return croppedThumbnailDataUrl(renderer.domElement);
