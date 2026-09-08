@@ -387,6 +387,10 @@
   --turn-trophy-road-authored-source: url('../assets/trophy-road/monster-truck.svg');
 }
 
+.turn-trophy-road-authored-icon.is-supercar {
+  --turn-trophy-road-authored-source: url('../assets/trophy-road/supercar.svg');
+}
+
 .turn-trophy-road-marker svg,
 .turn-trophy-road-highlight-icon svg,
 .turn-trophy-road-detail-icon svg,
