@@ -275,15 +275,32 @@ const turnWorkflowPaths = (await fs.readdir(path.join(repositoryRoot, '.github',
   .sort()
   .map((name) => `.github/workflows/${name}`);
 
-const [headGraph, labDocument, nextDocument, yourTurnDocument, workflowEntries] = await Promise.all([
+const [
+  headGraph,
+  labDocument,
+  nextDocument,
+  yourTurnDocument,
+  aboutBootstrap,
+  aboutHistory,
+  designMain,
+  designDialogs,
+  workflowEntries
+] = await Promise.all([
   buildProductionGraph(currentReader),
   currentReader('turn-lab/index.html'),
   currentReader('turn-next/index.html'),
   currentReader('yourturn/index.html'),
+  currentReader('turn/ui/about-history-bootstrap-r165.js'),
+  currentReader('turn/content/about-history.js'),
+  currentReader('turn/design.html'),
+  currentReader('turn/design-dialogs.html'),
   Promise.all(turnWorkflowPaths.map(async (workflowPath) => [workflowPath, await currentReader(workflowPath)]))
 ]);
 
-assert.ok(labDocument && nextDocument && yourTurnDocument, 'TURN deployment entrypoints must exist');
+assert.ok(
+  labDocument && nextDocument && yourTurnDocument && aboutBootstrap && aboutHistory && designMain && designDialogs,
+  'TURN deployment and release-facing documents must exist'
+);
 const labImportMap = parseImportMap(labDocument);
 const nextImportMap = parseImportMap(nextDocument);
 const yourTurnImportMap = parseImportMap(yourTurnDocument);
@@ -306,6 +323,28 @@ assert.doesNotMatch(headGraph.document, /challenge-mode|challenge-codec|RACE MY 
   'Challenge prototypes must remain isolated from production TURN');
 assert.doesNotMatch(headGraph.document, /href=["'][^"']*(?:\/turn\/stats|stats\/)/i,
   'The private statistics dashboard must not be linked from production TURN');
+
+const escapedVersion = headGraph.release.version.replaceAll('.', '\\.');
+const escapedReleaseId = headGraph.release.id.replaceAll('.', '\\.');
+assert.match(aboutBootstrap, new RegExp(`about-history\\.js\\?build=${headGraph.release.cacheKey}`),
+  'About must import release history through the current cache identity');
+assert.match(
+  aboutHistory,
+  new RegExp(`CURRENT_RELEASE[\\s\\S]*version: '${escapedVersion}'[\\s\\S]*build: '${escapedReleaseId}'`),
+  'About history must describe the current release source of truth'
+);
+for (const source of [designMain, designDialogs]) {
+  assert.match(source, new RegExp(`TURN ${escapedVersion}`),
+    'Design references must identify the current release version');
+  assert.match(source, new RegExp(`Build ${escapedReleaseId}`),
+    'Design references must identify the current release build');
+}
+assert.match(nextDocument, new RegExp(`Source TURN v${escapedVersion} · Build ${escapedReleaseId}`),
+  'TURN NEXT must identify the current production release');
+for (const bootstrap of ['motion-safe-zone.js', 'orientation-compat.js']) {
+  assert.match(yourTurnDocument, new RegExp(`/turn/${bootstrap.replace('.', '\\.')}\\?build=${headGraph.release.cacheKey}`),
+    `YOUR TURN must load ${bootstrap} through the current production release`);
+}
 
 for (const repositoryPath of requiredActiveModules) {
   assert.ok(headGraph.identities.has(repositoryPath), `${repositoryPath} must remain represented in the production module graph`);
