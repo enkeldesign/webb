@@ -68,11 +68,19 @@ export function installSupercarKenneyWheels(model, trainingCarSource) {
     const rimMaterial = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.74,
-      metalness: 0.04
+      metalness: 0.04,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2
     });
     rimMaterial.name = 'secondary-paint supercar-rim';
     const rim = new THREE.Mesh(rimGeometry, rimMaterial);
     rim.name = spec.rim;
+    // Kenney's wheel contains overlapping/coplanar face layers. Keep the
+    // separately painted rim layer visibly above the dark tire face without
+    // changing the authored wheel geometry.
+    rim.renderOrder = 2;
+    rim.userData.turnSecondaryPaintSurface = true;
 
     replacement.add(tire, rim);
     target.clear();
