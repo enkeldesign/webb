@@ -52,9 +52,9 @@ assert.deepEqual(supercarDefinition.secondaryPaint?.meshNames, [
   'supercar-rim-back-left',
   'supercar-rim-back-right'
 ]);
-assert.equal(supercarDefinition.defaultSecondaryColor, '#ffcc00');
-assert.deepEqual(supercarDefinition.defaultSecondaryColorP3, [1, 0.76, 0],
-  'Supercar factory rims must use TURN’s Display-P3 yellow');
+assert.equal(supercarDefinition.defaultSecondaryColor, '#ffbb00');
+assert.deepEqual(supercarDefinition.defaultSecondaryColorP3, [1, 0.69, 0],
+  'Supercar factory rims must use the warmer Display-P3 #fb0 yellow');
 
 const paletteContracts = new Map([
   ['car', {
@@ -263,9 +263,9 @@ const luxurySuvWheels = mergeNodeCells(luxurySuvCells, (name) => /wheel/i.test(n
 assert.ok(cellHits(luxurySuvBody, [[4, 2], [4, 3]]) > 0,
   'Luxury SUV primary paint cells must intersect its authored body triangles');
 assert.ok(cellHits(luxurySuvBody, [[3, 4], [3, 5]]) > 0,
-  'Luxury SUV secondary trim cells must intersect its authored body triangles');
+  'Luxury SUV secondary trim cells must intersect authored body triangles');
 assert.ok(cellHits(luxurySuvWheels, [[5, 4], [5, 5]]) > 0,
-  'Luxury SUV rim paint cells must intersect its authored wheel triangles');
+  'Luxury SUV rim paint cells must intersect authored wheel triangles');
 assert.match(semanticSource, /'suv-luxury': profile\(\{ primary: \[\[4, 2\], \[4, 3\]\]/,
   'Luxury SUV must use its verified native palette cells instead of the old SUV mask');
 
