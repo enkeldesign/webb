@@ -61,7 +61,7 @@ export function installSupercarKenneyWheels(model, trainingCarSource) {
       roughness: 0.96,
       metalness: 0
     });
-    tireMaterial.name = 'supercar-dark-tire';
+    tireMaterial.name = 'supercar-dark-foot';
     const tire = new THREE.Mesh(tireGeometry, tireMaterial);
     tire.name = spec.tire;
 
