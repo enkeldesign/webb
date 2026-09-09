@@ -6,6 +6,11 @@ import {
   crossedForwardGate,
   updateLapProgressState
 } from '../../turn/race/lap-system.js';
+import {
+  COUNTRYSIDE_CHECKPOINT_GATE_HALF_WIDTH_FACTOR,
+  LAP_VOID_DISABLED_TRACKS,
+  updateLapProgressState as updateProductionLapProgressState
+} from '../../turn/race/lap-system-r86.js';
 import { resetRaceToStage } from '../../turn/race/game-state.js';
 
 const catalogSource = await fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8');
@@ -27,6 +32,10 @@ assert.deepEqual(
 );
 
 assert.ok(LAP_CHECKPOINTS.length >= 10, 'anti-shortcut checkpoint chain must stay dense');
+assert.equal(COUNTRYSIDE_CHECKPOINT_GATE_HALF_WIDTH_FACTOR, 3,
+  'Countryside must give new players a much broader valid racing corridor');
+assert.deepEqual(LAP_VOID_DISABLED_TRACKS, ['cliffside'],
+  'Cliffside physical containment should make checkpoint-based LAP VOID unnecessary');
 
 class Vec3 {
   constructor(x = 0, y = 0, z = 0) {
@@ -139,6 +148,91 @@ updateLapProgressState({
 });
 assert.equal(skippedGateState.lapCheckpointIndex, 0, 'skipping the required checkpoint must not advance the ordered chain');
 assert.equal(skippedGateState.lapInvalid, true, 'crossing a later gate before the required one must permanently invalidate the current attempt');
+
+for (const lateralOffset of [-70, 70]) {
+  const countrysideState = {
+    trackId: 'countryside',
+    lapActive: true,
+    lapInvalid: false,
+    lapCheckpointIndex: 0,
+    lapStartedAt: 0,
+    lapElapsed: 0,
+    position: new Vec3(firstCheckpointIndex + 2, 0, lateralOffset),
+    velocity: new Vec3(10, 0, 0),
+    progress: LAP_CHECKPOINTS[0],
+    trackDistance: Math.abs(lateralOffset),
+    lapPreviousPosition: { x: firstCheckpointIndex - 2, z: lateralOffset }
+  };
+  updateProductionLapProgressState({
+    state: countrysideState,
+    nearestAfter: { sample: samples[firstCheckpointIndex] },
+    samples,
+    trackWidth: 27,
+    now: 1360,
+    beginTimedLap: () => assert.fail('a wide Countryside checkpoint crossing must not restart the lap'),
+    completeLap: () => assert.fail('the first Countryside checkpoint must not complete the lap'),
+    recordGhostFrame: () => {}
+  });
+  assert.equal(countrysideState.lapCheckpointIndex, 1,
+    'Countryside must accept broad excursions on either side of the road');
+  assert.equal(countrysideState.lapInvalid, false,
+    'a harmless wide Countryside line must remain a valid lap');
+}
+
+const cliffsideState = {
+  trackId: 'cliffside',
+  lapActive: true,
+  lapInvalid: false,
+  lapCheckpointIndex: 0,
+  lapStartedAt: 0,
+  lapElapsed: 0,
+  position: new Vec3(2, 0, 0),
+  velocity: new Vec3(10, 0, 0),
+  progress: 0,
+  trackDistance: 0,
+  lapPreviousPosition: { x: -2, z: 0 }
+};
+let cliffsideCompleted = 0;
+updateProductionLapProgressState({
+  state: cliffsideState,
+  nearestAfter: { sample: samples[0] },
+  samples,
+  trackWidth: 27,
+  now: 1370,
+  beginTimedLap: () => assert.fail('an active Cliffside lap must not restart at the finish'),
+  completeLap: () => { cliffsideCompleted += 1; },
+  recordGhostFrame: () => {}
+});
+assert.equal(cliffsideCompleted, 1,
+  'Cliffside must complete from the physical start/finish gate without checkpoint LAP VOID');
+assert.equal(cliffsideState.lapInvalid, false,
+  'Cliffside containment must not produce checkpoint-based LAP VOID');
+
+const airportState = {
+  trackId: 'airport',
+  lapActive: true,
+  lapInvalid: false,
+  lapCheckpointIndex: 0,
+  lapStartedAt: 0,
+  lapElapsed: 0,
+  position: new Vec3(secondCheckpointIndex + 2, 0, 0),
+  velocity: new Vec3(10, 0, 0),
+  progress: LAP_CHECKPOINTS[1],
+  trackDistance: 0,
+  lapPreviousPosition: { x: secondCheckpointIndex - 2, z: 0 }
+};
+updateProductionLapProgressState({
+  state: airportState,
+  nearestAfter: { sample: samples[secondCheckpointIndex] },
+  samples,
+  trackWidth: 27,
+  now: 1380,
+  beginTimedLap: () => {},
+  completeLap: () => {},
+  recordGhostFrame: () => {}
+});
+assert.equal(airportState.lapInvalid, true,
+  'open shortcut-prone tracks such as Airport must retain ordered checkpoint protection');
 
 assert.equal(
   crossedForwardGate(
@@ -256,10 +350,11 @@ assert.equal(resetState.lapCheckpointIndex, 0, 'reset must clear checkpoint prog
 assert.equal(resetState.lapInvalid, false, 'Restart Lap must clear the persistent invalid-lap state');
 assert.equal(resetState.lapActive, false, 'reset must return to staged pre-lap state');
 
-const [carModelsSource, mainSource, lapSystemSource, gameStateSource] = await Promise.all([
+const [carModelsSource, mainSource, lapSystemSource, productionLapSystemSource, gameStateSource] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/lap-system.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/race/lap-system-r86.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/game-state.js', import.meta.url), 'utf8')
 ]);
 assert.match(carModelsSource, /const TIRE_COLOR = 0x17191c/, 'asset vehicle wheels must be forced to a dark tire colour');
@@ -271,10 +366,16 @@ assert.match(mainSource, /const car = makeCar\(0x38d9ff, 1\)/, 'additional proce
 assert.match(lapSystemSource, /crossedForwardGate/, 'production lap registration must use swept physical gates');
 assert.match(lapSystemSource, /crossedLaterCheckpointGate/, 'passing a later gate must expose the moment a lap becomes irrecoverably invalid');
 assert.match(lapSystemSource, /state\.lapInvalid = true/, 'skipped route detection must persist invalidity for the current attempt');
-assert.match(lapSystemSource, /CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 1\.05/, 'checkpoint gates must allow broad grass and verge racing lines');
+assert.match(lapSystemSource, /CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 1\.05/, 'default checkpoint gates must retain their established anti-shortcut width');
+assert.match(lapSystemSource, /checkpointGateHalfWidthFactor = CHECKPOINT_GATE_HALF_WIDTH_FACTOR/,
+  'track policy must be able to widen checkpoints without widening start/finish');
 assert.match(lapSystemSource, /START_GATE_HALF_WIDTH_FACTOR = 0\.82/, 'start and finish must keep the established narrower crossing gate');
 assert.match(lapSystemSource, /turn:lap-invalid/, 'an incomplete checkpoint chain must report an invalid lap instead of failing silently');
 assert.doesNotMatch(lapSystemSource, /crossedStartByProgress/, 'start and finish must not retain the retired progress-wrap fallback');
+assert.match(productionLapSystemSource, /COUNTRYSIDE_CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 3/,
+  'Countryside must expose its user-tested broad excursion allowance');
+assert.match(productionLapSystemSource, /LAP_VOID_DISABLED_TRACKS = Object\.freeze\(\['cliffside'\]\)/,
+  'physically contained Cliffside must opt out of checkpoint LAP VOID');
 assert.match(gameStateSource, /state\.lapInvalid = false/, 'race staging must clear invalid-lap status');
 
-console.log('TURN forgiving swept lap gates, early invalid-lap state, single-source start line and anti-shortcut regression passed.');
+console.log('TURN forgiving per-track swept lap gates, contained-track opt-out and anti-shortcut regression passed.');
