@@ -301,8 +301,8 @@ const [showroomSource, paintGateSource, wrapperSource, enhancementSource, savedP
 ]);
 assert.match(showroomSource, /const thumbnailPaint = resolveLotPaint\(car\.id\)/,
   'Thumbnail loading fallbacks must start from saved paint instead of factory paint');
-assert.match(showroomSource, /thumbnailRenderer\.renderAll\(LOT_CARS, carButtons, resolveLotPaint\)/,
-  'The initial 3D thumbnail pass must render every remembered per-car paint pair');
+assert.match(showroomSource, /thumbnailRenderer\.observeVisible\(LOT_CARS, carButtons, resolveLotPaint, carPicker\)/,
+  'Each visibility-driven 3D thumbnail batch must render its remembered per-car paint pair');
 assert.match(showroomSource, /thumbnailRenderer\.renderOne\(car, button, paint\)/,
   'SAVE and RESET must refresh only the affected thumbnail');
 assert.match(showroomSource, /className = 'lot-paint-save-action'/);
@@ -311,7 +311,7 @@ assert.match(showroomSource, /button\.textContent = resetMode \? 'RESET' : 'SAVE
 assert.match(showroomSource, /saveLotPaint\(selectedCarId, selectedPaint\(\)\)/);
 assert.match(showroomSource, /resetLotPaint\(selectedCarId\)/);
 assert.match(showroomSource, /let pending = Promise\.resolve\(\)/,
-  'Single-thumbnail refreshes must serialize behind the initial low-power render rather than open concurrent WebGL contexts');
+  'Single-thumbnail refreshes must serialize behind visible-card work rather than open concurrent WebGL contexts');
 assert.match(showroomSource, /car-models\.js\?revision=r252-supercar-outward-rims/,
   'The Lot must cross a fresh cache boundary into the corrected Supercar model factory');
 assert.match(paintGateSource, /if \(freeColor && !paintUnlocked\) forceFactoryPaint\(carId\)/,

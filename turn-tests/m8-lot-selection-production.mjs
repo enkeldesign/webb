@@ -32,8 +32,8 @@ assert.match(
 );
 assert.match(
   m8Home,
-  /await Promise\.all\(\[[\s\S]*activateTrack\(selectedTrackId, runtime\),[\s\S]*prepareEnhancedLot\(\)[\s\S]*\]\);/,
-  'M8 must prepare the showroom in parallel with track activation so its controls can mount synchronously once Home is hidden'
+  /await Promise\.all\(\[[\s\S]*activateTrack\(trackId, runtime\),[\s\S]*prepareLotOnce\(\)[\s\S]*\]\);/,
+  'M8 must reuse the warmed showroom in parallel with track activation so its controls can mount synchronously once Home is hidden'
 );
 assert.match(
   m8Home,
@@ -41,7 +41,7 @@ assert.match(
   'M8 must still open car selection with the current saved vehicle after activating the selected track'
 );
 assert.ok(
-  m8Home.indexOf('prepareEnhancedLot()') < m8Home.indexOf('const lotPromise = showTheLot'),
+  m8Home.indexOf('prepareLotOnce()') < m8Home.indexOf('const lotPromise = showTheLot'),
   'The showroom must be prepared before M8 attaches the existing Race This Car motion-access gate'
 );
 assert.ok(
@@ -96,6 +96,16 @@ assert.doesNotMatch(showroom, /let pitch\s*=|pitch\s*=|stage\.rotation\.x\s*=|la
   'Vertical pointer movement must never pitch or roll the selected showroom car');
 assert.match(showroom, /function createThumbnailRenderer\(\)/,
   'The visible car rail must render actual TURN car models');
+assert.match(showroom, /function observeVisible\(cars, carButtons, paintForCar, root\)/,
+  'The Lot must expose visibility-driven thumbnail preparation');
+assert.match(showroom, /new globalThis\.IntersectionObserver/,
+  'The Lot must defer real-model thumbnails until their rail cards approach the viewport');
+assert.match(showroom, /rootMargin: THUMBNAIL_ROOT_MARGIN/,
+  'The visibility queue should prepare nearby cards just before they scroll onscreen');
+assert.doesNotMatch(showroom, /thumbnailRenderer\.renderAll|renderAll\(cars/,
+  'Opening The Lot must never launch all 16 real-model thumbnails');
+assert.match(showroom, /revealSelectedCar\(\{ immediate: true \}\)/,
+  'The saved car must be positioned before visibility observation begins');
 assert.match(showroom, /preserveDrawingBuffer: true/,
   'Real model thumbnails must be copied from the temporary WebGL renderer into persistent 2D canvases');
 assert.match(showroom, /powerPreference: 'low-power'/,
@@ -106,6 +116,13 @@ assert.match(showroom, /requestIdleCallback/,
   'Thumbnail generation should use idle time when the browser exposes it');
 assert.match(showroom, /renderer\?\.forceContextLoss\?\.\(\)/,
   'The temporary thumbnail WebGL context must be explicitly released');
+assert.match(
+  showroom,
+  /thumbnailRenderer\.stop\(\);[\s\S]*viewer\.stop\(\);[\s\S]*overlay\.remove\(\);[\s\S]*resolve\([\s\S]*deferLotRendererCleanup/,
+  'Closing The Lot must detach and resolve before expensive GPU disposal'
+);
+assert.match(showroom, /requestIdleCallback\(cleanup, \{ timeout: 800 \}\)/,
+  'WebGL cleanup should move behind the visible transition frame when idle scheduling is available');
 assert.match(showroom, /className = 'lot-car-option-thumbnail'/,
   'Each visible vehicle card must receive a canvas for its real 3D model thumbnail');
 assert.doesNotMatch(showroom, /makeLotGround|makeParkingPad|const positions = LOT_CARS/,

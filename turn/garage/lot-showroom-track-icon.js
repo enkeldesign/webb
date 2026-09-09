@@ -2,10 +2,10 @@
 // belongs to Home/race state; this only mirrors that choice as a decorative icon
 // beside THE LOT heading without creating another source of track truth.
 
-import { showTheLot as showBaseLot } from './lot-showroom-experiment.js?revision=r252-supercar-outward-rims-base';
+import { showTheLot as showBaseLot } from './lot-showroom-experiment.js?revision=r259-swift-lot-ui-base';
 import { trackIconMarkup } from '../ui/track-icons.js?revision=r1-track-reward-icons';
 
-export * from './lot-showroom-experiment.js?revision=r252-supercar-outward-rims-base';
+export * from './lot-showroom-experiment.js?revision=r259-swift-lot-ui-base';
 
 function currentTrackId() {
   return globalThis.__turnNextHome?.getSelectedTrackId?.()

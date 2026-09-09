@@ -635,6 +635,8 @@ export async function installM8HomeNavigation() {
   let selectedTrackId = normalizeTrackId(loadTrackSelection());
   let setupPending = false;
   let pendingAccess = null;
+  let lotWarmupPromise = null;
+  let lotWarmupScheduled = false;
 
   const home = document.createElement('section');
   home.className = 'm8-home';
@@ -709,6 +711,36 @@ export async function installM8HomeNavigation() {
     return TRACK_CATALOG.find((track) => track.id === selectedTrackId) || TRACK_CATALOG[0];
   }
 
+  function prepareLotOnce() {
+    if (!lotWarmupPromise) lotWarmupPromise = prepareEnhancedLot();
+    return lotWarmupPromise;
+  }
+
+  function scheduleEnhancedLotWarmup() {
+    if (lotWarmupPromise || lotWarmupScheduled) return;
+    lotWarmupScheduled = true;
+    requestAnimationFrame(() => {
+      const beginWarmup = () => {
+        lotWarmupScheduled = false;
+        void prepareLotOnce().catch((error) => {
+          console.warn('TURN: The Lot could not be prepared in the background.', error);
+        });
+      };
+
+      if (typeof globalThis.requestIdleCallback === 'function') {
+        globalThis.requestIdleCallback(beginWarmup, { timeout: 1800 });
+        return;
+      }
+      globalThis.setTimeout(beginWarmup, 600);
+    });
+  }
+
+  function waitForHomePaint() {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+  }
+
   function syncSelection({ scroll = false } = {}) {
     for (const card of cards) {
       const selected = card.dataset.trackId === selectedTrackId;
@@ -780,6 +812,7 @@ export async function installM8HomeNavigation() {
     document.body.classList.add('turn-m8-active', 'turn-home-open');
     syncTrackBestVisibility();
     syncSelection();
+    scheduleEnhancedLotWarmup();
     requestAnimationFrame(() => {
       syncScrollButtons();
       if (focus) home.querySelector('#m8HomeTitle')?.focus?.();
@@ -793,15 +826,23 @@ export async function installM8HomeNavigation() {
 
   async function continueToTrack() {
     if (setupPending) return;
+    const trackId = selectedTrackId;
+    const trackName = selectedTrack().name.toUpperCase();
+    const setupMessage = `PREPARING ${trackName} AND THE LOT…`;
     setupPending = true;
     continueButton.disabled = true;
-    homeStatus.textContent = '';
+    continueButton.textContent = `PREPARING ${trackName}…`;
+    continueButton.setAttribute('aria-busy', 'true');
+    homeStatus.textContent = setupMessage;
     pendingAccess = null;
 
     try {
+      // Let the pressed state and setup copy reach the screen before world
+      // construction or module parsing can occupy the main thread.
+      await waitForHomePaint();
       await Promise.all([
-        activateTrack(selectedTrackId, runtime),
-        prepareEnhancedLot()
+        activateTrack(trackId, runtime),
+        prepareLotOnce()
       ]);
       hideHome();
       const lotPromise = showTheLot({ initialSelection: selectedVehicle(runtime) });
@@ -820,8 +861,12 @@ export async function installM8HomeNavigation() {
         return false;
       }
 
-      await raceSession.selectVehicle(selection);
-      await showTrackIntro(selectedTrackId);
+      // The track intro is already an intentional transition. Prepare the
+      // selected race car behind it instead of making the player wait twice.
+      await Promise.all([
+        raceSession.selectVehicle(selection),
+        showTrackIntro(trackId)
+      ]);
       await raceSession.startGame(pendingAccess?.fullscreenPromise);
       return true;
     } catch (error) {
@@ -832,6 +877,9 @@ export async function installM8HomeNavigation() {
     } finally {
       setupPending = false;
       continueButton.disabled = false;
+      continueButton.removeAttribute('aria-busy');
+      syncSelection();
+      if (homeStatus.textContent === setupMessage) homeStatus.textContent = '';
     }
   }
 
@@ -843,6 +891,7 @@ export async function installM8HomeNavigation() {
 
   for (const card of cards) {
     card.addEventListener('click', () => {
+      if (setupPending) return;
       selectedTrackId = normalizeTrackId(card.dataset.trackId);
       syncSelection({ scroll: true });
     });

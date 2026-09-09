@@ -283,15 +283,19 @@ assert.match(lotAccessibility, /Choose car/);
 assert.match(lotAccessibility, /Choose car colour/);
 assert.match(lotAccessibility, /Car information/);
 
-assert.match(home, /activateTrack\(selectedTrackId, runtime\)/);
+assert.match(home, /activateTrack\(trackId, runtime\)/);
 assert.match(home, /showTheLot\(\{ initialSelection: selectedVehicle\(runtime\) \}\)/);
 assert.match(home, /raceSession\.selectVehicle\(selection\)/);
-assert.match(home, /showTrackIntro\(selectedTrackId\)/);
+assert.match(home, /showTrackIntro\(trackId\)/);
 assert.match(home, /raceSession\.startGame\(pendingAccess\?\.fullscreenPromise\)/);
-assert.ok(home.indexOf('activateTrack(selectedTrackId, runtime)') < home.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })'));
+assert.match(
+  home,
+  /await Promise\.all\(\[\s*raceSession\.selectVehicle\(selection\),\s*showTrackIntro\(trackId\)\s*\]\);/
+);
+assert.ok(home.indexOf('activateTrack(trackId, runtime)') < home.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })'));
 assert.ok(home.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })') < home.indexOf('raceSession.selectVehicle(selection)'));
-assert.ok(home.indexOf('raceSession.selectVehicle(selection)') < home.indexOf('showTrackIntro(selectedTrackId)'));
-assert.ok(home.indexOf('showTrackIntro(selectedTrackId)') < home.indexOf('raceSession.startGame(pendingAccess?.fullscreenPromise)'));
+assert.ok(home.indexOf('raceSession.selectVehicle(selection)') < home.indexOf('showTrackIntro(trackId)'));
+assert.ok(home.indexOf('showTrackIntro(trackId)') < home.indexOf('raceSession.startGame(pendingAccess?.fullscreenPromise)'));
 assert.doesNotMatch(home, /chooseTrackBeforeLot/);
 
 assert.match(trackIntro, /TRACK_INTRO_HOLD_MS = 2100/);

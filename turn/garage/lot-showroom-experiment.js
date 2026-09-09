@@ -32,6 +32,7 @@ const VIEWER_INITIAL_YAW = THREE.MathUtils.degToRad(200);
 const THUMBNAIL_INITIAL_YAW = Math.PI - 0.55;
 const THUMBNAIL_WIDTH = 240;
 const THUMBNAIL_HEIGHT = 108;
+const THUMBNAIL_ROOT_MARGIN = '0px 160px';
 let paintControlSerial = 0;
 
 export const LOT_CAR_ORDER = Object.freeze([
@@ -284,12 +285,12 @@ export function showTheLot({ initialSelection } = {}) {
       if (reveal) revealSelectedCar();
     }
 
-    function revealSelectedCar() {
+    function revealSelectedCar({ immediate = false } = {}) {
       const selectedButton = carButtons.get(selectedCarId);
       if (!selectedButton) return;
       const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
       selectedButton.scrollIntoView({
-        behavior: reducedMotion ? 'auto' : 'smooth',
+        behavior: immediate || reducedMotion ? 'auto' : 'smooth',
         block: 'nearest',
         inline: 'center'
       });
@@ -480,19 +481,42 @@ export function showTheLot({ initialSelection } = {}) {
       window.removeEventListener('turn:trophy-road-updated', syncAvailabilitySummary);
       window.removeEventListener('turn:paint-controls-unlocked', handlePaintUnlocked);
       resizeObserver.disconnect();
-      thumbnailRenderer.cancel();
-      viewer.dispose();
+
+      // Stop both render loops immediately, detach the UI, and resolve the
+      // selection before the synchronous WebGL context teardown runs.
+      thumbnailRenderer.stop();
+      viewer.stop();
       overlay.remove();
       document.body.classList.remove('turn-lot-open');
       resolve(result ? normalizeVehicleSelection(result) : null);
+      deferLotRendererCleanup(() => {
+        thumbnailRenderer.cancel();
+        viewer.dispose();
+      });
     }
 
     updateSelectionUi({ reveal: false });
     syncAvailabilitySummary();
     requestAnimationFrame(() => {
+      if (disposed) return;
       viewer.resize();
-      revealSelectedCar();
-      void thumbnailRenderer.renderAll(LOT_CARS, carButtons, resolveLotPaint);
+      revealSelectedCar({ immediate: true });
+      requestAnimationFrame(() => {
+        if (disposed) return;
+        thumbnailRenderer.observeVisible(LOT_CARS, carButtons, resolveLotPaint, carPicker);
+      });
+    });
+  });
+}
+
+function deferLotRendererCleanup(cleanup) {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (typeof globalThis.requestIdleCallback === 'function') {
+        globalThis.requestIdleCallback(cleanup, { timeout: 800 });
+        return;
+      }
+      globalThis.setTimeout(cleanup, 120);
     });
   });
 }
@@ -559,6 +583,7 @@ function createViewer(host) {
   let pointerId = null;
   let lastX = 0;
   let disposed = false;
+  let resourcesDisposed = false;
   let lastRenderAt = -Infinity;
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
   const clock = new THREE.Clock();
@@ -598,9 +623,32 @@ function createViewer(host) {
     recordPerformanceFrame('lot', renderer, now);
   });
 
+  function stop() {
+    if (disposed) return;
+    disposed = true;
+    generation += 1;
+    renderer.setAnimationLoop(null);
+  }
+
+  function dispose() {
+    if (resourcesDisposed) return;
+    stop();
+    resourcesDisposed = true;
+    if (visual) {
+      stage.remove(visual);
+      disposeVisualMaterials(visual);
+      visual = null;
+    }
+    for (const resource of platformResources) resource.dispose?.();
+    renderer.dispose();
+    renderer.forceContextLoss?.();
+    renderer.domElement.remove();
+  }
+
   return {
     renderer,
     async show(carId, color, secondaryColor) {
+      if (disposed) return;
       const request = ++generation;
       currentColor = normalizeVehicleColor(color);
       currentSecondaryColor = normalizeVehicleSecondaryColor(secondaryColor);
@@ -644,20 +692,8 @@ function createViewer(host) {
       camera.position.set(compact ? 9.6 : 8.6, compact ? 5.2 : 4.9, compact ? 10.6 : 9.7);
       camera.lookAt(0, 1.05, 0);
     },
-    dispose() {
-      disposed = true;
-      generation += 1;
-      renderer.setAnimationLoop(null);
-      if (visual) {
-        stage.remove(visual);
-        disposeVisualMaterials(visual);
-        visual = null;
-      }
-      for (const resource of platformResources) resource.dispose?.();
-      renderer.dispose();
-      renderer.forceContextLoss?.();
-      renderer.domElement.remove();
-    }
+    stop,
+    dispose
   };
 }
 
@@ -666,9 +702,11 @@ function createThumbnailRenderer() {
   let renderer = null;
   let activeVisual = null;
   let pending = Promise.resolve();
+  let visibilityObserver = null;
+  const requestedCarIds = new Set();
 
   async function renderBatch(cars, carButtons, paintForCar) {
-    if (cancelled) return;
+    if (cancelled || !cars.length) return;
 
     const scene = new THREE.Scene();
     scene.add(new THREE.HemisphereLight(0xffffff, 0x43556c, 3.2));
@@ -759,21 +797,70 @@ function createThumbnailRenderer() {
     return job;
   }
 
+  function renderVisible(cars, carButtons, paintForCar) {
+    const freshCars = cars.filter((car) => car && !requestedCarIds.has(car.id));
+    for (const car of freshCars) requestedCarIds.add(car.id);
+    if (!freshCars.length) return Promise.resolve();
+    return enqueue(freshCars, carButtons, paintForCar);
+  }
+
+  function observeVisible(cars, carButtons, paintForCar, root) {
+    if (cancelled) return;
+    visibilityObserver?.disconnect();
+
+    if (typeof globalThis.IntersectionObserver !== 'function') {
+      const selectedCars = cars.filter(
+        (car) => carButtons.get(car.id)?.getAttribute('aria-checked') === 'true'
+      );
+      void renderVisible(selectedCars.length ? selectedCars : cars.slice(0, 1), carButtons, paintForCar)
+        .catch((error) => {
+          console.warn('TURN: the selected Lot thumbnail could not be prepared.', error);
+        });
+      return;
+    }
+
+    const carByButton = new Map(
+      cars.map((car) => [carButtons.get(car.id), car]).filter(([button]) => Boolean(button))
+    );
+    visibilityObserver = new globalThis.IntersectionObserver((entries) => {
+      const visibleCars = entries
+        .filter((entry) => entry.isIntersecting)
+        .map((entry) => carByButton.get(entry.target))
+        .filter(Boolean);
+      void renderVisible(visibleCars, carButtons, paintForCar).catch((error) => {
+        console.warn('TURN: visible Lot thumbnails could not be prepared.', error);
+      });
+    }, {
+      root,
+      rootMargin: THUMBNAIL_ROOT_MARGIN,
+      threshold: 0.01
+    });
+    for (const button of carByButton.keys()) visibilityObserver.observe(button);
+  }
+
+  function stop() {
+    if (cancelled) return;
+    cancelled = true;
+    visibilityObserver?.disconnect();
+    visibilityObserver = null;
+  }
+
+  function cancel() {
+    stop();
+    if (activeVisual) disposeVisualMaterials(activeVisual);
+    activeVisual = null;
+    renderer?.dispose();
+    renderer?.forceContextLoss?.();
+    renderer = null;
+  }
+
   return {
-    renderAll(cars, carButtons, paintForCar) {
-      return enqueue(cars, carButtons, paintForCar);
-    },
+    observeVisible,
     renderOne(car, button, paint) {
       return enqueue([car], new Map([[car.id, button]]), () => paint);
     },
-    cancel() {
-      cancelled = true;
-      if (activeVisual) disposeVisualMaterials(activeVisual);
-      activeVisual = null;
-      renderer?.dispose();
-      renderer?.forceContextLoss?.();
-      renderer = null;
-    }
+    stop,
+    cancel
   };
 }
 
