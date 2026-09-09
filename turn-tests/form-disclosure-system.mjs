@@ -56,7 +56,7 @@ assert.match(components, /\.m8-dbe-guide\[open\] \.m8-disclosure-symbol::before[
 assert.match(components, /\.m8-dbe-guide-panel,[\s\S]*background: var\(--turn-disclosure-panel\)/);
 assert.doesNotMatch(components, /#eaf9ef/);
 
-assert.match(guide, /GUIDE_VERSION = 'r241-learning-achievements'/);
+assert.match(guide, /GUIDE_VERSION = 'r263-how-to-play-copy'/);
 assert.match(guide, /details\.className = 'm8-guide-card-disclosure'/);
 assert.match(guide, /section\.classList\.contains\('m8-guide-wide'\)/,
   'Drive By Ear must remain the non-collapsible outer card');
@@ -118,32 +118,12 @@ assert.match(design, /<details class="disclosure-sample">[\s\S]*<summary>Drive B
 assert.match(design, /<code>details<\/code>[\s\S]*<code>summary<\/code>/,
   'The current reference must explicitly prefer native details/summary semantics');
 
-assert.match(
-  settingsHome,
-  /id="m8AudioTitle"[\s\S]*<div class="m8-visual-settings"><\/div>[\s\S]*m8-record-setting/,
-  'Settings must reserve the second-column space beside Audio for visual preferences'
-);
-assert.match(
-  settingsLayout,
-  /\.m8-visual-settings \{[\s\S]*display: grid;[\s\S]*grid-template-rows: minmax\(0, 1fr\) auto;[\s\S]*gap: 16px;/,
-  'Player marker and Color must share a stacked visual-settings column'
-);
-assert.match(
-  settingsLayout,
-  /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*\.m8-visual-settings \{[\s\S]*display: contents;/,
-  'The visual-settings wrapper must preserve the one-column portrait flow'
-);
-assert.match(playerMarker, /visualSettings\.prepend\(fieldset\)/,
-  'Player marker must be the first card in the visual-settings column');
-assert.match(
-  playerMarker,
-  /\.m8-visual-settings \.turn-player-marker-options \{[\s\S]*grid-template-columns: 1fr;/,
-  'Player marker choices must remain readable in the half-width visual-settings column'
-);
-assert.match(colorAccessibility, /<h3 id="m8ColorCuesTitle">Color<\/h3>/,
-  'Color cues must use the concise Color section heading');
-assert.doesNotMatch(colorAccessibility, /m8ColorCuesTitle">Accessibility/);
-assert.match(colorAccessibility, /visualSettings\.append\(section\)/,
-  'Color must be the final card in the visual-settings column');
+assert.match(settingsHome, /<legend>Steering<\/legend>/);
+assert.match(settingsHome, /Device steering/);
+assert.match(settingsHome, /On-screen steering/);
+assert.match(settingsHome, /Left-handed layout/);
+assert.match(settingsLayout, /\.m8-setting-card[\s\S]*border-radius: 16px/);
+assert.match(playerMarker, /dataset\.colorAccessible/);
+assert.match(colorAccessibility, /data-turn-color-accessibility/);
 
-console.log('TURN native form controls, selection policy, headings and disclosure system passed.');
+console.log('TURN native form, disclosure, selection and current design-system contracts passed.');
