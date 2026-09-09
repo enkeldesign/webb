@@ -1,0 +1,388 @@
+/*
+ * Handedness is a peripheral-HUD composition, not only a control swap.
+ * The stats/score/steering column stays opposite the map/drive-pad column,
+ * while the centre of the road remains clear.
+ */
+:root {
+  --turn-peripheral-left-edge: max(12px, env(safe-area-inset-left));
+  --turn-peripheral-right-edge: max(12px, env(safe-area-inset-right));
+  --turn-peripheral-stats-height: clamp(58px, 8vh, 66px);
+  --turn-peripheral-column-gap: clamp(8px, 2vh, 16px);
+  --turn-peripheral-score-control-gap: clamp(12px, 2vh, 16px);
+  --turn-peripheral-score-flow-gap: 3px;
+  --turn-peripheral-manual-bottom: max(68px, calc(env(safe-area-inset-bottom) + 56px));
+  --turn-peripheral-manual-height: clamp(102px, 15vw, 150px);
+  --turn-peripheral-score-top: calc(
+    max(10px, env(safe-area-inset-top))
+    + var(--turn-peripheral-stats-height)
+    + var(--turn-peripheral-column-gap)
+  );
+  --turn-peripheral-score-clearance: calc(
+    var(--turn-peripheral-manual-bottom)
+    + var(--turn-peripheral-manual-height)
+    + var(--turn-peripheral-score-control-gap)
+  );
+}
+
+:root.turn-right-handed-controls .topbar {
+  flex-direction: row;
+}
+
+:root.turn-left-handed-controls .topbar {
+  flex-direction: row-reverse;
+}
+
+/*
+ * Reserve the complete two-row DRIFT + FLOW footprint above steering. The
+ * flex rows shrink together only when viewport height makes that necessary;
+ * a single active row keeps its normal 104px instrument height.
+ */
+.score-feedback {
+  top: var(--turn-peripheral-score-top);
+  right: auto;
+  left: var(--turn-peripheral-left-edge);
+  display: flex;
+  height: min(
+    calc(
+      var(--score-feedback-paper-height)
+      + var(--score-feedback-paper-height)
+      + var(--turn-peripheral-score-flow-gap)
+    ),
+    max(
+      var(--score-feedback-paper-height),
+      calc(
+        var(--app-height)
+        - var(--turn-peripheral-score-top)
+        - var(--turn-peripheral-score-clearance)
+      )
+    )
+  );
+  flex-direction: column;
+}
+
+.score-feedback-row {
+  min-height: 52px;
+  flex: 0 1 var(--score-feedback-paper-height);
+}
+
+.score-feedback-flow-row {
+  margin-top: var(--turn-peripheral-score-flow-gap);
+}
+
+.score-feedback-state {
+  height: 100%;
+}
+
+.score-feedback-gauge-shell {
+  height: calc(
+    100%
+    - var(--score-feedback-gauge-inset-y)
+    - var(--score-feedback-gauge-inset-y)
+  );
+}
+
+:root.turn-left-handed-controls .score-feedback {
+  right: var(--turn-peripheral-right-edge);
+  left: auto;
+}
+
+/* Default/right-handed gauges unfold from the left column into the playfield. */
+:root.turn-right-handed-controls .score-feedback-gauge-shell,
+:root:not(.turn-left-handed-controls) .score-feedback-gauge-shell {
+  right: auto;
+  left: calc(100% - var(--score-feedback-gauge-overlap));
+  transform-origin: left center;
+}
+
+/* Left-handed mode mirrors the complete gauge, including its fill direction. */
+:root.turn-left-handed-controls .score-feedback-gauge-shell {
+  right: calc(100% - var(--score-feedback-gauge-overlap));
+  left: auto;
+  transform-origin: right center;
+}
+
+:root.turn-left-handed-controls .score-feedback-state {
+  transform-origin: right center;
+}
+
+:root.turn-left-handed-controls .score-feedback-meter,
+:root.turn-left-handed-controls .score-feedback-gauge {
+  border-radius: 10px 0 0 10px;
+  transform-origin: right center;
+}
+
+:root.turn-left-handed-controls .score-feedback-meter::before,
+:root.turn-left-handed-controls .score-feedback-gauge::before {
+  right: 5px;
+  left: auto;
+}
+
+:root.turn-left-handed-controls .score-feedback-meter > i,
+:root.turn-left-handed-controls .score-feedback-gauge > i {
+  background: linear-gradient(
+    to left,
+    var(--score-feedback-gauge-fill-a),
+    var(--score-feedback-gauge-fill-b)
+  );
+  transform-origin: right center;
+}
+
+:root.turn-left-handed-controls .score-feedback-meter > i::after,
+:root.turn-left-handed-controls .score-feedback-gauge > i::after {
+  right: auto;
+  left: 0;
+  transform: translateX(-35%) scaleY(.65);
+}
+
+:root.turn-left-handed-controls .score-feedback[data-gauge-heat="hot"] .score-feedback-meter > i::before,
+:root.turn-left-handed-controls .score-feedback[data-flow-heat="hot"] .score-feedback-gauge[data-score-channel="flow"] > i::before,
+:root.turn-left-handed-controls .score-feedback[data-gauge-heat="critical"] .score-feedback-meter > i::before,
+:root.turn-left-handed-controls .score-feedback[data-flow-heat="critical"] .score-feedback-gauge[data-score-channel="flow"] > i::before {
+  animation-name: turn-score-gauge-rush-mirrored;
+}
+
+:root.turn-left-handed-controls .score-feedback[data-gauge-heat="hot"] .score-feedback-meter > i::after,
+:root.turn-left-handed-controls .score-feedback[data-flow-heat="hot"] .score-feedback-gauge[data-score-channel="flow"] > i::after,
+:root.turn-left-handed-controls .score-feedback[data-gauge-heat="critical"] .score-feedback-meter > i::after,
+:root.turn-left-handed-controls .score-feedback[data-flow-heat="critical"] .score-feedback-gauge[data-score-channel="flow"] > i::after {
+  animation-name: turn-score-gauge-cap-mirrored;
+}
+
+@keyframes turn-score-gauge-rush-mirrored {
+  from { transform: translateX(18%); }
+  to { transform: translateX(-18%); }
+}
+
+@keyframes turn-score-gauge-cap-mirrored {
+  0%, 100% { transform: translateX(-35%) scaleY(.65); }
+  50% { transform: translateX(15%) scaleY(1.12); }
+}
+
+/*
+ * Event callouts occupy the inboard slot beyond the gauge instead of growing
+ * down into steering. The same rule stays clear of the opposite map column.
+ */
+.score-feedback-callout,
+.score-feedback[data-score-layout="dual"] .score-feedback-callout {
+  top: 0;
+  right: auto;
+  left: calc(100% + var(--score-feedback-gauge-width) + 9px);
+  max-width: min(220px, 28vw);
+  overflow: hidden;
+  transform-origin: left top;
+}
+
+.score-feedback-callout strong,
+.score-feedback-callout b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:root.turn-left-handed-controls .score-feedback-callout,
+:root.turn-left-handed-controls .score-feedback[data-score-layout="dual"] .score-feedback-callout {
+  right: calc(100% + var(--score-feedback-gauge-width) + 9px);
+  left: auto;
+  transform-origin: right top;
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  :root {
+    --turn-peripheral-stats-height: 58px;
+    --turn-peripheral-column-gap: clamp(8px, 1.8vh, 10px);
+    --turn-peripheral-score-control-gap: 12px;
+    --turn-peripheral-manual-bottom: max(58px, calc(env(safe-area-inset-bottom) + 50px));
+    --turn-peripheral-manual-height: clamp(96px, 14vw, 126px);
+  }
+
+  .score-feedback {
+    --score-feedback-paper-width: clamp(148px, 21vw, 190px);
+    --score-feedback-gauge-width: clamp(42px, 5.5vw, 52px);
+    --score-feedback-gauge-inset-y: 5px;
+    --score-feedback-gauge-overlap: 2px;
+  }
+
+  .score-feedback-state {
+    padding: 6px 8px 7px;
+    border-width: 2px;
+    box-shadow: 3px 3px 0 var(--turn-ink);
+  }
+
+  .score-feedback-heading,
+  .score-feedback-lap {
+    font-size: clamp(.4rem, 1vw, .54rem);
+  }
+
+  .score-feedback-values {
+    margin-top: 1px;
+  }
+
+  .score-feedback-values strong {
+    font-size: clamp(1.08rem, 3.2vw, 1.72rem);
+  }
+
+  .score-feedback-values b {
+    padding: 2px 5px 3px;
+    font-size: clamp(.58rem, 1.4vw, .78rem);
+  }
+
+  .score-feedback-flow-state .score-feedback-values b {
+    font-size: clamp(.64rem, 1.55vw, .86rem);
+  }
+
+  .score-feedback-techniques {
+    font-size: clamp(.31rem, .7vw, .4rem);
+  }
+
+  .score-feedback-meter,
+  .score-feedback-gauge {
+    border-width: 2px;
+  }
+
+  :root.turn-left-handed-controls .score-feedback-meter::before,
+  :root.turn-left-handed-controls .score-feedback-gauge::before {
+    right: 4px;
+  }
+
+  .score-feedback-callout,
+  .score-feedback[data-score-layout="dual"] .score-feedback-callout {
+    left: calc(100% + var(--score-feedback-gauge-width) + 7px);
+    max-width: min(190px, 28vw);
+    padding: 6px 8px 7px;
+    border-width: 2px;
+    box-shadow: 3px 3px 0 var(--turn-ink);
+  }
+
+  :root.turn-left-handed-controls .score-feedback-callout,
+  :root.turn-left-handed-controls .score-feedback[data-score-layout="dual"] .score-feedback-callout {
+    right: calc(100% + var(--score-feedback-gauge-width) + 7px);
+    left: auto;
+  }
+
+  .manual-steer {
+    bottom: var(--turn-peripheral-manual-bottom);
+    height: var(--turn-peripheral-manual-height);
+  }
+}
+
+@media (max-height: 360px) and (orientation: landscape) {
+  :root {
+    --turn-peripheral-stats-height: 48px;
+    --turn-peripheral-column-gap: 6px;
+    --turn-peripheral-score-control-gap: 10px;
+    --turn-peripheral-score-flow-gap: 2px;
+    --turn-peripheral-manual-bottom: max(48px, calc(env(safe-area-inset-bottom) + 42px));
+    --turn-peripheral-manual-height: 82px;
+  }
+
+  .stats {
+    gap: 4px;
+  }
+
+  .stats .chip {
+    height: 48px;
+    padding: 4px 6px 5px;
+    border-width: 2px;
+    border-radius: 10px;
+    box-shadow: 2px 2px 0 var(--ink);
+    font-size: .46rem;
+  }
+
+  .stats .chip strong,
+  .stats .race-position-hud strong {
+    font-size: .78rem;
+  }
+
+  .stats .chip:nth-child(1) {
+    width: 80px;
+  }
+
+  .stats .chip:nth-child(2),
+  .stats .chip:nth-child(3) {
+    width: 48px;
+  }
+
+  .stats .chip:nth-child(4),
+  .stats .chip:nth-child(5) {
+    width: 90px;
+  }
+
+  .map-wrap {
+    width: min(16vw, 96px);
+    padding: 3px;
+    border-width: 2px;
+    border-radius: 10px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .score-feedback {
+    --score-feedback-paper-width: 126px;
+    --score-feedback-gauge-width: 38px;
+    --score-feedback-gauge-inset-y: 4px;
+  }
+
+  .score-feedback-state {
+    padding: 4px 6px;
+    border-radius: 10px;
+  }
+
+  .score-feedback-heading,
+  .score-feedback-lap {
+    gap: 4px;
+    font-size: .36rem;
+  }
+
+  .score-feedback-values strong {
+    font-size: clamp(.94rem, 3.1vw, 1.12rem);
+  }
+
+  .score-feedback-values b,
+  .score-feedback-flow-state .score-feedback-values b {
+    padding: 1px 4px 2px;
+    border-width: 1px;
+    font-size: .54rem;
+  }
+
+  .score-feedback-techniques {
+    font-size: .3rem;
+  }
+
+  .score-feedback-callout,
+  .score-feedback[data-score-layout="dual"] .score-feedback-callout {
+    left: calc(100% + var(--score-feedback-gauge-width) + 6px);
+    max-width: min(150px, 25vw);
+    padding: 5px 7px 6px;
+    border-radius: 9px;
+  }
+
+  :root.turn-left-handed-controls .score-feedback-callout,
+  :root.turn-left-handed-controls .score-feedback[data-score-layout="dual"] .score-feedback-callout {
+    right: calc(100% + var(--score-feedback-gauge-width) + 6px);
+    left: auto;
+  }
+
+  .manual-steer {
+    width: 128px;
+    border-width: 4px;
+    border-radius: 22px;
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+
+  .manual-steer::before,
+  .manual-steer::after {
+    font-size: 1.8rem;
+  }
+
+  .manual-steer-knob {
+    width: 54px;
+    border-width: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root.turn-left-handed-controls .score-feedback-meter > i::before,
+  :root.turn-left-handed-controls .score-feedback-gauge > i::before,
+  :root.turn-left-handed-controls .score-feedback-meter > i::after,
+  :root.turn-left-handed-controls .score-feedback-gauge > i::after {
+    animation: none !important;
+  }
+}
