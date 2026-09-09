@@ -95,14 +95,16 @@ assert.match(createVisualSection, /rememberCompetitorGhostTemplate\(competitorTe
 const cloneSection = section(carModels, 'function cloneCompetitorGhostVisual(template)', '\nfunction installWheelAnimationHostBridge');
 assert.match(cloneSection, /for \(const child of template\.children\) clone\.add\(child\.clone\(true\)\)/,
   'Fast rival clones must reuse the already-prepared geometry/material graph');
-assert.match(cloneSection, /frontWheelPivots\.push\(node\)/,
-  'Fast rival clones must rebuild their own steering-pivot references');
+assert.match(cloneSection, /collectAssetWheelRig\(clone, \{ reset: true \}\)/,
+  'Fast rival clones must rebuild and reset their own steering-and-spin references');
+assert.match(cloneSection, /clone\.userData\.wheelSpinners = wheelSpinners/,
+  'Fast rival clones must publish their populated authored wheel spinners');
 assert.match(cloneSection, /turnFastGhostClone = true/,
   'The optimized path must remain inspectable in diagnostics');
 assert.doesNotMatch(cloneSection, /loadCarSource|installSemanticCarFinish|normalizeModelToGround|addOutlines/,
   'Fast rival cloning must not repeat the expensive first-build pipeline');
 
-const outlineSection = section(carModels, 'function addOutlines(model)', '\nfunction installFrontWheelSteeringRig');
+const outlineSection = section(carModels, 'function addOutlines(model)', '\nfunction normalizeModelToGround');
 assert.match(carModels, /const CAR_OUTLINE_MATERIAL = new THREE\.MeshBasicMaterial\(/,
   'All car outlines must share one immutable material instead of allocating one material per mesh');
 assert.match(outlineSection, /new THREE\.Mesh\(node\.geometry, CAR_OUTLINE_MATERIAL\)/,

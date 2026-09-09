@@ -152,7 +152,7 @@ const expectedCatalogTargets = [
 ];
 const expectedEmergencyTargets = [
   ['/turn/vehicle/semantic-car-finish.js', '/turn/vehicle/semantic-car-finish.js?revision=r223-training-car-taxi'],
-  ['/turn/vehicle/car-models.js', '/turn/vehicle/car-models.js?revision=r253-supercar-release'],
+  ['/turn/vehicle/car-models.js', '/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin'],
   ['/turn/vehicle/emergency-livery-models.js', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi'],
   ['./vehicle/car-models.js?build=20260720-r19', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi'],
   ['./vehicle/car-models.js?build=20260720-r22', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi']

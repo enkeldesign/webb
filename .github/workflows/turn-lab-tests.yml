@@ -178,6 +178,9 @@ jobs:
       - name: Run all-car orientation regression
         run: node turn-lab/tests/car-orientation-production.mjs
 
+      - name: Run authored wheel animation regression
+        run: node turn-tests/asset-wheel-animation-production.mjs
+
       - name: Run native and secondary paint regression
         run: node turn-lab/tests/native-paint-production.mjs
 

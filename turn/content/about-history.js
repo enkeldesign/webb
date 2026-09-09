@@ -306,7 +306,7 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   ]
 },
 {
-  period: '5–8 September',
+  period: '5–9 September',
   title: 'Trophy Road becomes a legible journey',
   paragraphs: [
     'Trophy Road reshapes progression into nineteen rewards at steady one-hundred-trophy intervals from 400 to 2,200. DRIFT ATTACK joins the road at 600 trophies and FLOW at 1,500, so each scoring system activates automatically as a layer of normal racing rather than asking the player to choose a mode.',
@@ -323,7 +323,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'The release graph now gives the accumulated SUPERCAR, FLOW SHIFT, record-thumbnail and rival-onboarding work one coherent cache identity. A fast composition check follows active modules and rejects changed runtime bytes behind an unchanged URL, while specialist CI responds to real subsystem dependencies and cancels obsolete runs on the same pull request.',
     'FLOW SHIFT and ordinary SHIFT now share one authoritative tuning transition. Great-FLOW changes replace any pending ordinary target before the next update tick, while race, track and Home resets cancel pending easing and restore the standard setup coherently.',
     'FLOW SHIFT now preserves its orientation-specific accessible name through pointer and app-lifecycle recovery. Every intentional toggle names the active default or UP gear, and the UP dot remains perceivable in forced-colors mode without changing ordinary SHIFT feedback.',
-    'Challenge achievements now consume the exact OVERCHARGE and course-safety transitions already owned by gameplay instead of waking twenty times per second for the page lifetime. Bella keeps spatial sampling where it is useful, but only during a visible Countryside Fire Truck race and never again after rescue.'
+    'Challenge achievements now consume the exact OVERCHARGE and course-safety transitions already owned by gameplay instead of waking twenty times per second for the page lifetime. Bella keeps spatial sampling where it is useful, but only during a visible Countryside Fire Truck race and never again after rescue.',
+    'Authored vehicle wheels now carry a reusable animation rig. Steering and local-axle spin use separate pivots, so the Supercar’s transplanted Kenney wheels and every other asset-backed car rotate with speed without disturbing authored geometry, paint or outlines.'
   ],
   milestones: [
     'Nineteen Trophy Road rewards from 400–2,200 trophies',
@@ -342,7 +343,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Authoritative FLOW SHIFT tuning across easing, FLOW loss and resets',
     'Orientation-specific FLOW SHIFT names, recovery semantics and forced-colors feedback',
     'Event-driven challenge achievements and eligibility-gated Bella sampling',
-    'TURN 1.17.0–1.17.11 · 2026.09.05-r200–2026.09.09-r211 Trophy Road, SUPERCAR and release-composition refinement'
+    'Reusable authored-wheel steering and spin for player and replay visuals',
+    'TURN 1.17.0–1.17.12 · 2026.09.05-r200–2026.09.09-r212 Trophy Road, SUPERCAR and release-composition refinement'
   ]
 }
 ]);
@@ -677,6 +679,8 @@ export const CHANGELOG = Object.freeze([
   {
     date: '9 September',
     entries: [
+      ['1.17.12 r212', 'Makes all four wheels on asset-backed cars rotate around their authored axle while preserving independent front-wheel steering.'],
+      ['Authored wheel rigs', 'Keeps the exact model geometry, materials and outlines beneath separate steering and spin pivots, and rebuilds clean animation handles for saved-rival clones.'],
       ['1.17.11 r211', 'Removes the page-lifetime 20 Hz challenge-achievement loop while preserving every achievement requirement and reward.'],
       ['Event-driven challenges', 'CATCH THE CHARGE now evaluates the existing OVERCHARGE-caught transition, while SAFETY achievements consume the physics-owned on-course lap result.'],
       ['Dormant Bella', 'Bella’s spatial sampler starts only for a visible Countryside Fire Truck race, stops on Home, other cars, other tracks, Spectate and backgrounding, and permanently detaches after rescue.']
@@ -685,7 +689,7 @@ export const CHANGELOG = Object.freeze([
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.17.11',
-  build: '2026.09.09-r211',
-  note: 'TURN 1.17.11 makes challenge achievements event-driven and keeps Bella’s spatial sampling dormant until rescue is possible.'
+  version: '1.17.12',
+  build: '2026.09.09-r212',
+  note: 'TURN 1.17.12 gives every asset-backed car reusable authored-wheel steering and spin without changing its geometry or finish.'
 });

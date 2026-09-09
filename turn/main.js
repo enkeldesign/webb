@@ -22,6 +22,7 @@ import {
   saveVehicleSelection
 } from '/turn/vehicle/catalog.js?build=20260720-r19';
 import { createCarVisual } from '/turn/vehicle/car-models.js?build=20260720-r19';
+import { animateWheelRig } from '/turn/vehicle/wheel-animation-rig.js?revision=r257-authored-wheel-spin';
 import {
   FRONT_WHEEL_STEER_ANGLE,
   resolveFrontWheelSteeringAngle
@@ -827,14 +828,6 @@ function normalizeAngle(angle) {
   return angle;
 }
 
-function shortestAngle(from, to) {
-  return normalizeAngle(to - from);
-}
-
-function lerpAngle(a, b, t) {
-  return a + shortestAngle(a, b) * t;
-}
-
 function getForward(angle = state.heading) {
   return forwardVector.set(Math.sin(angle), 0, Math.cos(angle));
 }
@@ -1141,12 +1134,7 @@ function animateWheels(
   dt,
   steerAngle = steering * FRONT_WHEEL_STEER_ANGLE
 ) {
-  for (const pivot of car.userData.frontWheelPivots || []) {
-    pivot.rotation.y = lerpAngle(pivot.rotation.y, steerAngle, Math.min(1, dt * 8));
-  }
-  for (const spinner of car.userData.wheelSpinners || []) {
-    spinner.rotation.y -= speed * dt * 1.35;
-  }
+  animateWheelRig(car, { steerAngle, speed, dt });
 }
 
 function placePlayerCar(dt) {

@@ -91,6 +91,23 @@ for (const car of catalog.CAR_CATALOG) {
 
   const glb = await readCarGlb(car);
   const json = readGlbJson(glb, car.id);
+  const drivableWheels = (json.nodes || []).filter((node) => drivableWheelRole(node.name));
+  assert.equal(drivableWheels.length, 4,
+    `${car.name} must expose exactly four left/right authored wheel hosts`);
+  let verifiedLocalAxles = 0;
+  for (const wheel of drivableWheels) {
+    const primitive = json.meshes?.[wheel.mesh]?.primitives?.[0];
+    const positions = json.accessors?.[primitive?.attributes?.POSITION];
+    if (!positions?.min || !positions?.max) continue;
+    const span = positions.max.map((value, index) => value - positions.min[index]);
+    assert.ok(span[0] < Math.min(span[1], span[2]),
+      `${car.name} ${wheel.name} must keep local X as its authored axle`);
+    verifiedLocalAxles += 1;
+  }
+  if (car.id !== 'supercar') {
+    assert.equal(verifiedLocalAxles, 4,
+      `${car.name} must expose directly verifiable authored wheel geometry`);
+  }
   const rawFront = getKenneyWheelAxis(json, car);
   const rawLength = Math.hypot(rawFront.x, rawFront.z);
   assert.ok(rawLength > 0.1, `${car.name} must expose a usable front/back wheel axis`);
@@ -158,10 +175,11 @@ assertClose(
   'Monster Truck Lot-and-race visual scale'
 );
 
-const [index, releaseSource, carModels, lot, main, trackBestCar] = await Promise.all([
+const [index, releaseSource, carModels, wheelRig, lot, main, trackBestCar] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/vehicle/wheel-animation-rig.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/track-best-car.js', import.meta.url), 'utf8')
@@ -203,14 +221,16 @@ assert.match(carModels, /installLearnerCarLivery\(model, car, \{ ghost \}\)/,
   'The shared car factory must preserve the Learner Car door livery and authentic roof sign on every surface');
 assert.match(carModels, /REVERSED_FRONT_WHEEL_LABEL_IDS = new Set\(\['vintage-racer'\]\)/,
   'Vintage Racer must keep its verified authored wheel-label reversal');
-assert.match(carModels, /installFrontWheelSteeringRig\(model, car\)/,
-  'Every GLB visual must install the shared steering-wheel rig');
+assert.match(carModels, /installAssetWheelRig\(\{/,
+  'Every GLB visual must install the shared authored steering-and-spin rig');
 assert.match(carModels, /root\.userData\.frontWheelPivots = frontWheelPivots/,
   'Each GLB visual must retain its real front-wheel pivots');
+assert.match(carModels, /root\.userData\.wheelSpinners = wheelSpinners/,
+  'Each GLB visual must retain all four authored wheel spinners');
 assert.match(carModels, /installWheelAnimationHostBridge\(root\)/,
   'Each GLB visual must bridge its wheel rig to the outer race-car host');
-assert.match(carModels, /visual\.addEventListener\('added',[\s\S]*host\.userData\.frontWheelPivots = visual\.userData\.frontWheelPivots \|\| \[\]/,
-  'The bridge must publish the visible GLB pivots when main.js adds the visual to playerCar or a rival');
+assert.match(carModels, /visual\.addEventListener\('added',[\s\S]*host\.userData\.frontWheelPivots = visual\.userData\.frontWheelPivots \|\| \[\][\s\S]*host\.userData\.wheelSpinners = visual\.userData\.wheelSpinners \|\| \[\]/,
+  'The bridge must publish the complete visible GLB wheel rig when main.js adds a player or rival visual');
 assert.match(carModels, /side: THREE\.BackSide/, 'Car outlines must remain inverted back-face shells');
 assert.match(carModels, /depthTest: true/, 'Car outlines must still respect the body depth buffer');
 assert.match(carModels, /depthWrite: false/, 'Car outlines must not write depth and compete with body surfaces');
@@ -315,10 +335,12 @@ assert.match(
   'The player wheel animator must use both DRIFT and LOCK state'
 );
 assert.match(
-  main,
-  /pivot\.rotation\.y = lerpAngle\(pivot\.rotation\.y, steerAngle, Math\.min\(1, dt \* 8\)\)/,
+  wheelRig,
+  /STEERING_RESPONSE = 8[\s\S]*pivot\.rotation\.y = lerpAngle\(pivot\.rotation\.y, steerAngle, steeringBlend\)/,
   'Trajectory takeover must retain the quick smooth wheel transition'
 );
+assert.match(main, /animateWheelRig\(car, \{ steerAngle, speed, dt \}\)/,
+  'The gameplay wheel animator must use the shared steering-and-spin behavior');
 
 console.log(`TURN ${release.id} car orientation, trajectory steering, visible wheel integration and surface-specific visual sizing passed for all 16 models.`);
 
@@ -364,6 +386,13 @@ function wheelRole(name = '') {
   const label = name.toLowerCase();
   if (/^wheel-(?:front|f[lr])(?:-|$)/.test(label)) return 'front';
   if (/^wheel-(?:back|b[lr])(?:-|$)/.test(label)) return 'back';
+  return null;
+}
+
+function drivableWheelRole(name = '') {
+  const label = String(name).toLowerCase();
+  if (/^wheel-(?:front-(?:left|right)|f[lr])(?:-|$)/.test(label)) return 'front';
+  if (/^wheel-(?:back-(?:left|right)|b[lr])(?:-|$)/.test(label)) return 'back';
   return null;
 }
 
