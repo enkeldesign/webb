@@ -20,11 +20,11 @@ const [viewSource, roadStyles, semanticStyles, bend, straight, checkered] = awai
 ]);
 
 const expectedRoad = [
-  ['paintjob', 400],
-  ['awd-traction', 500],
+  ['awd-traction', 400],
+  ['truck-torque', 500],
   ['drift-attack', 600],
   ['midnight-city', 700],
-  ['truck-torque', 800],
+  ['paintjob', 800],
   ['vintage-racer', 900],
   ['shift', 1000],
   ['race-car', 1100],
