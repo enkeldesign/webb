@@ -55,6 +55,9 @@ export function updateLapProgressState({
   samples,
   trackWidth,
   checkpoints = LAP_CHECKPOINTS,
+  checkpointGateHalfWidthFactor = CHECKPOINT_GATE_HALF_WIDTH_FACTOR,
+  checkpointGateCenterPoint = null,
+  checkpointGateOuterHalfWidthFactor = checkpointGateHalfWidthFactor,
   now,
   beginTimedLap,
   completeLap,
@@ -62,7 +65,11 @@ export function updateLapProgressState({
 }) {
   const currentPosition = snapshotPosition(state.position);
   const previousPosition = state.lapPreviousPosition || currentPosition;
-  const checkpointGateHalfWidth = trackWidth * CHECKPOINT_GATE_HALF_WIDTH_FACTOR;
+  const checkpointGateHalfWidth = trackWidth * checkpointGateHalfWidthFactor;
+  const checkpointGateOuterHalfWidth = trackWidth * checkpointGateOuterHalfWidthFactor;
+  const checkpointGatePolicy = checkpointGateCenterPoint
+    ? { centerPoint: checkpointGateCenterPoint, outwardHalfWidth: checkpointGateOuterHalfWidth }
+    : null;
   const startGateHalfWidth = trackWidth * START_GATE_HALF_WIDTH_FACTOR;
   const nextCheckpoint = checkpoints[state.lapCheckpointIndex];
 
@@ -73,7 +80,8 @@ export function updateLapProgressState({
       previousPosition,
       currentPosition,
       checkpointSample,
-      checkpointGateHalfWidth
+      checkpointGateHalfWidth,
+      checkpointGatePolicy
     );
 
     const insideCheckpointGate = !state.lapPreviousPosition
@@ -88,7 +96,8 @@ export function updateLapProgressState({
       currentPosition,
       samples,
       checkpoints,
-      checkpointGateHalfWidth
+      checkpointGateHalfWidth,
+      checkpointGatePolicy
     })) {
       // Crossing a later ordered gate proves that the required route was skipped.
       // Keep timing internally for rival playback, but the HUD can stop presenting
@@ -259,7 +268,7 @@ export function completeLapState({
   };
 }
 
-export function crossedForwardGate(previousPosition, currentPosition, gateSample, halfWidth) {
+export function crossedForwardGate(previousPosition, currentPosition, gateSample, halfWidth, gatePolicy = null) {
   if (!previousPosition || !currentPosition || !gateSample?.point || !gateSample?.tangent) return false;
 
   const tangentX = Number(gateSample.tangent.x) || 0;
@@ -287,9 +296,19 @@ export function crossedForwardGate(previousPosition, currentPosition, gateSample
   const crossingT = Math.min(1, Math.max(0, -previousLongitudinal / longitudinalStep));
   const crossingX = previousPosition.x + (currentPosition.x - previousPosition.x) * crossingT;
   const crossingZ = previousPosition.z + (currentPosition.z - previousPosition.z) * crossingT;
-  const lateralDistance = Math.abs((crossingX - centerX) * nx + (crossingZ - centerZ) * nz);
+  const lateralOffset = (crossingX - centerX) * nx + (crossingZ - centerZ) * nz;
 
-  return lateralDistance <= halfWidth;
+  if (!gatePolicy?.centerPoint) return Math.abs(lateralOffset) <= halfWidth;
+
+  const centerLateralOffset = ((Number(gatePolicy.centerPoint.x) || 0) - centerX) * nx
+    + ((Number(gatePolicy.centerPoint.z) || 0) - centerZ) * nz;
+  const inwardSign = centerLateralOffset < 0 ? -1 : 1;
+  const inwardOffset = lateralOffset * inwardSign;
+  const outwardHalfWidth = Number.isFinite(gatePolicy.outwardHalfWidth)
+    ? Math.max(0, gatePolicy.outwardHalfWidth)
+    : Infinity;
+
+  return inwardOffset <= halfWidth && inwardOffset >= -outwardHalfWidth;
 }
 
 function crossedLaterCheckpointGate({
@@ -298,12 +317,19 @@ function crossedLaterCheckpointGate({
   currentPosition,
   samples,
   checkpoints,
-  checkpointGateHalfWidth
+  checkpointGateHalfWidth,
+  checkpointGatePolicy
 }) {
   for (let index = state.lapCheckpointIndex + 1; index < checkpoints.length; index += 1) {
     const sample = checkpointSampleAt(samples, checkpoints[index]);
     if (state.velocity.dot(sample.tangent) <= 2) continue;
-    if (crossedForwardGate(previousPosition, currentPosition, sample, checkpointGateHalfWidth)) return true;
+    if (crossedForwardGate(
+      previousPosition,
+      currentPosition,
+      sample,
+      checkpointGateHalfWidth,
+      checkpointGatePolicy
+    )) return true;
   }
   return false;
 }
