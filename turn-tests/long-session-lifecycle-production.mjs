@@ -255,15 +255,18 @@ assert.doesNotMatch(
 assert.match(bellaRescue, /function suspendMeowContext\(\)/);
 assert.match(
   bellaRescue,
-  /if \(!eligible \|\| document\.hidden\) \{[\s\S]*suspendMeowContext\(\)/,
-  'Leaving the eligible rescue state must suspend Bella audio rather than leaving another running context'
+  /function stopSampling\([\s\S]*window\.clearInterval\(samplingTimer\)[\s\S]*suspendMeowContext\(\)/,
+  'Leaving the eligible rescue state must stop Bella sampling and suspend its audio context'
 );
+assert.match(bellaRescue, /function syncSampling\(\)/);
+assert.match(bellaRescue, /globalThis\.addEventListener\('turn:ui-state-change', syncSampling\)/);
+assert.match(bellaRescue, /document\.addEventListener\('visibilitychange', syncSampling/);
 assert.match(
   bellaRescue,
   /meowContext\.close\?\.\(\)[\s\S]*meowContext = null/,
   'Disposing the rescue behavior must close and release Bella’s context'
 );
-assert.match(bellaBootstrap, /countryside-bella-rescue-r173\.js\?revision=r164-long-session-robustness/);
+assert.match(bellaBootstrap, /countryside-bella-rescue-r173\.js\?revision=r256-achievement-polling/);
 assert.match(bellaBootstrap, /RETRY_DELAYS_MS = Object\.freeze/);
 assert.doesNotMatch(bellaBootstrap, /setInterval/,
   'The independent Bella bootstrap must use bounded startup retries rather than a fixed polling interval');

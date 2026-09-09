@@ -238,6 +238,9 @@ jobs:
       - name: Run achievement system regression
         run: node turn-lab/tests/achievements-production.mjs
 
+      - name: Run achievement and Bella polling lifecycle regression
+        run: node turn-tests/achievement-polling-production.mjs
+
       - name: Run Super Sedan unranked regression
         run: node turn-tests/super-sedan-unranked-production.mjs
 

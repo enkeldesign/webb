@@ -1,4 +1,4 @@
-import { installBellaRescueBehavior } from './countryside-bella-rescue-r173.js?revision=r164-long-session-robustness';
+import { installBellaRescueBehavior } from './countryside-bella-rescue-r173.js?revision=r256-achievement-polling';
 
 const RETRY_DELAYS_MS = Object.freeze([250, 350, 500, 700, 900, 1200, 1600, 2200, 3000, 4000]);
 const spatialRuntimeCache = new WeakMap();

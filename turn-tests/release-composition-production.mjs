@@ -24,6 +24,8 @@ const productionCompatibilityRoutes = Object.freeze({
   '/turn/progression/trophy-road.js?revision=r243-mountain-1300': '/turn/progression/trophy-road.js?revision=r253-supercar-release',
   '/turn/progression/trophy-road.js?revision=r248-supercar': '/turn/progression/trophy-road.js?revision=r253-supercar-release',
   '/turn/achievements/trophy-road-showcase.js?revision=r243-mountain-1300': '/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release',
+  '/turn/achievements/challenge-expansion-r166.js?revision=r166-bella-records': '/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling',
+  '/turn/achievements/challenge-expansion-r166.js?revision=r241-learning-achievements': '/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling',
   '/turn/vehicle/shift-profile.js?revision=r232-double-shift': '/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility',
   '/turn/vehicle/shift-profile.js?revision=r253-supercar-release': '/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility',
   '/turn/vehicle/flow-shift.js?revision=r248-supercar': '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility',

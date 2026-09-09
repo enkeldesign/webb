@@ -152,7 +152,7 @@ assert.ok(challengeUnlocks.some(({ id }) => id === 'got-started'),
   'Existing players with every Getting Started achievement should receive GOT STARTED automatically');
 challengeUnlocks.length = 0;
 challengeApi.beginLap();
-challengeApi.completeLap({ position: 1, total: 5, time: 14 });
+challengeApi.completeLap({ position: 1, total: 5, time: 14, onCourseThroughout: true });
 assert.deepEqual(
   challengeUnlocks.map(({ id }) => id),
   ['countryside-winner', 'countryside-safety'],

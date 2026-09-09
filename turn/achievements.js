@@ -39,7 +39,7 @@ export {
   qualifiesForCatchGas,
   qualifiesForCleanLap,
   installAchievementChallengeExpansion
-} from './achievements/challenge-expansion-r166.js?revision=r166-bella-records';
+} from './achievements/challenge-expansion-r166.js?revision=r256-achievement-polling';
 export {
   TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_MAX_THRESHOLD,
