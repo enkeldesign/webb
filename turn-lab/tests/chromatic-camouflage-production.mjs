@@ -169,11 +169,11 @@ assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300);
 assert.deepEqual(
   TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
   [
-    ['paintjob', 400],
-    ['awd-traction', 500],
+    ['awd-traction', 400],
+    ['truck-torque', 500],
     ['drift-attack', 600],
     ['midnight-city', 700],
-    ['truck-torque', 800],
+    ['paintjob', 800],
     ['vintage-racer', 900],
     ['shift', 1000],
     ['race-car', 1100],
