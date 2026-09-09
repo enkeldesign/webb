@@ -170,6 +170,30 @@ function ensureHistoryReadouts(documentRef, root, channel) {
   return { last, best };
 }
 
+function ensureEventCallout(documentRef, root, channel) {
+  const row = scoreState(root, channel);
+  if (!row) return null;
+
+  const selector = `[data-score-feedback-${channel}-callout]`;
+  let callout = row.querySelector?.(selector);
+  if (callout) return callout;
+
+  callout = documentRef.createElement('section');
+  callout.className = 'turn-score-event-callout';
+  callout.setAttribute(`data-score-feedback-${channel}-callout`, '');
+  callout.setAttribute('aria-hidden', 'true');
+  callout.hidden = true;
+
+  const label = documentRef.createElement('strong');
+  label.setAttribute(`data-score-feedback-${channel}-callout-label`, '');
+  const score = documentRef.createElement('b');
+  score.setAttribute(`data-score-feedback-${channel}-callout-score`, '');
+  score.hidden = true;
+  callout.append(label, score);
+  row.append?.(callout);
+  return callout;
+}
+
 function setBest(valueNode, score) {
   if (!valueNode) return;
   const next = formatScore(score, { emptyWhenMissing: true, emptyWhenZero: true });
@@ -205,6 +229,13 @@ export function installScorekeeperRecords({
   ensureScorekeeperStyle(documentRef);
   const drift = ensureHistoryReadouts(documentRef, root, 'drift');
   const flow = ensureHistoryReadouts(documentRef, root, 'flow');
+
+  // #842: DRIFT and FLOW own independent event plates inside their paper boxes.
+  // They deliberately cover the BEST corner rather than the large live score.
+  // ScoreFeedback retains and updates these fixed nodes; no scoring-path DOM is created.
+  ensureEventCallout(documentRef, root, 'drift');
+  ensureEventCallout(documentRef, root, 'flow');
+
   const targetStorage = storageOrDefault(storage);
 
   function refreshBest(trackId = getTrackId()) {
