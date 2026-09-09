@@ -1,4 +1,4 @@
-import { installFlowShiftRuntime } from './flow-shift.js?revision=r253-supercar-release';
+import { installFlowShiftRuntime } from './flow-shift.js?revision=r255-flow-shift-accessibility';
 
 export const VEHICLE_SHIFT_FEATURE_ID = 'vehicle-shift';
 export const VEHICLE_SHIFT_REWARD_ID = 'shift';

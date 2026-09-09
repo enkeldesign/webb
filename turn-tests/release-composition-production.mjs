@@ -24,10 +24,13 @@ const productionCompatibilityRoutes = Object.freeze({
   '/turn/progression/trophy-road.js?revision=r243-mountain-1300': '/turn/progression/trophy-road.js?revision=r253-supercar-release',
   '/turn/progression/trophy-road.js?revision=r248-supercar': '/turn/progression/trophy-road.js?revision=r253-supercar-release',
   '/turn/achievements/trophy-road-showcase.js?revision=r243-mountain-1300': '/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release',
-  '/turn/vehicle/shift-profile.js?revision=r232-double-shift': '/turn/vehicle/shift-profile.js?revision=r253-supercar-release',
-  '/turn/vehicle/flow-shift.js?revision=r248-supercar': '/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority',
-  '/turn/vehicle/flow-shift.js?revision=r253-supercar-release': '/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority',
-  '/turn/ui/shift-feedback.js?revision=r232-double-shift': '/turn/ui/shift-feedback.js?revision=r253-supercar-release'
+  '/turn/vehicle/shift-profile.js?revision=r232-double-shift': '/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility',
+  '/turn/vehicle/shift-profile.js?revision=r253-supercar-release': '/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility',
+  '/turn/vehicle/flow-shift.js?revision=r248-supercar': '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility',
+  '/turn/vehicle/flow-shift.js?revision=r253-supercar-release': '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility',
+  '/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority': '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility',
+  '/turn/ui/shift-feedback.js?revision=r232-double-shift': '/turn/ui/shift-feedback.js?revision=r255-flow-shift-accessibility',
+  '/turn/ui/shift-feedback.js?revision=r253-supercar-release': '/turn/ui/shift-feedback.js?revision=r255-flow-shift-accessibility'
 });
 
 const requiredActiveModules = Object.freeze([

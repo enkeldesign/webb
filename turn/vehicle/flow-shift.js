@@ -21,7 +21,7 @@ const FLOW_SHIFT_STAT_KEYS = Object.freeze([
 ]);
 const FLOW_SHIFT_STAT_KEY_SET = new Set(FLOW_SHIFT_STAT_KEYS);
 const INSTALL_MARKER = '__turnFlowShiftRuntime';
-const PRESENTATION_STYLE_ID = 'turn-flow-shift-button-r250';
+const PRESENTATION_STYLE_ID = 'turn-flow-shift-button-r255';
 
 function runtimeState() {
   return globalThis.__turnRuntime?.state || null;
@@ -223,6 +223,14 @@ function ensurePresentationStyles() {
         animation: none;
       }
     }
+
+    @media (forced-colors: active) {
+      .drive-stack.is-shift-active .drive-shift-bubble i {
+        box-sizing: border-box;
+        border: 2px solid ButtonText;
+        background: ButtonText;
+      }
+    }
   `;
   documentRef.head.appendChild(style);
 }
@@ -253,7 +261,7 @@ function resetPresentation(bubble, stack) {
   stack?.classList?.remove('is-flow-shift-engaged');
 }
 
-function syncPresentation(state) {
+export function syncFlowShiftPresentation(state = runtimeState()) {
   const bubble = globalThis.document?.querySelector?.('.drive-shift-bubble');
   if (!bubble) return;
   const stack = bubble.closest?.('.drive-stack');
@@ -320,7 +328,7 @@ function setFlowMultiplier(multiplier) {
   } else if (previousGreatFlow && normalizedGainKeys(state.flowShiftGainKeys).length === 3) {
     applyCurrentFlowShift(state, { greatFlow: false });
   }
-  syncPresentation(state);
+  syncFlowShiftPresentation(state);
 }
 
 function onFlowScore(event) {
@@ -346,11 +354,11 @@ function onShiftChange(event) {
 
   if (event?.detail?.available === false) {
     state.flowShiftGainKeys = null;
-    syncPresentation(state);
+    syncFlowShiftPresentation(state);
     return;
   }
   if (event?.detail?.intentional !== true) {
-    syncPresentation(state);
+    syncFlowShiftPresentation(state);
     return;
   }
 
@@ -367,7 +375,7 @@ function onShiftChange(event) {
     state.flowShiftGainKeys = null;
     state.vehicleEffectiveTuning = state.vehicleTuning || null;
   }
-  syncPresentation(state);
+  syncFlowShiftPresentation(state);
   if (greatFlow && normalizedGainKeys(state.flowShiftGainKeys).length === 3) {
     bumpFlowShiftButton();
   }
@@ -377,7 +385,7 @@ function onUiState(event) {
   if (!isVehicleShiftResetReason(event?.detail?.reason)) return;
   const state = runtimeState();
   clearFlowShiftState(state);
-  syncPresentation(state);
+  syncFlowShiftPresentation(state);
 }
 
 function initializeRuntime(runtime = globalThis.__turnRuntime) {
@@ -385,7 +393,7 @@ function initializeRuntime(runtime = globalThis.__turnRuntime) {
   if (!state) return;
   state.flowMultiplier = 1;
   state.flowShiftGainKeys = null;
-  syncPresentation(state);
+  syncFlowShiftPresentation(state);
 }
 
 export function installFlowShiftRuntime(eventTarget = globalThis) {
