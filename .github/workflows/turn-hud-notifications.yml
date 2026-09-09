@@ -4,16 +4,26 @@ on:
   pull_request:
     paths:
       - 'turn/ui/hud-notifications.js'
+      - 'turn/ui/hud-notification-runtime.js'
       - 'turn/hud-notifications.css'
+      - 'turn/scoring/score-feedback.js'
+      - 'turn/scoring/scorekeeper-records.js'
       - 'turn-tests/hud-notification-components.mjs'
+      - 'turn-tests/hud-notification-layout-production.mjs'
+      - 'turn-tests/score-feedback-production.mjs'
       - '.github/workflows/turn-hud-notifications.yml'
   push:
     branches:
       - main
     paths:
       - 'turn/ui/hud-notifications.js'
+      - 'turn/ui/hud-notification-runtime.js'
       - 'turn/hud-notifications.css'
+      - 'turn/scoring/score-feedback.js'
+      - 'turn/scoring/scorekeeper-records.js'
       - 'turn-tests/hud-notification-components.mjs'
+      - 'turn-tests/hud-notification-layout-production.mjs'
+      - 'turn-tests/score-feedback-production.mjs'
       - '.github/workflows/turn-hud-notifications.yml'
 
 permissions:
@@ -39,10 +49,29 @@ jobs:
       - name: Syntax-check notification modules
         run: |
           node --check turn/ui/hud-notifications.js
+          node --check turn/ui/hud-notification-runtime.js
+          node --check turn/scoring/score-feedback.js
+          node --check turn/scoring/scorekeeper-records.js
           node --check turn-tests/hud-notification-components.mjs
+          node --check turn-tests/hud-notification-layout-production.mjs
+          node --check turn-tests/score-feedback-production.mjs
 
       - name: Lint notification modules
-        run: npx --yes eslint@9.39.1 turn/ui/hud-notifications.js turn-tests/hud-notification-components.mjs
+        run: >-
+          npx --yes eslint@9.39.1
+          turn/ui/hud-notifications.js
+          turn/ui/hud-notification-runtime.js
+          turn/scoring/score-feedback.js
+          turn/scoring/scorekeeper-records.js
+          turn-tests/hud-notification-components.mjs
+          turn-tests/hud-notification-layout-production.mjs
+          turn-tests/score-feedback-production.mjs
 
       - name: Run notification component regression
         run: node turn-tests/hud-notification-components.mjs
+
+      - name: Run standardized HUD layout regression
+        run: node turn-tests/hud-notification-layout-production.mjs
+
+      - name: Run embedded score-event regression
+        run: node turn-tests/score-feedback-production.mjs
