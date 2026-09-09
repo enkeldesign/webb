@@ -55,6 +55,7 @@ export function updateLapProgressState({
   samples,
   trackWidth,
   checkpoints = LAP_CHECKPOINTS,
+  checkpointGateHalfWidthFactor = CHECKPOINT_GATE_HALF_WIDTH_FACTOR,
   now,
   beginTimedLap,
   completeLap,
@@ -62,7 +63,7 @@ export function updateLapProgressState({
 }) {
   const currentPosition = snapshotPosition(state.position);
   const previousPosition = state.lapPreviousPosition || currentPosition;
-  const checkpointGateHalfWidth = trackWidth * CHECKPOINT_GATE_HALF_WIDTH_FACTOR;
+  const checkpointGateHalfWidth = trackWidth * checkpointGateHalfWidthFactor;
   const startGateHalfWidth = trackWidth * START_GATE_HALF_WIDTH_FACTOR;
   const nextCheckpoint = checkpoints[state.lapCheckpointIndex];
 
