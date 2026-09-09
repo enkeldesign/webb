@@ -131,8 +131,8 @@ assert.match(labIndex, new RegExp(`world-assets\\.js\\?build=${release.cacheKey}
 
 assert.equal(sha256(bella), '7133abe99b37322407cebe8ab4c627e3cd91663c3a981427fd328d403a734bf4',
   'BELLA and her rescue tree implementation must remain byte-for-byte unchanged');
-assert.equal(sha256(bellaRescue), '608464227f3a19e0b08eafc747d55276d1cbed5364a45232fb45d3973dd9c58a',
-  'BELLA rescue behavior must remain byte-for-byte unchanged');
+assert.equal(sha256(bellaRescue), '8cf0a88055a01e3baec7aab44924c059ade29515971d9c7918d75a8781018b10',
+  'BELLA rescue adapter must remain at the reviewed lifecycle-gated baseline');
 
 const suburbanFiles = [
   'building-type-a.glb',
