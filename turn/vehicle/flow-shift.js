@@ -188,7 +188,7 @@ function ensurePresentationStyles() {
 
     /* Passive FLOW loss carries the current regular SHIFT tuning without a new
        player action. Suppress the dot for that carried state; the next deliberate
-       SHIFT toggle clears `carried`, making the dot appear as immediate feedback. */
+       SHIFT toggle clears carried, making the dot appear as immediate feedback. */
     .drive-stack.is-shift-active .drive-shift-bubble:not([data-flow-shift="carried"]) i {
       width: .56rem;
       opacity: 1;
