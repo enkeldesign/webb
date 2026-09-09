@@ -35,9 +35,7 @@ assert.ok(
 assert.match(guide, /GUIDE_VERSION = 'r263-how-to-play-copy'/);
 assert.match(guide, /updateTrackAndCarCopy\(dialog\)/);
 assert.match(guide, /Choose a track, then pick your car in <strong>THE LOT<\/strong> before racing/);
-assert.match(guide, /Use <strong>SHOW BEST<\/strong> to compare your saved TIME, DRIFT and FLOW records/);
-assert.doesNotMatch(guide, /SHOW RECORDS/,
-  'How to Play must use the current SHOW BEST control name');
+assert.match(guide, /Use <strong>SHOW RECORDS<\/strong> to compare your saved TIME, DRIFT and FLOW records/);
 assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE<\/strong>/);
 assert.match(guide, /BRAKE stops at zero without reversing/);
 assert.match(guide, /slide outward into <strong>REVERSE<\/strong>/);
@@ -205,7 +203,7 @@ assert.match(rivalStorage, /localStorage\.removeItem\(rivalKey\(trackId\)\)/);
 assert.match(rivalStorage, /localStorage\.removeItem\(ghostKey\(trackId\)\)/);
 assert.match(rivalStorage, /state\.trackId = activeTrackId/, 'An all-track reset must preserve the runtime’s active track');
 assert.match(rivalStorage, /syncPrimaryRivalState\(state\)/);
-assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId: activeTrackId \}\)/, 'The race reset implementation must clear only the current track storage key');
+assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId: activeTrackId \}\)/, 'The race Settings path must clear only the current track storage key');
 assert.match(trackManager, /globalThis\.__turnResetRivals = resetCurrentTrackRivals/);
 
 console.log('TURN collapsible How to Play cards, current player-facing copy, clean scorekeeper and contextual rival reset passed.');

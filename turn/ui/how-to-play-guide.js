@@ -41,7 +41,7 @@ function updateTrackAndCarCopy(dialog) {
   const paragraph = section?.querySelector('p');
   if (!paragraph) return;
 
-  paragraph.innerHTML = 'Choose a track, then pick your car in <strong>THE LOT</strong> before racing. Use <strong>SHOW BEST</strong> to compare your saved TIME, DRIFT and FLOW records. TURN races you against recordings of your own fastest laps, not computer drivers.';
+  paragraph.innerHTML = 'Choose a track, then pick your car in <strong>THE LOT</strong> before racing. Use <strong>SHOW RECORDS</strong> to compare your saved TIME, DRIFT and FLOW records. TURN races you against recordings of your own fastest laps, not computer drivers.';
 }
 
 function updateDriveControlCopy(dialog) {
