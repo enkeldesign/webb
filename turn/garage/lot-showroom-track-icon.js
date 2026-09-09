@@ -22,17 +22,26 @@ function installChosenTrackIcon() {
   const markup = trackIconMarkup(currentTrackId());
   if (!markup) return;
 
-  headingCopy.style.position = 'relative';
+  // Reserve actual layout space for the icon rather than absolutely positioning
+  // it over the availability panel on narrower landscape viewports.
+  headingCopy.style.display = 'grid';
+  headingCopy.style.gridTemplateColumns = 'auto auto';
+  headingCopy.style.gridTemplateRows = 'auto auto';
+  headingCopy.style.columnGap = '14px';
+  headingCopy.style.alignItems = 'center';
+  headingCopy.style.justifyContent = 'start';
+  headingCopy.querySelector('h1')?.style.setProperty('grid-column', '1');
+  headingCopy.querySelector('h1')?.style.setProperty('grid-row', '1');
+  headingCopy.querySelector('p')?.style.setProperty('grid-column', '1');
+  headingCopy.querySelector('p')?.style.setProperty('grid-row', '2');
 
   const host = document.createElement('span');
   host.dataset.lotTrackIcon = '';
   host.setAttribute('aria-hidden', 'true');
-  host.style.position = 'absolute';
-  host.style.top = '50%';
-  host.style.left = 'calc(100% + 14px)';
-  host.style.width = 'clamp(46px, 5.8vw, 64px)';
-  host.style.height = 'clamp(46px, 5.8vw, 64px)';
-  host.style.transform = 'translateY(-50%)';
+  host.style.gridColumn = '2';
+  host.style.gridRow = '1 / span 2';
+  host.style.width = 'clamp(42px, 5.2vw, 62px)';
+  host.style.height = 'clamp(42px, 5.2vw, 62px)';
   host.style.color = 'var(--ink, #08090a)';
   host.style.pointerEvents = 'none';
   host.innerHTML = markup;
