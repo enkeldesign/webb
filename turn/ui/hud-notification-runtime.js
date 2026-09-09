@@ -31,13 +31,11 @@ function ensureStylesheet(documentRef) {
 function makeStatusCell(documentRef, label, value, status = '') {
   const cell = documentRef.createElement('span');
   cell.className = 'turn-race-status-cell';
-
   const kicker = documentRef.createElement('small');
   kicker.textContent = label;
   const main = documentRef.createElement('strong');
   main.textContent = value;
   cell.append(kicker, main);
-
   if (status) {
     const aside = documentRef.createElement('b');
     aside.textContent = status;
@@ -75,12 +73,6 @@ function makeLapResultBody(documentRef, result = {}) {
   return body;
 }
 
-function defaultLapResultAnnouncement(result = {}) {
-  const place = Math.max(1, Math.round(number(result.position, 1)));
-  const total = Math.max(1, Math.round(number(result.total, 1)));
-  return `Lap result. Position ${place} of ${total}. Time ${formatLapTime(result.time)}.`;
-}
-
 function cueKind(message) {
   const upper = text(message).toUpperCase();
   if (/PATIENT ON BOARD|MAYDAY|SECONDS/.test(upper)) return HUD_NOTIFICATION_KIND.DANGER;
@@ -108,9 +100,14 @@ function cloneMedia(documentRef, source) {
   return media;
 }
 
+function mutationObserverFrom(windowRef) {
+  return windowRef?.MutationObserver || globalThis.MutationObserver;
+}
+
 function installLegacyMessageBridge({ controller, documentRef, windowRef }) {
   const message = documentRef.querySelector?.('#message');
-  if (!message || typeof MutationObserver !== 'function') return () => {};
+  const MutationObserverRef = mutationObserverFrom(windowRef);
+  if (!message || typeof MutationObserverRef !== 'function') return () => {};
   let lastSignature = '';
 
   const sync = () => {
@@ -126,26 +123,36 @@ function installLegacyMessageBridge({ controller, documentRef, windowRef }) {
       title: copy,
       priority: cuePriority(copy),
       durationMs: 2800,
-      // #message remains the existing polite status source until its producers
-      // migrate semantically. The shared visual must not speak it twice.
+      // #message remains the canonical polite speech source during the migration.
       announce: false
     });
   };
 
-  const observer = new MutationObserver(sync);
-  observer.observe(message, { attributes: true, attributeFilter: ['class'], childList: true, characterData: true, subtree: true });
-  windowRef?.addEventListener?.('turn:ui-state-change', (event) => {
+  const observer = new MutationObserverRef(sync);
+  observer.observe(message, {
+    attributes: true,
+    attributeFilter: ['class'],
+    childList: true,
+    characterData: true,
+    subtree: true
+  });
+  const onUiState = (event) => {
     if (!event.detail?.running) {
       lastSignature = '';
       controller.clear(HUD_NOTIFICATION_SLOT.RACE_CUE);
     }
-  });
+  };
+  windowRef?.addEventListener?.('turn:ui-state-change', onUiState);
   sync();
-  return () => observer.disconnect();
+  return () => {
+    observer.disconnect();
+    windowRef?.removeEventListener?.('turn:ui-state-change', onUiState);
+  };
 }
 
-function installProgressionBridge({ controller, documentRef }) {
-  if (typeof MutationObserver !== 'function') return () => {};
+function installProgressionBridge({ controller, documentRef, windowRef }) {
+  const MutationObserverRef = mutationObserverFrom(windowRef);
+  if (typeof MutationObserverRef !== 'function' || !documentRef?.body) return () => {};
   const seenVisible = new WeakSet();
 
   const publishToast = (toast) => {
@@ -164,6 +171,13 @@ function installProgressionBridge({ controller, documentRef }) {
     const guideCopy = guide && !guide.hidden ? text(guide.textContent).trim() : '';
     const icon = cloneMedia(documentRef, toast.querySelector?.('.turn-achievement-toast-icon'));
     const stableTitle = title || (reward ? 'TROPHY ROAD REWARD' : 'ACHIEVEMENT');
+    const announcement = toast.getAttribute?.('aria-label')
+      || [label, stableTitle, badge].filter(Boolean).join('. ');
+
+    // The old node stays alive as the feature-owned action target, but the shared
+    // component becomes both the visible and accessible notification surface.
+    toast.setAttribute?.('aria-hidden', 'true');
+    if ('tabIndex' in toast) toast.tabIndex = -1;
 
     controller.publish(HUD_NOTIFICATION_SLOT.PROGRESSION, {
       id: `${reward ? 'reward' : 'achievement'}:${stableTitle}:${badge}`,
@@ -174,9 +188,9 @@ function installProgressionBridge({ controller, documentRef }) {
       badge,
       mediaNode: icon,
       durationMs: 3200,
-      announce: false,
+      announcement,
       ...(reward ? {
-        actionLabel: toast.getAttribute?.('aria-label') || `Open Achievements. ${stableTitle}`,
+        actionLabel: announcement || `Open Achievements. ${stableTitle}`,
         onActivate: () => toast.click?.()
       } : {})
     });
@@ -185,7 +199,7 @@ function installProgressionBridge({ controller, documentRef }) {
   const scan = (root = documentRef) => {
     for (const toast of root.querySelectorAll?.('.turn-achievement-toast') || []) publishToast(toast);
   };
-  const observer = new MutationObserver((records) => {
+  const observer = new MutationObserverRef((records) => {
     for (const record of records) {
       if (record.target?.matches?.('.turn-achievement-toast')) publishToast(record.target);
       for (const node of record.addedNodes || []) {
@@ -194,15 +208,21 @@ function installProgressionBridge({ controller, documentRef }) {
       }
     }
   });
-  observer.observe(documentRef.body, { attributes: true, attributeFilter: ['class', 'hidden'], childList: true, subtree: true });
+  observer.observe(documentRef.body, {
+    attributes: true,
+    attributeFilter: ['class', 'hidden'],
+    childList: true,
+    subtree: true
+  });
   scan();
   return () => observer.disconnect();
 }
 
-function installRivalBridge({ controller, documentRef }) {
-  if (typeof MutationObserver !== 'function') return () => {};
+function installRivalBridge({ controller, documentRef, windowRef }) {
+  const MutationObserverRef = mutationObserverFrom(windowRef);
+  if (typeof MutationObserverRef !== 'function' || !documentRef?.body) return () => {};
   let rival = documentRef.querySelector?.('.rival-onboarding');
-  let slot = controller.elementFor(HUD_NOTIFICATION_SLOT.RACE_CUE);
+  const slot = controller.elementFor(HUD_NOTIFICATION_SLOT.RACE_CUE);
 
   const adopt = () => {
     rival ||= documentRef.querySelector?.('.rival-onboarding');
@@ -214,7 +234,7 @@ function installRivalBridge({ controller, documentRef }) {
     slot.append(rival);
   };
 
-  const observer = new MutationObserver(() => adopt());
+  const observer = new MutationObserverRef(adopt);
   observer.observe(documentRef.body, { childList: true, subtree: true });
   adopt();
   return () => observer.disconnect();
@@ -233,6 +253,19 @@ export function installHudNotificationRuntime({
   const controller = createHudNotificationController({ hud, documentRef });
   const cleanups = [];
 
+  // Component 1 is physically hosted by .stats. This guarantees exact coverage
+  // even when compact/iPad layouts change the number or width of stat chips.
+  const stats = documentRef.querySelector?.('.stats');
+  const statusSlot = controller.elementFor(HUD_NOTIFICATION_SLOT.RACE_STATUS);
+  if (stats && statusSlot) {
+    stats.classList?.add?.('turn-hud-race-status-host');
+    stats.append(statusSlot);
+    cleanups.push(() => {
+      stats.classList?.remove?.('turn-hud-race-status-host');
+      if (statusSlot.parentElement !== controller.host) controller.host.prepend?.(statusSlot);
+    });
+  }
+
   const onLapResult = (event) => {
     const result = event.detail || {};
     controller.publish(HUD_NOTIFICATION_SLOT.RACE_STATUS, {
@@ -241,7 +274,7 @@ export function installHudNotificationRuntime({
       contentNode: makeLapResultBody(documentRef, result),
       priority: RACE_STATUS_RESULT_PRIORITY,
       durationMs: 4000,
-      // The canonical lap-result announcer remains the single speech owner.
+      // Existing lap-result announcer remains the single speech owner.
       announce: false
     });
   };
@@ -269,8 +302,8 @@ export function installHudNotificationRuntime({
   cleanups.push(() => windowRef.removeEventListener?.('turn:lap-invalid', onLapInvalid));
   cleanups.push(() => windowRef.removeEventListener?.('turn:ui-state-change', onUiState));
   cleanups.push(installLegacyMessageBridge({ controller, documentRef, windowRef }));
-  cleanups.push(installProgressionBridge({ controller, documentRef }));
-  cleanups.push(installRivalBridge({ controller, documentRef }));
+  cleanups.push(installProgressionBridge({ controller, documentRef, windowRef }));
+  cleanups.push(installRivalBridge({ controller, documentRef, windowRef }));
 
   const api = Object.freeze({
     controller,
@@ -295,4 +328,3 @@ export function installHudNotificationRuntime({
 }
 
 export const HUD_NOTIFICATION_STYLE_HREF = STYLE_HREF;
-export { defaultLapResultAnnouncement };
