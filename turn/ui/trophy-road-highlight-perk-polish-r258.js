@@ -26,7 +26,7 @@ function installStyles() {
 
     .turn-achievements-dialog .turn-trophy-road-detail-close,
     .lot-showroom .lot-perk-disclosure .lot-perk-close {
-      background: var(--turn-orange-500, #ff7b54);
+      background: var(--turn-action-navigation, #ff7b54);
     }
 
     .lot-showroom .lot-car-title .lot-perk-button.turn-perk-selection-wiggle {
