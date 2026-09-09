@@ -20,6 +20,10 @@ import {
 } from './semantic-car-finish.js';
 import { installLearnerCarLivery } from './learner-car-livery.js?revision=r223-training-car-taxi';
 import { installSupercarKenneyWheels } from './supercar-kenney-wheels.js?revision=r253-supercar-release';
+import {
+  collectAssetWheelRig,
+  installAssetWheelRig
+} from './wheel-animation-rig.js?revision=r257-authored-wheel-spin';
 
 const loadersByPack = new Map();
 const sourceCache = new Map();
@@ -193,7 +197,11 @@ export async function createCarVisual({
   }
 
   if (outline) addOutlines(model);
-  const frontWheelPivots = installFrontWheelSteeringRig(model, car);
+  const { frontWheelPivots, wheelSpinners } = installAssetWheelRig({
+    model,
+    frontRole: REVERSED_FRONT_WHEEL_LABEL_IDS.has(car.id) ? 'back' : 'front',
+    createGroup: () => new THREE.Group()
+  });
   const featuredSurface = FEATURED_SURFACE_TARGET_LENGTHS.has(targetLength);
   const featuredVisualSizeMultiplier = featuredSurface ? car.featuredVisualSizeMultiplier : 1;
   const effectiveVisualScale = car.visualScale
@@ -221,7 +229,7 @@ export async function createCarVisual({
   root.userData.turnPaintMaterials = [...primaryPaintMaterials, ...secondaryPaintMaterials];
   root.userData.turnSemanticPaintRecords = semanticPaintRecords;
   root.userData.frontWheelPivots = frontWheelPivots;
-  root.userData.wheelSpinners = [];
+  root.userData.wheelSpinners = wheelSpinners;
   installWheelAnimationHostBridge(root);
   if (competitorTemplateKey) rememberCompetitorGhostTemplate(competitorTemplateKey, root);
   return root;
@@ -253,12 +261,7 @@ function cloneCompetitorGhostVisual(template) {
   clone.visible = template.visible;
   for (const child of template.children) clone.add(child.clone(true));
 
-  const frontWheelPivots = [];
-  clone.traverse((node) => {
-    if (!String(node?.name || '').endsWith('-steer-pivot')) return;
-    node.rotation.y = 0;
-    frontWheelPivots.push(node);
-  });
+  const { frontWheelPivots, wheelSpinners } = collectAssetWheelRig(clone, { reset: true });
 
   clone.userData.turnCarId = template.userData.turnCarId;
   clone.userData.turnCarColor = template.userData.turnCarColor;
@@ -274,7 +277,7 @@ function cloneCompetitorGhostVisual(template) {
   clone.userData.turnPaintMaterials = [];
   clone.userData.turnSemanticPaintRecords = [];
   clone.userData.frontWheelPivots = frontWheelPivots;
-  clone.userData.wheelSpinners = [];
+  clone.userData.wheelSpinners = wheelSpinners;
   clone.userData.turnFastGhostClone = true;
   installWheelAnimationHostBridge(clone);
   return clone;
@@ -465,39 +468,6 @@ function addOutlines(model) {
     outline.userData.turnOutline = true;
     node.add(outline);
   }
-}
-
-function installFrontWheelSteeringRig(model, car) {
-  const actualFrontRole = REVERSED_FRONT_WHEEL_LABEL_IDS.has(car.id) ? 'back' : 'front';
-  const frontWheels = [];
-  model.traverse((node) => {
-    if (!node?.parent || wheelRole(node.name) !== actualFrontRole) return;
-    frontWheels.push(node);
-  });
-
-  const pivots = [];
-  for (const wheel of frontWheels) {
-    const parent = wheel.parent;
-    const localPosition = wheel.position.clone();
-    parent.remove(wheel);
-
-    const pivot = new THREE.Group();
-    pivot.name = `${wheel.name || 'wheel'}-steer-pivot`;
-    pivot.position.copy(localPosition);
-    parent.add(pivot);
-
-    wheel.position.set(0, 0, 0);
-    pivot.add(wheel);
-    pivots.push(pivot);
-  }
-  return pivots;
-}
-
-function wheelRole(name = '') {
-  const label = String(name).toLowerCase();
-  if (/^wheel-(?:front|f[lr])(?:-|$)/.test(label)) return 'front';
-  if (/^wheel-(?:back|b[lr])(?:-|$)/.test(label)) return 'back';
-  return null;
 }
 
 function normalizeModelToGround(model, targetLength, cacheKey = '') {

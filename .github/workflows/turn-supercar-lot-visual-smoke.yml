@@ -12,6 +12,7 @@ on:
       - 'turn/vehicle/learner-car-livery.js'
       - 'turn/vehicle/semantic-car-finish.js'
       - 'turn/vehicle/supercar-kenney-wheels.js'
+      - 'turn/vehicle/wheel-animation-rig.js'
       - 'turn/vehicle/wide-gamut.js'
       - 'turn/assets/cars/training-car.glb'
       - 'turn/design-tokens.css'

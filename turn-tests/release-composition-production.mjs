@@ -13,7 +13,7 @@ const comparedExtensions = new Set(['.css', '.js', '.mjs']);
 
 const criticalReleaseTargets = Object.freeze({
   '/turn/vehicle/catalog.js': '/turn/vehicle/catalog.js?revision=r253-supercar-release',
-  '/turn/vehicle/car-models.js': '/turn/vehicle/car-models.js?revision=r253-supercar-release'
+  '/turn/vehicle/car-models.js': '/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin'
 });
 
 const productionCompatibilityRoutes = Object.freeze({
@@ -21,6 +21,7 @@ const productionCompatibilityRoutes = Object.freeze({
   '/turn/vehicle/catalog.js?revision=r248-supercar': criticalReleaseTargets['/turn/vehicle/catalog.js'],
   '/turn/vehicle/catalog.js?revision=r250-supercar-finish': criticalReleaseTargets['/turn/vehicle/catalog.js'],
   '/turn/vehicle/car-models.js?revision=r252-supercar-outward-rims': criticalReleaseTargets['/turn/vehicle/car-models.js'],
+  '/turn/vehicle/car-models.js?revision=r253-supercar-release': criticalReleaseTargets['/turn/vehicle/car-models.js'],
   '/turn/progression/trophy-road.js?revision=r243-mountain-1300': '/turn/progression/trophy-road.js?revision=r253-supercar-release',
   '/turn/progression/trophy-road.js?revision=r248-supercar': '/turn/progression/trophy-road.js?revision=r253-supercar-release',
   '/turn/achievements/trophy-road-showcase.js?revision=r243-mountain-1300': '/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release',
@@ -47,6 +48,7 @@ const requiredActiveModules = Object.freeze([
   'turn/vehicle/flow-shift.js',
   'turn/vehicle/shift-tuning.js',
   'turn/vehicle/shift-profile.js',
+  'turn/vehicle/wheel-animation-rig.js',
   'turn/achievements/trophy-road-feedback.js',
   'turn/achievements/trophy-road-showcase.js',
   'turn/assets/cars/supercar-model-data.js'
