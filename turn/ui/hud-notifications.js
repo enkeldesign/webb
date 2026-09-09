@@ -97,15 +97,21 @@ function createPlate(documentRef, slot, notification) {
   if (notification.mediaNode) media.append(notification.mediaNode);
   else media.hidden = true;
 
-  const copy = documentRef.createElement('span');
-  copy.className = 'turn-hud-notification__copy';
-  appendIf(copy, makeTextNode(documentRef, 'turn-hud-notification__kicker', notification.kicker));
-  appendIf(copy, makeTextNode(documentRef, 'turn-hud-notification__title', notification.title));
-  appendIf(copy, makeTextNode(documentRef, 'turn-hud-notification__detail', notification.detail));
+  const body = documentRef.createElement('span');
+  body.className = notification.contentNode
+    ? 'turn-hud-notification__body'
+    : 'turn-hud-notification__copy';
+  if (notification.contentNode) {
+    body.append(notification.contentNode);
+  } else {
+    appendIf(body, makeTextNode(documentRef, 'turn-hud-notification__kicker', notification.kicker));
+    appendIf(body, makeTextNode(documentRef, 'turn-hud-notification__title', notification.title));
+    appendIf(body, makeTextNode(documentRef, 'turn-hud-notification__detail', notification.detail));
+  }
 
   const badge = makeTextNode(documentRef, 'turn-hud-notification__badge', notification.badge);
   appendIf(plate, media);
-  appendIf(plate, copy);
+  appendIf(plate, body);
   appendIf(plate, badge);
   return plate;
 }
