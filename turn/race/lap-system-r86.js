@@ -7,6 +7,7 @@ export const MOUNTAIN_LONG_CHECKPOINTS = Object.freeze(
 );
 export const COUNTRYSIDE_CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 3;
 export const LAP_VOID_DISABLED_TRACKS = Object.freeze(['cliffside']);
+const COUNTRYSIDE_TRACK_CENTER = Object.freeze({ x: 0, z: 0 });
 const NO_CHECKPOINTS = Object.freeze([]);
 
 export const beginTimedLapState = baseLapSystem.beginTimedLapState;
@@ -24,11 +25,19 @@ export function updateLapProgressState(options = {}) {
   const checkpointGateHalfWidthFactor = options.checkpointGateHalfWidthFactor ?? (
     trackId === 'countryside' ? COUNTRYSIDE_CHECKPOINT_GATE_HALF_WIDTH_FACTOR : undefined
   );
+  const checkpointGateCenterPoint = options.checkpointGateCenterPoint ?? (
+    trackId === 'countryside' ? COUNTRYSIDE_TRACK_CENTER : undefined
+  );
+  const checkpointGateOuterHalfWidthFactor = options.checkpointGateOuterHalfWidthFactor ?? (
+    trackId === 'countryside' ? Infinity : undefined
+  );
 
   return baseLapSystem.updateLapProgressState({
     ...options,
     checkpoints,
-    ...(checkpointGateHalfWidthFactor == null ? {} : { checkpointGateHalfWidthFactor })
+    ...(checkpointGateHalfWidthFactor == null ? {} : { checkpointGateHalfWidthFactor }),
+    ...(checkpointGateCenterPoint == null ? {} : { checkpointGateCenterPoint }),
+    ...(checkpointGateOuterHalfWidthFactor == null ? {} : { checkpointGateOuterHalfWidthFactor })
   });
 }
 
