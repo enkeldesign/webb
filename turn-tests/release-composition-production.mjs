@@ -16,14 +16,12 @@ const criticalReleaseTargets = Object.freeze({
   '/turn/vehicle/car-models.js': '/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin'
 });
 
-const productionCompatibilityRoutes = Object.freeze({
+const crossDeploymentCompatibilityRoutes = Object.freeze({
   '/turn/vehicle/catalog.js?revision=r243-mountain-1300': criticalReleaseTargets['/turn/vehicle/catalog.js'],
   '/turn/vehicle/catalog.js?revision=r248-supercar': criticalReleaseTargets['/turn/vehicle/catalog.js'],
   '/turn/vehicle/catalog.js?revision=r250-supercar-finish': criticalReleaseTargets['/turn/vehicle/catalog.js'],
   '/turn/vehicle/car-models.js?revision=r252-supercar-outward-rims': criticalReleaseTargets['/turn/vehicle/car-models.js'],
   '/turn/vehicle/car-models.js?revision=r253-supercar-release': criticalReleaseTargets['/turn/vehicle/car-models.js'],
-  '/turn/progression/trophy-road.js?revision=r243-mountain-1300': '/turn/progression/trophy-road.js?revision=r253-supercar-release',
-  '/turn/progression/trophy-road.js?revision=r248-supercar': '/turn/progression/trophy-road.js?revision=r253-supercar-release',
   '/turn/achievements/trophy-road-showcase.js?revision=r243-mountain-1300': '/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release',
   '/turn/achievements/challenge-expansion-r166.js?revision=r166-bella-records': '/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling',
   '/turn/achievements/challenge-expansion-r166.js?revision=r241-learning-achievements': '/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling',
@@ -36,6 +34,24 @@ const productionCompatibilityRoutes = Object.freeze({
   '/turn/ui/shift-feedback.js?revision=r253-supercar-release': '/turn/ui/shift-feedback.js?revision=r255-flow-shift-accessibility'
 });
 
+const legacyTrophyRoadCompatibilityRoutes = Object.freeze({
+  '/turn/progression/trophy-road.js?revision=r243-mountain-1300': '/turn/progression/trophy-road.js?revision=r253-supercar-release',
+  '/turn/progression/trophy-road.js?revision=r248-supercar': '/turn/progression/trophy-road.js?revision=r253-supercar-release'
+});
+
+const productionPresentationRoutes = Object.freeze({
+  '/turn/progression/trophy-road.js?revision=r243-mountain-1300': '/turn/progression/trophy-road-track-icons.js?revision=r1-track-reward-icons',
+  '/turn/progression/trophy-road.js?revision=r248-supercar': '/turn/progression/trophy-road-track-icons.js?revision=r1-track-reward-icons',
+  '/turn/progression/trophy-road.js?revision=r253-supercar-release': '/turn/progression/trophy-road-track-icons.js?revision=r1-track-reward-icons',
+  '/turn/achievements/catalog.js?revision=r222-awd-label': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+  '/turn/achievements/catalog.js?revision=r240-trophy-road-2': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+  '/turn/achievements/catalog.js?revision=r241-learning-achievements': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+  '/turn/achievements/catalog-production.js?revision=r222-awd-label': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+  '/turn/achievements/catalog-production.js?revision=r240-trophy-road-2': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+  '/turn/achievements/catalog-production.js?revision=r241-learning-achievements': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+  '/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims': '/turn/garage/lot-showroom-track-icon.js?revision=r1-track-reward-icons'
+});
+
 const requiredActiveModules = Object.freeze([
   'turn/app.js',
   'turn/main.js',
@@ -43,14 +59,18 @@ const requiredActiveModules = Object.freeze([
   'turn/ui/rival-onboarding.js',
   'turn/ui/shift-feedback.js',
   'turn/ui/track-best-car.js',
+  'turn/ui/track-icons.js',
   'turn/vehicle/catalog.js',
   'turn/vehicle/car-models.js',
   'turn/vehicle/flow-shift.js',
   'turn/vehicle/shift-tuning.js',
   'turn/vehicle/shift-profile.js',
   'turn/vehicle/wheel-animation-rig.js',
+  'turn/achievements/catalog-track-icons.js',
   'turn/achievements/trophy-road-feedback.js',
   'turn/achievements/trophy-road-showcase.js',
+  'turn/progression/trophy-road-track-icons.js',
+  'turn/garage/lot-showroom-track-icon.js',
   'turn/assets/cars/supercar-model-data.js'
 ]);
 
@@ -316,11 +336,14 @@ const yourTurnImportMap = parseImportMap(yourTurnDocument);
 
 assert.deepEqual(labImportMap, headGraph.importMap, 'TURN LAB must use the exact production import map');
 assertRouteTargets(headGraph.importMap, criticalReleaseTargets, 'Production TURN');
-assertRouteTargets(headGraph.importMap, productionCompatibilityRoutes, 'Production TURN');
+assertRouteTargets(headGraph.importMap, crossDeploymentCompatibilityRoutes, 'Production TURN');
+assertRouteTargets(headGraph.importMap, productionPresentationRoutes, 'Production TURN');
 assertRouteTargets(nextImportMap, criticalReleaseTargets, 'TURN NEXT');
-assertRouteTargets(nextImportMap, productionCompatibilityRoutes, 'TURN NEXT');
+assertRouteTargets(nextImportMap, crossDeploymentCompatibilityRoutes, 'TURN NEXT');
+assertRouteTargets(nextImportMap, legacyTrophyRoadCompatibilityRoutes, 'TURN NEXT');
 assertRouteTargets(yourTurnImportMap, criticalReleaseTargets, 'YOUR TURN');
-assertRouteTargets(yourTurnImportMap, productionCompatibilityRoutes, 'YOUR TURN');
+assertRouteTargets(yourTurnImportMap, crossDeploymentCompatibilityRoutes, 'YOUR TURN');
+assertRouteTargets(yourTurnImportMap, legacyTrophyRoadCompatibilityRoutes, 'YOUR TURN');
 
 await Promise.all([
   assertLocalImportTargetsExist(headGraph.importMap, 'Production TURN'),

@@ -7,20 +7,53 @@ import {
   getAchievement
 } from '../turn/achievements/catalog.js';
 import {
+  ICONS as PRESENTATION_ICONS,
+  TRACK_IDS as PRESENTATION_TRACK_IDS,
+  getAchievement as getPresentationAchievement
+} from '../turn/achievements/catalog-track-icons.js';
+import {
   TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_REWARD_ICONS
 } from '../turn/progression/trophy-road.js';
+import {
+  TROPHY_ROAD_REWARD_ICONS as PRESENTATION_TROPHY_ROAD_REWARD_ICONS,
+  getTrophyRoadReward as getPresentationTrophyRoadReward
+} from '../turn/progression/trophy-road-track-icons.js';
+import {
+  TRACK_ICON_ASSETS,
+  TRACK_ICON_MARKUP
+} from '../turn/ui/track-icons.js';
 import {
   AUTHORED_DRIFT_ICON,
   AUTHORED_PAINT_ICON,
   AUTHORED_SAFETY_ICON
 } from '../turn/ui/authored-icons.js';
 
-const [view, feedback, showcase, styles] = await Promise.all([
+const [
+  view,
+  feedback,
+  showcase,
+  styles,
+  productionIndex,
+  labIndex,
+  homeRewardReplay,
+  trophyRoadPerksFacade,
+  lotTrackIconWrapper,
+  ...trackIconSources
+] = await Promise.all([
   fs.readFile(new URL('../turn/achievements/view.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/trophy-road-feedback.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/trophy-road-showcase.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/progression/trophy-road.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/progression/trophy-road.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/achievements/home-reward-replay-r225.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/progression/trophy-road-perks-r164.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/garage/lot-showroom-track-icon.js', import.meta.url), 'utf8'),
+  ...TRACK_IDS.map((trackId) => fs.readFile(
+    new URL(`../turn/assets/trophy-road/${trackId}.svg`, import.meta.url),
+    'utf8'
+  ))
 ]);
 
 assert.deepEqual(trophyRoadDetailPlacement({
@@ -84,6 +117,66 @@ for (const achievementId of ['drive-by-ear', 'listen-closely', 'beyond-sight']) 
   assert.equal(getAchievement(achievementId)?.icon, trustYourEarsIcon,
     `${achievementId} must use the same non-visual-driving icon as TRUST YOUR EARS`);
 }
+
+assert.deepEqual(PRESENTATION_TRACK_IDS, TRACK_IDS,
+  'The track-icon presentation catalog must preserve the canonical track set');
+for (const [index, trackId] of TRACK_IDS.entries()) {
+  const iconKey = `track-${trackId}`;
+  assert.equal(getPresentationAchievement(`${trackId}-winner`)?.icon, iconKey,
+    `${trackId.toUpperCase()} WINNER must use its own track pictogram`);
+  assert.equal(PRESENTATION_ICONS[iconKey], TRACK_ICON_MARKUP[trackId],
+    `${trackId} achievement artwork must reuse the shared track icon source`);
+  assert.equal(TRACK_ICON_ASSETS[trackId], `/turn/assets/trophy-road/${trackId}.svg`);
+  assert.match(trackIconSources[index], /<svg[^>]+viewBox=/,
+    `${trackId} track pictogram must remain a vector SVG`);
+  assert.match(trackIconSources[index], /currentColor/,
+    `${trackId} track pictogram must inherit the surface colour`);
+  assert.doesNotMatch(trackIconSources[index], /<image\b|data:image|\.png|\.jpe?g/i,
+    `${trackId} track pictogram must not embed raster artwork`);
+}
+assert.equal(getPresentationAchievement('an-army-of-me')?.icon, 'trophy',
+  'AN ARMY OF ME must use the TROPHY icon');
+assert.equal(getPresentationAchievement('your-own-rival')?.icon, 'flag',
+  'YOUR OWN RIVAL must use the FLAG icon');
+assert.equal(getPresentationAchievement('charge-through-it')?.icon, 'drift',
+  'CHARGE THROUGH IT must use the authored DRIFT icon');
+assert.equal(getPresentationAchievement('catch-the-charge')?.icon, 'safety',
+  'CATCH THE CHARGE must use the authored SAFETY icon');
+assert.equal(PRESENTATION_ICONS.drift, AUTHORED_DRIFT_ICON);
+assert.equal(PRESENTATION_ICONS.safety, AUTHORED_SAFETY_ICON);
+
+const midnightReward = getPresentationTrophyRoadReward('midnight-city');
+const mountainReward = getPresentationTrophyRoadReward('mountain');
+assert.equal(PRESENTATION_TROPHY_ROAD_REWARD_ICONS[midnightReward.icon], TRACK_ICON_MARKUP['midnight-city'],
+  'MIDNIGHT CITY must use the new authored track icon on Trophy Road');
+assert.equal(PRESENTATION_TROPHY_ROAD_REWARD_ICONS[mountainReward.icon], TRACK_ICON_MARKUP.mountain,
+  'MOUNTAIN must use the new authored track icon on Trophy Road');
+
+for (const document of [productionIndex, labIndex]) {
+  assert.match(document, /"\/turn\/achievements\/catalog\.js\?revision=r241-learning-achievements": "\/turn\/achievements\/catalog-track-icons\.js\?revision=r1-track-reward-icons"/,
+    'Current achievement consumers must route through the track-icon presentation catalog');
+  assert.match(document, /"\/turn\/achievements\/catalog-production\.js\?revision=r241-learning-achievements": "\/turn\/achievements\/catalog-track-icons\.js\?revision=r1-track-reward-icons"/,
+    'Legacy achievement facades must also converge on the track-icon presentation catalog');
+  for (const revision of ['r243-mountain-1300', 'r248-supercar', 'r253-supercar-release']) {
+    assert.match(document, new RegExp(
+      `"/turn/progression/trophy-road\\.js\\?revision=${revision}": "/turn/progression/trophy-road-track-icons\\.js\\?revision=r1-track-reward-icons"`
+    ), `Trophy Road ${revision} consumers must converge on the authored track-icon presentation`);
+  }
+  assert.match(document, /"\/turn\/garage\/lot-showroom-experiment\.js\?revision=r252-supercar-outward-rims": "\/turn\/garage\/lot-showroom-track-icon\.js\?revision=r1-track-reward-icons"/,
+    'The current Lot showroom must route through the chosen-track icon wrapper');
+}
+assert.match(homeRewardReplay, /trophy-road-perks-r164\.js\?revision=r243-mountain-1300/,
+  'Home reward replay must continue through the compatibility Trophy Road facade');
+assert.match(trophyRoadPerksFacade, /trophy-road\.js\?revision=r243-mountain-1300/,
+  'The home reward facade must converge on the routed Trophy Road icon catalog');
+assert.match(feedback, /trophy-road\.js\?revision=r253-supercar-release/,
+  'Reward-detail rehydration must use the current Trophy Road route that is redirected to authored track icons');
+assert.match(lotTrackIconWrapper, /__turnNextHome\?\.getSelectedTrackId\?\.\(\)/,
+  'The Lot track pictogram must mirror Home selection instead of owning duplicate state');
+assert.match(lotTrackIconWrapper, /gridTemplateColumns = 'auto auto'/,
+  'The Lot header must reserve real layout space for the chosen-track pictogram');
+assert.match(lotTrackIconWrapper, /aria-hidden', 'true'/,
+  'The chosen-track Lot pictogram must remain decorative');
 
 assert.match(view, /data-trophy-road-detail-layer hidden/);
 assert.match(view, /role="dialog"[\s\S]*aria-modal="true"[\s\S]*aria-labelledby="turnTrophyRoadDetailTitle"/,
@@ -152,4 +245,4 @@ for (const reward of vehicleRewards) {
 assert.match(showcase, /supercar:\s*Object\.freeze\(\[[\s\S]*carId: 'supercar'/,
   'The 2300 SUPERCAR reward must load the actual Supercar vehicle model rather than stop at its line-art icon');
 
-console.log('TURN Trophy Road anchored reward modal, focus, placement, shared icon mapping and complete vehicle showcase coverage passed.');
+console.log('TURN Trophy Road anchored reward modal, shared track icons, chosen-track Lot cue and complete vehicle showcase coverage passed.');
