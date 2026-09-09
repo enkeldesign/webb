@@ -1,0 +1,290 @@
+/*
+ * Shared in-race notification primitives.
+ *
+ * This file deliberately defines component geometry and semantics only. Final
+ * race-HUD placement is owned by the peripheral HUD composition so right- and
+ * left-handed layouts can mirror from one source of truth.
+ */
+.turn-hud-notifications {
+  position: absolute;
+  z-index: 35;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.turn-hud-notification-slot {
+  position: absolute;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.turn-hud-notification {
+  --turn-hud-notification-surface: var(--turn-action-warning, var(--turn-yellow-400, #ffd43b));
+  --turn-hud-notification-radius: var(--turn-radius-default, 16px);
+  box-sizing: border-box;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: clamp(7px, 1.1vw, 11px);
+  margin: 0;
+  border: var(--turn-border-default, 3px) solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-hud-notification-radius);
+  background: var(--turn-hud-notification-surface);
+  box-shadow: var(--turn-shadow-default, 5px 5px 0 var(--turn-ink, #08090a));
+  color: var(--turn-ink, #08090a);
+  font: inherit;
+  text-align: start;
+  pointer-events: none;
+  animation: turn-hud-notification-enter 180ms cubic-bezier(.2, .82, .3, 1) both;
+}
+
+.turn-hud-notification[data-state="leaving"] {
+  animation: turn-hud-notification-exit 160ms ease-in both;
+}
+
+.turn-hud-notification.is-actionable {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.turn-hud-notification.is-actionable:focus-visible {
+  outline: 3px solid var(--turn-action-information, var(--turn-blue-500, #38d9ff));
+  outline-offset: 3px;
+}
+
+.turn-hud-notification__media {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+.turn-hud-notification__media[hidden] {
+  display: none;
+}
+
+.turn-hud-notification__copy,
+.turn-hud-notification__body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.turn-hud-notification__copy {
+  display: grid;
+  gap: 2px;
+}
+
+.turn-hud-notification__kicker,
+.turn-hud-notification__title,
+.turn-hud-notification__detail,
+.turn-hud-notification__badge {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.turn-hud-notification__kicker,
+.turn-hud-notification__badge {
+  font-size: clamp(.46rem, 1vw, .62rem);
+  font-weight: 950;
+  letter-spacing: .07em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.turn-hud-notification__title {
+  font-size: clamp(.78rem, 1.65vw, 1.05rem);
+  font-weight: 950;
+  letter-spacing: .025em;
+  line-height: 1.02;
+}
+
+.turn-hud-notification__detail {
+  font-size: clamp(.56rem, 1.15vw, .72rem);
+  font-weight: 850;
+  line-height: 1.08;
+}
+
+.turn-hud-notification__badge {
+  flex: 0 0 auto;
+  padding: 5px 8px 6px;
+  border: 2px solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-pill, 999px);
+  background: var(--turn-yellow-400, #ffd43b);
+  white-space: nowrap;
+}
+
+/* Component 1: wide race/lap status surface. */
+.turn-hud-notification[data-slot="race-status"] {
+  width: min(760px, 100%);
+  min-height: 58px;
+  padding: 7px 12px 8px;
+  --turn-hud-notification-radius: var(--turn-radius-default, 16px);
+}
+
+.turn-hud-notification[data-slot="race-status"] .turn-hud-notification__title {
+  font-size: clamp(.92rem, 2vw, 1.24rem);
+}
+
+/* Component 2: compact TURN command/cue pill, based on the existing GO plate. */
+.turn-hud-notification[data-slot="race-cue"] {
+  width: max-content;
+  max-width: min(72vw, 720px);
+  min-height: 38px;
+  padding: 6px 13px 7px;
+  --turn-hud-notification-radius: var(--turn-radius-pill, 999px);
+}
+
+.turn-hud-notification[data-slot="race-cue"] .turn-hud-notification__copy {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.turn-hud-notification[data-slot="race-cue"] .turn-hud-notification__kicker,
+.turn-hud-notification[data-slot="race-cue"] .turn-hud-notification__title,
+.turn-hud-notification[data-slot="race-cue"] .turn-hud-notification__detail {
+  white-space: nowrap;
+}
+
+/* Component 3: progression plate, intentionally smaller than the old toast. */
+.turn-hud-notification[data-slot="progression"] {
+  width: min(520px, 46vw);
+  min-height: 60px;
+  padding: 7px 9px 8px;
+  --turn-hud-notification-radius: var(--turn-radius-compact, 13px);
+}
+
+.turn-hud-notification[data-slot="progression"] .turn-hud-notification__media {
+  width: clamp(38px, 4.5vw, 50px);
+  align-self: stretch;
+  border: 2px solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-compact, 11px);
+  background: var(--turn-paper, #fff8e8);
+}
+
+/* Semantic variants. Colour reinforces the explicit text; it never carries meaning alone. */
+.turn-hud-notification[data-kind="info"],
+.turn-hud-notification[data-kind="command"] {
+  --turn-hud-notification-surface: var(--turn-yellow-400, #ffd43b);
+}
+
+.turn-hud-notification[data-kind="guidance"] {
+  --turn-hud-notification-surface: var(--turn-paper, #fff8e8);
+}
+
+.turn-hud-notification[data-kind="success"],
+.turn-hud-notification[data-kind="achievement"] {
+  --turn-hud-notification-surface: var(--turn-green-500, #8ce99a);
+}
+
+.turn-hud-notification[data-kind="danger"] {
+  --turn-hud-notification-surface: var(--turn-red-500, #ff6b6b);
+}
+
+.turn-hud-notification[data-kind="reward"] {
+  --turn-hud-notification-surface: var(--turn-yellow-400, #ffd43b);
+}
+
+/* Component 4 primitive. Placement inside DRIFT/FLOW paper is composed elsewhere. */
+.turn-score-event-callout {
+  box-sizing: border-box;
+  display: grid;
+  width: max-content;
+  max-width: 72%;
+  gap: 2px;
+  padding: 5px 7px 6px;
+  border: 2px solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-compact, 10px);
+  background: var(--turn-yellow-400, #ffd43b);
+  box-shadow: var(--turn-shadow-compact, 3px 3px 0 var(--turn-ink, #08090a));
+  color: var(--turn-ink, #08090a);
+  pointer-events: none;
+  animation: turn-hud-notification-enter 180ms cubic-bezier(.2, .82, .3, 1) both;
+}
+
+.turn-score-event-callout[hidden] {
+  display: none;
+}
+
+.turn-score-event-callout[data-state="leaving"] {
+  animation: turn-hud-notification-exit 160ms ease-in both;
+}
+
+.turn-score-event-callout strong,
+.turn-score-event-callout b {
+  overflow: hidden;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.turn-score-event-callout strong {
+  font-size: clamp(.52rem, 1.15vw, .68rem);
+  letter-spacing: .045em;
+}
+
+.turn-score-event-callout b {
+  font-size: clamp(.72rem, 1.7vw, 1rem);
+}
+
+.turn-score-event-callout[data-event="bank"] {
+  background: var(--turn-green-500, #8ce99a);
+}
+
+.turn-score-event-callout[data-event="loss"] {
+  background: var(--turn-red-500, #ff6b6b);
+}
+
+.turn-score-event-callout[data-event="milestone"] {
+  background: var(--turn-yellow-400, #ffd43b);
+}
+
+.turn-score-event-callout[data-event="personal-best"],
+.turn-score-event-callout[data-event="lap-result"] {
+  background: var(--turn-pink-500, #ff4fa3);
+}
+
+@keyframes turn-hud-notification-enter {
+  from { opacity: 0; transform: translateY(5px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes turn-hud-notification-exit {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(3px) scale(.985); }
+}
+
+@media (max-height: 430px) and (orientation: landscape) {
+  .turn-hud-notification[data-slot="race-status"] {
+    min-height: 48px;
+    padding: 5px 9px 6px;
+    border-width: 2px;
+    box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+  }
+
+  .turn-hud-notification[data-slot="race-cue"] {
+    min-height: 32px;
+    padding: 4px 10px 5px;
+    border-width: 2px;
+    box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+  }
+
+  .turn-hud-notification[data-slot="progression"] {
+    width: min(480px, 45vw);
+    min-height: 50px;
+    padding: 5px 7px 6px;
+    border-width: 2px;
+    box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-hud-notification,
+  .turn-hud-notification[data-state="leaving"],
+  .turn-score-event-callout,
+  .turn-score-event-callout[data-state="leaving"] {
+    animation: none;
+  }
+}
