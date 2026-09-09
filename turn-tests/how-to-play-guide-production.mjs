@@ -32,7 +32,12 @@ assert.ok(
   'The contextual reset enhancer must run only after the shared Settings dialog exists'
 );
 
-assert.match(guide, /GUIDE_VERSION = 'r241-learning-achievements'/);
+assert.match(guide, /GUIDE_VERSION = 'r263-how-to-play-copy'/);
+assert.match(guide, /updateTrackAndCarCopy\(dialog\)/);
+assert.match(guide, /Choose a track, then pick your car in <strong>THE LOT<\/strong> before racing/);
+assert.match(guide, /Use <strong>SHOW BEST<\/strong> to compare your saved TIME, DRIFT and FLOW records/);
+assert.doesNotMatch(guide, /SHOW RECORDS/,
+  'How to Play must use the current SHOW BEST control name');
 assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE<\/strong>/);
 assert.match(guide, /BRAKE stops at zero without reversing/);
 assert.match(guide, /slide outward into <strong>REVERSE<\/strong>/);
@@ -49,18 +54,23 @@ assert.match(guide, /Uncaught OVERCHARGE leaks\. At its peak, it starts leaking 
 
 assert.match(guide, /title: 'SHIFT'/);
 assert.match(guide, /normal attributes and the alternate setup you configured in <strong>THE LOT<\/strong>/);
-assert.match(guide, /redistributes attribute points — it does not add free power/);
+assert.match(guide, /redistributes attribute points between the two setups/);
+assert.doesNotMatch(guide, /does not add free power/,
+  'SHIFT help should explain the mechanic positively rather than defend against an unstated misconception');
 assert.match(guide, /slide from GAS into SHIFT to swap setup, then SHIFT again to return/);
-assert.match(guide, /title: 'DRIFT POINTS'/);
-assert.match(guide, /DRIFT POINTS<\/strong> reward strong, fast, controlled slides — not pressing DRIFT/);
+assert.match(guide, /title: 'DRIFT ATTACK'/);
+assert.match(guide, /DRIFT ATTACK<\/strong> rewards strong, fast, controlled slides/);
+assert.doesNotMatch(guide, /not pressing DRIFT/,
+  'DRIFT ATTACK help must not introduce the confusing input-versus-score aside');
 assert.match(guide, /large live number is the current drift value at risk/);
 assert.match(guide, /Link drifts to raise <strong>COMBO<\/strong>/);
 assert.match(guide, /clean exit <strong>BANKS<\/strong>/);
 assert.match(guide, /<strong>LAP<\/strong> is this lap, <strong>LAST<\/strong> is your previous completed lap and <strong>BEST<\/strong> is the saved record for this track/);
-assert.match(guide, /title: 'FLOW POINTS'/);
-assert.match(guide, /FLOW POINTS<\/strong> reward useful choreography between systems such as SHIFT, BOOST, DRIFT, LOCK, OVERCHARGE catches and clean exits/);
-assert.match(guide, /Button presses alone score nothing/);
-assert.match(guide, /Variety and useful timing build <strong>COMBO<\/strong>/);
+assert.match(guide, /title: 'FLOW'/);
+assert.match(guide, /FLOW<\/strong> rewards chaining different driving techniques at the right moment/);
+assert.match(guide, /Mix techniques with useful timing to build <strong>COMBO<\/strong>/);
+assert.doesNotMatch(guide, /Button presses alone score nothing/,
+  'FLOW help should describe rewarding play rather than expose anti-spam implementation language');
 assert.match(guide, /gauge shows your current FLOW momentum/);
 
 assert.match(guide, /installGuideCardDisclosures\(dialog\)/);
@@ -198,4 +208,4 @@ assert.match(rivalStorage, /syncPrimaryRivalState\(state\)/);
 assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId: activeTrackId \}\)/, 'The race reset implementation must clear only the current track storage key');
 assert.match(trackManager, /globalThis\.__turnResetRivals = resetCurrentTrackRivals/);
 
-console.log('TURN collapsible How to Play cards, SHIFT/scoring guidance, clean scorekeeper and contextual rival reset passed.');
+console.log('TURN collapsible How to Play cards, current player-facing copy, clean scorekeeper and contextual rival reset passed.');
