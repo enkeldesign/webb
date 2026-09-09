@@ -49,7 +49,7 @@ const productionPresentationRoutes = Object.freeze({
   '/turn/achievements/catalog-production.js?revision=r222-awd-label': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
   '/turn/achievements/catalog-production.js?revision=r240-trophy-road-2': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
   '/turn/achievements/catalog-production.js?revision=r241-learning-achievements': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-  '/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims': '/turn/garage/lot-showroom-track-icon.js?revision=r1-track-reward-icons'
+  '/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims': '/turn/garage/lot-showroom-track-icon.js?revision=r2-swift-lot-ui'
 });
 
 const requiredActiveModules = Object.freeze([

@@ -73,19 +73,39 @@ assert.match(
 );
 assert.match(
   homeSource,
-  /await Promise\.all\(\[[\s\S]*activateTrack\(selectedTrackId, runtime\),[\s\S]*prepareEnhancedLot\(\)[\s\S]*\]\);/,
-  'Track activation and showroom preparation should share the same transition window'
+  /function prepareLotOnce\(\) \{[\s\S]*lotWarmupPromise = prepareEnhancedLot\(\)/,
+  'Home must reuse one showroom warmup across idle preparation and the explicit transition'
+);
+assert.match(
+  homeSource,
+  /function scheduleEnhancedLotWarmup\(\)[\s\S]*requestIdleCallback[\s\S]*setTimeout\(beginWarmup, 600\)/,
+  'Home should prepare The Lot after its first paint, with an idle callback and a Safari fallback'
+);
+assert.match(
+  homeSource,
+  /continueButton\.textContent = `PREPARING \$\{trackName\}…`;[\s\S]*continueButton\.setAttribute\('aria-busy', 'true'\);[\s\S]*await waitForHomePaint\(\);/,
+  'The selected track action must visibly acknowledge input before expensive setup starts'
+);
+assert.match(
+  homeSource,
+  /await Promise\.all\(\[[\s\S]*activateTrack\(trackId, runtime\),[\s\S]*prepareLotOnce\(\)[\s\S]*\]\);/,
+  'Track activation and the reused showroom warmup should share the same transition window'
 );
 assert.doesNotMatch(homeSource, /chooseTrackBeforeLot/);
 assert.match(homeSource, /raceSession\.prepareMotionAccess\(\)/);
 assert.match(homeSource, /raceSession\.prepareManualAccess\(\)/);
 assert.match(homeSource, /raceSession\.selectVehicle\(selection\)/);
-assert.match(homeSource, /showTrackIntro\(selectedTrackId\)/);
+assert.match(homeSource, /showTrackIntro\(trackId\)/);
 assert.match(homeSource, /raceSession\.startGame\(pendingAccess\?\.fullscreenPromise\)/);
-assert.ok(homeSource.indexOf('activateTrack(selectedTrackId, runtime)') < homeSource.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })'));
-assert.ok(homeSource.indexOf('prepareEnhancedLot()') < homeSource.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })'));
-assert.ok(homeSource.indexOf('raceSession.selectVehicle(selection)') < homeSource.indexOf('showTrackIntro(selectedTrackId)'));
-assert.ok(homeSource.indexOf('showTrackIntro(selectedTrackId)') < homeSource.indexOf('raceSession.startGame(pendingAccess?.fullscreenPromise)'));
+assert.match(
+  homeSource,
+  /await Promise\.all\(\[\s*raceSession\.selectVehicle\(selection\),\s*showTrackIntro\(trackId\)\s*\]\);/,
+  'Race-car preparation should run behind the existing track intro instead of extending the wait'
+);
+assert.ok(homeSource.indexOf('activateTrack(trackId, runtime)') < homeSource.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })'));
+assert.ok(homeSource.indexOf('prepareLotOnce()') < homeSource.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })'));
+assert.ok(homeSource.indexOf('raceSession.selectVehicle(selection)') < homeSource.indexOf('showTrackIntro(trackId)'));
+assert.ok(homeSource.indexOf('showTrackIntro(trackId)') < homeSource.indexOf('raceSession.startGame(pendingAccess?.fullscreenPromise)'));
 assert.match(homeSource, /runtime\.openLot = leaveRaceForHome/);
 assert.match(homeSource, /showHome\(\{ focus: true \}\)/);
 assert.match(homeSource, /turn-steering-mode-v1/);
