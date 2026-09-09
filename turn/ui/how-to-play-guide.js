@@ -4,7 +4,7 @@ import {
   LEARNING_FEEDBACK_READY_EVENT
 } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
 
-const GUIDE_VERSION = 'r241-learning-achievements';
+const GUIDE_VERSION = 'r263-how-to-play-copy';
 const PACE_NOTE_EXPLANATION = 'Before major corners, one to three beeps play in the ear on the turn side. One beep means a gentler corner, two means medium and three means tight. A long corner keeps the same number of beeps but holds the final beep longer: bip-beeeep for a long medium corner and bip-bip-beeeep for a long tight corner. Separate groups describe linked corners in the order you will meet them.';
 const GUIDE_CARD_ID_BY_NUMBER = Object.freeze({
   1: 'choose-track-and-car',
@@ -21,6 +21,7 @@ export function installHowToPlayGuide(root = document) {
   if (!dialog) return false;
   if (dialog.dataset.guideVersion === GUIDE_VERSION) return true;
 
+  updateTrackAndCarCopy(dialog);
   updateDriveControlCopy(dialog);
   updateDriftAndBoostCopy(dialog);
   installShiftAndScoringSections(dialog);
@@ -33,6 +34,14 @@ export function installHowToPlayGuide(root = document) {
   dialog.dataset.guideVersion = GUIDE_VERSION;
   document.documentElement.dataset.turnHowToPlayGuide = GUIDE_VERSION;
   return true;
+}
+
+function updateTrackAndCarCopy(dialog) {
+  const section = findGuideSection(dialog, 'Choose a track and car');
+  const paragraph = section?.querySelector('p');
+  if (!paragraph) return;
+
+  paragraph.innerHTML = 'Choose a track, then pick your car in <strong>THE LOT</strong> before racing. Use <strong>SHOW BEST</strong> to compare your saved TIME, DRIFT and FLOW records. TURN races you against recordings of your own fastest laps, not computer drivers.';
 }
 
 function updateDriveControlCopy(dialog) {
@@ -90,19 +99,19 @@ function installShiftAndScoringSections(dialog) {
     id: 'shift',
     number: '5',
     title: 'SHIFT',
-    copy: '<strong>SHIFT</strong> swaps between your car’s normal attributes and the alternate setup you configured in <strong>THE LOT</strong>. It redistributes attribute points — it does not add free power. During a race, slide from GAS into SHIFT to swap setup, then SHIFT again to return. Trade for what you need next: for example more DRIFT or CONTROL into a slide, or more acceleration and BOOST performance on the exit.'
+    copy: '<strong>SHIFT</strong> swaps between your car’s normal attributes and the alternate setup you configured in <strong>THE LOT</strong>. It redistributes attribute points between the two setups. During a race, slide from GAS into SHIFT to swap setup, then SHIFT again to return. Trade for what you need next: for example more DRIFT or CONTROL into a slide, or more acceleration and BOOST performance on the exit.'
   });
   const drift = makeGuideSection(dialog, {
     id: 'drift-points',
     number: '6',
-    title: 'DRIFT POINTS',
-    copy: '<strong>DRIFT POINTS</strong> reward strong, fast, controlled slides — not pressing DRIFT. The large live number is the current drift value at risk and the gauge shows how strongly it is scoring right now. Link drifts to raise <strong>COMBO</strong>. A clean exit <strong>BANKS</strong> the current drift; a failed drift can lose the unbanked points without erasing points already banked this lap. <strong>LAP</strong> is this lap, <strong>LAST</strong> is your previous completed lap and <strong>BEST</strong> is the saved record for this track.'
+    title: 'DRIFT ATTACK',
+    copy: '<strong>DRIFT ATTACK</strong> rewards strong, fast, controlled slides. The large live number is the current drift value at risk and the gauge shows how strongly it is scoring right now. Link drifts to raise <strong>COMBO</strong>. A clean exit <strong>BANKS</strong> the current drift; a failed drift can lose the unbanked points without erasing points already banked this lap. <strong>LAP</strong> is this lap, <strong>LAST</strong> is your previous completed lap and <strong>BEST</strong> is the saved record for this track.'
   });
   const flow = makeGuideSection(dialog, {
     id: 'flow-points',
     number: '7',
-    title: 'FLOW POINTS',
-    copy: '<strong>FLOW POINTS</strong> reward useful choreography between systems such as SHIFT, BOOST, DRIFT, LOCK, OVERCHARGE catches and clean exits. Button presses alone score nothing. Variety and useful timing build <strong>COMBO</strong>; repeating the same idea adds less and mistakes can break the chain. The gauge shows your current FLOW momentum. <strong>LAP</strong> is this lap, <strong>LAST</strong> is your previous completed lap and <strong>BEST</strong> is the saved record for this track.'
+    title: 'FLOW',
+    copy: '<strong>FLOW</strong> rewards chaining different driving techniques at the right moment: SHIFT, BOOST, DRIFT, LOCK, catching OVERCHARGE and clean exits. Mix techniques with useful timing to build <strong>COMBO</strong>; repeating the same idea adds less and mistakes can break the chain. The gauge shows your current FLOW momentum. <strong>LAP</strong> is this lap, <strong>LAST</strong> is your previous completed lap and <strong>BEST</strong> is the saved record for this track.'
   });
 
   grid.insertBefore(shift, before);
