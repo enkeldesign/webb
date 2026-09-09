@@ -1,0 +1,44 @@
+name: TURN HUD notifications
+
+on:
+  pull_request:
+    paths:
+      - 'turn/ui/hud-notifications.js'
+      - 'turn/hud-notifications.css'
+      - 'turn-tests/hud-notification-components.mjs'
+      - '.github/workflows/turn-hud-notifications.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'turn/ui/hud-notifications.js'
+      - 'turn/hud-notifications.css'
+      - 'turn-tests/hud-notification-components.mjs'
+      - '.github/workflows/turn-hud-notifications.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  components:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Syntax-check notification modules
+        run: |
+          node --check turn/ui/hud-notifications.js
+          node --check turn-tests/hud-notification-components.mjs
+
+      - name: Lint notification modules
+        run: npx --yes eslint@9.39.1 turn/ui/hud-notifications.js turn-tests/hud-notification-components.mjs
+
+      - name: Run notification component regression
+        run: node turn-tests/hud-notification-components.mjs
