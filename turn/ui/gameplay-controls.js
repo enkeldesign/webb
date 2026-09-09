@@ -31,7 +31,10 @@ import {
   VEHICLE_SHIFT_FEATURE_ID,
   loadVehicleShiftProfile,
   vehicleShiftAmount
-} from '../vehicle/shift-profile.js?revision=r253-supercar-release';
+} from '../vehicle/shift-profile.js?revision=r255-flow-shift-accessibility';
+import {
+  syncFlowShiftPresentation
+} from '../vehicle/flow-shift.js?revision=r255-flow-shift-accessibility';
 import {
   advanceVehicleShiftTuning,
   applyVehicleShiftTuning,
@@ -342,6 +345,7 @@ function installGameplayUi() {
         ? 'GAS. Catches and holds OVERCHARGE. While holding GAS, slide outward into SHIFT to toggle alternate attributes.'
         : 'GAS. Catches and holds OVERCHARGE.'
     );
+    syncFlowShiftPresentation(globalThis.__turnRuntime?.state);
   }
 
   function publishShiftState({ announce = true } = {}) {
@@ -354,9 +358,6 @@ function installGameplayUi() {
     const lossKeys = VEHICLE_SHIFT_STAT_FIELDS
       .map(({ key }) => key)
       .filter((key) => !gainKeySet.has(key));
-    globalThis.__turnShiftActive = shiftActive;
-    const runtimeState = globalThis.__turnRuntime?.state;
-    if (runtimeState) runtimeState.shiftActive = shiftActive;
     if (announce) {
       const detailedAnnouncement = feedback?.announcement || (shiftActive
         ? 'SHIFT on. Alternate attributes engaged.'
@@ -491,6 +492,8 @@ function installGameplayUi() {
     }
 
     shiftActive = nextActive;
+    globalThis.__turnShiftActive = shiftActive;
+    if (runtime?.state) runtime.state.shiftActive = shiftActive;
     syncShiftVisual();
     publishShiftState({ announce });
   }

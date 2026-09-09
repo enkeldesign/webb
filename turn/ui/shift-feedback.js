@@ -1,7 +1,7 @@
 import {
   VEHICLE_SHIFT_STAT_FIELDS,
   vehicleShiftReceiversForReducers
-} from '../vehicle/shift-profile.js?revision=r253-supercar-release';
+} from '../vehicle/shift-profile.js?revision=r255-flow-shift-accessibility';
 
 function canonicalKeys(keys) {
   const requested = new Set(Array.isArray(keys) ? keys : []);
@@ -43,7 +43,7 @@ export function resolveVehicleShiftFeedback(profile, active) {
   const activeState = active === true;
   const flowShift = supercarFlowShiftActive();
   const stateAnnouncement = flowShift
-    ? 'FLOW SHIFT.'
+    ? `FLOW SHIFT. ${activeState ? 'UP' : 'Default'} gear active.`
     : activeState ? 'SHIFT on.' : 'SHIFT off.';
   const amount = Number(profile?.shiftAmount) === 2 ? 2 : 1;
   const points = amount === 1 ? 'one point' : 'two points';

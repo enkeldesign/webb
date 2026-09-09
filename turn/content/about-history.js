@@ -321,7 +321,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Outlined TIME, DRIFT and FLOW stripes stay distinct against every track card colour. Tighter row spacing preserves the established horizontal rhythm while giving the six-card default view more opportunity to fit without scrolling.',
     'SUPERCAR extends Trophy Road to 2,300 trophies with an adapted authored Cosmo body, real Kenney donor wheels and direct matte TURN paint. At Great FLOW, FLOW SHIFT keeps all three SHIFT gains without applying the complementary reductions; losing Great FLOW preserves the chosen orientation while restoring the normal eighteen-point trade-off.',
     'The release graph now gives the accumulated SUPERCAR, FLOW SHIFT, record-thumbnail and rival-onboarding work one coherent cache identity. A fast composition check follows active modules and rejects changed runtime bytes behind an unchanged URL, while specialist CI responds to real subsystem dependencies and cancels obsolete runs on the same pull request.',
-    'FLOW SHIFT and ordinary SHIFT now share one authoritative tuning transition. Great-FLOW changes replace any pending ordinary target before the next update tick, while race, track and Home resets cancel pending easing and restore the standard setup coherently.'
+    'FLOW SHIFT and ordinary SHIFT now share one authoritative tuning transition. Great-FLOW changes replace any pending ordinary target before the next update tick, while race, track and Home resets cancel pending easing and restore the standard setup coherently.',
+    'FLOW SHIFT now preserves its orientation-specific accessible name through pointer and app-lifecycle recovery. Every intentional toggle names the active default or UP gear, and the UP dot remains perceivable in forced-colors mode without changing ordinary SHIFT feedback.'
   ],
   milestones: [
     'Nineteen Trophy Road rewards from 400–2,200 trophies',
@@ -338,7 +339,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'SUPERCAR at 2,300 trophies with FLOW SHIFT, authored Kenney wheels and TURN paint',
     'Coherent release identities with domain-scoped, supersession-aware pull-request CI',
     'Authoritative FLOW SHIFT tuning across easing, FLOW loss and resets',
-    'TURN 1.17.0–1.17.9 · 2026.09.05-r200–2026.09.08-r209 Trophy Road, SUPERCAR and release-composition refinement'
+    'Orientation-specific FLOW SHIFT names, recovery semantics and forced-colors feedback',
+    'TURN 1.17.0–1.17.10 · 2026.09.05-r200–2026.09.08-r210 Trophy Road, SUPERCAR and release-composition refinement'
   ]
 }
 ]);
@@ -663,6 +665,7 @@ export const CHANGELOG = Object.freeze([
   {
     date: '8 September',
     entries: [
+      ['1.17.10 r210', 'Keeps FLOW SHIFT’s default and UP orientations distinct in accessible names and repeated announcements, restores those names after interrupted input or app lifecycle changes and protects the UP dot in forced-colors mode.'],
       ['1.17.9 r209', 'Keeps FLOW SHIFT’s 21-point physics tuning authoritative through later SHIFT easing, preserves its deliberate post-FLOW state and clears pending transitions on race, track and Home resets.'],
       ['1.17.8 r208', 'Publishes SUPERCAR, FLOW SHIFT, record-car thumbnails and rival onboarding through one coherent release and cache graph for returning players.'],
       ['Release composition', 'Checks production, TURN LAB, TURN NEXT and YOUR TURN routes, follows active local modules and rejects changed runtime files that keep an old effective URL.'],
@@ -672,7 +675,7 @@ export const CHANGELOG = Object.freeze([
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.17.9',
-  build: '2026.09.08-r209',
-  note: 'TURN 1.17.9 keeps FLOW SHIFT tuning authoritative through easing, FLOW loss and resets.'
+  version: '1.17.10',
+  build: '2026.09.08-r210',
+  note: 'TURN 1.17.10 preserves FLOW SHIFT orientation semantics through toggles and interruption recovery.'
 });
