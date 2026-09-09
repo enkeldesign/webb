@@ -76,15 +76,34 @@ assert.equal(rootClasses.has('turn-right-handed-controls'), true);
 assert.deepEqual(driveTop.children, [driftZone, boostZone],
   'Default visual order and keyboard focus order must both be DRIFT then BOOST');
 
-const [home, handedness, controls, driveCss, manualCss, guide, storageBootstrap, workflow] = await Promise.all([
+const [
+  home,
+  handedness,
+  controls,
+  driveCss,
+  manualCss,
+  peripheralCss,
+  guide,
+  storageBootstrap,
+  workflow,
+  turnIndex,
+  nextIndex,
+  labIndex,
+  yourTurnIndex
+] = await Promise.all([
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/control-handedness.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/drive-pad.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/manual-steering.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/peripheral-hud-r261.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/how-to-play-guide.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/storage-bootstrap.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8')
+  fs.readFile(new URL('../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8')
 ]);
 
 assert.match(home, /<legend>Steering<\/legend>[\s\S]*id="m8LeftHanded"/);
@@ -136,4 +155,79 @@ assert.match(handedness, /globalThis\.__TURN_SHARED_LOCAL_STORAGE__ \|\| globalT
 assert.match(workflow, /node turn-tests\/control-handedness-production\.mjs/,
   'The complete regression suite must protect the handedness feature');
 
-console.log('TURN persisted left-handed layout, mirrored thumb geometry and accessible focus order passed.');
+
+assert.match(
+  peripheralCss,
+  /:root\.turn-left-handed-controls \.topbar \{[\s\S]*flex-direction: row-reverse;/,
+  'Left-handed controls must mirror the stats/minimap topbar'
+);
+assert.match(
+  peripheralCss,
+  /:root\.turn-left-handed-controls \.score-feedback \{[\s\S]*right: var\(--turn-peripheral-right-edge\);[\s\S]*left: auto;/,
+  'The scorekeeper must follow steering onto the right-hand peripheral column'
+);
+assert.match(
+  peripheralCss,
+  /\.score-feedback \{[\s\S]*left: var\(--turn-peripheral-left-edge\);[\s\S]*height: min\([\s\S]*var\(--app-height\)[\s\S]*var\(--turn-peripheral-score-clearance\)/,
+  'The default scorekeeper must align with stats and budget its dual-row height above steering'
+);
+assert.match(
+  peripheralCss,
+  /\.score-feedback-row \{[\s\S]*min-height: 52px;[\s\S]*flex: 0 1 var\(--score-feedback-paper-height\);/,
+  'DRIFT and FLOW rows must shrink together before they can reach steering'
+);
+assert.match(
+  peripheralCss,
+  /:root\.turn-left-handed-controls \.score-feedback-gauge-shell \{[\s\S]*right: calc\(100% - var\(--score-feedback-gauge-overlap\)\);[\s\S]*left: auto;[\s\S]*transform-origin: right center;/,
+  'Left-handed score gauges must unfold inward from the right-hand paper'
+);
+assert.match(
+  peripheralCss,
+  /:root\.turn-left-handed-controls \.score-feedback-meter > i,[\s\S]*to left,[\s\S]*transform-origin: right center;/,
+  'Mirrored score fill must grow toward the playfield rather than the outer edge'
+);
+assert.match(
+  peripheralCss,
+  /\.score-feedback\[data-score-layout="dual"\] \.score-feedback-callout \{[\s\S]*top: 0;[\s\S]*left: calc\(100% \+ var\(--score-feedback-gauge-width\) \+ 9px\);/,
+  'Worst-case score callouts must use the inboard slot instead of dropping into steering'
+);
+assert.match(
+  peripheralCss,
+  /@media \(max-height: 560px\) and \(orientation: landscape\)[\s\S]*--turn-peripheral-manual-height: clamp\(96px, 14vw, 126px\);/,
+  'Short landscape layouts must reduce the steering and score footprint together'
+);
+assert.match(
+  peripheralCss,
+  /@media \(max-height: 360px\) and \(orientation: landscape\)[\s\S]*--turn-peripheral-stats-height: 48px;[\s\S]*--turn-peripheral-manual-height: 82px;/,
+  'Very short landscape layouts must compact stats and steering before overlap'
+);
+assert.match(peripheralCss, /env\(safe-area-inset-left\)/);
+assert.match(peripheralCss, /env\(safe-area-inset-right\)/);
+assert.match(peripheralCss, /env\(safe-area-inset-top\)/);
+assert.match(peripheralCss, /env\(safe-area-inset-bottom\)/);
+
+const peripheralStylesheet = /peripheral-hud-r261\.css\?revision=r261-mirrored-periphery/;
+for (const [deployment, markup] of [
+  ['TURN', turnIndex],
+  ['TURN NEXT', nextIndex],
+  ['TURN LAB', labIndex],
+  ['YOUR TURN', yourTurnIndex]
+]) {
+  assert.match(markup, peripheralStylesheet, `${deployment} must inherit the mirrored peripheral HUD`);
+}
+for (const [deployment, markup] of [
+  ['TURN', turnIndex],
+  ['TURN NEXT', nextIndex],
+  ['TURN LAB', labIndex]
+]) {
+  assert.ok(
+    markup.indexOf('scoring/score-feedback.css') < markup.indexOf('peripheral-hud-r261.css'),
+    `${deployment} must apply the composition layer after ScoreFeedback's component styles`
+  );
+}
+assert.ok(
+  yourTurnIndex.indexOf('manual-steering.css') < yourTurnIndex.indexOf('peripheral-hud-r261.css'),
+  'YOUR TURN must apply the shared composition after its canonical steering styles'
+);
+
+console.log('TURN persisted handedness, complete mirrored HUD composition and accessible focus order passed.');
