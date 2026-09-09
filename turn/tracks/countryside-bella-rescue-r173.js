@@ -252,12 +252,12 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
   if (!cat) return root;
   root.userData.turnBellaRescueBehaviorInstalled = true;
 
-  document.addEventListener('pointerdown', unlockMeowContext, { capture: true, passive: true });
-  document.addEventListener('keydown', unlockMeowContext, { capture: true });
-
   let lastMeowAt = -Infinity;
   let wasInRange = false;
   let disposed = false;
+  let samplingTimer = 0;
+  let activationListenersInstalled = false;
+  let lifecycleListenersInstalled = false;
   const bellaWorldPosition = new THREE.Vector3();
   const frame = {
     tree: new THREE.Vector3(),
@@ -268,11 +268,15 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
   };
 
   function rescueFromStoredAchievement({ announce = false } = {}) {
-    moveBellaToGround(root, { announce });
+    const moved = moveBellaToGround(root, { announce });
+    if (moved || root.userData.turnBellaRescued) {
+      stopRescueMonitoring({ preserveAudio: announce === true });
+    }
   }
 
   function completeInteractiveRescue(player) {
     if (!moveBellaToGround(root, { announce: true })) return false;
+    stopRescueMonitoring({ preserveAudio: true });
     root.userData.turnSecretAchievementFound = true;
     signalSecretAchievement(SAVE_BELLA_ID, {
       trackId: 'countryside',
@@ -287,6 +291,85 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
     return true;
   }
 
+  function samplingWanted() {
+    const state = runtime?.state;
+    return disposed !== true
+      && root.userData.turnBellaRescued !== true
+      && state?.running === true
+      && state?.mode !== 'spectating'
+      && activeTrackId(runtime) === 'countryside'
+      && String(state?.vehicleId || '').toLowerCase() === REQUIRED_VEHICLE_ID
+      && document.visibilityState !== 'hidden'
+      && document.hidden !== true;
+  }
+
+  function installActivationListeners() {
+    if (activationListenersInstalled) return;
+    document.addEventListener('pointerdown', unlockMeowContext, { capture: true, passive: true });
+    document.addEventListener('keydown', unlockMeowContext, { capture: true });
+    activationListenersInstalled = true;
+  }
+
+  function removeActivationListeners() {
+    if (!activationListenersInstalled) return;
+    document.removeEventListener('pointerdown', unlockMeowContext, { capture: true });
+    document.removeEventListener('keydown', unlockMeowContext, { capture: true });
+    activationListenersInstalled = false;
+  }
+
+  function stopSampling({ preserveAudio = false } = {}) {
+    if (samplingTimer) window.clearInterval(samplingTimer);
+    samplingTimer = 0;
+    wasInRange = false;
+    removeActivationListeners();
+    if (!preserveAudio) suspendMeowContext();
+  }
+
+  function startSampling() {
+    if (samplingTimer || !samplingWanted()) return;
+    installActivationListeners();
+    samplingTimer = window.setInterval(sample, UPDATE_INTERVAL_MS) || 0;
+    sample();
+  }
+
+  function syncSampling() {
+    if (root.userData.turnBellaRescued) {
+      stopRescueMonitoring({ preserveAudio: true });
+      return;
+    }
+    if (savedInProfile()) {
+      rescueFromStoredAchievement();
+      return;
+    }
+    if (samplingWanted()) startSampling();
+    else stopSampling({ preserveAudio: root.userData.turnBellaRescued === true });
+  }
+
+  function installLifecycleListeners() {
+    if (lifecycleListenersInstalled) return;
+    globalThis.addEventListener('turn:secret-achievement', handleSecretAchievement);
+    globalThis.addEventListener('turn:achievements-updated', handleAchievementUpdate);
+    globalThis.addEventListener('turn:ui-state-change', syncSampling);
+    globalThis.addEventListener('turn:track-changed', syncSampling);
+    document.addEventListener('visibilitychange', syncSampling, { passive: true });
+    lifecycleListenersInstalled = true;
+  }
+
+  function removeLifecycleListeners() {
+    if (!lifecycleListenersInstalled) return;
+    globalThis.removeEventListener('turn:secret-achievement', handleSecretAchievement);
+    globalThis.removeEventListener('turn:achievements-updated', handleAchievementUpdate);
+    globalThis.removeEventListener('turn:ui-state-change', syncSampling);
+    globalThis.removeEventListener('turn:track-changed', syncSampling);
+    document.removeEventListener('visibilitychange', syncSampling);
+    lifecycleListenersInstalled = false;
+  }
+
+  function stopRescueMonitoring({ preserveAudio = false } = {}) {
+    stopSampling({ preserveAudio });
+    removeLifecycleListeners();
+  }
+
   function handleSecretAchievement(event) {
     if (event.detail?.achievementId === SAVE_BELLA_ID) rescueFromStoredAchievement({ announce: true });
   }
@@ -297,16 +380,22 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
 
   function sample() {
     if (disposed) return;
-    if (savedInProfile()) rescueFromStoredAchievement();
-    if (root.userData.turnBellaRescued) return;
+    if (savedInProfile()) {
+      rescueFromStoredAchievement();
+      return;
+    }
+    if (root.userData.turnBellaRescued) {
+      stopRescueMonitoring({ preserveAudio: true });
+      return;
+    }
 
-    const state = runtime?.state;
+    if (!samplingWanted()) {
+      stopSampling();
+      return;
+    }
+
     const player = playerPosition(runtime);
-    const eligible = (state?.running === true || state?.lapActive === true)
-      && activeTrackId(runtime) === 'countryside'
-      && String(state?.vehicleId || '').toLowerCase() === REQUIRED_VEHICLE_ID
-      && player;
-    if (!eligible || document.hidden) {
+    if (!player) {
       wasInRange = false;
       suspendMeowContext();
       return;
@@ -345,9 +434,8 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
     if (played) lastMeowAt = now;
   }
 
-  globalThis.addEventListener('turn:secret-achievement', handleSecretAchievement);
-  globalThis.addEventListener('turn:achievements-updated', handleAchievementUpdate);
-  const timer = window.setInterval(sample, UPDATE_INTERVAL_MS);
+  installLifecycleListeners();
+  syncSampling();
 
   root.userData.turnBellaRescueZone = Object.freeze({
     shape: 'road-derived rear clearing rectangle',
@@ -361,6 +449,7 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
     requiredVehicle: 'Fire Truck',
     requiredAction: 'Use Boost to sound the siren',
     triggerSamplingMs: UPDATE_INTERVAL_MS,
+    triggerSamplingPolicy: 'Visible Countryside Fire Truck race only; stopped permanently after rescue.',
     trackSafety: 'The road-derived outward axis excludes the racing surface and track-facing side.'
   });
   root.userData.turnBellaMeowAccessibility = Object.freeze({
@@ -374,17 +463,12 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
   root.userData.turnBellaDisposeRescueBehavior = () => {
     if (disposed) return;
     disposed = true;
-    window.clearInterval(timer);
-    globalThis.removeEventListener('turn:secret-achievement', handleSecretAchievement);
-    globalThis.removeEventListener('turn:achievements-updated', handleAchievementUpdate);
-    document.removeEventListener('pointerdown', unlockMeowContext, { capture: true });
-    document.removeEventListener('keydown', unlockMeowContext, { capture: true });
+    stopRescueMonitoring();
     if (meowContext) {
       void meowContext.close?.().catch?.(() => {});
       meowContext = null;
     }
   };
 
-  sample();
   return root;
 }

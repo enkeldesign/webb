@@ -14,9 +14,9 @@ export const CLEAN_LAP_TARGETS = Object.freeze({
 });
 export const CATCH_GAS_MIN_OVERCHARGE = 0.001;
 
-const SAMPLE_INTERVAL_MS = 50;
 const GOT_STARTED_ID = 'got-started';
 const CATCH_THE_CHARGE_ID = 'catch-the-charge';
+const OVERCHARGE_CATCH_EVENT = 'turn:overcharge-catch';
 
 function normalizedTracks(value) {
   if (!Array.isArray(value)) return [];
@@ -120,6 +120,7 @@ export function installAchievementChallengeExpansion({
   let catchGasUnlocked = Boolean(
     achievements.getState?.().unlocked?.[CATCH_THE_CHARGE_ID]
   );
+  let catchGasListening = false;
 
   function syncGotStarted() {
     const state = achievements.getState?.();
@@ -158,17 +159,31 @@ export function installAchievementChallengeExpansion({
     currentLap = {
       trackId: state.trackId || globalThis.__turnGetTrackId?.() || '',
       vehicleId: state.vehicleId || '',
-      rivalCountAtStart: Array.isArray(state.competitorLaps) ? state.competitorLaps.length : 0,
-      onCourseThroughout: state.offRoad !== true
+      rivalCountAtStart: Array.isArray(state.competitorLaps) ? state.competitorLaps.length : 0
     };
   }
 
-  function sampleCatchGas() {
+  function stopCatchGasMonitoring() {
+    if (!catchGasListening) return;
+    globalThis.removeEventListener?.(OVERCHARGE_CATCH_EVENT, handleOverchargeCatch);
+    catchGasListening = false;
+  }
+
+  function startCatchGasMonitoring() {
+    if (catchGasUnlocked || catchGasListening) return;
+    globalThis.addEventListener?.(OVERCHARGE_CATCH_EVENT, handleOverchargeCatch);
+    catchGasListening = true;
+  }
+
+  function sampleCatchGas({
+    caught = globalThis.__turnBoostOverchargeCaught === true,
+    overcharge = globalThis.__turnBoostOvercharge
+  } = {}) {
     if (catchGasUnlocked) return null;
     const qualifies = qualifiesForCatchGas({
       running: runtime.state.running === true,
-      caught: globalThis.__turnBoostOverchargeCaught === true,
-      overcharge: globalThis.__turnBoostOvercharge,
+      caught,
+      overcharge,
       visible: document.visibilityState !== 'hidden'
     });
     if (!qualifies) return null;
@@ -180,13 +195,11 @@ export function installAchievementChallengeExpansion({
         runtime.state.vehicleId || ''
       )
     );
-    if (unlocked?.length) catchGasUnlocked = true;
+    if (unlocked?.length) {
+      catchGasUnlocked = true;
+      stopCatchGasMonitoring();
+    }
     return unlocked;
-  }
-
-  function sampleCourseState() {
-    if (currentLap && runtime.state.offRoad === true) currentLap.onCourseThroughout = false;
-    sampleCatchGas();
   }
 
   function resetLap() {
@@ -233,8 +246,15 @@ export function installAchievementChallengeExpansion({
   };
   const handleLapResult = (event) => completeLap(event.detail || {});
   const handleLapInvalid = () => resetLap();
+  const handleOverchargeCatch = (event) => sampleCatchGas({
+    caught: true,
+    overcharge: event.detail?.amount
+  });
   const handleAchievementsUpdated = (event) => {
-    if (event.detail?.unlocked?.includes(CATCH_THE_CHARGE_ID)) catchGasUnlocked = true;
+    if (event.detail?.unlocked?.includes(CATCH_THE_CHARGE_ID)) {
+      catchGasUnlocked = true;
+      stopCatchGasMonitoring();
+    }
     queueMicrotask(syncGotStarted);
   };
 
@@ -244,12 +264,11 @@ export function installAchievementChallengeExpansion({
   globalThis.addEventListener?.('turn:lap-result', handleLapResult);
   globalThis.addEventListener?.('turn:lap-invalid', handleLapInvalid);
   globalThis.addEventListener?.('turn:achievements-updated', handleAchievementsUpdated);
-  const sampler = globalThis.setInterval?.(sampleCourseState, SAMPLE_INTERVAL_MS) || 0;
+  startCatchGasMonitoring();
 
   const api = Object.freeze({
     progress,
     beginLap,
-    sampleCourseState,
     sampleCatchGas,
     completeLap,
     syncGotStarted,
@@ -258,7 +277,7 @@ export function installAchievementChallengeExpansion({
       globalThis.removeEventListener?.('turn:lap-result', handleLapResult);
       globalThis.removeEventListener?.('turn:lap-invalid', handleLapInvalid);
       globalThis.removeEventListener?.('turn:achievements-updated', handleAchievementsUpdated);
-      globalThis.clearInterval?.(sampler);
+      stopCatchGasMonitoring();
       delete globalThis.__turnAchievementChallengeExpansion;
     }
   });

@@ -322,7 +322,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'SUPERCAR extends Trophy Road to 2,300 trophies with an adapted authored Cosmo body, real Kenney donor wheels and direct matte TURN paint. At Great FLOW, FLOW SHIFT keeps all three SHIFT gains without applying the complementary reductions; losing Great FLOW preserves the chosen orientation while restoring the normal eighteen-point trade-off.',
     'The release graph now gives the accumulated SUPERCAR, FLOW SHIFT, record-thumbnail and rival-onboarding work one coherent cache identity. A fast composition check follows active modules and rejects changed runtime bytes behind an unchanged URL, while specialist CI responds to real subsystem dependencies and cancels obsolete runs on the same pull request.',
     'FLOW SHIFT and ordinary SHIFT now share one authoritative tuning transition. Great-FLOW changes replace any pending ordinary target before the next update tick, while race, track and Home resets cancel pending easing and restore the standard setup coherently.',
-    'FLOW SHIFT now preserves its orientation-specific accessible name through pointer and app-lifecycle recovery. Every intentional toggle names the active default or UP gear, and the UP dot remains perceivable in forced-colors mode without changing ordinary SHIFT feedback.'
+    'FLOW SHIFT now preserves its orientation-specific accessible name through pointer and app-lifecycle recovery. Every intentional toggle names the active default or UP gear, and the UP dot remains perceivable in forced-colors mode without changing ordinary SHIFT feedback.',
+    'Challenge achievements now consume the exact OVERCHARGE and course-safety transitions already owned by gameplay instead of waking twenty times per second for the page lifetime. Bella keeps spatial sampling where it is useful, but only during a visible Countryside Fire Truck race and never again after rescue.'
   ],
   milestones: [
     'Nineteen Trophy Road rewards from 400–2,200 trophies',
@@ -340,7 +341,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Coherent release identities with domain-scoped, supersession-aware pull-request CI',
     'Authoritative FLOW SHIFT tuning across easing, FLOW loss and resets',
     'Orientation-specific FLOW SHIFT names, recovery semantics and forced-colors feedback',
-    'TURN 1.17.0–1.17.10 · 2026.09.05-r200–2026.09.08-r210 Trophy Road, SUPERCAR and release-composition refinement'
+    'Event-driven challenge achievements and eligibility-gated Bella sampling',
+    'TURN 1.17.0–1.17.11 · 2026.09.05-r200–2026.09.09-r211 Trophy Road, SUPERCAR and release-composition refinement'
   ]
 }
 ]);
@@ -671,11 +673,19 @@ export const CHANGELOG = Object.freeze([
       ['Release composition', 'Checks production, TURN LAB, TURN NEXT and YOUR TURN routes, follows active local modules and rejects changed runtime files that keep an old effective URL.'],
       ['Leaner pull-request CI', 'Keeps specialist and visual workflows on their real dependencies, cancels superseded runs on the same pull request and preserves every main validation run.']
     ]
+  },
+  {
+    date: '9 September',
+    entries: [
+      ['1.17.11 r211', 'Removes the page-lifetime 20 Hz challenge-achievement loop while preserving every achievement requirement and reward.'],
+      ['Event-driven challenges', 'CATCH THE CHARGE now evaluates the existing OVERCHARGE-caught transition, while SAFETY achievements consume the physics-owned on-course lap result.'],
+      ['Dormant Bella', 'Bella’s spatial sampler starts only for a visible Countryside Fire Truck race, stops on Home, other cars, other tracks, Spectate and backgrounding, and permanently detaches after rescue.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.17.10',
-  build: '2026.09.08-r210',
-  note: 'TURN 1.17.10 preserves FLOW SHIFT orientation semantics through toggles and interruption recovery.'
+  version: '1.17.11',
+  build: '2026.09.09-r211',
+  note: 'TURN 1.17.11 makes challenge achievements event-driven and keeps Bella’s spatial sampling dormant until rescue is possible.'
 });

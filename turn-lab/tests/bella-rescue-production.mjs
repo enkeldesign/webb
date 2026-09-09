@@ -55,9 +55,12 @@ assert.match(behavior, /Number\(globalThis\.__turnBoostCharge\) > 0\.001/,
   'The trigger must recognise the visibly active Boost control even between physics updates');
 assert.match(behavior, /if \(inRescueZone && sirenControlActive\(\)\) \{\s*completeInteractiveRescue\(player\)/,
   'The Fire Truck siren must rescue Bella immediately when sampled inside the clearing');
-assert.match(behavior, /String\(state\?\.vehicleId \|\| ''\)\.toLowerCase\(\) === REQUIRED_VEHICLE_ID/);
-assert.match(behavior, /state\?\.running === true \|\| state\?\.lapActive === true/);
+assert.match(behavior, /function samplingWanted\(\)/);
+assert.match(behavior, /state\?\.running === true/);
+assert.match(behavior, /state\?\.mode !== 'spectating'/);
 assert.match(behavior, /activeTrackId\(runtime\) === 'countryside'/);
+assert.match(behavior, /String\(state\?\.vehicleId \|\| ''\)\.toLowerCase\(\) === REQUIRED_VEHICLE_ID/);
+assert.match(behavior, /document\.visibilityState !== 'hidden'/);
 
 assert.match(behavior, /SAFE_GROUND_POSITION = Object\.freeze\(\{ x: 4\.8, y: 0\.08, z: -3\.2 \}\)/);
 assert.match(behavior, /cat\.position\.set\(SAFE_GROUND_POSITION\.x/);
@@ -109,9 +112,14 @@ assert.match(
 assert.match(behavior, /function suspendMeowContext\(\)/);
 assert.match(
   behavior,
-  /if \(!eligible \|\| document\.hidden\) \{[\s\S]*suspendMeowContext\(\)/,
-  'Leaving an eligible rescue run must suspend Bella audio'
+  /function stopSampling\([\s\S]*window\.clearInterval\(samplingTimer\)[\s\S]*suspendMeowContext\(\)/,
+  'Leaving an eligible rescue run must stop its sampler and suspend Bella audio'
 );
+assert.match(behavior, /globalThis\.addEventListener\('turn:ui-state-change', syncSampling\)/);
+assert.match(behavior, /globalThis\.addEventListener\('turn:track-changed', syncSampling\)/);
+assert.match(behavior, /document\.addEventListener\('visibilitychange', syncSampling/);
+assert.match(behavior, /stopRescueMonitoring\(\{ preserveAudio: true \}\)/,
+  'Rescuing Bella must permanently detach its lifecycle monitoring without cutting off the final meow');
 assert.match(
   behavior,
   /meowContext\.close\?\.\(\)[\s\S]*meowContext = null/,
@@ -125,8 +133,8 @@ assert.match(app, /render\/world\.js\?revision=r532-countryside-nature-polish/,
   'The app must request the optimized world graph rather than an older Bella world cache identity');
 assert.match(homeLayout, /secret-achievements\.js\?build=\$\{buildKey\}-r174-bella-siren-zone/);
 
-assert.match(bootstrap, /countryside-bella-rescue-r173\.js\?revision=r164-long-session-robustness/,
-  'The independent Bella bootstrap must reinstall the same robustness behavior as the world graph');
+assert.match(bootstrap, /countryside-bella-rescue-r173\.js\?revision=r256-achievement-polling/,
+  'The independent Bella bootstrap must install the lifecycle-gated rescue behavior');
 assert.match(bootstrap, /turnBellaDisposeRescueBehavior\?\.\(\)/);
 assert.match(bootstrap, /turnBellaRescueBehaviorInstalled = false/);
 assert.match(bootstrap, /function correctedSpatialRuntime\(runtime\)/,

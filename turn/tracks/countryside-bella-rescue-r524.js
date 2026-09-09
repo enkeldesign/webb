@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { installBellaRescueBehavior as installBellaRescueBehaviorR173 } from './countryside-bella-rescue-r173.js?revision=r524-camera-relative-meow';
+import { installBellaRescueBehavior as installBellaRescueBehaviorR173 } from './countryside-bella-rescue-r173.js?revision=r256-achievement-polling';
 
 export function installBellaRescueBehavior({
   root,

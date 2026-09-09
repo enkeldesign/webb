@@ -523,14 +523,18 @@ for (const entry of [productionEntry, labEntry]) {
     'Installed builds must not retain the old DRIFT trophy value');
 }
 
-assert.match(challengeSource, /SAMPLE_INTERVAL_MS = 50/);
+assert.doesNotMatch(challengeSource, /setInterval|requestAnimationFrame/,
+  'Challenge achievements must not install a page-lifetime polling loop');
 assert.match(challengeSource, /CATCH_GAS_MIN_OVERCHARGE = 0\.001/);
 assert.doesNotMatch(challengeSource, /CATCH_GAS_REQUIRED_MS|catchGasMs|3000/,
   'CATCH THE CHARGE must not retain a hidden timed-hold requirement');
 assert.match(challengeSource, /GOT_STARTED_ID = 'got-started'/);
 assert.match(challengeSource, /mountain: 70/);
 assert.match(challengeSource, /rivalCountAtStart/);
-assert.match(challengeSource, /runtime\.state\.offRoad === true/);
+assert.doesNotMatch(challengeSource, /runtime\.state\.offRoad/,
+  'Clean-lap achievements must consume the physics-owned lap result');
+assert.match(challengeSource, /detail\?\.onCourseThroughout/);
+assert.match(challengeSource, /OVERCHARGE_CATCH_EVENT = 'turn:overcharge-catch'/);
 assert.match(challengeSource, /achievements\.unlock\(\s*CATCH_THE_CHARGE_ID/,
   'A qualifying GAS catch must unlock CATCH THE CHARGE directly');
 assert.match(challengeSource, /achievements\.unlock\('an-army-of-me'/);
@@ -539,6 +543,13 @@ assert.match(challengeSource, /turn:lap-result/);
 assert.match(challengeSource, /turn:lap-invalid/);
 assert.match(challengeSource, /turn:achievements-updated/);
 assert.match(challengeSource, /reason === 'lap-started'/);
+for (const entry of [productionEntry, labEntry]) {
+  assert.match(
+    entry,
+    /"\/turn\/achievements\/challenge-expansion-r166\.js\?revision=r166-bella-records": "\/turn\/achievements\/challenge-expansion-r166\.js\?revision=r256-achievement-polling"/,
+    'Installed builds must route old challenge-achievement modules to the event-driven implementation'
+  );
+}
 
 assert.match(bellaSource, /Kenney Cube Pets/);
 assert.match(bellaSource, /animal-cat\.glb/);
