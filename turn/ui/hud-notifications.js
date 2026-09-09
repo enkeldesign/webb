@@ -124,12 +124,20 @@ function makeSlotRecord(element) {
   };
 }
 
+function defaultQueueMicrotask(callback) {
+  if (typeof globalThis.queueMicrotask === 'function') {
+    globalThis.queueMicrotask(callback);
+    return;
+  }
+  Promise.resolve().then(callback);
+}
+
 export function createHudNotificationController({
   hud,
   documentRef = globalThis.document,
   setTimer = (callback, delay) => globalThis.setTimeout?.(callback, delay) || 0,
   clearTimer = (timer) => globalThis.clearTimeout?.(timer),
-  queueMicrotaskRef = (callback) => globalThis.queueMicrotask?.(callback) ?? Promise.resolve().then(callback),
+  queueMicrotaskRef = defaultQueueMicrotask,
   exitMs = HUD_NOTIFICATION_EXIT_MS
 } = {}) {
   if (!hud || !documentRef?.createElement) {
