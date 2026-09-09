@@ -71,11 +71,11 @@ function createMemoryStorage(initial = {}) {
 }
 
 const productionRewardIds = PRODUCTION_TROPHY_ROAD_REWARDS.map((reward) => reward.id);
-const through400 = ['paintjob'];
-const through500 = [...through400, 'awd-traction'];
+const through400 = ['awd-traction'];
+const through500 = [...through400, 'truck-torque'];
 const through600 = [...through500, 'drift-attack'];
 const through700 = [...through600, 'midnight-city'];
-const through800 = [...through700, 'truck-torque'];
+const through800 = [...through700, 'paintjob'];
 const through900 = [...through800, 'vintage-racer'];
 const through1000 = [...through900, 'shift'];
 const through1100 = [...through1000, 'race-car'];
@@ -115,11 +115,11 @@ assert.equal(PRODUCTION_TROPHY_ROAD_MAX_THRESHOLD, 2300,
 assert.deepEqual(
   PRODUCTION_TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
   [
-    ['paintjob', 400],
-    ['awd-traction', 500],
+    ['awd-traction', 400],
+    ['truck-torque', 500],
     ['drift-attack', 600],
     ['midnight-city', 700],
-    ['truck-torque', 800],
+    ['paintjob', 800],
     ['vintage-racer', 900],
     ['shift', 1000],
     ['race-car', 1100],
@@ -167,11 +167,11 @@ assert.deepEqual(productionRewardIdsForTrophies(2300), through2300);
 assert.deepEqual(productionRewardIdsForTrophies(4575), productionRewardIds);
 
 assert.equal(getProductionTrophyRoadReward('mountain')?.threshold, 1300);
-assert.equal(getProductionTrophyRoadReward('paintjob')?.threshold, 400);
+assert.equal(getProductionTrophyRoadReward('paintjob')?.threshold, 800);
 assert.equal(getProductionTrophyRoadReward('future-racer')?.threshold, 1600);
 assert.equal(getProductionTrophyRoadReward('rally-racer')?.threshold, 2000);
 assert.equal(getProductionTrophyRoadReward('shift')?.threshold, 1000);
-assert.equal(getProductionTrophyRoadReward('awd-traction')?.threshold, 500);
+assert.equal(getProductionTrophyRoadReward('awd-traction')?.threshold, 400);
 assert.equal(getProductionTrophyRoadReward('drift-attack')?.threshold, 600);
 assert.equal(getProductionTrophyRoadReward('flow')?.threshold, 1500);
 assert.equal(getProductionTrophyRoadReward('learner-graduated')?.threshold, 2200);
@@ -235,7 +235,7 @@ assert.equal(getCarDefinition('race').perk?.description,
   'OVERCHARGE increases CONTROL and ACCELERATION beyond their ordinary limits.');
 
 const torquePerk = getProductionTrophyRoadReward('truck-torque');
-assert.equal(torquePerk?.threshold, 800);
+assert.equal(torquePerk?.threshold, 500);
 assert.equal(torquePerk?.perkTitle, 'TORQUE');
 assert.equal(torquePerk?.perkDescription,
   'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.');
@@ -281,8 +281,8 @@ for (const reward of [racePerk, futurePerk, emergencyPerk, monsterPerk, vintageP
 }
 
 const trophyPerks = Object.freeze([
-  ['convertible', 'awd-traction', 500, 'TRACTION'],
-  ['truck', 'truck-torque', 800, 'TORQUE'],
+  ['convertible', 'awd-traction', 400, 'TRACTION'],
+  ['truck', 'truck-torque', 500, 'TORQUE'],
   ['van', 'van-carry-on', 1400, 'CARRY ON'],
   ['suv', 'suv-full-tank', 1700, 'FULL TANK'],
   ['sedan', 'sedan-double-shift', 1900, 'DOUBLE SHIFT'],
@@ -482,8 +482,8 @@ const migratedVersionFiveAt500 = normalizeAchievementState({
 assert.equal(migratedVersionFiveAt500.version, 9);
 assert.deepEqual(
   migratedVersionFiveAt500.rewards.unlocked,
-  ['vintage-racer', 'midnight-city', 'paintjob', 'awd-traction'],
-  'A 500-trophy profile must keep its old rewards and also derive both current Trophy Road rewards'
+  ['vintage-racer', 'midnight-city', 'awd-traction', 'truck-torque'],
+  'A 500-trophy profile must keep its old rewards and also derive both current Trophy Road perk rewards'
 );
 assert.deepEqual(migratedVersionFiveAt500.rewards.seen, ['vintage-racer', 'midnight-city'],
   'Newly derived Trophy Road rewards must surface once while retained rewards stay seen');
@@ -573,7 +573,7 @@ assert.deepEqual(store.syncRewards(), []);
 assert.equal(isTrackUnlocked('midnight-city', progressionStorage), true,
   'Midnight City must unlock at 700 trophies');
 assert.equal(store.unlock('night-shift-sheriff', { trackId: 'midnight-city', vehicleId: 'police' })?.trophies, 100);
-assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['truck-torque']);
+assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['paintjob']);
 assert.equal(store.unlock('on-course-of-course', { trackId: 'harbor' })?.trophies, 100);
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['vintage-racer']);
 assert.equal(store.unlock('ahead-of-yourself', { trackId: 'harbor' })?.trophies, 50);
@@ -643,7 +643,7 @@ assert.match(perkWrapper, /export \* from '\.\/trophy-road\.js\?revision=r243-mo
 assert.match(homeGate, /trophy-road\.js\?revision=r243-mountain-1300/);
 assert.match(lotGate, /trophy-road\.js\?revision=r243-mountain-1300/);
 assert.match(paintGate, /trophy-road\.js\?revision=r243-mountain-1300/);
-assert.match(paintGate, /reward\(\)\?\.threshold \|\| 400/);
+assert.match(paintGate, /reward\(\)\?\.threshold \|\| 800/);
 
 assert.match(perkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/,
   'The Lot must keep perk identity and copy on the selected car definition');

@@ -243,11 +243,11 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
 ]);
 
 const REWARD_ORDER = Object.freeze([
-  Object.freeze(['paintjob', 400]),
-  Object.freeze(['awd-traction', 500]),
+  Object.freeze(['awd-traction', 400]),
+  Object.freeze(['truck-torque', 500]),
   Object.freeze(['drift-attack', 600]),
   Object.freeze(['midnight-city', 700]),
-  Object.freeze(['truck-torque', 800]),
+  Object.freeze(['paintjob', 800]),
   Object.freeze(['vintage-racer', 900]),
   Object.freeze(['shift', 1000]),
   Object.freeze(['race-car', 1100]),
