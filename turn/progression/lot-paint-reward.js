@@ -203,7 +203,7 @@ export function gateLotPaintNow(root = document.body) {
       else colors.prepend(button);
     }
 
-    const threshold = reward()?.threshold || 400;
+    const threshold = reward()?.threshold || 800;
     const copy = button.querySelector('.lot-paint-lock-copy');
     if (copy) copy.innerHTML = `<strong>${threshold} 🏆</strong><small>TO UNLOCK</small>`;
     button.setAttribute(
