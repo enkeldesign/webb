@@ -162,7 +162,7 @@ for (const document of [productionIndex, labIndex]) {
       `"/turn/progression/trophy-road\\.js\\?revision=${revision}": "/turn/progression/trophy-road-track-icons\\.js\\?revision=r1-track-reward-icons"`
     ), `Trophy Road ${revision} consumers must converge on the authored track-icon presentation`);
   }
-  assert.match(document, /"\/turn\/garage\/lot-showroom-experiment\.js\?revision=r252-supercar-outward-rims": "\/turn\/garage\/lot-showroom-track-icon\.js\?revision=r1-track-reward-icons"/,
+  assert.match(document, /"\/turn\/garage\/lot-showroom-experiment\.js\?revision=r252-supercar-outward-rims": "\/turn\/garage\/lot-showroom-track-icon\.js\?revision=r2-swift-lot-ui"/,
     'The current Lot showroom must route through the chosen-track icon wrapper');
 }
 assert.match(homeRewardReplay, /trophy-road-perks-r164\.js\?revision=r243-mountain-1300/,
