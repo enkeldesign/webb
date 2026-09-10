@@ -37,6 +37,7 @@ const release = JSON.parse(releaseSource);
 const musicSpecifier = `/turn/audio/racing-music-v2.js?build=${release.cacheKey}-racing-music-warm-v2`;
 const audioPreferencesSpecifier = `/turn/audio/audio-preferences.js?build=${release.cacheKey}`;
 const instrumentBankSpecifier = '/turn/audio/music/instrument-bank.js?revision=r184-score-v2';
+const songbookSpecifier = '/turn/audio/music/songbook.js?revision=r197-audio-mix';
 const productionImports = importMapImports(index);
 const labImports = importMapImports(labIndex);
 const trackerImports = importMapImports(trackerIndex);
@@ -46,11 +47,13 @@ assert.equal(productionImports[audioPreferencesSpecifier], `/turn/audio/audio-pr
 assert.equal(labImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
 assert.equal(productionImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
 assert.equal(labImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
+assert.equal(productionImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r209-paper-skies');
+assert.equal(labImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r209-paper-skies');
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/);
 assert.match(engine, /music\/songbook\.js\?revision=r197-audio-mix/);
 assert.equal(
   trackerImports['./songbook.js?revision=r185-menu-orchestration'],
-  './songbook.js?revision=r197-audio-mix',
+  './songbook.js?revision=r209-paper-skies',
   'Music Tracker must bypass stale songbook modules after direct score edits'
 );
 assert.equal(
@@ -64,7 +67,8 @@ assert.match(trackerIndex, /tracker\.js\?revision=r196-song-recovery/,
 // Creative score files are intentionally user-editable. Cache-bust their direct imports whenever
 // the checked-in scores change so installed Safari PWAs do not keep stale song modules.
 for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain']) {
-  assert.match(songbookSource, new RegExp(`${songFile}\\.js\\?revision=r197-audio-mix`),
+  const revision = songFile === 'airport' ? 'r209-paper-skies' : 'r197-audio-mix';
+  assert.match(songbookSource, new RegExp(`${songFile}\\.js\\?revision=${revision}`),
     `${songFile} must use the current user-score cache revision`);
 }
 
@@ -72,6 +76,12 @@ const expectedTrackIds = ['countryside', 'airport', 'cliffside', 'harbor', 'midn
 assert.equal(MENU_SONG.id, 'menu');
 assert.deepEqual(Object.keys(TRACK_SONGS), expectedTrackIds);
 assert.equal(SONGBOOK.length, 7, 'Songbook contains menu music plus six track songs');
+assert.equal(TRACK_SONGS.airport.id, 'airport', 'Airport keeps the canonical track song id');
+assert.equal(TRACK_SONGS.airport.name, 'Paper Skies', 'Airport exposes the new Paper Skies title');
+assert.equal(TRACK_SONGS.airport.bpm, 144, 'Paper Skies keeps its authored tempo');
+assert.equal(TRACK_SONGS.airport.key, 'F# minor / E major', 'Paper Skies keeps its authored key metadata');
+assert.deepEqual(TRACK_SONGS.airport.form, ['bridge', 'bridge', 'tune', 'bridge', 'chorus', 'chorus'],
+  'Paper Skies keeps the authored six-part arrangement');
 
 const leadNames = new Set(Object.keys(LEAD_VOICES));
 const bassNames = new Set(Object.keys(BASS_VOICES));
