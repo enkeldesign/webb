@@ -19,9 +19,9 @@ const PREVIEW_FALLBACK_PREP_DELAY_MS = 500;
 const PREVIEW_WARM_WIDTH = 126;
 const PREVIEW_WARM_HEIGHT = 92;
 const PREVIEW_PRESENTATION = Object.freeze({
-  // Build from the same 5.5-unit competitor template as the actual race ghost, then
-  // scale only the presentation. This keeps CHASE YOUR BEST on the exact same painted
-  // visual path instead of constructing an independent 6.4-unit ghost variant.
+  // Factory paint can reuse the canonical 5.5-unit competitor ghost cache. A saved
+  // PAINTJOB deliberately uses the Lot's proven uncached 6.4-unit paint path instead,
+  // with its colours lightened before construction to preserve the ghost appearance.
   sourceLength: 5.5,
   targetLength: 6.4
 });
@@ -249,40 +249,6 @@ export function installRivalOnboarding() {
   });
 }
 
-function restoreCachedGhostPaintHandles(visual) {
-  if (!visual?.userData?.turnFastGhostClone) return;
-
-  const semanticPaintRecords = [];
-  const primaryPaintMaterials = [];
-  const secondaryPaintMaterials = [];
-  const seenMaterials = new Set();
-
-  visual.traverse((node) => {
-    if (!node?.isMesh || !node.material) return;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    for (const material of materials) {
-      if (!material || seenMaterials.has(material)) continue;
-      seenMaterials.add(material);
-      const semantic = material.userData?.turnSemanticPaint;
-      if (!semantic) continue;
-      semanticPaintRecords.push(semantic);
-      if (semantic.primary) primaryPaintMaterials.push(material);
-      if (semantic.secondary) secondaryPaintMaterials.push(material);
-    }
-  });
-
-  // The fast competitor clone deliberately drops these root-level arrays, but the
-  // shared materials still retain the semantic uniform records. Rebuild only the
-  // handles needed by recolorCarVisual so this secondary renderer can reassert the
-  // exact saved PAINTJOB instead of falling back to the template/factory uniforms.
-  visual.userData.turnSemanticPaintRecords = semanticPaintRecords;
-  visual.userData.turnPrimaryPaintMaterials = primaryPaintMaterials;
-  visual.userData.turnSecondaryPaintMaterials = secondaryPaintMaterials;
-  visual.userData.turnPaintMaterials = [
-    ...new Set([...primaryPaintMaterials, ...secondaryPaintMaterials])
-  ];
-}
-
 function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }) {
   const scene = new THREE.Scene();
   const renderer = new THREE.WebGLRenderer({
@@ -325,6 +291,8 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
   const customPaint = color !== getVehicleDefaultColor(carId)
     || secondaryColor !== getVehicleDefaultSecondaryColor(carId);
+  const previewColor = customPaint ? makeGhostColor(color) : color;
+  const previewSecondaryColor = customPaint ? makeGhostColor(secondaryColor) : secondaryColor;
 
   const resizeTo = (width, height) => {
     if (disposed || !width || !height) return;
@@ -403,14 +371,10 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     if (disposed || !visual) return;
     try {
       if (customPaint) {
-        // PAINTJOB colours are applied by semantic onBeforeCompile shaders. Let the
-        // hidden idle render own their first compilation in this secondary WebGL
-        // context; precompiling them here can leave the preview on its source palette.
+        // Match The Lot: PAINTJOB shader compilation belongs to an actual render in
+        // this WebGL context, never to the race-ghost cache or a precompile shortcut.
         runWarmupWhenIdle(finishWarmup);
       } else if (typeof renderer.compileAsync === 'function') {
-        // The native semantic paint system made these shaders more substantial than
-        // the original r40 onboarding. Compile them asynchronously in this separate
-        // WebGL context rather than on the CHASE YOUR BEST reveal frame.
         await renderer.compileAsync(scene, camera);
         if (disposed) return;
         runWarmupWhenIdle(finishWarmup);
@@ -439,29 +403,34 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     }
   };
 
+  // Custom PAINTJOBs intentionally use the exact construction pattern that already
+  // works in The Lot: a fresh non-ghost 6.4-unit visual, then recolour it in this
+  // renderer's own context. We pre-lighten the two paint channels so it still reads
+  // as the same solid ghost. Factory paint keeps the cheaper cached race-ghost path.
   void createCarVisual({
     carId,
-    color,
-    secondaryColor,
-    ghost: true,
-    targetLength: PREVIEW_PRESENTATION.sourceLength,
+    color: previewColor,
+    secondaryColor: previewSecondaryColor,
+    ghost: !customPaint,
+    targetLength: customPaint
+      ? PREVIEW_PRESENTATION.targetLength
+      : PREVIEW_PRESENTATION.sourceLength,
     outline: true
   }).then((next) => {
     if (disposed) return;
     visual = next;
 
-    // The shared 5.5-unit fast clone intentionally omits root paint handles. Restore
-    // its semantic uniform references before reapplying the saved rival PAINTJOB.
-    restoreCachedGhostPaintHandles(visual);
-    recolorCarVisual(visual, color, secondaryColor);
-
-    // 5.5 activates the canonical competitor-ghost cache. Counteract its featured
-    // surface multiplier while preserving the previous 6.4-unit onboarding framing.
-    const featuredMultiplier = Number(visual.userData?.turnFeaturedVisualSizeMultiplier) || 1;
-    visual.scale.multiplyScalar(
-      PREVIEW_PRESENTATION.targetLength
-        / (PREVIEW_PRESENTATION.sourceLength * featuredMultiplier)
-    );
+    if (customPaint) {
+      recolorCarVisual(visual, previewColor, previewSecondaryColor);
+    } else {
+      // 5.5 activates the canonical competitor-ghost cache. Counteract its featured
+      // surface multiplier while preserving the established 6.4-unit framing.
+      const featuredMultiplier = Number(visual.userData?.turnFeaturedVisualSizeMultiplier) || 1;
+      visual.scale.multiplyScalar(
+        PREVIEW_PRESENTATION.targetLength
+          / (PREVIEW_PRESENTATION.sourceLength * featuredMultiplier)
+      );
+    }
     stage.add(visual);
     void warmRenderer();
   }).catch((error) => {
