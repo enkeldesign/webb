@@ -16,6 +16,7 @@ const BASE_CAMERA_FOV = 68;
 const CLASSIC_MAX_CAMERA_FOV = 78;
 const ZOOM_MAX_CAMERA_FOV = 88;
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+const REDUCED_MOTION_AT_STARTUP = globalThis.matchMedia?.(REDUCED_MOTION_QUERY)?.matches === true;
 
 installDriftCameraSetting();
 
@@ -138,7 +139,7 @@ export function resolveCameraMotionLeadTime(responseRate, dt) {
 export function resolveRaceCameraFov({
   speedRatio = 0,
   speedResponsiveCamera = globalThis.__turnSpeedResponsiveCameraEnabled === true,
-  reducedMotion = globalThis.matchMedia?.(REDUCED_MOTION_QUERY)?.matches === true
+  reducedMotion = REDUCED_MOTION_AT_STARTUP
 } = {}) {
   if (reducedMotion) return BASE_CAMERA_FOV;
   const ratio = clamp(Number(speedRatio) || 0, 0, 1);
@@ -168,16 +169,10 @@ export function updateRaceCameraState({
   });
   const driftCosine = Math.cos(state.driftCameraYawOffset);
   const driftSine = Math.sin(state.driftCameraYawOffset);
-  const forward = {
-    x: carForward.x * driftCosine + carRight.x * driftSine,
-    y: 0,
-    z: carForward.z * driftCosine + carRight.z * driftSine
-  };
-  const right = {
-    x: carRight.x * driftCosine - carForward.x * driftSine,
-    y: 0,
-    z: carRight.z * driftCosine - carForward.z * driftSine
-  };
+  const forwardX = carForward.x * driftCosine + carRight.x * driftSine;
+  const forwardZ = carForward.z * driftCosine + carRight.z * driftSine;
+  const rightX = carRight.x * driftCosine - carForward.x * driftSine;
+  const rightZ = carRight.z * driftCosine - carForward.z * driftSine;
   const speedRatio = clamp(state.speed / maxSpeed, 0, 1);
   const speedResponsiveCamera = globalThis.__turnSpeedResponsiveCameraEnabled === true;
   const velocityX = finiteNumber(state.velocity?.x, 0);
@@ -217,14 +212,14 @@ export function updateRaceCameraState({
   cameraPosition.x = lerp(
     cameraPosition.x,
     state.position.x + velocityX * cameraMotionLead
-      - forward.x * followDistance - right.x * lateralOffset,
+      - forwardX * followDistance - rightX * lateralOffset,
     cameraResponse
   );
   cameraPosition.y = lerp(cameraPosition.y, roadY + cameraHeight, cameraResponse);
   cameraPosition.z = lerp(
     cameraPosition.z,
     state.position.z + velocityZ * cameraMotionLead
-      - forward.z * followDistance - right.z * lateralOffset,
+      - forwardZ * followDistance - rightZ * lateralOffset,
     cameraResponse
   );
   camera.position.copy(cameraPosition);
@@ -236,14 +231,14 @@ export function updateRaceCameraState({
     : 0;
   cameraTarget.x = lerp(
     cameraTarget.x,
-    state.position.x + velocityX * targetMotionLead + forward.x * targetDistance,
+    state.position.x + velocityX * targetMotionLead + forwardX * targetDistance,
     targetResponse
   );
   const anticipatedRoadY = roadY + (lookAheadRoadY - roadY) * 0.35;
   cameraTarget.y = lerp(cameraTarget.y, anticipatedRoadY + 2, targetResponse);
   cameraTarget.z = lerp(
     cameraTarget.z,
-    state.position.z + velocityZ * targetMotionLead + forward.z * targetDistance,
+    state.position.z + velocityZ * targetMotionLead + forwardZ * targetDistance,
     targetResponse
   );
   camera.up.set(0, 1, 0);

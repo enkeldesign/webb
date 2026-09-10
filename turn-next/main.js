@@ -3,7 +3,7 @@
 
 import * as THREE from 'three';
 import { installKenneyWorld } from '/turn/world-assets.js';
-import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19';
+import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19&revision=r270-camera-hotpath';
 import { updateHudState } from '/turn/ui/hud.js?build=20260720-r19';
 import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from '/turn/input/motion.js';
 import { updateVehiclePhysicsState } from '/turn/vehicle/physics.js?build=20260720-r19';
@@ -1260,130 +1260,6 @@ function updateSkids() {
   skidGeometry.setDrawRange(0, cursor);
 }
 
-const mapBounds = (() => {
-  const xs = samples.map((sample) => sample.point.x);
-  const zs = samples.map((sample) => sample.point.z);
-  return {
-    minX: Math.min(...xs),
-    maxX: Math.max(...xs),
-    minZ: Math.min(...zs),
-    maxZ: Math.max(...zs)
-  };
-})();
-
-function mapPoint(point) {
-  const pad = 20;
-  const width = mapCanvas.width - pad * 2;
-  const height = mapCanvas.height - pad * 2;
-  const sx = width / (mapBounds.maxX - mapBounds.minX);
-  const sz = height / (mapBounds.maxZ - mapBounds.minZ);
-  const scale = Math.min(sx, sz);
-  const contentW = (mapBounds.maxX - mapBounds.minX) * scale;
-  const contentH = (mapBounds.maxZ - mapBounds.minZ) * scale;
-  const offsetX = (mapCanvas.width - contentW) / 2;
-  const offsetY = (mapCanvas.height - contentH) / 2;
-  return {
-    x: offsetX + (point.x - mapBounds.minX) * scale,
-    y: offsetY + (point.z - mapBounds.minZ) * scale
-  };
-}
-
-function drawMap() {
-  const w = mapCanvas.width;
-  const h = mapCanvas.height;
-  mapCtx.clearRect(0, 0, w, h);
-  mapCtx.lineJoin = 'round';
-  mapCtx.lineCap = 'round';
-
-  mapCtx.beginPath();
-  samples.forEach((sample, index) => {
-    const p = mapPoint(sample.point);
-    if (index === 0) mapCtx.moveTo(p.x, p.y);
-    else mapCtx.lineTo(p.x, p.y);
-  });
-  mapCtx.closePath();
-  mapCtx.strokeStyle = '#08090a';
-  mapCtx.lineWidth = 16;
-  mapCtx.stroke();
-  mapCtx.strokeStyle = '#ff4fa3';
-  mapCtx.lineWidth = 8;
-  mapCtx.stroke();
-
-  const startPoint = mapPoint(samples[0].point);
-  const beforeStart = mapPoint(samples[samples.length - 4].point);
-  const afterStart = mapPoint(samples[4].point);
-  const startDx = afterStart.x - beforeStart.x;
-  const startDy = afterStart.y - beforeStart.y;
-  const startLength = Math.max(0.001, Math.hypot(startDx, startDy));
-  const startNx = -startDy / startLength;
-  const startNy = startDx / startLength;
-  mapCtx.beginPath();
-  mapCtx.moveTo(startPoint.x - startNx * 11, startPoint.y - startNy * 11);
-  mapCtx.lineTo(startPoint.x + startNx * 11, startPoint.y + startNy * 11);
-  mapCtx.strokeStyle = '#08090a';
-  mapCtx.lineWidth = 9;
-  mapCtx.stroke();
-  mapCtx.strokeStyle = '#fff8e8';
-  mapCtx.lineWidth = 5;
-  mapCtx.stroke();
-
-  const playerPoint = mapPoint(state.position);
-  mapCtx.beginPath();
-  mapCtx.arc(playerPoint.x, playerPoint.y, 8, 0, TAU);
-  mapCtx.fillStyle = '#ffd43b';
-  mapCtx.fill();
-  mapCtx.strokeStyle = '#08090a';
-  mapCtx.lineWidth = 4;
-  mapCtx.stroke();
-
-  if (state.lapActive) {
-    for (let i = 0; i < state.competitorLaps.length; i += 1) {
-      const rival = lapFrameAt(state.competitorLaps[i], state.lapElapsed);
-      if (!rival) continue;
-      const rivalPoint = mapPoint({ x: rival.x, z: rival.z });
-      mapCtx.beginPath();
-      mapCtx.arc(rivalPoint.x, rivalPoint.y, 6, 0, TAU);
-      mapCtx.fillStyle = COMPETITOR_MAP_COLORS[i] || '#38d9ff';
-      mapCtx.fill();
-      mapCtx.strokeStyle = '#08090a';
-      mapCtx.lineWidth = 3;
-      mapCtx.stroke();
-    }
-  }
-}
-
-function formatTime(seconds) {
-  if (!Number.isFinite(seconds)) return '--:--.---';
-  const minutes = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-  const ms = Math.floor((seconds % 1) * 1000).toString().padStart(3, '0');
-  return `${minutes}:${secs}.${ms}`;
-}
-
-function updateRacePosition() {
-  const total = state.competitorLaps.length + 1;
-  if (!state.lapActive || !state.competitorLaps.length) {
-    globalThis.__turnSetRacePosition?.(state.lapActive ? 1 : null, total);
-    return;
-  }
-
-  let rivalsAhead = 0;
-  const playerDistance = state.progress;
-
-  for (const lap of state.competitorLaps) {
-    const frame = lapFrameAt(lap, state.lapElapsed);
-    if (!frame) continue;
-    const progress = Number.isFinite(frame.p)
-      ? frame.p
-      : findNearestTrack(frame).index / TRACK_SAMPLES;
-    const completedGhostLaps = Number.isFinite(lap.time) && lap.time > 0
-      ? Math.floor(state.lapElapsed / lap.time)
-      : 0;
-    if (completedGhostLaps + progress > playerDistance + 0.002) rivalsAhead += 1;
-  }
-
-  globalThis.__turnSetRacePosition?.(rivalsAhead + 1, total);
-}
 
 function updateHud(now = performance.now()) {
   updateHudState({
