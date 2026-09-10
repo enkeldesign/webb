@@ -23,8 +23,8 @@ const [
 assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /track-map-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /r411\.css\?revision=r411/);
-assert.match(turnIndex, /ui\/r411-race-controls\.js\?revision=r229-minor-ux-polish/,
-  'TURN must cache-bust the race-control entry when the UX polish bundle changes');
+assert.match(turnIndex, /ui\/r411-race-controls\.js\?revision=r269-race-controls/,
+  'TURN must cache-bust the race-control entry when the active-race controls change');
 
 assert.match(yourTurnMap, /getTrackPreviewPoints/,
   'YOUR TURN maps must derive from TURN canonical track geometry');
@@ -55,12 +55,16 @@ assert.match(yourTurnCss, /\.yourturn-challenge-button\.is-lap-invalid[\s\S]*#ff
 assert.doesNotMatch(yourTurnCss, /\.utility-group\s*\{/,
   'The mockup must not cause global utility-row spacing or alignment changes');
 
-assert.match(turnControls, /menuState === 'racing'[\s\S]*restartButton\.hidden = false[\s\S]*recalibrateButton\.hidden = false/,
-  'TURN must expose Restart Lap and Recalibrate during an active race');
-assert.match(turnControls, /utilityGroup\.prepend\(recalibrateButton\);[\s\S]*utilityGroup\.prepend\(restartButton\)/,
-  'TURN active-race DOM order must be Restart Lap then Recalibrate');
+assert.match(turnControls, /menuState === 'racing'[\s\S]*restartButton\.hidden = false[\s\S]*recalibrateButton\.hidden = true/,
+  'TURN must expose Restart Lap but hide Recalibrate during an active race');
+assert.match(turnControls, /utilityGroup\.prepend\(restartButton\)/,
+  'TURN active-race DOM order must keep Restart Lap in the utility strip');
+assert.match(turnControls, /menuState !== 'staged'[\s\S]*recalibrateButton\.hidden = false/,
+  'TURN must restore Recalibrate when the player is back at the staged start line');
 assert.match(turnControls, /blankScreenButton\.after\(recalibrateButton\)/,
   'TURN must restore Recalibrate to its established staged position after Blank Screen');
+assert.match(turnControls, /\.manual-steer \{[\s\S]*background-clip: padding-box/,
+  'TURN must keep the yellow steering fill inside the thick rounded contour');
 assert.match(turnControls, /back-to-start-button[\s\S]*#ff7b54/,
   'TURN Restart Lap must be orange during a valid active lap');
 assert.match(turnControls, /back-to-start-button\.is-lap-invalid[\s\S]*#ff6b6b/,
