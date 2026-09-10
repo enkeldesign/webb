@@ -98,6 +98,15 @@ body .turn-screen-blank-toast {
   transform-origin: right bottom;
 }
 
+/* A single unlocked DRIFT row still sits inside the reserved two-row score
+ * footprint. Anchor its callout to the bottom of the actual DRIFT paper rather
+ * than the bottom of that reserved container.
+ */
+:root .score-feedback[data-score-layout="single"] .score-feedback-callout[data-channel="drift"] {
+  top: auto;
+  bottom: calc(100% - var(--score-feedback-paper-height) + 6px);
+}
+
 /* In dual-score mode the DRIFT paper is the upper half; FLOW remains anchored
  * to the lower paper. Using the live container height keeps this correct when
  * short landscape viewports shrink both paper rows together.
@@ -153,6 +162,10 @@ body .turn-screen-blank-toast {
     bottom: 5px;
     padding: 4px 6px 5px;
     border-radius: 9px;
+  }
+
+  :root .score-feedback[data-score-layout="single"] .score-feedback-callout[data-channel="drift"] {
+    bottom: calc(100% - var(--score-feedback-paper-height) + 5px);
   }
 
   :root .score-feedback[data-score-layout="dual"] .score-feedback-callout[data-channel="drift"] {
