@@ -80,7 +80,7 @@ assert.doesNotMatch(screenReaderCoordinator, /speak\(`\$\{readyMessage\} \$\{NON
   'The old portrait-ready plus onboarding utterance must not return');
 
 assert.match(fixedLayout, /achievements\/unread-markers\.js\?build=\$\{buildKey\}-r219-unified-filters/);
-assert.match(fixedLayout, /achievements\/trophy-road-feedback\.js\?build=\$\{buildKey\}-r244-reward-toast-guide/);
+assert.match(fixedLayout, /achievements\/trophy-road-feedback\.js\?build=\$\{buildKey\}-r254-achievement-filter-rows/);
 assert.match(fixedLayout, /installAchievementUnreadMarkers\(achievements\)/);
 assert.match(fixedLayout, /achievementUnreadMarkers,/);
 assert.match(fixedLayout, /function installDriveByEarSpokenLabels\(training\)/);
@@ -95,12 +95,24 @@ assert.match(unreadMarkers, /new MutationObserver\(queueDecoration\)/);
 assert.match(unreadMarkers, /listObserver\.observe\(list, \{ childList: true \}\)/);
 assert.doesNotMatch(unreadMarkers, /function installFilterButtons|function handleFilterClick/,
   'Unread decoration must not install a second competing achievement-filter controller');
-assert.match(trophyRoadFeedback, /Object\.freeze\(\{ id: 'hidden', label: 'HIDDEN' \}\)/,
+assert.match(trophyRoadFeedback, /Object\.freeze\(\{ id: 'hidden', label: 'HIDDEN', kind: 'tag' \}\)/,
   'Achievements must expose a dedicated Hidden filter');
-assert.match(trophyRoadFeedback, /Object\.freeze\(\{ id: 'new', label: 'NEW' \}\)/,
+assert.match(trophyRoadFeedback, /Object\.freeze\(\{ id: 'new', label: 'NEW', kind: 'tag' \}\)/,
   'Achievements must always expose a New filter');
-assert.match(trophyRoadFeedback, /Object\.freeze\(\{ id: 'locked', label: 'LOCKED' \}\)/,
+assert.match(trophyRoadFeedback, /Object\.freeze\(\{ id: 'locked', label: 'LOCKED', kind: 'status' \}\)/,
   'The existing Locked filter must remain available alongside the composable tags');
+assert.match(trophyRoadFeedback, /Object\.freeze\(\{ id: CATEGORY\.SCORING, label: 'SCORING', kind: 'tag' \}\)/,
+  'Achievements must expose a dedicated Scoring filter');
+assert.match(trophyRoadFeedback, /id: 'meta'[\s\S]*label: 'ALL'[\s\S]*label: 'NEW'[\s\S]*label: 'UNLOCKED'[\s\S]*label: 'LOCKED'/,
+  'Meta achievement filters must stay together on the first row');
+assert.match(trophyRoadFeedback, /id: 'general'[\s\S]*label: 'GETTING STARTED'[\s\S]*label: 'WAYS TO PLAY'[\s\S]*label: 'EXPLORATION'[\s\S]*label: 'HIDDEN'/,
+  'General achievement categories must stay together on the second row');
+assert.match(trophyRoadFeedback, /id: 'competition'[\s\S]*label: 'RACING'[\s\S]*label: 'TIME TRIALS'[\s\S]*label: 'SCORING'/,
+  'Racing, Time Trials and Scoring must stay together on the third row');
+assert.match(trophyRoadFeedback, /row\.className = 'turn-achievements-filter-row'/,
+  'Achievement filter rows must be explicit DOM groups');
+assert.match(trophyRoadFeedback, /\.turn-achievements-filters \{[\s\S]*display: grid;[\s\S]*\.turn-achievements-filter-row \{[\s\S]*display: flex;/,
+  'Achievement filter groups must render as separate rows while preserving pill wrapping within each row');
 assert.doesNotMatch(trophyRoadFeedback, /newButton\.hidden\s*=/,
   'NEW must stay visible in the filter row even when there is nothing new');
 assert.match(trophyRoadFeedback, /newButton\.disabled = !available/,
