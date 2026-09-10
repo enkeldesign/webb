@@ -14,6 +14,8 @@ const [
   mainSource,
   cameraSource,
   spectateSource,
+  nextMainSource,
+  labMainSource,
   rivalOnboarding,
   trackRegistry,
   trackManager
@@ -30,6 +32,8 @@ const [
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/render/camera.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn-next/main.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/rival-onboarding.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8')
@@ -186,5 +190,23 @@ assert.doesNotMatch(spectateHotPath, /new THREE\.Vector3|\.clone\(\)/,
   'Spectate frame updates must reuse scratch vectors instead of allocating/cloning them');
 assert.match(spectateHotPath, /desiredCamera\.copy\(focus\)\.addScaledVector/);
 assert.match(spectateHotPath, /desiredTarget\.copy\(focus\)\.addScaledVector/);
+
+// HUD/minimap/race-position ownership lives in turn/ui/hud.js. Do not reintroduce the
+// superseded local implementation into canonical TURN, its NEXT mirror, or the static LAB core.
+assert.equal(nextMainSource, mainSource, 'TURN NEXT main must remain a byte-for-byte mirror of canonical TURN main');
+for (const [label, runtimeSource] of [
+  ['TURN', mainSource],
+  ['TURN NEXT', nextMainSource],
+  ['TURN LAB', labMainSource]
+]) {
+  assert.doesNotMatch(runtimeSource, /\nconst mapBounds = \(\(\) => \{/,
+    `${label} must not contain the retired minimap bounds implementation`);
+  assert.doesNotMatch(runtimeSource, /\nfunction mapPoint\(/, `${label} must not contain the retired minimap coordinate helper`);
+  assert.doesNotMatch(runtimeSource, /\nfunction drawMap\(\)/, `${label} must not contain the retired duplicate minimap renderer`);
+  assert.doesNotMatch(runtimeSource, /\nfunction formatTime\(seconds\)/, `${label} must not contain the retired duplicate HUD time formatter`);
+  assert.doesNotMatch(runtimeSource, /\nfunction updateRacePosition\(\)/, `${label} must not contain the retired duplicate race-position calculator`);
+}
+assert.match(mainSource, /function updateHud\(now = performance\.now\(\)\) \{[\s\S]*updateHudState\(\{/,
+  'Canonical TURN must delegate HUD ownership to turn/ui/hud.js');
 
 console.log('TURN runtime hot-path, observer, rival-preview and deferred-loading performance contracts passed.');

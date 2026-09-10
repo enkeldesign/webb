@@ -30,7 +30,7 @@ assert.match(declarations, /const skidLeftWheel = new THREE\.Vector3\(\)/);
 assert.match(declarations, /const skidRightWheel = new THREE\.Vector3\(\)/);
 assert.doesNotMatch(declarations, /const skidHistory = \[\]/, 'The allocating array history must stay retired');
 
-const ringSection = section(main, 'function pushSkidSample', '\nconst mapBounds');
+const ringSection = section(main, 'function pushSkidSample', '\nfunction updateHud');
 assert.match(ringSection, /skidHistoryStart = \(skidHistoryStart - 1 \+ SKID_HISTORY_CAPACITY\) % SKID_HISTORY_CAPACITY/, 'New samples must wrap through fixed storage');
 assert.match(ringSection, /skidHistoryCount = Math\.min\(SKID_HISTORY_CAPACITY, skidHistoryCount \+ 1\)/, 'History count must never exceed its allocation');
 assert.match(ringSection, /for \(let component = 0; component < SKID_SAMPLE_STRIDE; component \+= 1\)/, 'Straight sections must duplicate the latest sample without allocating points');
