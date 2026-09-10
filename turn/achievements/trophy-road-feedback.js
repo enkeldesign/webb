@@ -8,6 +8,7 @@ import {
   getTrophyRoadReward
 } from '../progression/trophy-road.js?revision=r253-supercar-release';
 
+const FILTER_STYLE_ID = 'turn-achievement-filter-row-styles';
 const FILTER_ROWS = Object.freeze([
   Object.freeze({
     id: 'meta',
@@ -50,10 +51,29 @@ function ensureFeedbackStylesheet() {
   if (!stylesheet) {
     stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r254-achievement-filter-rows`;
+    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r244-reward-toast-guide`;
     stylesheet.setAttribute('data-turn-trophy-road-feedback', '');
   }
   document.head.appendChild(stylesheet);
+}
+
+function ensureFilterStyles() {
+  if (document.getElementById(FILTER_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = FILTER_STYLE_ID;
+  style.textContent = `
+    .turn-achievements-filters {
+      display: grid;
+      gap: 9px;
+    }
+    .turn-achievements-filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      align-items: center;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 function makeFilterButton(id, label, pressed = false) {
@@ -319,6 +339,7 @@ function installRoadBehavior({ achievements, summary }) {
 export function installTrophyRoadFeedback(achievements = globalThis.__turnAchievements) {
   if (installed) return installed;
   ensureFeedbackStylesheet();
+  ensureFilterStyles();
   const dialog = achievements?.dialog;
   if (!dialog || !achievements.store) return null;
 
