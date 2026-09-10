@@ -49,6 +49,26 @@
 }
 
 /* --------------------------------------------------------------------------
+ * Category 2 race cues
+ * -------------------------------------------------------------------------- */
+
+/* GO!, PATIENT ON BOARD and STEERING + TILT CENTERED already share #message,
+ * which is a compact yellow TURN pill at 22% from the top. CHASE YOUR BEST is
+ * already in the same visual lane at 20%. The blank-screen confirmation was
+ * the remaining outlier: move only that existing surface into the same lane
+ * and give it the same fully rounded pill silhouette. Keep its neutral paper
+ * colour and its existing status semantics/timing.
+ *
+ * screen-blanking.js appends its stylesheet at runtime, so the body-qualified
+ * selector deliberately has enough specificity to keep this placement without
+ * changing the feature runtime or its cache identity.
+ */
+body .turn-screen-blank-toast {
+  top: 20%;
+  border-radius: 999px;
+}
+
+/* --------------------------------------------------------------------------
  * DRIFT / FLOW event callout
  * -------------------------------------------------------------------------- */
 
@@ -121,6 +141,10 @@
 @media (max-height: 430px) {
   .lap-result-toast {
     padding: 5px 10px 6px;
+  }
+
+  body .turn-screen-blank-toast {
+    top: 16%;
   }
 
   :root .score-feedback .score-feedback-callout,
