@@ -23,7 +23,7 @@ export function updateHudState({
   setRacePosition
 }) {
   const lapInvalid = state.lapActive && state.lapInvalid === true;
-  setText(speedEl, Math.round(state.speed * 3.6));
+  setText(speedEl, Math.round(state.speed * 2.9));
   setText(lapEl, state.lap);
   setText(lapTimeEl, lapInvalid ? 'LAP VOID' : formatTime(state.lapElapsed));
   setText(bestTimeEl, formatTime(state.bestTime));
