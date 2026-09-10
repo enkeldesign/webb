@@ -1,4 +1,4 @@
-name: TURN Supercar Lot visual smoke
+name: TURN vehicle visual regression
 
 on:
   pull_request:
@@ -31,9 +31,9 @@ on:
       - 'turn/garage/lot-thumbnail-composition-r211.css'
       - 'turn/progression/trophy-road.js'
       - 'turn-lab/supercar-lot-visual.html'
-      - 'turn-lab/rival-paint-visual.html'
+      - 'turn-lab/rival-paint-regression.html'
       - 'turn-tests/supercar-lot-visual-smoke.mjs'
-      - 'turn-tests/rival-paint-webgl-diagnostic.mjs'
+      - 'turn-tests/rival-paint-webgl-regression.mjs'
       - '.github/workflows/turn-supercar-lot-visual-smoke.yml'
 
 concurrency:
@@ -66,34 +66,34 @@ jobs:
 
       - name: Start static TURN server
         run: |
-          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/turn-supercar-http.log 2>&1 &
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/turn-vehicle-visual-http.log 2>&1 &
           for attempt in {1..20}; do
             curl --fail --silent http://127.0.0.1:8000/turn-lab/supercar-lot-visual.html >/dev/null && exit 0
             sleep 0.5
           done
-          cat /tmp/turn-supercar-http.log
+          cat /tmp/turn-vehicle-visual-http.log
           exit 1
 
       - name: Render and validate the actual Lot preview
         run: node turn-tests/supercar-lot-visual-smoke.mjs
 
       - name: Validate CHASE YOUR BEST custom paint pixels
-        run: node turn-tests/rival-paint-webgl-diagnostic.mjs
+        run: node turn-tests/rival-paint-webgl-regression.mjs
 
       - name: Upload Supercar Lot inspection frames
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: supercar-lot-visual-smoke
+          name: supercar-lot-visual-regression
           path: supercar-lot-visual-artifact
           if-no-files-found: warn
           retention-days: 7
 
-      - name: Upload CHASE YOUR BEST paint diagnostic
+      - name: Upload CHASE YOUR BEST paint regression
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rival-paint-diagnostic
-          path: rival-paint-diagnostic-artifact
+          name: rival-paint-regression
+          path: rival-paint-regression-artifact
           if-no-files-found: warn
           retention-days: 7

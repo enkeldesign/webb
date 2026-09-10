@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TURN rival paint WebGL diagnostic</title>
+  <title>TURN rival paint WebGL regression</title>
   <link rel="stylesheet" href="/turn/design-tokens.css">
   <link rel="stylesheet" href="/turn/rival-onboarding.css">
   <style>
@@ -62,12 +62,12 @@
     const expectedGhostSecondaryColor = makeGhostColor(secondaryColor);
 
     globalThis.__rivalPaintCreateCalls = [];
-    globalThis.__rivalPaintDiagnosticReady = false;
-    globalThis.__rivalPaintDiagnosticFailure = null;
-    globalThis.__rivalPaintDiagnosticMetrics = null;
+    globalThis.__rivalPaintRegressionReady = false;
+    globalThis.__rivalPaintRegressionFailure = null;
+    globalThis.__rivalPaintRegressionMetrics = null;
 
     function fail(error) {
-      globalThis.__rivalPaintDiagnosticFailure = String(error?.stack || error?.message || error);
+      globalThis.__rivalPaintRegressionFailure = String(error?.stack || error?.message || error);
     }
 
     function createCalls() {
@@ -108,7 +108,7 @@
       });
       stage.add(visual);
       renderer.render(scene, camera);
-      globalThis.__rivalPaintDiagnosticMetrics = Object.freeze({
+      globalThis.__rivalPaintRegressionMetrics = Object.freeze({
         mode,
         custom,
         color,
@@ -122,7 +122,7 @@
         canvasWidth: renderer.domElement.width,
         canvasHeight: renderer.domElement.height
       });
-      globalThis.__rivalPaintDiagnosticReady = true;
+      globalThis.__rivalPaintRegressionReady = true;
     }
 
     function runOnboarding() {
@@ -161,7 +161,7 @@
         if (plate?.classList.contains('is-visible') && canvas?.width > 0 && canvas?.height > 0) {
           globalThis.clearInterval(timer);
           globalThis.setTimeout(() => {
-            globalThis.__rivalPaintDiagnosticMetrics = Object.freeze({
+            globalThis.__rivalPaintRegressionMetrics = Object.freeze({
               mode,
               custom,
               color,
@@ -173,11 +173,11 @@
               canvasWidth: canvas.width,
               canvasHeight: canvas.height
             });
-            globalThis.__rivalPaintDiagnosticReady = true;
+            globalThis.__rivalPaintRegressionReady = true;
           }, 300);
         } else if (performance.now() - startedAt > 12_000) {
           globalThis.clearInterval(timer);
-          fail(new Error('Timed out waiting for CHASE YOUR BEST diagnostic reveal.'));
+          fail(new Error('Timed out waiting for CHASE YOUR BEST regression reveal.'));
         }
       }, 50);
     }

@@ -5,7 +5,7 @@ import { chromium, webkit } from 'playwright';
 import { PNG } from 'pngjs';
 
 const baseUrl = process.env.TURN_VISUAL_BASE_URL || 'http://127.0.0.1:8000';
-const outputDir = process.env.TURN_RIVAL_PAINT_OUTPUT || 'rival-paint-diagnostic-artifact';
+const outputDir = process.env.TURN_RIVAL_PAINT_OUTPUT || 'rival-paint-regression-artifact';
 await fs.mkdir(outputDir, { recursive: true });
 
 const cases = [
@@ -35,7 +35,7 @@ for (const [browserName, browserType] of browserTypes) {
   const results = {};
 
   try {
-    for (const diagnosticCase of cases) {
+    for (const regressionCase of cases) {
       const page = await context.newPage();
       const browserErrors = [];
       page.on('pageerror', (error) => browserErrors.push(`pageerror: ${error.message}`));
@@ -43,25 +43,25 @@ for (const [browserName, browserType] of browserTypes) {
         if (message.type() === 'error') browserErrors.push(`console error: ${message.text()}`);
       });
 
-      const key = `${diagnosticCase.mode}-${diagnosticCase.paint}`;
+      const key = `${regressionCase.mode}-${regressionCase.paint}`;
       let failure = null;
       let metrics = null;
       let pixels = null;
       try {
         const response = await page.goto(
-          `${baseUrl}/turn-lab/rival-paint-visual.html?mode=${diagnosticCase.mode}&paint=${diagnosticCase.paint}`,
+          `${baseUrl}/turn-lab/rival-paint-regression.html?mode=${regressionCase.mode}&paint=${regressionCase.paint}`,
           { waitUntil: 'domcontentloaded', timeout: 90_000 }
         );
         assert.equal(response?.ok(), true, `${browserName} ${key} fixture must load`);
         await page.waitForFunction(
-          () => globalThis.__rivalPaintDiagnosticReady === true || Boolean(globalThis.__rivalPaintDiagnosticFailure),
+          () => globalThis.__rivalPaintRegressionReady === true || Boolean(globalThis.__rivalPaintRegressionFailure),
           null,
           { timeout: 20_000 }
         );
-        failure = await page.evaluate(() => globalThis.__rivalPaintDiagnosticFailure || null);
-        metrics = await page.evaluate(() => globalThis.__rivalPaintDiagnosticMetrics || null);
+        failure = await page.evaluate(() => globalThis.__rivalPaintRegressionFailure || null);
+        metrics = await page.evaluate(() => globalThis.__rivalPaintRegressionMetrics || null);
         if (!failure) {
-          const selector = diagnosticCase.mode === 'onboarding'
+          const selector = regressionCase.mode === 'onboarding'
             ? '.rival-onboarding-model canvas'
             : '#direct-host canvas';
           const canvas = page.locator(selector);
