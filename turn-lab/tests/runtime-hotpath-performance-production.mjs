@@ -69,29 +69,31 @@ assert.doesNotMatch(rewardPlacementFunction, /requestAnimationFrame|setInterval|
 assert.match(achievementView, /requestAnimationFrame/,
   'Achievement entrance animations should cross a frame boundary without a forced reflow');
 
-// CHASE YOUR BEST has its own WebGL context. The newer semantic car shaders make a first
-// render there materially more expensive than the original r40 implementation, so the context,
-// model and shader programs must be prepared before the first rival is saved/revealed.
+// CHASE YOUR BEST still prepares its optional renderer/model during the first lap, but this
+// diagnostic intentionally forbids GPU program compilation or rendering while its ancestor is
+// display:none. The first WebGL render is scheduled only after reveal() removes hidden.
 const revealFunction = rivalOnboarding.match(/  function reveal\(\) \{[\s\S]*?\n  \}/)?.[0] || '';
 assert.ok(revealFunction, 'Rival onboarding must keep a bounded reveal function');
 assert.doesNotMatch(revealFunction, /offsetWidth|offsetHeight|getBoundingClientRect|renderer\.render|renderFrame/,
-  'CHASE YOUR BEST reveal must not force layout or perform a first WebGL render');
-assert.match(revealFunction, /requestAnimationFrame/,
-  'CHASE YOUR BEST should cross a frame boundary without a forced reflow');
+  'CHASE YOUR BEST reveal must not force layout or render synchronously');
+assert.match(revealFunction, /plate\.hidden = false[\s\S]*requestAnimationFrame/,
+  'CHASE YOUR BEST must leave display:none before scheduling preview startup');
 assert.match(rivalOnboarding, /reason === 'race-started'[\s\S]*!hasRival && state[\s\S]*preparePreview\(state\)/,
-  'The first-rival 3D preview must begin preparing during the first race, not at lap completion');
+  'The first-rival 3D model/context may still prepare during the first race');
 assert.match(rivalOnboarding, /requestIdleCallback\(prepare\)/,
-  'Optional rival-preview context creation must wait for browser idle time when supported');
-assert.match(rivalOnboarding, /renderer\.compileAsync\(scene, camera\)/,
-  'The separate onboarding WebGL context must asynchronously precompile semantic car shaders');
-assert.match(rivalOnboarding, /renderer\.render\(scene, camera\);\s*warmed = true;/,
-  'The preview must warm one hidden frame before becoming eligible for visible rendering');
+  'Optional rival-preview preparation must wait for browser idle time when supported');
+assert.doesNotMatch(rivalOnboarding, /renderer\.compileAsync\(|renderer\.compile\(/,
+  'The diagnostic must not compile the CHASE YOUR BEST WebGL scene while hidden');
+assert.doesNotMatch(rivalOnboarding, /warmed|finishWarmup|warmRenderer|runWarmupWhenIdle/,
+  'The hidden GPU prewarm lifecycle must be fully absent from this diagnostic');
 const previewStart = rivalOnboarding.match(/    start\(\) \{[\s\S]*?\n    \},/)?.[0] || '';
 assert.ok(previewStart, 'Rival onboarding preview must expose a bounded start method');
+assert.match(previewStart, /resize\(\)/,
+  'Visible startup must measure the real preview host after display:none has been removed');
 assert.doesNotMatch(previewStart, /renderer\.render|renderFrame|compile/,
-  'Starting the visible rival preview must never discover GPU programs synchronously');
+  'Starting the visible rival preview must not synchronously compile or render');
 assert.match(previewStart, /requestAnimationFrame\(tick\)/,
-  'Visible rival rendering should begin on a later animation frame');
+  'The first GPU render must occur on a later animation frame after visible startup');
 
 // One logical unlock batch may award multiple achievements and Trophy Road rewards. Persist it once.
 assert.match(achievementStore, /function batch\(callback\)/);
@@ -152,4 +154,4 @@ const worldHomeGate = worldRender.indexOf('await waitForHomeBeforeCosmetics();')
 assert.ok(worldPrewarm >= 0 && worldHomeGate >= 0 && worldPrewarm < worldHomeGate,
   'World cosmetic module graph must prewarm before Home while installation still waits for Home');
 
-console.log('TURN runtime hot-path, observer, rival-preview and deferred-loading performance contracts passed.');
+console.log('TURN runtime hot-path, observer, visible-first rival-preview and deferred-loading performance contracts passed.');
