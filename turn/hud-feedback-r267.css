@@ -1,0 +1,164 @@
+/*
+ * HUD feedback salvage after the #842 rollback.
+ *
+ * Keep the existing lap-result and ScoreFeedback runtimes as state owners.
+ * This file only gives the already-existing surfaces the placements that tested
+ * well: lap feedback owns the full top instrumentation lane, and scoring
+ * callouts sit inside the relevant paper box without covering the live value.
+ */
+
+/* --------------------------------------------------------------------------
+ * Lap result / LAP VOID
+ * -------------------------------------------------------------------------- */
+
+.lap-result-toast {
+  --turn-lap-feedback-map-width: min(24vw, 184px);
+  --turn-lap-feedback-map-shell: calc(var(--turn-lap-feedback-map-width) + 18px);
+  --turn-lap-feedback-gap: clamp(8px, 1vw, 12px);
+  top: max(10px, env(safe-area-inset-top));
+  right: calc(
+    var(--turn-peripheral-right-edge, max(12px, env(safe-area-inset-right)))
+    + var(--turn-lap-feedback-map-shell)
+    + var(--turn-lap-feedback-gap)
+  );
+  left: var(--turn-peripheral-left-edge, max(12px, env(safe-area-inset-left)));
+  width: auto;
+  height: var(--turn-peripheral-stats-height, clamp(58px, 8vh, 66px));
+  min-height: 0;
+  padding: 6px 12px 7px;
+  transform-origin: left top;
+}
+
+/* LAP VOID is the same component and therefore uses the same complete lane. */
+.lap-result-toast.is-invalid {
+  width: auto;
+}
+
+/* The existing handedness state already mirrors the stats/minimap top bar.
+ * Mirror this independent overlay to the same physical side without changing
+ * DOM or screen-reader order.
+ */
+:root.turn-left-handed-controls .lap-result-toast {
+  right: var(--turn-peripheral-right-edge, max(12px, env(safe-area-inset-right)));
+  left: calc(
+    var(--turn-peripheral-left-edge, max(12px, env(safe-area-inset-left)))
+    + var(--turn-lap-feedback-map-shell)
+    + var(--turn-lap-feedback-gap)
+  );
+  transform-origin: right top;
+}
+
+/* --------------------------------------------------------------------------
+ * DRIFT / FLOW event callout
+ * -------------------------------------------------------------------------- */
+
+/*
+ * The existing ScoreFeedback engine still owns timing, priority, speech and
+ * data. We only move its existing transient callout into the paper footprint.
+ * data-channel tells us which paper the current event belongs to.
+ *
+ * The large live score stays untouched; the callout borrows the BEST corner.
+ */
+:root .score-feedback .score-feedback-callout,
+:root .score-feedback[data-score-layout="dual"] .score-feedback-callout {
+  z-index: 4;
+  top: auto;
+  right: 7px;
+  bottom: 6px;
+  left: auto;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 58%;
+  min-width: 62px;
+  padding: 5px 7px 6px;
+  overflow: hidden;
+  border: 2px solid var(--turn-ink);
+  border-radius: 10px;
+  box-shadow: 3px 3px 0 var(--turn-ink);
+  transform-origin: right bottom;
+}
+
+/* In dual-score mode the DRIFT paper is the upper half; FLOW remains anchored
+ * to the lower paper. Using the live container height keeps this correct when
+ * short landscape viewports shrink both paper rows together.
+ */
+:root .score-feedback[data-score-layout="dual"] .score-feedback-callout[data-channel="drift"] {
+  top: auto;
+  bottom: calc(50% + 7px);
+}
+
+:root .score-feedback .score-feedback-callout[data-channel="flow"] {
+  top: auto;
+  bottom: 6px;
+}
+
+:root .score-feedback .score-feedback-callout strong {
+  font-size: clamp(.52rem, 1.15vw, .68rem);
+  letter-spacing: .045em;
+  line-height: 1;
+}
+
+:root .score-feedback .score-feedback-callout b {
+  margin-top: 2px;
+  font-size: clamp(.72rem, 1.7vw, 1rem);
+  line-height: 1;
+}
+
+:root.turn-left-handed-controls .score-feedback .score-feedback-callout,
+:root.turn-left-handed-controls .score-feedback[data-score-layout="dual"] .score-feedback-callout {
+  right: auto;
+  left: 7px;
+  transform-origin: left bottom;
+}
+
+@media (max-width: 760px) and (orientation: landscape) {
+  .lap-result-toast {
+    --turn-lap-feedback-map-width: min(21vw, 142px);
+    --turn-lap-feedback-map-shell: calc(var(--turn-lap-feedback-map-width) + 16px);
+  }
+}
+
+@media (max-height: 430px) {
+  .lap-result-toast {
+    padding: 5px 10px 6px;
+  }
+
+  :root .score-feedback .score-feedback-callout,
+  :root .score-feedback[data-score-layout="dual"] .score-feedback-callout {
+    right: 5px;
+    bottom: 5px;
+    padding: 4px 6px 5px;
+    border-radius: 9px;
+  }
+
+  :root .score-feedback[data-score-layout="dual"] .score-feedback-callout[data-channel="drift"] {
+    bottom: calc(50% + 6px);
+  }
+
+  :root .score-feedback .score-feedback-callout[data-channel="flow"] {
+    bottom: 5px;
+  }
+
+  :root.turn-left-handed-controls .score-feedback .score-feedback-callout,
+  :root.turn-left-handed-controls .score-feedback[data-score-layout="dual"] .score-feedback-callout {
+    right: auto;
+    left: 5px;
+  }
+}
+
+@media (max-height: 360px) and (orientation: landscape) {
+  .lap-result-toast {
+    --turn-lap-feedback-map-width: min(16vw, 96px);
+    --turn-lap-feedback-map-shell: calc(var(--turn-lap-feedback-map-width) + 12px);
+    padding: 4px 8px 5px;
+    border-width: 2px;
+    border-radius: 10px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lap-result-toast {
+    transform: none;
+  }
+}
