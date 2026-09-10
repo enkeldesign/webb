@@ -386,8 +386,8 @@ const rivalRoute = Object.entries(headGraph.importMap.imports || {}).find(([spec
   /^\/turn\/ui\/rival-onboarding\.js\?build=\d{8}-r\d+$/.test(specifier)
 );
 assert.ok(rivalRoute, 'Production TURN must retain the release-bound rival onboarding route');
-assert.match(rivalRoute[1], /[?&]revision=r272-race-ghost-paint(?:&|$)/,
-  'Rival onboarding must use the race-ghost-aligned paint identity');
+assert.match(rivalRoute[1], /[?&]revision=r273-cached-paint-handles(?:&|$)/,
+  'Rival onboarding must use the cached-paint-handle-safe identity');
 
 const workflows = Object.fromEntries(workflowEntries);
 for (const [workflowPath, source] of Object.entries(workflows)) {
