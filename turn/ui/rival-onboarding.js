@@ -120,9 +120,8 @@ export function installRivalOnboarding() {
     plate.hidden = false;
     plate.classList.remove('is-visible', 'is-leaving');
 
-    // The diagnostic lifecycle deliberately keeps all GPU compilation/rendering out
-    // of the display:none phase. Cross one frame after unhiding; start() then resizes
-    // the real host and schedules the first WebGL render for the following frame.
+    // Cross a frame boundary instead of forcing a synchronous layout read. The 3D
+    // preview is prepared independently; revealing CHASE YOUR BEST must never wait for WebGL.
     revealFrame = requestAnimationFrame(() => {
       revealFrame = 0;
       if (plate.hidden) return;
@@ -184,9 +183,9 @@ export function installRivalOnboarding() {
       if (!plate.hidden) preview.start();
     };
 
-    // CPU-side/context/model preparation still happens during the first lap. The one
-    // thing intentionally deferred is GPU program initialization/rendering while the
-    // onboarding subtree has display:none.
+    // With no rival yet, race-started gives us an entire first lap to prepare the
+    // optional second WebGL context. Do it only when the browser reports idle time.
+    // Older engines get a delayed fallback, still well before the first rival reveal.
     if (typeof globalThis.requestIdleCallback === 'function') {
       preparationIdleHandle = globalThis.requestIdleCallback(prepare);
     } else {
@@ -250,8 +249,8 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.35));
   renderer.setClearColor(0x000000, 0);
-  // Allocate the small drawing buffer up front, but do not compile or render while
-  // the onboarding subtree is hidden. This isolates the Mobile Safari lifecycle.
+  // Warm at the maximum CSS preview size so the visible reveal does not discover a
+  // larger drawing buffer. This surface is still tiny compared with the race canvas.
   renderer.setSize(PREVIEW_WARM_WIDTH, PREVIEW_WARM_HEIGHT, false);
   modelHost.appendChild(renderer.domElement);
 
@@ -272,7 +271,10 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   let visual = null;
   let disposed = false;
   let active = false;
+  let warmed = false;
   let animationFrame = 0;
+  let warmIdleHandle = 0;
+  let warmTimer = 0;
   let lastTickAt = 0;
   let lastRenderAt = 0;
   let yaw = VIEWER_INITIAL_YAW;
@@ -283,6 +285,7 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(Math.round(width), Math.round(height), false);
+    if (active && warmed && reducedMotion) renderer.render(scene, camera);
   };
 
   const resize = () => {
@@ -292,15 +295,19 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   };
 
   const renderFrame = (now) => {
-    if (disposed || !visual) return;
+    if (disposed || !warmed) return;
     stage.rotation.y = yaw;
     stage.rotation.x = 0.08;
-    visual.position.y = reducedMotion ? 0 : Math.sin((now / 1000) * 2.1) * 0.04;
+    if (visual) visual.position.y = reducedMotion ? 0 : Math.sin((now / 1000) * 2.1) * 0.04;
     renderer.render(scene, camera);
   };
 
   const tick = (now) => {
     if (!active || disposed) return;
+    if (!warmed) {
+      animationFrame = requestAnimationFrame(tick);
+      return;
+    }
     const dt = Math.min(0.1, Math.max(0, (now - lastTickAt) / 1000));
     lastTickAt = now;
     if (!reducedMotion) yaw += dt * VIEWER_ROTATION_RADIANS_PER_SECOND;
@@ -319,6 +326,68 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     : null;
   observer?.observe(modelHost);
 
+  const runWarmupWhenIdle = (callback) => {
+    if (disposed) return;
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      warmIdleHandle = globalThis.requestIdleCallback(() => {
+        warmIdleHandle = 0;
+        if (!disposed) callback();
+      });
+    } else {
+      warmTimer = window.setTimeout(() => {
+        warmTimer = 0;
+        if (!disposed) callback();
+      }, 120);
+    }
+  };
+
+  const finishWarmup = () => {
+    if (disposed || !visual) return;
+    // One hidden render uploads geometry and textures after shader compilation. The
+    // first visible frame then has no new GPU program or texture work to discover.
+    renderer.render(scene, camera);
+    warmed = true;
+    if (active && !animationFrame) {
+      lastTickAt = performance.now();
+      animationFrame = requestAnimationFrame(tick);
+    }
+  };
+
+  const warmRenderer = async () => {
+    if (disposed || !visual) return;
+    try {
+      if (typeof renderer.compileAsync === 'function') {
+        // The native semantic paint system made these shaders more substantial than
+        // the original r40 onboarding. Compile them asynchronously in this separate
+        // WebGL context rather than on the CHASE YOUR BEST reveal frame.
+        await renderer.compileAsync(scene, camera);
+        if (disposed) return;
+        runWarmupWhenIdle(finishWarmup);
+      } else {
+        runWarmupWhenIdle(() => {
+          if (disposed) return;
+          renderer.compile(scene, camera);
+          finishWarmup();
+        });
+      }
+    } catch (error) {
+      if (disposed) return;
+      console.warn('TURN: first rival preview shader warm-up failed.', error);
+      // Even the recovery compile stays off the reveal path. If it fails too, keep the
+      // onboarding copy and hide only the optional model.
+      runWarmupWhenIdle(() => {
+        if (disposed) return;
+        try {
+          renderer.compile(scene, camera);
+          finishWarmup();
+        } catch (fallbackError) {
+          console.warn('TURN: first rival preview fallback warm-up failed.', fallbackError);
+          onError?.(fallbackError);
+        }
+      });
+    }
+  };
+
   void createCarVisual({
     carId,
     color,
@@ -330,6 +399,7 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     if (disposed) return;
     visual = next;
     stage.add(visual);
+    void warmRenderer();
   }).catch((error) => {
     if (disposed) return;
     console.warn('TURN: first rival could not load in the onboarding viewer.', error);
@@ -342,11 +412,10 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     start() {
       if (disposed || active) return;
       active = true;
-      resize();
       lastTickAt = performance.now();
-      lastRenderAt = 0;
-      // First GPU work happens on the next frame, after the parent has left
-      // display:none and after reveal() has applied the visible presentation state.
+      if (!observer) resize();
+      // Never synchronously render on reveal. If warm-up is still finishing, CHASE
+      // YOUR BEST appears on time and the 3D ghost joins on a later animation frame.
       animationFrame = requestAnimationFrame(tick);
     },
     dispose() {
@@ -354,6 +423,10 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
       disposed = true;
       active = false;
       cancelAnimationFrame(animationFrame);
+      if (warmIdleHandle && typeof globalThis.cancelIdleCallback === 'function') {
+        globalThis.cancelIdleCallback(warmIdleHandle);
+      }
+      window.clearTimeout(warmTimer);
       observer?.disconnect();
       renderer.dispose();
       renderer.domElement.remove();
