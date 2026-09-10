@@ -47,13 +47,13 @@ assert.equal(productionImports[audioPreferencesSpecifier], `/turn/audio/audio-pr
 assert.equal(labImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
 assert.equal(productionImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
 assert.equal(labImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
-assert.equal(productionImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r210-open-horizon');
-assert.equal(labImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r210-open-horizon');
+assert.equal(productionImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r211-breakwater');
+assert.equal(labImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r211-breakwater');
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/);
 assert.match(engine, /music\/songbook\.js\?revision=r197-audio-mix/);
 assert.equal(
   trackerImports['./songbook.js?revision=r185-menu-orchestration'],
-  './songbook.js?revision=r210-open-horizon',
+  './songbook.js?revision=r211-breakwater',
   'Music Tracker must bypass stale songbook modules after direct score edits'
 );
 assert.equal(
@@ -71,7 +71,9 @@ for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'ha
     ? 'r209-paper-skies'
     : songFile === 'cliffside'
       ? 'r210-open-horizon'
-      : 'r197-audio-mix';
+      : songFile === 'harbor'
+        ? 'r211-breakwater'
+        : 'r197-audio-mix';
   assert.match(songbookSource, new RegExp(`${songFile}\\.js\\?revision=${revision}`),
     `${songFile} must use the current user-score cache revision`);
 }
@@ -92,6 +94,12 @@ assert.equal(TRACK_SONGS.cliffside.bpm, 136, 'Open Horizon keeps its authored te
 assert.equal(TRACK_SONGS.cliffside.key, 'B minor / D major', 'Open Horizon keeps its authored key metadata');
 assert.deepEqual(TRACK_SONGS.cliffside.form, ['tune', 'tune', 'bridge', 'tune', 'chorus', 'chorus'],
   'Open Horizon keeps the authored six-part arrangement');
+assert.equal(TRACK_SONGS.harbor.id, 'harbor', 'Harbor keeps the canonical track song id');
+assert.equal(TRACK_SONGS.harbor.name, 'Breakwater', 'Harbor exposes the new Breakwater title');
+assert.equal(TRACK_SONGS.harbor.bpm, 128, 'Breakwater keeps its authored tempo');
+assert.equal(TRACK_SONGS.harbor.key, 'E minor', 'Breakwater keeps its authored key metadata');
+assert.deepEqual(TRACK_SONGS.harbor.form, ['tune', 'tune', 'bridge', 'tune', 'chorus', 'chorus'],
+  'Breakwater keeps the authored six-part arrangement');
 
 const leadNames = new Set(Object.keys(LEAD_VOICES));
 const bassNames = new Set(Object.keys(BASS_VOICES));
