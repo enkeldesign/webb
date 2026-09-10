@@ -249,6 +249,40 @@ export function installRivalOnboarding() {
   });
 }
 
+function restoreCachedGhostPaintHandles(visual) {
+  if (!visual?.userData?.turnFastGhostClone) return;
+
+  const semanticPaintRecords = [];
+  const primaryPaintMaterials = [];
+  const secondaryPaintMaterials = [];
+  const seenMaterials = new Set();
+
+  visual.traverse((node) => {
+    if (!node?.isMesh || !node.material) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of materials) {
+      if (!material || seenMaterials.has(material)) continue;
+      seenMaterials.add(material);
+      const semantic = material.userData?.turnSemanticPaint;
+      if (!semantic) continue;
+      semanticPaintRecords.push(semantic);
+      if (semantic.primary) primaryPaintMaterials.push(material);
+      if (semantic.secondary) secondaryPaintMaterials.push(material);
+    }
+  });
+
+  // The fast competitor clone deliberately drops these root-level arrays, but the
+  // shared materials still retain the semantic uniform records. Rebuild only the
+  // handles needed by recolorCarVisual so this secondary renderer can reassert the
+  // exact saved PAINTJOB instead of falling back to the template/factory uniforms.
+  visual.userData.turnSemanticPaintRecords = semanticPaintRecords;
+  visual.userData.turnPrimaryPaintMaterials = primaryPaintMaterials;
+  visual.userData.turnSecondaryPaintMaterials = secondaryPaintMaterials;
+  visual.userData.turnPaintMaterials = [
+    ...new Set([...primaryPaintMaterials, ...secondaryPaintMaterials])
+  ];
+}
+
 function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }) {
   const scene = new THREE.Scene();
   const renderer = new THREE.WebGLRenderer({
@@ -416,9 +450,9 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     if (disposed) return;
     visual = next;
 
-    // Reassert the saved rival paint through the same recolour API used by The Lot.
-    // Fresh 5.5-unit visuals retain semantic uniform records; cache clones already
-    // share the exact painted material objects used by the race competitor template.
+    // The shared 5.5-unit fast clone intentionally omits root paint handles. Restore
+    // its semantic uniform references before reapplying the saved rival PAINTJOB.
+    restoreCachedGhostPaintHandles(visual);
     recolorCarVisual(visual, color, secondaryColor);
 
     // 5.5 activates the canonical competitor-ghost cache. Counteract its featured
