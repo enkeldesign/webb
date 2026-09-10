@@ -8,19 +8,40 @@ import {
   getTrophyRoadReward
 } from '../progression/trophy-road.js?revision=r253-supercar-release';
 
-const TAG_FILTERS = Object.freeze([
-  Object.freeze({ id: 'new', label: 'NEW' }),
-  Object.freeze({ id: CATEGORY.ONBOARDING, label: 'GETTING STARTED' }),
-  Object.freeze({ id: CATEGORY.WAYS_TO_PLAY, label: 'WAYS TO PLAY' }),
-  Object.freeze({ id: CATEGORY.EXPLORATION, label: 'EXPLORATION' }),
-  Object.freeze({ id: CATEGORY.RACING, label: 'RACING' }),
-  Object.freeze({ id: CATEGORY.TIME_TRIALS, label: 'TIME TRIALS' }),
-  Object.freeze({ id: 'hidden', label: 'HIDDEN' })
+const FILTER_ROWS = Object.freeze([
+  Object.freeze({
+    id: 'meta',
+    label: 'Achievement state and newness',
+    filters: Object.freeze([
+      Object.freeze({ id: 'all', label: 'ALL', kind: 'all' }),
+      Object.freeze({ id: 'new', label: 'NEW', kind: 'tag' }),
+      Object.freeze({ id: 'unlocked', label: 'UNLOCKED', kind: 'status' }),
+      Object.freeze({ id: 'locked', label: 'LOCKED', kind: 'status' })
+    ])
+  }),
+  Object.freeze({
+    id: 'general',
+    label: 'General achievement categories',
+    filters: Object.freeze([
+      Object.freeze({ id: CATEGORY.ONBOARDING, label: 'GETTING STARTED', kind: 'tag' }),
+      Object.freeze({ id: CATEGORY.WAYS_TO_PLAY, label: 'WAYS TO PLAY', kind: 'tag' }),
+      Object.freeze({ id: CATEGORY.EXPLORATION, label: 'EXPLORATION', kind: 'tag' }),
+      Object.freeze({ id: 'hidden', label: 'HIDDEN', kind: 'tag' })
+    ])
+  }),
+  Object.freeze({
+    id: 'competition',
+    label: 'Racing and scoring achievement categories',
+    filters: Object.freeze([
+      Object.freeze({ id: CATEGORY.RACING, label: 'RACING', kind: 'tag' }),
+      Object.freeze({ id: CATEGORY.TIME_TRIALS, label: 'TIME TRIALS', kind: 'tag' }),
+      Object.freeze({ id: CATEGORY.SCORING, label: 'SCORING', kind: 'tag' })
+    ])
+  })
 ]);
-const STATUS_FILTERS = Object.freeze([
-  Object.freeze({ id: 'unlocked', label: 'UNLOCKED' }),
-  Object.freeze({ id: 'locked', label: 'LOCKED' })
-]);
+const FILTERS = Object.freeze(FILTER_ROWS.flatMap(({ filters }) => filters));
+const TAG_FILTERS = Object.freeze(FILTERS.filter(({ kind }) => kind === 'tag'));
+const STATUS_FILTERS = Object.freeze(FILTERS.filter(({ kind }) => kind === 'status'));
 let installed = null;
 
 function ensureFeedbackStylesheet() {
@@ -29,7 +50,7 @@ function ensureFeedbackStylesheet() {
   if (!stylesheet) {
     stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r244-reward-toast-guide`;
+    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r254-achievement-filter-rows`;
     stylesheet.setAttribute('data-turn-trophy-road-feedback', '');
   }
   document.head.appendChild(stylesheet);
@@ -42,6 +63,18 @@ function makeFilterButton(id, label, pressed = false) {
   button.setAttribute('aria-pressed', String(pressed));
   button.textContent = label;
   return button;
+}
+
+function makeFilterRow({ id, label, filters }) {
+  const row = document.createElement('div');
+  row.className = 'turn-achievements-filter-row';
+  row.dataset.achievementFilterRow = id;
+  row.setAttribute('role', 'group');
+  row.setAttribute('aria-label', label);
+  row.append(...filters.map(({ id: filterId, label: filterLabel, kind }) => (
+    makeFilterButton(filterId, filterLabel, kind === 'all')
+  )));
+  return row;
 }
 
 function prepareSummary(dialog) {
@@ -73,11 +106,7 @@ function prepareFilters(dialog) {
   const container = dialog.querySelector('.turn-achievements-filters');
   if (!container) return null;
   container.setAttribute('aria-label', 'Achievement filters. Choose one or more.');
-  container.replaceChildren(
-    makeFilterButton('all', 'ALL', true),
-    ...TAG_FILTERS.map(({ id, label }) => makeFilterButton(id, label)),
-    ...STATUS_FILTERS.map(({ id, label }) => makeFilterButton(id, label))
-  );
+  container.replaceChildren(...FILTER_ROWS.map(makeFilterRow));
 
   const tagIds = new Set(TAG_FILTERS.map(({ id }) => id));
   const statusIds = new Set(STATUS_FILTERS.map(({ id }) => id));
