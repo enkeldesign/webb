@@ -383,7 +383,7 @@ if (buildLabel) {
 // Historical clean record-layout cache marker:
 // m8-home-fixed-layout.js?revision=r217-track-record-layout&trophy-road=r159&achievements=r166-bella-records&bella-rescue=r174-siren-zone&music=warm-v2&robustness=r164-long-session
 const { installM8HomeFixedLayout } = await import(
-  withBuild('./m8-home-fixed-layout.js?revision=r218-track-record-breathing&trophy-road=r159&achievements=r166-bella-records&bella-rescue=r174-siren-zone&music=warm-v2&robustness=r164-long-session')
+  withBuild('./m8-home-fixed-layout.js?revision=r218-track-record-breathing&trophy-road=r159&achievements=r166-bella-records&achievement-filters=r254&bella-rescue=r174-siren-zone&music=warm-v2&robustness=r164-long-session')
 );
 await installM8HomeFixedLayout();
 installStylesheet(
