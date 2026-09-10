@@ -259,8 +259,8 @@ assert.match(index, new RegExp(`lap-result-toast\\.css\\?build=${release.cacheKe
 assert.match(index, new RegExp(`rival-onboarding\\.css\\?build=${release.cacheKey}`));
 assert.equal(
   imports[`/turn/ui/rival-onboarding.js?build=${release.cacheKey}`],
-  `/turn/ui/rival-onboarding.js?build=${release.cacheKey}&revision=r253-supercar-release`,
-  'Installed PWAs must refetch the prewarmed CHASE YOUR BEST runtime'
+  `/turn/ui/rival-onboarding.js?build=${release.cacheKey}&revision=r276-rival-paint-normalization`,
+  'Installed PWAs must refetch the single-normalization CHASE YOUR BEST runtime'
 );
 assert.ok(
   imports['./race/lap-system.js?build=20260720-r19']?.startsWith(`./race/lap-system-r86.js?build=${release.cacheKey}`),
@@ -323,6 +323,10 @@ assert.match(onboarding, /!hadRival && hasRival\) schedule\(rivals\[0\]\)/, 'The
 assert.match(onboarding, /source\.carId \|\| source\.vehicleId/, 'The prepared preview must use the selected model and confirm it against the saved ghost model');
 assert.match(onboarding, /source\.carColor \|\| source\.vehicleColor/, 'The prepared preview must use the selected body paint and confirm it against saved ghost paint');
 assert.match(onboarding, /source\.carSecondaryColor \|\| source\.vehicleSecondaryColor/, 'The prepared preview must preserve selected and saved secondary paint');
+assert.match(onboarding, /preparePreview\(rival\)/,
+  'The saved rival contract must enter preview preparation before normalization');
+assert.doesNotMatch(onboarding, /preparePreview\(normalized\)/,
+  'An already-normalized preview object must never be normalized again and fall back to factory paint');
 assert.match(onboarding, /ghost: true/, 'The onboarding model must use the same lighter solid ghost treatment as race rivals');
 assert.match(onboarding, /targetLength: 6\.4/, 'The onboarding model must use the Lot 3D viewer presentation scale');
 assert.match(onboarding, /PerspectiveCamera\(34, 1, 0\.1, 60\)/, 'The onboarding model must reuse the Lot viewer camera language');
