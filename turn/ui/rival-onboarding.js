@@ -7,7 +7,10 @@ import {
   normalizeVehicleId,
   normalizeVehicleSecondaryColor
 } from '../vehicle/catalog.js?build=20260720-r19';
-import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
+import {
+  createCarVisual,
+  recolorCarVisual
+} from '../vehicle/car-models.js?build=20260720-r22';
 
 const RESULT_TOAST_HANDOFF_MS = 4300;
 const ONBOARDING_VISIBLE_MS = 3200;
@@ -15,6 +18,13 @@ const ONBOARDING_EXIT_MS = 180;
 const PREVIEW_FALLBACK_PREP_DELAY_MS = 500;
 const PREVIEW_WARM_WIDTH = 126;
 const PREVIEW_WARM_HEIGHT = 92;
+const PREVIEW_PRESENTATION = Object.freeze({
+  // Build from the same 5.5-unit competitor template as the actual race ghost, then
+  // scale only the presentation. This keeps CHASE YOUR BEST on the exact same painted
+  // visual path instead of constructing an independent 6.4-unit ghost variant.
+  sourceLength: 5.5,
+  targetLength: 6.4
+});
 const VIEWER_INITIAL_YAW = THREE.MathUtils.degToRad(200);
 const VIEWER_ROTATION_RADIANS_PER_SECOND = 0.144;
 const VIEWER_FRAME_INTERVAL_MS = 1000 / 30;
@@ -400,11 +410,24 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     color,
     secondaryColor,
     ghost: true,
-    targetLength: 6.4,
+    targetLength: PREVIEW_PRESENTATION.sourceLength,
     outline: true
   }).then((next) => {
     if (disposed) return;
     visual = next;
+
+    // Reassert the saved rival paint through the same recolour API used by The Lot.
+    // Fresh 5.5-unit visuals retain semantic uniform records; cache clones already
+    // share the exact painted material objects used by the race competitor template.
+    recolorCarVisual(visual, color, secondaryColor);
+
+    // 5.5 activates the canonical competitor-ghost cache. Counteract its featured
+    // surface multiplier while preserving the previous 6.4-unit onboarding framing.
+    const featuredMultiplier = Number(visual.userData?.turnFeaturedVisualSizeMultiplier) || 1;
+    visual.scale.multiplyScalar(
+      PREVIEW_PRESENTATION.targetLength
+        / (PREVIEW_PRESENTATION.sourceLength * featuredMultiplier)
+    );
     stage.add(visual);
     void warmRenderer();
   }).catch((error) => {
