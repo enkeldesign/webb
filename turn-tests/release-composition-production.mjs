@@ -386,8 +386,8 @@ const rivalRoute = Object.entries(headGraph.importMap.imports || {}).find(([spec
   /^\/turn\/ui\/rival-onboarding\.js\?build=\d{8}-r\d+$/.test(specifier)
 );
 assert.ok(rivalRoute, 'Production TURN must retain the release-bound rival onboarding route');
-assert.match(rivalRoute[1], /[?&]revision=r253-supercar-release(?:&|$)/,
-  'Rival onboarding must use the current release graph instead of its pre-SUPERCAR identity');
+assert.match(rivalRoute[1], /[?&]revision=r276-rival-paint-normalization(?:&|$)/,
+  'Rival onboarding must use the single-normalization PAINTJOB identity');
 
 const workflows = Object.fromEntries(workflowEntries);
 for (const [workflowPath, source] of Object.entries(workflows)) {
@@ -449,6 +449,8 @@ for (const dependency of [
   'turn/vehicle/catalog.js',
   'turn/vehicle/learner-car-livery.js',
   'turn/vehicle/wide-gamut.js',
+  'turn/ui/rival-onboarding.js',
+  'turn/rival-onboarding.css',
   'turn/garage/lot-saved-paint.js',
   'turn/garage/lot-showroom-experiment.css',
   'turn/progression/trophy-road.js'

@@ -202,8 +202,10 @@ export function installRivalOnboarding() {
     plate.style.setProperty('--rival-onboarding-color', makeGhostColor(normalized.color));
     // Normally this is already the exact preview prepared at race-started. If the
     // saved rival differs for any reason, prepare the corrected model without making
-    // the reveal wait for it.
-    preparePreview(normalized);
+    // the reveal wait for it. Pass the saved rival contract itself; preparePreview()
+    // owns normalization, so an already-normalized { color, secondaryColor } object
+    // must not be normalized a second time and fall back to factory paint.
+    preparePreview(rival);
 
     showTimer = window.setTimeout(() => {
       showTimer = 0;

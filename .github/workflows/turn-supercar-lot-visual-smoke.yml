@@ -17,6 +17,8 @@ on:
       - 'turn/assets/cars/training-car.glb'
       - 'turn/design-tokens.css'
       - 'turn/styles.css'
+      - 'turn/rival-onboarding.css'
+      - 'turn/ui/rival-onboarding.js'
       - 'turn/garage/lot-info-panel-r212.css'
       - 'turn/garage/lot-info-typography-r213.css'
       - 'turn/garage/lot-layout-r60.css'
@@ -75,7 +77,7 @@ jobs:
       - name: Render and validate the actual Lot preview
         run: node turn-tests/supercar-lot-visual-smoke.mjs
 
-      - name: Diagnose CHASE YOUR BEST semantic paint pixels
+      - name: Validate CHASE YOUR BEST custom paint pixels
         run: node turn-tests/rival-paint-webgl-diagnostic.mjs
 
       - name: Upload Supercar Lot inspection frames
