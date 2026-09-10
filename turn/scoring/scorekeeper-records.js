@@ -52,6 +52,7 @@ function ensureScorekeeperStyle(documentRef) {
 .score-feedback-state {
   grid-template-rows: auto 1fr auto auto;
   padding: 8px 10px 9px;
+  border-width: var(--turn-border-default, 4px);
 }
 
 .score-feedback-values strong {
