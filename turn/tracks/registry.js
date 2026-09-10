@@ -14,7 +14,7 @@ import {
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 import './contextual-road-edges.js?revision=r518-signature-yellow';
 import './road-contour-color-r512.js?revision=r513-countryside';
-import './start-area-polish-r519.js?revision=r519-start-area-consistency-v2';
+import './start-area-polish-r519.js?revision=r519-midnight-full-width-accents';
 import './airport-start-banner-r520.js?revision=r520-signature-yellow';
 import './procedural-surface-polish-r522.js?revision=r524-procedural-surfaces-contrast-r171';
 import './airport-surface-contrast-r525.js?revision=r525-airport-ground-contrast';
