@@ -28,7 +28,7 @@
         "/turn/vehicle/catalog.js?build=20260720-r19": "/turn/vehicle/catalog.js?revision=r253-supercar-release",
         "/turn/vehicle/semantic-car-finish.js": "/turn/vehicle/semantic-car-finish.js?revision=r223-training-car-taxi",
         "/turn/vehicle/car-models.js": "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin",
-        "/turn/vehicle/car-models.js?build=20260720-r22": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi",
+        "/turn/vehicle/car-models.js?build=20260720-r22": "/turn-lab/rival-paint-car-models-probe.js",
         "/turn/vehicle/emergency-livery-models.js": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi",
         "/turn/ui/rival-onboarding.js?build=20260909-r212": "/turn/ui/rival-onboarding.js?build=20260909-r212&revision=r253-supercar-release"
       }
@@ -61,12 +61,17 @@
     const expectedGhostColor = makeGhostColor(color);
     const expectedGhostSecondaryColor = makeGhostColor(secondaryColor);
 
+    globalThis.__rivalPaintCreateCalls = [];
     globalThis.__rivalPaintDiagnosticReady = false;
     globalThis.__rivalPaintDiagnosticFailure = null;
     globalThis.__rivalPaintDiagnosticMetrics = null;
 
     function fail(error) {
       globalThis.__rivalPaintDiagnosticFailure = String(error?.stack || error?.message || error);
+    }
+
+    function createCalls() {
+      return [...(globalThis.__rivalPaintCreateCalls || [])];
     }
 
     async function renderDirect(ghost) {
@@ -113,6 +118,7 @@
         visualColor: visual.userData.turnCarColor,
         visualSecondaryColor: visual.userData.turnCarSecondaryColor,
         semanticRecordCount: visual.userData.turnSemanticPaintRecords?.length || 0,
+        createCalls: createCalls(),
         canvasWidth: renderer.domElement.width,
         canvasHeight: renderer.domElement.height
       });
@@ -163,6 +169,7 @@
               expectedGhostColor,
               expectedGhostSecondaryColor,
               pillColor: plate.style.getPropertyValue('--rival-onboarding-color'),
+              createCalls: createCalls(),
               canvasWidth: canvas.width,
               canvasHeight: canvas.height
             });
