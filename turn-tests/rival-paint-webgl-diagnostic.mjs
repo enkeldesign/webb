@@ -108,6 +108,14 @@ for (const [browserName, browserType] of browserTypes) {
   assert.ok(directCustom.metrics?.semanticRecordCount > 0, `${browserName} direct custom visual must install semantic paint records`);
   assert.ok(ghostCustom.metrics?.semanticRecordCount > 0, `${browserName} custom ghost must install semantic paint records`);
 
+  const customCreateCalls = onboardingCustom.metrics?.createCalls || [];
+  assert.equal(customCreateCalls.length, 1,
+    `${browserName} CHASE YOUR BEST must not replace the prepared custom rival with a second factory-colour preview`);
+  assert.equal(customCreateCalls[0]?.color, '#ff0000',
+    `${browserName} CHASE YOUR BEST must construct the saved custom body colour`);
+  assert.equal(customCreateCalls[0]?.secondaryColor, '#0000ff',
+    `${browserName} CHASE YOUR BEST must construct the saved custom secondary colour`);
+
   const classification = {
     directNormalCustomRed: directCustom.pixels.redDominant,
     directGhostCustomRed: ghostCustom.pixels.redDominant,
@@ -115,17 +123,24 @@ for (const [browserName, browserType] of browserTypes) {
     onboardingCustomRed: onboardingCustom.pixels.redDominant,
     onboardingFactoryRed: onboardingFactory.pixels.redDominant,
     directGhostPaintVisible: ghostCustom.pixels.redDominant > ghostFactory.pixels.redDominant + 12,
-    onboardingPaintVisible: onboardingCustom.pixels.redDominant > onboardingFactory.pixels.redDominant + 12,
+    onboardingPaintVisible: onboardingCustom.pixels.redDominant > onboardingFactory.pixels.redDominant + 100,
     onboardingPillCarriesCustomPaint:
       onboardingCustom.metrics?.pillColor === onboardingCustom.metrics?.expectedGhostColor
   };
+
+  assert.equal(classification.directGhostPaintVisible, true,
+    `${browserName} direct ghost control must visibly render its custom paint`);
+  assert.equal(classification.onboardingPaintVisible, true,
+    `${browserName} CHASE YOUR BEST must visibly render the saved custom paint instead of factory paint`);
+  assert.equal(classification.onboardingPillCarriesCustomPaint, true,
+    `${browserName} CHASE YOUR BEST pill must stay coupled to the saved custom paint`);
 
   report[browserName] = { results, classification };
   console.log(`${browserName}: ${JSON.stringify(classification)}`);
 }
 
 await fs.writeFile(path.join(outputDir, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
-console.log('TURN CHASE YOUR BEST paint diagnostic completed; see report.json and rendered canvases.');
+console.log('TURN CHASE YOUR BEST custom-paint browser regression passed in Chromium and WebKit.');
 
 function pixelMetrics(buffer) {
   const image = PNG.sync.read(buffer);
