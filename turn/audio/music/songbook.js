@@ -1,6 +1,6 @@
 import { MENU_SONG } from './menu-theme.js?revision=r197-audio-mix';
 import { COUNTRYSIDE_SONG } from './countryside.js?revision=r197-audio-mix';
-import { AIRPORT_SONG } from './airport.js?revision=r197-audio-mix';
+import { AIRPORT_SONG } from './airport.js?revision=r209-paper-skies';
 import { CLIFFSIDE_SONG } from './cliffside.js?revision=r197-audio-mix';
 import { HARBOR_SONG } from './harbor.js?revision=r197-audio-mix';
 import { MIDNIGHT_CITY_SONG } from './midnight-city.js?revision=r197-audio-mix';
