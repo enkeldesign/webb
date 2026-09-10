@@ -259,8 +259,8 @@ assert.match(index, new RegExp(`lap-result-toast\\.css\\?build=${release.cacheKe
 assert.match(index, new RegExp(`rival-onboarding\\.css\\?build=${release.cacheKey}`));
 assert.equal(
   imports[`/turn/ui/rival-onboarding.js?build=${release.cacheKey}`],
-  `/turn/ui/rival-onboarding.js?build=${release.cacheKey}&revision=r272-race-ghost-paint`,
-  'Installed PWAs must refetch the race-ghost-aligned CHASE YOUR BEST runtime'
+  `/turn/ui/rival-onboarding.js?build=${release.cacheKey}&revision=r273-cached-paint-handles`,
+  'Installed PWAs must refetch the cached-paint-handle-safe CHASE YOUR BEST runtime'
 );
 assert.ok(
   imports['./race/lap-system.js?build=20260720-r19']?.startsWith(`./race/lap-system-r86.js?build=${release.cacheKey}`),
@@ -330,7 +330,12 @@ assert.match(onboarding, /if \(customPaint\) \{[\s\S]*runWarmupWhenIdle\(finishW
   'Custom-paint previews must let the hidden render compile semantic paint in their actual WebGL context');
 assert.match(onboarding, /sourceLength: 5\.5/, 'CHASE YOUR BEST must build from the same 5.5-unit competitor ghost template as the race');
 assert.match(onboarding, /targetLength: PREVIEW_PRESENTATION\.sourceLength/, 'The onboarding createCarVisual call must activate the canonical competitor-ghost paint path');
-assert.match(onboarding, /recolorCarVisual\(visual, color, secondaryColor\)/, 'Fresh onboarding ghosts must reassert the saved PAINTJOB through the shared recolour API');
+assert.match(onboarding, /function restoreCachedGhostPaintHandles\(visual\)/,
+  'Cached competitor ghosts must restore semantic paint handles before the onboarding reuses them');
+assert.match(onboarding, /turnFastGhostClone[\s\S]*turnSemanticPaintRecords = semanticPaintRecords/,
+  'The fast-clone path must rebuild its root semantic uniform references from cached materials');
+assert.match(onboarding, /restoreCachedGhostPaintHandles\(visual\);\s*recolorCarVisual\(visual, color, secondaryColor\)/,
+  'CHASE YOUR BEST must restore cached paint handles before reasserting the saved PAINTJOB');
 assert.match(onboarding, /targetLength: 6\.4/, 'The onboarding model must preserve its established 6.4-unit presentation scale');
 assert.match(onboarding, /PerspectiveCamera\(34, 1, 0\.1, 60\)/, 'The onboarding model must reuse the Lot viewer camera language');
 assert.match(onboarding, /camera\.position\.set\(7\.8, 4\.8, 8\.8\)/, 'The onboarding model must use the Lot viewer camera position');
