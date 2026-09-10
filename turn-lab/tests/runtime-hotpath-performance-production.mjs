@@ -12,6 +12,8 @@ const [
   rivalStorage,
   lapSystem,
   mainSource,
+  cameraSource,
+  spectateSource,
   rivalOnboarding,
   trackRegistry,
   trackManager
@@ -26,6 +28,8 @@ const [
   fs.readFile(new URL('../../turn/race/rival-storage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/lap-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/render/camera.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/rival-onboarding.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8')
@@ -151,5 +155,36 @@ const worldPrewarm = worldRender.indexOf('const worldModulesPromise = loadWorldM
 const worldHomeGate = worldRender.indexOf('await waitForHomeBeforeCosmetics();');
 assert.ok(worldPrewarm >= 0 && worldHomeGate >= 0 && worldPrewarm < worldHomeGate,
   'World cosmetic module graph must prewarm before Home while installation still waits for Home');
+
+// Race camera/Spectate are 60 fps hot paths. Resolve OS Reduced Motion once at module
+// startup, keep drift-adjusted axes scalar, and allocate Spectate scratch vectors per runtime.
+assert.match(cameraSource, /const REDUCED_MOTION_AT_STARTUP = globalThis\.matchMedia\?\.\(REDUCED_MOTION_QUERY\)\?\.matches === true;/);
+const fovStart = cameraSource.indexOf('export function resolveRaceCameraFov');
+const cameraUpdateStart = cameraSource.indexOf('export function updateRaceCameraState');
+const cameraUpdateEnd = cameraSource.indexOf('function normalizeAngle', cameraUpdateStart);
+assert.ok(fovStart >= 0 && cameraUpdateStart > fovStart && cameraUpdateEnd > cameraUpdateStart,
+  'Race camera source must expose bounded FOV and frame-update functions');
+assert.doesNotMatch(cameraSource.slice(fovStart, cameraUpdateStart), /matchMedia\s*\(/,
+  'Race FOV resolution must use the startup Reduced Motion snapshot, not query matchMedia per call');
+const cameraHotPath = cameraSource.slice(cameraUpdateStart, cameraUpdateEnd);
+assert.doesNotMatch(cameraHotPath, /matchMedia\s*\(/,
+  'Race camera frame path must not query OS media preferences');
+assert.doesNotMatch(cameraHotPath, /const (?:forward|right) = \{/,
+  'Race camera frame path must not allocate temporary direction objects');
+assert.match(cameraHotPath, /const forwardX =/);
+assert.match(cameraHotPath, /const rightZ =/);
+
+assert.match(spectateSource, /function createSpectateScratch\(\) \{[\s\S]*focus: new THREE\.Vector3\(\)[\s\S]*desiredTarget: new THREE\.Vector3\(\)/,
+  'Spectate must allocate reusable camera vectors once per installed runtime');
+assert.match(spectateSource, /const scratch = createSpectateScratch\(\);[\s\S]*updateSpectatorScene\(runtime, dt, scratch\)/);
+const spectateUpdateStart = spectateSource.indexOf('function updateSpectatorScene');
+const spectateUpdateEnd = spectateSource.indexOf('function installPublicApi', spectateUpdateStart);
+assert.ok(spectateUpdateStart >= 0 && spectateUpdateEnd > spectateUpdateStart,
+  'Spectate source must expose a bounded scene update function');
+const spectateHotPath = spectateSource.slice(spectateUpdateStart, spectateUpdateEnd);
+assert.doesNotMatch(spectateHotPath, /new THREE\.Vector3|\.clone\(\)/,
+  'Spectate frame updates must reuse scratch vectors instead of allocating/cloning them');
+assert.match(spectateHotPath, /desiredCamera\.copy\(focus\)\.addScaledVector/);
+assert.match(spectateHotPath, /desiredTarget\.copy\(focus\)\.addScaledVector/);
 
 console.log('TURN runtime hot-path, observer, rival-preview and deferred-loading performance contracts passed.');

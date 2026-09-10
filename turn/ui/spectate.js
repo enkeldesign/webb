@@ -30,11 +30,21 @@ function waitForRuntime() {
   }, { once: true });
 }
 
+function createSpectateScratch() {
+  return {
+    focus: new THREE.Vector3(),
+    forward: new THREE.Vector3(),
+    desiredCamera: new THREE.Vector3(),
+    desiredTarget: new THREE.Vector3()
+  };
+}
+
 function install(runtime) {
   if (!runtime || runtime.__spectateInstalled) return;
   runtime.__spectateInstalled = true;
 
-  runtime.setSceneOverride((dt) => updateSpectatorScene(runtime, dt));
+  const scratch = createSpectateScratch();
+  runtime.setSceneOverride((dt) => updateSpectatorScene(runtime, dt, scratch));
   installPublicApi(runtime);
   installUi(runtime);
 }
@@ -45,7 +55,7 @@ function replaySurfaceSample(runtime, frame) {
     || null;
 }
 
-function updateSpectatorScene(runtime, dt) {
+function updateSpectatorScene(runtime, dt, scratch) {
   if (!spectate.active) return false;
 
   const {
@@ -95,14 +105,15 @@ function updateSpectatorScene(runtime, dt) {
 
   const surfaceSample = replaySurfaceSample(runtime, frame);
   const surfaceY = trackSurfaceY(surfaceSample);
-  const focus = new THREE.Vector3(frame.x, surfaceY, frame.z);
-  const forward = new THREE.Vector3(Math.sin(frame.h), 0, Math.cos(frame.h));
-  const desiredCamera = focus.clone().addScaledVector(forward, -18.5);
+  const { focus, forward, desiredCamera, desiredTarget } = scratch;
+  focus.set(frame.x, surfaceY, frame.z);
+  forward.set(Math.sin(frame.h), 0, Math.cos(frame.h));
+  desiredCamera.copy(focus).addScaledVector(forward, -18.5);
   desiredCamera.y = surfaceY + 8.6;
   cameraPosition.lerp(desiredCamera, 1 - Math.exp(-dt * 7.2));
   camera.position.copy(cameraPosition);
 
-  const desiredTarget = focus.clone().addScaledVector(forward, 13.5);
+  desiredTarget.copy(focus).addScaledVector(forward, 13.5);
   desiredTarget.y = surfaceY + 2.15;
   cameraTarget.lerp(desiredTarget, 1 - Math.exp(-dt * 9));
   camera.up.set(0, 1, 0);
