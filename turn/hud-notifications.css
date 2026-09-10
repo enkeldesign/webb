@@ -1,10 +1,4 @@
-/*
- * Shared in-race notification primitives.
- *
- * This file deliberately defines component geometry and semantics only. Final
- * race-HUD placement is owned by the peripheral HUD composition so right- and
- * left-handed layouts can mirror from one source of truth.
- */
+/* Shared in-race notification components and final #842 HUD composition. */
 .turn-hud-notifications {
   position: absolute;
   z-index: 35;
@@ -59,21 +53,14 @@
   place-items: center;
   min-width: 0;
 }
-
-.turn-hud-notification__media[hidden] {
-  display: none;
-}
+.turn-hud-notification__media[hidden] { display: none; }
 
 .turn-hud-notification__copy,
 .turn-hud-notification__body {
   min-width: 0;
   flex: 1 1 auto;
 }
-
-.turn-hud-notification__copy {
-  display: grid;
-  gap: 2px;
-}
+.turn-hud-notification__copy { display: grid; gap: 2px; }
 
 .turn-hud-notification__kicker,
 .turn-hud-notification__title,
@@ -83,7 +70,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .turn-hud-notification__kicker,
 .turn-hud-notification__badge {
   font-size: clamp(.46rem, 1vw, .62rem);
@@ -92,20 +78,17 @@
   line-height: 1;
   text-transform: uppercase;
 }
-
 .turn-hud-notification__title {
   font-size: clamp(.78rem, 1.65vw, 1.05rem);
   font-weight: 950;
   letter-spacing: .025em;
   line-height: 1.02;
 }
-
 .turn-hud-notification__detail {
   font-size: clamp(.56rem, 1.15vw, .72rem);
   font-weight: 850;
   line-height: 1.08;
 }
-
 .turn-hud-notification__badge {
   flex: 0 0 auto;
   padding: 5px 8px 6px;
@@ -115,84 +98,190 @@
   white-space: nowrap;
 }
 
-/* Component 1: wide race/lap status surface. */
+/* Component 1 lives *inside* .stats, so its opaque plate exactly covers the
+   speed/lap/time/best instruments without changing their DOM or reading order. */
+.stats.turn-hud-race-status-host { position: relative; }
+.stats.turn-hud-race-status-host > .turn-hud-notification-slot[data-slot="race-status"] {
+  z-index: 8;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
 .turn-hud-notification[data-slot="race-status"] {
-  width: min(760px, 100%);
-  min-height: 58px;
+  width: 100%;
+  height: 100%;
+  min-height: var(--turn-peripheral-stats-height, 58px);
   padding: 7px 12px 8px;
   --turn-hud-notification-radius: var(--turn-radius-default, 16px);
 }
-
 .turn-hud-notification[data-slot="race-status"] .turn-hud-notification__title {
   font-size: clamp(.92rem, 2vw, 1.24rem);
 }
+.turn-race-status-grid {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: minmax(11rem, 1.45fr) repeat(2, minmax(7rem, 1fr));
+  align-items: stretch;
+}
+.turn-race-status-cell {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  grid-template-columns: max-content 1fr;
+  column-gap: 5px;
+  padding: 0 clamp(9px, 1.4vw, 16px);
+  border-inline-start: 2px solid color-mix(in srgb, var(--turn-ink, #08090a) 35%, transparent);
+}
+.turn-race-status-cell:first-child {
+  padding-inline-start: 0;
+  border-inline-start: 0;
+}
+.turn-race-status-cell small {
+  grid-column: 1 / -1;
+  font-size: clamp(.42rem, .85vw, .56rem);
+  font-weight: 950;
+  letter-spacing: .08em;
+  line-height: 1;
+}
+.turn-race-status-cell strong {
+  overflow: hidden;
+  font-size: clamp(.78rem, 1.8vw, 1.15rem);
+  font-weight: 950;
+  line-height: 1.02;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.turn-race-status-cell b {
+  align-self: end;
+  overflow: hidden;
+  padding-bottom: 1px;
+  font-size: clamp(.42rem, .82vw, .54rem);
+  font-weight: 950;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-/* Component 2: compact TURN command/cue pill, based on the existing GO plate. */
-.turn-hud-notification[data-slot="race-cue"] {
+/* Component 2: one maximally rounded GO!-style cue lane. The anchor mirrors
+   around the centre with the peripheral HUD, rather than changing DOM order. */
+.turn-hud-notification-slot[data-slot="race-cue"] {
+  top: calc(var(--turn-peripheral-score-top, 84px) + 132px);
+  left: calc(var(--turn-peripheral-left-edge, 12px) + var(--score-feedback-paper-width, 190px) + var(--score-feedback-gauge-width, 52px) + 18px);
+  right: auto;
+  display: flex;
+  max-width: min(60vw, 720px);
+  justify-content: flex-start;
+}
+:root.turn-left-handed-controls .turn-hud-notification-slot[data-slot="race-cue"] {
+  right: calc(var(--turn-peripheral-right-edge, 12px) + var(--score-feedback-paper-width, 190px) + var(--score-feedback-gauge-width, 52px) + 18px);
+  left: auto;
+  justify-content: flex-end;
+}
+.turn-hud-notification[data-slot="race-cue"],
+.turn-hud-rival-cue {
   width: max-content;
-  max-width: min(72vw, 720px);
+  max-width: min(60vw, 720px);
   min-height: 38px;
   padding: 6px 13px 7px;
   --turn-hud-notification-radius: var(--turn-radius-pill, 999px);
 }
-
 .turn-hud-notification[data-slot="race-cue"] .turn-hud-notification__copy {
   display: flex;
   align-items: baseline;
   gap: 7px;
 }
-
 .turn-hud-notification[data-slot="race-cue"] .turn-hud-notification__kicker,
 .turn-hud-notification[data-slot="race-cue"] .turn-hud-notification__title,
-.turn-hud-notification[data-slot="race-cue"] .turn-hud-notification__detail {
-  white-space: nowrap;
+.turn-hud-notification[data-slot="race-cue"] .turn-hud-notification__detail { white-space: nowrap; }
+
+/* Adopted CHASE YOUR BEST keeps its prepared WebGL preview but uses Component 2
+   geometry and the same slot instead of a separate viewport coordinate system. */
+.turn-hud-rival-cue {
+  position: relative !important;
+  inset: auto !important;
+  display: flex !important;
+  align-items: center;
+  overflow: hidden;
+}
+.turn-hud-rival-cue .rival-onboarding-copy {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-/* Component 3: progression plate, intentionally smaller than the old toast. */
+/* Component 3: compact progression queue, mirrored just inboard of the scoring
+   column. Achievement and Trophy Road rewards share this exact anchor. */
+.turn-hud-notification-slot[data-slot="progression"] {
+  top: var(--turn-peripheral-score-top, 84px);
+  left: calc(var(--turn-peripheral-left-edge, 12px) + var(--score-feedback-paper-width, 190px) + var(--score-feedback-gauge-width, 52px) + 18px);
+  right: auto;
+}
+:root.turn-left-handed-controls .turn-hud-notification-slot[data-slot="progression"] {
+  right: calc(var(--turn-peripheral-right-edge, 12px) + var(--score-feedback-paper-width, 190px) + var(--score-feedback-gauge-width, 52px) + 18px);
+  left: auto;
+}
 .turn-hud-notification[data-slot="progression"] {
-  width: min(520px, 46vw);
-  min-height: 60px;
-  padding: 7px 9px 8px;
+  width: min(500px, 44vw);
+  min-height: 56px;
+  padding: 6px 8px 7px;
   --turn-hud-notification-radius: var(--turn-radius-compact, 13px);
 }
-
 .turn-hud-notification[data-slot="progression"] .turn-hud-notification__media {
-  width: clamp(38px, 4.5vw, 50px);
+  width: clamp(36px, 4vw, 46px);
   align-self: stretch;
   border: 2px solid var(--turn-ink, #08090a);
   border-radius: var(--turn-radius-compact, 11px);
   background: var(--turn-paper, #fff8e8);
 }
+.turn-progression-icon,
+.turn-progression-icon > svg { width: 100%; height: 100%; }
 
-/* Semantic variants. Colour reinforces the explicit text; it never carries meaning alone. */
+/* The legacy visual surfaces stay as semantic/event sources during this migration.
+   Their visuals no longer compete with the shared components. */
+.turn-hud-notifications-active .lap-result-toast { display: none !important; }
+.turn-hud-notifications-active .turn-achievement-toast {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.turn-hud-notifications-active #message {
+  position: fixed !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* Semantic variants. Meaning is also always stated in copy. */
 .turn-hud-notification[data-kind="info"],
-.turn-hud-notification[data-kind="command"] {
-  --turn-hud-notification-surface: var(--turn-yellow-400, #ffd43b);
-}
-
-.turn-hud-notification[data-kind="guidance"] {
-  --turn-hud-notification-surface: var(--turn-paper, #fff8e8);
-}
-
+.turn-hud-notification[data-kind="command"] { --turn-hud-notification-surface: var(--turn-yellow-400, #ffd43b); }
+.turn-hud-notification[data-kind="guidance"] { --turn-hud-notification-surface: var(--turn-paper, #fff8e8); }
 .turn-hud-notification[data-kind="success"],
-.turn-hud-notification[data-kind="achievement"] {
-  --turn-hud-notification-surface: var(--turn-green-500, #8ce99a);
-}
+.turn-hud-notification[data-kind="achievement"] { --turn-hud-notification-surface: var(--turn-green-500, #8ce99a); }
+.turn-hud-notification[data-kind="danger"] { --turn-hud-notification-surface: var(--turn-red-500, #ff6b6b); }
+.turn-hud-notification[data-kind="reward"] { --turn-hud-notification-surface: var(--turn-yellow-400, #ffd43b); }
 
-.turn-hud-notification[data-kind="danger"] {
-  --turn-hud-notification-surface: var(--turn-red-500, #ff6b6b);
-}
-
-.turn-hud-notification[data-kind="reward"] {
-  --turn-hud-notification-surface: var(--turn-yellow-400, #ffd43b);
-}
-
-/* Component 4 primitive. Placement inside DRIFT/FLOW paper is composed elsewhere. */
+/* Component 4 is channel-local and occupies the BEST corner of each paper.
+   The large live DRIFT/FLOW value remains untouched. The physical inboard corner
+   mirrors with handedness while logical DOM order remains unchanged. */
+.score-feedback-state { position: relative; }
 .turn-score-event-callout {
+  position: absolute;
+  z-index: 4;
+  right: 7px;
+  bottom: 6px;
+  left: auto;
   box-sizing: border-box;
   display: grid;
   width: max-content;
-  max-width: 72%;
+  max-width: 58%;
+  min-width: 62px;
   gap: 2px;
   padding: 5px 7px 6px;
   border: 2px solid var(--turn-ink, #08090a);
@@ -203,15 +292,12 @@
   pointer-events: none;
   animation: turn-hud-notification-enter 180ms cubic-bezier(.2, .82, .3, 1) both;
 }
-
-.turn-score-event-callout[hidden] {
-  display: none;
+:root.turn-left-handed-controls .turn-score-event-callout {
+  right: auto;
+  left: 7px;
 }
-
-.turn-score-event-callout[data-state="leaving"] {
-  animation: turn-hud-notification-exit 160ms ease-in both;
-}
-
+.turn-score-event-callout[hidden] { display: none; }
+.turn-score-event-callout[data-state="leaving"] { animation: turn-hud-notification-exit 160ms ease-in both; }
 .turn-score-event-callout strong,
 .turn-score-event-callout b {
   overflow: hidden;
@@ -219,72 +305,73 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.turn-score-event-callout strong {
-  font-size: clamp(.52rem, 1.15vw, .68rem);
-  letter-spacing: .045em;
-}
-
-.turn-score-event-callout b {
-  font-size: clamp(.72rem, 1.7vw, 1rem);
-}
-
-.turn-score-event-callout[data-event="bank"] {
-  background: var(--turn-green-500, #8ce99a);
-}
-
-.turn-score-event-callout[data-event="loss"] {
-  background: var(--turn-red-500, #ff6b6b);
-}
-
-.turn-score-event-callout[data-event="milestone"] {
-  background: var(--turn-yellow-400, #ffd43b);
-}
-
+.turn-score-event-callout strong { font-size: clamp(.52rem, 1.15vw, .68rem); letter-spacing: .045em; }
+.turn-score-event-callout b { font-size: clamp(.72rem, 1.7vw, 1rem); }
+.turn-score-event-callout[data-event="bank"] { background: var(--turn-green-500, #8ce99a); }
+.turn-score-event-callout[data-event="loss"] { background: var(--turn-red-500, #ff6b6b); }
+.turn-score-event-callout[data-event="milestone"] { background: var(--turn-yellow-400, #ffd43b); }
 .turn-score-event-callout[data-event="personal-best"],
-.turn-score-event-callout[data-event="lap-result"] {
-  background: var(--turn-pink-500, #ff4fa3);
-}
+.turn-score-event-callout[data-event="lap-result"] { background: var(--turn-pink-500, #ff4fa3); }
 
 @keyframes turn-hud-notification-enter {
   from { opacity: 0; transform: translateY(5px) scale(.97); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
-
 @keyframes turn-hud-notification-exit {
   from { opacity: 1; transform: translateY(0) scale(1); }
   to { opacity: 0; transform: translateY(3px) scale(.985); }
 }
 
-@media (max-height: 430px) and (orientation: landscape) {
-  .turn-hud-notification[data-slot="race-status"] {
+@media (max-height: 560px) and (orientation: landscape) {
+  .turn-hud-notification-slot[data-slot="progression"] {
+    top: var(--turn-peripheral-score-top, 76px);
+  }
+  .turn-hud-notification-slot[data-slot="race-cue"] {
+    top: calc(var(--turn-peripheral-score-top, 76px) + 112px);
+  }
+  .turn-hud-notification[data-slot="progression"] {
+    width: min(440px, 42vw);
     min-height: 48px;
+    padding: 5px 7px 6px;
+    border-width: 2px;
+    box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+  }
+  .turn-hud-notification[data-slot="race-status"] {
     padding: 5px 9px 6px;
     border-width: 2px;
     box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
   }
-
-  .turn-hud-notification[data-slot="race-cue"] {
+  .turn-hud-notification[data-slot="race-cue"],
+  .turn-hud-rival-cue {
     min-height: 32px;
     padding: 4px 10px 5px;
     border-width: 2px;
     box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
   }
+  .turn-score-event-callout { right: 5px; bottom: 5px; padding: 4px 6px 5px; }
+  :root.turn-left-handed-controls .turn-score-event-callout { right: auto; left: 5px; }
+}
 
-  .turn-hud-notification[data-slot="progression"] {
-    width: min(480px, 45vw);
-    min-height: 50px;
-    padding: 5px 7px 6px;
-    border-width: 2px;
-    box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+@media (max-height: 360px) and (orientation: landscape) {
+  .turn-race-status-grid { grid-template-columns: minmax(8rem, 1.35fr) repeat(2, minmax(5.5rem, 1fr)); }
+  .turn-race-status-cell { padding-inline: 6px; }
+  .turn-hud-notification-slot[data-slot="progression"],
+  .turn-hud-notification-slot[data-slot="race-cue"] {
+    left: calc(var(--turn-peripheral-left-edge, 12px) + 126px + 38px + 10px);
   }
+  :root.turn-left-handed-controls .turn-hud-notification-slot[data-slot="progression"],
+  :root.turn-left-handed-controls .turn-hud-notification-slot[data-slot="race-cue"] {
+    right: calc(var(--turn-peripheral-right-edge, 12px) + 126px + 38px + 10px);
+    left: auto;
+  }
+  .turn-hud-notification-slot[data-slot="race-cue"] { top: calc(var(--turn-peripheral-score-top, 60px) + 88px); }
+  .turn-hud-notification[data-slot="progression"] { width: min(390px, 40vw); }
+  .turn-score-event-callout { max-width: 62%; padding: 3px 5px 4px; border-radius: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .turn-hud-notification,
   .turn-hud-notification[data-state="leaving"],
   .turn-score-event-callout,
-  .turn-score-event-callout[data-state="leaving"] {
-    animation: none;
-  }
+  .turn-score-event-callout[data-state="leaving"] { animation: none; }
 }
