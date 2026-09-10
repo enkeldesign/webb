@@ -279,6 +279,8 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   let lastRenderAt = 0;
   let yaw = VIEWER_INITIAL_YAW;
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
+  const customPaint = color !== getVehicleDefaultColor(carId)
+    || secondaryColor !== getVehicleDefaultSecondaryColor(carId);
 
   const resizeTo = (width, height) => {
     if (disposed || !width || !height) return;
@@ -356,7 +358,12 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   const warmRenderer = async () => {
     if (disposed || !visual) return;
     try {
-      if (typeof renderer.compileAsync === 'function') {
+      if (customPaint) {
+        // PAINTJOB colours are applied by semantic onBeforeCompile shaders. Let the
+        // hidden idle render own their first compilation in this secondary WebGL
+        // context; precompiling them here can leave the preview on its source palette.
+        runWarmupWhenIdle(finishWarmup);
+      } else if (typeof renderer.compileAsync === 'function') {
         // The native semantic paint system made these shaders more substantial than
         // the original r40 onboarding. Compile them asynchronously in this separate
         // WebGL context rather than on the CHASE YOUR BEST reveal frame.
