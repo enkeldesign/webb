@@ -1,5 +1,4 @@
 import { installScorekeeperRecords } from './scorekeeper-records.js';
-import { installHudNotificationRuntime } from '../ui/hud-notification-runtime.js?revision=r266-standard-hud';
 
 export const SCORE_FEEDBACK_CHANNEL = Object.freeze({
   DRIFT: 'drift',
@@ -82,21 +81,6 @@ function makeChannel(label) {
     phase: 'quiet',
     label,
     tokens: ['', '', '', '', '']
-  };
-}
-
-function makeEvent(channel) {
-  return {
-    active: false,
-    channel,
-    type: SCORE_FEEDBACK_EVENT.BUILD,
-    priority: 0,
-    score: 0,
-    multiplier: 1,
-    label: '',
-    announcement: '',
-    expiresAt: 0,
-    revision: 0
   };
 }
 
@@ -271,13 +255,10 @@ export function createScoreFeedback({
 } = {}) {
   if (!root) throw new Error('TURN ScoreFeedback requires a fixed root element.');
 
-  const documentRef = root.ownerDocument || globalThis.document;
-  // Scorekeeper history and event callouts are fixed presentation composition,
-  // installed before retaining DOM references so scoring never creates nodes.
-  installScorekeeperRecords({ documentRef });
-  // ScoreFeedback is shared by production TURN, TURN NEXT and TURN LAB, so this
-  // is the single composition point for the standardized in-race HUD runtime.
-  installHudNotificationRuntime({ documentRef });
+  // Scorekeeper history is presentation composition, not a DRIFT runtime side effect.
+  // Install it before retaining any optional DOM references so it can remove the
+  // intentionally hidden FLOW token strip in the production document.
+  installScorekeeperRecords({ documentRef: root.ownerDocument || globalThis.document });
 
   const statePanel = requiredElement(root, '[data-score-feedback-state]');
   const driftReadout = optionalElement(root, '[data-score-feedback-drift-readout]') || statePanel;
@@ -294,35 +275,27 @@ export function createScoreFeedback({
   const flowLapScore = optionalElement(root, '[data-score-feedback-flow-total]');
   const flowTechniquePool = optionalElement(root, '[data-score-feedback-flow-techniques]');
   const flowTechniqueTokens = flowTechniquePool?.querySelectorAll?.('span') || [];
-  const driftCallout = requiredElement(root, '[data-score-feedback-drift-callout]');
-  const driftCalloutLabel = requiredElement(root, '[data-score-feedback-drift-callout-label]');
-  const driftCalloutScore = requiredElement(root, '[data-score-feedback-drift-callout-score]');
-  const flowCallout = requiredElement(root, '[data-score-feedback-flow-callout]');
-  const flowCalloutLabel = requiredElement(root, '[data-score-feedback-flow-callout-label]');
-  const flowCalloutScore = requiredElement(root, '[data-score-feedback-flow-callout-score]');
+  const callout = requiredElement(root, '[data-score-feedback-callout]');
+  const calloutLabel = requiredElement(root, '[data-score-feedback-callout-label]');
+  const calloutScore = requiredElement(root, '[data-score-feedback-callout-score]');
   const announcer = requiredElement(root, '[data-score-feedback-announcer]');
 
   const channels = {
     [SCORE_FEEDBACK_CHANNEL.DRIFT]: makeChannel(CHANNEL_LABEL.drift),
     [SCORE_FEEDBACK_CHANNEL.FLOW]: makeChannel(CHANNEL_LABEL.flow)
   };
-  const activeEvents = {
-    [SCORE_FEEDBACK_CHANNEL.DRIFT]: makeEvent(SCORE_FEEDBACK_CHANNEL.DRIFT),
-    [SCORE_FEEDBACK_CHANNEL.FLOW]: makeEvent(SCORE_FEEDBACK_CHANNEL.FLOW)
+  const activeEvent = {
+    active: false,
+    channel: SCORE_FEEDBACK_CHANNEL.DRIFT,
+    type: SCORE_FEEDBACK_EVENT.BUILD,
+    priority: 0,
+    score: 0,
+    multiplier: 1,
+    label: '',
+    announcement: '',
+    expiresAt: 0,
+    revision: 0
   };
-  const callouts = {
-    [SCORE_FEEDBACK_CHANNEL.DRIFT]: {
-      root: driftCallout,
-      label: driftCalloutLabel,
-      score: driftCalloutScore
-    },
-    [SCORE_FEEDBACK_CHANNEL.FLOW]: {
-      root: flowCallout,
-      label: flowCalloutLabel,
-      score: flowCalloutScore
-    }
-  };
-
   const minCommitInterval = Math.max(80, finiteNumber(commitIntervalMs, SCORE_FEEDBACK_COMMIT_INTERVAL_MS));
   const minAnnouncementInterval = Math.max(
     500,
@@ -356,7 +329,11 @@ export function createScoreFeedback({
   function setChannelVisible(channel, visible, now = 0) {
     const normalizedChannel = normalizeChannel(channel);
     channels[normalizedChannel].visible = visible !== false;
-    if (!channels[normalizedChannel].visible) clearEvent(normalizedChannel);
+    if (!channels[normalizedChannel].visible
+      && activeEvent.active
+      && activeEvent.channel === normalizedChannel) {
+      clearEvent();
+    }
     dirty = true;
     return commit(now, true);
   }
@@ -370,13 +347,10 @@ export function createScoreFeedback({
     }
     if (!channels[normalizedChannel].visible) return false;
 
-    const activeEvent = activeEvents[normalizedChannel];
     const priority = Math.max(
       SCORE_FEEDBACK_PRIORITY[normalizedType] || 0,
       finiteNumber(detail.priority)
     );
-    // Event competition is local to a scorekeeper paper. A FLOW milestone must
-    // never suppress a DRIFT bank/loss (or vice versa).
     if (activeEvent.active && timestamp < activeEvent.expiresAt && priority < activeEvent.priority) {
       return false;
     }
@@ -384,6 +358,7 @@ export function createScoreFeedback({
     const score = Math.max(0, finiteNumber(detail.score));
     const eventMultiplier = Math.max(1, finiteNumber(detail.multiplier, 1));
     activeEvent.active = true;
+    activeEvent.channel = normalizedChannel;
     activeEvent.type = normalizedType;
     activeEvent.priority = priority;
     activeEvent.score = score;
@@ -408,12 +383,14 @@ export function createScoreFeedback({
     activeEvent.revision += 1;
     dirty = true;
 
-    announceActiveEvent(activeEvent, timestamp);
-    if (typeof onSound === 'function') onSound(normalizedType, normalizedChannel, detail);
+    if (channels[normalizedChannel].visible) {
+      announceActiveEvent(timestamp);
+      if (typeof onSound === 'function') onSound(normalizedType, normalizedChannel, detail);
+    }
     return commit(timestamp, true);
   }
 
-  function announceActiveEvent(activeEvent, now) {
+  function announceActiveEvent(now) {
     const message = activeEvent.announcement.trim();
     if (!message) return false;
     const higherPriority = activeEvent.priority > lastAnnouncementPriority;
@@ -429,9 +406,7 @@ export function createScoreFeedback({
     return true;
   }
 
-  function clearEvent(channel) {
-    const normalizedChannel = normalizeChannel(channel);
-    const activeEvent = activeEvents[normalizedChannel];
+  function clearEvent() {
     activeEvent.active = false;
     activeEvent.priority = 0;
     activeEvent.expiresAt = 0;
@@ -452,25 +427,25 @@ export function createScoreFeedback({
   function clearChannel(channel, now = 0) {
     const normalizedChannel = normalizeChannel(channel);
     resetChannelState(channels[normalizedChannel]);
-    clearEvent(normalizedChannel);
+    if (activeEvent.active && activeEvent.channel === normalizedChannel) clearEvent();
     dirty = true;
     return commit(now, true);
   }
 
   function dismissEvent(channel, now = 0) {
     const normalizedChannel = normalizeChannel(channel);
-    if (!activeEvents[normalizedChannel].active) return false;
-    clearEvent(normalizedChannel);
+    if (!activeEvent.active || activeEvent.channel !== normalizedChannel) return false;
+    clearEvent();
     dirty = true;
     return commit(now, true);
   }
 
   function reset(now = 0) {
-    for (const [channelName, channel] of Object.entries(channels)) {
+    for (const channel of Object.values(channels)) {
       resetChannelState(channel);
       channel.visible = false;
-      clearEvent(channelName);
     }
+    clearEvent();
     announcementRevision += 1;
     announcer.textContent = '';
     lastAnnouncementPriority = 0;
@@ -478,54 +453,12 @@ export function createScoreFeedback({
     return commit(now, true);
   }
 
-  function eventScoreText(activeEvent) {
-    if (!(activeEvent.score > 0)) return '';
-    return activeEvent.type === SCORE_FEEDBACK_EVENT.BANK
-      ? `+${formatScore(activeEvent.score)}`
-      : formatScore(activeEvent.score);
-  }
-
-  function renderEventCallout(channel) {
-    const activeEvent = activeEvents[channel];
-    const callout = callouts[channel];
-    const visible = channels[channel].visible && activeEvent.active;
-    setHidden(callout.root, !visible);
-    if (!visible) {
-      callout.root.classList.remove('is-release', 'is-event-a', 'is-event-b');
-      return false;
-    }
-
-    setData(callout.root, 'event', activeEvent.type);
-    setData(callout.root, 'channel', channel);
-    setText(callout.label, activeEvent.label);
-    const scoreText = eventScoreText(activeEvent);
-    setText(callout.score, scoreText);
-    callout.score.hidden = !scoreText;
-    callout.root.classList.toggle(
-      'is-release',
-      activeEvent.priority >= SCORE_FEEDBACK_PRIORITY[SCORE_FEEDBACK_EVENT.BANK]
-    );
-    const evenRevision = activeEvent.revision % 2 === 0;
-    callout.root.classList.toggle('is-event-a', !evenRevision);
-    callout.root.classList.toggle('is-event-b', evenRevision);
-    return true;
-  }
-
   function commit(now = 0, force = false) {
     const timestamp = finiteNumber(now);
-    let eventExpired = false;
-    for (const channel of Object.values(SCORE_FEEDBACK_CHANNEL)) {
-      const activeEvent = activeEvents[channel];
-      if (activeEvent.active && timestamp >= activeEvent.expiresAt) {
-        clearEvent(channel);
-        eventExpired = true;
-      }
-    }
-    if (eventExpired) {
+    if (activeEvent.active && timestamp >= activeEvent.expiresAt) {
+      clearEvent();
       dirty = true;
-      if (!Object.values(activeEvents).some((activeEvent) => activeEvent.active)) {
-        lastAnnouncementPriority = 0;
-      }
+      lastAnnouncementPriority = 0;
     }
     if (!dirty || (!force && timestamp - lastCommitAt < minCommitInterval)) return false;
 
@@ -544,6 +477,7 @@ export function createScoreFeedback({
           : flow.visible
             ? flow
             : null;
+    const eventVisible = activeEvent.active && channels[activeEvent.channel].visible;
     const flowHasOwnGauge = Boolean(flowGaugeFill);
     const fallbackGaugeToFlow = !flowHasOwnGauge && flowActive && primary === flow;
     const driftGaugeActive = driftActive || fallbackGaugeToFlow;
@@ -629,10 +563,25 @@ export function createScoreFeedback({
       setData(root, 'phase', primary.phase);
     }
 
-    renderEventCallout(SCORE_FEEDBACK_CHANNEL.DRIFT);
-    renderEventCallout(SCORE_FEEDBACK_CHANNEL.FLOW);
+    setHidden(callout, !eventVisible);
+    if (eventVisible) {
+      setData(callout, 'event', activeEvent.type);
+      setData(callout, 'channel', activeEvent.channel);
+      setText(calloutLabel, activeEvent.label);
+      const eventScore = activeEvent.type === SCORE_FEEDBACK_EVENT.BANK
+        ? `+${formatScore(activeEvent.score)}`
+        : formatScore(activeEvent.score);
+      setText(calloutScore, activeEvent.score > 0 ? eventScore : '');
+      calloutScore.hidden = !(activeEvent.score > 0);
+      callout.classList.toggle('is-release', activeEvent.priority >= SCORE_FEEDBACK_PRIORITY.bank);
+      const evenRevision = activeEvent.revision % 2 === 0;
+      callout.classList.toggle('is-event-a', !evenRevision);
+      callout.classList.toggle('is-event-b', evenRevision);
+    } else {
+      callout.classList.remove('is-release', 'is-event-a', 'is-event-b');
+    }
 
-    setHidden(root, !drift.visible && !flow.visible);
+    setHidden(root, !drift.visible && !flow.visible && !eventVisible);
     dirty = false;
     lastCommitAt = timestamp;
     if (phaseStartedAt != null) recordPhase('hud', Math.max(0, performanceNow() - phaseStartedAt));
@@ -640,19 +589,8 @@ export function createScoreFeedback({
   }
 
   function inspect() {
-    const eventSnapshots = {
-      [SCORE_FEEDBACK_CHANNEL.DRIFT]: { ...activeEvents[SCORE_FEEDBACK_CHANNEL.DRIFT] },
-      [SCORE_FEEDBACK_CHANNEL.FLOW]: { ...activeEvents[SCORE_FEEDBACK_CHANNEL.FLOW] }
-    };
-    // Keep the old single-event inspection shape for diagnostics while exposing
-    // the authoritative channel-local event state introduced by #842.
-    const legacyEvent = Object.values(eventSnapshots)
-      .filter((activeEvent) => activeEvent.active)
-      .sort((left, right) => right.priority - left.priority || right.expiresAt - left.expiresAt)[0]
-      || eventSnapshots[SCORE_FEEDBACK_CHANNEL.DRIFT];
     return {
-      activeEvent: { ...legacyEvent },
-      activeEvents: eventSnapshots,
+      activeEvent: { ...activeEvent },
       drift: { ...channels[SCORE_FEEDBACK_CHANNEL.DRIFT] },
       flow: { ...channels[SCORE_FEEDBACK_CHANNEL.FLOW] },
       lastCommitAt
