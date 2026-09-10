@@ -29,7 +29,9 @@ on:
       - 'turn/garage/lot-thumbnail-composition-r211.css'
       - 'turn/progression/trophy-road.js'
       - 'turn-lab/supercar-lot-visual.html'
+      - 'turn-lab/rival-paint-visual.html'
       - 'turn-tests/supercar-lot-visual-smoke.mjs'
+      - 'turn-tests/rival-paint-webgl-diagnostic.mjs'
       - '.github/workflows/turn-supercar-lot-visual-smoke.yml'
 
 concurrency:
@@ -42,7 +44,7 @@ permissions:
 jobs:
   visual-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -55,10 +57,10 @@ jobs:
       - name: Validate the authored Supercar wheel contract
         run: node turn-lab/tests/semantic-car-finish-production.mjs
 
-      - name: Install Playwright Chromium
+      - name: Install Playwright Chromium and WebKit
         run: |
           npm install --no-save playwright@1.55.0 pngjs@7.0.0
-          npx playwright install chromium
+          npx playwright install --with-deps chromium webkit
 
       - name: Start static TURN server
         run: |
@@ -73,11 +75,23 @@ jobs:
       - name: Render and validate the actual Lot preview
         run: node turn-tests/supercar-lot-visual-smoke.mjs
 
+      - name: Diagnose CHASE YOUR BEST semantic paint pixels
+        run: node turn-tests/rival-paint-webgl-diagnostic.mjs
+
       - name: Upload Supercar Lot inspection frames
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: supercar-lot-visual-smoke
           path: supercar-lot-visual-artifact
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload CHASE YOUR BEST paint diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rival-paint-diagnostic
+          path: rival-paint-diagnostic-artifact
           if-no-files-found: warn
           retention-days: 7
