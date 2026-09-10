@@ -4,22 +4,7 @@ const PLAYER_MAP_INK = '#000000';
 const PLAYER_MAP_RADIUS = 9;
 const PLAYER_MAP_BORDER_WIDTH = 4;
 const PLAYER_MAP_INNER_RADIUS = 3;
-const MAX_SPEEDOMETER_KMH = 399;
-const BASE_GAME_MAX_SPEED = 88;
-const MAX_TOP_SPEED_MULTIPLIER = 1.12;
-const FUTURE_RACER_BOOST_SPEED_MULTIPLIER = 1.32;
-const FUTURE_RACER_OVERDRIVE_MULTIPLIER = 1.06;
-const ABSOLUTE_GAME_SPEED_LIMIT = BASE_GAME_MAX_SPEED
-  * MAX_TOP_SPEED_MULTIPLIER
-  * FUTURE_RACER_BOOST_SPEED_MULTIPLIER
-  * FUTURE_RACER_OVERDRIVE_MULTIPLIER;
-const SPEEDOMETER_KMH_PER_GAME_SPEED = MAX_SPEEDOMETER_KMH / ABSOLUTE_GAME_SPEED_LIMIT;
 const mapCache = new WeakMap();
-
-export function speedometerKmhFromGameSpeed(speed) {
-  const gameSpeed = Math.max(0, Number(speed) || 0);
-  return Math.min(MAX_SPEEDOMETER_KMH, Math.round(gameSpeed * SPEEDOMETER_KMH_PER_GAME_SPEED));
-}
 
 export function updateHudState({
   state,
@@ -38,7 +23,7 @@ export function updateHudState({
   setRacePosition
 }) {
   const lapInvalid = state.lapActive && state.lapInvalid === true;
-  setText(speedEl, speedometerKmhFromGameSpeed(state.speed));
+  setText(speedEl, Math.round(state.speed * 2.9));
   setText(lapEl, state.lap);
   setText(lapTimeEl, lapInvalid ? 'LAP VOID' : formatTime(state.lapElapsed));
   setText(bestTimeEl, formatTime(state.bestTime));
