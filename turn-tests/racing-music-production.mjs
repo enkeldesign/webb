@@ -67,7 +67,11 @@ assert.match(trackerIndex, /tracker\.js\?revision=r196-song-recovery/,
 // Creative score files are intentionally user-editable. Cache-bust their direct imports whenever
 // the checked-in scores change so installed Safari PWAs do not keep stale song modules.
 for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain']) {
-  const revision = songFile === 'airport' ? 'r209-paper-skies' : 'r197-audio-mix';
+  const revision = songFile === 'airport'
+    ? 'r209-paper-skies'
+    : songFile === 'cliffside'
+      ? 'r210-open-horizon'
+      : 'r197-audio-mix';
   assert.match(songbookSource, new RegExp(`${songFile}\\.js\\?revision=${revision}`),
     `${songFile} must use the current user-score cache revision`);
 }
@@ -82,6 +86,12 @@ assert.equal(TRACK_SONGS.airport.bpm, 144, 'Paper Skies keeps its authored tempo
 assert.equal(TRACK_SONGS.airport.key, 'F# minor / E major', 'Paper Skies keeps its authored key metadata');
 assert.deepEqual(TRACK_SONGS.airport.form, ['bridge', 'bridge', 'tune', 'bridge', 'chorus', 'chorus'],
   'Paper Skies keeps the authored six-part arrangement');
+assert.equal(TRACK_SONGS.cliffside.id, 'cliffside', 'Cliffside keeps the canonical track song id');
+assert.equal(TRACK_SONGS.cliffside.name, 'Open Horizon', 'Cliffside exposes the new Open Horizon title');
+assert.equal(TRACK_SONGS.cliffside.bpm, 136, 'Open Horizon keeps its authored tempo');
+assert.equal(TRACK_SONGS.cliffside.key, 'B minor / D major', 'Open Horizon keeps its authored key metadata');
+assert.deepEqual(TRACK_SONGS.cliffside.form, ['tune', 'tune', 'bridge', 'tune', 'chorus', 'chorus'],
+  'Open Horizon keeps the authored six-part arrangement');
 
 const leadNames = new Set(Object.keys(LEAD_VOICES));
 const bassNames = new Set(Object.keys(BASS_VOICES));
