@@ -14,6 +14,12 @@ function installStyles() {
       background: #ff6b6b;
     }
 
+    /* Keep the yellow steering fill inside its rounded contour. In WebKit the
+       background can otherwise show through the thick rounded border corners. */
+    .manual-steer {
+      background-clip: padding-box;
+    }
+
     /* NEW is an availability cue: draw attention while unseen achievements exist,
        then get out of the way once the player has actively chosen the filter. */
     .turn-achievements-filters button[data-achievement-filter="new"]:not(:disabled):not([aria-pressed="true"])::after {
@@ -53,16 +59,16 @@ function install() {
     const menuState = utilityGroup.dataset.menuState;
     if (menuState === 'racing') {
       restartButton.hidden = false;
-      recalibrateButton.hidden = false;
-      // The active-race order is intentionally RESTART LAP → RECALIBRATE.
-      // Moving the existing nodes keeps visual and keyboard focus order aligned.
-      utilityGroup.prepend(recalibrateButton);
+      recalibrateButton.hidden = true;
+      // Recalibration belongs to the staged start-line setup. During a race,
+      // keep the utility strip to the action that is actually needed: Restart Lap.
       utilityGroup.prepend(restartButton);
       return;
     }
 
     if (menuState !== 'staged') return;
 
+    recalibrateButton.hidden = false;
     // Restore TURN's established start-line order without touching gaps, alignment,
     // or the position of Settings/Achievements/Spectate added by their own modules.
     const blankScreenButton = utilityGroup.querySelector('.turn-screen-blank-control');
