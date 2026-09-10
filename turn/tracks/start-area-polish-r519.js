@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const REVISION = 'r519-start-area-consistency';
+const REVISION = 'r519-midnight-full-width-accents';
 const INK = 0x08090a;
 const TURN_YELLOW = 0xffbd12;
 const FLAG_RECHECK_DELAYS_MS = Object.freeze([0, 220, 700, 1600, 3200]);
@@ -152,13 +152,13 @@ function makeMidnightStartTexture() {
   context.lineWidth = 7;
   context.strokeStyle = cyan;
   context.beginPath();
-  context.moveTo(40, 25);
-  context.lineTo(165, 25);
+  context.moveTo(20, 25);
+  context.lineTo(canvas.width - 20, 25);
   context.stroke();
   context.strokeStyle = pink;
   context.beginPath();
-  context.moveTo(canvas.width - 165, canvas.height - 25);
-  context.lineTo(canvas.width - 40, canvas.height - 25);
+  context.moveTo(20, canvas.height - 25);
+  context.lineTo(canvas.width - 20, canvas.height - 25);
   context.stroke();
   context.shadowBlur = 0;
 
