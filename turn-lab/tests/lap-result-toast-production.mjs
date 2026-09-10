@@ -259,8 +259,8 @@ assert.match(index, new RegExp(`lap-result-toast\\.css\\?build=${release.cacheKe
 assert.match(index, new RegExp(`rival-onboarding\\.css\\?build=${release.cacheKey}`));
 assert.equal(
   imports[`/turn/ui/rival-onboarding.js?build=${release.cacheKey}`],
-  `/turn/ui/rival-onboarding.js?build=${release.cacheKey}&revision=r274-lot-paint-path`,
-  'Installed PWAs must refetch the Lot-paint-path CHASE YOUR BEST runtime'
+  `/turn/ui/rival-onboarding.js?build=${release.cacheKey}&revision=r253-supercar-release`,
+  'Installed PWAs must refetch the prewarmed CHASE YOUR BEST runtime'
 );
 assert.ok(
   imports['./race/lap-system.js?build=20260720-r19']?.startsWith(`./race/lap-system-r86.js?build=${release.cacheKey}`),
@@ -323,23 +323,8 @@ assert.match(onboarding, /!hadRival && hasRival\) schedule\(rivals\[0\]\)/, 'The
 assert.match(onboarding, /source\.carId \|\| source\.vehicleId/, 'The prepared preview must use the selected model and confirm it against the saved ghost model');
 assert.match(onboarding, /source\.carColor \|\| source\.vehicleColor/, 'The prepared preview must use the selected body paint and confirm it against saved ghost paint');
 assert.match(onboarding, /source\.carSecondaryColor \|\| source\.vehicleSecondaryColor/, 'The prepared preview must preserve selected and saved secondary paint');
-assert.match(onboarding, /const customPaint = color !== getVehicleDefaultColor\(carId\)[\s\S]*secondaryColor !== getVehicleDefaultSecondaryColor\(carId\)/,
-  'CHASE YOUR BEST must detect PAINTJOB colours instead of treating them as factory paint');
-assert.match(onboarding, /const previewColor = customPaint \? makeGhostColor\(color\) : color;/,
-  'A custom body PAINTJOB must be ghost-lightened before entering the proven Lot paint path');
-assert.match(onboarding, /const previewSecondaryColor = customPaint \? makeGhostColor\(secondaryColor\) : secondaryColor;/,
-  'A custom secondary PAINTJOB must be ghost-lightened before entering the proven Lot paint path');
-assert.match(onboarding, /if \(customPaint\) \{[\s\S]*runWarmupWhenIdle\(finishWarmup\);/,
-  'Custom-paint previews must let the hidden render compile paint in their actual WebGL context');
-assert.match(onboarding, /sourceLength: 5\.5/, 'Factory CHASE YOUR BEST previews may still reuse the 5.5-unit competitor ghost cache');
-assert.match(onboarding, /ghost: !customPaint/, 'PAINTJOB previews must bypass the cached ghost-construction branch');
-assert.match(onboarding, /targetLength: customPaint[\s\S]*PREVIEW_PRESENTATION\.targetLength[\s\S]*PREVIEW_PRESENTATION\.sourceLength/,
-  'PAINTJOB previews must construct at the Lot 6.4-unit presentation size while factory ghosts keep the cached source size');
-assert.match(onboarding, /if \(customPaint\) \{\s*recolorCarVisual\(visual, previewColor, previewSecondaryColor\);/,
-  'CHASE YOUR BEST must use the same post-construction recolour step as the Lot viewer for a saved PAINTJOB');
-assert.doesNotMatch(onboarding, /restoreCachedGhostPaintHandles/,
-  'PAINTJOB correctness must not depend on reconstructing cached race-ghost paint handles');
-assert.match(onboarding, /targetLength: 6\.4/, 'The onboarding model must preserve its established 6.4-unit presentation scale');
+assert.match(onboarding, /ghost: true/, 'The onboarding model must use the same lighter solid ghost treatment as race rivals');
+assert.match(onboarding, /targetLength: 6\.4/, 'The onboarding model must use the Lot 3D viewer presentation scale');
 assert.match(onboarding, /PerspectiveCamera\(34, 1, 0\.1, 60\)/, 'The onboarding model must reuse the Lot viewer camera language');
 assert.match(onboarding, /camera\.position\.set\(7\.8, 4\.8, 8\.8\)/, 'The onboarding model must use the Lot viewer camera position');
 assert.match(onboarding, /HemisphereLight\(0xffffff, 0x5b6770, 3\.2\)/, 'The onboarding model must use the Lot viewer ambient lighting');

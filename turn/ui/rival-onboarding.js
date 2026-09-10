@@ -7,10 +7,7 @@ import {
   normalizeVehicleId,
   normalizeVehicleSecondaryColor
 } from '../vehicle/catalog.js?build=20260720-r19';
-import {
-  createCarVisual,
-  recolorCarVisual
-} from '../vehicle/car-models.js?build=20260720-r22';
+import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 
 const RESULT_TOAST_HANDOFF_MS = 4300;
 const ONBOARDING_VISIBLE_MS = 3200;
@@ -18,13 +15,6 @@ const ONBOARDING_EXIT_MS = 180;
 const PREVIEW_FALLBACK_PREP_DELAY_MS = 500;
 const PREVIEW_WARM_WIDTH = 126;
 const PREVIEW_WARM_HEIGHT = 92;
-const PREVIEW_PRESENTATION = Object.freeze({
-  // Factory paint can reuse the canonical 5.5-unit competitor ghost cache. A saved
-  // PAINTJOB deliberately uses the Lot's proven uncached 6.4-unit paint path instead,
-  // with its colours lightened before construction to preserve the ghost appearance.
-  sourceLength: 5.5,
-  targetLength: 6.4
-});
 const VIEWER_INITIAL_YAW = THREE.MathUtils.degToRad(200);
 const VIEWER_ROTATION_RADIANS_PER_SECOND = 0.144;
 const VIEWER_FRAME_INTERVAL_MS = 1000 / 30;
@@ -289,10 +279,6 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   let lastRenderAt = 0;
   let yaw = VIEWER_INITIAL_YAW;
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
-  const customPaint = color !== getVehicleDefaultColor(carId)
-    || secondaryColor !== getVehicleDefaultSecondaryColor(carId);
-  const previewColor = customPaint ? makeGhostColor(color) : color;
-  const previewSecondaryColor = customPaint ? makeGhostColor(secondaryColor) : secondaryColor;
 
   const resizeTo = (width, height) => {
     if (disposed || !width || !height) return;
@@ -370,11 +356,10 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   const warmRenderer = async () => {
     if (disposed || !visual) return;
     try {
-      if (customPaint) {
-        // Match The Lot: PAINTJOB shader compilation belongs to an actual render in
-        // this WebGL context, never to the race-ghost cache or a precompile shortcut.
-        runWarmupWhenIdle(finishWarmup);
-      } else if (typeof renderer.compileAsync === 'function') {
+      if (typeof renderer.compileAsync === 'function') {
+        // The native semantic paint system made these shaders more substantial than
+        // the original r40 onboarding. Compile them asynchronously in this separate
+        // WebGL context rather than on the CHASE YOUR BEST reveal frame.
         await renderer.compileAsync(scene, camera);
         if (disposed) return;
         runWarmupWhenIdle(finishWarmup);
@@ -403,34 +388,16 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     }
   };
 
-  // Custom PAINTJOBs intentionally use the exact construction pattern that already
-  // works in The Lot: a fresh non-ghost 6.4-unit visual, then recolour it in this
-  // renderer's own context. We pre-lighten the two paint channels so it still reads
-  // as the same solid ghost. Factory paint keeps the cheaper cached race-ghost path.
   void createCarVisual({
     carId,
-    color: previewColor,
-    secondaryColor: previewSecondaryColor,
-    ghost: !customPaint,
-    targetLength: customPaint
-      ? PREVIEW_PRESENTATION.targetLength
-      : PREVIEW_PRESENTATION.sourceLength,
+    color,
+    secondaryColor,
+    ghost: true,
+    targetLength: 6.4,
     outline: true
   }).then((next) => {
     if (disposed) return;
     visual = next;
-
-    if (customPaint) {
-      recolorCarVisual(visual, previewColor, previewSecondaryColor);
-    } else {
-      // 5.5 activates the canonical competitor-ghost cache. Counteract its featured
-      // surface multiplier while preserving the established 6.4-unit framing.
-      const featuredMultiplier = Number(visual.userData?.turnFeaturedVisualSizeMultiplier) || 1;
-      visual.scale.multiplyScalar(
-        PREVIEW_PRESENTATION.targetLength
-          / (PREVIEW_PRESENTATION.sourceLength * featuredMultiplier)
-      );
-    }
     stage.add(visual);
     void warmRenderer();
   }).catch((error) => {
