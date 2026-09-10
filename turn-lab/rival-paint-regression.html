@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TURN rival paint WebGL regression</title>
+  <link rel="stylesheet" href="/turn/design-tokens.css">
+  <link rel="stylesheet" href="/turn/rival-onboarding.css">
+  <style>
+    html, body { margin: 0; min-height: 100%; background: #252a31; }
+    #hud { position: relative; width: 640px; height: 360px; overflow: hidden; }
+    #direct-host { width: 126px; height: 92px; }
+    #direct-host canvas { display: block; width: 100%; height: 100%; }
+  </style>
+  <script>
+    globalThis.__TURN_BUILD__ = Object.freeze({
+      version: '1.17.12',
+      id: '2026.09.09-r212',
+      cacheKey: '20260909-r212'
+    });
+  </script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
+        "/turn/vehicle/catalog.js": "/turn/vehicle/catalog.js?revision=r253-supercar-release",
+        "/turn/vehicle/catalog.js?build=20260720-r19": "/turn/vehicle/catalog.js?revision=r253-supercar-release",
+        "/turn/vehicle/semantic-car-finish.js": "/turn/vehicle/semantic-car-finish.js?revision=r223-training-car-taxi",
+        "/turn/vehicle/car-models.js": "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin",
+        "/turn/vehicle/car-models.js?build=20260720-r22": "/turn-lab/rival-paint-car-models-probe.js",
+        "/turn/vehicle/emergency-livery-models.js": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi",
+        "/turn/ui/rival-onboarding.js?build=20260909-r212": "/turn/ui/rival-onboarding.js?build=20260909-r212&revision=r276-rival-paint-normalization"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="hud"></div>
+  <div id="direct-host"></div>
+  <script type="module">
+    import * as THREE from 'three';
+    import {
+      getVehicleDefaultColor,
+      getVehicleDefaultSecondaryColor,
+      makeGhostColor
+    } from '/turn/vehicle/catalog.js?build=20260720-r19';
+    import {
+      createCarVisual
+    } from '/turn/vehicle/car-models.js?build=20260720-r22';
+    import {
+      installRivalOnboarding
+    } from '/turn/ui/rival-onboarding.js?build=20260909-r212';
+
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode') || 'onboarding';
+    const custom = params.get('paint') !== 'factory';
+    const carId = 'sedan';
+    const color = custom ? '#ff0000' : getVehicleDefaultColor(carId);
+    const secondaryColor = custom ? '#0000ff' : getVehicleDefaultSecondaryColor(carId);
+    const expectedGhostColor = makeGhostColor(color);
+    const expectedGhostSecondaryColor = makeGhostColor(secondaryColor);
+
+    globalThis.__rivalPaintCreateCalls = [];
+    globalThis.__rivalPaintRegressionReady = false;
+    globalThis.__rivalPaintRegressionFailure = null;
+    globalThis.__rivalPaintRegressionMetrics = null;
+
+    function fail(error) {
+      globalThis.__rivalPaintRegressionFailure = String(error?.stack || error?.message || error);
+    }
+
+    function createCalls() {
+      return [...(globalThis.__rivalPaintCreateCalls || [])];
+    }
+
+    async function renderDirect(ghost) {
+      const host = document.querySelector('#direct-host');
+      document.querySelector('#hud').remove();
+      const scene = new THREE.Scene();
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.setPixelRatio(1);
+      renderer.setClearColor(0x000000, 0);
+      renderer.setSize(126, 92, false);
+      host.appendChild(renderer.domElement);
+
+      const camera = new THREE.PerspectiveCamera(34, 126 / 92, 0.1, 60);
+      camera.position.set(7.8, 4.8, 8.8);
+      camera.lookAt(0, 1.1, 0);
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x5b6770, 3.2));
+      const key = new THREE.DirectionalLight(0xfff2c9, 4.2);
+      key.position.set(-6, 10, 7);
+      scene.add(key);
+
+      const stage = new THREE.Group();
+      stage.rotation.y = THREE.MathUtils.degToRad(200);
+      stage.rotation.x = 0.08;
+      scene.add(stage);
+
+      const visual = await createCarVisual({
+        carId,
+        color,
+        secondaryColor,
+        ghost,
+        targetLength: 6.4,
+        outline: true
+      });
+      stage.add(visual);
+      renderer.render(scene, camera);
+      globalThis.__rivalPaintRegressionMetrics = Object.freeze({
+        mode,
+        custom,
+        color,
+        secondaryColor,
+        expectedGhostColor,
+        expectedGhostSecondaryColor,
+        visualColor: visual.userData.turnCarColor,
+        visualSecondaryColor: visual.userData.turnCarSecondaryColor,
+        semanticRecordCount: visual.userData.turnSemanticPaintRecords?.length || 0,
+        createCalls: createCalls(),
+        canvasWidth: renderer.domElement.width,
+        canvasHeight: renderer.domElement.height
+      });
+      globalThis.__rivalPaintRegressionReady = true;
+    }
+
+    function runOnboarding() {
+      document.querySelector('#direct-host').remove();
+      const state = {
+        running: true,
+        vehicleId: carId,
+        vehicleColor: color,
+        vehicleSecondaryColor: secondaryColor,
+        competitorLaps: []
+      };
+      globalThis.__turnRuntime = { state };
+      installRivalOnboarding();
+      window.dispatchEvent(new CustomEvent('turn:ui-state-change', {
+        detail: { reason: 'race-started', running: true }
+      }));
+
+      globalThis.setTimeout(() => {
+        state.competitorLaps = [{
+          time: 12.34,
+          carId,
+          carColor: color,
+          carSecondaryColor: secondaryColor,
+          factoryPaint: !custom,
+          frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 24, x: index, z: 0, h: 0 }))
+        }];
+        window.dispatchEvent(new CustomEvent('turn:ui-state-change', {
+          detail: { reason: 'lap-completed', running: true }
+        }));
+      }, 650);
+
+      const startedAt = performance.now();
+      const timer = globalThis.setInterval(() => {
+        const plate = document.querySelector('.rival-onboarding');
+        const canvas = plate?.querySelector('canvas');
+        if (plate?.classList.contains('is-visible') && canvas?.width > 0 && canvas?.height > 0) {
+          globalThis.clearInterval(timer);
+          globalThis.setTimeout(() => {
+            globalThis.__rivalPaintRegressionMetrics = Object.freeze({
+              mode,
+              custom,
+              color,
+              secondaryColor,
+              expectedGhostColor,
+              expectedGhostSecondaryColor,
+              pillColor: plate.style.getPropertyValue('--rival-onboarding-color'),
+              createCalls: createCalls(),
+              canvasWidth: canvas.width,
+              canvasHeight: canvas.height
+            });
+            globalThis.__rivalPaintRegressionReady = true;
+          }, 300);
+        } else if (performance.now() - startedAt > 12_000) {
+          globalThis.clearInterval(timer);
+          fail(new Error('Timed out waiting for CHASE YOUR BEST regression reveal.'));
+        }
+      }, 50);
+    }
+
+    try {
+      if (mode === 'direct-ghost') void renderDirect(true).catch(fail);
+      else if (mode === 'direct-normal') void renderDirect(false).catch(fail);
+      else runOnboarding();
+    } catch (error) {
+      fail(error);
+    }
+  </script>
+</body>
+</html>
