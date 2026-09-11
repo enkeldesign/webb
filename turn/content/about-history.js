@@ -346,6 +346,24 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Reusable authored-wheel steering and spin for player and replay visuals',
     'TURN 1.17.0–1.17.12 · 2026.09.05-r200–2026.09.09-r212 Trophy Road, SUPERCAR and release-composition refinement'
   ]
+},
+{
+  period: '10–11 September',
+  title: 'Track music becomes identity and the racing hot path gets lighter',
+  paragraphs: [
+    'TURN’s generated soundtrack becomes more track-specific. AIRPORT gets PAPER SKIES, CLIFFSIDE gets OPEN HORIZON and HARBOR gets BREAKWATER, while MOUNTAIN gains its own score and settles on a CCTTBB form. The same canonical songbook identities feed production, TURN LAB and the Music Tracker.',
+    'A focused performance pass removes avoidable work from racing’s busiest moments. Camera and Spectate updates shed repeated allocations, duplicate HUD runtime code is removed, stored-rival summaries stop cloning replay frames, and CHROMATIC CAMOUFLAGE leaves lap completion for idle time.',
+    'The start and finish line receive a dedicated cross-layer fix. Stored rivals prewarm on the main race WebGL context before first visibility, while YOUR TURN keeps best-time and shareability state in memory during the session so lap-result and race-to-Home transitions do not reread replay persistence. Regression coverage now protects both first-crossing GPU work and finish-line storage work.',
+    'Achievements also become easier to scan: filters are grouped into deliberate rows and SCORING joins the available categories without changing the underlying composable filter behaviour.'
+  ],
+  milestones: [
+    'PAPER SKIES for AIRPORT, OPEN HORIZON for CLIFFSIDE, BREAKWATER for HARBOR and a CCTTBB MOUNTAIN score',
+    'Camera, Spectate and HUD hot-path cleanup',
+    'GPU-prewarmed rivals plus summary-only, deferred finish-line work',
+    'Runtime-authoritative YOUR TURN share state during active sessions',
+    'Grouped achievement filters with SCORING',
+    'TURN 1.18.0 · 2026.09.11-r213 track-music and racing-performance release'
+  ]
 }
 ]);
 
@@ -685,11 +703,22 @@ export const CHANGELOG = Object.freeze([
       ['Event-driven challenges', 'CATCH THE CHARGE now evaluates the existing OVERCHARGE-caught transition, while SAFETY achievements consume the physics-owned on-course lap result.'],
       ['Dormant Bella', 'Bella’s spatial sampler starts only for a visible Countryside Fire Truck race, stops on Home, other cars, other tracks, Spectate and backgrounding, and permanently detaches after rescue.']
     ]
-  }
+  },
+{
+  date: '10–11 September',
+  entries: [
+    ['1.18.0 r213', 'Brings the new track-specific soundtrack and timing-line performance work into one canonical release with refreshed production, TURN LAB and TURN NEXT identities.'],
+    ['Track-specific music', 'AIRPORT gets PAPER SKIES, CLIFFSIDE gets OPEN HORIZON, HARBOR gets BREAKWATER and MOUNTAIN gets its own score in CCTTBB form, all routed through the same production and Music Tracker songbook.'],
+    ['Start/finish performance', 'Prewarms stored rival visuals on the main WebGL context, keeps best-lap summary reads replay-free, defers CHROMATIC CAMOUFLAGE evaluation and protects the crossing frame with dedicated regressions.'],
+    ['YOUR TURN sharing', 'Keeps per-track best time and shareability authoritative in session memory; persistence is initial hydration or explicit replay retrieval rather than a lap-result or race-to-Home source of truth.'],
+    ['Runtime cleanup', 'Reduces camera and Spectate hot-path work and removes dead duplicate HUD runtime code.'],
+    ['Achievements', 'Groups filters into deliberate rows and adds SCORING while preserving composable filtering.']
+  ]
+}
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.17.12',
-  build: '2026.09.09-r212',
-  note: 'TURN 1.17.12 gives every asset-backed car reusable authored-wheel steering and spin without changing its geometry or finish.'
+  version: '1.18.0',
+  build: '2026.09.11-r213',
+  note: 'TURN 1.18.0 gives more tracks their own generated scores while making timing-line and race hot paths substantially lighter.'
 });
