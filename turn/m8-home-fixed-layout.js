@@ -262,9 +262,7 @@ export async function installM8HomeFixedLayout() {
     secretAchievementsModule,
     challengeExpansionModule,
     trophyRoadFeedbackModule,
-    driveByEarTrainingModule,
-    worldPlaygroundEntryModule,
-    worldPlaygroundModule
+    driveByEarTrainingModule
   ] = await Promise.all([
     import(`/turn/pwa-short-viewport-repair-r184.js?build=${buildKey}&revision=r184-start-settle-first-activation`),
     // Historical regression markers for the previous aligned-title bundles:
@@ -278,9 +276,7 @@ export async function installM8HomeFixedLayout() {
     import(`/turn/achievements/secret-achievements.js?build=${buildKey}-r174-bella-siren-zone`),
     import(`/turn/achievements/challenge-expansion-r166.js?build=${buildKey}-r166-bella-records`),
     import(`/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r254-achievement-filter-rows&robustness=r164-long-session`),
-    import(`/turn/training/drive-by-ear-training.js?build=${buildKey}-r151-dbe-training-device-fixes`),
-    import(`/turn/training/world-playground-entry.js?build=${buildKey}&revision=r1-map-layout`),
-    import(`/turn/training/world-playground.js?build=${buildKey}&revision=r1-map-layout`)
+    import(`/turn/training/drive-by-ear-training.js?build=${buildKey}-r151-dbe-training-device-fixes`)
   ]);
 
   const shortViewportAutoRepair = shortViewportModule.installShortViewportAutoRepair({ home });
@@ -296,8 +292,6 @@ export async function installM8HomeFixedLayout() {
   const trophyRoadFeedback = trophyRoadFeedbackModule.installTrophyRoadFeedback(achievements);
   const driveByEarTraining = await driveByEarTrainingModule.installDriveByEarTraining(globalThis.__turnRuntime);
   installDriveByEarSpokenLabels(driveByEarTraining);
-  const worldPlaygroundEntry = worldPlaygroundEntryModule.installWorldPlaygroundEntry();
-  const worldPlayground = await worldPlaygroundModule.installWorldPlayground(globalThis.__turnRuntime);
 
   let racingMusic = null;
   let dbeTrainingMusicSilence = null;
@@ -347,8 +341,6 @@ export async function installM8HomeFixedLayout() {
     achievementChallengeExpansion,
     trophyRoadFeedback,
     driveByEarTraining,
-    worldPlaygroundEntry,
-    worldPlayground,
     get racingMusic() { return racingMusic; },
     get dbeTrainingMusicSilence() { return dbeTrainingMusicSilence; },
     get racingMusicHealth() { return racingMusicHealth; },

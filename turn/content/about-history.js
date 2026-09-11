@@ -364,22 +364,7 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Grouped achievement filters with SCORING',
     'TURN 1.18.0 · 2026.09.11-r213 track-music and racing-performance release'
   ]
-},
-  {
-    period: '11 September',
-    title: 'The six tracks become one miniature world',
-    paragraphs: [
-      'HOW TO PLAY gains a playable miniature TURN world: one oversized continuous road links Harbor, the coastal Cliffside, Mountain, Midnight City, Countryside and Airport using the geography established for the wider TURN setting rather than combining the six competitive race circuits.',
-      'Each district reuses TURN landmarks and visual language at model-world scale — Harbor containers, cranes and ships; Cliffside houses, rocks and ocean liner; Mountain village, river and waterfall; Midnight City skyscrapers, parks, neon and directional signs; Countryside farms, trees and windmill; and Airport runway, control tower and aircraft.',
-      'The playground is deliberately untimed. HOW TO PLAY launches it directly in the Learner Car, lap timing and records stay dormant, and invisible shore and mountain-range boundaries keep free roaming inside the coastal world without producing LAP VOID.'
-    ],
-    milestones: [
-      'Explore the world of TURN action in HOW TO PLAY',
-      'One continuous model-world road loop across all six track identities',
-      'Untimed Learner Car free roam with shore and mountain containment',
-      'TURN 1.19.0 · 2026.09.11-r214 world-playground release'
-    ]
-  }
+}
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -729,20 +714,11 @@ export const CHANGELOG = Object.freeze([
     ['Runtime cleanup', 'Reduces camera and Spectate hot-path work and removes dead duplicate HUD runtime code.'],
     ['Achievements', 'Groups filters into deliberate rows and adds SCORING while preserving composable filtering.']
   ]
-},
-  {
-    date: '11 September',
-    entries: [
-      ['1.19.0 r214', 'Adds the HOW TO PLAY TURN world playground: an untimed Learner Car free-roam loop through miniature versions of Harbor, Cliffside, Mountain, Midnight City, Countryside and Airport.'],
-      ['World layout', 'Uses the coastal TURN world map as geography, with Harbor on the western sea, Cliffside climbing north to Mountain, the city in the centre, Countryside toward the east and Airport beyond it.'],
-      ['Model-world landmarks', 'Reuses classic scenery families and track motifs while keeping one shared road rather than six isolated race courses.'],
-      ['Free-roam safety', 'Keeps timing, records and LAP VOID dormant and contains the world with invisible shore and mountain-range walls that preserve useful tangential motion.']
-    ]
-  }
+}
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.0',
-  build: '2026.09.11-r214',
-  note: 'TURN 1.19.0 turns HOW TO PLAY into a place to explore with one miniature coastal world connecting all six track identities.'
+  version: '1.18.0',
+  build: '2026.09.11-r213',
+  note: 'TURN 1.18.0 gives more tracks their own generated scores while making timing-line and race hot paths substantially lighter.'
 });
