@@ -1,94 +1,94 @@
 import { bars, makeSection, makeSong } from './song-tools.js?revision=r186-note-ties';
 
 const TUNE = makeSection({
-  name: 'tune',
-  leadVoice: 'pluck', bassVoice: 'sub', arpVoice: 'glass', drumKit: 'classic',
+  name: 'tune', harmony: ['Dm', 'C', 'Bb', 'F/A'],
+  leadVoice: 'picked', bassVoice: 'drone', arpVoice: 'neon', drumKit: 'cinematic',
   lead: bars(
-    'E6 - G6 B6 D7 - B6 G6 E6 - G6 A6 B6 D7 E7 -',
-    'D7 - B6 A6 G6 - E6 G6 A6 B6 D7 B6 A6 G6 F#6 -',
-    'E6 - B6 D7 E7 G7 F#7 E7 D7 - B6 G6 A6 B6 D7 -',
-    'B6 D7 E7 G7 F#7 E7 D7 B6 A6 B6 G6 F#6 E6 B6 E7 -'
+    'F5 = = A5 = F5 E5 D5 = = C5 D5 F5 = E5 -',
+    'E5 = = G5 = E5 D5 C5 = = A4 C5 E5 = D5 -',
+    'D5 = F5 = D5 C5 Bb4 = = D5 F5 A5 = G5 F5 -',
+    'F5 = = A5 = C6 A5 F5 = E5 D5 C5 A4 = = -'
   ),
   bass: bars(
-    'E2 - E3 E4 - B3 D4 - E2 - G3 B3 D4 B3 E4 -',
-    'C2 - C4 G3 - C4 B3 - D2 - D4 A3 D4 F#4 A3 -',
-    'E2 - E4 B3 D4 B3 G3 - E2 - E4 - D4 B3 G3 -',
-    'C2 - G3 C4 B3 - D4 C4 D2 - D4 F#4 E3 B3 E4 -'
+    'D1 = = = A1 = = = D2 = F2 = A1 = C2 -',
+    'C1 = = = G1 = = = C2 = E2 = G1 = D2 -',
+    'Bb0 = = = F1 = = = Bb1 = D2 = F1 = A1 -',
+    'A0 = = = E1 = = = A1 = C2 = F2 = E2 -'
   ),
   arp: bars(
-    'E6 B6 G6 B6 E7 B6 G6 B6 E6 B6 G6 B6 E7 B6 G6 D7',
-    'C6 G6 E6 G6 C7 G6 E6 G6 D6 A6 F#6 A6 D7 A6 F#6 A6',
-    'E6 B6 G6 B6 E7 B6 G6 B6 E6 G6 B6 D7 E7 D7 B6 G6',
-    'C6 G6 E6 G6 C7 B6 G6 E6 D6 A6 F#6 A6 E6 B6 G6 E7'
+    'D3 = A3 - D4 - F4 = A4 - F4 D4 A3 = F3 -',
+    'C3 = G3 - C4 - E4 = G4 - E4 C4 G3 = E3 -',
+    'Bb2 = F3 - Bb3 - D4 = F4 - D4 Bb3 F3 = D3 -',
+    'A2 = E3 - A3 - C4 = F4 - A4 F4 C4 = E4 -'
   ),
   drums: bars(
-    'KH H KH H KSH H KH H KH H KH H KSH H K OH',
-    'KH H KH H KSH H K H KH H KH H KSH H KS OH',
-    'KH H KH H KSH H KH H KH H KH H KSH H K OH',
-    'KH H KH H KSH H KH H KH H KSH H KS S KS OH'
+    'K - - - KS - - - K - - - KS - - -',
+    'K - - - KS - - - K - - - KS - - -',
+    'K - - - KS - - - K - - - KS - - -',
+    'K - - - KS - - - K - - K KS T T T'
   )
 });
 
 const BRIDGE = makeSection({
-  name: 'bridge',
-  leadVoice: 'pluck', bassVoice: 'sub', arpVoice: 'glass', drumKit: 'cinematic',
+  name: 'bridge', harmony: ['Bb', 'C', 'Dm', 'A7'],
+  leadVoice: 'picked', bassVoice: 'drone', arpVoice: 'neon', drumKit: 'cinematic',
   lead: bars(
-    'G6 - B6 D7 G7 F#7 D7 B6 A6 B6 D7 E7 D7 B6 G6 -',
-    'F#6 - A6 D7 F#7 E7 D7 A6 B6 D7 E7 F#7 E7 D7 A6 -',
-    'E6 G6 C7 E7 G7 E7 D7 C7 G6 C7 D7 E7 G7 E7 C7 -',
-    'F#6 A6 B6 D#7 F#7 D#7 B6 A6 F#6 A6 B6 D#7 F#7 D#7 B6 D#7'
+    'F5 = D5 = Bb4 = D5 F5 = = G5 F5 D5 = C5 -',
+    'G5 = E5 = C5 = E5 G5 = = A5 G5 E5 = D5 -',
+    'A5 = F5 = D5 = F5 A5 = = C6 A5 F5 = E5 -',
+    'E5 = C#5 = A4 = C#5 E5 = G5 F5 E5 C#5 A4 = -'
   ),
   bass: bars(
-    'G2 - G3 D4 - G4 F#4 D4 G2 - D4 - G4 D4 B3 -',
-    'D2 - D4 A3 - D4 F#4 A3 D2 - D4 - F#4 D4 A3 -',
-    'C2 - C4 G3 - C4 E4 G3 C2 - C4 - E4 C4 G3 -',
-    'B1 - B3 F#3 A3 B3 D#4 F#4 B1 - A3 B3 D#4 F#4 B3 D#4'
+    'Bb0 = = = F1 = = = Bb1 = D2 = F1 = D2 -',
+    'C1 = = = G1 = = = C2 = E2 = G1 = E2 -',
+    'D1 = = = A1 = = = D2 = F2 = A1 = F2 -',
+    'A0 = = = E1 = = = G1 = E1 = C#2 = A1 -'
   ),
   arp: bars(
-    'G6 D7 B6 D7 G7 D7 B6 D7 G6 B6 D7 G7 D7 B6 D7 G7',
-    'D6 A6 F#6 A6 D7 A6 F#6 A6 D6 F#6 A6 D7 F#7 D7 A6 F#6',
-    'C6 G6 E6 G6 C7 G6 E6 G6 C6 E6 G6 C7 E7 C7 G6 E6',
-    'B5 F#6 A6 D#7 B6 F#6 A6 D#7 B5 A6 D#7 F#7 A7 F#7 D#7 B6'
+    'Bb2 F3 Bb3 D4 F4 = D4 Bb3 F3 = Bb3 D4 F4 A4 F4 D4',
+    'C3 G3 C4 E4 G4 = E4 C4 G3 = C4 E4 G4 C5 G4 E4',
+    'D3 A3 D4 F4 A4 = F4 D4 A3 = D4 F4 A4 D5 A4 F4',
+    'A2 E3 A3 C#4 E4 = G4 A4 C#5 = A4 G4 E4 C#4 A3 E3'
   ),
   drums: bars(
-    'KH H KHM H KSHC H KHM H KH H KHM H KSHC H KM KHO',
-    'KH H KHM H KSHC H KM H KH H KHM H KSHC H KSM KHO',
-    'KH H KHM H KSHC H KHM H KH H KHM H KSHC H KM KHO',
-    'KH H KHM H KSHC H KHM H KS H KSCM H KSC KSHC KSM KSO'
+    'K - H - KS - - - K - H - KS - - KO',
+    'K - H - KS - - - K - H K KS - T KOT',
+    'K - H - KS - - - K - H - KS - - KO',
+    'K - H - KS - - - K - H - KS T HT KOT'
   )
 });
 
 const CHORUS = makeSection({
-  name: 'chorus',
-  leadVoice: 'pluck', bassVoice: 'sub', arpVoice: 'organ', drumKit: 'classic',
+  name: 'chorus', harmony: ['Dm', 'Gm', 'Dm', 'A7'],
+  leadVoice: 'picked', bassVoice: 'drone', arpVoice: 'neon', drumKit: 'cinematic',
   lead: bars(
-    'E6 E6 G6 G6 B6 B6 G6 G6 E7 E7 B6 B6 G6 G6 B6 B6',
-    'G6 G6 E6 E6 C7 C7 E7 E7 G7 G7 E7 E7 D7 D7 C7 C7',
-    'D7 D7 B6 B6 G6 G6 B6 B6 D7 D7 B6 B6 A6 A6 G6 G6',
-    'F#6 F#6 A6 A6 B6 B6 D#7 D#7 B6 B6 A6 A6 F#6 F#6 D#6 D#6'
+    '- A5 A5 F5 D5 = = - A5 G5 F5 E5 D5 = C5 -',
+    'D5 - G5 Bb5 - A5 G5 - F5 D5 G5 = A5 Bb5 A5 -',
+    '- A5 A5 F5 D5 = = - A5 G5 F5 E5 D5 = C5 -',
+    'E5 E5 G5 E5 C#5 = - A4 C#5 E5 G5 A5 G5 E5 C#5 -'
   ),
   bass: bars(
-    'E2 - E2 E2 B2 B2 B2 B2 E2 - B2 B2 B2 B2 B2 B2',
-    'C2 - C2 C2 G2 G2 G2 G2 C2 - C3 C3 G2 G2 G2 G2',
-    'G2 - G2 G2 D3 D3 D3 D3 G2 - G3 G3 D3 D3 D3 D3',
-    'B1 - B1 B1 F#2 F#2 F#2 F#2 A2 - A2 A2 D#3 D#3 F#3 F#3'
+    'D1 = = = A1 = = = F2 = = = A1 = F1 -',
+    'G1 = = = D2 = = = Bb1 = D2 = G2 = F2 -',
+    'D1 = = = A1 = = = F2 = = = A1 = F1 -',
+    'A0 = = = E1 = = = G1 = E1 = C#2 = A1 -'
   ),
   arp: bars(
-    'E6 - G6 - B6 - G6 - E7 - B6 - G6 - B6 -',
-    'C6 - E6 - G6 - E6 - C7 - G6 - E6 - G6 -',
-    'G6 - B6 - D7 - B6 - G7 - D7 - B6 - D7 -',
-    'B5 - D#6 - F#6 - A6 - B6 - F#6 - D#6 - F#6 -'
+    'D3 = = = A3 - D4 - F4 = A4 - F4 D4 A3 -',
+    'G2 D3 G3 - Bb3 = D4 - G4 - D4 Bb3 G3 - F3 -',
+    'D3 = = = A3 - D4 - F4 = A4 - F4 D4 A3 -',
+    'A2 E3 A3 - C#4 = E4 - G4 A4 G4 E4 C#4 A3 E3 -'
   ),
   drums: bars(
-    'KH H KH H KSH H K H KH H KH H KSH H K OH',
-    'KH H KH H KSH H K H KH H KH OH KSH H K OH',
-    'KH H KH H KSH H K H KH H KH H KSH H K OH',
-    'KH H KH H KSH H KH H KS H K OH KSH H KS OH'
+    'K - H - KS - H - K - H - KS - H -',
+    'K - H - KS - H - K - H - KS - H KO',
+    'K - H - KS - H - K - H - KS - H -',
+    'K - H - KS - H - K - H - KS T HT KOT'
   )
 });
 
 export const MOUNTAIN_SONG = makeSong({
-  id: 'mountain', name: 'TURN Theme', bpm: 120, key: 'E minor',
-  style: 'warm arcade title anthem', swing: 0.12,
-  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['tune', 'tune', 'bridge', 'tune', 'chorus', 'chorus']
+  id: 'mountain', name: 'Mountain', bpm: 144, key: 'D minor',
+  style: 'dark melodic mountain theme with sustained reed melody, deep moving drone bass, orchestral organ figures and a relentless cinematic pulse', swing: 0,
+  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['tune', 'tune', 'bridge', 'bridge', 'chorus', 'chorus']
 });
