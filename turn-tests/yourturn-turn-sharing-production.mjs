@@ -75,8 +75,8 @@ assert.match(shareSource, /input\.value = profile\.name \|\| ''/,
   'The composer must prefill the last deliberately entered social name');
 assert.match(shareSource, /saveSocialRacerName\(racerName\)/,
   'A successfully entered social name must become the next composer default');
-assert.match(shareSource, /card\?\.classList\.contains\('is-selected'\) && best/,
-  'Only the selected track with a shareable personal best gets the Home share control');
+assert.match(shareSource, /card\?\.classList\.contains\('is-selected'\) && shareable/,
+  'Only the selected track with a shareable replay gets the Home share control');
 assert.match(shareSource, /time < previousBest - PB_EPSILON/,
   'The lap-result share entry must appear only for a new personal best');
 assert.match(shareSource, /lap-result-yourturn-share/);
