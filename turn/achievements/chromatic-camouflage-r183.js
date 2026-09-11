@@ -95,6 +95,7 @@ export function installChromaticCamouflageAchievement() {
 
   let achievements = globalThis.__turnAchievements || null;
   let disposed = false;
+  let scheduledEvaluation = null;
 
   const evaluate = () => {
     if (disposed) return false;
@@ -107,7 +108,31 @@ export function installChromaticCamouflageAchievement() {
     return true;
   };
 
-  const scheduleEvaluation = () => globalThis.setTimeout?.(evaluate, 0);
+  const runScheduledEvaluation = () => {
+    scheduledEvaluation = null;
+    evaluate();
+  };
+
+  const scheduleEvaluation = () => {
+    if (disposed || scheduledEvaluation) return;
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      const id = globalThis.requestIdleCallback(runScheduledEvaluation, { timeout: 1200 });
+      scheduledEvaluation = { type: 'idle', id };
+    } else {
+      const id = globalThis.setTimeout(runScheduledEvaluation, 96);
+      scheduledEvaluation = { type: 'timeout', id };
+    }
+  };
+
+  const cancelScheduledEvaluation = () => {
+    if (!scheduledEvaluation) return;
+    if (scheduledEvaluation.type === 'idle') {
+      globalThis.cancelIdleCallback?.(scheduledEvaluation.id);
+    } else {
+      globalThis.clearTimeout?.(scheduledEvaluation.id);
+    }
+    scheduledEvaluation = null;
+  };
 
   globalThis.addEventListener?.('turn:lap-result', scheduleEvaluation);
   globalThis.addEventListener?.('turn:home-ready', scheduleEvaluation);
@@ -118,6 +143,7 @@ export function installChromaticCamouflageAchievement() {
     matchesTrackColor,
     disconnect() {
       disposed = true;
+      cancelScheduledEvaluation();
       globalThis.removeEventListener?.('turn:lap-result', scheduleEvaluation);
       globalThis.removeEventListener?.('turn:home-ready', scheduleEvaluation);
       globalThis.__turnChromaticCamouflage = null;
