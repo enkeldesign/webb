@@ -367,17 +367,15 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
 },
   {
     period: '11 September',
-    title: 'The six tracks become one miniature world',
+    title: 'The world playground returns to the workshop',
     paragraphs: [
-      'HOW TO PLAY gains a playable miniature TURN world: one oversized continuous road links Harbor, the coastal Cliffside, Mountain, Midnight City, Countryside and Airport using the geography established for the wider TURN setting rather than combining the six competitive race circuits.',
-      'Each district reuses TURN landmarks and visual language at model-world scale — Harbor containers, cranes and ships; Cliffside houses, rocks and ocean liner; Mountain village, river and waterfall; Midnight City skyscrapers, parks, neon and directional signs; Countryside farms, trees and windmill; and Airport runway, control tower and aircraft.',
-      'The playground is deliberately untimed. HOW TO PLAY launches it directly in the Learner Car, lap timing and records stay dormant, and invisible shore and mountain-range boundaries keep free roaming inside the coastal world without producing LAP VOID.'
+      'TURN 1.19.0 briefly shipped the first HOW TO PLAY world-playground prototype: a single untimed Learner Car loop through miniature Harbor, Cliffside, Mountain, Midnight City, Countryside and Airport districts.',
+      'The first full device tour made the prototype useful as a design study but not yet strong enough as a production world. TURN 1.19.1 therefore removes the playground entry and runtime again while keeping the release history monotonic, so the layout, scale, sightlines, landmark density and road character can be redesigned without leaving an unfinished mode in the game.'
     ],
     milestones: [
-      'Explore the world of TURN action in HOW TO PLAY',
-      'One continuous model-world road loop across all six track identities',
-      'Untimed Learner Car free roam with shore and mountain containment',
-      'TURN 1.19.0 · 2026.09.11-r214 world-playground release'
+      'First complete device tour of the model-world prototype',
+      'Playground removed from production pending redesign',
+      'TURN 1.19.1 · 2026.09.11-r215 rollback release'
     ]
   }
 ]);
@@ -733,16 +731,15 @@ export const CHANGELOG = Object.freeze([
   {
     date: '11 September',
     entries: [
-      ['1.19.0 r214', 'Adds the HOW TO PLAY TURN world playground: an untimed Learner Car free-roam loop through miniature versions of Harbor, Cliffside, Mountain, Midnight City, Countryside and Airport.'],
-      ['World layout', 'Uses the coastal TURN world map as geography, with Harbor on the western sea, Cliffside climbing north to Mountain, the city in the centre, Countryside toward the east and Airport beyond it.'],
-      ['Model-world landmarks', 'Reuses classic scenery families and track motifs while keeping one shared road rather than six isolated race courses.'],
-      ['Free-roam safety', 'Keeps timing, records and LAP VOID dormant and contains the world with invisible shore and mountain-range walls that preserve useful tangential motion.']
+      ['1.19.0 r214', 'Briefly introduced the HOW TO PLAY world-playground prototype with one untimed Learner Car loop across six miniature track districts.'],
+      ['1.19.1 r215', 'Rolls the playground back out of production after the first complete device tour, restoring the 1.18.0 feature set while keeping version and build history monotonic.'],
+      ['Playground redesign', 'The prototype is retained in Git history for another pass on world scale, district identity, road layout, sightlines, boundaries and landmark composition before it returns.']
     ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.0',
-  build: '2026.09.11-r214',
-  note: 'TURN 1.19.0 turns HOW TO PLAY into a place to explore with one miniature coastal world connecting all six track identities.'
+  version: '1.19.1',
+  build: '2026.09.11-r215',
+  note: 'TURN 1.19.1 rolls the first world-playground prototype back out of production while its layout and visual language are redesigned.'
 });
