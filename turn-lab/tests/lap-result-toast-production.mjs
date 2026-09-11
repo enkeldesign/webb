@@ -259,8 +259,8 @@ assert.match(index, new RegExp(`lap-result-toast\\.css\\?build=${release.cacheKe
 assert.match(index, new RegExp(`rival-onboarding\\.css\\?build=${release.cacheKey}`));
 assert.equal(
   imports[`/turn/ui/rival-onboarding.js?build=${release.cacheKey}`],
-  `/turn/ui/rival-onboarding.js?build=${release.cacheKey}&revision=r276-rival-paint-normalization`,
-  'Installed PWAs must refetch the single-normalization CHASE YOUR BEST runtime'
+  `/turn/ui/rival-onboarding.js?build=${release.cacheKey}&revision=r277-main-rival-gpu-warmup`,
+  'Installed PWAs must refetch the GPU-warmed CHASE YOUR BEST runtime'
 );
 assert.ok(
   imports['./race/lap-system.js?build=20260720-r19']?.startsWith(`./race/lap-system-r86.js?build=${release.cacheKey}`),
