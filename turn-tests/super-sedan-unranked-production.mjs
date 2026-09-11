@@ -169,8 +169,8 @@ assert.match(chromaticSource, /getStoredBestLap/,
 for (const index of [productionIndex, labIndex]) {
   assert.match(index, new RegExp(`lap-system-r86\\.js\\?build=${release.cacheKey}&revision=r262-forgiving-lap-void`),
     'Prod and TURN LAB must route the lap runtime through the fresh track-aware module URL');
-  assert.match(index, new RegExp(`rival-storage\\.js\\?build=${release.cacheKey}&revision=r223-training-car-taxi`),
-    'Prod and TURN LAB must cache-bust ranked rival storage with the current release identity');
+  assert.match(index, new RegExp(`rival-storage\\.js\\?build=${release.cacheKey}&revision=r224-finish-line-summary`),
+    'Prod and TURN LAB must cache-bust the current summary-only ranked rival storage with the release identity');
   assert.match(index, /achievements\/runtime\.js\?revision=r244-reward-toast-guide/,
     'Prod and TURN LAB must cache-bust the time-trial guard and perk-entitlement readiness event');
 }
