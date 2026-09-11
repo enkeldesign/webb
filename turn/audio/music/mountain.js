@@ -90,5 +90,5 @@ const CHORUS = makeSection({
 export const MOUNTAIN_SONG = makeSong({
   id: 'mountain', name: 'Mountain', bpm: 144, key: 'D minor',
   style: 'dark melodic mountain theme with sustained reed melody, deep moving drone bass, orchestral organ figures and a relentless cinematic pulse', swing: 0,
-  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['tune', 'tune', 'bridge', 'bridge', 'chorus', 'chorus']
+  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['chorus', 'chorus', 'tune', 'tune', 'bridge', 'bridge']
 });
