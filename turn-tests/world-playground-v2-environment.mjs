@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// Environment-first prototype contract: landmark assets and signs intentionally arrive later.
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(scriptDir, '..');
 const mapPath = path.join(repoDir, 'turn/training/world-playground-v2-map.js');
