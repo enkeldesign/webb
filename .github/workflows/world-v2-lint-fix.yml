@@ -1,0 +1,51 @@
+name: Prepare World V2 lint fix
+
+on:
+  push:
+    branches:
+      - feature/world-playground-v2-environment
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/world-playground-v2-environment
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Fix and verify World V2
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          env = Path('turn/training/world-playground-v2-environment.js')
+          text = env.read_text().replace('offsets.forEach((offset, profileIndex) => {', 'offsets.forEach((offset) => {')
+          env.write_text(text)
+
+          test = Path('turn-tests/world-playground-v2-environment.mjs')
+          text = test.read_text()
+          if "from 'node:buffer'" not in text:
+              text = text.replace("import assert from 'node:assert/strict';\n", "import assert from 'node:assert/strict';\nimport { Buffer } from 'node:buffer';\n", 1)
+          test.write_text(text)
+          PY
+          node --check turn/training/world-playground-v2-map.js
+          node --check turn/training/world-playground-v2-environment.js
+          node --check turn/training/world-playground-v2-session.js
+          node --check turn-tests/world-playground-v2-environment.mjs
+          npx --yes eslint@9.39.1 turn/training/world-playground-v2-map.js turn/training/world-playground-v2-environment.js turn/training/world-playground-v2-session.js turn-tests/world-playground-v2-environment.mjs
+          node turn-tests/world-playground-v2-environment.mjs
+          rm .github/workflows/world-v2-lint-fix.yml
+      - name: Commit verified fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn/training/world-playground-v2-environment.js turn-tests/world-playground-v2-environment.mjs .github/workflows/world-v2-lint-fix.yml
+          git commit -m "Fix World V2 environment lint contract"
+          git push origin HEAD:feature/world-playground-v2-environment
