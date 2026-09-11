@@ -22,74 +22,65 @@ jobs:
         with:
           node-version: 22
 
-      - name: Integrate playground with Home and free-roam HUD
+      - name: Wire playground into Home and free roam
         run: |
           python - <<'PY'
           from pathlib import Path
 
           fixed = Path('turn/m8-home-fixed-layout.js')
           text = fixed.read_text()
-          old = """    challengeExpansionModule,\n    trophyRoadFeedbackModule,\n    driveByEarTrainingModule\n  ] = await Promise.all(["""
-          new = """    challengeExpansionModule,\n    trophyRoadFeedbackModule,\n    driveByEarTrainingModule,\n    worldPlaygroundEntryModule,\n    worldPlaygroundModule\n  ] = await Promise.all(["""
-          if old not in text:
-              raise SystemExit('fixed-layout module tuple marker not found')
-          text = text.replace(old, new, 1)
+          if 'worldPlaygroundEntryModule' not in text:
+              old = """    challengeExpansionModule,\n    trophyRoadFeedbackModule,\n    driveByEarTrainingModule\n  ] = await Promise.all(["""
+              new = """    challengeExpansionModule,\n    trophyRoadFeedbackModule,\n    driveByEarTrainingModule,\n    worldPlaygroundEntryModule,\n    worldPlaygroundModule\n  ] = await Promise.all(["""
+              if old not in text:
+                  raise SystemExit('fixed-layout module tuple marker not found')
+              text = text.replace(old, new, 1)
 
-          old = """    import(`/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r254-achievement-filter-rows&robustness=r164-long-session`),\n    import(`/turn/training/drive-by-ear-training.js?build=${buildKey}-r151-dbe-training-device-fixes`)\n  ]);"""
-          new = """    import(`/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r254-achievement-filter-rows&robustness=r164-long-session`),\n    import(`/turn/training/drive-by-ear-training.js?build=${buildKey}-r151-dbe-training-device-fixes`),\n    import(`/turn/training/world-playground-entry.js?build=${buildKey}&revision=r1-map-layout`),\n    import(`/turn/training/world-playground.js?build=${buildKey}&revision=r1-map-layout`)\n  ]);"""
-          if old not in text:
-              raise SystemExit('fixed-layout Promise.all marker not found')
-          text = text.replace(old, new, 1)
+              old = """    import(`/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r254-achievement-filter-rows&robustness=r164-long-session`),\n    import(`/turn/training/drive-by-ear-training.js?build=${buildKey}-r151-dbe-training-device-fixes`)\n  ]);"""
+              new = """    import(`/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r254-achievement-filter-rows&robustness=r164-long-session`),\n    import(`/turn/training/drive-by-ear-training.js?build=${buildKey}-r151-dbe-training-device-fixes`),\n    import(`/turn/training/world-playground-entry.js?build=${buildKey}&revision=r1-map-layout`),\n    import(`/turn/training/world-playground.js?build=${buildKey}&revision=r1-map-layout`)\n  ]);"""
+              if old not in text:
+                  raise SystemExit('fixed-layout Promise.all marker not found')
+              text = text.replace(old, new, 1)
 
-          old = """  const driveByEarTraining = await driveByEarTrainingModule.installDriveByEarTraining(globalThis.__turnRuntime);\n  installDriveByEarSpokenLabels(driveByEarTraining);"""
-          new = """  const driveByEarTraining = await driveByEarTrainingModule.installDriveByEarTraining(globalThis.__turnRuntime);\n  installDriveByEarSpokenLabels(driveByEarTraining);\n  const worldPlaygroundEntry = worldPlaygroundEntryModule.installWorldPlaygroundEntry();\n  const worldPlayground = await worldPlaygroundModule.installWorldPlayground(globalThis.__turnRuntime);"""
-          if old not in text:
-              raise SystemExit('fixed-layout install marker not found')
-          text = text.replace(old, new, 1)
+              old = """  const driveByEarTraining = await driveByEarTrainingModule.installDriveByEarTraining(globalThis.__turnRuntime);\n  installDriveByEarSpokenLabels(driveByEarTraining);"""
+              new = """  const driveByEarTraining = await driveByEarTrainingModule.installDriveByEarTraining(globalThis.__turnRuntime);\n  installDriveByEarSpokenLabels(driveByEarTraining);\n  const worldPlaygroundEntry = worldPlaygroundEntryModule.installWorldPlaygroundEntry();\n  const worldPlayground = await worldPlaygroundModule.installWorldPlayground(globalThis.__turnRuntime);"""
+              if old not in text:
+                  raise SystemExit('fixed-layout install marker not found')
+              text = text.replace(old, new, 1)
 
-          old = """    trophyRoadFeedback,\n    driveByEarTraining,\n    get racingMusic() { return racingMusic; },"""
-          new = """    trophyRoadFeedback,\n    driveByEarTraining,\n    worldPlaygroundEntry,\n    worldPlayground,\n    get racingMusic() { return racingMusic; },"""
-          if old not in text:
-              raise SystemExit('fixed-layout API marker not found')
-          text = text.replace(old, new, 1)
-          fixed.write_text(text)
+              old = """    trophyRoadFeedback,\n    driveByEarTraining,\n    get racingMusic() { return racingMusic; },"""
+              new = """    trophyRoadFeedback,\n    driveByEarTraining,\n    worldPlaygroundEntry,\n    worldPlayground,\n    get racingMusic() { return racingMusic; },"""
+              if old not in text:
+                  raise SystemExit('fixed-layout API marker not found')
+              text = text.replace(old, new, 1)
+              fixed.write_text(text)
 
           session = Path('turn/training/world-playground.js')
           text = session.read_text()
-          old = """    if (runtime.state.running) constrainToWorld(session.course?.boundary || []);\n    session.frame = requestAnimationFrame(playgroundFrame);"""
-          new = """    if (runtime.state.running) {\n      constrainToWorld(session.course?.boundary || []);\n      // This is free roam, not a seventh competitive track. Keep race timing,\n      // checkpoints, replay recording and score runtimes dormant even when the\n      // oversized loop crosses the ordinary start gate.\n      runtime.state.lapActive = false;\n      runtime.state.lapInvalid = false;\n      runtime.state.lapElapsed = 0;\n      runtime.state.lapCheckpointIndex = 0;\n      runtime.state.recording = [];\n      runtime.state.suppressNextLapStartMessage = true;\n    }\n    session.frame = requestAnimationFrame(playgroundFrame);"""
-          if old not in text:
-              raise SystemExit('playground frame marker not found')
-          text = text.replace(old, new, 1)
-          session.write_text(text)
+          if 'runtime.state.lapActive = false;' not in text:
+              old = """    if (runtime.state.running) constrainToWorld(session.course?.boundary || []);\n    session.frame = requestAnimationFrame(playgroundFrame);"""
+              new = """    if (runtime.state.running) {\n      constrainToWorld(session.course?.boundary || []);\n      // This is free roam, not a seventh competitive track. Keep race timing,\n      // checkpoints, replay recording and score runtimes dormant even when the\n      // oversized loop crosses the ordinary start gate.\n      runtime.state.lapActive = false;\n      runtime.state.lapInvalid = false;\n      runtime.state.lapElapsed = 0;\n      runtime.state.lapCheckpointIndex = 0;\n      runtime.state.recording = [];\n      runtime.state.suppressNextLapStartMessage = true;\n    }\n    session.frame = requestAnimationFrame(playgroundFrame);"""
+              if old not in text:
+                  raise SystemExit('playground frame marker not found')
+              session.write_text(text.replace(old, new, 1))
 
           entry = Path('turn/training/world-playground-entry.js')
           text = entry.read_text()
-          marker = """    .${SECTION_CLASS} > button[aria-busy=\"true\"] {\n      cursor: progress;\n      opacity: .72;\n    }\n  `;"""
-          replacement = """    .${SECTION_CLASS} > button[aria-busy=\"true\"] {\n      cursor: progress;\n      opacity: .72;\n    }\n\n    /* The model world is deliberately untimed free roam: keep speed and driving\n       controls, but remove competitive lap/record chips and result surfaces. */\n    .turn-world-playground-active .lap-chip,\n    .turn-world-playground-active .time-chip,\n    .turn-world-playground-active .best-chip,\n    .turn-world-playground-active .position-chip,\n    .turn-world-playground-active .lap-result-toast {\n      display: none !important;\n    }\n  `;"""
-          if marker not in text:
-              raise SystemExit('entry style marker not found')
-          entry.write_text(text.replace(marker, replacement, 1))
-
-          workflow = Path('.github/workflows/turn-lab-tests.yml')
-          text = workflow.read_text()
-          old = """      - name: Run Home help and all-track rival reset regression\n        run: node turn-tests/how-to-play-guide-production.mjs\n"""
-          new = old + """\n      - name: Run HOW TO PLAY world playground regression\n        run: node turn-tests/world-playground-production.mjs\n"""
-          if old not in text:
-              raise SystemExit('turn-lab-tests insertion marker not found')
-          workflow.write_text(text.replace(old, new, 1))
+          if '.turn-world-playground-active .lap-chip' not in text:
+              marker = """    .${SECTION_CLASS} > button[aria-busy=\"true\"] {\n      cursor: progress;\n      opacity: .72;\n    }\n  `;"""
+              replacement = """    .${SECTION_CLASS} > button[aria-busy=\"true\"] {\n      cursor: progress;\n      opacity: .72;\n    }\n\n    /* The model world is deliberately untimed free roam: keep speed and driving\n       controls, but remove competitive lap/record chips and result surfaces. */\n    .turn-world-playground-active .lap-chip,\n    .turn-world-playground-active .time-chip,\n    .turn-world-playground-active .best-chip,\n    .turn-world-playground-active .position-chip,\n    .turn-world-playground-active .lap-result-toast {\n      display: none !important;\n    }\n  `;"""
+              if marker not in text:
+                  raise SystemExit('entry style marker not found')
+              entry.write_text(text.replace(marker, replacement, 1))
           PY
 
       - name: Run focused playground regression
         run: node turn-tests/world-playground-production.mjs
 
-      - name: Remove one-shot integration workflow
-        run: rm .github/workflows/world-playground-integrate.yml
-
       - name: Commit integrated playground
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add turn/m8-home-fixed-layout.js turn/training/world-playground.js turn/training/world-playground-entry.js turn-tests/world-playground-production.mjs .github/workflows/turn-lab-tests.yml .github/workflows/world-playground-integrate.yml
+          git add turn/m8-home-fixed-layout.js turn/training/world-playground.js turn/training/world-playground-entry.js
           git commit -m "Wire HOW TO PLAY world playground" || exit 0
           git push origin HEAD:feature/how-to-play-world-playground
