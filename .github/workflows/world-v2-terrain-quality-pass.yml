@@ -1,0 +1,196 @@
+name: Prepare World V2 terrain quality pass
+
+on:
+  push:
+    branches:
+      - feature/world-playground-v2-environment
+
+permissions:
+  contents: write
+
+jobs:
+  quality:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/world-playground-v2-environment
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Refine terrain integration and atmosphere
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          env = Path('turn/training/world-playground-v2-environment.js')
+          text = env.read_text()
+          replacements = {
+            'const TERRAIN_CORRIDOR = 54;\nconst TERRAIN_GRID_X = 124;\nconst TERRAIN_GRID_Z = 96;':
+            'const TERRAIN_CORRIDOR = 190;\nconst TERRAIN_GRID_X = 220;\nconst TERRAIN_GRID_Z = 166;',
+            '  world.add(makeTerrain(terrainHeight));\n  world.add(makeRoadBed(samples, terrainHeight, trackWidth));':
+            '  world.add(makeTerrain(terrainHeight));\n  world.add(makeCoastalCliffs(terrainHeight));\n  world.add(makeRoadBed(samples, terrainHeight, trackWidth));',
+            '  world.add(makeMountainRiver());':
+            '  world.add(makeMountainRiver(terrainHeight));',
+            "  const offsets = [-(half + 34), -(half + 19), -(half + 8.5), -(half + 4.2), half + 4.2, half + 8.5, half + 19, half + 34];":
+            "  const offsets = [-(half + 118), -(half + 68), -(half + 34), -(half + 14), -(half + 4.2), half + 4.2, half + 14, half + 34, half + 68, half + 118];",
+            '      const roadTarget = sample.point.y - (abs <= half + 4.2 ? 0.34 : 0.8);\n      const blend = 1 - smoothStep(half + 8, half + 34, abs);':
+            '      const bank = smoothStep(half + 8, half + 118, abs);\n      const roadTarget = sample.point.y - 0.34 - bank * 5.8;\n      const blend = 1 - smoothStep(half + 16, half + 118, abs);',
+            'function makeMountainRiver() {':
+            'function makeMountainRiver(heightAt) {',
+            "  const points = WORLD_PLAYGROUND_V2_RIVER.map(([x, y, z]) => new THREE.Vector3(x, y, z));":
+            "  const points = WORLD_PLAYGROUND_V2_RIVER.map(([x, _y, z]) => new THREE.Vector3(x, heightAt(x, z) + 0.62, z));",
+            "  const waterfall = new THREE.Mesh(\n    new THREE.PlaneGeometry(15, 34),":
+            "  const waterfallTop = heightAt(115, -505) + 0.8;\n  const waterfallBottom = heightAt(160, -445) + 0.35;\n  const waterfallHeight = Math.max(12, waterfallTop - waterfallBottom);\n  const waterfall = new THREE.Mesh(\n    new THREE.PlaneGeometry(15, waterfallHeight),",
+            "  waterfall.position.set(85, 74, -500);\n  waterfall.rotation.y = -0.58;":
+            "  waterfall.position.set(137, waterfallBottom + waterfallHeight / 2, -475);\n  waterfall.rotation.y = -0.58;",
+            "  if (distance < TERRAIN_CORRIDOR) {\n    const influence = 1 - smoothStep(20, TERRAIN_CORRIDOR, distance);\n    const target = roadY - 0.62 - smoothStep(20, TERRAIN_CORRIDOR, distance) * 1.2;\n    base = THREE.MathUtils.lerp(base, target, influence);\n  }":
+            "  if (distance < TERRAIN_CORRIDOR) {\n    const transition = smoothStep(28, TERRAIN_CORRIDOR, distance);\n    const influence = 1 - transition;\n    const target = roadY - 0.66 - transition * 6.5;\n    base = THREE.MathUtils.lerp(base, target, influence);\n  }",
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'missing environment replacement: {old[:70]}')
+              text = text.replace(old, new, 1)
+
+          old_color = """function terrainColor(x, y, z) {
+  if (y < WORLD_PLAYGROUND_V2_SEA_LEVEL + 1) return COLOR.seaFloor.clone();
+  if (y > 176) return COLOR.snow.clone().lerp(COLOR.mountainRock, smoothStep(230, 180, y) * 0.28);
+  if (y > 112) return COLOR.mountainRock.clone().lerp(COLOR.alpineGrass, smoothStep(112, 165, y) * 0.32);
+
+  const cliff = x < -650 && z < 140;
+  if (cliff) {
+    const rockMix = smoothStep(18, 82, y);
+    return COLOR.dryGrass.clone().lerp(COLOR.cliffRock, rockMix);
+  }
+
+  const airport = ellipseInfluence(x, z, 930, -55, 390, 320);
+  if (airport > 0.18) return COLOR.lowGrass.clone().lerp(COLOR.airportGround, airport * 0.7);
+
+  const city = ellipseInfluence(x, z, -90, 500, 455, 320);
+  if (city > 0.15) return COLOR.lowGrass.clone().lerp(COLOR.cityGround, city * 0.72);
+
+  const harbor = ellipseInfluence(x, z, -650, 405, 315, 255);
+  if (harbor > 0.16) return COLOR.lowGrass.clone().lerp(COLOR.harborGround, harbor * 0.64);
+
+  const country = ellipseInfluence(x, z, 590, 300, 560, 430);
+  if (country > 0.12) {
+    const patch = 0.5 + 0.5 * Math.sin(Math.floor(x / 95) * 1.7 + Math.floor(z / 80) * 2.3);
+    return COLOR.countryGreen.clone().lerp(COLOR.countryGold, patch * 0.3 * country);
+  }
+
+  const variation = 0.5 + 0.5 * Math.sin(x * 0.019 + z * 0.013);
+  return COLOR.lowGrass.clone().lerp(COLOR.lushGrass, variation * 0.34);
+}"""
+          new_color = """function terrainColor(x, y, z) {
+  if (y < WORLD_PLAYGROUND_V2_SEA_LEVEL + 1) return COLOR.seaFloor.clone();
+
+  const variation = 0.5 + 0.5 * Math.sin(x * 0.019 + z * 0.013);
+  let color = COLOR.lowGrass.clone().lerp(COLOR.lushGrass, variation * 0.28);
+
+  const cliff = x < -650 && z < 150;
+  if (cliff) {
+    const rockMix = smoothStep(20, 118, y) * 0.82;
+    color = COLOR.dryGrass.clone().lerp(COLOR.cliffRock, rockMix);
+  }
+
+  const airport = ellipseInfluence(x, z, 930, -55, 390, 320);
+  color.lerp(COLOR.airportGround, airport * 0.58);
+
+  const city = ellipseInfluence(x, z, -90, 500, 455, 320);
+  color.lerp(COLOR.cityGround, city * 0.58);
+
+  const harbor = ellipseInfluence(x, z, -650, 405, 315, 255);
+  color.lerp(COLOR.harborGround, harbor * 0.5);
+
+  const country = ellipseInfluence(x, z, 590, 300, 560, 430);
+  if (country > 0.04) {
+    const broadPatch = 0.5 + 0.5 * Math.sin(x * 0.0105 + Math.sin(z * 0.006) * 1.7);
+    color.lerp(COLOR.countryGreen.clone().lerp(COLOR.countryGold, broadPatch * 0.24), country * 0.52);
+  }
+
+  const alpine = smoothStep(82, 168, y);
+  color.lerp(COLOR.alpineGrass.clone().lerp(COLOR.mountainRock, 0.48), alpine * 0.86);
+  const snow = smoothStep(178, 242, y);
+  color.lerp(COLOR.snow, snow * 0.94);
+  return color;
+}"""
+          if old_color not in text:
+              raise SystemExit('terrainColor block not found')
+          text = text.replace(old_color, new_color, 1)
+
+          marker = 'function makeMountainRiver(heightAt) {'
+          cliff_fn = """function makeCoastalCliffs(heightAt) {
+  const group = new THREE.Group();
+  group.name = 'World Playground V2 sculpted coastal cliff face';
+  const positions = [];
+  const colors = [];
+  const rockDark = new THREE.Color(0x665d55);
+  const rockLight = new THREE.Color(0x91816d);
+  const zMin = -790;
+  const zMax = 115;
+  const steps = 150;
+
+  for (let index = 0; index < steps; index += 1) {
+    const z0 = THREE.MathUtils.lerp(zMin, zMax, index / steps);
+    const z1 = THREE.MathUtils.lerp(zMin, zMax, (index + 1) / steps);
+    const x0 = worldPlaygroundV2CoastX(z0) + 12;
+    const x1 = worldPlaygroundV2CoastX(z1) + 12;
+    const top0 = Math.max(WORLD_PLAYGROUND_V2_SEA_LEVEL + 7, heightAt(x0 + 24, z0) - 1.2);
+    const top1 = Math.max(WORLD_PLAYGROUND_V2_SEA_LEVEL + 7, heightAt(x1 + 24, z1) - 1.2);
+    const bottom0 = WORLD_PLAYGROUND_V2_SEA_LEVEL - 0.35;
+    const bottom1 = WORLD_PLAYGROUND_V2_SEA_LEVEL - 0.35;
+    positions.push(
+      x0, top0, z0,
+      x1, top1, z1,
+      x0 - 3.5, bottom0, z0,
+      x0 - 3.5, bottom0, z0,
+      x1, top1, z1,
+      x1 - 3.5, bottom1, z1
+    );
+    const color = rockDark.clone().lerp(rockLight, 0.36 + Math.sin(index * 0.41) * 0.08);
+    for (let vertex = 0; vertex < 6; vertex += 1) colors.push(color.r, color.g, color.b);
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geometry.computeVertexNormals();
+  const cliff = new THREE.Mesh(
+    geometry,
+    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0, side: THREE.DoubleSide })
+  );
+  cliff.receiveShadow = true;
+  group.add(cliff);
+  return group;
+}
+
+"""
+          if marker not in text:
+              raise SystemExit('mountain river marker missing')
+          text = text.replace(marker, cliff_fn + marker, 1)
+          env.write_text(text)
+
+          session = Path('turn/training/world-playground-v2-session.js')
+          s = session.read_text().replace('new THREE.Fog(0xb8d4d8, 560, 2180)', 'new THREE.Fog(0xb8d4d8, 980, 3400)')
+          session.write_text(s)
+
+          visual = Path('turn-lab/world-v2-environment-visual.html')
+          v = visual.read_text().replace('new THREE.Fog(0xb8d4d8, 820, 2850)', 'new THREE.Fog(0xb8d4d8, 1150, 3800)')
+          visual.write_text(v)
+          PY
+
+          node --check turn/training/world-playground-v2-environment.js
+          node --check turn/training/world-playground-v2-session.js
+          node turn-tests/world-playground-v2-environment.mjs
+          npx --yes eslint@9.39.1 turn/training/world-playground-v2-map.js turn/training/world-playground-v2-environment.js turn/training/world-playground-v2-session.js turn-tests/world-playground-v2-environment.mjs
+          rm .github/workflows/world-v2-terrain-quality-pass.yml
+
+      - name: Commit quality pass
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn/training/world-playground-v2-environment.js turn/training/world-playground-v2-session.js turn-lab/world-v2-environment-visual.html .github/workflows/world-v2-terrain-quality-pass.yml
+          git commit -m "Refine World V2 terrain and road integration"
+          git push origin HEAD:feature/world-playground-v2-environment
