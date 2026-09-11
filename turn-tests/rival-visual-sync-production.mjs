@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import '../turn-lab/tests/start-finish-line-performance.mjs';
 
 const [
   releaseSource,

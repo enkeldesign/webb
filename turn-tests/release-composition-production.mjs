@@ -386,8 +386,8 @@ const rivalRoute = Object.entries(headGraph.importMap.imports || {}).find(([spec
   /^\/turn\/ui\/rival-onboarding\.js\?build=\d{8}-r\d+$/.test(specifier)
 );
 assert.ok(rivalRoute, 'Production TURN must retain the release-bound rival onboarding route');
-assert.match(rivalRoute[1], /[?&]revision=r276-rival-paint-normalization(?:&|$)/,
-  'Rival onboarding must use the single-normalization PAINTJOB identity');
+assert.match(rivalRoute[1], /[?&]revision=r277-main-rival-gpu-warmup(?:&|$)/,
+  'Rival onboarding must publish the main-renderer GPU warm-up identity');
 
 const workflows = Object.fromEntries(workflowEntries);
 for (const [workflowPath, source] of Object.entries(workflows)) {

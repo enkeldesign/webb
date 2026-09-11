@@ -29,10 +29,10 @@ const [
   fs.readFile(new URL('../yourturn/challenge-store.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(turnIndex, /\.\/social\/your-turn-share-bootstrap\.js\?revision=r2/,
-  'Production TURN must load the short-link sharing bootstrap with a fresh cache identity');
-assert.match(shareBootstrap, /your-turn-share\.js\?revision=r2/,
-  'The bootstrap must load the short-link sharing implementation');
+assert.match(turnIndex, /\.\/social\/your-turn-share-bootstrap\.js\?revision=r4-runtime-share-state/,
+  'Production TURN must load the runtime-authoritative short-link sharing bootstrap with a fresh cache identity');
+assert.match(shareBootstrap, /your-turn-share\.js\?revision=r4-runtime-share-state/,
+  'The bootstrap must load the runtime-authoritative short-link sharing implementation');
 assert.match(shareBootstrap, /globalThis\.__turnHomeLayout\?\.home/,
   'Sharing must wait until all existing fixed-Home enhancements have completed');
 assert.match(shareBootstrap, /installYourTurnShare\(\{ home \}\)/);
@@ -42,9 +42,12 @@ assert.doesNotMatch(fixedHome, /your-turn-share|installYourTurnShare/,
 assert.match(rivalStorage, /export function getStoredBestReplayLap\(/,
   'TURN must expose the actual stored replay, not only the best-time summary');
 assert.match(rivalStorage, /frames: lap\.frames\.map\(\(frame\) => \(\{ \.\.\.frame \}\)\)/,
-  'Shareable replay reads must clone persisted frames');
-assert.match(rivalStorage, /getStoredBestLap[\s\S]*getStoredBestReplayLap/,
-  'Existing best-lap summaries must keep using the same canonical record source');
+  'Explicit shareable replay reads must still clone persisted frames');
+const bestLapSummary = rivalStorage.match(/export function getStoredBestLap\([\s\S]*?\n\}/)?.[0] || '';
+assert.match(bestLapSummary, /readBestLapRecord/,
+  'Best-lap summaries must use the canonical summary record source');
+assert.doesNotMatch(bestLapSummary, /getStoredBestReplayLap|frames\.map/,
+  'Best-lap summary reads must not clone full replay frames on Home or lap-result hot paths');
 assert.match(rivalStorage, /historical summary-only fallback[\s\S]*oldGhost\?\.bestTime/,
   'Very old best-time-only Countryside records must remain visible even when they cannot be shared');
 
@@ -72,8 +75,15 @@ assert.match(shareSource, /input\.value = profile\.name \|\| ''/,
   'The composer must prefill the last deliberately entered social name');
 assert.match(shareSource, /saveSocialRacerName\(racerName\)/,
   'A successfully entered social name must become the next composer default');
-assert.match(shareSource, /card\?\.classList\.contains\('is-selected'\) && best/,
-  'Only the selected track with a shareable personal best gets the Home share control');
+assert.match(shareSource, /const shareStateByTrack = new Map\(\)/,
+  'TURN sharing must keep best-time/shareability state in memory after hydration');
+const homeShareSync = shareSource.match(/function syncTrackShareButtons\(\) \{[\s\S]*?\n  \}/)?.[0] || '';
+assert.match(homeShareSync, /shareStateFor\(trackId\)/,
+  'Home share controls must use in-memory sharing state');
+assert.doesNotMatch(homeShareSync, /getStoredBestLap|getStoredBestReplayLap|hasStoredBestReplayLap/,
+  'Home share-control refreshes must not reread persistence');
+assert.match(shareSource, /card\?\.classList\.contains\('is-selected'\) && shareState\.shareable/,
+  'Only the selected track with a shareable replay gets the Home share control');
 assert.match(shareSource, /time < previousBest - PB_EPSILON/,
   'The lap-result share entry must appear only for a new personal best');
 assert.match(shareSource, /lap-result-yourturn-share/);
@@ -136,4 +146,4 @@ assert.match(yourTurnUi, /adoptSocialRacerIdentity\(\{ id: existing\.id, name: t
 assert.match(yourTurnUi, /challenge\.racers\.some\(\(racer\) => racer\.id === sessionState\.racerId\)/,
   'A recognized racer ID must bypass unnecessary identity confirmation');
 
-console.log('TURN → YOUR TURN seed sharing, time-record Home placement, short transport, remembered names and returning-racer claim regression passed.');
+console.log('TURN → YOUR TURN seed sharing, runtime state, time-record Home placement, short transport, remembered names and returning-racer claim regression passed.');

@@ -15,6 +15,9 @@ const ONBOARDING_EXIT_MS = 180;
 const PREVIEW_FALLBACK_PREP_DELAY_MS = 500;
 const PREVIEW_WARM_WIDTH = 126;
 const PREVIEW_WARM_HEIGHT = 92;
+const RACE_RIVAL_WARM_TARGET_SIZE = 64;
+const RACE_RIVAL_WARM_RETRY_MS = 80;
+const RACE_RIVAL_WARM_MAX_RETRIES = 6;
 const VIEWER_INITIAL_YAW = THREE.MathUtils.degToRad(200);
 const VIEWER_ROTATION_RADIANS_PER_SECOND = 0.144;
 const VIEWER_FRAME_INTERVAL_MS = 1000 / 30;
@@ -55,6 +58,10 @@ export function installRivalOnboarding() {
   let pendingPreviewIdentity = '';
   let previewIdentity = '';
   let preview = null;
+  let raceWarmIdleHandle = 0;
+  let raceWarmTimer = 0;
+  let raceWarmGeneration = 0;
+  let warmedRaceIdentity = '';
 
   function clearTimers() {
     window.clearTimeout(showTimer);
@@ -76,6 +83,16 @@ export function installRivalOnboarding() {
     preparationIdleHandle = 0;
     preparationTimer = 0;
     pendingPreviewIdentity = '';
+  }
+
+  function cancelRaceRivalWarmup() {
+    raceWarmGeneration += 1;
+    if (raceWarmIdleHandle && typeof globalThis.cancelIdleCallback === 'function') {
+      globalThis.cancelIdleCallback(raceWarmIdleHandle);
+    }
+    window.clearTimeout(raceWarmTimer);
+    raceWarmIdleHandle = 0;
+    raceWarmTimer = 0;
   }
 
   function disposePreviewVisual() {
@@ -213,8 +230,128 @@ export function installRivalOnboarding() {
     }, RESULT_TOAST_HANDOFF_MS);
   }
 
+  function raceRivalVisuals(runtime) {
+    const cars = runtime?.competitorCars || [];
+    const savedCount = Math.min(cars.length, runtime?.state?.competitorLaps?.length || 0);
+    // With no saved rival, main.js still prepares ghostCar with the player's exact
+    // selected identity so the first completed lap can become rival #1 cheaply.
+    const expectedCount = savedCount || (cars.length ? 1 : 0);
+    const visuals = [];
+    for (let index = 0; index < expectedCount; index += 1) {
+      const root = cars[index];
+      const visual = root?.children?.find((child) => child.userData?.turnAssetVisual);
+      if (visual) visuals.push({ root, visual });
+    }
+    return { expectedCount, visuals };
+  }
+
+  function raceRivalWarmIdentity(runtime, visuals) {
+    const trackId = runtime?.state?.trackId || '';
+    return `${trackId}|${visuals.map(({ root }) => root.userData?.turnVisualKey || '').join('||')}`;
+  }
+
+  function makeRaceRivalWarmScene(visuals) {
+    const scene = new THREE.Scene();
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x5b6770, 3));
+    const key = new THREE.DirectionalLight(0xfff2c9, 4);
+    key.position.set(-6, 10, 7);
+    scene.add(key);
+
+    const stage = new THREE.Group();
+    scene.add(stage);
+    const spacing = 7;
+    const center = (visuals.length - 1) * spacing * 0.5;
+    for (let index = 0; index < visuals.length; index += 1) {
+      const clone = visuals[index].visual.clone(true);
+      clone.visible = true;
+      clone.position.set(index * spacing - center, 0, 0);
+      clone.traverse((node) => {
+        if (node.isMesh) node.frustumCulled = false;
+      });
+      stage.add(clone);
+    }
+
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80);
+    camera.position.set(0, 7, 18 + Math.max(0, visuals.length - 1) * 2.5);
+    camera.lookAt(0, 1.1, 0);
+    return { scene, camera };
+  }
+
+  async function warmRaceRivalRenderer(generation, retry = 0) {
+    raceWarmIdleHandle = 0;
+    raceWarmTimer = 0;
+    if (generation !== raceWarmGeneration || document.visibilityState === 'hidden') return;
+
+    const runtime = globalThis.__turnRuntime;
+    const renderer = runtime?.renderer;
+    if (!runtime?.scene || !renderer) return;
+
+    const { expectedCount, visuals } = raceRivalVisuals(runtime);
+    if (!expectedCount) return;
+    if (visuals.length < expectedCount) {
+      if (retry < RACE_RIVAL_WARM_MAX_RETRIES) {
+        raceWarmTimer = window.setTimeout(
+          () => void warmRaceRivalRenderer(generation, retry + 1),
+          RACE_RIVAL_WARM_RETRY_MS
+        );
+      }
+      return;
+    }
+
+    const identity = raceRivalWarmIdentity(runtime, visuals);
+    if (!identity || identity === warmedRaceIdentity) return;
+
+    const warm = makeRaceRivalWarmScene(visuals);
+    try {
+      if (typeof renderer.compileAsync === 'function') {
+        // Compile the actual stored-rival material graph against the race scene's
+        // lighting before the timing line makes those cars visible. r184 supports
+        // targetScene; disabling clone frustum culling also avoids its stale-frustum
+        // compileAsync edge case without touching the live cars.
+        await renderer.compileAsync(warm.scene, warm.camera, runtime.scene);
+      } else {
+        renderer.compile(warm.scene, warm.camera, runtime.scene);
+      }
+      if (generation !== raceWarmGeneration) return;
+
+      // compileAsync handles shader programs. One tiny off-screen render on the same
+      // WebGL context also uploads shared rival geometry/textures before their first
+      // visible race frame. Never draw the warm-up into the gameplay framebuffer.
+      const target = new THREE.WebGLRenderTarget(
+        RACE_RIVAL_WARM_TARGET_SIZE,
+        RACE_RIVAL_WARM_TARGET_SIZE
+      );
+      const previousTarget = renderer.getRenderTarget();
+      try {
+        renderer.setRenderTarget(target);
+        renderer.render(warm.scene, warm.camera);
+      } finally {
+        renderer.setRenderTarget(previousTarget);
+        target.dispose();
+      }
+      warmedRaceIdentity = identity;
+    } catch (error) {
+      console.warn('TURN: race rival GPU warm-up failed.', error);
+    }
+  }
+
+  function scheduleRaceRivalWarmup({ racing = false } = {}) {
+    cancelRaceRivalWarmup();
+    const generation = raceWarmGeneration;
+    const run = () => void warmRaceRivalRenderer(generation);
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      raceWarmIdleHandle = globalThis.requestIdleCallback(run, {
+        timeout: racing ? 180 : 700
+      });
+    } else {
+      raceWarmTimer = window.setTimeout(run, racing ? 24 : 90);
+    }
+  }
+
   window.addEventListener('turn:rivals-reset', () => {
     hadRival = false;
+    warmedRaceIdentity = '';
+    cancelRaceRivalWarmup();
     hide({ immediate: true });
   });
 
@@ -226,8 +363,10 @@ export function installRivalOnboarding() {
 
     if (reason === 'rivals-loaded') {
       hadRival = hasRival;
+      scheduleRaceRivalWarmup();
     } else if (reason === 'race-started') {
       hadRival = hasRival;
+      scheduleRaceRivalWarmup({ racing: true });
       if (!hasRival && state) preparePreview(state);
       else if (hasRival) destroyPreview();
     } else if (reason === 'lap-completed') {
@@ -236,6 +375,7 @@ export function installRivalOnboarding() {
     }
 
     if (!event.detail?.running || reason === 'race-reset') {
+      if (reason !== 'rivals-loaded') cancelRaceRivalWarmup();
       hide({ immediate: true });
     }
   });

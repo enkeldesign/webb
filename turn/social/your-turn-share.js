@@ -1,4 +1,8 @@
-import { getStoredBestReplayLap } from '../race/rival-storage.js?build=20260806-r161';
+import {
+  getStoredBestLap,
+  getStoredBestReplayLap,
+  hasStoredBestReplayLap
+} from '../race/rival-storage.js?build=20260806-r161';
 import { TRACK_CATALOG, getTrackDefinition } from '../tracks/catalog.js?build=20260806-r161';
 import { getTrackStorageRevision } from '../tracks/definitions.js?build=20260806-r161';
 import { getCarDefinition } from '../vehicle/catalog.js?build=20260806-r161';
@@ -124,16 +128,58 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   const trackButtons = [...rail.querySelectorAll('.turn-yourturn-track-share')];
   const toast = document.querySelector('.lap-result-toast');
   let toastShare = null;
+  let toastLap = null;
+  let toastLapTrackId = '';
   let activeLap = null;
   let activeTrackId = '';
   let returnFocus = null;
   let pausedRace = false;
   let pausedAt = 0;
   let sharing = false;
-  const knownBestTimes = new Map();
+  let shareButtonsDirty = false;
+  const shareStateByTrack = new Map();
 
+  function setShareState(trackId, { bestTime = Infinity, shareable = false } = {}) {
+    shareStateByTrack.set(trackId, Object.freeze({
+      bestTime: Number.isFinite(Number(bestTime)) ? Number(bestTime) : Infinity,
+      shareable: Boolean(shareable)
+    }));
+  }
+
+  function shareStateFor(trackId) {
+    return shareStateByTrack.get(trackId) || { bestTime: Infinity, shareable: false };
+  }
+
+  function lapIsShareable(lap) {
+    return Boolean(
+      lap
+      && Number.isFinite(Number(lap.time))
+      && Array.isArray(lap.frames)
+      && lap.frames.length > 20
+    );
+  }
+
+  function updateActiveTrackShareStateFromRuntime(trackId) {
+    const currentBest = runtime?.state?.competitorLaps?.[0] || null;
+    if (!currentBest) {
+      setShareState(trackId);
+      return null;
+    }
+    setShareState(trackId, {
+      bestTime: Number(currentBest.time),
+      shareable: lapIsShareable(currentBest)
+    });
+    return currentBest;
+  }
+
+  // Hydrate once. From here until an explicit SHARE action, runtime/in-memory state
+  // is authoritative; persistence is not consulted by race -> Home UI updates.
   for (const track of TRACK_CATALOG) {
-    knownBestTimes.set(track.id, getStoredBestReplayLap(track.id)?.time ?? Infinity);
+    const best = getStoredBestLap(track.id);
+    setShareState(track.id, {
+      bestTime: best?.time,
+      shareable: hasStoredBestReplayLap(track.id)
+    });
   }
 
   if (toast) {
@@ -150,16 +196,17 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
     for (const button of trackButtons) {
       const trackId = button.dataset.trackId || '';
       const card = button.parentElement?.querySelector('.track-card');
-      const best = getStoredBestReplayLap(trackId);
+      const shareState = shareStateFor(trackId);
       const unavailable = card?.disabled || card?.classList.contains('is-trophy-locked');
-      button.hidden = !(card?.classList.contains('is-selected') && best && !unavailable);
+      button.hidden = !(card?.classList.contains('is-selected') && shareState.shareable && !unavailable);
       button.setAttribute(
         'aria-label',
-        best
+        shareState.shareable
           ? `Share your best lap on ${formatTrackName(trackId)} as a YOUR TURN challenge`
           : `No shareable best lap on ${formatTrackName(trackId)}`
       );
     }
+    shareButtonsDirty = false;
   }
 
   function setNameValidation(message = '') {
@@ -297,7 +344,10 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
     event.preventDefault();
     event.stopPropagation();
     const trackId = toastShare.dataset.trackId || runtime?.state?.trackId || 'countryside';
-    openComposer(trackId, getStoredBestReplayLap(trackId), toastShare);
+    const lap = toastLap && toastLapTrackId === trackId
+      ? toastLap
+      : getStoredBestReplayLap(trackId);
+    openComposer(trackId, lap, toastShare);
   });
 
   submit.addEventListener('click', () => void shareActiveLap());
@@ -321,14 +371,20 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
     selectionObserver?.observe(card, { attributes: true, attributeFilter: ['class', 'aria-pressed', 'disabled'] });
   }
 
-  window.addEventListener('turn:rivals-reset', () => {
-    for (const track of TRACK_CATALOG) {
-      knownBestTimes.set(track.id, getStoredBestReplayLap(track.id)?.time ?? Infinity);
+  window.addEventListener('turn:rivals-reset', (event) => {
+    if (event.detail?.scope === 'all-tracks') {
+      for (const track of TRACK_CATALOG) setShareState(track.id);
+    } else {
+      setShareState(runtime?.state?.trackId || 'countryside');
     }
+    toastLap = null;
+    toastLapTrackId = '';
     syncTrackShareButtons();
   });
 
   window.addEventListener('turn:lap-invalid', () => {
+    toastLap = null;
+    toastLapTrackId = '';
     if (toastShare) toastShare.hidden = true;
     toast?.classList.remove('has-yourturn-share');
   });
@@ -336,14 +392,24 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   window.addEventListener('turn:lap-result', (event) => {
     const trackId = runtime?.state?.trackId || 'countryside';
     const time = Number(event.detail?.time);
-    const previousBest = knownBestTimes.get(trackId) ?? Infinity;
-    const currentBest = getStoredBestReplayLap(trackId);
+    const previousBest = shareStateFor(trackId).bestTime;
+    const currentBest = runtime?.state?.competitorLaps?.[0] || null;
+    const currentBestTime = Number(currentBest?.time);
+    const currentBestShareable = lapIsShareable(currentBest);
     const isNewBest = Number.isFinite(time)
       && time < previousBest - PB_EPSILON
-      && currentBest
-      && Math.abs(currentBest.time - time) <= 0.002;
-    knownBestTimes.set(trackId, currentBest?.time ?? previousBest);
-    syncTrackShareButtons();
+      && currentBestShareable
+      && Math.abs(currentBestTime - time) <= 0.002;
+
+    if (Number.isFinite(currentBestTime)) {
+      setShareState(trackId, {
+        bestTime: currentBestTime,
+        shareable: currentBestShareable
+      });
+    }
+    shareButtonsDirty = true;
+    toastLap = isNewBest ? currentBest : null;
+    toastLapTrackId = isNewBest ? trackId : '';
 
     if (!toastShare) return;
     toastShare.dataset.trackId = trackId;
@@ -352,9 +418,17 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   });
 
   window.addEventListener('turn:ui-state-change', (event) => {
-    if (!event.detail?.running || event.detail?.reason === 'race-reset') {
+    const reason = event.detail?.reason || '';
+    if (reason === 'rivals-loaded') {
+      updateActiveTrackShareStateFromRuntime(runtime?.state?.trackId || 'countryside');
+      shareButtonsDirty = true;
+    }
+    if (!event.detail?.running || reason === 'race-reset') {
+      if (shareButtonsDirty) syncTrackShareButtons();
       if (toastShare) toastShare.hidden = true;
       toast?.classList.remove('has-yourturn-share');
+      toastLap = null;
+      toastLapTrackId = '';
     }
   });
 
@@ -369,7 +443,7 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   });
   globalThis[INSTALL_FLAG] = api;
   globalThis.__turnYourTurnShare = api;
-  document.documentElement.dataset.turnYourTurnShare = 'r2';
+  document.documentElement.dataset.turnYourTurnShare = 'r3-runtime-state';
   return api;
 }
 
