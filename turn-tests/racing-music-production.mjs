@@ -47,13 +47,13 @@ assert.equal(productionImports[audioPreferencesSpecifier], `/turn/audio/audio-pr
 assert.equal(labImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
 assert.equal(productionImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
 assert.equal(labImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
-assert.equal(productionImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r213-mountain');
-assert.equal(labImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r213-mountain');
+assert.equal(productionImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r214-mountain-ccttbb');
+assert.equal(labImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r214-mountain-ccttbb');
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/);
 assert.match(engine, /music\/songbook\.js\?revision=r197-audio-mix/);
 assert.equal(
   trackerImports['./songbook.js?revision=r185-menu-orchestration'],
-  './songbook.js?revision=r213-mountain',
+  './songbook.js?revision=r214-mountain-ccttbb',
   'Music Tracker must bypass stale songbook modules after direct score edits'
 );
 assert.equal(
@@ -74,7 +74,7 @@ for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'ha
       : songFile === 'harbor'
         ? 'r211-breakwater'
         : songFile === 'mountain'
-          ? 'r213-mountain'
+          ? 'r214-mountain-ccttbb'
           : 'r197-audio-mix';
   assert.match(songbookSource, new RegExp(`${songFile}\\.js\\?revision=${revision}`),
     `${songFile} must use the current user-score cache revision`);
@@ -106,8 +106,8 @@ assert.equal(TRACK_SONGS.mountain.id, 'mountain', 'Mountain keeps the canonical 
 assert.equal(TRACK_SONGS.mountain.name, 'Mountain', 'Mountain exposes the new Mountain title');
 assert.equal(TRACK_SONGS.mountain.bpm, 144, 'Mountain keeps its authored tempo');
 assert.equal(TRACK_SONGS.mountain.key, 'D minor', 'Mountain keeps its authored key metadata');
-assert.deepEqual(TRACK_SONGS.mountain.form, ['tune', 'tune', 'bridge', 'bridge', 'chorus', 'chorus'],
-  'Mountain keeps the authored six-part arrangement');
+assert.deepEqual(TRACK_SONGS.mountain.form, ['chorus', 'chorus', 'tune', 'tune', 'bridge', 'bridge'],
+  'Mountain keeps the requested CCTTBB six-part arrangement');
 
 const leadNames = new Set(Object.keys(LEAD_VOICES));
 const bassNames = new Set(Object.keys(BASS_VOICES));
