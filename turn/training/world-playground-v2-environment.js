@@ -185,7 +185,7 @@ function makeRoadBed(samples, heightAt, trackWidth) {
 
   for (let index = 0; index <= samples.length; index += 1) {
     const sample = samples[index % samples.length];
-    offsets.forEach((offset, profileIndex) => {
+    offsets.forEach((offset) => {
       const point = sample.point.clone().addScaledVector(sample.normal, offset);
       const terrainY = heightAt(point.x, point.z);
       const abs = Math.abs(offset);
