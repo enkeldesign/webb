@@ -29,10 +29,10 @@ const [
   fs.readFile(new URL('../yourturn/challenge-store.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(turnIndex, /\.\/social\/your-turn-share-bootstrap\.js\?revision=r2/,
-  'Production TURN must load the short-link sharing bootstrap with a fresh cache identity');
-assert.match(shareBootstrap, /your-turn-share\.js\?revision=r2/,
-  'The bootstrap must load the short-link sharing implementation');
+assert.match(turnIndex, /\.\/social\/your-turn-share-bootstrap\.js\?revision=r3-lap-result-hot-path/,
+  'Production TURN must load the optimized short-link sharing bootstrap with a fresh cache identity');
+assert.match(shareBootstrap, /your-turn-share\.js\?revision=r3-lap-result-hot-path/,
+  'The bootstrap must load the optimized short-link sharing implementation');
 assert.match(shareBootstrap, /globalThis\.__turnHomeLayout\?\.home/,
   'Sharing must wait until all existing fixed-Home enhancements have completed');
 assert.match(shareBootstrap, /installYourTurnShare\(\{ home \}\)/);
@@ -42,9 +42,12 @@ assert.doesNotMatch(fixedHome, /your-turn-share|installYourTurnShare/,
 assert.match(rivalStorage, /export function getStoredBestReplayLap\(/,
   'TURN must expose the actual stored replay, not only the best-time summary');
 assert.match(rivalStorage, /frames: lap\.frames\.map\(\(frame\) => \(\{ \.\.\.frame \}\)\)/,
-  'Shareable replay reads must clone persisted frames');
-assert.match(rivalStorage, /getStoredBestLap[\s\S]*getStoredBestReplayLap/,
-  'Existing best-lap summaries must keep using the same canonical record source');
+  'Explicit shareable replay reads must still clone persisted frames');
+const bestLapSummary = rivalStorage.match(/export function getStoredBestLap\([\s\S]*?\n\}/)?.[0] || '';
+assert.match(bestLapSummary, /readBestLapRecord/,
+  'Best-lap summaries must use the canonical summary record source');
+assert.doesNotMatch(bestLapSummary, /getStoredBestReplayLap|frames\.map/,
+  'Best-lap summary reads must not clone full replay frames on Home or lap-result hot paths');
 assert.match(rivalStorage, /historical summary-only fallback[\s\S]*oldGhost\?\.bestTime/,
   'Very old best-time-only Countryside records must remain visible even when they cannot be shared');
 
