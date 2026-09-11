@@ -4,7 +4,7 @@ import { AIRPORT_SONG } from './airport.js?revision=r209-paper-skies';
 import { CLIFFSIDE_SONG } from './cliffside.js?revision=r212-open-horizon-final';
 import { HARBOR_SONG } from './harbor.js?revision=r211-breakwater';
 import { MIDNIGHT_CITY_SONG } from './midnight-city.js?revision=r197-audio-mix';
-import { MOUNTAIN_SONG } from './mountain.js?revision=r197-audio-mix';
+import { MOUNTAIN_SONG } from './mountain.js?revision=r213-mountain';
 
 export { MENU_SONG };
 
