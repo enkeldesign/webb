@@ -364,7 +364,20 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Grouped achievement filters with SCORING',
     'TURN 1.18.0 · 2026.09.11-r213 track-music and racing-performance release'
   ]
-}
+},
+  {
+    period: '11 September',
+    title: 'The world playground returns to the workshop',
+    paragraphs: [
+      'TURN 1.19.0 briefly shipped the first HOW TO PLAY world-playground prototype: a single untimed Learner Car loop through miniature Harbor, Cliffside, Mountain, Midnight City, Countryside and Airport districts.',
+      'The first full device tour made the prototype useful as a design study but not yet strong enough as a production world. TURN 1.19.1 therefore removes the playground entry and runtime again while keeping the release history monotonic, so the layout, scale, sightlines, landmark density and road character can be redesigned without leaving an unfinished mode in the game.'
+    ],
+    milestones: [
+      'First complete device tour of the model-world prototype',
+      'Playground removed from production pending redesign',
+      'TURN 1.19.1 · 2026.09.11-r215 rollback release'
+    ]
+  }
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -714,11 +727,19 @@ export const CHANGELOG = Object.freeze([
     ['Runtime cleanup', 'Reduces camera and Spectate hot-path work and removes dead duplicate HUD runtime code.'],
     ['Achievements', 'Groups filters into deliberate rows and adds SCORING while preserving composable filtering.']
   ]
-}
+},
+  {
+    date: '11 September',
+    entries: [
+      ['1.19.0 r214', 'Briefly introduced the HOW TO PLAY world-playground prototype with one untimed Learner Car loop across six miniature track districts.'],
+      ['1.19.1 r215', 'Rolls the playground back out of production after the first complete device tour, restoring the 1.18.0 feature set while keeping version and build history monotonic.'],
+      ['Playground redesign', 'The prototype is retained in Git history for another pass on world scale, district identity, road layout, sightlines, boundaries and landmark composition before it returns.']
+    ]
+  }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.18.0',
-  build: '2026.09.11-r213',
-  note: 'TURN 1.18.0 gives more tracks their own generated scores while making timing-line and race hot paths substantially lighter.'
+  version: '1.19.1',
+  build: '2026.09.11-r215',
+  note: 'TURN 1.19.1 rolls the first world-playground prototype back out of production while its layout and visual language are redesigned.'
 });
