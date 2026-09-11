@@ -112,8 +112,8 @@ export const WORLD_PLAYGROUND_V2_RIVER = Object.freeze([
 ]);
 
 export function worldPlaygroundV2CoastX(z) {
-  const northernCliffPush = 285 * Math.exp(-((z + 315) / 430) ** 2);
-  const harborBay = 78 * Math.exp(-((z - 405) / 210) ** 2);
+  const northernCliffPush = 285 * Math.exp(-(((z + 315) / 430) ** 2));
+  const harborBay = 78 * Math.exp(-(((z - 405) / 210) ** 2));
   return -785 - northernCliffPush + harborBay;
 }
 
