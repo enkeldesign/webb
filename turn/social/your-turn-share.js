@@ -1,4 +1,8 @@
-import { getStoredBestReplayLap } from '../race/rival-storage.js?build=20260806-r161';
+import {
+  getStoredBestLap,
+  getStoredBestReplayLap,
+  hasStoredBestReplayLap
+} from '../race/rival-storage.js?build=20260806-r161';
 import { TRACK_CATALOG, getTrackDefinition } from '../tracks/catalog.js?build=20260806-r161';
 import { getTrackStorageRevision } from '../tracks/definitions.js?build=20260806-r161';
 import { getCarDefinition } from '../vehicle/catalog.js?build=20260806-r161';
@@ -124,16 +128,19 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   const trackButtons = [...rail.querySelectorAll('.turn-yourturn-track-share')];
   const toast = document.querySelector('.lap-result-toast');
   let toastShare = null;
+  let toastLap = null;
+  let toastLapTrackId = '';
   let activeLap = null;
   let activeTrackId = '';
   let returnFocus = null;
   let pausedRace = false;
   let pausedAt = 0;
   let sharing = false;
+  let shareButtonsDirty = false;
   const knownBestTimes = new Map();
 
   for (const track of TRACK_CATALOG) {
-    knownBestTimes.set(track.id, getStoredBestReplayLap(track.id)?.time ?? Infinity);
+    knownBestTimes.set(track.id, getStoredBestLap(track.id)?.time ?? Infinity);
   }
 
   if (toast) {
@@ -150,16 +157,18 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
     for (const button of trackButtons) {
       const trackId = button.dataset.trackId || '';
       const card = button.parentElement?.querySelector('.track-card');
-      const best = getStoredBestReplayLap(trackId);
+      const best = getStoredBestLap(trackId);
+      const shareable = hasStoredBestReplayLap(trackId);
       const unavailable = card?.disabled || card?.classList.contains('is-trophy-locked');
-      button.hidden = !(card?.classList.contains('is-selected') && best && !unavailable);
+      button.hidden = !(card?.classList.contains('is-selected') && shareable && !unavailable);
       button.setAttribute(
         'aria-label',
-        best
+        best && shareable
           ? `Share your best lap on ${formatTrackName(trackId)} as a YOUR TURN challenge`
           : `No shareable best lap on ${formatTrackName(trackId)}`
       );
     }
+    shareButtonsDirty = false;
   }
 
   function setNameValidation(message = '') {
@@ -297,7 +306,10 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
     event.preventDefault();
     event.stopPropagation();
     const trackId = toastShare.dataset.trackId || runtime?.state?.trackId || 'countryside';
-    openComposer(trackId, getStoredBestReplayLap(trackId), toastShare);
+    const lap = toastLap && toastLapTrackId === trackId
+      ? toastLap
+      : getStoredBestReplayLap(trackId);
+    openComposer(trackId, lap, toastShare);
   });
 
   submit.addEventListener('click', () => void shareActiveLap());
@@ -323,12 +335,16 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
 
   window.addEventListener('turn:rivals-reset', () => {
     for (const track of TRACK_CATALOG) {
-      knownBestTimes.set(track.id, getStoredBestReplayLap(track.id)?.time ?? Infinity);
+      knownBestTimes.set(track.id, getStoredBestLap(track.id)?.time ?? Infinity);
     }
+    toastLap = null;
+    toastLapTrackId = '';
     syncTrackShareButtons();
   });
 
   window.addEventListener('turn:lap-invalid', () => {
+    toastLap = null;
+    toastLapTrackId = '';
     if (toastShare) toastShare.hidden = true;
     toast?.classList.remove('has-yourturn-share');
   });
@@ -337,13 +353,15 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
     const trackId = runtime?.state?.trackId || 'countryside';
     const time = Number(event.detail?.time);
     const previousBest = knownBestTimes.get(trackId) ?? Infinity;
-    const currentBest = getStoredBestReplayLap(trackId);
+    const currentBest = runtime?.state?.competitorLaps?.[0] || null;
     const isNewBest = Number.isFinite(time)
       && time < previousBest - PB_EPSILON
       && currentBest
-      && Math.abs(currentBest.time - time) <= 0.002;
-    knownBestTimes.set(trackId, currentBest?.time ?? previousBest);
-    syncTrackShareButtons();
+      && Math.abs(Number(currentBest.time) - time) <= 0.002;
+    knownBestTimes.set(trackId, Number(currentBest?.time) || previousBest);
+    shareButtonsDirty = true;
+    toastLap = isNewBest ? currentBest : null;
+    toastLapTrackId = isNewBest ? trackId : '';
 
     if (!toastShare) return;
     toastShare.dataset.trackId = trackId;
@@ -353,8 +371,11 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
 
   window.addEventListener('turn:ui-state-change', (event) => {
     if (!event.detail?.running || event.detail?.reason === 'race-reset') {
+      if (shareButtonsDirty) syncTrackShareButtons();
       if (toastShare) toastShare.hidden = true;
       toast?.classList.remove('has-yourturn-share');
+      toastLap = null;
+      toastLapTrackId = '';
     }
   });
 
