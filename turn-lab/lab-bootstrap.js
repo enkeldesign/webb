@@ -53,10 +53,9 @@
     return keys[index] ?? null;
   };
 
-  // MOUNTAIN is the subject of this LAB build, so a fresh isolated LAB profile
-  // must not inherit production's 700-trophy gate. Seed only that reward in the
-  // prefixed LAB achievement record; production TURN storage is never read or
-  // written, and every other Trophy Road reward keeps its production behavior.
+  // MOUNTAIN is the subject of the default LAB build, so a fresh isolated LAB
+  // profile must not inherit production's reward gate. World V2 keeps the same
+  // isolated storage contract while using LAB only as an environment incubator.
   const ACHIEVEMENT_KEY = `${LOCAL_PREFIX}turn-achievements-v1`;
   const MOUNTAIN_REWARD_ID = 'mountain';
   const TROPHY_ROAD_STORAGE_VERSION = 6;
@@ -110,6 +109,7 @@
   }
 
   const mountainAccessReady = ensureMountainLabAccess();
+  const worldV2Requested = new URLSearchParams(window.location.search).get('world') === '2';
 
   const isStandalone =
     window.matchMedia?.('(display-mode: standalone)').matches ||
@@ -118,7 +118,7 @@
 
   document.documentElement.classList.toggle('turn-standalone', isStandalone);
   document.documentElement.classList.toggle('turn-browser', !isStandalone);
-  document.documentElement.dataset.turnLab = 'mountain-long-course';
+  document.documentElement.dataset.turnLab = worldV2Requested ? 'world-playground-v2' : 'mountain-long-course';
   document.documentElement.dataset.turnLabMountainAccess = mountainAccessReady ? 'unlocked' : 'storage-blocked';
 
   let releaseBrowserLaunch = null;
@@ -154,7 +154,7 @@
       guideSteps.innerHTML = `
         <div class="install-step"><div class="install-step-number" aria-hidden="true">1</div><div><strong>Open Safari’s Share menu</strong><span>Use the Share button while TURN LAB is open.</span></div></div>
         <div class="install-step"><div class="install-step-number" aria-hidden="true">2</div><div><strong>Choose Add to Home Screen</strong><span>Keep the separate TURN LAB name so production TURN remains untouched.</span></div></div>
-        <div class="install-step"><div class="install-step-number" aria-hidden="true">3</div><div><strong>Launch TURN LAB from its icon</strong><span>LAB keeps its own saves and layers the long MOUNTAIN course over the production TURN engine.</span></div></div>`;
+        <div class="install-step"><div class="install-step-number" aria-hidden="true">3</div><div><strong>Launch TURN LAB from its icon</strong><span>LAB keeps its own saves and layers experiments over the production TURN engine.</span></div></div>`;
       guide.hidden = false;
     });
     browserButton.addEventListener('click', () => {
@@ -167,9 +167,35 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', installGate, { once: true });
-  } else {
+  async function installWorldV2Experiment() {
+    if (!worldV2Requested) return;
+    try {
+      await globalThis.__turnLaunchReady;
+      const deadline = performance.now() + 20000;
+      while (
+        (!globalThis.__turnRuntime || !globalThis.__turnHome || !globalThis.__turnRaceSession)
+        && performance.now() < deadline
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 60));
+      }
+      if (!globalThis.__turnRuntime || !globalThis.__turnHome || !globalThis.__turnRaceSession) {
+        throw new Error('TURN runtime did not become ready for the World V2 environment prototype.');
+      }
+      const module = await import('/turn/training/world-playground-v2-session.js?revision=r1-environment');
+      await module.installWorldPlaygroundV2Lab(globalThis.__turnRuntime);
+    } catch (error) {
+      console.warn('TURN LAB: could not install World Playground V2.', error);
+    }
+  }
+
+  function onReady() {
     installGate();
+    void installWorldV2Experiment();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onReady, { once: true });
+  } else {
+    onReady();
   }
 })();
