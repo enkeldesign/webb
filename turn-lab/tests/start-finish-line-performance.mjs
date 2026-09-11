@@ -1,14 +1,18 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [storage, sharing, chromatic, rivalOnboarding, index, shareBootstrap] = await Promise.all([
+const [storage, sharing, chromatic, rivalOnboarding, index, shareBootstrap, releaseSource] = await Promise.all([
   fs.readFile(new URL('../../turn/race/rival-storage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/social/your-turn-share.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/chromatic-camouflage-r183.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/rival-onboarding.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/social/your-turn-share-bootstrap.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/social/your-turn-share-bootstrap.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8')
 ]);
+
+const release = JSON.parse(releaseSource);
+const escapedCacheKey = release.cacheKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const bestLapSummary = storage.match(
   /export function getStoredBestLap\([\s\S]*?\n\}/
@@ -80,9 +84,9 @@ assert.match(rivalOnboarding, /new THREE\.WebGLRenderTarget\(/,
 assert.match(rivalOnboarding, /renderer\.setRenderTarget\(target\)/,
   'The GPU warm-up must stay off the visible gameplay framebuffer');
 
-assert.match(index, /rival-storage\.js\?build=20260909-r212&revision=r224-finish-line-summary/,
+assert.match(index, new RegExp(`rival-storage\\.js\\?build=${escapedCacheKey}&revision=r224-finish-line-summary`),
   'Production must publish the summary-only rival-storage path under a fresh cache identity');
-assert.match(index, /rival-onboarding\.js\?build=20260909-r212&revision=r277-main-rival-gpu-warmup/,
+assert.match(index, new RegExp(`rival-onboarding\\.js\\?build=${escapedCacheKey}&revision=r277-main-rival-gpu-warmup`),
   'Production must publish the main-renderer rival warm-up under a fresh cache identity');
 assert.match(index, /chromatic-camouflage-r183\.js\?revision=r184-idle-summary-check/,
   'Production must publish the deferred Chromatic evaluator under a fresh cache identity');
