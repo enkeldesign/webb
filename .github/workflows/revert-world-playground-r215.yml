@@ -1,0 +1,103 @@
+name: Prepare TURN 1.19.1 r215 rollback
+
+on:
+  push:
+    branches:
+      - revert/world-playground-r215
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: revert/world-playground-r215
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Prepare rollback release
+        run: |
+          cat > turn/release.json <<'EOF'
+          {
+            "version": "1.19.1",
+            "id": "2026.09.11-r215",
+            "cacheKey": "20260911-r215"
+          }
+          EOF
+
+          node turn/scripts/release.mjs --write
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          history = Path('turn/content/about-history.js')
+          text = history.read_text()
+
+          if "The world playground returns to the workshop" not in text:
+              history_entry = """\n  {\n    period: '11 September',\n    title: 'The world playground returns to the workshop',\n    paragraphs: [\n      'TURN 1.19.0 briefly shipped the first HOW TO PLAY world-playground prototype: a single untimed Learner Car loop through miniature Harbor, Cliffside, Mountain, Midnight City, Countryside and Airport districts.',\n      'The first full device tour made the prototype useful as a design study but not yet strong enough as a production world. TURN 1.19.1 therefore removes the playground entry and runtime again while keeping the release history monotonic, so the layout, scale, sightlines, landmark density and road character can be redesigned without leaving an unfinished mode in the game.'\n    ],\n    milestones: [\n      'First complete device tour of the model-world prototype',\n      'Playground removed from production pending redesign',\n      'TURN 1.19.1 · 2026.09.11-r215 rollback release'\n    ]\n  }"""
+              marker = "\n]);\n\nexport const CHANGELOG = Object.freeze(["
+              if marker not in text:
+                  raise SystemExit('DEVELOPMENT_HISTORY closing marker not found')
+              text = text.replace(marker, "," + history_entry + marker, 1)
+
+          if "['1.19.1 r215'" not in text:
+              changelog_entry = """\n  {\n    date: '11 September',\n    entries: [\n      ['1.19.0 r214', 'Briefly introduced the HOW TO PLAY world-playground prototype with one untimed Learner Car loop across six miniature track districts.'],\n      ['1.19.1 r215', 'Rolls the playground back out of production after the first complete device tour, restoring the 1.18.0 feature set while keeping version and build history monotonic.'],\n      ['Playground redesign', 'The prototype is retained in Git history for another pass on world scale, district identity, road layout, sightlines, boundaries and landmark composition before it returns.']\n    ]\n  }"""
+              marker = "\n]);\n\nexport const CURRENT_RELEASE = Object.freeze({"
+              if marker not in text:
+                  raise SystemExit('CHANGELOG closing marker not found')
+              text = text.replace(marker, "," + changelog_entry + marker, 1)
+
+          text = re.sub(
+              r"export const CURRENT_RELEASE = Object\.freeze\(\{[\s\S]*?\}\);",
+              """export const CURRENT_RELEASE = Object.freeze({\n  version: '1.19.1',\n  build: '2026.09.11-r215',\n  note: 'TURN 1.19.1 rolls the first world-playground prototype back out of production while its layout and visual language are redesigned.'\n});""",
+              text,
+              count=1
+          )
+          history.write_text(text)
+
+          bootstrap = Path('turn/ui/about-history-bootstrap-r165.js')
+          b = bootstrap.read_text()
+          b = re.sub(r"about-history\.js\?build=\d{8}-r\d+", "about-history.js?build=20260911-r215", b)
+          bootstrap.write_text(b)
+
+          for filename in ['turn/design.html', 'turn/design-dialogs.html']:
+              path = Path(filename)
+              d = path.read_text()
+              d = re.sub(r'TURN 1\.18\.0', 'TURN 1.19.1', d)
+              d = re.sub(r'Build 2026\.09\.11-r213', 'Build 2026.09.11-r215', d)
+              path.write_text(d)
+
+          yourturn = Path('yourturn/index.html')
+          y = yourturn.read_text().replace('20260911-r213', '20260911-r215')
+          yourturn.write_text(y)
+          PY
+
+          node turn-next/scripts/build-parity-app.mjs
+          node turn-next/scripts/build-parity-main.mjs
+          node turn-next/scripts/build-parity-entry.mjs
+
+      - name: Verify rollback release
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-next/scripts/build-parity-app.mjs --check
+          node turn-next/scripts/build-parity-main.mjs --check
+          node turn-next/scripts/build-parity-entry.mjs --check
+          node turn-tests/release-production.mjs
+          node turn-tests/about-history-production.mjs
+          node turn-tests/release-composition-production.mjs --base 08290210ffe8cbd5ee5e7706c81475532c9040c6
+
+      - name: Commit rollback release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn turn-lab turn-next yourturn
+          git commit -m "Release TURN 1.19.1 r215 rollback" || exit 0
+          git push origin HEAD:revert/world-playground-r215
