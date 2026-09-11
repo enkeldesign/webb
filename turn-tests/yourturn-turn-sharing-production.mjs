@@ -29,10 +29,10 @@ const [
   fs.readFile(new URL('../yourturn/challenge-store.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(turnIndex, /\.\/social\/your-turn-share-bootstrap\.js\?revision=r3-lap-result-hot-path/,
-  'Production TURN must load the optimized short-link sharing bootstrap with a fresh cache identity');
-assert.match(shareBootstrap, /your-turn-share\.js\?revision=r3-lap-result-hot-path/,
-  'The bootstrap must load the optimized short-link sharing implementation');
+assert.match(turnIndex, /\.\/social\/your-turn-share-bootstrap\.js\?revision=r4-runtime-share-state/,
+  'Production TURN must load the runtime-authoritative short-link sharing bootstrap with a fresh cache identity');
+assert.match(shareBootstrap, /your-turn-share\.js\?revision=r4-runtime-share-state/,
+  'The bootstrap must load the runtime-authoritative short-link sharing implementation');
 assert.match(shareBootstrap, /globalThis\.__turnHomeLayout\?\.home/,
   'Sharing must wait until all existing fixed-Home enhancements have completed');
 assert.match(shareBootstrap, /installYourTurnShare\(\{ home \}\)/);
@@ -75,7 +75,14 @@ assert.match(shareSource, /input\.value = profile\.name \|\| ''/,
   'The composer must prefill the last deliberately entered social name');
 assert.match(shareSource, /saveSocialRacerName\(racerName\)/,
   'A successfully entered social name must become the next composer default');
-assert.match(shareSource, /card\?\.classList\.contains\('is-selected'\) && shareable/,
+assert.match(shareSource, /const shareStateByTrack = new Map\(\)/,
+  'TURN sharing must keep best-time/shareability state in memory after hydration');
+const homeShareSync = shareSource.match(/function syncTrackShareButtons\(\) \{[\s\S]*?\n  \}/)?.[0] || '';
+assert.match(homeShareSync, /shareStateFor\(trackId\)/,
+  'Home share controls must use in-memory sharing state');
+assert.doesNotMatch(homeShareSync, /getStoredBestLap|getStoredBestReplayLap|hasStoredBestReplayLap/,
+  'Home share-control refreshes must not reread persistence');
+assert.match(shareSource, /card\?\.classList\.contains\('is-selected'\) && shareState\.shareable/,
   'Only the selected track with a shareable replay gets the Home share control');
 assert.match(shareSource, /time < previousBest - PB_EPSILON/,
   'The lap-result share entry must appear only for a new personal best');
@@ -139,4 +146,4 @@ assert.match(yourTurnUi, /adoptSocialRacerIdentity\(\{ id: existing\.id, name: t
 assert.match(yourTurnUi, /challenge\.racers\.some\(\(racer\) => racer\.id === sessionState\.racerId\)/,
   'A recognized racer ID must bypass unnecessary identity confirmation');
 
-console.log('TURN → YOUR TURN seed sharing, time-record Home placement, short transport, remembered names and returning-racer claim regression passed.');
+console.log('TURN → YOUR TURN seed sharing, runtime state, time-record Home placement, short transport, remembered names and returning-racer claim regression passed.');
