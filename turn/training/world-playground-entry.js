@@ -87,6 +87,16 @@ function installStyles(root) {
       cursor: progress;
       opacity: .72;
     }
+
+    /* The model world is deliberately untimed free roam: keep speed and driving
+       controls, but remove competitive lap/record chips and result surfaces. */
+    .turn-world-playground-active .lap-chip,
+    .turn-world-playground-active .time-chip,
+    .turn-world-playground-active .best-chip,
+    .turn-world-playground-active .position-chip,
+    .turn-world-playground-active .lap-result-toast {
+      display: none !important;
+    }
   `;
   root.head.appendChild(style);
 }

@@ -195,7 +195,18 @@ export async function installWorldPlayground(runtime = globalThis.__turnRuntime)
       session.frame = 0;
       return;
     }
-    if (runtime.state.running) constrainToWorld(session.course?.boundary || []);
+    if (runtime.state.running) {
+      constrainToWorld(session.course?.boundary || []);
+      // This is free roam, not a seventh competitive track. Keep race timing,
+      // checkpoints, replay recording and score runtimes dormant even when the
+      // oversized loop crosses the ordinary start gate.
+      runtime.state.lapActive = false;
+      runtime.state.lapInvalid = false;
+      runtime.state.lapElapsed = 0;
+      runtime.state.lapCheckpointIndex = 0;
+      runtime.state.recording = [];
+      runtime.state.suppressNextLapStartMessage = true;
+    }
     session.frame = requestAnimationFrame(playgroundFrame);
   }
 
