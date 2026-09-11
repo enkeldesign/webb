@@ -1,4 +1,4 @@
-import { installYourTurnShare } from './your-turn-share.js?revision=r2';
+import { installYourTurnShare } from './your-turn-share.js?revision=r3-lap-result-hot-path';
 
 let started = false;
 
