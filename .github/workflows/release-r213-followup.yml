@@ -65,9 +65,15 @@ jobs:
           node turn-tests/release-production.mjs
           node turn-tests/release-composition-production.mjs --base 39a7d503edfe4702a17986635ddb6eea19a401e4
           node turn-tests/yourturn-engine-parity-production.mjs
-          node turn-tests/yourturn-motion-parity-production.mjs
+          node turn-tests/yourturn-motion-start-guard-production.mjs
+          node turn-tests/yourturn-r411-production.mjs
+          node turn-tests/yourturn-r417-observer-loop-production.mjs
+          node turn-tests/yourturn-about-modal-production.mjs
           node turn-tests/yourturn-turn-sharing-production.mjs
           node turn-tests/yourturn-short-links-production.mjs
+          node turn-tests/yourturn-start-grid-production.mjs
+          node turn-tests/telemetry-production.mjs
+          node turn-next/scripts/build-parity-app.mjs --check
           node turn-lab/tests/start-finish-line-performance.mjs
 
       - name: Commit parity fixes
