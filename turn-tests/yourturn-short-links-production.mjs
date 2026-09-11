@@ -106,8 +106,8 @@ assert.match(turnShareSource, /makeShareableChallengeUrl/,
   'TURN-created seeds must use the same short-link transport');
 assert.match(turnShareSource, /Preparing challenge link…/,
   'The composer should announce the short-link preparation delay');
-assert.match(turnIndex, /your-turn-share-bootstrap\.js\?revision=r2/,
-  'TURN must cache-bust the short-link sharing bootstrap');
+assert.match(turnIndex, /your-turn-share-bootstrap\.js\?revision=r4-runtime-share-state/,
+  'TURN must cache-bust the runtime-authoritative short-link sharing bootstrap');
 assert.match(yourTurnIndex, /session\.js\?revision=r3[^\n]*session\.js\?revision=r595-landscape-recalibrate/,
   'YOUR TURN must cache-bust the current session that understands short IDs');
 
