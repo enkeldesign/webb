@@ -39,18 +39,21 @@ const legacyTrophyRoadCompatibilityRoutes = Object.freeze({
   '/turn/progression/trophy-road.js?revision=r248-supercar': '/turn/progression/trophy-road.js?revision=r253-supercar-release'
 });
 
-const productionPresentationRoutes = Object.freeze({
-  '/turn/progression/trophy-road.js?revision=r243-mountain-1300': '/turn/progression/trophy-road-track-icons.js?revision=r1-track-reward-icons',
-  '/turn/progression/trophy-road.js?revision=r248-supercar': '/turn/progression/trophy-road-track-icons.js?revision=r1-track-reward-icons',
-  '/turn/progression/trophy-road.js?revision=r253-supercar-release': '/turn/progression/trophy-road-track-icons.js?revision=r1-track-reward-icons',
-  '/turn/achievements/catalog.js?revision=r222-awd-label': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-  '/turn/achievements/catalog.js?revision=r240-trophy-road-2': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-  '/turn/achievements/catalog.js?revision=r241-learning-achievements': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-  '/turn/achievements/catalog-production.js?revision=r222-awd-label': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-  '/turn/achievements/catalog-production.js?revision=r240-trophy-road-2': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-  '/turn/achievements/catalog-production.js?revision=r241-learning-achievements': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-  '/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims': '/turn/garage/lot-showroom-track-icon.js?revision=r2-swift-lot-ui'
-});
+function productionPresentationRoutes(release) {
+  const trophyRoadPresentation = `/turn/progression/trophy-road-track-icons.js?revision=r1-track-reward-icons&build=${release.cacheKey}`;
+  return Object.freeze({
+    '/turn/progression/trophy-road.js?revision=r243-mountain-1300': trophyRoadPresentation,
+    '/turn/progression/trophy-road.js?revision=r248-supercar': trophyRoadPresentation,
+    '/turn/progression/trophy-road.js?revision=r253-supercar-release': trophyRoadPresentation,
+    '/turn/achievements/catalog.js?revision=r222-awd-label': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+    '/turn/achievements/catalog.js?revision=r240-trophy-road-2': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+    '/turn/achievements/catalog.js?revision=r241-learning-achievements': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+    '/turn/achievements/catalog-production.js?revision=r222-awd-label': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+    '/turn/achievements/catalog-production.js?revision=r240-trophy-road-2': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+    '/turn/achievements/catalog-production.js?revision=r241-learning-achievements': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+    '/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims': '/turn/garage/lot-showroom-track-icon.js?revision=r2-swift-lot-ui'
+  });
+}
 
 const requiredActiveModules = Object.freeze([
   'turn/app.js',
@@ -346,7 +349,7 @@ const yourTurnImportMap = parseImportMap(yourTurnDocument);
 assert.deepEqual(labImportMap, headGraph.importMap, 'TURN LAB must use the exact production import map');
 assertRouteTargets(headGraph.importMap, criticalReleaseTargets, 'Production TURN');
 assertRouteTargets(headGraph.importMap, crossDeploymentCompatibilityRoutes, 'Production TURN');
-assertRouteTargets(headGraph.importMap, productionPresentationRoutes, 'Production TURN');
+assertRouteTargets(headGraph.importMap, productionPresentationRoutes(headGraph.release), 'Production TURN');
 assertRouteTargets(nextImportMap, criticalReleaseTargets, 'TURN NEXT');
 assertRouteTargets(nextImportMap, crossDeploymentCompatibilityRoutes, 'TURN NEXT');
 assertRouteTargets(nextImportMap, legacyTrophyRoadCompatibilityRoutes, 'TURN NEXT');
