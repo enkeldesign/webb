@@ -148,7 +148,9 @@ for (const [specifier, target] of Object.entries(futureImports)) {
   if (!target.startsWith('/turn/')) continue;
   const url = new URL(target, 'https://enkel.design');
   if (url.pathname === '/turn/garage/lot-enhancement-runtime.js'
-    || url.pathname === '/turn/progression/trophy-road-track-icons.js') {
+    || url.pathname === '/turn/progression/trophy-road-track-icons.js'
+    || url.pathname === '/turn/garage/lot-track-select.js'
+    || url.pathname === '/turn/m8-home.js') {
     assert.equal(url.searchParams.get('build'), futureRelease.cacheKey,
       `${specifier} must advance with the release, including compatibility aliases`);
   }

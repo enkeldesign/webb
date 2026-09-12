@@ -324,8 +324,10 @@ assert.match(wrapperSource, /lot-saved-paint\.css\?revision=r246-lot-saved-paint
 assert.match(enhancementSource, /lot-paint-reward\.js\?revision=r246-lot-saved-paint/);
 assert.match(savedPaintCss, /\.lot-paint-save-action\[data-mode='reset'\]/,
   'RESET must have a distinct paper treatment while SAVE remains the cyan action');
-assert.match(index, /"\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate": "\/turn\/garage\/lot-track-select\.js\?revision=r252-supercar-outward-rims"/,
-  'Production must route existing Home callers through the corrected Supercar wheel wrapper URL');
+const imports = JSON.parse(index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)[1]).imports;
+assert.equal(imports['/turn/garage/lot-track-select.js?revision=r200-production-candidate'],
+  `/turn/garage/lot-track-select.js?revision=r252-supercar-outward-rims&build=${release.cacheKey}`,
+  'Production must route existing Home callers through the corrected Supercar wrapper with the current build identity');
 
 console.log(`TURN ${release.id} Hatchback, Rally Racer, native secondary paint and saved Lot paint passed.`);
 

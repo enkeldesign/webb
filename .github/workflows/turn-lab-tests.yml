@@ -112,6 +112,12 @@ jobs:
       - name: Run production race and replay regression tests
         run: node turn-tests/race-production.mjs
 
+      - name: Run rival persistence transaction regression
+        run: node turn-tests/rival-persistence-production.mjs
+
+      - name: Run Lot preparation failure recovery regression
+        run: node turn-tests/lot-preparation-retry-production.mjs
+
       - name: Run multi-track and Airport regression
         run: node turn-lab/tests/multi-track-production.mjs
 

@@ -159,7 +159,9 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
     if (typeof target !== 'string' || !target.startsWith('/turn/')) continue;
     const pathname = new URL(target, 'https://enkel.design').pathname;
     if (pathname === '/turn/garage/lot-enhancement-runtime.js'
-      || pathname === '/turn/progression/trophy-road-track-icons.js') {
+      || pathname === '/turn/progression/trophy-road-track-icons.js'
+      || pathname === '/turn/garage/lot-track-select.js'
+      || pathname === '/turn/m8-home.js') {
       synchronizeReleaseBoundImportTarget(importMap, release, specifier);
     }
   }

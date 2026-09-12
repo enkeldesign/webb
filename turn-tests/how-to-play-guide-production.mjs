@@ -199,8 +199,8 @@ assert.match(resetCss, /\.m8-settings-dialog \.m8-reset-rivals,[\s\S]*background
 assert.match(resetCss, /\.utility-group \.reset-rivals-button,[\s\S]*#ffd43b/, 'The direct start-line reset action must also remain yellow');
 
 assert.match(rivalStorage, /export function clearAllRivalsState\(state, trackIds = \[\]\)/);
-assert.match(rivalStorage, /localStorage\.removeItem\(rivalKey\(trackId\)\)/);
-assert.match(rivalStorage, /localStorage\.removeItem\(ghostKey\(trackId\)\)/);
+assert.match(rivalStorage, /for \(const key of \[rivalKey\(trackId\), ghostKey\(trackId\)\]\) \{[\s\S]*?localStorage\.removeItem\(key\)/,
+  'The shared reset helper must remove both current rival and legacy ghost storage keys');
 assert.match(rivalStorage, /state\.trackId = activeTrackId/, 'An all-track reset must preserve the runtime’s active track');
 assert.match(rivalStorage, /syncPrimaryRivalState\(state\)/);
 assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId: activeTrackId \}\)/, 'The race Settings path must clear only the current track storage key');

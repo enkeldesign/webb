@@ -65,8 +65,8 @@ assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\);[\s\S]*const
 assert.match(wrapper, /removeScreenReaderPass\(\);[\s\S]*removeEnhancements\(\);/,
   'Showroom semantic cleanup must release before the underlying enhancement bundle');
 assert.match(wrapper, /export function showEnhancedLot/);
-assert.match(wrapper, /if \(originalLotModule && screenReaderPassModule\) return mountEnhancedLot\(options\)/,
-  'M8 must not cross another asynchronous boundary once the showroom and semantic pass have been prepared');
+assert.match(wrapper, /if \(showroomPrepared\) return mountEnhancedLot\(options\)/,
+  'M8 must mount synchronously only once modules, enhancements and styles have all been prepared');
 assert.match(wrapper, /lot-showroom-experiment\.js\?revision=r200-production-candidate/,
   'The production wrapper must lazy-load the current showroom implementation');
 assert.match(wrapper, /lot-showroom-experiment\.css\?revision=r200-production-candidate/,

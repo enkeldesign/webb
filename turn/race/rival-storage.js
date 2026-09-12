@@ -16,7 +16,9 @@ const GHOST_KEY = 'turn-three-ghost-v4';
 const COMPETITOR_KEY = 'turn-personal-rivals-v1';
 const pendingRivalSaves = new Map();
 const bestLapSummaryCache = new Map();
+const RIVAL_RETRY_DELAYS = [1000, 4000, 16000];
 let pendingRivalFlush = null;
+let rivalRetryAttempt = 0;
 let persistenceLifecycleInstalled = false;
 
 function normalizeTrackId(trackId) {
@@ -105,7 +107,7 @@ function readBestLapRecord(trackId) {
     // Preserve the historical summary-only fallback. Very old Countryside saves
     // can contain a best time without enough replay frames to share as YOUR TURN;
     // Home should still display that record even though no share button is offered.
-    if (activeTrackId === DEFAULT_TRACK_ID) {
+    if (sourceVersion < RIVAL_STORAGE_VERSION && activeTrackId === DEFAULT_TRACK_ID) {
       const oldGhost = JSON.parse(localStorage.getItem(ghostKey(activeTrackId)));
       const legacyTime = Number(oldGhost?.bestTime);
       if (Number.isFinite(legacyTime)) {
@@ -168,21 +170,42 @@ export function flushScheduledRivalsState() {
   if (!pendingRivalSaves.size) return true;
   let success = true;
   const payloads = [...pendingRivalSaves.values()];
-  pendingRivalSaves.clear();
   for (const payload of payloads) {
     try {
       writeRivalPayload(payload);
+      if (pendingRivalSaves.get(payload.key) === payload) pendingRivalSaves.delete(payload.key);
     } catch (_) {
       success = false;
     }
   }
+  if (!pendingRivalSaves.size) rivalRetryAttempt = 0;
+  if (!success) schedulePendingRivalRetry();
   return success;
+}
+
+function schedulePendingRivalRetry() {
+  if (!pendingRivalSaves.size || pendingRivalFlush
+    || globalThis.document?.visibilityState === 'hidden'
+    || rivalRetryAttempt >= RIVAL_RETRY_DELAYS.length) return;
+  const id = globalThis.setTimeout(() => {
+    pendingRivalFlush = null;
+    flushScheduledRivalsState();
+  }, RIVAL_RETRY_DELAYS[rivalRetryAttempt++]);
+  pendingRivalFlush = { type: 'retry', id };
+}
+
+function resumePendingRivalPersistence() {
+  if (!pendingRivalSaves.size) return;
+  rivalRetryAttempt = 0;
+  schedulePendingRivalFlush();
 }
 
 function ensurePersistenceLifecycle() {
   if (persistenceLifecycleInstalled) return;
   persistenceLifecycleInstalled = true;
   globalThis.addEventListener?.('pagehide', flushScheduledRivalsState);
+  globalThis.addEventListener?.('pagehide', cancelScheduledRivalFlush);
+  globalThis.addEventListener?.('pageshow', resumePendingRivalPersistence);
   globalThis.addEventListener?.('storage', (event) => {
     const key = String(event?.key || '');
     if (!key || key.startsWith(COMPETITOR_KEY) || key.startsWith(GHOST_KEY)) {
@@ -190,12 +213,17 @@ function ensurePersistenceLifecycle() {
     }
   });
   globalThis.document?.addEventListener?.('visibilitychange', () => {
-    if (globalThis.document?.visibilityState === 'hidden') flushScheduledRivalsState();
+    if (globalThis.document?.visibilityState === 'hidden') {
+      flushScheduledRivalsState();
+      cancelScheduledRivalFlush();
+    } else {
+      resumePendingRivalPersistence();
+    }
   });
 }
 
 function schedulePendingRivalFlush() {
-  if (pendingRivalFlush) return;
+  if (!pendingRivalSaves.size || pendingRivalFlush) return;
   const flush = () => {
     pendingRivalFlush = null;
     flushScheduledRivalsState();
@@ -213,6 +241,8 @@ export function scheduleRivalsStateSave(state, { trackId } = {}) {
   try {
     const payload = rivalSavePayload(state, trackId);
     pendingRivalSaves.set(payload.key, payload);
+    rivalRetryAttempt = 0;
+    if (pendingRivalFlush?.type === 'retry') cancelScheduledRivalFlush();
     ensurePersistenceLifecycle();
     schedulePendingRivalFlush();
     return true;
@@ -224,9 +254,17 @@ export function scheduleRivalsStateSave(state, { trackId } = {}) {
 export function saveRivalsState(state, { trackId } = {}) {
   try {
     const payload = rivalSavePayload(state, trackId);
-    pendingRivalSaves.delete(payload.key);
+    pendingRivalSaves.set(payload.key, payload);
+    rivalRetryAttempt = 0;
+    ensurePersistenceLifecycle();
+    try {
+      writeRivalPayload(payload);
+    } catch (_) {
+      schedulePendingRivalRetry();
+      return false;
+    }
+    if (pendingRivalSaves.get(payload.key) === payload) pendingRivalSaves.delete(payload.key);
     if (!pendingRivalSaves.size) cancelScheduledRivalFlush();
-    writeRivalPayload(payload);
     return true;
   } catch (_) {
     return false;
@@ -237,11 +275,12 @@ export function loadRivalsState({ state, samples, findNearestTrack, trackId }) {
   const activeTrackId = stateTrackId(state, trackId);
 
   try {
-    const savedRivals = JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
+    const pending = pendingRivalPayload(activeTrackId);
+    const savedRivals = pending || JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
     let laps = Array.isArray(savedRivals?.laps) ? savedRivals.laps : [];
     let sourceVersion = Number(savedRivals?.version) || 0;
 
-    if (!laps.length && activeTrackId === DEFAULT_TRACK_ID) {
+    if (sourceVersion < RIVAL_STORAGE_VERSION && !laps.length && activeTrackId === DEFAULT_TRACK_ID) {
       const oldGhost = JSON.parse(localStorage.getItem(ghostKey(activeTrackId)));
       if (
         oldGhost &&
@@ -293,33 +332,37 @@ export function loadRivalsState({ state, samples, findNearestTrack, trackId }) {
   }
 }
 
+function clearTrackRivalPersistence(trackId) {
+  // Cancel queued data before removing disk data so an idle/retry flush cannot
+  // resurrect a reset. Other tracks keep their pending saves and scheduled flush.
+  pendingRivalSaves.delete(rivalKey(trackId));
+  if (!pendingRivalSaves.size) {
+    cancelScheduledRivalFlush();
+    rivalRetryAttempt = 0;
+  }
+  rememberBestLapSummary(trackId, null);
+  for (const key of [rivalKey(trackId), ghostKey(trackId)]) {
+    try { localStorage.removeItem(key); } catch (_) {}
+  }
+}
+
 export function clearRivalsState(state, { trackId } = {}) {
   const activeTrackId = stateTrackId(state, trackId);
   state.trackId = activeTrackId;
   state.competitorLaps = [];
   syncPrimaryRivalState(state);
-  rememberBestLapSummary(activeTrackId, null);
-
-  try {
-    localStorage.removeItem(rivalKey(activeTrackId));
-    localStorage.removeItem(ghostKey(activeTrackId));
-  } catch (_) {}
+  clearTrackRivalPersistence(activeTrackId);
 }
 
 export function clearAllRivalsState(state, trackIds = []) {
   const activeTrackId = stateTrackId(state);
   const normalizedTrackIds = [...new Set([
     activeTrackId,
-    ...trackIds
+    ...trackIds,
+    ...[...pendingRivalSaves.values()].map((payload) => payload.value.trackId)
   ].map(normalizeTrackId))];
 
-  try {
-    for (const trackId of normalizedTrackIds) {
-      localStorage.removeItem(rivalKey(trackId));
-      localStorage.removeItem(ghostKey(trackId));
-      rememberBestLapSummary(trackId, null);
-    }
-  } catch (_) {}
+  for (const trackId of normalizedTrackIds) clearTrackRivalPersistence(trackId);
 
   state.trackId = activeTrackId;
   state.competitorLaps = [];
@@ -366,7 +409,7 @@ export function getStoredBestReplayLap(trackId = DEFAULT_TRACK_ID) {
       : null;
     if (bestLap) return bestLap;
 
-    if (activeTrackId === DEFAULT_TRACK_ID) {
+    if (sourceVersion < RIVAL_STORAGE_VERSION && activeTrackId === DEFAULT_TRACK_ID) {
       const oldGhost = JSON.parse(localStorage.getItem(ghostKey(activeTrackId)));
       const legacyTime = Number(oldGhost?.bestTime);
       if (Number.isFinite(legacyTime) && Array.isArray(oldGhost?.frames) && oldGhost.frames.length > 20) {

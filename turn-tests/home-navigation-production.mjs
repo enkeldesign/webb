@@ -73,7 +73,7 @@ assert.match(
 );
 assert.match(
   homeSource,
-  /function prepareLotOnce\(\) \{[\s\S]*lotWarmupPromise = prepareEnhancedLot\(\)/,
+  /function prepareLotOnce\(\) \{[\s\S]*const preparation = prepareEnhancedLot\(\)[\s\S]*lotWarmupPromise = preparation/,
   'Home must reuse one showroom warmup across idle preparation and the explicit transition'
 );
 assert.match(

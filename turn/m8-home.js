@@ -712,7 +712,13 @@ export async function installM8HomeNavigation() {
   }
 
   function prepareLotOnce() {
-    if (!lotWarmupPromise) lotWarmupPromise = prepareEnhancedLot();
+    if (!lotWarmupPromise) {
+      const preparation = prepareEnhancedLot().catch((error) => {
+        if (lotWarmupPromise === preparation) lotWarmupPromise = null;
+        throw error;
+      });
+      lotWarmupPromise = preparation;
+    }
     return lotWarmupPromise;
   }
 
