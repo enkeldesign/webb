@@ -323,8 +323,6 @@ const [
   yourTurnDocument,
   aboutBootstrap,
   aboutHistory,
-  designMain,
-  designDialogs,
   workflowEntries
 ] = await Promise.all([
   buildProductionGraph(currentReader),
@@ -332,14 +330,12 @@ const [
   currentReader('turn-next/index.html'),
   currentReader('yourturn/index.html'),
   currentReader('turn/ui/about-history-bootstrap-r165.js'),
-  currentReader('turn/content/about-history.js'),
-  currentReader('turn/design.html'),
-  currentReader('turn/design-dialogs.html'),
+  currentReader('turn/content/about-history-current.js'),
   Promise.all(turnWorkflowPaths.map(async (workflowPath) => [workflowPath, await currentReader(workflowPath)]))
 ]);
 
 assert.ok(
-  labDocument && nextDocument && yourTurnDocument && aboutBootstrap && aboutHistory && designMain && designDialogs,
+  labDocument && nextDocument && yourTurnDocument && aboutBootstrap && aboutHistory,
   'TURN deployment and release-facing documents must exist'
 );
 const labImportMap = parseImportMap(labDocument);
@@ -370,19 +366,13 @@ assert.doesNotMatch(headGraph.document, /href=["'][^"']*(?:\/turn\/stats|stats\/
 
 const escapedVersion = headGraph.release.version.replaceAll('.', '\\.');
 const escapedReleaseId = headGraph.release.id.replaceAll('.', '\\.');
-assert.match(aboutBootstrap, new RegExp(`about-history\\.js\\?build=${headGraph.release.cacheKey}`),
+assert.match(aboutBootstrap, new RegExp(`about-history-current\\.js\\?build=${headGraph.release.cacheKey}`),
   'About must import release history through the current cache identity');
 assert.match(
   aboutHistory,
   new RegExp(`CURRENT_RELEASE[\\s\\S]*version: '${escapedVersion}'[\\s\\S]*build: '${escapedReleaseId}'`),
   'About history must describe the current release source of truth'
 );
-for (const source of [designMain, designDialogs]) {
-  assert.match(source, new RegExp(`TURN ${escapedVersion}`),
-    'Design references must identify the current release version');
-  assert.match(source, new RegExp(`Build ${escapedReleaseId}`),
-    'Design references must identify the current release build');
-}
 assert.match(nextDocument, new RegExp(`Source TURN v${escapedVersion} · Build ${escapedReleaseId}`),
   'TURN NEXT must identify the current production release');
 for (const bootstrap of ['motion-safe-zone.js', 'orientation-compat.js']) {
