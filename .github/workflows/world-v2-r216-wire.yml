@@ -1,0 +1,101 @@
+name: Prepare TURN LAB r216 World V2 wiring
+
+on:
+  push:
+    branches:
+      - feature/world-playground-v2-environment
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/world-playground-v2-environment
+          fetch-depth: 0
+      - name: Wire macro landmark playground and LAB build
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          index = Path('turn-lab/index.html')
+          text = index.read_text()
+          old = """    globalThis.__TURN_LAB_SOURCE__ = Object.freeze({
+              runtime: 'production TURN 2026.09.11-r215',
+              purpose: 'mountain-long-course'
+            });"""
+          new = """    globalThis.__TURN_LAB_BUILD__ = Object.freeze({
+              id: '2026.09.12-lab-r216',
+              cacheKey: '20260912-lab-r216',
+              purpose: 'world-v2-macro-landmarks'
+            });
+            globalThis.__TURN_LAB_SOURCE__ = Object.freeze({
+              runtime: 'production TURN 2026.09.11-r215',
+              purpose: 'world-v2-macro-landmarks'
+            });"""
+          if old not in text:
+              raise SystemExit('TURN LAB source block not found')
+          text = text.replace(old, new, 1)
+          text = text.replace(
+              '<!-- TURN LAB MOUNTAIN long-course experiment. Runtime source: production TURN 2026.09.11-r215. -->',
+              '<!-- TURN LAB 2026.09.12-lab-r216 · World V2 macro-landmark experiment. Runtime source: production TURN 2026.09.11-r215. -->',
+              1
+          )
+          index.write_text(text)
+
+          bootstrap = Path('turn-lab/lab-bootstrap.js')
+          text = bootstrap.read_text()
+          text = text.replace(
+              "  document.documentElement.dataset.turnLabMountainAccess = mountainAccessReady ? 'unlocked' : 'storage-blocked';",
+              "  document.documentElement.dataset.turnLabMountainAccess = mountainAccessReady ? 'unlocked' : 'storage-blocked';\n  document.documentElement.dataset.turnLabBuild = globalThis.__TURN_LAB_BUILD__?.id || '2026.09.12-lab-r216';",
+              1
+          )
+          text = text.replace("    if (!worldV2Requested) return;\n", '', 1)
+          text = text.replace(
+              "      const module = await import('/turn/training/world-playground-v2-session.js?revision=r1-environment');",
+              "      const module = await import('/turn/training/world-playground-v2-session.js?revision=r2-macro-landmarks-lab-r216');",
+              1
+          )
+          bootstrap.write_text(text)
+
+          session = Path('turn/training/world-playground-v2-session.js')
+          text = session.read_text()
+          text = text.replace(
+              "} from './world-playground-v2-environment.js?revision=r1-environment';",
+              "} from './world-playground-v2-environment.js?revision=r2-macro-landmarks-lab-r216';",
+              1
+          )
+          text = text.replace("const REVISION = 'r1-environment';", "const REVISION = 'r2-macro-landmarks';", 1)
+          text = text.replace(
+              "      session.course = buildWorldPlaygroundV2Environment();\n      overrideRuntimeTrack(session.course);",
+              "      session.course = buildWorldPlaygroundV2Environment();\n      await Promise.race([\n        session.course.landmarksReady || Promise.resolve(),\n        new Promise((resolve) => setTimeout(resolve, 1400))\n      ]);\n      overrideRuntimeTrack(session.course);",
+              1
+          )
+          text = text.replace("runtime.scene.fog = new THREE.Fog(0xb8d4d8, 560, 2180);", "runtime.scene.fog = new THREE.Fog(0xb8d4d8, 980, 3400);", 1)
+          text = text.replace("globalThis.__turnShowMessage?.('TURN WORLD V2 · ENVIRONMENT', 1800);", "globalThis.__turnShowMessage?.('TURN WORLD V2 · LAB r216', 1800);", 1)
+          text = text.replace("environmentOnly: true", "environmentOnly: false", 2)
+          text = text.replace("button.textContent = 'ENTER WORLD V2 ENVIRONMENT';", "button.textContent = 'ENTER WORLD V2';", 1)
+          text = text.replace(
+              "button.setAttribute('aria-label', 'Enter the TURN World V2 environment prototype in the Learner Car');",
+              "button.setAttribute('aria-label', 'Enter TURN World V2 in the Learner Car, TURN LAB build r216');",
+              1
+          )
+          session.write_text(text)
+          PY
+
+          node --check turn-lab/lab-bootstrap.js
+          node --check turn/training/world-playground-v2-session.js
+          node --check turn/training/world-playground-v2-landmarks-r1.js
+          npx --yes eslint@9.39.1 turn/training/world-playground-v2-session.js turn/training/world-playground-v2-landmarks-r1.js
+
+      - name: Commit LAB r216 wiring
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn-lab/index.html turn-lab/lab-bootstrap.js turn/training/world-playground-v2-session.js
+          git commit -m "Wire World V2 macro landmarks into TURN LAB r216"
+          git push origin HEAD:feature/world-playground-v2-environment
