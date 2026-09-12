@@ -18,14 +18,14 @@
   </script>
 </head>
 <body>
-  <div id="label">WORLD V2 · ENVIRONMENT ONLY</div>
+  <div id="label">WORLD V2 · ENVIRONMENT ONLY · r3</div>
   <script type="module">
     import * as THREE from 'three';
-    import { buildWorldPlaygroundV2Environment } from '/turn/training/world-playground-v2-environment.js?revision=r1-environment';
+    import { buildWorldPlaygroundV2Environment } from '/turn/training/world-playground-v2-environment-r3.js?revision=r3-single-terrain';
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x9fc7d4);
-    scene.fog = new THREE.Fog(0xb8d4d8, 820, 2850);
+    scene.fog = new THREE.Fog(0xb8d4d8, 1150, 3800);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
@@ -74,7 +74,7 @@
         camera.updateProjectionMatrix();
         camera.lookAt(...view.t);
         renderer.render(scene, camera);
-        document.querySelector('#label').textContent = `WORLD V2 · ${String(name).toUpperCase()}`;
+        document.querySelector('#label').textContent = `WORLD V2 · ${String(name).toUpperCase()} · ENVIRONMENT ONLY`;
         return true;
       },
       approximateLength: environment.approximateLength
