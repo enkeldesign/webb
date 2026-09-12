@@ -1,5 +1,10 @@
 (() => {
   globalThis.__TURN_LAB__ = true;
+  globalThis.__TURN_LAB_BUILD__ = Object.freeze({
+    id: '2026.09.12-lab-r216',
+    cacheKey: '20260912-lab-r216',
+    purpose: 'world-v2-macro-landmarks'
+  });
 
   const localStorageRef = window.localStorage;
   const sessionStorageRef = window.sessionStorage;
@@ -53,9 +58,8 @@
     return keys[index] ?? null;
   };
 
-  // MOUNTAIN is the subject of the default LAB build, so a fresh isolated LAB
-  // profile must not inherit production's reward gate. World V2 keeps the same
-  // isolated storage contract while using LAB only as an environment incubator.
+  // MOUNTAIN remains unlocked inside isolated LAB storage, while World V2 uses
+  // the production runtime purely as a driving shell.
   const ACHIEVEMENT_KEY = `${LOCAL_PREFIX}turn-achievements-v1`;
   const MOUNTAIN_REWARD_ID = 'mountain';
   const TROPHY_ROAD_STORAGE_VERSION = 6;
@@ -118,7 +122,9 @@
 
   document.documentElement.classList.toggle('turn-standalone', isStandalone);
   document.documentElement.classList.toggle('turn-browser', !isStandalone);
-  document.documentElement.dataset.turnLab = worldV2Requested ? 'world-playground-v2' : 'mountain-long-course';
+  document.documentElement.dataset.turnLab = 'world-playground-v2';
+  document.documentElement.dataset.turnLabRequested = worldV2Requested ? 'explicit' : 'default';
+  document.documentElement.dataset.turnLabBuild = globalThis.__TURN_LAB_BUILD__.id;
   document.documentElement.dataset.turnLabMountainAccess = mountainAccessReady ? 'unlocked' : 'storage-blocked';
 
   let releaseBrowserLaunch = null;
@@ -168,7 +174,6 @@
   }
 
   async function installWorldV2Experiment() {
-    if (!worldV2Requested) return;
     try {
       await globalThis.__turnLaunchReady;
       const deadline = performance.now() + 20000;
@@ -181,8 +186,13 @@
       if (!globalThis.__turnRuntime || !globalThis.__turnHome || !globalThis.__turnRaceSession) {
         throw new Error('TURN runtime did not become ready for the World V2 environment prototype.');
       }
-      const module = await import('/turn/training/world-playground-v2-session.js?revision=r1-environment');
+      const module = await import('/turn/training/world-playground-v2-session.js?revision=r1-environment-lab-r216');
       await module.installWorldPlaygroundV2Lab(globalThis.__turnRuntime);
+      const trigger = document.querySelector('[data-turn-world-v2-lab-trigger]');
+      if (trigger) {
+        trigger.textContent = 'ENTER WORLD V2';
+        trigger.setAttribute('aria-label', 'Enter TURN World V2 in the Learner Car, TURN LAB build r216');
+      }
     } catch (error) {
       console.warn('TURN LAB: could not install World Playground V2.', error);
     }
