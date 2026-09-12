@@ -97,20 +97,24 @@ assert.doesNotMatch(landmarksSource, /makeRoadSign|CanvasTexture|TextGeometry/,
 assert.match(sessionSource, /TURN LAB only/);
 assert.match(sessionSource, /TRAINING_CAR_ID/);
 assert.match(sessionSource, /lapActive = false/);
-assert.match(sessionSource, /revision=r2-macro-landmarks-lab-r216/);
-assert.match(sessionSource, /TURN WORLD V2 · LAB r216/);
+assert.match(sessionSource, /world-playground-v2-environment\.js\?revision=r1-environment/,
+  'The session may retain its stable import identity while the facade advances underneath it');
 
+assert.match(labBootstrapSource, /__TURN_LAB_BUILD__/);
+assert.match(labBootstrapSource, /2026\.09\.12-lab-r216/);
+assert.match(labBootstrapSource, /purpose: 'world-v2-macro-landmarks'/);
 assert.match(labBootstrapSource, /get\('world'\) === '2'/,
-  'The query may still label World V2 explicitly, even though the branch entry button is always installed');
+  'The query may still record an explicit World V2 request');
 assert.doesNotMatch(labBootstrapSource, /if \(!worldV2Requested\) return/,
   'World V2 entry must be discoverable in plain TURN LAB on the review branch');
-assert.match(labBootstrapSource, /world-playground-v2-session\.js\?revision=r2-macro-landmarks-lab-r216/);
+assert.match(labBootstrapSource, /world-playground-v2-session\.js\?revision=r1-environment-lab-r216/);
+assert.match(labBootstrapSource, /ENTER WORLD V2/);
 
-assert.match(labIndex, /__TURN_LAB_BUILD__/);
-assert.match(labIndex, /2026\.09\.12-lab-r216/);
 assert.match(labIndex, /version: '1\.19\.1'/,
-  'TURN LAB may bump independently while the production runtime version remains untouched');
+  'TURN LAB must keep the production runtime version untouched during playground development');
 assert.match(labIndex, /id: '2026\.09\.11-r215'/,
   'TURN LAB must continue to identify the production runtime source as r215');
+assert.doesNotMatch(labIndex, /version: '1\.20\.0'/,
+  'A LAB art pass must not bump the production TURN semantic version');
 
-console.log('TURN World Playground V2 r216 environment and macro-landmark contract verified.');
+console.log('TURN World Playground V2 LAB r216 environment and macro-landmark contract verified.');
