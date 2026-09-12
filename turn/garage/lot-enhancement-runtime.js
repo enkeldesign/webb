@@ -28,6 +28,7 @@ export function prepareLotEnhancements() {
     import('./lot-shift.js?revision=r243-mountain-1300'),
     import('./lot-accessibility-r118.js?build=20260729-r118&revision=r588-canonical-attributes'),
     import('./lot-perk-disclosure.js?revision=r243-mountain-1300'),
+    import('./lot-perk-icon.js'),
     import('./lot-card-scroll-boundary.js?revision=r216-meter-density'),
     import('./lot-vehicle-copy.js?revision=r223-training-car-taxi'),
     import('./lot-trophy-order.js'),
@@ -39,6 +40,7 @@ export function prepareLotEnhancements() {
     shift,
     accessibility,
     perkDisclosure,
+    perkIcon,
     scrollBoundary,
     vehicleCopy,
     trophyOrder,
@@ -51,6 +53,7 @@ export function prepareLotEnhancements() {
       installLotShift: shift.installLotShift,
       installLotAccessibility: accessibility.installLotAccessibility,
       installLotPerkDisclosure: perkDisclosure.installLotPerkDisclosure,
+      installLotPerkIcon: perkIcon.installLotPerkIcon,
       installLotCardScrollBoundary: scrollBoundary.installLotCardScrollBoundary,
       installLotVehicleCopy: vehicleCopy.installLotVehicleCopy,
       installLotTrophyOrder: trophyOrder.installLotTrophyOrder,
@@ -130,6 +133,7 @@ export function enhanceLotNow(root = document.body) {
     gateLotNow,
     gateLotPaintNow,
     installLotPerkDisclosure,
+    installLotPerkIcon,
     installLotStatLegend,
     installLotLayout,
     installLotShift,
@@ -144,6 +148,7 @@ export function enhanceLotNow(root = document.body) {
   const removeTrophyGate = gateLotNow(scope);
   const removePaintGate = gateLotPaintNow(scope);
   const removePerkDisclosure = installLotPerkDisclosure(scope);
+  const removePerkIcon = installLotPerkIcon(scope);
   const removeStatLegend = installLotStatLegend(scope);
   const removeLayout = installLotLayout(scope);
   const removeShift = installLotShift(scope);
@@ -161,6 +166,7 @@ export function enhanceLotNow(root = document.body) {
     removeShift();
     removeLayout();
     removeStatLegend();
+    removePerkIcon();
     removePerkDisclosure();
     removePaintGate();
     removeTrophyGate();
