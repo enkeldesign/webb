@@ -264,6 +264,15 @@ function assertLocalImportTargetsExist(importMap, label) {
   }));
 }
 
+function assertSingleActiveIdentity(graph, repositoryPath, label) {
+  const identities = [...(graph.identities.get(repositoryPath) || [])];
+  assert.equal(
+    identities.length,
+    1,
+    `${label} must resolve ${repositoryPath} through one active URL identity; got ${identities.join(', ') || 'none'}`
+  );
+}
+
 export function assertNoUnchangedActiveIdentities(changedPaths, baseGraph, headGraph) {
   const stale = [];
   for (const repositoryPath of changedPaths) {
@@ -381,6 +390,12 @@ for (const bootstrap of ['motion-safe-zone.js', 'orientation-compat.js']) {
 for (const repositoryPath of requiredActiveModules) {
   assert.ok(headGraph.identities.has(repositoryPath), `${repositoryPath} must remain represented in the production module graph`);
 }
+
+assertSingleActiveIdentity(
+  headGraph,
+  'turn/race/rival-storage.js',
+  'Production TURN rival storage'
+);
 
 const rivalRoute = Object.entries(headGraph.importMap.imports || {}).find(([specifier]) =>
   /^\/turn\/ui\/rival-onboarding\.js\?build=\d{8}-r\d+$/.test(specifier)
