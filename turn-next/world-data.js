@@ -91,14 +91,14 @@ async function loadOpenStreetMap(bounds, signal) {
 
   const bbox = `${bounds.south},${bounds.west},${bounds.north},${bounds.east}`;
   const query = `[out:json][timeout:22];\n(\n`
-    + `way[\"highway\"~\"motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified|residential|living_street|service|track\"](${bbox});\n`
-    + `way[\"aeroway\"~\"runway|taxiway\"](${bbox});\n`
-    + `way[\"building\"](${bbox});\n`
-    + `way[\"natural\"~\"water|wood\"](${bbox});\n`
-    + `way[\"water\"](${bbox});\n`
-    + `way[\"landuse\"](${bbox});\n`
-    + `way[\"leisure\"~\"park|pitch|recreation_ground\"](${bbox});\n`
-    + `way[\"waterway\"=\"riverbank\"](${bbox});\n`
+    + `way["highway"~"motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified|residential|living_street|service|track"](${bbox});\n`
+    + `way["aeroway"~"runway|taxiway"](${bbox});\n`
+    + `way["building"](${bbox});\n`
+    + `way["natural"~"water|wood"](${bbox});\n`
+    + `way["water"](${bbox});\n`
+    + `way["landuse"](${bbox});\n`
+    + `way["leisure"~"park|pitch|recreation_ground"](${bbox});\n`
+    + `way["waterway"="riverbank"](${bbox});\n`
     + `);\nout tags geom;`;
 
   let lastError = null;
@@ -222,13 +222,37 @@ function imageFromBlob(blob) {
 }
 
 function sampleTerrainTileSet(tiles, lat, lon, zoom) {
+  const firstTile = tiles.values().next().value;
+  if (!firstTile) return 0;
   const tilePosition = lonLatToTile(lon, lat, zoom);
-  const x = Math.floor(tilePosition.x);
-  const y = Math.floor(tilePosition.y);
-  const tile = tiles.get(`${x}:${y}`);
+  const globalX = tilePosition.x * firstTile.width;
+  const globalY = tilePosition.y * firstTile.height;
+  const x0 = Math.floor(globalX);
+  const y0 = Math.floor(globalY);
+  const x1 = x0 + 1;
+  const y1 = y0 + 1;
+  const tx = globalX - x0;
+  const ty = globalY - y0;
+  const top = lerp(
+    terrainPixel(tiles, x0, y0, firstTile.width, firstTile.height),
+    terrainPixel(tiles, x1, y0, firstTile.width, firstTile.height),
+    tx
+  );
+  const bottom = lerp(
+    terrainPixel(tiles, x0, y1, firstTile.width, firstTile.height),
+    terrainPixel(tiles, x1, y1, firstTile.width, firstTile.height),
+    tx
+  );
+  return lerp(top, bottom, ty);
+}
+
+function terrainPixel(tiles, globalX, globalY, width, height) {
+  const tileX = Math.floor(globalX / width);
+  const tileY = Math.floor(globalY / height);
+  const tile = tiles.get(`${tileX}:${tileY}`);
   if (!tile) return 0;
-  const pixelX = clamp(Math.floor((tilePosition.x - x) * tile.width), 0, tile.width - 1);
-  const pixelY = clamp(Math.floor((tilePosition.y - y) * tile.height), 0, tile.height - 1);
+  const pixelX = ((globalX % width) + width) % width;
+  const pixelY = ((globalY % height) + height) % height;
   const offset = (pixelY * tile.width + pixelX) * 4;
   const red = tile.data[offset];
   const green = tile.data[offset + 1];
@@ -472,13 +496,14 @@ function installForestTrees(world, ways, terrain, center) {
     const target = clamp(Math.round(area / 5_000), 3, 18);
     const random = seededRandom(Number(way.id) || 1);
     let attempts = 0;
-    while (placements.length < MAX_TREES && attempts < target * 14) {
+    let added = 0;
+    while (placements.length < MAX_TREES && added < target && attempts < target * 14) {
       attempts += 1;
       const x = bounds.minX + random() * bounds.width;
       const z = bounds.minZ + random() * bounds.depth;
       if (!pointInsidePolygon(x, z, polygon)) continue;
       placements.push({ x, z, scale: 0.75 + random() * 0.7, rotation: random() * Math.PI * 2 });
-      if (placements.length % target === 0 && attempts >= target) break;
+      added += 1;
     }
   }
   if (!placements.length) return 0;
