@@ -3,6 +3,7 @@ const readonlyGlobals = {
   localStorage: 'readonly',
   process: 'readonly',
   URL: 'readonly',
+  URLSearchParams: 'readonly',
   window: 'readonly',
   document: 'readonly',
   CustomEvent: 'readonly',
