@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 const repositoryRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const releasePath = path.join(repositoryRoot, 'turn', 'release.json');
 const outputPath = path.join(repositoryRoot, 'turn-next', 'index.html');
+const NEXT_IDENTITY_SOURCE = 'm8.5-logo-world';
 
 export function renderParityEntry(source, release) {
   const currentBuild = source.match(
@@ -15,10 +16,15 @@ export function renderParityEntry(source, release) {
   assert.ok(currentBuild, 'TURN NEXT entry must expose its source TURN build identity');
 
   const [, currentVersion, currentId, currentCacheKey] = currentBuild;
-  return source
+  const releaseAligned = source
     .replaceAll(currentVersion, release.version)
     .replaceAll(currentId, release.id)
     .replaceAll(currentCacheKey, release.cacheKey);
+
+  return releaseAligned.replace(
+    /\/turn-next\/identity\.js\?source=[^"']+/,
+    `/turn-next/identity.js?source=${release.cacheKey}-${NEXT_IDENTITY_SOURCE}`
+  );
 }
 
 function validateParityEntry(current, release) {
@@ -29,7 +35,11 @@ function validateParityEntry(current, release) {
   assert.match(current, new RegExp(`/turn-next/storage-bootstrap\\.js\\?source=${release.cacheKey}`));
   assert.match(current, /\/turn-next\/site\.webmanifest/);
   assert.match(current, /\/turn-next\/identity\.css/);
-  assert.match(current, /\/turn-next\/identity\.js/);
+  assert.match(
+    current,
+    new RegExp(`/turn-next/identity\\.js\\?source=${release.cacheKey}-${NEXT_IDENTITY_SOURCE}`),
+    'TURN NEXT identity changes must receive a staging-specific cache key even when production TURN is unchanged'
+  );
   assert.match(current, new RegExp(`/turn-next/app\\.js\\?source=${release.cacheKey}-browser-consent`));
   assert.match(current, new RegExp(`install-gate\\.js\\?build=${release.cacheKey}-social-browser`));
   assert.match(current, new RegExp(`install-gate\\.css\\?build=${release.cacheKey}-social-browser`));

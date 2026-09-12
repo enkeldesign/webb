@@ -1,15 +1,18 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [identity, worldMode, worldData, worldCss] = await Promise.all([
+const [entry, identity, worldMode, worldData, worldCss] = await Promise.all([
+  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/identity.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/world-mode.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/world-data.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/world-mode.css', import.meta.url), 'utf8')
 ]);
 
+assert.match(entry, /\/turn-next\/identity\.js\?source=\d{8}-r\d+-m8\.5-logo-world/,
+  'TURN NEXT entry should cache-bust the identity bootstrap when staging-only features change');
 assert.match(identity, /import\('\/turn-next\/world-mode\.js'\)/,
-  'TURN NEXT identity should install WORLD without editing generated app/index files');
+  'TURN NEXT identity should install WORLD without changing the canonical production app');
 assert.match(identity, /__turnHomeLayout\?\.menu/,
   'WORLD should attach only after the protected Home layout exists');
 
