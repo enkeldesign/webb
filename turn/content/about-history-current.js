@@ -23,20 +23,40 @@ const PERK_CHANGELOG_ENTRIES = Object.freeze([
   Object.freeze(['Release identity', 'Publishes the changed Trophy Road presentation and Lot enhancement through build 2026.09.12-r217 without introducing a new manual revision identifier.'])
 ]);
 
+const RELIABILITY_HISTORY = Object.freeze({
+  period: '12 September',
+  title: 'Records stay put and The Lot recovers',
+  paragraphs: Object.freeze([
+    'TURN 1.19.4 keeps a newly earned personal best when a track is reopened quickly, and prevents a delayed save from bringing back rivals after a reset. Interrupted saves retain the latest replay and receive a limited set of retries.',
+    'The Lot can retry interrupted loading without restarting TURN. Car selection waits for its models, accessibility enhancements and styles to finish preparing, while successful preparation remains available for a quick return.'
+  ]),
+  milestones: Object.freeze([
+    'Consistent personal bests through quick track changes and resets',
+    'Recoverable interrupted saves and Lot preparation',
+    'TURN 1.19.4 · 2026.09.12-r218'
+  ])
+});
+
+const RELIABILITY_CHANGELOG_ENTRIES = Object.freeze([
+  Object.freeze(['1.19.4 r218', 'Keeps fresh personal bests through quick track reopening, prevents delayed saves from undoing resets, and retries interrupted saves.']),
+  Object.freeze(['The Lot recovery', 'Retries interrupted module and stylesheet loading without requiring a restart, while preserving the quick prepared entry path.'])
+]);
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
       ...previousLatest,
-      entries: Object.freeze([...previousLatest.entries, ...PERK_CHANGELOG_ENTRIES])
+      entries: Object.freeze([...previousLatest.entries, ...PERK_CHANGELOG_ENTRIES, ...RELIABILITY_CHANGELOG_ENTRIES])
     })
   : Object.freeze({
       date: '12 September',
-      entries: PERK_CHANGELOG_ENTRIES
+      entries: Object.freeze([...PERK_CHANGELOG_ENTRIES, ...RELIABILITY_CHANGELOG_ENTRIES])
     });
 
 export const DEVELOPMENT_HISTORY = Object.freeze([
   ...BASE_DEVELOPMENT_HISTORY,
-  PERK_HISTORY
+  PERK_HISTORY,
+  RELIABILITY_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -45,7 +65,7 @@ export const CHANGELOG = Object.freeze([
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.3',
-  build: '2026.09.12-r217',
-  note: 'TURN 1.19.3 gives PERK rewards one authored icon across Trophy Road and The Lot.'
+  version: '1.19.4',
+  build: '2026.09.12-r218',
+  note: 'TURN 1.19.4 improves personal-best saving, rival resets and recovery from interrupted Lot loading.'
 });

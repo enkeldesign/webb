@@ -36,36 +36,44 @@ const SHOWROOM_INFO_STYLE_ID = 'turn-lot-info-r212-fit';
 const SHOWROOM_TYPOGRAPHY_STYLE_ID = 'turn-lot-info-r214-worst-case-fit';
 const SHOWROOM_SHIFT_STYLE_ID = 'turn-lot-shift-r228';
 const SHOWROOM_SAVED_PAINT_STYLE_ID = 'turn-lot-saved-paint-r246';
+const stylesheetPromises = new Map();
 let showroomStylePromise = null;
+let showroomPrepared = false;
 let originalLotPromise = null;
 let originalLotModule = null;
 let screenReaderPassPromise = null;
 let screenReaderPassModule = null;
 
 function prepareStylesheet(id, relativeUrl) {
-  return new Promise((resolve) => {
+  if (stylesheetPromises.has(id)) return stylesheetPromises.get(id);
+  const preparation = new Promise((resolve, reject) => {
     const existing = document.getElementById(id);
-    if (existing) {
+    if (existing?.sheet) {
       resolve();
       return;
     }
 
-    const link = document.createElement('link');
+    const link = existing || document.createElement('link');
     link.id = id;
     link.rel = 'stylesheet';
     link.href = new URL(relativeUrl, import.meta.url).href;
     link.addEventListener('load', resolve, { once: true });
     link.addEventListener('error', () => {
-      console.warn(`TURN: showroom stylesheet could not be loaded: ${relativeUrl}`);
-      resolve();
+      link.remove();
+      reject(new Error(`TURN: showroom stylesheet could not be loaded: ${relativeUrl}`));
     }, { once: true });
-    document.head.appendChild(link);
+    if (!existing) document.head.appendChild(link);
+  }).catch((error) => {
+    if (stylesheetPromises.get(id) === preparation) stylesheetPromises.delete(id);
+    throw error;
   });
+  stylesheetPromises.set(id, preparation);
+  return preparation;
 }
 
 function prepareShowroomStyles() {
   if (showroomStylePromise) return showroomStylePromise;
-  showroomStylePromise = Promise.all([
+  const preparation = Promise.all([
     prepareStylesheet(
       SHOWROOM_STYLE_ID,
       './lot-showroom-experiment.css?revision=r200-production-candidate'
@@ -94,39 +102,53 @@ function prepareShowroomStyles() {
       SHOWROOM_SAVED_PAINT_STYLE_ID,
       './lot-saved-paint.css?revision=r246-lot-saved-paint'
     )
-  ]);
+  ]).catch((error) => {
+    if (showroomStylePromise === preparation) showroomStylePromise = null;
+    throw error;
+  });
+  showroomStylePromise = preparation;
   return showroomStylePromise;
 }
 
 function loadOriginalLot() {
   if (!originalLotPromise) {
-    originalLotPromise = import('./lot-showroom-experiment.js?revision=r252-supercar-outward-rims')
+    const preparation = import('./lot-showroom-experiment.js?revision=r252-supercar-outward-rims')
       .then((module) => {
         originalLotModule = module;
         return module;
+      }).catch((error) => {
+        if (originalLotPromise === preparation) originalLotPromise = null;
+        throw error;
       });
+    originalLotPromise = preparation;
   }
   return originalLotPromise;
 }
 
 function loadScreenReaderPass() {
   if (!screenReaderPassPromise) {
-    screenReaderPassPromise = import('./lot-screen-reader-r202.js?revision=r202-heading-structure')
+    const preparation = import('./lot-screen-reader-r202.js?revision=r202-heading-structure')
       .then((module) => {
         screenReaderPassModule = module;
         return module;
+      }).catch((error) => {
+        if (screenReaderPassPromise === preparation) screenReaderPassPromise = null;
+        throw error;
       });
+    screenReaderPassPromise = preparation;
   }
   return screenReaderPassPromise;
 }
 
 export async function prepareEnhancedLot() {
+  if (showroomPrepared) return;
   await Promise.all([
     loadOriginalLot(),
     loadScreenReaderPass(),
     prepareShowroomStyles(),
     prepareLotEnhancements()
   ]);
+  showroomPrepared = true;
 }
 
 function mountEnhancedLot(options) {
@@ -148,6 +170,9 @@ function mountEnhancedLot(options) {
 
 export async function showTheLot(options = {}) {
   const lotWarmup = prepareEnhancedLot();
+  // Selection may cancel before warmup settles; a selected track still awaits
+  // the original Promise below and receives its error normally.
+  void lotWarmup.catch(() => {});
   const trackId = await chooseTrackBeforeLot();
   if (!trackId) return null;
 
@@ -158,6 +183,6 @@ export async function showTheLot(options = {}) {
 }
 
 export function showEnhancedLot(options = {}) {
-  if (originalLotModule && screenReaderPassModule) return mountEnhancedLot(options);
+  if (showroomPrepared) return mountEnhancedLot(options);
   return prepareEnhancedLot().then(() => mountEnhancedLot(options));
 }
