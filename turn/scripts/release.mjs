@@ -15,6 +15,8 @@ const RIVAL_ONBOARDING_SPECIFIER_PATTERN = /^\/turn\/ui\/rival-onboarding\.js\?b
 const LOT_ENHANCEMENT_SPECIFIER_PATTERN = /^\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r164-post-soak&build=\d{8}-r\d+$/;
 const KNOWN_INSTALLED_LOT_SPECIFIER = '/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=20260826-r184';
 const SESSION_ORCHESTRATOR_SPECIFIER = '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
+const RIVAL_STORAGE_PATH = '/turn/race/rival-storage.js';
+const RIVAL_STORAGE_REVISION = 'r224-finish-line-summary';
 
 export async function loadReleaseDefinition() {
   const release = JSON.parse(await fs.readFile(releasePath, 'utf8'));
@@ -107,6 +109,16 @@ function synchronizeLotEnhancementSpecifiers(importMap, release) {
   importMap.imports = synchronizedImports;
 }
 
+function synchronizeRivalStorageTargets(importMap, release) {
+  const canonicalTarget = `${RIVAL_STORAGE_PATH}?build=${release.cacheKey}&revision=${RIVAL_STORAGE_REVISION}`;
+  for (const [specifier, target] of Object.entries(importMap.imports || {})) {
+    if (typeof target !== 'string') continue;
+    const targetUrl = new URL(target, 'https://enkel.design/turn/');
+    if (targetUrl.pathname !== RIVAL_STORAGE_PATH) continue;
+    importMap.imports[specifier] = canonicalTarget;
+  }
+}
+
 function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   // Keep this list to modules imported through withBuild(); historical alias keys intentionally retain their source revisions.
   synchronizeReleaseBoundSpecifier(
@@ -128,6 +140,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
     `/turn/ui/rival-onboarding.js?build=${release.cacheKey}`
   );
   synchronizeLotEnhancementSpecifiers(importMap, release);
+  synchronizeRivalStorageTargets(importMap, release);
   synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);
 }
 

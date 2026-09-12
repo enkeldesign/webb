@@ -377,6 +377,19 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
       'Playground removed from production pending redesign',
       'TURN 1.19.1 · 2026.09.11-r215 rollback release'
     ]
+  },
+  {
+    period: '12 September',
+    title: 'Fresh records become one live state',
+    paragraphs: [
+      'TURN 1.19.2 fixes a release-composition regression that could load rival storage under two different browser module URLs after a build bump. The racing runtime could therefore know about a freshly completed personal best — and enable YOUR TURN sharing — while Home still read an older in-memory summary and showed NO TIME YET until the app was restarted.',
+      'Release generation now routes every rival-storage import-map alias to one canonical current-build URL. A release-composition guard also requires the stateful rival-storage module to have exactly one active runtime identity, keeping deferred persistence, record summaries and sharing on the same live state.'
+    ],
+    milestones: [
+      'Fresh personal bests appear in Home immediately after the lap',
+      'SHARE and BEST use the same live rival state',
+      'TURN 1.19.2 · 2026.09.12-r216'
+    ]
   }
 ]);
 
@@ -735,11 +748,19 @@ export const CHANGELOG = Object.freeze([
       ['1.19.1 r215', 'Rolls the playground back out of production after the first complete device tour, restoring the 1.18.0 feature set while keeping version and build history monotonic.'],
       ['Playground redesign', 'The prototype is retained in Git history for another pass on world scale, district identity, road layout, sightlines, boundaries and landmark composition before it returns.']
     ]
+  },
+  {
+    date: '12 September',
+    entries: [
+      ['1.19.2 r216', 'Fixes a freshly set personal best showing NO TIME YET in Home until restart even though SHARE was already available.'],
+      ['Rival state identity', 'All production rival-storage aliases now resolve to one current-build ES-module identity so deferred saves and Home record summaries share the same in-memory cache.'],
+      ['Release guard', 'Release composition now fails if rival storage becomes split across multiple active runtime URLs again.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.1',
-  build: '2026.09.11-r215',
-  note: 'TURN 1.19.1 rolls the first world-playground prototype back out of production while its layout and visual language are redesigned.'
+  version: '1.19.2',
+  build: '2026.09.12-r216',
+  note: 'TURN 1.19.2 keeps freshly completed personal bests and YOUR TURN sharing in sync immediately after a lap.'
 });

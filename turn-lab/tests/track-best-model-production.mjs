@@ -59,9 +59,24 @@ const bestLayoutBlock = css.match(/\.track-card-best \{[\s\S]*?\n\}/)?.[0] || ''
 
 assert.match(index, new RegExp(`track-select-r61\\.css\\?build=${release.cacheKey}`), 'Production must load the record-car thumbnail layout through the current release');
 assert.equal(imports['./ui/track-select.js?build=20260722-r51'], releaseTarget('./ui/track-select.js'), 'Production must publish the enhanced selector');
-assert.ok(
-  imports['./race/rival-storage.js?build=20260722-r50']?.startsWith(releaseTarget('./race/rival-storage.js')),
-  'The selector must receive the current paint-aware ranked record summaries'
+const rivalStorageTarget = new URL(
+  imports['./race/rival-storage.js?build=20260722-r50'] || '',
+  'https://enkel.design/turn/'
+);
+assert.equal(
+  rivalStorageTarget.pathname,
+  '/turn/race/rival-storage.js',
+  'The selector must receive the paint-aware ranked record summary module'
+);
+assert.equal(
+  rivalStorageTarget.searchParams.get('build'),
+  release.cacheKey,
+  'The selector record summary module must use the current release identity'
+);
+assert.equal(
+  rivalStorageTarget.searchParams.get('revision'),
+  'r224-finish-line-summary',
+  'The selector record summary module must keep the finish-line summary contract'
 );
 
 assert.match(selector, /track-card-best-model/, 'Every playable Best row must reserve a model thumbnail');
