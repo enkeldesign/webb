@@ -1,0 +1,66 @@
+name: Repair TURN record identity assertion
+
+on:
+  push:
+    branches:
+      - fix/record-summary-module-identity-r216
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/record-summary-module-identity-r216
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Make record-model contract URL-shape agnostic
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('turn-lab/tests/track-best-model-production.mjs')
+          source = path.read_text()
+          old = """assert.ok(
+            imports['./race/rival-storage.js?build=20260722-r50']?.startsWith(releaseTarget('./race/rival-storage.js')),
+            'The selector must receive the current paint-aware ranked record summaries'
+          );"""
+          new = """const rivalStorageTarget = new URL(
+            imports['./race/rival-storage.js?build=20260722-r50'] || '',
+            'https://enkel.design/turn/'
+          );
+          assert.equal(
+            rivalStorageTarget.pathname,
+            '/turn/race/rival-storage.js',
+            'The selector must receive the paint-aware ranked record summary module'
+          );
+          assert.equal(
+            rivalStorageTarget.searchParams.get('build'),
+            release.cacheKey,
+            'The selector record summary module must use the current release identity'
+          );
+          assert.equal(
+            rivalStorageTarget.searchParams.get('revision'),
+            'r224-finish-line-summary',
+            'The selector record summary module must keep the finish-line summary contract'
+          );"""
+          if old not in source:
+              raise SystemExit('stale rival-storage assertion not found')
+          path.write_text(source.replace(old, new, 1))
+          PY
+          node turn-lab/tests/track-best-model-production.mjs
+          node turn-tests/release-composition-production.mjs
+      - name: Commit regression assertion repair
+        run: |
+          rm .github/workflows/fix-record-summary-test-r216.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn-lab/tests/track-best-model-production.mjs .github/workflows/fix-record-summary-test-r216.yml
+          git commit -m "Update track record identity regression"
+          git push origin HEAD:fix/record-summary-module-identity-r216
