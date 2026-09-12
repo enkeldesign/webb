@@ -155,6 +155,9 @@ function bindView(view, session, context) {
   view.driveButton.addEventListener('click', () => void startWorld(session, context, view));
   view.leaveButton.addEventListener('click', () => void leaveWorld(session, context, view));
   view.dialog.addEventListener('cancel', () => session.controller?.abort());
+  view.dialog.addEventListener('close', () => {
+    if (session.loading && !session.active) session.controller?.abort();
+  });
 }
 
 function useBrowserLocation(view) {
@@ -208,16 +211,23 @@ async function startWorld(session, context, view) {
     session.snapshot = captureSnapshot(context.runtime, context.home);
     session.worldData = worldData;
     await enterWorld(session, context, view, access);
-    closeDialog(view.dialog);
+    closeDialog(view.dialog, { restoreFocus: false });
     return true;
   } catch (error) {
+    if (session.snapshot) {
+      try {
+        await leaveWorld(session, context, view);
+      } catch (restoreError) {
+        console.warn('TURN NEXT WORLD could not fully restore the previous track.', restoreError);
+      }
+    } else if (session.worldData) {
+      disposeSemanticWorld(session.worldData.world);
+      session.worldData = null;
+    }
     if (error?.name !== 'AbortError') {
       console.warn('TURN NEXT WORLD could not start.', error);
       setStatus(view, error instanceof Error ? error.message : 'The real-world experiment could not start.');
-    }
-    if (session.worldData && !session.active) {
-      disposeSemanticWorld(session.worldData.world);
-      session.worldData = null;
+      if (!view.dialog.open) openDialog(view.dialog, session.returnFocus);
     }
     return false;
   } finally {
@@ -459,11 +469,11 @@ function openDialog(dialog, returnFocus) {
   else dialog.setAttribute('open', '');
 }
 
-function closeDialog(dialog) {
+function closeDialog(dialog, { restoreFocus = true } = {}) {
   try {
     dialog.close();
   } catch (_) {
     dialog.removeAttribute('open');
   }
-  dialog.__turnReturnFocus?.focus?.();
+  if (restoreFocus) dialog.__turnReturnFocus?.focus?.();
 }
