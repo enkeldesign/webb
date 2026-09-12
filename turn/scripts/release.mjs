@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { renderParityEntry } from '../../turn-next/scripts/build-parity-entry.mjs';
+import { buildTurnNextApp } from '../../turn-next/scripts/build-parity-app.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const turnDir = path.resolve(scriptDir, '..');
@@ -17,6 +19,15 @@ const KNOWN_INSTALLED_LOT_SPECIFIER = '/turn/garage/lot-enhancement-runtime.js?r
 const SESSION_ORCHESTRATOR_SPECIFIER = '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
 const RIVAL_STORAGE_PATH = '/turn/race/rival-storage.js';
 const RIVAL_STORAGE_REVISION = 'r224-finish-line-summary';
+const companionPaths = Object.freeze([
+  'turn-next/index.html',
+  'turn-next/app.js',
+  'yourturn/index.html',
+  'turn/ui/about-history-bootstrap-r165.js',
+  'turn/content/about-history-current.js',
+  'turn/design.html',
+  'turn/design-dialogs.html'
+]);
 
 export async function loadReleaseDefinition() {
   const release = JSON.parse(await fs.readFile(releasePath, 'utf8'));
@@ -142,6 +153,16 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeLotEnhancementSpecifiers(importMap, release);
   synchronizeRivalStorageTargets(importMap, release);
   synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);
+  // These presentation modules now use the release build instead of a new
+  // hand-maintained revision. Advance every alias, including installed routes.
+  for (const [specifier, target] of Object.entries(importMap.imports || {})) {
+    if (typeof target !== 'string' || !target.startsWith('/turn/')) continue;
+    const pathname = new URL(target, 'https://enkel.design').pathname;
+    if (pathname === '/turn/garage/lot-enhancement-runtime.js'
+      || pathname === '/turn/progression/trophy-road-track-icons.js') {
+      synchronizeReleaseBoundImportTarget(importMap, release, specifier);
+    }
+  }
 }
 
 export function renderReleaseIndex(source, release) {
@@ -205,34 +226,61 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
     .replace(/<script type="importmap">[\s\S]*?<\/script>/, productionImportMap);
 }
 
+export function renderReleaseCompanion(repositoryPath, source, release) {
+  validateReleaseDefinition(release);
+  if (repositoryPath === 'turn-next/index.html') return renderParityEntry(source, release);
+  if (repositoryPath === 'turn-next/app.js') return buildTurnNextApp(release);
+  if (repositoryPath === 'yourturn/index.html') {
+    return source.replace(/((?:href|src)="\/turn\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`);
+  }
+  if (repositoryPath === 'turn/ui/about-history-bootstrap-r165.js') {
+    return source.replace(/(about-history-current\.js\?build=)\d{8}-r\d+/, `$1${release.cacheKey}`);
+  }
+  if (repositoryPath === 'turn/content/about-history-current.js') {
+    // Historical entries keep their original release identities.
+    return source.replace(
+      /(export const CURRENT_RELEASE = Object\.freeze\(\{\s*version: ')[^']+(',\s*build: ')[^']+(')/,
+      `$1${release.version}$2${release.id}$3`
+    );
+  }
+  assert.ok(repositoryPath === 'turn/design.html' || repositoryPath === 'turn/design-dialogs.html',
+    `Unknown release companion: ${repositoryPath}`);
+  return source
+    .replace(/(<span>TURN )\d+\.\d+\.\d+(<\/span>)/, `$1${release.version}$2`)
+    .replace(/(<span>Build )\d{4}\.\d{2}\.\d{2}-r\d+(<\/span>)/, `$1${release.id}$2`)
+    .replace(/(class="home-mini__build">)TURN \d+\.\d+\.\d+ · \d{4}\.\d{2}\.\d{2}-r\d+/, `$1TURN ${release.version} · ${release.id}`);
+}
+
 export async function checkReleaseFiles({ write = false } = {}) {
-  const [release, source, labSource] = await Promise.all([
+  const [release, source, labSource, companions] = await Promise.all([
     loadReleaseDefinition(),
     fs.readFile(indexPath, 'utf8'),
-    fs.readFile(labIndexPath, 'utf8')
+    fs.readFile(labIndexPath, 'utf8'),
+    Promise.all(companionPaths.map(async (repositoryPath) => [
+      repositoryPath,
+      await fs.readFile(path.resolve(turnDir, '..', repositoryPath), 'utf8')
+    ]))
   ]);
   const expected = renderReleaseIndex(source, release);
   const expectedLab = renderLabReleaseIndex(labSource, expected, release);
-
-  if (write) {
-    const productionChanged = expected !== source;
-    const labChanged = expectedLab !== labSource;
-    if (productionChanged) await fs.writeFile(indexPath, expected);
-    if (labChanged) await fs.writeFile(labIndexPath, expectedLab);
-    return { release, changed: productionChanged || labChanged };
+  const files = [
+    ['turn/index.html', source, expected],
+    ['turn-lab/index.html', labSource, expectedLab],
+    ...companions.map(([repositoryPath, content]) => [
+      repositoryPath, content, renderReleaseCompanion(repositoryPath, content, release)
+    ])
+  ];
+  let changed = false;
+  for (const [repositoryPath, current, rendered] of files) {
+    if (write && current !== rendered) {
+      await fs.writeFile(path.resolve(turnDir, '..', repositoryPath), rendered);
+      changed = true;
+    } else if (!write) {
+      assert.equal(current, rendered,
+        `${repositoryPath} is not synchronized with turn/release.json. Run: node turn/scripts/release.mjs --write`);
+    }
   }
-
-  assert.equal(
-    source,
-    expected,
-    'turn/index.html is not synchronized with turn/release.json. Run: node turn/scripts/release.mjs --write'
-  );
-  assert.equal(
-    labSource,
-    expectedLab,
-    'turn-lab/index.html is not synchronized with production TURN. Run: node turn/scripts/release.mjs --write'
-  );
-  return { release, changed: false };
+  return { release, changed };
 }
 
 function indentJson(value, spaces) {

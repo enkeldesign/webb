@@ -152,15 +152,19 @@ assert.equal(PRESENTATION_TROPHY_ROAD_REWARD_ICONS[midnightReward.icon], TRACK_I
 assert.equal(PRESENTATION_TROPHY_ROAD_REWARD_ICONS[mountainReward.icon], TRACK_ICON_MARKUP.mountain,
   'MOUNTAIN must use the new authored track icon on Trophy Road');
 
+const release = JSON.parse(await fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'));
 for (const document of [productionIndex, labIndex]) {
+  const imports = JSON.parse(document.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)[1]).imports;
   assert.match(document, /"\/turn\/achievements\/catalog\.js\?revision=r241-learning-achievements": "\/turn\/achievements\/catalog-track-icons\.js\?revision=r1-track-reward-icons"/,
     'Current achievement consumers must route through the track-icon presentation catalog');
   assert.match(document, /"\/turn\/achievements\/catalog-production\.js\?revision=r241-learning-achievements": "\/turn\/achievements\/catalog-track-icons\.js\?revision=r1-track-reward-icons"/,
     'Legacy achievement facades must also converge on the track-icon presentation catalog');
   for (const revision of ['r243-mountain-1300', 'r248-supercar', 'r253-supercar-release']) {
-    assert.match(document, new RegExp(
-      `"/turn/progression/trophy-road\\.js\\?revision=${revision}": "/turn/progression/trophy-road-track-icons\\.js\\?revision=r1-track-reward-icons"`
-    ), `Trophy Road ${revision} consumers must converge on the authored track-icon presentation`);
+    assert.equal(
+      imports[`/turn/progression/trophy-road.js?revision=${revision}`],
+      `/turn/progression/trophy-road-track-icons.js?revision=r1-track-reward-icons&build=${release.cacheKey}`,
+      `Trophy Road ${revision} consumers must converge on the current-build authored track-icon presentation`
+    );
   }
   assert.match(document, /"\/turn\/garage\/lot-showroom-experiment\.js\?revision=r252-supercar-outward-rims": "\/turn\/garage\/lot-showroom-track-icon\.js\?revision=r2-swift-lot-ui"/,
     'The current Lot showroom must route through the chosen-track icon wrapper');

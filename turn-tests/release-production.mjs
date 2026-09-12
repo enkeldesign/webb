@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import {
   checkReleaseFiles,
   loadReleaseDefinition,
+  renderReleaseCompanion,
   renderReleaseIndex
 } from '../turn/scripts/release.mjs';
 
@@ -143,6 +144,33 @@ assert.equal(
   '/turn/garage/lot-enhancement-runtime.js?revision=r243-mountain-1300&build=20260827-r185',
   'The one known r184 installed-PWA Lot URL must remain a narrow compatibility bridge to the current release'
 );
+for (const [specifier, target] of Object.entries(futureImports)) {
+  if (!target.startsWith('/turn/')) continue;
+  const url = new URL(target, 'https://enkel.design');
+  if (url.pathname === '/turn/garage/lot-enhancement-runtime.js'
+    || url.pathname === '/turn/progression/trophy-road-track-icons.js') {
+    assert.equal(url.searchParams.get('build'), futureRelease.cacheKey,
+      `${specifier} must advance with the release, including compatibility aliases`);
+  }
+}
+for (const repositoryPath of [
+  'turn-next/index.html', 'turn-next/app.js', 'yourturn/index.html',
+  'turn/ui/about-history-bootstrap-r165.js', 'turn/content/about-history-current.js',
+  'turn/design.html', 'turn/design-dialogs.html'
+]) {
+  const source = await fs.readFile(new URL(`../${repositoryPath}`, import.meta.url), 'utf8');
+  const rendered = renderReleaseCompanion(repositoryPath, source, futureRelease);
+  assert.equal(renderReleaseCompanion(repositoryPath, rendered, futureRelease), rendered,
+    `${repositoryPath} synchronization must be idempotent`);
+  const identity = repositoryPath.endsWith('app.js') ? futureRelease.version
+    : repositoryPath.endsWith('about-history-current.js') || repositoryPath.includes('design')
+      ? futureRelease.id : futureRelease.cacheKey;
+  assert.ok(rendered.includes(identity), `${repositoryPath} must follow the next release`);
+  if (repositoryPath.endsWith('about-history-current.js')) {
+    assert.equal(rendered.split('export const CURRENT_RELEASE')[0], source.split('export const CURRENT_RELEASE')[0],
+      'Synchronizing current About metadata must not rewrite historical releases');
+  }
+}
 
 assert.match(app, /const buildKey = globalThis\.__TURN_BUILD__\?\.cacheKey/);
 assert.match(app, /function withBuild\(path\)/);
