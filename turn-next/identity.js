@@ -1,4 +1,6 @@
 (() => {
+  let worldModeLoading = false;
+
   function rewriteInstallCopy(root) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     const nodes = [];
@@ -36,6 +38,34 @@
     document.documentElement.dataset.turnLegacyStart = 'retired';
   }
 
+  function installWorldModeWhenReady() {
+    if (worldModeLoading || globalThis.__turnNextWorldMode) return true;
+    const home = globalThis.__turnNextHome || globalThis.__turnHome;
+    const menu = globalThis.__turnHomeLayout?.menu;
+    if (!globalThis.__turnRuntime || !globalThis.__turnNextRaceSession || !home || !menu) return false;
+
+    worldModeLoading = true;
+    import('/turn-next/world-mode.js')
+      .then(({ installWorldMode }) => installWorldMode())
+      .catch((error) => {
+        worldModeLoading = false;
+        console.warn('TURN NEXT: WORLD experiment could not install.', error);
+      });
+    return true;
+  }
+
+  function scheduleWorldMode() {
+    let attempts = 0;
+    const tryInstall = () => {
+      if (installWorldModeWhenReady()) return;
+      attempts += 1;
+      if (attempts < 240) requestAnimationFrame(tryInstall);
+    };
+    tryInstall();
+    document.addEventListener('turn:home-ready', tryInstall);
+    window.addEventListener('turn:runtime-ready', tryInstall);
+  }
+
   function installIdentity() {
     document.documentElement.dataset.turnDeployment = 'next';
     retireLegacyStartPanel();
@@ -47,6 +77,7 @@
       observer.observe(gate, { childList: true, subtree: true, characterData: true });
     }
 
+    scheduleWorldMode();
     const source = globalThis.__TURN_BUILD__;
     console.info(`TURN NEXT: test runtime loaded from TURN ${source?.id || 'unknown source'}.`);
   }
