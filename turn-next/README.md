@@ -17,6 +17,24 @@ Completed foundations:
 - audible limit cue on every rearmed hard crossing
 - first-per-side VoiceOver announcement during each race
 
+## WORLD experiment
+
+TURN NEXT also contains an isolated real-world free-roam experiment. It is intentionally additive and does not change the generated TURN NEXT parity entry files or production TURN.
+
+From the TURN NEXT Home menu, **WORLD** opens a small-area loader that can use entered coordinates, browser geolocation, or the Alpine demo preset. The experiment:
+
+- queries OpenStreetMap through Overpass for drivable roads, buildings, water, land use, woodland, parks and aeroways
+- generates road widths and markings from map semantics rather than using raster or satellite imagery
+- extrudes building footprints and uses simplified building bounds for collision
+- scatters low-poly trees inside mapped woodland
+- loads open Terrarium elevation tiles and builds low-poly terrain
+- feeds the mapped road network into TURN’s existing nearest-track physics while a scene override applies terrain height and pitch
+- suppresses competitive lap/record state while WORLD is active
+- restores the previously selected canonical TURN track when the player leaves WORLD
+- keeps visible OpenStreetMap and terrain-data attribution in the setup and WORLD HUD
+
+The loaded area is deliberately bounded to a maximum 1.25 km radius so public data services and mobile/tablet rendering stay within experiment-scale limits.
+
 ## Canonical motion safe zone
 
 The accepted Safe Zone M3 and Limit M4.2 behavior is no longer a TURN NEXT override.
