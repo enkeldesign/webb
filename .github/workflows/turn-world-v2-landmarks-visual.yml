@@ -1,0 +1,65 @@
+name: TURN World V2 macro landmark visual smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn/training/world-playground-v2-*.js'
+      - 'turn-lab/world-v2-landmarks-visual.html'
+      - 'turn-lab/tests/world-v2-landmarks-visual-smoke.mjs'
+      - 'turn-tests/world-playground-v2-environment.mjs'
+      - '.github/workflows/turn-world-v2-landmarks-visual.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  visual-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Verify World V2 r216 contract
+        run: node turn-tests/world-playground-v2-environment.mjs
+
+      - name: Syntax and lint macro landmark pass
+        run: |
+          node --check turn/training/world-playground-v2-landmarks-r1.js
+          node --check turn/training/world-playground-v2-environment.js
+          node --check turn-lab/lab-bootstrap.js
+          npx --yes eslint@9.39.1 turn/training/world-playground-v2-landmarks-r1.js turn/training/world-playground-v2-environment.js turn-lab/lab-bootstrap.js turn-tests/world-playground-v2-environment.mjs
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install chromium
+
+      - name: Start static TURN server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/turn-world-v2-landmarks-http.log 2>&1 &
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:8000/turn-lab/world-v2-landmarks-visual.html >/dev/null && exit 0
+            sleep 0.5
+          done
+          cat /tmp/turn-world-v2-landmarks-http.log
+          exit 1
+
+      - name: Render World V2 macro landmark inspection views
+        run: node turn-lab/tests/world-v2-landmarks-visual-smoke.mjs
+
+      - name: Upload World V2 macro landmark inspection frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: turn-world-v2-landmarks-visual
+          path: world-v2-landmarks-visual-artifact
+          if-no-files-found: warn
+          retention-days: 7
