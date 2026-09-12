@@ -9,6 +9,7 @@ let installed = false;
 
 export async function installWorldMode() {
   if (installed) return globalThis.__turnNextWorldMode;
+
   const runtime = globalThis.__turnRuntime;
   const raceSession = globalThis.__turnNextRaceSession;
   const home = globalThis.__turnNextHome || globalThis.__turnHome;
@@ -53,6 +54,7 @@ function installStylesheet() {
 function createLauncher(menu, dialog) {
   const existing = menu.querySelector('[data-turn-next-world-launcher]');
   if (existing) return existing;
+
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'turn-next-world-launcher';
@@ -129,9 +131,9 @@ function createView() {
   return {
     dialog,
     hud,
-    latitude: dialog.elements.latitude,
-    longitude: dialog.elements.longitude,
-    radius: dialog.elements.radius,
+    latitude: dialog.querySelector('[name="latitude"]'),
+    longitude: dialog.querySelector('[name="longitude"]'),
+    radius: dialog.querySelector('[name="radius"]'),
     locationButton: dialog.querySelector('[data-world-location]'),
     demoButton: dialog.querySelector('[data-world-demo]'),
     driveButton: dialog.querySelector('[data-world-drive]'),
@@ -165,6 +167,7 @@ function useBrowserLocation(view) {
     setStatus(view, 'Location is not available in this browser. Enter coordinates instead.');
     return;
   }
+
   view.locationButton.disabled = true;
   setStatus(view, 'Requesting your location…');
   globalThis.navigator.geolocation.getCurrentPosition(
@@ -185,6 +188,7 @@ function useBrowserLocation(view) {
 
 async function startWorld(session, context, view) {
   if (session.active || session.loading) return false;
+
   const latitude = Number(view.latitude.value);
   const longitude = Number(view.longitude.value);
   const radiusMeters = Number(view.radius.value) || DEFAULT_RADIUS;
@@ -224,6 +228,7 @@ async function startWorld(session, context, view) {
       disposeSemanticWorld(session.worldData.world);
       session.worldData = null;
     }
+
     if (error?.name !== 'AbortError') {
       console.warn('TURN NEXT WORLD could not start.', error);
       setStatus(view, error instanceof Error ? error.message : 'The real-world experiment could not start.');
@@ -319,7 +324,7 @@ function positionAtStart(runtime, worldData) {
   runtime.state.driftSlipAngle = 0;
   runtime.state.offRoad = false;
   runtime.state.trackDistance = 0;
-  runtime.state.progress = worldData.startIndex / worldData.samples.length;
+  runtime.state.progress = worldData.startIndex / runtime.samples.length;
   runtime.state.lastProgress = runtime.state.progress;
   runtime.state.nearestTrackIndex = worldData.startIndex;
   runtime.state.lapActive = false;
@@ -335,8 +340,8 @@ function positionAtStart(runtime, worldData) {
 
 function renderWorldFrame(runtime, worldData, dt) {
   const state = runtime.state;
-  const terrainY = worldData.terrain.heightAtWorld(state.position.x, state.position.z);
-  state.position.y = terrainY + 0.18;
+  state.position.y = worldData.terrain.heightAtWorld(state.position.x, state.position.z) + 0.18;
+
   const forward = runtime.getForward();
   const probe = 3.8;
   const front = worldData.terrain.heightAtWorld(
@@ -375,6 +380,7 @@ function worldFrame(session, { runtime }, view) {
     session.frame = 0;
     return;
   }
+
   const worldData = session.worldData;
   if (runtime.state.running && worldData) {
     clampToWorld(runtime.state, worldData.radius * 1.04);
@@ -386,6 +392,7 @@ function worldFrame(session, { runtime }, view) {
       session.lastHudUpdate = now;
     }
   }
+
   session.frame = requestAnimationFrame(() => worldFrame(session, { runtime }, view));
 }
 
@@ -402,6 +409,7 @@ function suppressCompetitiveRaceState(state) {
 function clampToWorld(state, limit) {
   const distance = Math.hypot(state.position.x, state.position.z);
   if (distance <= limit) return;
+
   const nx = state.position.x / distance;
   const nz = state.position.z / distance;
   state.position.x = nx * limit;
@@ -416,6 +424,7 @@ function clampToWorld(state, limit) {
 
 async function leaveWorld(session, { runtime, raceSession, home }, view) {
   if (!session.active && !session.snapshot) return false;
+
   session.controller?.abort();
   if (session.frame) cancelAnimationFrame(session.frame);
   session.frame = 0;
