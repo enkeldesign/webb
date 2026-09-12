@@ -6,6 +6,8 @@ import {
 } from '../turn/race/rival-storage.js';
 import { getTrackStorageRevision } from '../turn/tracks/definitions.js';
 
+const { Event, EventTarget } = globalThis;
+
 const disk = new Map();
 const scheduled = new Map();
 const windowEvents = new EventTarget();
@@ -89,12 +91,16 @@ function reset() {
 try {
   reset();
   const harbor = state('harbor');
+  disk.set(key('harbor'), JSON.stringify({ version: 7, laps: harbor.competitorLaps }));
+  disk.set(`turn-three-ghost-v4:${getTrackStorageRevision('harbor')}`, JSON.stringify({ bestTime: 30 }));
   scheduleRivalsStateSave(harbor);
   scheduleRivalsStateSave(state('airport', 12));
   clearRivalsState(harbor);
   assert.equal(scheduled.size, 1, 'Resetting one track must preserve another track’s pending flush');
   runNext();
   assert.equal(disk.has(key('harbor')), false, 'Idle persistence must not resurrect a reset');
+  assert.equal(disk.has(`turn-three-ghost-v4:${getTrackStorageRevision('harbor')}`), false,
+    'Reset must remove the legacy ghost key as well as the current rival key');
   assert.equal(JSON.parse(disk.get(key('airport'))).laps[0].time, 12);
   assert.equal(getStoredBestLap('harbor'), null);
   assert.equal(hasStoredBestReplayLap('harbor'), false);

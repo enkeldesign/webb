@@ -28,7 +28,7 @@ const RELIABILITY_HISTORY = Object.freeze({
   title: 'Records stay put and The Lot recovers',
   paragraphs: Object.freeze([
     'TURN 1.19.4 keeps a newly earned personal best when a track is reopened quickly, and prevents a delayed save from bringing back rivals after a reset. Interrupted saves retain the latest replay and receive a limited set of retries.',
-    'The Lot can retry interrupted loading without restarting TURN. Car selection waits for its models, accessibility enhancements and styles to finish preparing, while successful preparation remains available for a quick return.'
+    'The Lot can retry interrupted loading when you continue from Home. Its interface finishes preparing before car selection opens, while successful preparation remains available for a quick return.'
   ]),
   milestones: Object.freeze([
     'Consistent personal bests through quick track changes and resets',

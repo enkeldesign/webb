@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import { DEVELOPMENT_HISTORY } from '../turn/content/about-history-current.js';
 
 const [
   releaseSource,
@@ -150,7 +151,9 @@ assert.match(currentContent, new RegExp(`build: '${escapeRegex(release.id)}'`),
 assert.match(currentContent, /PERK gets one visual language/);
 assert.match(currentContent, /1\.19\.3 r217/);
 assert.match(currentContent, /circuit-board icon/);
-assert.match(currentContent, /Trophy Road and The Lot/);
+assert.ok(DEVELOPMENT_HISTORY.some((entry) => entry.title === 'PERK gets one visual language'
+  && entry.paragraphs.some((paragraph) => paragraph.includes('Trophy Road') && paragraph.includes('The Lot'))),
+  'Later releases must preserve the PERK history describing both Trophy Road and The Lot');
 
 for (const size of ['compact', 'standard', 'wide', 'reader']) {
   assert.match(dialogCss, new RegExp(`\\.turn-dialog--${size}`),

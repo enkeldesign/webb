@@ -177,9 +177,12 @@ assert.match(lotWrapper, /SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r206-po
 assert.match(lotWrapper, /lot-showroom-cleanup-r201\.css\?revision=r206-pwa-color/);
 assert.match(index, /\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r164-post-soak&build=20260826-r184"\s*:\s*"\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r243-mountain-1300/,
   'Old installed app runtime URLs must retain their existing bridge');
-assert.match(index, /\/turn\/m8-home\.js\?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r200&build=20260818-r175"\s*:\s*"\/turn\/m8-home\.js\?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r206-pwa-color&build=20260818-r175/);
-assert.match(index, /\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate"\s*:\s*"\/turn\/garage\/lot-track-select\.js\?revision=r252-supercar-outward-rims/,
-  'Existing Home callers must cross a fresh cache boundary into the corrected Supercar wrapper');
+assert.equal(imports['/turn/m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r200&build=20260818-r175'],
+  `/turn/m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r206-pwa-color&build=${release.cacheKey}`,
+  'The existing Home bridge must preserve PWA color support and advance its build identity');
+assert.equal(imports['/turn/garage/lot-track-select.js?revision=r200-production-candidate'],
+  `/turn/garage/lot-track-select.js?revision=r252-supercar-outward-rims&build=${release.cacheKey}`,
+  'Existing Home callers must cross the current build boundary into the corrected Supercar wrapper');
 assert.match(
   index,
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click[^\"]*-pwa-color-r206`),

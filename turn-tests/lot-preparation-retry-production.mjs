@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
+const { Event, EventTarget, queueMicrotask, setImmediate } = globalThis;
+
 const [wrapperSource, homeSource] = await Promise.all([
   fs.readFile(new URL('../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8')
