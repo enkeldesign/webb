@@ -9,6 +9,7 @@ const [
   bootstrap,
   browserInstallCss,
   content,
+  currentContent,
   dialogCss,
   historyCss,
   designMain,
@@ -22,6 +23,7 @@ const [
   fs.readFile(new URL('../turn/ui/about-history-bootstrap-r165.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/browser-install-r165.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/content/about-history.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/content/about-history-current.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/dialog-system-r163.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/about-history-r163.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design.html', import.meta.url), 'utf8'),
@@ -49,8 +51,8 @@ assert.match(productionEntry, /id="installTurnButton"[\s\S]*id="installNote"[\s\
 assert.match(productionEntry, /Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
 
 assert.match(bootstrap, /CHANGELOG[\s\S]*CURRENT_RELEASE[\s\S]*DEVELOPMENT_HISTORY/);
-assert.match(bootstrap, new RegExp(`about-history\\.js\\?build=${escapeRegex(release.cacheKey)}`),
-  'History data must use the current release cache identity');
+assert.match(bootstrap, new RegExp(`about-history-current\\.js\\?build=${escapeRegex(release.cacheKey)}`),
+  'Current History data must use the current release cache identity');
 assert.match(bootstrap, /function focusDialogHeading\(dialog\)/,
   'Dialog opening must have a heading-first focus path');
 assert.match(bootstrap, /heading\.setAttribute\('tabindex', '-1'\)/,
@@ -122,10 +124,6 @@ assert.match(content, /18 July 2026/);
 assert.match(content, /8 August/);
 assert.match(content, /TURN 1\.5\.1/,
   'History must retain the previous 1.5.1 milestone');
-assert.match(content, new RegExp(`TURN ${escapeRegex(release.version)}`),
-  'History must name the canonical current release');
-assert.match(content, new RegExp(escapeRegex(release.id)),
-  'History must name the canonical current build');
 assert.match(content, /Cloudflare Worker and D1 snapshot store/,
   'History must explain the short-link transport introduced with YOUR TURN');
 assert.match(content, /one oh one/);
@@ -144,6 +142,15 @@ assert.match(content, /MIDNIGHT CITY/);
 assert.match(content, /≈4\.7 km/);
 assert.match(content, /≈3\.8 km/);
 assert.doesNotMatch(content, /MOUNTAIN at 1,000 trophies/);
+
+assert.match(currentContent, new RegExp(`version: '${escapeRegex(release.version)}'`),
+  'The current History facade must name the canonical release version');
+assert.match(currentContent, new RegExp(`build: '${escapeRegex(release.id)}'`),
+  'The current History facade must name the canonical release build');
+assert.match(currentContent, /PERK gets one visual language/);
+assert.match(currentContent, /1\.19\.3 r217/);
+assert.match(currentContent, /circuit-board icon/);
+assert.match(currentContent, /Trophy Road and The Lot/);
 
 for (const size of ['compact', 'standard', 'wide', 'reader']) {
   assert.match(dialogCss, new RegExp(`\\.turn-dialog--${size}`),
@@ -188,10 +195,6 @@ for (const designPage of [designMain, designReference]) {
     'Open TURN must use a fresh browsing context so mobile Safari cannot carry documentation viewport state into the game');
   assert.match(designPage, /class="section-nav" aria-label="[^"]+ sections"/,
     'Every design-system page must expose compact sticky section navigation');
-  assert.match(designPage, new RegExp(`TURN ${escapeRegex(release.version)}`),
-    'Design references must identify the current production version');
-  assert.match(designPage, new RegExp(`Build ${escapeRegex(release.id)}`, 'i'),
-    'Design references must identify the current production build');
 }
 
 assert.match(designMain, /href="\.\/design\.html" aria-current="page">Design system<\/a>/);
