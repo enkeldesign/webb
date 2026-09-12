@@ -195,6 +195,10 @@ for (const designPage of [designMain, designReference]) {
     'Open TURN must use a fresh browsing context so mobile Safari cannot carry documentation viewport state into the game');
   assert.match(designPage, /class="section-nav" aria-label="[^"]+ sections"/,
     'Every design-system page must expose compact sticky section navigation');
+  assert.match(designPage, new RegExp(`TURN ${escapeRegex(release.version)}`),
+    'Design references must identify the current production version');
+  assert.match(designPage, new RegExp(`Build ${escapeRegex(release.id)}`, 'i'),
+    'Design references must identify the current production build');
 }
 
 assert.match(designMain, /href="\.\/design\.html" aria-current="page">Design system<\/a>/);
