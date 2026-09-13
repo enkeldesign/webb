@@ -32,8 +32,11 @@ jobs:
       - name: Apply render-only LOW GRAPHICS profile
         run: python3 .github/turn-r223-render-only.py
 
-      - name: Generate r223 release surfaces
-        run: node turn/scripts/release.mjs --write
+      - name: Generate r223 release surfaces and TURN NEXT parity
+        run: |
+          node turn/scripts/release.mjs --write
+          node turn-next/scripts/build-parity-main.mjs
+          node turn-next/scripts/build-parity-entry.mjs
 
       - name: Remove temporary updater
         run: rm .github/turn-r223-render-only.py .github/workflows/turn-r223-render-only.yml
