@@ -1,0 +1,49 @@
+name: Synchronize LOW GRAPHICS into TURN LAB
+
+on:
+  push:
+    branches:
+      - feature/turn-low-graphics-r221
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/turn-low-graphics-r221
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Synchronize production settings entry
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('turn-lab/index.html')
+          source = path.read_text()
+          entry = '  <script type="module" src="./ui/low-graphics-setting.js?build=20260913-r221"></script>\n'
+          if entry not in source:
+              anchor = '  <script type="module" src="./testing/admin-unlock-sequence.js?revision=r243-mountain-1300"></script>\n'
+              if anchor not in source:
+                  raise SystemExit('TURN LAB entry anchor not found')
+              source = source.replace(anchor, anchor + entry, 1)
+              path.write_text(source)
+          PY
+          node turn/scripts/release.mjs --check
+          node turn-lab/tests/mountain-long-lab.mjs
+      - name: Commit synchronized LAB entry
+        run: |
+          if git diff --quiet; then
+            echo "TURN LAB entry already synchronized."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn-lab/index.html
+          git commit -m "Synchronize LOW GRAPHICS into TURN LAB"
+          git push origin HEAD:feature/turn-low-graphics-r221
