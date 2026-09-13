@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { flushScheduledScoreRecords } from '../../turn/scoring/score-record-store.js';
 import fs from 'node:fs/promises';
 
 import {
@@ -129,6 +130,7 @@ assert.deepEqual(getBestDriftRecord('countryside', driftPaintStorage), {
   carColor: '#ffcc00',
   carSecondaryColor: '#222222'
 }, 'DRIFT records must preserve the car paint that produced the best');
+assert.equal(flushScheduledScoreRecords(), true);
 assert.equal(JSON.parse(driftPaintStorage.getItem(DRIFT_RECORDS_STORAGE_KEY)).version, 2);
 
 const flowPaintStorage = new MemoryStorage();
@@ -147,6 +149,7 @@ assert.deepEqual(getBestFlowRecord('countryside', flowPaintStorage), {
   carColor: '#5d503f',
   carSecondaryColor: '#222222'
 }, 'FLOW records must preserve the car paint that produced the best');
+assert.equal(flushScheduledScoreRecords(), true);
 assert.equal(JSON.parse(flowPaintStorage.getItem(FLOW_RECORDS_STORAGE_KEY)).version, 2);
 
 const legacyPaintStorage = new MemoryStorage();

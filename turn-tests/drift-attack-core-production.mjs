@@ -14,6 +14,7 @@ import {
   saveBestDriftRecord
 } from '../turn/scoring/drift-records.js';
 import { SCORE_FEEDBACK_EVENT } from '../turn/scoring/score-feedback.js';
+import { flushScheduledScoreRecords } from '../turn/scoring/score-record-store.js';
 
 class MemoryStorage {
   constructor() {
@@ -232,6 +233,8 @@ const firstSave = saveBestDriftRecord({
   hitAt: 1000
 }, storage);
 assert.equal(firstSave.isNewBest, true);
+assert.equal(firstSave.saved, false, 'New-best feedback precedes durable storage');
+assert.equal(firstSave.pending, true);
 assert.deepEqual(getBestDriftRecord('mountain', storage), {
   score: 8420,
   carId: 'sedan-sports',
@@ -247,12 +250,12 @@ const slowerSave = saveBestDriftRecord({
 }, storage);
 assert.equal(slowerSave.saved, false);
 assert.equal(getBestDriftRecord('mountain', storage).score, 8420);
+assert.equal(storage.getItem(DRIFT_RECORDS_STORAGE_KEY), null, 'Record writes wait for the deferred flush');
+assert.equal(flushScheduledScoreRecords(), true);
 assert.equal(JSON.parse(storage.getItem(DRIFT_RECORDS_STORAGE_KEY)).tracks.mountain.score, 8420);
-assert.deepEqual(saveBestDriftRecord({ trackId: 'harbor', score: 1200 }, null), {
-  record: null,
-  isNewBest: false,
-  saved: false
-}, 'Unavailable storage must not report a phantom persisted best');
+assert.equal(getBestDriftRecord('harbor', null), null);
+// Unavailable storage and retry semantics are exercised with controlled timers
+// in score-persistence-production.mjs, including the durable-status flag.
 
 const source = await fs.readFile(new URL('../turn/scoring/drift-attack.js', import.meta.url), 'utf8');
 assert.doesNotMatch(source, /requestAnimationFrame|querySelector|createElement|localStorage/);

@@ -488,7 +488,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
   });
 
   window.addEventListener('turn:lap-result', (event) => {
-    if (validCompletedLap(event.detail)) completeValidLap(event.detail);
+    if (validCompletedLap(event.detail)) store.batch(() => completeValidLap(event.detail));
   });
 
   window.addEventListener('turn:track-changed', () => {

@@ -104,6 +104,8 @@ export function createFlowRuntime({
   }
 
   const targetStorage = getStorage(storage);
+  // Load the channel once during setup, before the first finish-line frame.
+  getBestFlowRecord(state.trackId, storage);
   let enabled = isUnlocked() === true;
   let hudVisible = flowHudVisible(targetStorage);
   let pendingShift = null;
@@ -411,7 +413,7 @@ export function createFlowRuntime({
     if (!enabled) return Object.freeze({ available: false });
     const scoreResult = scorer.completeLap(now);
     const eligible = valid === true && ranked !== false;
-    const previousBest = getBestFlowRecord(trackId, targetStorage);
+    const previousBest = getBestFlowRecord(trackId, storage);
     const saved = eligible
       ? saveBestFlowRecord({
         trackId,
@@ -421,7 +423,7 @@ export function createFlowRuntime({
         carSecondaryColor,
         lapTime: time,
         hitAt: wallClock()
-      }, targetStorage)
+      }, storage)
       : { record: previousBest, isNewBest: false, saved: false };
     const result = Object.freeze({
       available: true,
@@ -429,6 +431,7 @@ export function createFlowRuntime({
       bestScore: saved.record?.score || previousBest?.score || 0,
       newBest: saved.isNewBest === true,
       saved: saved.saved === true,
+      pending: saved.pending === true,
       eligible,
       maxMultiplier: scoreResult.maxMultiplier,
       maxChain: scoreResult.maxChain,
@@ -504,6 +507,6 @@ export function createFlowRuntime({
     setHudVisible,
     isEnabled: () => enabled,
     isHudVisible: () => hudVisible,
-    getBestRecord: (trackId = state.trackId) => getBestFlowRecord(trackId, targetStorage)
+    getBestRecord: (trackId = state.trackId) => getBestFlowRecord(trackId, storage)
   });
 }

@@ -78,6 +78,8 @@ export function createDriftAttackRuntime({
   }
 
   const targetStorage = getStorage(storage);
+  // Load the channel once during setup, before the first finish-line frame.
+  getBestDriftRecord(state.trackId, storage);
   let enabled = isUnlocked() === true;
   let hudVisible = driftHudVisible(targetStorage);
 
@@ -184,7 +186,7 @@ export function createDriftAttackRuntime({
 
     const scoreResult = scorer.completeLap(now);
     const eligible = valid === true && ranked !== false;
-    const previousBest = getBestDriftRecord(trackId, targetStorage);
+    const previousBest = getBestDriftRecord(trackId, storage);
     const saved = eligible
       ? saveBestDriftRecord({
         trackId,
@@ -194,7 +196,7 @@ export function createDriftAttackRuntime({
         carSecondaryColor,
         lapTime: time,
         hitAt: wallClock()
-      }, targetStorage)
+      }, storage)
       : { record: previousBest, isNewBest: false, saved: false };
     const bestScore = saved.record?.score || previousBest?.score || 0;
     const result = Object.freeze({
@@ -203,6 +205,7 @@ export function createDriftAttackRuntime({
       bestScore,
       newBest: saved.isNewBest === true,
       saved: saved.saved === true,
+      pending: saved.pending === true,
       eligible,
       bankCount: scoreResult.bankCount,
       bestBank: scoreResult.bestBank,
@@ -276,6 +279,6 @@ export function createDriftAttackRuntime({
     setHudVisible,
     isEnabled: () => enabled,
     isHudVisible: () => hudVisible,
-    getBestRecord: (trackId = state.trackId) => getBestDriftRecord(trackId, targetStorage)
+    getBestRecord: (trackId = state.trackId) => getBestDriftRecord(trackId, storage)
   });
 }

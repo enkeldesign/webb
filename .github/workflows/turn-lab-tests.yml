@@ -115,6 +115,9 @@ jobs:
       - name: Run rival persistence transaction regression
         run: node turn-tests/rival-persistence-production.mjs
 
+      - name: Run score persistence and finish-line storage regression
+        run: node turn-tests/score-persistence-production.mjs
+
       - name: Run Lot preparation failure recovery regression
         run: node turn-tests/lot-preparation-retry-production.mjs
 

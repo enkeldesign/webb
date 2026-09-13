@@ -134,6 +134,12 @@ const futureRelease = {
 const futureIndex = renderReleaseIndex(index, futureRelease);
 const futureImportMapText = futureIndex.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
 const futureImports = JSON.parse(futureImportMapText).imports;
+const relativeBridgeFixture = '<script type="importmap">{"imports":{"./achievements/runtime.js?revision=r164-long-session-robustness":"./achievements/runtime.js?revision=r244-reward-toast-guide"}}</script>';
+const relativeBridge = JSON.parse(renderReleaseIndex(relativeBridgeFixture, futureRelease)
+  .match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)[1]).imports;
+assert.equal(relativeBridge['./achievements/runtime.js?revision=r164-long-session-robustness'],
+  `/turn/achievements/runtime.js?revision=r244-reward-toast-guide&build=${futureRelease.cacheKey}`,
+  'Synchronizing a relative achievement alias must preserve its /turn/ document base');
 assert.equal(
   futureImports['/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=20260827-r185'],
   '/turn/garage/lot-enhancement-runtime.js?revision=r243-mountain-1300&build=20260827-r185',
@@ -150,7 +156,9 @@ for (const [specifier, target] of Object.entries(futureImports)) {
   if (url.pathname === '/turn/garage/lot-enhancement-runtime.js'
     || url.pathname === '/turn/progression/trophy-road-track-icons.js'
     || url.pathname === '/turn/garage/lot-track-select.js'
-    || url.pathname === '/turn/m8-home.js') {
+    || url.pathname === '/turn/m8-home.js'
+    || url.pathname === '/turn/achievements/runtime.js'
+    || /\/scoring\/(?:drift-records|flow-records|score-record-store|drift-attack-runtime|flow-runtime)\.js$/.test(url.pathname)) {
     assert.equal(url.searchParams.get('build'), futureRelease.cacheKey,
       `${specifier} must advance with the release, including compatibility aliases`);
   }
