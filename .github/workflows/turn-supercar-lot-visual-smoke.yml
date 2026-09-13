@@ -30,10 +30,18 @@ on:
       - 'turn/garage/lot-showroom-experiment.css'
       - 'turn/garage/lot-thumbnail-composition-r211.css'
       - 'turn/progression/trophy-road.js'
+      - 'turn/graphics-profile.js'
+      - 'turn/three-runtime.js'
+      - 'turn/ui/low-graphics-setting.js'
+      - 'turn/render/world.js'
+      - 'turn/index.html'
+      - 'turn/release.json'
       - 'turn-lab/supercar-lot-visual.html'
       - 'turn-lab/rival-paint-regression.html'
       - 'turn-tests/supercar-lot-visual-smoke.mjs'
       - 'turn-tests/rival-paint-webgl-regression.mjs'
+      - 'turn-tests/low-graphics-production.mjs'
+      - 'turn-tests/low-graphics-browser-smoke.mjs'
       - '.github/workflows/turn-supercar-lot-visual-smoke.yml'
 
 concurrency:
@@ -59,6 +67,9 @@ jobs:
       - name: Validate the authored Supercar wheel contract
         run: node turn-lab/tests/semantic-car-finish-production.mjs
 
+      - name: Validate LOW GRAPHICS production contract
+        run: node turn-tests/low-graphics-production.mjs
+
       - name: Install Playwright Chromium and WebKit
         run: |
           npm install --no-save playwright@1.55.0 pngjs@7.0.0
@@ -73,6 +84,9 @@ jobs:
           done
           cat /tmp/turn-vehicle-visual-http.log
           exit 1
+
+      - name: Validate LOW GRAPHICS in Chromium and WebKit
+        run: node turn-tests/low-graphics-browser-smoke.mjs
 
       - name: Render and validate the actual Lot preview
         run: node turn-tests/supercar-lot-visual-smoke.mjs

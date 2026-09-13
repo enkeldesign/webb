@@ -70,6 +70,20 @@ const VISUAL_HISTORY = Object.freeze({
   ])
 });
 
+const LOW_GRAPHICS_HISTORY = Object.freeze({
+  period: '13 September',
+  title: 'LOW GRAPHICS for older devices',
+  paragraphs: Object.freeze([
+    'TURN 1.19.7 adds a saved LOW GRAPHICS option in Settings. After restart it caps rendering at DPR 1.0, disables antialiasing and shadow rendering, removes real point-light contribution and suppresses outline draw calls across the race and secondary 3D previews.',
+    'Countryside also skips its deferred world-beauty and art passes in LOW GRAPHICS while retaining track identity, Drive By Ear discovery content and gameplay-critical world structure. Visible lamps, emissive surfaces and the shared shadowless night headlight remain available as cues.'
+  ]),
+  milestones: Object.freeze([
+    'One LOW GRAPHICS profile across race, The Lot, Home previews, Trophy Road and rival previews',
+    'DPR 1.0, no antialiasing or shadows, fewer real lights and outline draw calls',
+    'TURN 1.19.7 · 2026.09.13-r221'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -86,7 +100,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   PERK_HISTORY,
   RELIABILITY_HISTORY,
   SCORE_HISTORY,
-  VISUAL_HISTORY
+  VISUAL_HISTORY,
+  LOW_GRAPHICS_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -98,13 +113,15 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.19.5 r219', 'Reduces repeated score-storage work at the finish line and on Home while keeping new DRIFT and FLOW bests immediately available.']),
       Object.freeze(['Record recovery', 'Preserves pending score records through interrupted saves and reconciles other-tab updates and resets.']),
       Object.freeze(['1.19.6 r220', 'Releases discarded car models and closed previews while preserving resources shared by cars still in use.']),
-      Object.freeze(['Quick car changes', 'Keeps the latest car selection when earlier model loads finish late, and cleans up previews after interrupted loading.'])
+      Object.freeze(['Quick car changes', 'Keeps the latest car selection when earlier model loads finish late, and cleans up previews after interrupted loading.']),
+      Object.freeze(['1.19.7 r221', 'Adds LOW GRAPHICS for older devices with DPR 1.0, no antialiasing or shadows, fewer real lights, suppressed outlines and reduced cosmetic scenery.']),
+      Object.freeze(['One graphics profile', 'Applies the same low profile to the race renderer and TURN secondary WebGL previews after a restart.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.6',
-  build: '2026.09.13-r220',
-  note: 'TURN 1.19.6 cleans up discarded cars and previews, and keeps quick car changes consistent.'
+  version: '1.19.7',
+  build: '2026.09.13-r221',
+  note: 'TURN 1.19.7 adds LOW GRAPHICS for better performance on older devices.'
 });
