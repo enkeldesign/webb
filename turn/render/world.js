@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { graphicsProfile } from '../graphics-profile.js';
 
 const buildId = new URL(import.meta.url).searchParams.get('build');
 const TREE_CLUSTER_SINK_RATIO = 0.07;
@@ -31,26 +30,6 @@ async function waitForHomeBeforeCosmetics() {
 }
 
 async function loadWorldModules() {
-  if (graphicsProfile.lowGraphics) {
-    const [identity, intensity, bella, bellaFinal, bellaRescue] = await Promise.all([
-      import(moduleUrl('../track-identity.js?revision=r532-countryside-nature-polish')),
-      import(moduleUrl('../section-intensity.js?revision=r532-countryside-nature-polish')),
-      import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r168-bella-markings-eyes-foliage-r169-facing-palette-r170-eye-placement-r171-cute-eyes-r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
-      import(moduleUrl('../tracks/countryside-bella-final-r172.js?revision=r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
-      import(moduleUrl('../tracks/countryside-bella-rescue-r524.js?revision=r524-camera-relative-meow'))
-    ]);
-    return {
-      installWorldBeauty: async () => {},
-      installArtPass: async () => {},
-      installTrackIdentity: identity.installTrackIdentity,
-      installSectionIntensity: intensity.installSectionIntensity,
-      installCountrysideSceneryCleanup: () => {},
-      installCountrysideBella: bella.installCountrysideBella,
-      applyBellaFinalVisuals: bellaFinal.applyBellaFinalVisuals,
-      installBellaRescueBehavior: bellaRescue.installBellaRescueBehavior
-    };
-  }
-
   const [beauty, art, identity, intensity, scenery, bella, bellaFinal, bellaRescue] = await Promise.all([
     import(moduleUrl('../world-beauty.js?revision=r532-countryside-nature-polish')),
     import(moduleUrl('../world-art-pass.js?revision=r514-road-contour')),

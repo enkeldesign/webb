@@ -23,11 +23,11 @@ const lowGraphics = loadLowGraphicsEnabled();
 export const graphicsProfile = Object.freeze({
   lowGraphics,
   dprCap: lowGraphics ? 1 : Infinity,
-  antialias: !lowGraphics,
+  antialias: true,
   shadows: !lowGraphics,
   outlines: !lowGraphics,
   pointLights: !lowGraphics,
-  optionalScenery: !lowGraphics
+  optionalScenery: true
 });
 
 export function graphicsPixelRatio(requested = Infinity, devicePixelRatio = globalThis.devicePixelRatio || 1) {

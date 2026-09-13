@@ -79,7 +79,7 @@ export class PointLight extends NativeThree.PointLight {
 export class WebGLRenderer extends NativeThree.WebGLRenderer {
   constructor(parameters = {}) {
     const rendererParameters = graphicsProfile.lowGraphics
-      ? { ...parameters, antialias: false }
+      ? { ...parameters, antialias: true }
       : parameters;
     super(rendererParameters);
 
