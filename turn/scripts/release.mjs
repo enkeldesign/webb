@@ -26,7 +26,15 @@ const companionPaths = Object.freeze([
   'turn/ui/about-history-bootstrap-r165.js',
   'turn/content/about-history-current.js',
   'turn/design.html',
-  'turn/design-dialogs.html'
+  'turn/design-dialogs.html',
+  'turn/tracks/registry.js',
+  'turn/tracks/midnight-city-world-r2.js',
+  'turn/tracks/midnight-city-world-r3.js',
+  'turn/tracks/midnight-city-world-r4.js',
+  'turn/tracks/midnight-city-world-r5.js',
+  'turn/tracks/midnight-city-world-r6.js',
+  'turn/tracks/midnight-city-world-r7.js',
+  'turn/tracks/midnight-city-world-r11.js'
 ]);
 
 export async function loadReleaseDefinition() {
@@ -200,12 +208,43 @@ function synchronizeGraphicsRuntimeTarget(importMap, release) {
   imports['/turn/graphics-profile.js'] = `/turn/graphics-profile.js?build=${release.cacheKey}`;
 }
 
+function synchronizeLowGraphicsProducerTargets(importMap, release) {
+  const imports = importMap.imports ||= {};
+  const legacySpecifiers = [
+    '/turn/tracks/airport-emergency-r493.js?revision=r527-no-finish-sync-wreck',
+    '/turn/tracks/airport-world-r50.js?build=20260722-r50',
+    '/turn/tracks/airport-world-r53.js?build=20260814-r57',
+    '/turn/tracks/cliffside-world.js?base=20260725-r72',
+    '/turn/tracks/countryside-world-r531.js?revision=r532-countryside-nature-polish',
+    '/turn/tracks/start-area-polish-r519.js?revision=r519-midnight-full-width-accents'
+  ];
+  const changedPaths = new Set(legacySpecifiers.map((specifier) =>
+    new URL(specifier, 'https://enkel.design').pathname
+  ));
+
+  // Preserve existing legacy import specifiers for compatibility, but route every
+  // active contour producer through the current release build. This avoids inventing
+  // another hand-maintained revision namespace while guaranteeing fresh source code.
+  for (const specifier of legacySpecifiers) {
+    const pathname = new URL(specifier, 'https://enkel.design').pathname;
+    imports[specifier] = `${pathname}?build=${release.cacheKey}`;
+  }
+
+  for (const [specifier, target] of Object.entries(imports)) {
+    if (typeof target !== 'string') continue;
+    const url = new URL(target, 'https://enkel.design/turn/');
+    if (!changedPaths.has(url.pathname)) continue;
+    imports[specifier] = `${url.pathname}?build=${release.cacheKey}`;
+  }
+}
+
 function renderSharedResourceImports(source, release) {
   return source.replace(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/, (_, jsonText) => {
     const importMap = JSON.parse(jsonText);
     synchronizeScoreStoreTargets(importMap, release);
     synchronizeVisualResourceTargets(importMap, release);
     synchronizeGraphicsRuntimeTarget(importMap, release);
+    synchronizeLowGraphicsProducerTargets(importMap, release);
     return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
   });
 }
@@ -235,6 +274,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeScoreStoreTargets(importMap, release);
   synchronizeVisualResourceTargets(importMap, release);
   synchronizeGraphicsRuntimeTarget(importMap, release);
+  synchronizeLowGraphicsProducerTargets(importMap, release);
   synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);
   // These presentation modules now use the release build instead of a new
   // hand-maintained revision. Advance every alias, including installed routes.
@@ -308,6 +348,10 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
       `TURN LAB · production TURN ${release.version} r${revision}`
     )
     .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
+    .replace(
+      /(src="\.\/tracks\/kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish)(?:&build=\d{8}-r\d+)?"/,
+      `$1&build=${release.cacheKey}"`
+    )
     .replace(/<script type="importmap">[\s\S]*?<\/script>/, productionImportMap);
 }
 
@@ -326,6 +370,18 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
     return source.replace(
       /(export const CURRENT_RELEASE = Object\.freeze\(\{\s*version: ')[^']+(',\s*build: ')[^']+(')/,
       `$1${release.version}$2${release.id}$3`
+    );
+  }
+  if (repositoryPath === 'turn/tracks/registry.js') {
+    return source.replace(
+      /(await import\(\s*'\.\/midnight-city-world-r11\.js\?build=)[^']+('\s*\))/,
+      `$1${release.cacheKey}$2`
+    );
+  }
+  if (/^turn\/tracks\/midnight-city-world-r(?:2|3|4|5|6|7|11)\.js$/.test(repositoryPath)) {
+    return source.replace(
+      /(from '\.\/midnight-city-world(?:-r\d+)?\.js\?build=)[^']+(')/,
+      `$1${release.cacheKey}$2`
     );
   }
   assert.ok(repositoryPath === 'turn/design.html' || repositoryPath === 'turn/design-dialogs.html',

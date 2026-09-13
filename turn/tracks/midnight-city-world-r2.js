@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { installMidnightCityWorld as installMidnightCityWorldR1 } from './midnight-city-world.js?base=20260801-r1';
+import { graphicsProfile } from '/turn/graphics-profile.js';
+import { installMidnightCityWorld as installMidnightCityWorldR1 } from './midnight-city-world.js?build=20260913-r223';
 
 const WARM_LIGHT = 0xffd27a;
 const PLAYER_FILL = 0xffe3b3;
@@ -36,12 +37,14 @@ function installPlayerLightRig(playerCar) {
   const rig = new THREE.Group();
   rig.name = PLAYER_LIGHT_RIG_NAME;
 
-  for (const side of [-1, 1]) {
-    const light = new THREE.PointLight(PLAYER_FILL, 6.2, 58, 1.72);
-    light.name = `Midnight City player fill ${side < 0 ? 'left' : 'right'}`;
-    light.position.set(side * 1.55, 2.85, 2.4);
-    light.castShadow = false;
-    rig.add(light);
+  if (graphicsProfile.pointLights) {
+    for (const side of [-1, 1]) {
+      const light = new THREE.PointLight(PLAYER_FILL, 6.2, 58, 1.72);
+      light.name = `Midnight City player fill ${side < 0 ? 'left' : 'right'}`;
+      light.position.set(side * 1.55, 2.85, 2.4);
+      light.castShadow = false;
+      rig.add(light);
+    }
   }
 
   playerCar.add(rig);
@@ -56,6 +59,8 @@ function installPlayerLightRig(playerCar) {
 }
 
 function strengthenStreetLights(world) {
+  if (!graphicsProfile.pointLights) return 0;
+
   let count = 0;
   world.traverse((node) => {
     if (!node.isPointLight || node.color?.getHex() !== WARM_LIGHT) return;

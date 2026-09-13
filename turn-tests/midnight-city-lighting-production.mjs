@@ -8,7 +8,8 @@ const [
   showcaseSource,
   signParkSource,
   easterEggSource,
-  registrySource
+  registrySource,
+  releaseSource
 ] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r3.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r4.js', import.meta.url), 'utf8'),
@@ -16,7 +17,8 @@ const [
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r6.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r11.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
 ]);
 
 assert.match(claritySource, /installMidnightCityWorld as installMidnightCityWorldR2/);
@@ -119,8 +121,9 @@ assert.doesNotMatch(
   'The hidden portrait and surface repair must use the existing render loop without adding timers or inline lights'
 );
 
-assert.match(registrySource, /midnight-city-world-r11\.js\?build=20260819-r176-upward-road-normals/,
-  'Production must cache-bust the Midnight City wrapper that repairs inherited surface normals');
+const release = JSON.parse(releaseSource);
+assert.match(registrySource, new RegExp(`midnight-city-world-r11\\.js\\?build=${release.cacheKey}`),
+  'Production must load the current-build Midnight City wrapper so nested lighting fixes cannot remain cached');
 assert.match(registrySource, /'midnight-city'\(\{ scene, samples, trackWidth, runtime \}\)/);
 assert.match(registrySource, /installMidnightCityWorld\(\{ scene, samples, trackWidth, runtime \}\)/);
 

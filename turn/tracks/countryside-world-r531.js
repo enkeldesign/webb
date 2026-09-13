@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260811-r164';
 
@@ -167,6 +168,7 @@ function cloneAndTuneMaterials(node, semantic) {
 }
 
 function addInkOutline(root, scale = 1.022) {
+  if (!graphicsProfile.outlines) return;
   const surfaces = [];
   root.traverse((node) => {
     if (node?.isMesh && !node.userData?.turnOutline) surfaces.push(node);

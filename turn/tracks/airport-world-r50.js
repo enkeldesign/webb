@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r19';
 
@@ -75,6 +76,14 @@ function outlinedMesh(geometry, meshMaterial, scale = 1.035, {
   castShadow = true,
   receiveShadow = true
 } = {}) {
+  if (!graphicsProfile.outlines) {
+    const group = new THREE.Group();
+    const mesh = new THREE.Mesh(geometry, meshMaterial);
+    mesh.castShadow = castShadow;
+    mesh.receiveShadow = receiveShadow;
+    group.add(mesh);
+    return group;
+  }
   const group = new THREE.Group();
   const outline = new THREE.Mesh(geometry, blackOutlineMaterial);
   outline.scale.setScalar(scale);

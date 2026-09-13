@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 import {
   createCarVisual,
   preloadCarModels
@@ -772,6 +773,15 @@ function updateResponderLights(rig) {
 }
 
 function outlinedPrimitive(geometry, fillMaterial, scale = 1.04) {
+  if (!graphicsProfile.outlines) {
+    const root = new THREE.Group();
+    const fill = new THREE.Mesh(geometry, fillMaterial);
+    fill.castShadow = true;
+    fill.receiveShadow = true;
+    fill.userData.turnOutlined = true;
+    root.add(fill);
+    return root;
+  }
   const group = new THREE.Group();
   const outline = new THREE.Mesh(
     geometry,

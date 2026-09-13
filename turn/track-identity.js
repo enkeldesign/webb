@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 
 const REVISION = 'r532-countryside-nature-polish';
 const INK = 0x08090a;
@@ -12,6 +13,7 @@ function isInk(material) {
 }
 
 function thinContours(world) {
+  if (!graphicsProfile.outlines) return;
   world.traverse((node) => {
     if (!node?.isMesh) return;
     if (node.userData?.turnOutline || node.name === 'TURN outline') {

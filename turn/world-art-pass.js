@@ -1,12 +1,15 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 
 const TAU = Math.PI * 2;
 const INK = 0x08090a;
 const TURN_ROAD = 0x44494f;
-const OUTLINE_MATERIAL = new THREE.MeshBasicMaterial({
+const OUTLINE_MATERIAL = graphicsProfile.outlines
+  ? new THREE.MeshBasicMaterial({
   color: INK,
   side: THREE.BackSide
-});
+})
+  : null;
 
 function seeded01(seed) {
   const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
@@ -44,6 +47,7 @@ function geometryIsTooFlat(mesh) {
 }
 
 function addContour(mesh, scale = 1.055) {
+  if (!graphicsProfile.outlines) return;
   if (!mesh?.isMesh || mesh.isInstancedMesh || mesh.userData.turnOutline || mesh.userData.turnOutlined) return;
   if (isOutlineMaterial(mesh.material) || hasExistingOutline(mesh) || geometryIsTooFlat(mesh)) {
     mesh.userData.turnOutlined = true;
@@ -62,6 +66,7 @@ function addContour(mesh, scale = 1.055) {
 }
 
 function contourObject(root, scale = 1.055) {
+  if (!graphicsProfile.outlines) return;
   const meshes = [];
   root.traverse((node) => {
     if (node.isMesh && !node.userData.turnOutline) meshes.push(node);
@@ -70,6 +75,7 @@ function contourObject(root, scale = 1.055) {
 }
 
 function applyWorldContours(world) {
+  if (!graphicsProfile.outlines) return;
   const meshes = [];
   world.traverse((node) => {
     if (node.isMesh && !node.userData.turnOutline) meshes.push(node);
@@ -284,7 +290,9 @@ function addLake(world, samples) {
   const shoreInner = offsetContour(shoreOuter, center, -8.5);
   const waterOuter = offsetContour(shoreInner, center, -2.1);
 
-  const blackMaterial = new THREE.MeshBasicMaterial({ color: INK, side: THREE.DoubleSide });
+  const blackMaterial = graphicsProfile.outlines
+    ? new THREE.MeshBasicMaterial({ color: INK, side: THREE.DoubleSide })
+    : null;
   const sandMaterial = new THREE.MeshStandardMaterial({ color: 0xf2cf83, roughness: 1, metalness: 0, side: THREE.DoubleSide });
   const waterMaterial = new THREE.MeshStandardMaterial({
     map: makeWaterTexture(),
@@ -294,9 +302,9 @@ function addLake(world, samples) {
     side: THREE.DoubleSide
   });
 
-  world.add(makeRibbon(blackOuter, shoreOuter, 0.038, blackMaterial));
+  if (graphicsProfile.outlines) world.add(makeRibbon(blackOuter, shoreOuter, 0.038, blackMaterial));
   world.add(makeRibbon(shoreOuter, shoreInner, 0.042, sandMaterial));
-  world.add(makeRibbon(shoreInner, waterOuter, 0.047, blackMaterial));
+  if (graphicsProfile.outlines) world.add(makeRibbon(shoreInner, waterOuter, 0.047, blackMaterial));
   world.add(makeShape(waterOuter, waterMaterial, 0.051));
 
   const rockMaterial = new THREE.MeshStandardMaterial({ color: 0x697481, roughness: 0.96, flatShading: true });
@@ -328,10 +336,13 @@ function addLakeIsland(world, center) {
     );
   });
 
-  const black = makeShape(ellipse(20, 13), new THREE.MeshBasicMaterial({ color: INK, side: THREE.DoubleSide }), 0.058);
+  const black = graphicsProfile.outlines
+    ? makeShape(ellipse(20, 13), new THREE.MeshBasicMaterial({ color: INK, side: THREE.DoubleSide }), 0.058)
+    : null;
   const sand = makeShape(ellipse(17.8, 10.8), new THREE.MeshStandardMaterial({ color: 0xf2cf83, roughness: 1 }), 0.064);
   const grass = makeShape(ellipse(13.8, 7.8), new THREE.MeshStandardMaterial({ color: 0x78c976, roughness: 1 }), 0.071);
-  world.add(black, sand, grass);
+  if (black) world.add(black);
+  world.add(sand, grass);
 
   const rockPalette = [0x596573, 0x74808a, 0x8a949c];
   for (let i = 0; i < 5; i += 1) {
@@ -353,6 +364,7 @@ function addLakeIsland(world, center) {
 }
 
 function addRoadOuterContour(world, samples, trackWidth) {
+  if (!graphicsProfile.outlines) return;
   const material = new THREE.MeshBasicMaterial({ color: TURN_ROAD, side: THREE.DoubleSide });
   for (const side of [-1, 1]) {
     const inner = [];
@@ -441,6 +453,11 @@ export async function installArtPass({ world, scene, samples, trackWidth }) {
   addLake(world, samples);
   addRoadOuterContour(world, samples, trackWidth);
   addDistantMountains(world, samples);
+
+  if (!graphicsProfile.outlines) {
+    console.info('TURN: bold surroundings art pass loaded without contour construction.');
+    return;
+  }
 
   applyWorldContours(world);
 

@@ -2,6 +2,7 @@
 // TURN game core.
 
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 import { installKenneyWorld } from '/turn/world-assets.js';
 import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19&revision=r270-camera-hotpath';
 import { updateHudState } from '/turn/ui/hud.js?build=20260720-r19';
@@ -289,6 +290,14 @@ installPerformanceMonitor({
 const blackMaterial = new THREE.MeshBasicMaterial({ color: 0x08090a, side: THREE.BackSide });
 
 function outlinedMesh(geometry, material, scale = 1.055) {
+  if (!graphicsProfile.outlines) {
+    const group = new THREE.Group();
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    group.add(mesh);
+    return group;
+  }
   const group = new THREE.Group();
   const outline = new THREE.Mesh(geometry, blackMaterial);
   outline.scale.setScalar(scale);

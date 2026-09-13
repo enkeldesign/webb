@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { installMidnightCityWorld as installMidnightCityWorldR2 } from './midnight-city-world-r2.js?base=20260801-r2';
+import { graphicsProfile } from '/turn/graphics-profile.js';
+import { installMidnightCityWorld as installMidnightCityWorldR2 } from './midnight-city-world-r2.js?build=20260913-r223';
 
 const WARM_LIGHT = 0xffd27a;
 const PLAYER_FILL = 0xffe3b3;
@@ -61,11 +62,13 @@ function replacePlayerLighting(playerCar) {
 
   for (const child of [...rig.children]) rig.remove(child);
 
-  const fill = new THREE.PointLight(PLAYER_FILL, 3.1, 17, 2);
-  fill.name = 'Midnight City player visibility fill';
-  fill.position.set(0, 2.55, 0.45);
-  fill.castShadow = false;
-  rig.add(fill);
+  if (graphicsProfile.pointLights) {
+    const fill = new THREE.PointLight(PLAYER_FILL, 3.1, 17, 2);
+    fill.name = 'Midnight City player visibility fill';
+    fill.position.set(0, 2.55, 0.45);
+    fill.castShadow = false;
+    rig.add(fill);
+  }
 
   const headlights = new THREE.Group();
   headlights.name = HEADLIGHT_PROJECTION_NAME;
@@ -128,6 +131,16 @@ function alignSparseStreetLights(world, samples, trackWidth) {
   world.traverse((node) => {
     if (node.isPointLight && node.color?.getHex() === WARM_LIGHT) lights.push(node);
   });
+
+  if (!graphicsProfile.pointLights) {
+    for (const light of lights) {
+      light.visible = false;
+      light.intensity = 0;
+      light.castShadow = false;
+      light.userData.turnLowGraphicsDisabledLight = true;
+    }
+    return { active: 0, disabled: lights.length };
+  }
 
   let active = 0;
   let disabled = 0;

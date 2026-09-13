@@ -18,18 +18,6 @@ for (const browserType of [chromium, webkit]) {
     renderer.setPixelRatio(2);
 
     const light = new THREE.PointLight(0xffffff, 4, 20, 2);
-    const root = new THREE.Group();
-    const taggedOutline = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.BackSide })
-    );
-    taggedOutline.userData.turnOutline = true;
-    const legacyOutline = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshBasicMaterial({ color: 0x08090a, side: THREE.BackSide })
-    );
-    root.add(taggedOutline, legacyOutline);
-    await Promise.resolve();
 
     const output = {
       lowGraphics: globalThis.__turnGraphicsProfile?.lowGraphics,
@@ -37,9 +25,7 @@ for (const browserType of [chromium, webkit]) {
       pixelRatio: renderer.getPixelRatio(),
       shadows: renderer.shadowMap.enabled,
       pointLightVisible: light.visible,
-      pointLightIntensity: light.intensity,
-      taggedOutlineVisible: taggedOutline.visible,
-      legacyOutlineVisible: legacyOutline.visible
+      pointLightIntensity: light.intensity
     };
 
     renderer.dispose();
@@ -53,8 +39,6 @@ for (const browserType of [chromium, webkit]) {
   assert.equal(result.shadows, false, `${browserType.name()} keeps shadow rendering disabled.`);
   assert.equal(result.pointLightVisible, false, `${browserType.name()} removes real PointLights from rendering.`);
   assert.equal(result.pointLightIntensity, 0, `${browserType.name()} removes PointLight illumination.`);
-  assert.equal(result.taggedOutlineVisible, false, `${browserType.name()} suppresses tagged TURN outline draw calls.`);
-  assert.equal(result.legacyOutlineVisible, false, `${browserType.name()} suppresses legacy black back-face outline draw calls.`);
 
   await context.close();
   await browser.close();

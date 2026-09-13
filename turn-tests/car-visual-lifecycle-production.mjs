@@ -16,6 +16,12 @@ import {
 
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const entry = await read('turn/index.html');
+const lowGraphics = process.argv.includes('--low-graphics');
+const graphicsProfile = Object.freeze({
+  lowGraphics,
+  outlines: !lowGraphics,
+  pointLights: !lowGraphics
+});
 assert.ok(entry.includes(`three@0.${THREE.REVISION}.0/build/three.module.js`),
   'Resource tests must use the same Three version as production');
 
@@ -114,7 +120,7 @@ const semantic = await moduleUnderTest('turn/vehicle/semantic-car-finish.js', { 
 let sourceReads = 0;
 let failPaint = false;
 const models = await moduleUnderTest('turn/vehicle/car-models.js', {
-  THREE, ...catalog, ...gamut, ...wheelRig, ...learner, ...supercar, ...semantic,
+  THREE, graphicsProfile, ...catalog, ...gamut, ...wheelRig, ...learner, ...supercar, ...semantic,
   createCarVisualResourceOwner: trackedOwner, disposeCarVisual, retainCarVisualResources,
   readCarSource: async () => { sourceReads += 1; return source; },
   installSemanticCarFinish(options) {
@@ -129,6 +135,12 @@ for (const carId of ['sedan', 'classic', 'supercar', 'police', 'ambulance', 'fir
   const first = await models.createCarVisual({ carId, color: '#123456', secondaryColor: '#abcdef' });
   const second = await models.createCarVisual({ carId, color: '#654321', secondaryColor: '#fedcba' });
   const resources = visualResources.get(first);
+  if (lowGraphics) {
+    first.traverse((node) => {
+      assert.equal(Boolean(node.userData?.turnOutline), false,
+        'LOW GRAPHICS car factories must not construct turnOutline meshes');
+    });
+  }
   assert.ok(resources.size >= 5, `${carId} owns its prepared materials`);
   if (carId === 'classic') {
     const sign = first.getObjectByName('kenney-taxi-roof-sign-learner-livery');
@@ -141,8 +153,10 @@ for (const carId of ['sedan', 'classic', 'supercar', 'police', 'ambulance', 'fir
       'Split tyres/rims and empty original wheel geometry are owned');
   }
   if (first.userData.turnEmergencyLightRig) {
-    assert.equal([...resources].filter((resource) => resource.isPointLight).length, 2,
-      'Non-mesh light resources participate in ownership');
+    assert.equal([...resources].filter((resource) => resource.isPointLight).length, lowGraphics ? 0 : 2,
+      lowGraphics
+        ? 'LOW GRAPHICS does not construct emergency PointLights'
+        : 'Non-mesh light resources participate in ownership');
     assert.equal([...resources].filter((resource) => resource.isBufferGeometry).length, 6);
   }
   disposeCarVisual(first);
