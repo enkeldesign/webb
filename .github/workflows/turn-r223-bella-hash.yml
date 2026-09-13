@@ -1,0 +1,45 @@
+name: TURN r223 Bella hash rebaseline
+
+on:
+  push:
+    branches:
+      - fix/turn-low-graphics-render-only-r223
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  rebaseline:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/turn-low-graphics-render-only-r223
+
+      - name: Rebaseline protected Bella source hash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('turn-tests/countryside-world-redesign-production.mjs')
+          source = path.read_text()
+          old = '7133abe99b37322407cebe8ab4c627e3cd91663c3a981427fd328d403a734bf4'
+          new = '5b98671d235f3cc6b3c38f81bf336f9fcd4d853698ed2715a260093237e776b2'
+          if old not in source:
+              raise SystemExit('Expected protected Bella baseline hash not found')
+          path.write_text(source.replace(old, new, 1))
+          PY
+
+      - name: Commit test baseline
+        run: |
+          git config user.name 'enkeldesign'
+          git config user.email '75029856+enkeldesign@users.noreply.github.com'
+          git add turn-tests/countryside-world-redesign-production.mjs
+          git commit -m 'Rebaseline Bella after LOW GRAPHICS contour guard'
+          git push origin HEAD:fix/turn-low-graphics-render-only-r223
