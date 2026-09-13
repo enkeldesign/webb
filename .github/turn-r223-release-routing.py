@@ -41,15 +41,33 @@ if 'function synchronizeLowGraphicsProducerTargets' not in source:
         raise AssertionError('release shared import renderer anchor missing')
     source = source.replace(marker, function_source + marker, 1)
 
-for anchor in [
-    '    synchronizeGraphicsRuntimeTarget(importMap, release);\n',
-    '  synchronizeGraphicsRuntimeTarget(importMap, release);\n'
-]:
-    replacement = anchor + anchor[:len(anchor) - len(anchor.lstrip())] + 'synchronizeLowGraphicsProducerTargets(importMap, release);\n'
-    if replacement not in source:
-        if anchor not in source:
-            raise AssertionError(f'release synchronizer call anchor missing: {anchor!r}')
-        source = source.replace(anchor, replacement, 1)
+shared_start = source.index('function renderSharedResourceImports(source, release) {')
+shared_end = source.index('\n}\n', shared_start)
+shared = source[shared_start:shared_end]
+if 'synchronizeLowGraphicsProducerTargets(importMap, release);' not in shared:
+    anchor = '    synchronizeGraphicsRuntimeTarget(importMap, release);\n'
+    if anchor not in shared:
+        raise AssertionError('shared-resource graphics synchronizer anchor missing')
+    shared = shared.replace(
+        anchor,
+        anchor + '    synchronizeLowGraphicsProducerTargets(importMap, release);\n',
+        1
+    )
+    source = source[:shared_start] + shared + source[shared_end:]
+
+runtime_start = source.index('function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {')
+runtime_end = source.index('\n}\n\nexport function renderReleaseIndex', runtime_start)
+runtime = source[runtime_start:runtime_end]
+if 'synchronizeLowGraphicsProducerTargets(importMap, release);' not in runtime:
+    anchor = '  synchronizeGraphicsRuntimeTarget(importMap, release);\n'
+    if anchor not in runtime:
+        raise AssertionError('production release graphics synchronizer anchor missing')
+    runtime = runtime.replace(
+        anchor,
+        anchor + '  synchronizeLowGraphicsProducerTargets(importMap, release);\n',
+        1
+    )
+    source = source[:runtime_start] + runtime + source[runtime_end:]
 
 path.write_text(source)
 print('Added release-bound routing for changed LOW GRAPHICS contour producers.')
