@@ -1,0 +1,52 @@
+name: TURN r224 MOUNTAIN warning sign updater
+
+on:
+  push:
+    branches:
+      - feature/mountain-slalom-warning-sign-r224
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/mountain-slalom-warning-sign-r224
+          fetch-depth: 0
+
+      - name: Apply authored warning sign and release updates
+        run: python3 .github/turn-r224-warning-sign.py
+
+      - name: Synchronize release surfaces
+        run: node turn/scripts/release.mjs --write
+
+      - name: Validate focused MOUNTAIN and release contracts
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-tests/mountain-track-production.mjs
+          node turn-lab/tests/multi-track-production.mjs
+          node turn-tests/release-production.mjs
+          node turn-tests/release-composition-production.mjs --base=f17c38bce68bf6b88784babcff01e91744f50b20
+          git diff --check
+
+      - name: Commit r224 implementation
+        run: |
+          git config user.name "enkeldesign"
+          git config user.email "75029856+enkeldesign@users.noreply.github.com"
+          git add turn turn-next turn-lab yourturn turn-tests
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+            exit 0
+          fi
+          git commit -m "Add MOUNTAIN downhill warning landmark; release TURN 1.19.10 r224"
+          git push origin HEAD:feature/mountain-slalom-warning-sign-r224
