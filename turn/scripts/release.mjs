@@ -340,6 +340,10 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
       `TURN LAB · production TURN ${release.version} r${revision}`
     )
     .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
+    .replace(
+      /(src="\.\/tracks\/kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish)(?:&build=\d{8}-r\d+)?"/,
+      `$1&build=${release.cacheKey}"`
+    )
     .replace(/<script type="importmap">[\s\S]*?<\/script>/, productionImportMap);
 }
 
