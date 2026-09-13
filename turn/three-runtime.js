@@ -4,6 +4,24 @@ import { graphicsProfile, graphicsPixelRatio } from './graphics-profile.js';
 export * from 'three-native';
 
 const ADD_PATCH = Symbol.for('turn.lowGraphics.object3d.add');
+const TURN_INK = 0x08090a;
+
+function isTurnOutlineMaterial(material) {
+  const materials = Array.isArray(material) ? material : [material];
+  return materials.some((candidate) => (
+    candidate?.side === NativeThree.BackSide
+    && candidate?.color?.getHex?.() === TURN_INK
+  ));
+}
+
+function isTurnOutline(node) {
+  if (!node?.isMesh) return false;
+  return Boolean(
+    node.userData?.turnOutline
+    || node.userData?.turnStartBannerContour
+    || isTurnOutlineMaterial(node.material)
+  );
+}
 
 function suppressLowGraphicsObject(root) {
   if (!graphicsProfile.lowGraphics || !root) return;
@@ -13,7 +31,7 @@ function suppressLowGraphicsObject(root) {
       node.intensity = 0;
       if (node.userData) node.userData.turnLowGraphicsDisabledLight = true;
     }
-    if (node?.userData?.turnOutline) {
+    if (isTurnOutline(node)) {
       node.visible = false;
       node.userData.turnLowGraphicsHiddenOutline = true;
     }
@@ -35,9 +53,9 @@ function installObjectAddPolicy() {
   prototype.add = function addWithLowGraphicsPolicy(...objects) {
     const result = originalAdd.apply(this, objects);
     for (const object of objects) suppressLowGraphicsObject(object);
-    // Some legacy contour helpers tag turnOutline immediately after add().
-    // Recheck after the current synchronous construction pass without paying
-    // for a scene traversal every rendered frame.
+    // Legacy contour helpers can add or tag their shell during the same
+    // construction pass. Recheck once after that synchronous work completes
+    // without paying for a scene traversal every rendered frame.
     queueMicrotask(() => {
       for (const object of objects) suppressLowGraphicsObject(object);
     });
