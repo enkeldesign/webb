@@ -1,0 +1,39 @@
+name: TURN r222 branch updater
+
+on:
+  push:
+    branches:
+      - 'fix/turn-low-graphics-aa-scenery-r222'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/turn-low-graphics-aa-scenery-r222
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: python3 .github/scripts/turn-r222-tune.py
+      - run: node turn/scripts/release.mjs --write
+      - run: node turn/scripts/release.mjs --check
+      - run: node turn-tests/low-graphics-production.mjs
+      - run: node turn-tests/release-production.mjs
+      - run: node turn-tests/about-history-production.mjs
+      - run: node turn-lab/tests/mountain-long-lab.mjs
+      - name: Commit generated r222 release
+        run: |
+          if git diff --quiet; then
+            echo 'No generated changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn turn-next turn-lab yourturn turn-tests
+          git commit -m 'Tune LOW GRAPHICS visuals; release TURN 1.19.8 r222 [skip ci]'
+          git push origin HEAD:fix/turn-low-graphics-aa-scenery-r222
