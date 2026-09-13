@@ -1,5 +1,5 @@
 import * as NativeThree from 'three-native';
-import { graphicsProfile, graphicsPixelRatio } from './graphics-profile.js';
+import { graphicsProfile, graphicsPixelRatio } from './graphics-profile.js?build=20260913-r222';
 
 export * from 'three-native';
 
