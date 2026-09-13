@@ -357,6 +357,10 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
       /(src="\.\/tracks\/kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish)(?:&build=\d{8}-r\d+)?"/,
       `$1&build=${release.cacheKey}"`
     )
+    .replace(
+      /"\.\/tracks\/mountain-world-r3\.js\?(?:revision=r177-ipad-sky-aspect|build=\d{8}-r\d+)"/,
+      `"./tracks/mountain-world-r3.js?build=${release.cacheKey}"`
+    )
     .replace(/<script type="importmap">[\s\S]*?<\/script>/, productionImportMap);
 }
 

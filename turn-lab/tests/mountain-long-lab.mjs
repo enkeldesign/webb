@@ -61,6 +61,12 @@ assert.equal(labImportMaps.length, 2);
 assert.equal(productionImportMaps.length, 1);
 assert.deepEqual(labImportMaps[0], productionImportMaps[0],
   'TURN LAB must continue to boot the exact production runtime map');
+const mountainWorldSpecifier = `./tracks/mountain-world-r3.js?build=${release.cacheKey}`;
+assert.equal(
+  labImportMaps[1]?.scopes?.['/turn/']?.[mountainWorldSpecifier],
+  '/turn-lab/tracks/mountain-world-lab-r1.js?revision=mountain-slip-bridge-r18',
+  'TURN LAB must keep its isolated MOUNTAIN world override when production advances the base-world build identity'
+);
 assert.deepEqual(
   stylesheetUrls(labIndex),
   stylesheetUrls(productionIndex),
