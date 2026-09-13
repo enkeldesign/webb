@@ -1,0 +1,69 @@
+name: TURN World V2 environment visual smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn/training/world-playground-v2-*.js'
+      - 'turn-lab/world-v2-environment-visual.html'
+      - 'turn-lab/tests/world-v2-environment-visual-smoke.mjs'
+      - '.github/workflows/turn-world-v2-environment-visual.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'turn/training/world-playground-v2-*.js'
+      - 'turn-lab/world-v2-environment-visual.html'
+      - 'turn-lab/tests/world-v2-environment-visual-smoke.mjs'
+      - '.github/workflows/turn-world-v2-environment-visual.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  visual-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Verify environment contract
+        run: node turn-tests/world-playground-v2-environment.mjs
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install chromium
+
+      - name: Start static TURN server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/turn-world-v2-http.log 2>&1 &
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:8000/turn-lab/world-v2-environment-visual.html >/dev/null && exit 0
+            sleep 0.5
+          done
+          cat /tmp/turn-world-v2-http.log
+          exit 1
+
+      - name: Render World V2 inspection views
+        run: node turn-lab/tests/world-v2-environment-visual-smoke.mjs
+
+      - name: Upload World V2 inspection frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: turn-world-v2-environment-visual
+          path: world-v2-environment-visual-artifact
+          if-no-files-found: warn
+          retention-days: 7

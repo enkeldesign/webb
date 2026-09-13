@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>TURN LAB · World V2 environment inspection</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #9fc7d4; }
+    canvas { width: 100%; height: 100%; display: block; }
+    #label { position: fixed; left: 18px; top: 16px; z-index: 2; padding: 7px 10px; border: 2px solid #08090a; border-radius: 9px; background: rgba(255,248,232,.92); color: #08090a; font: 800 13px/1 system-ui,sans-serif; letter-spacing: .04em; }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="label">WORLD V2 · ENVIRONMENT ONLY · r3</div>
+  <script type="module">
+    import * as THREE from 'three';
+    import { buildWorldPlaygroundV2Environment } from '/turn/training/world-playground-v2-environment-r3.js?revision=r3-single-terrain';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x9fc7d4);
+    scene.fog = new THREE.Fog(0xb8d4d8, 1150, 3800);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const hemi = new THREE.HemisphereLight(0xd8eff4, 0x62705a, 1.8);
+    scene.add(hemi);
+    const sun = new THREE.DirectionalLight(0xfff0d2, 3.2);
+    sun.position.set(-720, 1100, 650);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -1100;
+    sun.shadow.camera.right = 1100;
+    sun.shadow.camera.top = 1100;
+    sun.shadow.camera.bottom = -1100;
+    sun.shadow.camera.near = 50;
+    sun.shadow.camera.far = 2600;
+    sun.shadow.bias = -0.00012;
+    scene.add(sun);
+
+    const environment = buildWorldPlaygroundV2Environment();
+    scene.add(environment.world);
+
+    const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.5, 6000);
+    const views = Object.freeze({
+      overview: { p: [160, 1550, 1600], t: [-40, 20, -90], fov: 48 },
+      coast: { p: [-1230, 255, 315], t: [-930, 72, -290], fov: 48 },
+      mountain: { p: [-780, 410, -430], t: [-260, 135, -850], fov: 50 },
+      east: { p: [1260, 310, 650], t: [690, 30, -140], fov: 49 },
+      city: { p: [-430, 205, 900], t: [-40, 12, 475], fov: 48 },
+      road: { p: [-958, 76, 65], t: [-1000, 68, -155], fov: 58 }
+    });
+
+    globalThis.__turnWorldV2Visual = Object.freeze({
+      ready: true,
+      setView(name) {
+        const view = views[name] || views.overview;
+        camera.position.set(...view.p);
+        camera.fov = view.fov;
+        camera.updateProjectionMatrix();
+        camera.lookAt(...view.t);
+        renderer.render(scene, camera);
+        document.querySelector('#label').textContent = `WORLD V2 · ${String(name).toUpperCase()} · ENVIRONMENT ONLY`;
+        return true;
+      },
+      approximateLength: environment.approximateLength
+    });
+
+    function resize() {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.render(scene, camera);
+    }
+    addEventListener('resize', resize);
+    globalThis.__turnWorldV2Visual.setView('overview');
+  </script>
+</body>
+</html>

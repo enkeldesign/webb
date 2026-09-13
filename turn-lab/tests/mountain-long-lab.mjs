@@ -72,7 +72,10 @@ assert.match(labIndex, /<base href="\/turn\/">/);
 assert.doesNotMatch(labIndex, /portrait-play|portrait-centered-pad|roadtrip-world|build-a-car/i);
 assert.match(labBootstrap, /LOCAL_PREFIX = 'turn-lab:'/);
 assert.match(labBootstrap, /SESSION_PREFIX = 'turn-lab-session:'/);
-assert.match(labBootstrap, /dataset\.turnLab = 'mountain-long-course'/);
+assert.match(labBootstrap, /dataset\.turnLab = 'world-playground-v2'/,
+  'World V2 is the current TURN LAB review subject while MOUNTAIN parity remains available underneath');
+assert.match(labBootstrap, /2026\.09\.12-lab-r216/,
+  'TURN LAB review builds must expose their independent development identity');
 
 // After promotion, LAB and production intentionally share the same long MOUNTAIN
 // geometry. Compare both to the retained short-course rollback baseline instead of
