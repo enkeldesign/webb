@@ -48,14 +48,19 @@ const [
 ]);
 
 const release = JSON.parse(releaseSource);
-assert.equal(release.version, '1.19.9');
-assert.equal(release.id, '2026.09.13-r223');
-assert.equal(release.cacheKey, '20260913-r223');
+assert.match(release.version, /^\d+\.\d+\.\d+$/, 'LOW GRAPHICS must work with the current semantic TURN release.');
+assert.match(release.id, /^\d{4}\.\d{2}\.\d{2}-r\d+$/, 'LOW GRAPHICS must work with the current TURN build id.');
+assert.match(release.cacheKey, /^\d{8}-r\d+$/, 'LOW GRAPHICS must work with the current TURN cache key.');
+assert.equal(release.id.replaceAll('.', '').replace('-', '-'), release.cacheKey,
+  'LOW GRAPHICS release assertions must follow turn/release.json rather than a historical build.');
 
 assert.match(indexSource, /"three-native": "https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.184\.0\/build\/three\.module\.js"/);
-assert.match(indexSource, /"three": "\/turn\/three-runtime\.js\?build=20260913-r223"/);
-assert.match(indexSource, /"\/turn\/graphics-profile\.js": "\/turn\/graphics-profile\.js\?build=20260913-r223"/);
-assert.match(indexSource, /ui\/low-graphics-setting\.js\?build=20260913-r223/);
+assert.ok(indexSource.includes(`"three": "/turn/three-runtime.js?build=${release.cacheKey}"`),
+  'The shared Three runtime must use the current release identity.');
+assert.ok(indexSource.includes(`"/turn/graphics-profile.js": "/turn/graphics-profile.js?build=${release.cacheKey}"`),
+  'The LOW GRAPHICS profile must use the current release identity.');
+assert.ok(indexSource.includes(`ui/low-graphics-setting.js?build=${release.cacheKey}`),
+  'The LOW GRAPHICS Settings module must use the current release identity.');
 
 assert.match(profileSource, /turn-low-graphics-v1/);
 assert.match(profileSource, /dprCap: lowGraphics \? 1 : Infinity/);

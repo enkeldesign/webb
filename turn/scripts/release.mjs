@@ -28,6 +28,7 @@ const companionPaths = Object.freeze([
   'turn/design.html',
   'turn/design-dialogs.html',
   'turn/tracks/registry.js',
+  'turn/tracks/mountain-world-long.js',
   'turn/tracks/midnight-city-world-r2.js',
   'turn/tracks/midnight-city-world-r3.js',
   'turn/tracks/midnight-city-world-r4.js',
@@ -303,7 +304,11 @@ export function renderReleaseIndex(source, release) {
     .replace(/TURN v\d+\.\d+\.\d+ · Build \d{4}\.\d{2}\.\d{2}-r\d+/g, `TURN v${release.version} · Build ${release.id}`)
     // Update the canonical build prefix while preserving an explicit per-asset
     // revision such as "-icon-20260730" after it.
-    .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`);
+    .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
+    .replace(
+      /(src="\.\/tracks\/kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish)(?:&build=\d{8}-r\d+)?"/,
+      `$1&build=${release.cacheKey}"`
+    );
 
   output = output.replace(
     /<script type="importmap">\s*([\s\S]*?)\s*<\/script>/,
@@ -352,6 +357,10 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
       /(src="\.\/tracks\/kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish)(?:&build=\d{8}-r\d+)?"/,
       `$1&build=${release.cacheKey}"`
     )
+    .replace(
+      /^\s*"\.\/tracks\/mountain-world-r3\.js\?(?:revision=r177-ipad-sky-aspect|build=\d{8}-r\d+)": "\/turn-lab\/tracks\/mountain-world-lab-r1\.js\?revision=mountain-slip-bridge-r18",\n/m,
+      ''
+    )
     .replace(/<script type="importmap">[\s\S]*?<\/script>/, productionImportMap);
 }
 
@@ -373,8 +382,19 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
     );
   }
   if (repositoryPath === 'turn/tracks/registry.js') {
+    return source
+      .replace(
+        /(await import\(\s*'\.\/midnight-city-world-r11\.js\?build=)[^']+('\s*\))/,
+        `$1${release.cacheKey}$2`
+      )
+      .replace(
+        /(await import\(\s*'\.\/mountain-world-long\.js\?build=)[^']+('\s*\))/,
+        `$1${release.cacheKey}$2`
+      );
+  }
+  if (repositoryPath === 'turn/tracks/mountain-world-long.js') {
     return source.replace(
-      /(await import\(\s*'\.\/midnight-city-world-r11\.js\?build=)[^']+('\s*\))/,
+      /(from '\.\/mountain-world-r3\.js\?build=)[^']+(')/,
       `$1${release.cacheKey}$2`
     );
   }

@@ -112,6 +112,21 @@ const LOW_GRAPHICS_RENDER_ONLY_HISTORY = Object.freeze({
   ])
 });
 
+
+const MOUNTAIN_WARNING_HISTORY = Object.freeze({
+  period: '13 September',
+  title: 'A warning before the MOUNTAIN plunge',
+  paragraphs: Object.freeze([
+    'TURN 1.19.10 restores a strong visual timing landmark before MOUNTAIN’s technical downhill slalom. A large yellow triangular warning sign now stands on the north/outside shoulder where the earlier tree used to help drivers judge the plunge.',
+    'The sign is authored from lightweight TURN geometry with its own black border and exclamation mark, faces the approaching driver, has no collision role and does not require another downloaded scenery asset.'
+  ]),
+  milestones: Object.freeze([
+    'Readable warning landmark before the downhill slalom',
+    'Authored low-poly sign with no extra asset download or collision',
+    'TURN 1.19.10 · 2026.09.13-r224'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -131,7 +146,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   VISUAL_HISTORY,
   LOW_GRAPHICS_HISTORY,
   LOW_GRAPHICS_TUNING_HISTORY,
-  LOW_GRAPHICS_RENDER_ONLY_HISTORY
+  LOW_GRAPHICS_RENDER_ONLY_HISTORY,
+  MOUNTAIN_WARNING_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -149,13 +165,15 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.19.8 r222', 'Keeps antialiasing and the full Countryside world-beauty, art and extra scenery pipeline enabled in LOW GRAPHICS after device testing.']),
       Object.freeze(['Tuned low profile', 'Retains DPR 1.0, disabled shadows, fewer real lights and suppressed outline draw calls while restoring those visual-quality features.']),
       Object.freeze(['1.19.9 r223', 'Defines LOW GRAPHICS as rendering-only: identical world content, DPR 1.0, no shadows, no constructed TURN contours and cheaper real lighting.']),
-      Object.freeze(['No post-hoc contour removal', 'Contour producers now skip their outline meshes before allocation; the shared Three runtime no longer traverses the scene to hide them.'])
+      Object.freeze(['No post-hoc contour removal', 'Contour producers now skip their outline meshes before allocation; the shared Three runtime no longer traverses the scene to hide them.']),
+      Object.freeze(['1.19.10 r224', 'Adds a large yellow warning sign before MOUNTAIN’s downhill slalom, restoring the visual timing landmark that the old tree provided.']),
+      Object.freeze(['Slalom landmark', 'The sign is lightweight authored geometry, faces the approach and remains visual-only with no collision or extra asset download.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.9',
-  build: '2026.09.13-r223',
-  note: 'TURN 1.19.9 makes LOW GRAPHICS a rendering-only performance profile.'
+  version: '1.19.10',
+  build: '2026.09.13-r224',
+  note: 'TURN 1.19.10 adds a warning landmark before MOUNTAIN’s downhill slalom.'
 });
