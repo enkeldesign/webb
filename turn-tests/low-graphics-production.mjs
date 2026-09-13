@@ -24,6 +24,7 @@ assert.equal(release.cacheKey, '20260913-r222');
 
 assert.match(indexSource, /"three-native": "https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.184\.0\/build\/three\.module\.js"/);
 assert.match(indexSource, /"three": "\/turn\/three-runtime\.js\?build=20260913-r222"/);
+assert.match(indexSource, /"\/turn\/graphics-profile\.js": "\/turn\/graphics-profile\.js\?build=20260913-r222"/);
 assert.match(indexSource, /ui\/low-graphics-setting\.js\?build=20260913-r222/);
 
 assert.match(profileSource, /turn-low-graphics-v1/);
@@ -33,6 +34,7 @@ assert.match(profileSource, /shadows: !lowGraphics/);
 assert.match(profileSource, /pointLights: !lowGraphics/);
 assert.match(profileSource, /optionalScenery: true/);
 
+assert.match(runtimeSource, /from '\/turn\/graphics-profile\.js'/);
 assert.match(runtimeSource, /antialias: true/);
 assert.match(runtimeSource, /graphicsPixelRatio\(value\)/);
 assert.match(runtimeSource, /Object\.defineProperty\(this\.shadowMap, 'enabled'/);

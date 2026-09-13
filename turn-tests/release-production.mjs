@@ -139,6 +139,8 @@ const futureImports = JSON.parse(futureImportMapText).imports;
 assert.match(futureImports['three-native'], /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@/);
 assert.equal(futureImports.three, `/turn/three-runtime.js?build=${futureRelease.cacheKey}`,
   'Future releases must advance the shared graphics runtime identity');
+assert.equal(futureImports['/turn/graphics-profile.js'], `/turn/graphics-profile.js?build=${futureRelease.cacheKey}`,
+  'Future releases must advance the LOW GRAPHICS profile identity');
 const relativeBridgeFixture = '<script type="importmap">{"imports":{"./achievements/runtime.js?revision=r164-long-session-robustness":"./achievements/runtime.js?revision=r244-reward-toast-guide"}}</script>';
 const relativeBridge = JSON.parse(renderReleaseIndex(relativeBridgeFixture, futureRelease)
   .match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)[1]).imports;

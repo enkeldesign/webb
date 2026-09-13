@@ -197,6 +197,7 @@ function synchronizeGraphicsRuntimeTarget(importMap, release) {
   if (!nativeTarget) return;
   imports['three-native'] = nativeTarget;
   imports.three = `/turn/three-runtime.js?build=${release.cacheKey}`;
+  imports['/turn/graphics-profile.js'] = `/turn/graphics-profile.js?build=${release.cacheKey}`;
 }
 
 function renderSharedResourceImports(source, release) {
