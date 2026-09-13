@@ -119,7 +119,7 @@ assert.ok(supercarPrimitives.every((primitive) => primitive.attributes?.COLOR_0 
 assert.match(carModelsSource, /loadEmbeddedSupercarSource/);
 assert.match(carModelsSource, /DecompressionStream\('gzip'\)/);
 assert.match(carModelsSource, /loaderForPack\(car\.pack\)\.parseAsync\(arrayBuffer, ''\)/);
-assert.match(carModelsSource, /installSupercarKenneyWheels\(model, trainingCarSource\)/,
+assert.match(carModelsSource, /installSupercarKenneyWheels\(model, trainingCarSource, \{ ownResource: resources\.own \}\)/,
   'Supercar visuals must replace the Cosmo wheels with the verified Kenney donor geometry before paint traversal');
 assert.match(carModelsSource, /supercar-kenney-wheels\.js\?revision=r253-supercar-release/,
   'Returning clients must fetch the corrected outward-facing donor mapping');
@@ -207,7 +207,7 @@ assert.match(supercarWheelsSource, /metalness: 0\s*\n\s*\}\)/,
   'Supercar tires must remain fully matte rather than inherit the rim finish');
 assert.match(supercarWheelsSource, /turnWheelSource = 'Kenney Car Kit 3\.1'/,
   'The mounted wheels must retain explicit source provenance');
-assert.match(supercarWheelsSource, /splitKenneyWheelGeometry\(donor\.geometry\)/,
+assert.match(supercarWheelsSource, /splitKenneyWheelGeometry\(donor\.geometry, ownResource\)/,
   'The transplant must reuse the exact donor mesh geometry rather than draw replacement wheels');
 assert.match(supercarWheelsSource, /target\.clear\(\)[\s\S]*target\.add\(replacement\)/,
   'The transplant must remove the Ghini wheel contents while preserving its animation host node');

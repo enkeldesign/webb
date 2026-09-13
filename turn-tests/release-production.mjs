@@ -150,6 +150,12 @@ assert.equal(
   '/turn/garage/lot-enhancement-runtime.js?revision=r243-mountain-1300&build=20260827-r185',
   'The one known r184 installed-PWA Lot URL must remain a narrow compatibility bridge to the current release'
 );
+const visualResourcePaths = new Set([
+  '/turn/main.js', '/turn/vehicle/car-models.js', '/turn/vehicle/car-visual-resources.js',
+  '/turn/vehicle/emergency-livery-models.js', '/turn/vehicle/learner-car-livery.js',
+  '/turn/vehicle/supercar-kenney-wheels.js', '/turn/ui/track-best-car.js',
+  '/turn/garage/lot-showroom-experiment.js', '/turn/achievements/trophy-road-showcase.js'
+]);
 for (const [specifier, target] of Object.entries(futureImports)) {
   if (!target.startsWith('/turn/')) continue;
   const url = new URL(target, 'https://enkel.design');
@@ -158,6 +164,7 @@ for (const [specifier, target] of Object.entries(futureImports)) {
     || url.pathname === '/turn/garage/lot-track-select.js'
     || url.pathname === '/turn/m8-home.js'
     || url.pathname === '/turn/achievements/runtime.js'
+    || visualResourcePaths.has(url.pathname)
     || /\/scoring\/(?:drift-records|flow-records|score-record-store|drift-attack-runtime|flow-runtime)\.js$/.test(url.pathname)) {
     assert.equal(url.searchParams.get('build'), futureRelease.cacheKey,
       `${specifier} must advance with the release, including compatibility aliases`);
@@ -176,6 +183,14 @@ for (const repositoryPath of [
     : repositoryPath.endsWith('about-history-current.js') || repositoryPath.includes('design')
       ? futureRelease.id : futureRelease.cacheKey;
   assert.ok(rendered.includes(identity), `${repositoryPath} must follow the next release`);
+  if (repositoryPath.endsWith('index.html')) {
+    const imports = JSON.parse(rendered.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)[1]).imports;
+    for (const target of Object.values(imports)) {
+      const url = new URL(target, 'https://enkel.design/turn/');
+      if (visualResourcePaths.has(url.pathname)) assert.equal(url.searchParams.get('build'), futureRelease.cacheKey,
+        `${repositoryPath} must advance every visual resource alias with the release`);
+    }
+  }
   if (repositoryPath.endsWith('about-history-current.js')) {
     assert.equal(rendered.split('export const CURRENT_RELEASE')[0], source.split('export const CURRENT_RELEASE')[0],
       'Synchronizing current About metadata must not rewrite historical releases');

@@ -10,6 +10,8 @@ on:
       - 'turn-next/**'
       - 'turn-tests/**'
       - 'turn-lab/**'
+      # Lifecycle tests use the vendored production Three version without network I/O.
+      - 'postal/vendor/three*.js'
       - 'eslint.config.mjs'
       - '.github/workflows/turn-lab-tests.yml'
   push:
@@ -21,6 +23,7 @@ on:
       - 'turn-next/**'
       - 'turn-tests/**'
       - 'turn-lab/**'
+      - 'postal/vendor/three*.js'
       - 'eslint.config.mjs'
       - '.github/workflows/turn-lab-tests.yml'
 
@@ -117,6 +120,9 @@ jobs:
 
       - name: Run score persistence and finish-line storage regression
         run: node turn-tests/score-persistence-production.mjs
+
+      - name: Run car visual ownership and preview lifecycle regression
+        run: node turn-tests/car-visual-lifecycle-production.mjs
 
       - name: Run Lot preparation failure recovery regression
         run: node turn-tests/lot-preparation-retry-production.mjs

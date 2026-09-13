@@ -1,5 +1,6 @@
 import {
   createCarVisual as createBaseCarVisual,
+  disposeCarVisual,
   preloadCarModels,
   recolorCarVisual
 } from './car-models.js';
@@ -9,7 +10,7 @@ const EMERGENCY_IDS = new Set(['police', 'ambulance', 'firetruck']);
 const LEARNER_CAR_ID = 'classic';
 const DARK_TIRE_COLOR = 0x060708;
 
-export { preloadCarModels, recolorCarVisual };
+export { disposeCarVisual, preloadCarModels, recolorCarVisual };
 
 /**
  * Shared presentation bridge. Emergency paint, glass, lamps, wheel details and the
@@ -20,24 +21,29 @@ export { preloadCarModels, recolorCarVisual };
  */
 export async function createCarVisual(options = {}) {
   const root = await createBaseCarVisual(options);
-  const carId = root?.userData?.turnCarId;
-  const emergency = EMERGENCY_IDS.has(carId);
+  try {
+    const carId = root?.userData?.turnCarId;
+    const emergency = EMERGENCY_IDS.has(carId);
 
-  if (carId === LEARNER_CAR_ID) {
-    const authoredModel = root?.children?.[0] || null;
-    installLearnerCarLivery(authoredModel, { id: LEARNER_CAR_ID }, {
-      ghost: Boolean(root?.userData?.turnGhost)
-    });
-  }
+    if (carId === LEARNER_CAR_ID) {
+      const authoredModel = root?.children?.[0] || null;
+      installLearnerCarLivery(authoredModel, { id: LEARNER_CAR_ID }, {
+        ghost: Boolean(root?.userData?.turnGhost)
+      });
+    }
 
-  // Fixed-livery emergency wheels use one authored palette texture for tyre and rim.
-  // They intentionally skip semantic repaint, so tinting the whole wheel would also
-  // blacken the authored rim cells. Preserve the native wheel atlas for those cars.
-  if (!emergency) darkenVisibleWheels(root);
-  if (emergency) {
-    root.userData.turnEmergencyLivery = 'native-kenney-palette';
+    // Fixed-livery emergency wheels use one authored palette texture for tyre and rim.
+    // They intentionally skip semantic repaint, so tinting the whole wheel would also
+    // blacken the authored rim cells. Preserve the native wheel atlas for those cars.
+    if (!emergency) darkenVisibleWheels(root);
+    if (emergency) {
+      root.userData.turnEmergencyLivery = 'native-kenney-palette';
+    }
+    return root;
+  } catch (error) {
+    disposeCarVisual(root);
+    throw error;
   }
-  return root;
 }
 
 function darkenVisibleWheels(root) {

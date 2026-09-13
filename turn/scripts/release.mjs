@@ -160,10 +160,40 @@ function synchronizeScoreStoreTargets(importMap, release) {
   }
 }
 
-function renderScoreStoreImports(source, release) {
+function synchronizeVisualResourceTargets(importMap, release) {
+  const modules = {
+    '/turn/main.js': ['r270-runtime-health', '?build=20260909-r212'],
+    '/turn/vehicle/car-models.js': ['r257-authored-wheel-spin', '?revision=r257-authored-wheel-spin'],
+    '/turn/vehicle/car-visual-resources.js': ['', ''],
+    '/turn/vehicle/emergency-livery-models.js': ['r223-training-car-taxi', '?build=20260823-r179', '?build=20260811-r164'],
+    '/turn/vehicle/learner-car-livery.js': ['r223-training-car-taxi', '?revision=r223-training-car-taxi'],
+    '/turn/vehicle/supercar-kenney-wheels.js': ['r253-supercar-release', '?revision=r253-supercar-release'],
+    '/turn/ui/track-best-car.js': ['r253-supercar-release', '?revision=r253-supercar-release'],
+    '/turn/garage/lot-showroom-experiment.js': ['r259-swift-lot-ui-base', '?revision=r259-swift-lot-ui-base'],
+    '/turn/achievements/trophy-road-showcase.js': ['r253-supercar-release', '?revision=r253-supercar-release']
+  };
+  const imports = importMap.imports ||= {};
+  for (const [pathname, [revision, ...aliases]] of Object.entries(modules)) {
+    const target = `${pathname}?${revision ? `revision=${revision}&` : ''}build=${release.cacheKey}`;
+    for (const suffix of ['', ...aliases]) {
+      const specifier = `${pathname}${suffix}`;
+      // Preserve presentation bridges (car liveries and the Lot heading wrapper).
+      if (imports[specifier] && new URL(imports[specifier], 'https://enkel.design/turn/').pathname !== pathname) continue;
+      imports[specifier] = target;
+    }
+    for (const [specifier, existing] of Object.entries(imports)) {
+      if (typeof existing === 'string' && new URL(existing, 'https://enkel.design/turn/').pathname === pathname) {
+        imports[specifier] = target;
+      }
+    }
+  }
+}
+
+function renderSharedResourceImports(source, release) {
   return source.replace(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/, (_, jsonText) => {
     const importMap = JSON.parse(jsonText);
     synchronizeScoreStoreTargets(importMap, release);
+    synchronizeVisualResourceTargets(importMap, release);
     return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
   });
 }
@@ -191,6 +221,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeLotEnhancementSpecifiers(importMap, release);
   synchronizeRivalStorageTargets(importMap, release);
   synchronizeScoreStoreTargets(importMap, release);
+  synchronizeVisualResourceTargets(importMap, release);
   synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);
   // These presentation modules now use the release build instead of a new
   // hand-maintained revision. Advance every alias, including installed routes.
@@ -269,10 +300,10 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
 
 export function renderReleaseCompanion(repositoryPath, source, release) {
   validateReleaseDefinition(release);
-  if (repositoryPath === 'turn-next/index.html') return renderScoreStoreImports(renderParityEntry(source, release), release);
+  if (repositoryPath === 'turn-next/index.html') return renderSharedResourceImports(renderParityEntry(source, release), release);
   if (repositoryPath === 'turn-next/app.js') return buildTurnNextApp(release);
   if (repositoryPath === 'yourturn/index.html') {
-    return renderScoreStoreImports(source.replace(/((?:href|src)="\/turn\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`), release);
+    return renderSharedResourceImports(source.replace(/((?:href|src)="\/turn\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`), release);
   }
   if (repositoryPath === 'turn/ui/about-history-bootstrap-r165.js') {
     return source.replace(/(about-history-current\.js\?build=)\d{8}-r\d+/, `$1${release.cacheKey}`);

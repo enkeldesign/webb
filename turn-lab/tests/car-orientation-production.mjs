@@ -217,7 +217,7 @@ assert.match(carModels, /turnVisualSizeMultiplier = car\.visualSizeMultiplier/);
 assert.match(carModels, /turnFeaturedVisualSizeMultiplier = featuredVisualSizeMultiplier/);
 assert.match(carModels, /turnFeaturedVisualSurface = featuredSurface/);
 assert.match(carModels, /turnEffectiveVisualScale = effectiveVisualScale/);
-assert.match(carModels, /installLearnerCarLivery\(model, car, \{ ghost \}\)/,
+assert.match(carModels, /installLearnerCarLivery\(model, car, \{ ghost, ownResource: resources\.own \}\)/,
   'The shared car factory must preserve the Learner Car door livery and authentic roof sign on every surface');
 assert.match(carModels, /REVERSED_FRONT_WHEEL_LABEL_IDS = new Set\(\['vintage-racer'\]\)/,
   'Vintage Racer must keep its verified authored wheel-label reversal');

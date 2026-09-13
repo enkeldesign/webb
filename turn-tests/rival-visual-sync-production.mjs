@@ -67,7 +67,8 @@ assert.ok(
 );
 
 assert.match(main, /competitorCars,\s*ensureCompetitorCars,\s*syncCompetitorVisuals,/, 'The runtime must expose separate pool and identity operations');
-assert.match(main, /if \(root\.userData\.turnVisualKey === key \|\| root\.userData\.turnVisualPendingKey === key\) return;/, 'Model installation must retain its duplicate-key fast path');
+assert.match(main, /if \(root\.userData\.turnVisualKey === key\) \{/, 'Installed identities must retain their fast path while cancelling stale pending selections');
+assert.match(main, /if \(root\.userData\.turnVisualPendingKey === key\) return;/, 'Duplicate pending identities must retain their fast path');
 
 const selectionSection = section(main, 'async function applyVehicleSelection(selection)', '\nvoid installCarVisual(playerCar');
 assert.match(selectionSection, /if \(!state\.competitorLaps\.length\)/,
@@ -88,7 +89,7 @@ assert.ok(
     < createVisualSection.indexOf('const source = await loadCarSource(car.id)'),
   'A cached rival identity must avoid GLTF cloning, material classification and normalization entirely'
 );
-assert.match(createVisualSection, /return cloneCompetitorGhostVisual\(cachedCompetitorTemplate\)/,
+assert.match(createVisualSection, /return cloneCompetitorGhostVisual\(cachedCompetitorTemplate\.visual\)/,
   'Cached rival identities must use the lightweight clone path');
 assert.match(createVisualSection, /rememberCompetitorGhostTemplate\(competitorTemplateKey, root\)/,
   'The first fully prepared rival identity must become the reusable template');

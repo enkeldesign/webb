@@ -10,10 +10,11 @@ const execFileAsync = promisify(execFile);
 const repositoryRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const productionDocumentUrl = new URL('https://enkel.design/turn/index.html');
 const comparedExtensions = new Set(['.css', '.js', '.mjs']);
+const currentRelease = JSON.parse(await fs.readFile(path.join(repositoryRoot, 'turn/release.json'), 'utf8'));
 
 const criticalReleaseTargets = Object.freeze({
   '/turn/vehicle/catalog.js': '/turn/vehicle/catalog.js?revision=r253-supercar-release',
-  '/turn/vehicle/car-models.js': '/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin'
+  '/turn/vehicle/car-models.js': `/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=${currentRelease.cacheKey}`
 });
 
 const crossDeploymentCompatibilityRoutes = Object.freeze({
@@ -22,7 +23,7 @@ const crossDeploymentCompatibilityRoutes = Object.freeze({
   '/turn/vehicle/catalog.js?revision=r250-supercar-finish': criticalReleaseTargets['/turn/vehicle/catalog.js'],
   '/turn/vehicle/car-models.js?revision=r252-supercar-outward-rims': criticalReleaseTargets['/turn/vehicle/car-models.js'],
   '/turn/vehicle/car-models.js?revision=r253-supercar-release': criticalReleaseTargets['/turn/vehicle/car-models.js'],
-  '/turn/achievements/trophy-road-showcase.js?revision=r243-mountain-1300': '/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release',
+  '/turn/achievements/trophy-road-showcase.js?revision=r243-mountain-1300': `/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release&build=${currentRelease.cacheKey}`,
   '/turn/achievements/challenge-expansion-r166.js?revision=r166-bella-records': '/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling',
   '/turn/achievements/challenge-expansion-r166.js?revision=r241-learning-achievements': '/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling',
   '/turn/vehicle/shift-profile.js?revision=r232-double-shift': '/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility',
@@ -65,6 +66,7 @@ const requiredActiveModules = Object.freeze([
   'turn/ui/track-icons.js',
   'turn/vehicle/catalog.js',
   'turn/vehicle/car-models.js',
+  'turn/vehicle/car-visual-resources.js',
   'turn/vehicle/flow-shift.js',
   'turn/vehicle/shift-tuning.js',
   'turn/vehicle/shift-profile.js',
@@ -399,6 +401,18 @@ assertSingleActiveIdentity(
   'turn/race/rival-storage.js',
   'Production TURN rival storage'
 );
+
+for (const file of ['car-models.js', 'car-visual-resources.js', 'learner-car-livery.js', 'supercar-kenney-wheels.js']) {
+  assertSingleActiveIdentity(headGraph, `turn/vehicle/${file}`, 'Production TURN visual ownership');
+}
+for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['TURN NEXT', nextImportMap], ['YOUR TURN', yourTurnImportMap]]) {
+  assert.equal(importMap.imports['/turn/vehicle/car-visual-resources.js'],
+    `/turn/vehicle/car-visual-resources.js?build=${headGraph.release.cacheKey}`,
+    `${label} must use the current visual resource owner`);
+  assert.equal(importMap.imports['/turn/vehicle/learner-car-livery.js?revision=r223-training-car-taxi'],
+    importMap.imports['/turn/vehicle/learner-car-livery.js'],
+    `${label} must share the learner livery resource registration across aliases`);
+}
 
 for (const file of ['drift-records.js', 'flow-records.js', 'score-record-store.js']) {
   assertSingleActiveIdentity(headGraph, `turn/scoring/${file}`, 'Production TURN score storage');
