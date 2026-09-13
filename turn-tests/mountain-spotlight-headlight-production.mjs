@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [sharedHeadlight, mountainWrapper, world, midnight, registry] = await Promise.all([
+const [sharedHeadlight, mountainWrapper, world, midnight, registry, mountainLong, releaseSource] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/night-player-spotlight-r560.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-player-headlight-r8.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r11.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-world-long.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
 ]);
+const release = JSON.parse(releaseSource);
 
 assert.match(sharedHeadlight, /new THREE\.SpotLight\(/,
   'Night-track headlights must use a real SpotLight');
@@ -57,9 +60,11 @@ assert.match(midnight, /installNightPlayerSpotlight\(options\.runtime\?\.playerC
 assert.match(midnight, /shared-warm-shadowless-spotlight-identical-to-mountain/);
 assert.match(midnight, /repairTrackSurfaceWinding\(world\)/,
   'MIDNIGHT CITY must correct its inherited downward road normals before the shared spotlight is evaluated');
-assert.match(registry, /mountain-world-r3\.js\?revision=r177-ipad-sky-aspect/,
-  'Production must cache-bust MOUNTAIN through the iPad sky aspect correction without changing its shared headlight rig');
-assert.match(registry, /midnight-city-world-r11\.js\?build=20260819-r176-upward-road-normals/,
-  'Production must cache-bust MIDNIGHT CITY to the upward road-normal repair');
+assert.ok(registry.includes(`./mountain-world-long.js?build=${release.cacheKey}`),
+  'Production must route MOUNTAIN through the current release-bound long-world wrapper without changing its shared headlight rig');
+assert.ok(mountainLong.includes(`./mountain-world-r3.js?build=${release.cacheKey}`),
+  'The long MOUNTAIN wrapper must route the mature base world through the current release identity');
+assert.ok(registry.includes(`./midnight-city-world-r11.js?build=${release.cacheKey}`),
+  'Production must route MIDNIGHT CITY through the current release-bound upward-road-normal repair');
 
 console.log('TURN shared MOUNTAIN + MIDNIGHT CITY reconciled 220 m shadowless spotlight contract passed.');
