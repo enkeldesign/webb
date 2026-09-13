@@ -141,8 +141,8 @@ assert.match(definitionsBase, /storageRevision: 'mountain-r1'/,
 assert.match(paceNotes, /pace-notes-base\.js/);
 assert.match(paceNotesBase, /const MOUNTAIN_PACE_NOTES/,
   'The retired short-course pace map remains available only as the retained base');
-assert.match(registry, /mountain-world-long\.js\?build=20260913-r225/);
-assert.match(longWorld, /mountain-world-r3\.js\?build=20260913-r225/);
+assert.match(registry, /mountain-world-long\.js\?build=20260914-r226/);
+assert.match(longWorld, /mountain-world-r3\.js\?build=20260914-r226/);
 assert.match(longWorld, /installBaseMountainWorld/);
 assert.match(longWorld, /installMountainLongExtension/);
 assert.match(longWorld, /BASE_WORLD_SAMPLE_COUNT = 1080/);
@@ -180,6 +180,13 @@ assert.match(baseWorld, /new THREE\.ExtrudeGeometry\(warningTriangleShape\(1\)/,
   'The warning plate must be authored geometry, not a downloaded scenery dependency');
 assert.match(baseWorld, /Mountain warning sign black border/);
 assert.match(baseWorld, /Mountain warning sign exclamation bar/);
+assert.match(baseWorld, /MOUNTAIN_WARNING_PLATE_Y = 5\.0/);
+assert.match(baseWorld, /new THREE\.ShapeGeometry\(warningExclamationBarShape\(\)\)/,
+  'The warning symbol must use its own flat tapered bar rather than the support post');
+assert.match(baseWorld, /new THREE\.CircleGeometry\(0\.22, 16\)/,
+  'The warning symbol must keep a visibly separate round dot');
+assert.match(baseWorld, /post\.position\.set\(0, 2\.3, -0\.30\)/,
+  'The sign support must stay behind the plate instead of crossing the front graphic');
 assert.match(baseWorld, /side: 'north-outside'/,
   'The warning sign must remain on the old tree sightline side of the road');
 assert.match(baseWorld, /collidable: false/,

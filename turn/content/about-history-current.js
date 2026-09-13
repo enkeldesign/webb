@@ -141,6 +141,20 @@ const MOUNTAIN_WARNING_PLACEMENT_HISTORY = Object.freeze({
   ])
 });
 
+const MOUNTAIN_WARNING_READABILITY_HISTORY = Object.freeze({
+  period: '14 September',
+  title: 'The MOUNTAIN warning reads clearly',
+  paragraphs: Object.freeze([
+    'TURN 1.19.12 raises the summit warning plate slightly while keeping its road position exactly where drivers tested it.',
+    'The support now stays behind the plate, and the front graphic uses a tapered bar with a separate round dot so the symbol reads unmistakably as an exclamation mark.'
+  ]),
+  milestones: Object.freeze([
+    'Slightly higher warning plate at the same summit landmark',
+    'Clear exclamation mark separated from the support post',
+    'TURN 1.19.12 · 2026.09.14-r226'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -162,7 +176,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   LOW_GRAPHICS_TUNING_HISTORY,
   LOW_GRAPHICS_RENDER_ONLY_HISTORY,
   MOUNTAIN_WARNING_HISTORY,
-  MOUNTAIN_WARNING_PLACEMENT_HISTORY
+  MOUNTAIN_WARNING_PLACEMENT_HISTORY,
+  MOUNTAIN_WARNING_READABILITY_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -186,11 +201,18 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.19.11 r225', 'Moves the MOUNTAIN warning landmark to the broad summit bend where the old tree actually served as a planning cue before the plunge.']),
       Object.freeze(['Landmark placement correction', 'Leaves the minimap untouched and keeps the warning sign visual-only while restoring the earlier approach sightline.'])
     ])
+  }),
+  Object.freeze({
+    date: '14 September',
+    entries: Object.freeze([
+      Object.freeze(['1.19.12 r226', 'Raises the MOUNTAIN summit warning plate slightly without moving its tested road position.']),
+      Object.freeze(['Clear warning symbol', 'Keeps the support behind the plate and gives the front a tapered exclamation bar with a separate round dot.'])
+    ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.11',
-  build: '2026.09.13-r225',
-  note: 'TURN 1.19.11 moves MOUNTAIN’s warning landmark back to the summit sightline before the plunge.'
+  version: '1.19.12',
+  build: '2026.09.14-r226',
+  note: 'TURN 1.19.12 raises and clarifies MOUNTAIN’s summit warning sign while keeping its placement unchanged.'
 });
