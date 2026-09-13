@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: turn-r223-render-only-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
