@@ -1,0 +1,55 @@
+name: TURN MOUNTAIN warning sign adjust
+
+on:
+  push:
+    branches:
+      - fix/mountain-warning-sign-r226
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/mountain-warning-sign-r226
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Raise and correct warning sign
+        run: python .github/turn-warning-sign-adjust.py
+
+      - name: Synchronize release surfaces
+        run: node turn/scripts/release.mjs --write
+
+      - name: Validate release and MOUNTAIN contracts
+        shell: bash
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-tests/release-production.mjs
+          node turn-tests/release-composition-production.mjs
+          node turn-tests/mountain-track-production.mjs
+          node turn-lab/tests/multi-track-production.mjs
+          git diff --check
+          test "$(git grep -l '20260913-r225' -- 'turn-tests/*.mjs' 'turn-lab/tests/*.mjs' | wc -l)" -eq 0
+
+      - name: Commit sign correction
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn turn-next turn-lab yourturn turn-tests
+          git commit -m "Raise and clarify MOUNTAIN warning sign"
+          git push origin HEAD:fix/mountain-warning-sign-r226
