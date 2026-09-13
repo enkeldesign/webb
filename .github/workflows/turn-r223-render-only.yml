@@ -41,8 +41,10 @@ jobs:
           node turn-next/scripts/build-parity-main.mjs
           node turn-next/scripts/build-parity-entry.mjs
 
-      - name: Remove temporary updater
-        run: rm .github/turn-r223-render-only.py .github/turn-r223-test-harness.py .github/turn-r223-release-routing.py .github/workflows/turn-r223-render-only.yml
+      - name: Remove temporary scripts and restore protected workflow files
+        run: |
+          rm .github/turn-r223-render-only.py .github/turn-r223-test-harness.py .github/turn-r223-release-routing.py
+          git checkout HEAD -- .github/workflows/turn-supercar-lot-visual-smoke.yml
 
       - name: Validate focused production contracts
         run: |
