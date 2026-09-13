@@ -61,12 +61,10 @@ assert.equal(labImportMaps.length, 2);
 assert.equal(productionImportMaps.length, 1);
 assert.deepEqual(labImportMaps[0], productionImportMaps[0],
   'TURN LAB must continue to boot the exact production runtime map');
-const mountainWorldSpecifier = `./tracks/mountain-world-r3.js?build=${release.cacheKey}`;
-assert.equal(
-  labImportMaps[1]?.scopes?.['/turn/']?.[mountainWorldSpecifier],
-  '/turn-lab/tracks/mountain-world-lab-r1.js?revision=mountain-slip-bridge-r18',
-  'TURN LAB must keep its isolated MOUNTAIN world override when production advances the base-world build identity'
-);
+const labMountainWorldOverrides = Object.keys(labImportMaps[1]?.scopes?.['/turn/'] || {})
+  .filter((specifier) => specifier.startsWith('./tracks/mountain-world-r3.js?'));
+assert.deepEqual(labMountainWorldOverrides, [],
+  'TURN LAB app runtime must use the promoted production long-world wrapper; remapping its base r3 import would double-wrap and downsample the 2160-sample route');
 assert.deepEqual(
   stylesheetUrls(labIndex),
   stylesheetUrls(productionIndex),
@@ -141,8 +139,9 @@ assert.match(labCollision, /promotedCollision\?\.bridgeGuide === true/,
 assert.match(labCollision, /Compatibility fallback/,
   'LAB should retain compatibility with pre-promotion production revisions');
 
-// Both wrappers still build the mature r177 production mountain world first, then
-// apply the same long-course extension. LAB only adds its isolated diagnostics/name.
+// Production app runtime owns the promoted long-world composition. The retained LAB
+// world wrapper is exercised directly by the dedicated visual fixture only; it must not
+// be injected into the production wrapper through the app import map.
 assert.ok(productionWorld.includes(`./mountain-world-r3.js?build=${release.cacheKey}`),
   'Production MOUNTAIN long wrapper must advance the mature base world with the current TURN release identity');
 assert.match(productionWorld, /installMountainLongExtension/);

@@ -358,8 +358,8 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
       `$1&build=${release.cacheKey}"`
     )
     .replace(
-      /"\.\/tracks\/mountain-world-r3\.js\?(?:revision=r177-ipad-sky-aspect|build=\d{8}-r\d+)"/,
-      `"./tracks/mountain-world-r3.js?build=${release.cacheKey}"`
+      /^\s*"\.\/tracks\/mountain-world-r3\.js\?(?:revision=r177-ipad-sky-aspect|build=\d{8}-r\d+)": "\/turn-lab\/tracks\/mountain-world-lab-r1\.js\?revision=mountain-slip-bridge-r18",\n/m,
+      ''
     )
     .replace(/<script type="importmap">[\s\S]*?<\/script>/, productionImportMap);
 }
