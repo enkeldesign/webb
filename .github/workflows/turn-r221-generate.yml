@@ -1,0 +1,35 @@
+name: Generate TURN r221 companions
+
+on:
+  push:
+    branches:
+      - feature/turn-low-graphics-r221
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/turn-low-graphics-r221
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Generate release companions
+        run: node turn/scripts/release.mjs --write
+      - name: Commit generated surfaces
+        run: |
+          if git diff --quiet; then
+            echo "Release surfaces already synchronized."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn-lab/index.html turn-next/index.html turn-next/app.js yourturn/index.html turn/ui/about-history-bootstrap-r165.js turn/content/about-history-current.js turn/design.html turn/design-dialogs.html
+          git commit -m "Synchronize TURN 1.19.7 r221 release companions"
+          git push origin HEAD:feature/turn-low-graphics-r221
