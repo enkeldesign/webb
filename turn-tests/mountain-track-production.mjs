@@ -141,8 +141,8 @@ assert.match(definitionsBase, /storageRevision: 'mountain-r1'/,
 assert.match(paceNotes, /pace-notes-base\.js/);
 assert.match(paceNotesBase, /const MOUNTAIN_PACE_NOTES/,
   'The retired short-course pace map remains available only as the retained base');
-assert.match(registry, /mountain-world-long\.js\?build=20260913-r224/);
-assert.match(longWorld, /mountain-world-r3\.js\?build=20260913-r224/);
+assert.match(registry, /mountain-world-long\.js\?build=20260913-r225/);
+assert.match(longWorld, /mountain-world-r3\.js\?build=20260913-r225/);
 assert.match(longWorld, /installBaseMountainWorld/);
 assert.match(longWorld, /installMountainLongExtension/);
 assert.match(longWorld, /BASE_WORLD_SAMPLE_COUNT = 1080/);
@@ -173,8 +173,8 @@ assert.match(baseWorld, /installMountainScenery\([\s\S]*FINAL_VILLAGE_OPTIONS/);
 assert.match(baseWorld, /installMountainR4VisualPolish\([\s\S]*FINAL_VILLAGE_OPTIONS/);
 assert.doesNotMatch(baseWorld, /setAnimationLoop|requestAnimationFrame|setInterval/);
 
-assert.match(baseWorld, /MOUNTAIN_SLALOM_WARNING_TARGET = Object\.freeze\(\{ x: 66, z: 62 \}\)/,
-  'MOUNTAIN warning sign must stay anchored to the summit-to-slalom landmark');
+assert.match(baseWorld, /MOUNTAIN_SLALOM_WARNING_TARGET = Object\.freeze\(\{ x: 138, z: 168 \}\)/,
+  'MOUNTAIN warning sign must stay anchored to the broad summit bend before the plunge');
 assert.match(baseWorld, /Mountain downhill slalom warning sign/);
 assert.match(baseWorld, /new THREE\.ExtrudeGeometry\(warningTriangleShape\(1\)/,
   'The warning plate must be authored geometry, not a downloaded scenery dependency');

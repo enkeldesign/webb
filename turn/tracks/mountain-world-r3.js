@@ -17,7 +17,7 @@ const MOUNTAIN_VILLAGE_BENCHES = new Set([
 const MOUNTAIN_MOONLIGHT_FILL = 0x18314c;
 const MOUNTAIN_MOONLIGHT_FILL_INTENSITY = 0.16;
 const FINAL_VILLAGE_OPTIONS = Object.freeze({ skipRetiredHolidayCabins: true });
-const MOUNTAIN_SLALOM_WARNING_TARGET = Object.freeze({ x: 66, z: 62 });
+const MOUNTAIN_SLALOM_WARNING_TARGET = Object.freeze({ x: 138, z: 168 });
 const MOUNTAIN_WARNING_YELLOW = 0xffc400;
 const MOUNTAIN_WARNING_INK = 0x08090a;
 const MOUNTAIN_WARNING_POST = 0x34383d;
@@ -117,9 +117,9 @@ function installDownhillSlalomWarningSign(world, samples, trackWidth, terrainHei
   const roadOffset = trackWidth / 2 + 6.8;
   const positive = sample.point.clone().addScaledVector(sample.normal, roadOffset);
   const negative = sample.point.clone().addScaledVector(sample.normal, -roadOffset);
-  // The old tree landmark sat on the north/outside shoulder in the player's
-  // sightline before the plunge. Choosing the higher-z candidate preserves
-  // that landmark even if the sampled normal flips direction.
+  // The old tree landmark sat on the right/outside shoulder of the broad summit
+  // bend, well before the plunge. Choosing the higher-z candidate preserves that
+  // approach sightline even if the sampled normal flips direction.
   const point = positive.z >= negative.z ? positive : negative;
   point.y = terrainHeightAt(point.x, point.z) + 0.02;
 

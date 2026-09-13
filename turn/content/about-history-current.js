@@ -127,6 +127,20 @@ const MOUNTAIN_WARNING_HISTORY = Object.freeze({
   ])
 });
 
+const MOUNTAIN_WARNING_PLACEMENT_HISTORY = Object.freeze({
+  period: '13 September',
+  title: 'The MOUNTAIN warning returns to the old sightline',
+  paragraphs: Object.freeze([
+    'TURN 1.19.11 moves the MOUNTAIN warning landmark up to the broad summit bend where the old tree was actually used as a planning cue. Drivers can now see it before committing to the plunge rather than only after reaching the slalom entry.',
+    'This is a world-placement correction only: the minimap is unchanged, the sign remains visual-only, and the lightweight authored sign geometry is otherwise unchanged.'
+  ]),
+  milestones: Object.freeze([
+    'Warning landmark moved to the broad summit bend before the plunge',
+    'No minimap marker or gameplay collision added',
+    'TURN 1.19.11 · 2026.09.13-r225'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -147,7 +161,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   LOW_GRAPHICS_HISTORY,
   LOW_GRAPHICS_TUNING_HISTORY,
   LOW_GRAPHICS_RENDER_ONLY_HISTORY,
-  MOUNTAIN_WARNING_HISTORY
+  MOUNTAIN_WARNING_HISTORY,
+  MOUNTAIN_WARNING_PLACEMENT_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -167,13 +182,15 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.19.9 r223', 'Defines LOW GRAPHICS as rendering-only: identical world content, DPR 1.0, no shadows, no constructed TURN contours and cheaper real lighting.']),
       Object.freeze(['No post-hoc contour removal', 'Contour producers now skip their outline meshes before allocation; the shared Three runtime no longer traverses the scene to hide them.']),
       Object.freeze(['1.19.10 r224', 'Adds a large yellow warning sign before MOUNTAIN’s downhill slalom, restoring the visual timing landmark that the old tree provided.']),
-      Object.freeze(['Slalom landmark', 'The sign is lightweight authored geometry, faces the approach and remains visual-only with no collision or extra asset download.'])
+      Object.freeze(['Slalom landmark', 'The sign is lightweight authored geometry, faces the approach and remains visual-only with no collision or extra asset download.']),
+      Object.freeze(['1.19.11 r225', 'Moves the MOUNTAIN warning landmark to the broad summit bend where the old tree actually served as a planning cue before the plunge.']),
+      Object.freeze(['Landmark placement correction', 'Leaves the minimap untouched and keeps the warning sign visual-only while restoring the earlier approach sightline.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.10',
-  build: '2026.09.13-r224',
-  note: 'TURN 1.19.10 adds a warning landmark before MOUNTAIN’s downhill slalom.'
+  version: '1.19.11',
+  build: '2026.09.13-r225',
+  note: 'TURN 1.19.11 moves MOUNTAIN’s warning landmark back to the summit sightline before the plunge.'
 });
