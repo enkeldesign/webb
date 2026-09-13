@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 import { trackPitch } from './elevation.js';
 
 const INK = 0x08090a;
@@ -516,6 +517,15 @@ function makeDistantIslands(world) {
 }
 
 function outlinedBox(width, height, depth, meshMaterial) {
+  if (!graphicsProfile.outlines) {
+    const group = new THREE.Group();
+    const geometry = new THREE.BoxGeometry(width, height, depth);
+    const mesh = new THREE.Mesh(geometry, meshMaterial);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    group.add(mesh);
+    return group;
+  }
   const group = new THREE.Group();
   const geometry = new THREE.BoxGeometry(width, height, depth);
   const outline = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: INK, side: THREE.BackSide }));

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { installAirportWorld as installAirportWorldR52 } from './airport-world-r52.js?build=20260722-r52';
 
@@ -168,7 +169,7 @@ function prepareAircraftAsset(source, {
 
   alignAndScaleAircraft(model, targetLength, lengthToSpanRatio, airborne);
 
-  if (outline) {
+  if (outline && graphicsProfile.outlines) {
     for (const mesh of meshes) {
       const outlineNode = new THREE.Mesh(
         mesh.geometry,

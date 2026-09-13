@@ -200,12 +200,43 @@ function synchronizeGraphicsRuntimeTarget(importMap, release) {
   imports['/turn/graphics-profile.js'] = `/turn/graphics-profile.js?build=${release.cacheKey}`;
 }
 
+function synchronizeLowGraphicsProducerTargets(importMap, release) {
+  const imports = importMap.imports ||= {};
+  const legacySpecifiers = [
+    '/turn/tracks/airport-emergency-r493.js?revision=r527-no-finish-sync-wreck',
+    '/turn/tracks/airport-world-r50.js?build=20260722-r50',
+    '/turn/tracks/airport-world-r53.js?build=20260814-r57',
+    '/turn/tracks/cliffside-world.js?base=20260725-r72',
+    '/turn/tracks/countryside-world-r531.js?revision=r532-countryside-nature-polish',
+    '/turn/tracks/start-area-polish-r519.js?revision=r519-midnight-full-width-accents'
+  ];
+  const changedPaths = new Set(legacySpecifiers.map((specifier) =>
+    new URL(specifier, 'https://enkel.design').pathname
+  ));
+
+  // Preserve existing legacy import specifiers for compatibility, but route every
+  // active contour producer through the current release build. This avoids inventing
+  // another hand-maintained revision namespace while guaranteeing fresh source code.
+  for (const specifier of legacySpecifiers) {
+    const pathname = new URL(specifier, 'https://enkel.design').pathname;
+    imports[specifier] = `${pathname}?build=${release.cacheKey}`;
+  }
+
+  for (const [specifier, target] of Object.entries(imports)) {
+    if (typeof target !== 'string') continue;
+    const url = new URL(target, 'https://enkel.design/turn/');
+    if (!changedPaths.has(url.pathname)) continue;
+    imports[specifier] = `${url.pathname}?build=${release.cacheKey}`;
+  }
+}
+
 function renderSharedResourceImports(source, release) {
   return source.replace(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/, (_, jsonText) => {
     const importMap = JSON.parse(jsonText);
     synchronizeScoreStoreTargets(importMap, release);
     synchronizeVisualResourceTargets(importMap, release);
     synchronizeGraphicsRuntimeTarget(importMap, release);
+    synchronizeLowGraphicsProducerTargets(importMap, release);
     return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
   });
 }
@@ -235,6 +266,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeScoreStoreTargets(importMap, release);
   synchronizeVisualResourceTargets(importMap, release);
   synchronizeGraphicsRuntimeTarget(importMap, release);
+  synchronizeLowGraphicsProducerTargets(importMap, release);
   synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);
   // These presentation modules now use the release build instead of a new
   // hand-maintained revision. Advance every alias, including installed routes.

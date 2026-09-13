@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const REVISION = 'r532-countryside-nature-polish';
@@ -47,6 +48,7 @@ function loadSource(key) {
 }
 
 function addInkOutline(root, scale = 1.02) {
+  if (!graphicsProfile.outlines) return;
   const surfaces = [];
   root.traverse((node) => {
     if (node?.isMesh) surfaces.push(node);
@@ -105,6 +107,15 @@ function prepareModel(source, {
 }
 
 function outlinedPrimitive(geometry, surfaceMaterial, outlineScale = 1.035) {
+  if (!graphicsProfile.outlines) {
+    const root = new THREE.Group();
+    const surface = new THREE.Mesh(geometry, surfaceMaterial);
+    surface.castShadow = true;
+    surface.receiveShadow = true;
+    surface.userData.turnOutlined = true;
+    root.add(surface);
+    return root;
+  }
   const root = new THREE.Group();
   const outline = new THREE.Mesh(geometry, inkMaterial);
   const surface = new THREE.Mesh(geometry, surfaceMaterial);

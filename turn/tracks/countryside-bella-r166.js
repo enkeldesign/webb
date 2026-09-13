@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r166-bella-records';
 
@@ -54,6 +55,15 @@ function flatColorMaterial(color) {
 }
 
 function outlinedPrimitive(geometry, fillMaterial, outlineScale = 1.065) {
+  if (!graphicsProfile.outlines) {
+    const root = new THREE.Group();
+    const fill = new THREE.Mesh(geometry, fillMaterial);
+    fill.castShadow = true;
+    fill.receiveShadow = true;
+    fill.userData.turnOutlined = true;
+    root.add(fill);
+    return root;
+  }
   const group = new THREE.Group();
   const outline = new THREE.Mesh(
     geometry,

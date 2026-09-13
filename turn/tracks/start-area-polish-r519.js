@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 
 const REVISION = 'r519-midnight-full-width-accents';
 const INK = 0x08090a;
@@ -73,6 +74,7 @@ function directBoxSurface(root, predicate) {
 }
 
 function addInkContour(mesh, scale = 1.05) {
+  if (!graphicsProfile.outlines) return false;
   if (!mesh?.isMesh || mesh.userData.turnStartBannerContour) return false;
   if (mesh.children.some((child) => child.userData?.turnStartBannerContour)) return true;
 

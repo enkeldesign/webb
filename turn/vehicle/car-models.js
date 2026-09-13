@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
   createCarVisualResourceOwner,
@@ -365,13 +366,17 @@ function installEmergencyLightRig(root, model, service, ownResource) {
     wideHalo.visible = false;
     wideHalo.renderOrder = 40;
 
-    const pointLight = ownResource(new THREE.PointLight(0xffffff, 0, lightDistance, 2));
-    setThreeColor(pointLight.color, colorSpec);
-    pointLight.position.copy(lamp.position);
-    pointLight.position.y += lampHeight * 1.2;
-    pointLight.castShadow = false;
+    let pointLight = null;
+    if (graphicsProfile.pointLights) {
+      pointLight = ownResource(new THREE.PointLight(0xffffff, 0, lightDistance, 2));
+      setThreeColor(pointLight.color, colorSpec);
+      pointLight.position.copy(lamp.position);
+      pointLight.position.y += lampHeight * 1.2;
+      pointLight.castShadow = false;
+      root.add(pointLight);
+    }
 
-    root.add(pointLight, wideHalo, halo, lamp);
+    root.add(wideHalo, halo, lamp);
     lamps.push({ lamp, material, halo, haloMaterial, wideHalo, wideHaloMaterial, pointLight, index });
   });
 
@@ -397,7 +402,7 @@ function updateEmergencyLightRig(rig) {
     record.material.opacity = active ? (on ? 1 : 0.08) : 0;
     record.haloMaterial.opacity = active && on ? (rig.reducedMotion ? 0.42 : 0.68) : 0;
     record.wideHaloMaterial.opacity = active && on ? 0.26 : 0;
-    record.pointLight.intensity = active && on ? (rig.reducedMotion ? 70 : 110) : 0;
+    if (record.pointLight) record.pointLight.intensity = active && on ? (rig.reducedMotion ? 70 : 110) : 0;
   }
 }
 
@@ -478,6 +483,7 @@ function assetUrl(relativePath) {
 }
 
 function addOutlines(model) {
+  if (!graphicsProfile.outlines) return;
   const originals = [];
   model.traverse((node) => {
     if (node.isMesh) originals.push(node);

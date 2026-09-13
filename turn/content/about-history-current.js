@@ -98,6 +98,20 @@ const LOW_GRAPHICS_TUNING_HISTORY = Object.freeze({
   ])
 });
 
+const LOW_GRAPHICS_RENDER_ONLY_HISTORY = Object.freeze({
+  period: '13 September',
+  title: 'LOW GRAPHICS changes rendering, not the world',
+  paragraphs: Object.freeze([
+    'TURN 1.19.9 makes LOW GRAPHICS a rendering-cost profile only. The same track scenery, world-beauty and art passes run in both graphics modes; antialiasing also remains enabled.',
+    'The low profile keeps DPR capped at 1.0, disables shadow rendering, avoids constructing TURN contour meshes at their producers, and reduces real point-light illumination while leaving visible lamps, emissive surfaces and halos intact.'
+  ]),
+  milestones: Object.freeze([
+    'World content identical between normal and LOW GRAPHICS',
+    'Contours skipped before mesh construction instead of hidden afterwards',
+    'TURN 1.19.9 · 2026.09.13-r223'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -116,7 +130,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   SCORE_HISTORY,
   VISUAL_HISTORY,
   LOW_GRAPHICS_HISTORY,
-  LOW_GRAPHICS_TUNING_HISTORY
+  LOW_GRAPHICS_TUNING_HISTORY,
+  LOW_GRAPHICS_RENDER_ONLY_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -132,13 +147,15 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.19.7 r221', 'Adds LOW GRAPHICS for older devices with DPR 1.0, no antialiasing or shadows, fewer real lights, suppressed outlines and reduced cosmetic scenery.']),
       Object.freeze(['One graphics profile', 'Applies the same low profile to the race renderer and TURN secondary WebGL previews after a restart.']),
       Object.freeze(['1.19.8 r222', 'Keeps antialiasing and the full Countryside world-beauty, art and extra scenery pipeline enabled in LOW GRAPHICS after device testing.']),
-      Object.freeze(['Tuned low profile', 'Retains DPR 1.0, disabled shadows, fewer real lights and suppressed outline draw calls while restoring those visual-quality features.'])
+      Object.freeze(['Tuned low profile', 'Retains DPR 1.0, disabled shadows, fewer real lights and suppressed outline draw calls while restoring those visual-quality features.']),
+      Object.freeze(['1.19.9 r223', 'Defines LOW GRAPHICS as rendering-only: identical world content, DPR 1.0, no shadows, no constructed TURN contours and cheaper real lighting.']),
+      Object.freeze(['No post-hoc contour removal', 'Contour producers now skip their outline meshes before allocation; the shared Three runtime no longer traverses the scene to hide them.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.8',
-  build: '2026.09.13-r222',
-  note: 'TURN 1.19.8 tunes LOW GRAPHICS to keep antialiasing and full Countryside scenery.'
+  version: '1.19.9',
+  build: '2026.09.13-r223',
+  note: 'TURN 1.19.9 makes LOW GRAPHICS a rendering-only performance profile.'
 });
