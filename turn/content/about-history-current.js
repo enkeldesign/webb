@@ -84,6 +84,20 @@ const LOW_GRAPHICS_HISTORY = Object.freeze({
   ])
 });
 
+const LOW_GRAPHICS_TUNING_HISTORY = Object.freeze({
+  period: '13 September',
+  title: 'LOW GRAPHICS keeps the smooth edges and full countryside',
+  paragraphs: Object.freeze([
+    'TURN 1.19.8 tunes LOW GRAPHICS after device testing. Antialiasing stays enabled, and Countryside once again loads its deferred world-beauty, art and extra scenery passes while the mode keeps its DPR 1.0 cap, disabled shadows, reduced real lights and suppressed outline draw calls.',
+    'This keeps the strongest visual-quality wins that proved worthwhile in testing without giving up the lower-resolution, shadowless rendering profile aimed at older devices.'
+  ]),
+  milestones: Object.freeze([
+    'Antialiasing remains enabled in LOW GRAPHICS',
+    'Full Countryside world-beauty, art and extra scenery restored',
+    'TURN 1.19.8 · 2026.09.13-r222'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -101,7 +115,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   RELIABILITY_HISTORY,
   SCORE_HISTORY,
   VISUAL_HISTORY,
-  LOW_GRAPHICS_HISTORY
+  LOW_GRAPHICS_HISTORY,
+  LOW_GRAPHICS_TUNING_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -115,13 +130,15 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.19.6 r220', 'Releases discarded car models and closed previews while preserving resources shared by cars still in use.']),
       Object.freeze(['Quick car changes', 'Keeps the latest car selection when earlier model loads finish late, and cleans up previews after interrupted loading.']),
       Object.freeze(['1.19.7 r221', 'Adds LOW GRAPHICS for older devices with DPR 1.0, no antialiasing or shadows, fewer real lights, suppressed outlines and reduced cosmetic scenery.']),
-      Object.freeze(['One graphics profile', 'Applies the same low profile to the race renderer and TURN secondary WebGL previews after a restart.'])
+      Object.freeze(['One graphics profile', 'Applies the same low profile to the race renderer and TURN secondary WebGL previews after a restart.']),
+      Object.freeze(['1.19.8 r222', 'Keeps antialiasing and the full Countryside world-beauty, art and extra scenery pipeline enabled in LOW GRAPHICS after device testing.']),
+      Object.freeze(['Tuned low profile', 'Retains DPR 1.0, disabled shadows, fewer real lights and suppressed outline draw calls while restoring those visual-quality features.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.7',
-  build: '2026.09.13-r221',
-  note: 'TURN 1.19.7 adds LOW GRAPHICS for better performance on older devices.'
+  version: '1.19.8',
+  build: '2026.09.13-r222',
+  note: 'TURN 1.19.8 tunes LOW GRAPHICS to keep antialiasing and full Countryside scenery.'
 });

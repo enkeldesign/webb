@@ -1,5 +1,5 @@
 import * as NativeThree from 'three-native';
-import { graphicsProfile, graphicsPixelRatio } from './graphics-profile.js';
+import { graphicsProfile, graphicsPixelRatio } from '/turn/graphics-profile.js';
 
 export * from 'three-native';
 
@@ -79,7 +79,7 @@ export class PointLight extends NativeThree.PointLight {
 export class WebGLRenderer extends NativeThree.WebGLRenderer {
   constructor(parameters = {}) {
     const rendererParameters = graphicsProfile.lowGraphics
-      ? { ...parameters, antialias: false }
+      ? { ...parameters, antialias: true }
       : parameters;
     super(rendererParameters);
 

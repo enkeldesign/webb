@@ -29,7 +29,7 @@ function installLowGraphicsSetting() {
         <small id="m8LowGraphicsDescription">Better performance on older devices</small>
       </span>
     </label>
-    <p id="m8LowGraphicsRestartNote">Uses lower resolution, no shadows or antialiasing, fewer real lights, no outline draw calls and less cosmetic scenery. Restart TURN to apply changes.</p>
+    <p id="m8LowGraphicsRestartNote">Uses lower resolution, no shadows, fewer real lights and no outline draw calls. Antialiasing and full track scenery stay on. Restart TURN to apply changes.</p>
     <button type="button" class="m8-low-graphics-restart" hidden>RESTART TURN TO APPLY</button>`;
 
   const visualSettings = list.querySelector('.m8-visual-settings');

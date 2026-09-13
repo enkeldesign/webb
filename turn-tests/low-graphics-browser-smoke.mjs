@@ -48,7 +48,7 @@ for (const browserType of [chromium, webkit]) {
   });
 
   assert.equal(result.lowGraphics, true, `${browserType.name()} loaded the saved LOW GRAPHICS profile.`);
-  assert.equal(result.antialias, false, `${browserType.name()} disables WebGL antialiasing.`);
+  assert.equal(result.antialias, true, `${browserType.name()} keeps WebGL antialiasing enabled.`);
   assert.ok(result.pixelRatio <= 1, `${browserType.name()} caps renderer DPR at 1.0.`);
   assert.equal(result.shadows, false, `${browserType.name()} keeps shadow rendering disabled.`);
   assert.equal(result.pointLightVisible, false, `${browserType.name()} removes real PointLights from rendering.`);
