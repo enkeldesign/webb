@@ -189,11 +189,22 @@ function synchronizeVisualResourceTargets(importMap, release) {
   }
 }
 
+function synchronizeGraphicsRuntimeTarget(importMap, release) {
+  const imports = importMap.imports ||= {};
+  const nativeTarget = imports['three-native']
+    || (typeof imports.three === 'string' && /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@/.test(imports.three)
+      ? imports.three : null);
+  if (!nativeTarget) return;
+  imports['three-native'] = nativeTarget;
+  imports.three = `/turn/three-runtime.js?build=${release.cacheKey}`;
+}
+
 function renderSharedResourceImports(source, release) {
   return source.replace(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/, (_, jsonText) => {
     const importMap = JSON.parse(jsonText);
     synchronizeScoreStoreTargets(importMap, release);
     synchronizeVisualResourceTargets(importMap, release);
+    synchronizeGraphicsRuntimeTarget(importMap, release);
     return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
   });
 }
@@ -222,6 +233,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeRivalStorageTargets(importMap, release);
   synchronizeScoreStoreTargets(importMap, release);
   synchronizeVisualResourceTargets(importMap, release);
+  synchronizeGraphicsRuntimeTarget(importMap, release);
   synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);
   // These presentation modules now use the release build instead of a new
   // hand-maintained revision. Advance every alias, including installed routes.

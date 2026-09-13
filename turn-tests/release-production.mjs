@@ -120,7 +120,9 @@ for (const build of attributeBuilds) {
 const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
 assert.ok(importMapText, 'Production must retain the external Three.js import map');
 const importMap = JSON.parse(importMapText);
-assert.match(importMap.imports.three, /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@/);
+assert.match(importMap.imports['three-native'], /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@/);
+assert.equal(importMap.imports.three, `/turn/three-runtime.js?build=${release.cacheKey}`,
+  'Production Three.js imports must pass through the current-build graphics runtime');
 for (const [specifier, target] of Object.entries(importMap.imports)) {
   if (!target.startsWith('./')) continue;
   assert.equal(new URL(target, 'https://enkel.design/turn/').searchParams.get('build'), release.cacheKey, `${specifier} must resolve through the current release cache key`);
@@ -134,6 +136,9 @@ const futureRelease = {
 const futureIndex = renderReleaseIndex(index, futureRelease);
 const futureImportMapText = futureIndex.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
 const futureImports = JSON.parse(futureImportMapText).imports;
+assert.match(futureImports['three-native'], /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@/);
+assert.equal(futureImports.three, `/turn/three-runtime.js?build=${futureRelease.cacheKey}`,
+  'Future releases must advance the shared graphics runtime identity');
 const relativeBridgeFixture = '<script type="importmap">{"imports":{"./achievements/runtime.js?revision=r164-long-session-robustness":"./achievements/runtime.js?revision=r244-reward-toast-guide"}}</script>';
 const relativeBridge = JSON.parse(renderReleaseIndex(relativeBridgeFixture, futureRelease)
   .match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)[1]).imports;
