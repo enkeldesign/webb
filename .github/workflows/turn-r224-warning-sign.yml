@@ -25,7 +25,9 @@ jobs:
           fetch-depth: 0
 
       - name: Apply authored warning sign and release updates
-        run: python3 .github/turn-r224-warning-sign.py
+        run: |
+          python3 .github/turn-r224-warning-sign.py
+          python3 .github/turn-r224-warning-sign-test-sync.py
 
       - name: Synchronize release surfaces
         run: node turn/scripts/release.mjs --write
