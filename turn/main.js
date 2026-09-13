@@ -21,7 +21,7 @@ import {
   loadVehicleSelection,
   saveVehicleSelection
 } from '/turn/vehicle/catalog.js?build=20260720-r19';
-import { createCarVisual } from '/turn/vehicle/car-models.js?build=20260720-r19';
+import { createCarVisual, disposeCarVisual } from '/turn/vehicle/car-models.js?build=20260720-r19';
 import { animateWheelRig } from '/turn/vehicle/wheel-animation-rig.js?revision=r257-authored-wheel-spin';
 import {
   FRONT_WHEEL_STEER_ANGLE,
@@ -554,31 +554,47 @@ ghostCar.userData.turnProceduralParts = proceduralGhostParts;
 
 async function installCarVisual(root, { carId, color, secondaryColor, ghost = false }) {
   const key = `${carId}|${color}|${secondaryColor}|${ghost ? 1 : 0}`;
-  if (root.userData.turnVisualKey === key || root.userData.turnVisualPendingKey === key) return;
+  if (root.userData.turnVisualKey === key) {
+    // Re-selecting the installed car also cancels a different pending selection.
+    if (root.userData.turnVisualPendingKey && root.userData.turnVisualPendingKey !== key) {
+      root.userData.turnVisualGeneration += 1;
+      root.userData.turnVisualPendingKey = null;
+    }
+    return;
+  }
+  if (root.userData.turnVisualPendingKey === key) return;
 
   const generation = (root.userData.turnVisualGeneration || 0) + 1;
   root.userData.turnVisualGeneration = generation;
   root.userData.turnVisualPendingKey = key;
 
-  const visual = await createCarVisual({
-    carId,
-    color,
-    secondaryColor,
-    ghost,
-    targetLength: 5.5,
-    outline: true
-  });
-  if (root.userData.turnVisualGeneration !== generation) return;
+  try {
+    const visual = await createCarVisual({
+      carId,
+      color,
+      secondaryColor,
+      ghost,
+      targetLength: 5.5,
+      outline: true
+    });
+    if (root.userData.turnVisualGeneration !== generation) {
+      disposeCarVisual(visual);
+      return;
+    }
 
-  for (const child of [...root.children]) {
-    if (child.userData?.turnAssetVisual) root.remove(child);
+    for (const child of [...root.children]) {
+      if (child.userData?.turnAssetVisual) disposeCarVisual(child);
+    }
+    for (const part of root.userData.turnProceduralParts || []) part.visible = false;
+
+    visual.userData.turnAssetVisual = true;
+    root.add(visual);
+    root.userData.turnVisualKey = key;
+  } catch (error) {
+    if (root.userData.turnVisualGeneration === generation) throw error;
+  } finally {
+    if (root.userData.turnVisualGeneration === generation) root.userData.turnVisualPendingKey = null;
   }
-  for (const part of root.userData.turnProceduralParts || []) part.visible = false;
-
-  visual.userData.turnAssetVisual = true;
-  root.add(visual);
-  root.userData.turnVisualKey = key;
-  root.userData.turnVisualPendingKey = null;
 }
 
 async function applyVehicleSelection(selection) {

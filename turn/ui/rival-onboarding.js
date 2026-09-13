@@ -7,7 +7,8 @@ import {
   normalizeVehicleId,
   normalizeVehicleSecondaryColor
 } from '../vehicle/catalog.js?build=20260720-r19';
-import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
+import { createCarVisual, disposeCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
+import { retainCarVisualResources } from '../vehicle/car-visual-resources.js';
 
 const RESULT_TOAST_HANDOFF_MS = 4300;
 const ONBOARDING_VISIBLE_MS = 3200;
@@ -261,14 +262,20 @@ export function installRivalOnboarding() {
     scene.add(stage);
     const spacing = 7;
     const center = (visuals.length - 1) * spacing * 0.5;
-    for (let index = 0; index < visuals.length; index += 1) {
-      const clone = visuals[index].visual.clone(true);
-      clone.visible = true;
-      clone.position.set(index * spacing - center, 0, 0);
-      clone.traverse((node) => {
-        if (node.isMesh) node.frustumCulled = false;
-      });
-      stage.add(clone);
+    try {
+      for (let index = 0; index < visuals.length; index += 1) {
+        const clone = visuals[index].visual.clone(true);
+        retainCarVisualResources(visuals[index].visual, clone);
+        stage.add(clone);
+        clone.visible = true;
+        clone.position.set(index * spacing - center, 0, 0);
+        clone.traverse((node) => {
+          if (node.isMesh) node.frustumCulled = false;
+        });
+      }
+    } catch (error) {
+      disposeCarVisual(scene);
+      throw error;
     }
 
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80);
@@ -301,8 +308,9 @@ export function installRivalOnboarding() {
     const identity = raceRivalWarmIdentity(runtime, visuals);
     if (!identity || identity === warmedRaceIdentity) return;
 
-    const warm = makeRaceRivalWarmScene(visuals);
+    let warm = null;
     try {
+      warm = makeRaceRivalWarmScene(visuals);
       if (typeof renderer.compileAsync === 'function') {
         // Compile the actual stored-rival material graph against the race scene's
         // lighting before the timing line makes those cars visible. r184 supports
@@ -332,6 +340,10 @@ export function installRivalOnboarding() {
       warmedRaceIdentity = identity;
     } catch (error) {
       console.warn('TURN: race rival GPU warm-up failed.', error);
+    } finally {
+      // A replaced/reset rival can release its live visual while this compiler is
+      // still polling. The temporary warm scene owns a lease until that work ends.
+      disposeCarVisual(warm?.scene);
     }
   }
 
@@ -412,6 +424,8 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
 
   let visual = null;
   let disposed = false;
+  let resourcesDisposed = false;
+  let pendingCompilation = null;
   let active = false;
   let warmed = false;
   let animationFrame = 0;
@@ -502,7 +516,8 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
         // The native semantic paint system made these shaders more substantial than
         // the original r40 onboarding. Compile them asynchronously in this separate
         // WebGL context rather than on the CHASE YOUR BEST reveal frame.
-        await renderer.compileAsync(scene, camera);
+        pendingCompilation = renderer.compileAsync(scene, camera);
+        await pendingCompilation;
         if (disposed) return;
         runWarmupWhenIdle(finishWarmup);
       } else {
@@ -524,9 +539,13 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
           finishWarmup();
         } catch (fallbackError) {
           console.warn('TURN: first rival preview fallback warm-up failed.', fallbackError);
+          dispose();
           onError?.(fallbackError);
         }
       });
+    } finally {
+      pendingCompilation = null;
+      if (disposed) releaseResources();
     }
   };
 
@@ -538,15 +557,44 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     targetLength: 6.4,
     outline: true
   }).then((next) => {
-    if (disposed) return;
+    if (disposed) {
+      disposeCarVisual(next);
+      return;
+    }
     visual = next;
     stage.add(visual);
     void warmRenderer();
   }).catch((error) => {
     if (disposed) return;
     console.warn('TURN: first rival could not load in the onboarding viewer.', error);
+    dispose();
     onError?.(error);
   });
+
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    active = false;
+    cancelAnimationFrame(animationFrame);
+    if (warmIdleHandle && typeof globalThis.cancelIdleCallback === 'function') {
+      globalThis.cancelIdleCallback(warmIdleHandle);
+    }
+    window.clearTimeout(warmTimer);
+    observer?.disconnect();
+    renderer.domElement.remove();
+    // Three's asynchronous compiler still polls material/program state. Stop the
+    // preview immediately, but keep those resources valid until compilation ends.
+    if (!pendingCompilation) releaseResources();
+  }
+
+  function releaseResources() {
+    if (resourcesDisposed) return;
+    resourcesDisposed = true;
+    disposeCarVisual(visual);
+    visual = null;
+    renderer.dispose();
+    renderer.forceContextLoss?.();
+  }
 
   return {
     renderer,
@@ -560,18 +608,6 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
       // YOUR BEST appears on time and the 3D ghost joins on a later animation frame.
       animationFrame = requestAnimationFrame(tick);
     },
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      active = false;
-      cancelAnimationFrame(animationFrame);
-      if (warmIdleHandle && typeof globalThis.cancelIdleCallback === 'function') {
-        globalThis.cancelIdleCallback(warmIdleHandle);
-      }
-      window.clearTimeout(warmTimer);
-      observer?.disconnect();
-      renderer.dispose();
-      renderer.domElement.remove();
-    }
+    dispose
   };
 }

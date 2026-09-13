@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
+  createCarVisualResourceOwner,
+  disposeCarVisual,
+  retainCarVisualResources
+} from './car-visual-resources.js';
+export { disposeCarVisual } from './car-visual-resources.js';
+import {
   DEFAULT_VEHICLE_SECONDARY_COLOR,
   getCarDefinition,
   getVehicleDefaultColorSpec,
@@ -90,149 +96,157 @@ export async function createCarVisual({
   const cachedCompetitorTemplate = competitorTemplateKey
     ? competitorGhostTemplateCache.get(competitorTemplateKey)
     : null;
-  if (cachedCompetitorTemplate) return cloneCompetitorGhostVisual(cachedCompetitorTemplate);
+  if (cachedCompetitorTemplate) return cloneCompetitorGhostVisual(cachedCompetitorTemplate.visual);
 
   const source = await loadCarSource(car.id);
   const root = new THREE.Group();
-  const model = source.clone(true);
-  if (car.id === 'supercar') {
-    const trainingCarSource = await loadCarSource('classic');
-    installSupercarKenneyWheels(model, trainingCarSource);
-  }
-  model.rotation.y = Math.PI + car.modelYawQuarterTurns * Math.PI / 2;
-  root.add(model);
+  const resources = createCarVisualResourceOwner(root);
+  try {
+    const model = source.clone(true);
+    if (car.id === 'supercar') {
+      const trainingCarSource = await loadCarSource('classic');
+      installSupercarKenneyWheels(model, trainingCarSource, { ownResource: resources.own });
+    }
+    model.rotation.y = Math.PI + car.modelYawQuarterTurns * Math.PI / 2;
+    root.add(model);
 
-  const requestedColorSpec = primaryColorSpec(car, requestedColor);
-  const requestedSecondaryColorSpec = secondaryColorSpec(car, requestedSecondaryColor);
-  const ghostColor = makeGhostColor(requestedColor);
-  const ghostSecondaryColor = makeGhostColor(requestedSecondaryColor);
-  const meshRecords = [];
-  const primaryPaintMaterials = [];
-  const secondaryPaintMaterials = [];
-  const semanticPaintRecords = [];
-  let explicitPaintCount = 0;
+    const requestedColorSpec = primaryColorSpec(car, requestedColor);
+    const requestedSecondaryColorSpec = secondaryColorSpec(car, requestedSecondaryColor);
+    const ghostColor = makeGhostColor(requestedColor);
+    const ghostSecondaryColor = makeGhostColor(requestedSecondaryColor);
+    const meshRecords = [];
+    const primaryPaintMaterials = [];
+    const secondaryPaintMaterials = [];
+    const semanticPaintRecords = [];
+    let explicitPaintCount = 0;
 
-  model.traverse((node) => {
-    if (!node.isMesh || !node.material) return;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    const cloned = materials.map((material) => material.clone());
-    node.material = Array.isArray(node.material) ? cloned : cloned[0];
+    model.traverse((node) => {
+      if (!node.isMesh || !node.material) return;
+      const materials = Array.isArray(node.material) ? node.material : [node.material];
+      const cloned = materials.map((material) => (
+        resources.has(material) ? material : resources.own(material.clone())
+      ));
+      node.material = Array.isArray(node.material) ? cloned : cloned[0];
 
-    cloned.forEach((material) => {
-      const semantic = installSemanticCarFinish({
-        node,
-        material,
-        car,
-        primaryColor: ghost ? ghostColor : requestedColorSpec,
-        secondaryColor: ghost ? ghostSecondaryColor : requestedSecondaryColorSpec,
-        primaryPaintMaterials,
-        secondaryPaintMaterials,
-        semanticPaintRecords
+      cloned.forEach((material) => {
+        const semantic = installSemanticCarFinish({
+          node,
+          material,
+          car,
+          primaryColor: ghost ? ghostColor : requestedColorSpec,
+          secondaryColor: ghost ? ghostSecondaryColor : requestedSecondaryColorSpec,
+          primaryPaintMaterials,
+          secondaryPaintMaterials,
+          semanticPaintRecords
+        });
+        const record = {
+          node,
+          material,
+          semantic,
+          protected: isProtectedPart(node, material),
+          wheel: isWheelPart(node, material),
+          secondaryPaint: isSecondaryPaint(node, car),
+          explicitPaint: isExplicitPaint(node, material)
+        };
+        if (!semantic && record.explicitPaint && !record.protected) explicitPaintCount += 1;
+        meshRecords.push(record);
       });
-      const record = {
-        node,
+    });
+
+    for (const record of meshRecords) {
+      const {
         material,
         semantic,
-        protected: isProtectedPart(node, material),
-        wheel: isWheelPart(node, material),
-        secondaryPaint: isSecondaryPaint(node, car),
-        explicitPaint: isExplicitPaint(node, material)
-      };
-      if (!semantic && record.explicitPaint && !record.protected) explicitPaintCount += 1;
-      meshRecords.push(record);
-    });
-  });
-
-  for (const record of meshRecords) {
-    const {
-      material,
-      semantic,
-      protected: protectedPart,
-      wheel: wheelPart,
-      secondaryPaint,
-      explicitPaint
-    } = record;
-    const paintable = !semantic && !car.fixedLivery && !protectedPart && !secondaryPaint && (
-      explicitPaint
-      || (explicitPaintCount === 0 && isFallbackPaintCandidate(material))
-      || (car.pack !== 'car' && isFallbackPaintCandidate(material))
-    );
-
-    if (!semantic && wheelPart && material.color) {
-      material.color.setHex(TIRE_COLOR);
-      if ('roughness' in material) material.roughness = Math.max(Number(material.roughness) || 0, 0.82);
-    } else if (!semantic && secondaryPaint && !protectedPart && material.color) {
-      setThreeColor(material.color, ghost ? ghostSecondaryColor : requestedSecondaryColorSpec);
-      secondaryPaintMaterials.push(material);
-    } else if (paintable && material.color) {
-      setThreeColor(material.color, ghost ? ghostColor : requestedColorSpec);
-      primaryPaintMaterials.push(material);
-    }
-
-    if (car.id === 'supercar' && paintable) {
-      // Cosmo's Ghini bakes a dark grey body colour into its base-color map.
-      // Multiplying TURN's picker colour by that map makes every paint choice
-      // much darker than the rest of the garage. The model geometry already
-      // supplies the panel shading we need, so treat paintable body surfaces
-      // like TURN lacquer: direct colour + lighting, with no baked dark tint.
-      material.map = null;
-      material.userData.turnSupercarDirectPaint = true;
-      if ('roughness' in material) material.roughness = Math.max(
-        Number(material.roughness) || 0,
-        SUPERCAR_MATTE_ROUGHNESS
+        protected: protectedPart,
+        wheel: wheelPart,
+        secondaryPaint,
+        explicitPaint
+      } = record;
+      const paintable = !semantic && !car.fixedLivery && !protectedPart && !secondaryPaint && (
+        explicitPaint
+        || (explicitPaintCount === 0 && isFallbackPaintCandidate(material))
+        || (car.pack !== 'car' && isFallbackPaintCandidate(material))
       );
-      if ('metalness' in material) material.metalness = SUPERCAR_MATTE_METALNESS;
-      material.needsUpdate = true;
+
+      if (!semantic && wheelPart && material.color) {
+        material.color.setHex(TIRE_COLOR);
+        if ('roughness' in material) material.roughness = Math.max(Number(material.roughness) || 0, 0.82);
+      } else if (!semantic && secondaryPaint && !protectedPart && material.color) {
+        setThreeColor(material.color, ghost ? ghostSecondaryColor : requestedSecondaryColorSpec);
+        secondaryPaintMaterials.push(material);
+      } else if (paintable && material.color) {
+        setThreeColor(material.color, ghost ? ghostColor : requestedColorSpec);
+        primaryPaintMaterials.push(material);
+      }
+
+      if (car.id === 'supercar' && paintable) {
+        // Cosmo's Ghini bakes a dark grey body colour into its base-color map.
+        // Multiplying TURN's picker colour by that map makes every paint choice
+        // much darker than the rest of the garage. The model geometry already
+        // supplies the panel shading we need, so treat paintable body surfaces
+        // like TURN lacquer: direct colour + lighting, with no baked dark tint.
+        material.map = null;
+        material.userData.turnSupercarDirectPaint = true;
+        if ('roughness' in material) material.roughness = Math.max(
+          Number(material.roughness) || 0,
+          SUPERCAR_MATTE_ROUGHNESS
+        );
+        if ('metalness' in material) material.metalness = SUPERCAR_MATTE_METALNESS;
+        material.needsUpdate = true;
+      }
+
+      if (ghost) {
+        material.transparent = false;
+        material.opacity = 1;
+        material.depthWrite = true;
+        material.needsUpdate = true;
+      }
+
+      record.node.castShadow = !ghost;
+      record.node.receiveShadow = true;
     }
 
-    if (ghost) {
-      material.transparent = false;
-      material.opacity = 1;
-      material.depthWrite = true;
-      material.needsUpdate = true;
-    }
+    if (outline) addOutlines(model);
+    const { frontWheelPivots, wheelSpinners } = installAssetWheelRig({
+      model,
+      frontRole: REVERSED_FRONT_WHEEL_LABEL_IDS.has(car.id) ? 'back' : 'front',
+      createGroup: () => new THREE.Group()
+    });
+    const featuredSurface = FEATURED_SURFACE_TARGET_LENGTHS.has(targetLength);
+    const featuredVisualSizeMultiplier = featuredSurface ? car.featuredVisualSizeMultiplier : 1;
+    const effectiveVisualScale = car.visualScale
+      * car.visualSizeMultiplier
+      * featuredVisualSizeMultiplier;
+    normalizeModelToGround(
+      model,
+      targetLength * effectiveVisualScale,
+      `${car.id}|${outline ? 1 : 0}`
+    );
+    if (car.id === 'classic') installLearnerCarLivery(model, car, { ghost, ownResource: resources.own });
+    if (car.emergencyService && !ghost) installEmergencyLightRig(root, model, car.emergencyService, resources.own);
 
-    record.node.castShadow = !ghost;
-    record.node.receiveShadow = true;
+    root.userData.turnCarId = car.id;
+    root.userData.turnCarColor = requestedColor;
+    root.userData.turnCarSecondaryColor = requestedSecondaryColor;
+    root.userData.turnGhost = ghost;
+    root.userData.turnModelYawQuarterTurns = car.modelYawQuarterTurns;
+    root.userData.turnVisualSizeMultiplier = car.visualSizeMultiplier;
+    root.userData.turnFeaturedVisualSizeMultiplier = featuredVisualSizeMultiplier;
+    root.userData.turnFeaturedVisualSurface = featuredSurface;
+    root.userData.turnEffectiveVisualScale = effectiveVisualScale;
+    root.userData.turnPrimaryPaintMaterials = primaryPaintMaterials;
+    root.userData.turnSecondaryPaintMaterials = secondaryPaintMaterials;
+    root.userData.turnPaintMaterials = [...primaryPaintMaterials, ...secondaryPaintMaterials];
+    root.userData.turnSemanticPaintRecords = semanticPaintRecords;
+    root.userData.frontWheelPivots = frontWheelPivots;
+    root.userData.wheelSpinners = wheelSpinners;
+    installWheelAnimationHostBridge(root);
+    if (competitorTemplateKey) rememberCompetitorGhostTemplate(competitorTemplateKey, root);
+    return root;
+  } catch (error) {
+    disposeCarVisual(root);
+    throw error;
   }
-
-  if (outline) addOutlines(model);
-  const { frontWheelPivots, wheelSpinners } = installAssetWheelRig({
-    model,
-    frontRole: REVERSED_FRONT_WHEEL_LABEL_IDS.has(car.id) ? 'back' : 'front',
-    createGroup: () => new THREE.Group()
-  });
-  const featuredSurface = FEATURED_SURFACE_TARGET_LENGTHS.has(targetLength);
-  const featuredVisualSizeMultiplier = featuredSurface ? car.featuredVisualSizeMultiplier : 1;
-  const effectiveVisualScale = car.visualScale
-    * car.visualSizeMultiplier
-    * featuredVisualSizeMultiplier;
-  normalizeModelToGround(
-    model,
-    targetLength * effectiveVisualScale,
-    `${car.id}|${outline ? 1 : 0}`
-  );
-  if (car.id === 'classic') installLearnerCarLivery(model, car, { ghost });
-  if (car.emergencyService && !ghost) installEmergencyLightRig(root, model, car.emergencyService);
-
-  root.userData.turnCarId = car.id;
-  root.userData.turnCarColor = requestedColor;
-  root.userData.turnCarSecondaryColor = requestedSecondaryColor;
-  root.userData.turnGhost = ghost;
-  root.userData.turnModelYawQuarterTurns = car.modelYawQuarterTurns;
-  root.userData.turnVisualSizeMultiplier = car.visualSizeMultiplier;
-  root.userData.turnFeaturedVisualSizeMultiplier = featuredVisualSizeMultiplier;
-  root.userData.turnFeaturedVisualSurface = featuredSurface;
-  root.userData.turnEffectiveVisualScale = effectiveVisualScale;
-  root.userData.turnPrimaryPaintMaterials = primaryPaintMaterials;
-  root.userData.turnSecondaryPaintMaterials = secondaryPaintMaterials;
-  root.userData.turnPaintMaterials = [...primaryPaintMaterials, ...secondaryPaintMaterials];
-  root.userData.turnSemanticPaintRecords = semanticPaintRecords;
-  root.userData.frontWheelPivots = frontWheelPivots;
-  root.userData.wheelSpinners = wheelSpinners;
-  installWheelAnimationHostBridge(root);
-  if (competitorTemplateKey) rememberCompetitorGhostTemplate(competitorTemplateKey, root);
-  return root;
 }
 
 function reusableCompetitorGhostKey({ car, color, secondaryColor, ghost, targetLength, outline }) {
@@ -245,10 +259,18 @@ function reusableCompetitorGhostKey({ car, color, secondaryColor, ghost, targetL
 }
 
 function rememberCompetitorGhostTemplate(key, visual) {
-  if (competitorGhostTemplateCache.has(key)) competitorGhostTemplateCache.delete(key);
-  competitorGhostTemplateCache.set(key, visual);
+  // Retain the already-prepared graph without adding another clone to prewarming.
+  // Its cache lease outlives disposal of the first live visual, and releases on
+  // eviction independently of any player/rival still using the resources.
+  const lease = {};
+  retainCarVisualResources(visual, lease);
+  disposeCarVisual(competitorGhostTemplateCache.get(key)?.lease);
+  competitorGhostTemplateCache.delete(key);
+  competitorGhostTemplateCache.set(key, { visual, lease });
   while (competitorGhostTemplateCache.size > COMPETITOR_GHOST_TEMPLATE_LIMIT) {
-    competitorGhostTemplateCache.delete(competitorGhostTemplateCache.keys().next().value);
+    const oldestKey = competitorGhostTemplateCache.keys().next().value;
+    disposeCarVisual(competitorGhostTemplateCache.get(oldestKey).lease);
+    competitorGhostTemplateCache.delete(oldestKey);
   }
 }
 
@@ -280,6 +302,7 @@ function cloneCompetitorGhostVisual(template) {
   clone.userData.wheelSpinners = wheelSpinners;
   clone.userData.turnFastGhostClone = true;
   installWheelAnimationHostBridge(clone);
+  retainCarVisualResources(template, clone);
   return clone;
 }
 
@@ -292,7 +315,7 @@ function installWheelAnimationHostBridge(visual) {
   });
 }
 
-function installEmergencyLightRig(root, model, service) {
+function installEmergencyLightRig(root, model, service, ownResource) {
   model.updateMatrixWorld(true);
   const bounds = new THREE.Box3().setFromObject(model);
   const size = bounds.getSize(new THREE.Vector3());
@@ -312,37 +335,37 @@ function installEmergencyLightRig(root, model, service) {
   const lamps = [];
 
   colors.forEach((colorSpec, index) => {
-    const material = new THREE.MeshBasicMaterial({
+    const material = ownResource(new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
       opacity: 0,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       toneMapped: false
-    });
+    }));
     setThreeColor(material.color, colorSpec);
-    const lamp = new THREE.Mesh(new THREE.BoxGeometry(lampWidth, lampHeight, lampDepth), material);
+    const lamp = new THREE.Mesh(ownResource(new THREE.BoxGeometry(lampWidth, lampHeight, lampDepth)), material);
     lamp.position.set((index === 0 ? -1 : 1) * barWidth * 0.27, roofY, roofZ);
     lamp.visible = true;
     lamp.renderOrder = 42;
 
-    const haloMaterial = material.clone();
+    const haloMaterial = ownResource(material.clone());
     haloMaterial.opacity = 0;
-    const halo = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 10), haloMaterial);
+    const halo = new THREE.Mesh(ownResource(new THREE.SphereGeometry(0.5, 16, 10)), haloMaterial);
     halo.position.copy(lamp.position);
     halo.scale.set(lampWidth * 2.3, lampHeight * 5.4, lampDepth * 2.3);
     halo.visible = false;
     halo.renderOrder = 41;
 
-    const wideHaloMaterial = material.clone();
+    const wideHaloMaterial = ownResource(material.clone());
     wideHaloMaterial.opacity = 0;
-    const wideHalo = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 10), wideHaloMaterial);
+    const wideHalo = new THREE.Mesh(ownResource(new THREE.SphereGeometry(0.5, 16, 10)), wideHaloMaterial);
     wideHalo.position.copy(lamp.position);
     wideHalo.scale.set(lampWidth * 4.4, lampHeight * 8.2, lampDepth * 4.4);
     wideHalo.visible = false;
     wideHalo.renderOrder = 40;
 
-    const pointLight = new THREE.PointLight(0xffffff, 0, lightDistance, 2);
+    const pointLight = ownResource(new THREE.PointLight(0xffffff, 0, lightDistance, 2));
     setThreeColor(pointLight.color, colorSpec);
     pointLight.position.copy(lamp.position);
     pointLight.position.y += lampHeight * 1.2;

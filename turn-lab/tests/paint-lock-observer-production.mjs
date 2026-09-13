@@ -201,8 +201,8 @@ assert.equal(
 );
 assert.equal(
   imports['/turn/garage/lot-showroom-experiment.js?revision=r206-race-before-locks'],
-  '/turn/garage/lot-showroom-experiment.js?revision=r243-mountain-1300',
-  'Installed PWAs must retain the previous showroom cache bridge while new callers use r246'
+  `/turn/garage/lot-showroom-experiment.js?revision=r259-swift-lot-ui-base&build=${release.cacheKey}`,
+  'Installed PWAs must retain the previous showroom specifier as a bridge to the current resource-safe renderer'
 );
 for (const staleCatalogSpecifier of [
   '/turn/vehicle/catalog.js?build=20260804-r157-factory-colors',

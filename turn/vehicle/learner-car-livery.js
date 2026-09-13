@@ -41,12 +41,12 @@ const KENNEY_TAXI_SIGN_TRIANGLES = Object.freeze([
 const SIGN_GRAPHIC_TRIANGLES = new Set([0, 1, 4, 5]);
 let signFaceTexture = null;
 
-export function installLearnerCarLivery(model, car, { ghost = false } = {}) {
+export function installLearnerCarLivery(model, car, { ghost = false, ownResource = (resource) => resource } = {}) {
   if (!model?.isObject3D || car?.id !== LEARNER_CAR_ID) return null;
   if (model.userData?.turnLearnerCarLiveryInstalled) return model.userData.turnLearnerCarSign || null;
 
   installDoorLearnerMarks(model);
-  const sign = createAuthenticKenneyTaxiSign({ ghost });
+  const sign = createAuthenticKenneyTaxiSign({ ghost, ownResource });
   model.add(sign);
 
   model.userData.turnLearnerCarLiveryInstalled = true;
@@ -119,7 +119,7 @@ function installDoorMarkShader(material) {
   material.needsUpdate = true;
 }
 
-function createAuthenticKenneyTaxiSign({ ghost }) {
+function createAuthenticKenneyTaxiSign({ ghost, ownResource }) {
   const positions = [];
   const uvs = [];
   const groups = [];
@@ -139,7 +139,7 @@ function createAuthenticKenneyTaxiSign({ ghost }) {
     groups.push({ start, count: 3, materialIndex: SIGN_GRAPHIC_TRIANGLES.has(triangleIndex) ? 1 : 0 });
   });
 
-  const geometry = new THREE.BufferGeometry();
+  const geometry = ownResource(new THREE.BufferGeometry());
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   for (const group of groups) geometry.addGroup(group.start, group.count, group.materialIndex);
@@ -147,19 +147,19 @@ function createAuthenticKenneyTaxiSign({ ghost }) {
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
 
-  const yellowMaterial = new THREE.MeshStandardMaterial({
+  const yellowMaterial = ownResource(new THREE.MeshStandardMaterial({
     color: ghost ? '#f2ca36' : '#ffcc00',
     roughness: 0.78,
     metalness: 0
-  });
+  }));
   yellowMaterial.name = 'learner-sign-yellow';
 
-  const faceMaterial = new THREE.MeshStandardMaterial({
+  const faceMaterial = ownResource(new THREE.MeshStandardMaterial({
     color: 0xffffff,
     map: getLearnerSignFaceTexture(),
     roughness: 0.78,
     metalness: 0
-  });
+  }));
   faceMaterial.name = 'learner-sign-l-end-face';
 
   const sign = new THREE.Mesh(geometry, [yellowMaterial, faceMaterial]);

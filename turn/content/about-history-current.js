@@ -56,6 +56,20 @@ const SCORE_HISTORY = Object.freeze({
   ])
 });
 
+const VISUAL_HISTORY = Object.freeze({
+  period: '13 September',
+  title: 'Car previews clean up after themselves',
+  paragraphs: Object.freeze([
+    'TURN 1.19.6 releases discarded car models and previews when you change selection or leave a preview. Shared resources stay available to cars still in use, including prepared rivals.',
+    'Quick car changes keep the latest selection even when an older model finishes loading later. Preview cleanup also covers interrupted loading in CHASE YOUR BEST, Home, The Lot and Trophy Road.'
+  ]),
+  milestones: Object.freeze([
+    'Cleanup for discarded cars and closed previews',
+    'Latest car selection wins during overlapping loads',
+    'TURN 1.19.6 · 2026.09.13-r220'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -71,7 +85,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   ...BASE_DEVELOPMENT_HISTORY,
   PERK_HISTORY,
   RELIABILITY_HISTORY,
-  SCORE_HISTORY
+  SCORE_HISTORY,
+  VISUAL_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -81,13 +96,15 @@ export const CHANGELOG = Object.freeze([
     date: '13 September',
     entries: Object.freeze([
       Object.freeze(['1.19.5 r219', 'Reduces repeated score-storage work at the finish line and on Home while keeping new DRIFT and FLOW bests immediately available.']),
-      Object.freeze(['Record recovery', 'Preserves pending score records through interrupted saves and reconciles other-tab updates and resets.'])
+      Object.freeze(['Record recovery', 'Preserves pending score records through interrupted saves and reconciles other-tab updates and resets.']),
+      Object.freeze(['1.19.6 r220', 'Releases discarded car models and closed previews while preserving resources shared by cars still in use.']),
+      Object.freeze(['Quick car changes', 'Keeps the latest car selection when earlier model loads finish late, and cleans up previews after interrupted loading.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.5',
-  build: '2026.09.13-r219',
-  note: 'TURN 1.19.5 reduces score-saving work at the finish line and repeated record loading on Home.'
+  version: '1.19.6',
+  build: '2026.09.13-r220',
+  note: 'TURN 1.19.6 cleans up discarded cars and previews, and keeps quick car changes consistent.'
 });

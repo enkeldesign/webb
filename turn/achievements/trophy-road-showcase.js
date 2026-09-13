@@ -3,7 +3,7 @@ import {
   getVehicleDefaultColor,
   getVehicleDefaultSecondaryColor
 } from '../vehicle/catalog.js?revision=r253-supercar-release';
-import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260823-r179';
+import { createCarVisual, disposeCarVisual } from '../vehicle/emergency-livery-models.js?build=20260823-r179';
 import { configureRendererWideGamut } from '../vehicle/wide-gamut.js?revision=r157-display-p3';
 
 const SHOWCASE_FRAME_INTERVAL_MS = 1000 / 30;
@@ -114,28 +114,43 @@ export function createTrophyRoadShowcase() {
 
     const request = (async () => {
       const group = new THREE.Group();
-      const visuals = await Promise.all(definitions.map(async (definition, index) => {
-        const visual = await createCarVisual({
-          carId: definition.carId,
-          color: getVehicleDefaultColor(definition.carId),
-          secondaryColor: getVehicleDefaultSecondaryColor(definition.carId),
-          targetLength: definition.targetLength,
-          // Trophy Road cards are small, continuously rotating previews. The
-          // contour shell would render every car mesh twice for little visual
-          // benefit here, so keep the actual model only.
-          outline: false
-        });
-        visual.position.set(definition.x, 0, 0);
-        visual.rotation.y = definition.yaw;
-        visual.userData.turnRewardBaseX = definition.x;
-        visual.userData.turnRewardBaseYaw = definition.yaw;
-        visual.userData.turnRewardPhase = index * 1.7;
-        group.add(visual);
-        return visual;
-      }));
-      group.userData.turnRewardVisuals = visuals;
-      groups.set(rewardId, group);
-      return group;
+      let failed = false;
+      try {
+        const visuals = await Promise.all(definitions.map(async (definition, index) => {
+          const visual = await createCarVisual({
+            carId: definition.carId,
+            color: getVehicleDefaultColor(definition.carId),
+            secondaryColor: getVehicleDefaultSecondaryColor(definition.carId),
+            targetLength: definition.targetLength,
+            // Trophy Road cards are small, continuously rotating previews. The
+            // contour shell would render every car mesh twice for little visual
+            // benefit here, so keep the actual model only.
+            outline: false
+          });
+          if (disposed || failed) {
+            disposeCarVisual(visual);
+            return null;
+          }
+          visual.position.set(definition.x, 0, 0);
+          visual.rotation.y = definition.yaw;
+          visual.userData.turnRewardBaseX = definition.x;
+          visual.userData.turnRewardBaseYaw = definition.yaw;
+          visual.userData.turnRewardPhase = index * 1.7;
+          group.add(visual);
+          return visual;
+        }));
+        if (disposed) {
+          disposeCarVisual(group);
+          return null;
+        }
+        group.userData.turnRewardVisuals = visuals;
+        groups.set(rewardId, group);
+        return group;
+      } catch (error) {
+        failed = true;
+        disposeCarVisual(group);
+        throw error;
+      }
     })();
 
     groupPromises.set(rewardId, request);
@@ -240,6 +255,7 @@ export function createTrophyRoadShowcase() {
     renderer?.domElement?.remove();
     renderer = null;
     activeHost = null;
+    for (const group of groups.values()) disposeCarVisual(group);
     groups.clear();
     groupPromises.clear();
   }

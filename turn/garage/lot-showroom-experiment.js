@@ -10,7 +10,7 @@ import {
   normalizeVehicleSecondaryColor,
   normalizeVehicleSelection
 } from '../vehicle/catalog.js?revision=r250-supercar-finish';
-import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?revision=r252-supercar-outward-rims';
+import { createCarVisual, disposeCarVisual, recolorCarVisual } from '../vehicle/car-models.js?revision=r252-supercar-outward-rims';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 import { isPaintUnlocked, LOCK_ICON } from '../progression/trophy-road.js?revision=r248-supercar';
@@ -588,20 +588,22 @@ function createViewer(host) {
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
   const clock = new THREE.Clock();
 
-  host.addEventListener('pointerdown', (event) => {
+  const startDrag = (event) => {
     event.preventDefault();
     dragging = true;
     pointerId = event.pointerId;
     lastX = event.clientX;
     host.setPointerCapture?.(event.pointerId);
-  });
+  };
+  host.addEventListener('pointerdown', startDrag);
 
-  host.addEventListener('pointermove', (event) => {
+  const moveDrag = (event) => {
     if (!dragging || event.pointerId !== pointerId) return;
     const dx = event.clientX - lastX;
     lastX = event.clientX;
     yaw += dx * 0.012;
-  });
+  };
+  host.addEventListener('pointermove', moveDrag);
 
   const stopDrag = (event) => {
     if (pointerId !== null && event?.pointerId != null && event.pointerId !== pointerId) return;
@@ -628,6 +630,13 @@ function createViewer(host) {
     disposed = true;
     generation += 1;
     renderer.setAnimationLoop(null);
+    host.removeEventListener('pointerdown', startDrag);
+    host.removeEventListener('pointermove', moveDrag);
+    host.removeEventListener('pointerup', stopDrag);
+    host.removeEventListener('pointercancel', stopDrag);
+    host.removeEventListener('lostpointercapture', stopDrag);
+    if (pointerId !== null && host.hasPointerCapture?.(pointerId)) host.releasePointerCapture(pointerId);
+    stopDrag();
   }
 
   function dispose() {
@@ -703,6 +712,7 @@ function createThumbnailRenderer() {
   let activeVisual = null;
   let pending = Promise.resolve();
   let visibilityObserver = null;
+  let cancelYield = null;
   const requestedCarIds = new Set();
 
   async function renderBatch(cars, carButtons, paintForCar) {
@@ -843,6 +853,7 @@ function createThumbnailRenderer() {
     cancelled = true;
     visibilityObserver?.disconnect();
     visibilityObserver = null;
+    cancelYield?.();
   }
 
   function cancel() {
@@ -852,6 +863,25 @@ function createThumbnailRenderer() {
     renderer?.dispose();
     renderer?.forceContextLoss?.();
     renderer = null;
+  }
+
+  function yieldForThumbnailWork() {
+    if (cancelled) return Promise.resolve();
+    return new Promise((resolve) => {
+      const idle = typeof globalThis.requestIdleCallback === 'function';
+      const finish = () => {
+        cancelYield = null;
+        resolve();
+      };
+      const handle = idle
+        ? globalThis.requestIdleCallback(finish, { timeout: 80 })
+        : globalThis.setTimeout(finish, 0);
+      cancelYield = () => {
+        if (idle) globalThis.cancelIdleCallback?.(handle);
+        else globalThis.clearTimeout(handle);
+        finish();
+      };
+    });
   }
 
   return {
@@ -880,16 +910,6 @@ function fitThumbnailCamera(camera, visual) {
   camera.updateProjectionMatrix();
 }
 
-function yieldForThumbnailWork() {
-  return new Promise((resolve) => {
-    if (typeof globalThis.requestIdleCallback === 'function') {
-      globalThis.requestIdleCallback(() => resolve(), { timeout: 80 });
-      return;
-    }
-    globalThis.setTimeout(resolve, 0);
-  });
-}
-
 function rendererPixelRatio(fallbackCap) {
   const deviceRatio = Math.max(1, Number(globalThis.devicePixelRatio) || 1);
   const profileCap = Number(globalThis.__turnPerformanceProfile?.dprCap);
@@ -898,13 +918,7 @@ function rendererPixelRatio(fallbackCap) {
 }
 
 function disposeVisualMaterials(root) {
-  const materials = new Set();
-  root?.traverse?.((node) => {
-    if (!node?.isMesh || !node.material) return;
-    const nodeMaterials = Array.isArray(node.material) ? node.material : [node.material];
-    for (const material of nodeMaterials) materials.add(material);
-  });
-  for (const material of materials) material.dispose?.();
+  disposeCarVisual(root);
 }
 
 function makeStats(vehicleStats) {

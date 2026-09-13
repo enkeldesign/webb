@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
+import { createCarVisual, disposeCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 import {
   getCarDefinition,
   getVehicleDefaultColor,
@@ -119,7 +119,7 @@ async function renderThumbnail({ carId, color, secondaryColor }) {
     renderer.render(scene, camera);
     return croppedThumbnailDataUrl(renderer.domElement);
   } finally {
-    if (visual) disposeVisualMaterials(visual);
+    disposeCarVisual(visual);
     renderer.dispose();
     renderer.forceContextLoss?.();
   }
@@ -178,14 +178,4 @@ function croppedThumbnailDataUrl(sourceCanvas) {
     cropHeight
   );
   return croppedCanvas.toDataURL('image/png');
-}
-
-function disposeVisualMaterials(root) {
-  const materials = new Set();
-  root.traverse((node) => {
-    if (!node.isMesh || !node.material) return;
-    const nodeMaterials = Array.isArray(node.material) ? node.material : [node.material];
-    for (const material of nodeMaterials) materials.add(material);
-  });
-  for (const material of materials) material.dispose?.();
 }

@@ -35,7 +35,7 @@ const WHEEL_ROLES = Object.freeze([
   })
 ]);
 
-export function installSupercarKenneyWheels(model, trainingCarSource) {
+export function installSupercarKenneyWheels(model, trainingCarSource, { ownResource = (resource) => resource } = {}) {
   if (!model || !trainingCarSource) return false;
   let replacements = 0;
 
@@ -57,7 +57,7 @@ export function installSupercarKenneyWheels(model, trainingCarSource) {
     const donorDiameter = Math.max(donorSize.y, donorSize.z);
     if (!(targetDiameter > 0) || !(donorDiameter > 0)) continue;
 
-    const { tireGeometry, rimGeometry } = splitKenneyWheelGeometry(donor.geometry);
+    const { tireGeometry, rimGeometry } = splitKenneyWheelGeometry(donor.geometry, ownResource);
     if (!tireGeometry || !rimGeometry) continue;
 
     const scale = targetDiameter / donorDiameter;
@@ -70,27 +70,27 @@ export function installSupercarKenneyWheels(model, trainingCarSource) {
     replacement.userData.turnWheelSource = 'Kenney Car Kit 3.1';
     replacement.userData.turnWheelDonorRole = spec.donorRole;
 
-    const tireMaterial = new THREE.MeshStandardMaterial({
+    const tireMaterial = ownResource(new THREE.MeshStandardMaterial({
       color: SUPERCAR_TIRE_COLOR,
       roughness: 0.96,
       metalness: 0
-    });
+    }));
     tireMaterial.name = 'supercar-dark-foot';
     const tire = new THREE.Mesh(tireGeometry, tireMaterial);
     tire.name = spec.tire;
 
-    const rimMaterial = new THREE.MeshStandardMaterial({
+    const rimMaterial = ownResource(new THREE.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.74,
       metalness: 0.04
-    });
+    }));
     rimMaterial.name = 'secondary-paint supercar-rim';
     const rim = new THREE.Mesh(rimGeometry, rimMaterial);
     rim.name = spec.rim;
 
     replacement.add(tire, rim);
     target.clear();
-    if (target.isMesh) target.geometry = new THREE.BufferGeometry();
+    if (target.isMesh) target.geometry = ownResource(new THREE.BufferGeometry());
     target.add(replacement);
     replacements += 1;
   }
@@ -98,7 +98,7 @@ export function installSupercarKenneyWheels(model, trainingCarSource) {
   return replacements === WHEEL_ROLES.length;
 }
 
-function splitKenneyWheelGeometry(sourceGeometry) {
+function splitKenneyWheelGeometry(sourceGeometry, ownResource) {
   const index = sourceGeometry?.index;
   const uv = sourceGeometry?.getAttribute?.('uv');
   if (!index || !uv || index.count < 3) return { tireGeometry: null, rimGeometry: null };
@@ -117,13 +117,13 @@ function splitKenneyWheelGeometry(sourceGeometry) {
 
   if (!tireIndices.length || !rimIndices.length) return { tireGeometry: null, rimGeometry: null };
   return {
-    tireGeometry: geometryRegion(sourceGeometry, tireIndices),
-    rimGeometry: geometryRegion(sourceGeometry, rimIndices)
+    tireGeometry: geometryRegion(sourceGeometry, tireIndices, ownResource),
+    rimGeometry: geometryRegion(sourceGeometry, rimIndices, ownResource)
   };
 }
 
-function geometryRegion(sourceGeometry, indices) {
-  const geometry = sourceGeometry.clone();
+function geometryRegion(sourceGeometry, indices, ownResource) {
+  const geometry = ownResource(sourceGeometry.clone());
   geometry.clearGroups();
   geometry.setIndex(indices);
   geometry.computeBoundingBox();
