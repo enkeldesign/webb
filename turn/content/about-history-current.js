@@ -42,6 +42,20 @@ const RELIABILITY_CHANGELOG_ENTRIES = Object.freeze([
   Object.freeze(['The Lot recovery', 'Retries interrupted module and stylesheet loading without requiring a restart, while preserving the quick prepared entry path.'])
 ]);
 
+const SCORE_HISTORY = Object.freeze({
+  period: '13 September',
+  title: 'Less saving work at the finish line',
+  paragraphs: Object.freeze([
+    'TURN 1.19.5 makes new DRIFT and FLOW bests available immediately to the race and Home records, then saves them after the busy finish-line work. Reading the six track cards reuses the same score records.',
+    'Interrupted saves keep their latest records for a limited set of retries. Score stores reconcile updates from other tabs and respect resets while a save is pending.'
+  ]),
+  milestones: Object.freeze([
+    'Shared DRIFT and FLOW records across Home, race feedback and achievements',
+    'Deferred score saving with reset and retry protection',
+    'TURN 1.19.5 · 2026.09.13-r219'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -56,16 +70,24 @@ const mergedLatest = previousLatest?.date === '12 September'
 export const DEVELOPMENT_HISTORY = Object.freeze([
   ...BASE_DEVELOPMENT_HISTORY,
   PERK_HISTORY,
-  RELIABILITY_HISTORY
+  RELIABILITY_HISTORY,
+  SCORE_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
   ...(previousLatest?.date === '12 September' ? BASE_CHANGELOG.slice(0, -1) : BASE_CHANGELOG),
-  mergedLatest
+  mergedLatest,
+  Object.freeze({
+    date: '13 September',
+    entries: Object.freeze([
+      Object.freeze(['1.19.5 r219', 'Reduces repeated score-storage work at the finish line and on Home while keeping new DRIFT and FLOW bests immediately available.']),
+      Object.freeze(['Record recovery', 'Preserves pending score records through interrupted saves and reconciles other-tab updates and resets.'])
+    ])
+  })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.4',
-  build: '2026.09.12-r218',
-  note: 'TURN 1.19.4 improves personal-best saving, rival resets and recovery from interrupted Lot loading.'
+  version: '1.19.5',
+  build: '2026.09.13-r219',
+  note: 'TURN 1.19.5 reduces score-saving work at the finish line and repeated record loading on Home.'
 });

@@ -400,6 +400,19 @@ assertSingleActiveIdentity(
   'Production TURN rival storage'
 );
 
+for (const file of ['drift-records.js', 'flow-records.js', 'score-record-store.js']) {
+  assertSingleActiveIdentity(headGraph, `turn/scoring/${file}`, 'Production TURN score storage');
+  for (const [label, importMap] of [['TURN', headGraph.importMap], ['NEXT', nextImportMap], ['YOUR TURN', yourTurnImportMap]]) {
+    const pathname = `/turn/scoring/${file}`;
+    const suffixes = file === 'score-record-store.js' ? ['']
+      : ['', '?revision=r206-home-track-records', '?revision=r219-record-paint'];
+    for (const suffix of suffixes) {
+      assert.equal(importMap.imports[`${pathname}${suffix}`], `${pathname}?build=${headGraph.release.cacheKey}`,
+        `${label} must give Home, race and achievement score readers the same current-build owner`);
+    }
+  }
+}
+
 const rivalRoute = Object.entries(headGraph.importMap.imports || {}).find(([specifier]) =>
   /^\/turn\/ui\/rival-onboarding\.js\?build=\d{8}-r\d+$/.test(specifier)
 );

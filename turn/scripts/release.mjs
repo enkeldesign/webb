@@ -80,7 +80,7 @@ function synchronizeReleaseBoundImportTarget(importMap, release, specifier) {
   const sourceTarget = importMap.imports?.[specifier];
   if (typeof sourceTarget !== 'string') return;
 
-  const targetUrl = new URL(sourceTarget, 'https://enkel.design');
+  const targetUrl = new URL(sourceTarget, 'https://enkel.design/turn/');
   targetUrl.searchParams.set('build', release.cacheKey);
   importMap.imports[specifier] = `${targetUrl.pathname}${targetUrl.search}`;
 }
@@ -130,6 +130,44 @@ function synchronizeRivalStorageTargets(importMap, release) {
   }
 }
 
+function synchronizeScoreStoreTargets(importMap, release) {
+  const aliases = {
+    'drift-records.js': ['', '?revision=r206-home-track-records', '?revision=r219-record-paint'],
+    'flow-records.js': ['', '?revision=r206-home-track-records', '?revision=r219-record-paint'],
+    'score-record-store.js': [''],
+    'drift-attack-runtime.js': ['', '?revision=r240-trophy-road-2'],
+    'flow-runtime.js': ['', '?revision=r240-trophy-road-2']
+  };
+  const imports = importMap.imports ||= {};
+  imports['/turn/achievements/runtime.js?revision=r244-reward-toast-guide']
+    = `/turn/achievements/runtime.js?revision=r244-reward-toast-guide&build=${release.cacheKey}`;
+  for (const [file, suffixes] of Object.entries(aliases)) {
+    const pathname = `/turn/scoring/${file}`;
+    const target = `${pathname}?build=${release.cacheKey}`;
+    for (const suffix of suffixes) imports[`${pathname}${suffix}`] = target;
+    for (const [specifier, existing] of Object.entries(imports)) {
+      if (typeof existing === 'string' && new URL(existing, 'https://enkel.design/turn/').pathname === pathname) {
+        imports[specifier] = target;
+      }
+    }
+  }
+  // The lap-result achievement batch also needs a fresh URL in shared shells.
+  for (const [specifier, target] of Object.entries(imports)) {
+    if (typeof target !== 'string') continue;
+    if (new URL(target, 'https://enkel.design/turn/').pathname === '/turn/achievements/runtime.js') {
+      synchronizeReleaseBoundImportTarget(importMap, release, specifier);
+    }
+  }
+}
+
+function renderScoreStoreImports(source, release) {
+  return source.replace(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/, (_, jsonText) => {
+    const importMap = JSON.parse(jsonText);
+    synchronizeScoreStoreTargets(importMap, release);
+    return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
+  });
+}
+
 function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   // Keep this list to modules imported through withBuild(); historical alias keys intentionally retain their source revisions.
   synchronizeReleaseBoundSpecifier(
@@ -152,6 +190,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   );
   synchronizeLotEnhancementSpecifiers(importMap, release);
   synchronizeRivalStorageTargets(importMap, release);
+  synchronizeScoreStoreTargets(importMap, release);
   synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);
   // These presentation modules now use the release build instead of a new
   // hand-maintained revision. Advance every alias, including installed routes.
@@ -230,10 +269,10 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
 
 export function renderReleaseCompanion(repositoryPath, source, release) {
   validateReleaseDefinition(release);
-  if (repositoryPath === 'turn-next/index.html') return renderParityEntry(source, release);
+  if (repositoryPath === 'turn-next/index.html') return renderScoreStoreImports(renderParityEntry(source, release), release);
   if (repositoryPath === 'turn-next/app.js') return buildTurnNextApp(release);
   if (repositoryPath === 'yourturn/index.html') {
-    return source.replace(/((?:href|src)="\/turn\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`);
+    return renderScoreStoreImports(source.replace(/((?:href|src)="\/turn\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`), release);
   }
   if (repositoryPath === 'turn/ui/about-history-bootstrap-r165.js') {
     return source.replace(/(about-history-current\.js\?build=)\d{8}-r\d+/, `$1${release.cacheKey}`);

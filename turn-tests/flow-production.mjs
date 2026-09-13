@@ -13,6 +13,7 @@ import {
   FLOW_RECORDS_STORAGE_KEY,
   getBestFlowRecord
 } from '../turn/scoring/flow-records.js';
+import { flushScheduledScoreRecords } from '../turn/scoring/score-record-store.js';
 
 class MemoryStorage {
   constructor() {
@@ -420,6 +421,10 @@ try {
     'Runtime lap completion must preserve the active FLOW chain');
   assert.equal(getBestFlowRecord('mountain', storage).score, result.score);
   assert.equal(getBestFlowRecord('mountain', storage).hitAt, 123456);
+  assert.equal(result.saved, false);
+  assert.equal(result.pending, true);
+  assert.equal(storage.getItem(FLOW_RECORDS_STORAGE_KEY), null);
+  assert.equal(flushScheduledScoreRecords(), true);
   assert.ok(JSON.parse(storage.getItem(FLOW_RECORDS_STORAGE_KEY)).tracks.mountain);
   assert.ok(eventTarget.events.some((event) => event.type === 'turn:flow-lap-result'));
 } finally {
