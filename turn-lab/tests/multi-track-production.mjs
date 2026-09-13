@@ -197,7 +197,7 @@ assert.match(definitions, /sampleCount: 2160/);
 assert.doesNotMatch(definitionsBase, /id: 'track-6-tba'/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
 assert.match(catalog, /MOUNTAIN_CONTROL_POINTS\.map/);
-assert.match(registry, /mountain-world-long\.js\?revision=mountain-long-r1/);
+assert.match(registry, /mountain-world-long\.js\?build=20260913-r224/);
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'mountain'/);
 assert.match(manager, /track\.fogNear/);

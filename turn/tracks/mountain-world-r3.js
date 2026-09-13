@@ -17,6 +17,131 @@ const MOUNTAIN_VILLAGE_BENCHES = new Set([
 const MOUNTAIN_MOONLIGHT_FILL = 0x18314c;
 const MOUNTAIN_MOONLIGHT_FILL_INTENSITY = 0.16;
 const FINAL_VILLAGE_OPTIONS = Object.freeze({ skipRetiredHolidayCabins: true });
+const MOUNTAIN_SLALOM_WARNING_TARGET = Object.freeze({ x: 66, z: 62 });
+const MOUNTAIN_WARNING_YELLOW = 0xffc400;
+const MOUNTAIN_WARNING_INK = 0x08090a;
+const MOUNTAIN_WARNING_POST = 0x34383d;
+
+function warningTriangleShape(scale = 1) {
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 1.72 * scale);
+  shape.lineTo(1.82 * scale, -1.38 * scale);
+  shape.lineTo(-1.82 * scale, -1.38 * scale);
+  shape.closePath();
+  return shape;
+}
+
+function makeDownhillSlalomWarningSign() {
+  const root = new THREE.Group();
+  root.name = 'Mountain downhill slalom warning sign';
+  root.userData.turnGameplayLandmark = true;
+  root.userData.turnCollision = false;
+
+  const yellow = new THREE.MeshBasicMaterial({ color: MOUNTAIN_WARNING_YELLOW, side: THREE.DoubleSide });
+  const ink = new THREE.MeshBasicMaterial({ color: MOUNTAIN_WARNING_INK, side: THREE.DoubleSide });
+  const postMaterial = new THREE.MeshStandardMaterial({ color: MOUNTAIN_WARNING_POST, roughness: 0.82, metalness: 0.18 });
+  const snowMaterial = new THREE.MeshStandardMaterial({ color: 0xeaf1f4, roughness: 1, metalness: 0 });
+
+  const post = new THREE.Mesh(new THREE.BoxGeometry(0.38, 4.2, 0.38), postMaterial);
+  post.position.set(0, 2.1, -0.05);
+  post.name = 'Mountain warning sign dark post';
+  root.add(post);
+
+  const snowFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 1.02, 0.30, 8), snowMaterial);
+  snowFoot.position.y = 0.15;
+  snowFoot.name = 'Mountain warning sign snow foot';
+  root.add(snowFoot);
+
+  const plate = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(warningTriangleShape(1), {
+      depth: 0.18,
+      bevelEnabled: false,
+      curveSegments: 1
+    }),
+    yellow
+  );
+  plate.position.set(0, 4.58, -0.09);
+  plate.name = 'Mountain warning sign yellow plate';
+  root.add(plate);
+
+  const border = new THREE.Mesh(new THREE.ShapeGeometry(warningTriangleShape(0.86)), ink);
+  border.position.set(0, 4.58, 0.101);
+  border.name = 'Mountain warning sign black border';
+  root.add(border);
+
+  const face = new THREE.Mesh(new THREE.ShapeGeometry(warningTriangleShape(0.70)), yellow);
+  face.position.set(0, 4.58, 0.108);
+  face.name = 'Mountain warning sign yellow face';
+  root.add(face);
+
+  const exclamationBar = new THREE.Mesh(new THREE.BoxGeometry(0.34, 1.42, 0.08), ink);
+  exclamationBar.position.set(0, 4.78, 0.16);
+  exclamationBar.rotation.z = -0.03;
+  exclamationBar.name = 'Mountain warning sign exclamation bar';
+  root.add(exclamationBar);
+
+  const exclamationDot = new THREE.Mesh(new THREE.SphereGeometry(0.23, 10, 7), ink);
+  exclamationDot.position.set(0, 3.82, 0.16);
+  exclamationDot.name = 'Mountain warning sign exclamation dot';
+  root.add(exclamationDot);
+
+  root.traverse((object) => {
+    if (!object?.isMesh) return;
+    object.castShadow = true;
+    object.receiveShadow = true;
+    // This prop carries its own graphic border. Do not let a later art pass
+    // add a second TURN contour around it.
+    object.userData.turnOutlined = true;
+  });
+  return root;
+}
+
+function nearestMountainSampleIndex(samples, target) {
+  let nearestIndex = 0;
+  let nearestDistanceSq = Infinity;
+  for (let index = 0; index < samples.length; index += 1) {
+    const point = samples[index].point;
+    const dx = point.x - target.x;
+    const dz = point.z - target.z;
+    const distanceSq = dx * dx + dz * dz;
+    if (distanceSq >= nearestDistanceSq) continue;
+    nearestDistanceSq = distanceSq;
+    nearestIndex = index;
+  }
+  return nearestIndex;
+}
+
+function installDownhillSlalomWarningSign(world, samples, trackWidth, terrainHeightAt) {
+  const sampleIndex = nearestMountainSampleIndex(samples, MOUNTAIN_SLALOM_WARNING_TARGET);
+  const sample = samples[sampleIndex];
+  const roadOffset = trackWidth / 2 + 6.8;
+  const positive = sample.point.clone().addScaledVector(sample.normal, roadOffset);
+  const negative = sample.point.clone().addScaledVector(sample.normal, -roadOffset);
+  // The old tree landmark sat on the north/outside shoulder in the player's
+  // sightline before the plunge. Choosing the higher-z candidate preserves
+  // that landmark even if the sampled normal flips direction.
+  const point = positive.z >= negative.z ? positive : negative;
+  point.y = terrainHeightAt(point.x, point.z) + 0.02;
+
+  const sign = makeDownhillSlalomWarningSign();
+  sign.position.copy(point);
+  sign.rotation.y = Math.atan2(-sample.tangent.x, -sample.tangent.z);
+  world.add(sign);
+
+  world.userData.turnMountainSlalomWarningSign = Object.freeze({
+    sampleIndex,
+    targetX: MOUNTAIN_SLALOM_WARNING_TARGET.x,
+    targetZ: MOUNTAIN_SLALOM_WARNING_TARGET.z,
+    x: point.x,
+    y: point.y,
+    z: point.z,
+    roadOffset,
+    side: 'north-outside',
+    facesApproach: true,
+    collidable: false
+  });
+  return sign;
+}
 
 function faceMountainVillageBenchesTowardTrack(world) {
   world.traverse((object) => {
@@ -63,6 +188,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
 
   const terrainContext = installMountainTerrain(world, samples, trackWidth);
   installMountainR3Polish(world, samples, trackWidth);
+  installDownhillSlalomWarningSign(world, samples, trackWidth, terrainContext.terrainHeightAt);
   const sceneryReady = installMountainScenery(
     world,
     samples,
@@ -99,6 +225,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     roadbed: 'opaque-and-terrain-supported',
     retainingFoundation: '4.6m-granite-skirt',
     routeClearanceProtected: true,
+    downhillSlalomLandmark: 'authored-yellow-warning-sign-on-north-outside-shoulder',
     assetVillage: 'Kenney-City-Kit-Suburban-complete-buildings-A-G-M-N-U',
     villagePalette: 'dark-brown-walls-and-snow-white-roofs',
     villageSquare: 'winter-market-no-fountain',

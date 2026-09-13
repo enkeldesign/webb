@@ -28,6 +28,7 @@ const companionPaths = Object.freeze([
   'turn/design.html',
   'turn/design-dialogs.html',
   'turn/tracks/registry.js',
+  'turn/tracks/mountain-world-long.js',
   'turn/tracks/midnight-city-world-r2.js',
   'turn/tracks/midnight-city-world-r3.js',
   'turn/tracks/midnight-city-world-r4.js',
@@ -373,8 +374,19 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
     );
   }
   if (repositoryPath === 'turn/tracks/registry.js') {
+    return source
+      .replace(
+        /(await import\(\s*'\.\/midnight-city-world-r11\.js\?build=)[^']+('\s*\))/,
+        `$1${release.cacheKey}$2`
+      )
+      .replace(
+        /(await import\(\s*'\.\/mountain-world-long\.js\?build=)[^']+('\s*\))/,
+        `$1${release.cacheKey}$2`
+      );
+  }
+  if (repositoryPath === 'turn/tracks/mountain-world-long.js') {
     return source.replace(
-      /(await import\(\s*'\.\/midnight-city-world-r11\.js\?build=)[^']+('\s*\))/,
+      /(from '\.\/mountain-world-r3\.js\?build=)[^']+(')/,
       `$1${release.cacheKey}$2`
     );
   }
