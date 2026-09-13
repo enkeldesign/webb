@@ -37,7 +37,11 @@ assert.match(runtimeSource, /antialias: false/);
 assert.match(runtimeSource, /graphicsPixelRatio\(value\)/);
 assert.match(runtimeSource, /Object\.defineProperty\(this\.shadowMap, 'enabled'/);
 assert.match(runtimeSource, /class PointLight extends NativeThree\.PointLight/);
-assert.match(runtimeSource, /node\?\.userData\?\.turnOutline/);
+assert.match(runtimeSource, /function isTurnOutline\(node\)/);
+assert.match(runtimeSource, /node\.userData\?\.turnOutline/);
+assert.match(runtimeSource, /node\.userData\?\.turnStartBannerContour/);
+assert.match(runtimeSource, /candidate\?\.side === NativeThree\.BackSide/);
+assert.match(runtimeSource, /candidate\?\.color\?\.getHex\?\.\(\) === TURN_INK/);
 assert.match(runtimeSource, /node\.visible = false/);
 
 assert.match(settingSource, /<strong>LOW GRAPHICS<\/strong>/);
