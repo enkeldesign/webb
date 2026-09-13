@@ -21,7 +21,9 @@ old_test = "assert.match(baseWorld, /MOUNTAIN_SLALOM_WARNING_TARGET = Object\\.f
 new_test = "assert.match(baseWorld, /MOUNTAIN_SLALOM_WARNING_TARGET = Object\\.freeze\\(\\{ x: 138, z: 168 \\}\\)/,\n  'MOUNTAIN warning sign must stay anchored to the broad summit bend before the plunge');"
 if old_test not in test:
     raise SystemExit('warning target test anchor not found')
-test_path.write_text(test.replace(old_test, new_test, 1))
+test = test.replace(old_test, new_test, 1)
+test = test.replace('20260913-r224', '20260913-r225')
+test_path.write_text(test)
 
 release_path = Path('turn/release.json')
 release = json.loads(release_path.read_text())
