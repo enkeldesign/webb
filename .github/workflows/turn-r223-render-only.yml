@@ -30,7 +30,9 @@ jobs:
           node-version: '24'
 
       - name: Apply render-only LOW GRAPHICS profile
-        run: python3 .github/turn-r223-render-only.py
+        run: |
+          python3 .github/turn-r223-render-only.py
+          python3 .github/turn-r223-test-harness.py
 
       - name: Generate r223 release surfaces and TURN NEXT parity
         run: |
@@ -39,7 +41,7 @@ jobs:
           node turn-next/scripts/build-parity-entry.mjs
 
       - name: Remove temporary updater
-        run: rm .github/turn-r223-render-only.py .github/workflows/turn-r223-render-only.yml
+        run: rm .github/turn-r223-render-only.py .github/turn-r223-test-harness.py .github/workflows/turn-r223-render-only.yml
 
       - name: Validate focused production contracts
         run: |
@@ -48,6 +50,7 @@ jobs:
           node turn-next/scripts/build-parity-main.mjs --check
           node turn-next/scripts/build-parity-entry.mjs --check
           node turn-tests/low-graphics-production.mjs
+          node turn-tests/car-visual-lifecycle-production.mjs
           node turn-tests/car-visual-lifecycle-production.mjs --low-graphics
           node turn-tests/rival-visual-sync-production.mjs
           node turn-tests/release-production.mjs
