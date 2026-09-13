@@ -33,6 +33,7 @@ jobs:
         run: |
           python3 .github/turn-r223-render-only.py
           python3 .github/turn-r223-test-harness.py
+          python3 .github/turn-r223-release-routing.py
 
       - name: Generate r223 release surfaces and TURN NEXT parity
         run: |
@@ -41,7 +42,7 @@ jobs:
           node turn-next/scripts/build-parity-entry.mjs
 
       - name: Remove temporary updater
-        run: rm .github/turn-r223-render-only.py .github/turn-r223-test-harness.py .github/workflows/turn-r223-render-only.yml
+        run: rm .github/turn-r223-render-only.py .github/turn-r223-test-harness.py .github/turn-r223-release-routing.py .github/workflows/turn-r223-render-only.yml
 
       - name: Validate focused production contracts
         run: |
