@@ -33,7 +33,8 @@ const [
   productionExtension,
   labWorld,
   productionWorld,
-  visualWorkflow
+  visualWorkflow,
+  releaseSource
 ] = await Promise.all([
   readText('turn-lab/index.html'),
   readText('turn/index.html'),
@@ -47,8 +48,10 @@ const [
   readText('turn/tracks/mountain-long-extension-r1.js'),
   readText('turn-lab/tracks/mountain-world-lab-r1.js'),
   readText('turn/tracks/mountain-world-long.js'),
-  readText('.github/workflows/turn-lab-mountain-long-visual.yml')
+  readText('.github/workflows/turn-lab-mountain-long-visual.yml'),
+  readText('turn/release.json')
 ]);
+const release = JSON.parse(releaseSource);
 
 // TURN LAB remains a production-runtime shell with an isolated identity. Its first
 // import map must still be production-identical; only its second scoped map may differ.
@@ -134,7 +137,8 @@ assert.match(labCollision, /Compatibility fallback/,
 
 // Both wrappers still build the mature r177 production mountain world first, then
 // apply the same long-course extension. LAB only adds its isolated diagnostics/name.
-assert.match(productionWorld, /mountain-world-r3\.js\?revision=r177-ipad-sky-aspect/);
+assert.ok(productionWorld.includes(`./mountain-world-r3.js?build=${release.cacheKey}`),
+  'Production MOUNTAIN long wrapper must advance the mature base world with the current TURN release identity');
 assert.match(productionWorld, /installMountainLongExtension/);
 assert.match(productionWorld, /BASE_WORLD_SAMPLE_COUNT = 1080/);
 assert.match(labWorld, /mountain-world-r3\.js\?lab-base=mountain-long/);

@@ -304,7 +304,11 @@ export function renderReleaseIndex(source, release) {
     .replace(/TURN v\d+\.\d+\.\d+ · Build \d{4}\.\d{2}\.\d{2}-r\d+/g, `TURN v${release.version} · Build ${release.id}`)
     // Update the canonical build prefix while preserving an explicit per-asset
     // revision such as "-icon-20260730" after it.
-    .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`);
+    .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
+    .replace(
+      /(src="\.\/tracks\/kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish)(?:&build=\d{8}-r\d+)?"/,
+      `$1&build=${release.cacheKey}"`
+    );
 
   output = output.replace(
     /<script type="importmap">\s*([\s\S]*?)\s*<\/script>/,
