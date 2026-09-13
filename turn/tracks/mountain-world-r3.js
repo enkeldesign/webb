@@ -21,12 +21,23 @@ const MOUNTAIN_SLALOM_WARNING_TARGET = Object.freeze({ x: 138, z: 168 });
 const MOUNTAIN_WARNING_YELLOW = 0xffc400;
 const MOUNTAIN_WARNING_INK = 0x08090a;
 const MOUNTAIN_WARNING_POST = 0x34383d;
+const MOUNTAIN_WARNING_PLATE_Y = 5.0;
 
 function warningTriangleShape(scale = 1) {
   const shape = new THREE.Shape();
   shape.moveTo(0, 1.72 * scale);
   shape.lineTo(1.82 * scale, -1.38 * scale);
   shape.lineTo(-1.82 * scale, -1.38 * scale);
+  shape.closePath();
+  return shape;
+}
+
+function warningExclamationBarShape() {
+  const shape = new THREE.Shape();
+  shape.moveTo(-0.19, 0.70);
+  shape.lineTo(0.19, 0.70);
+  shape.lineTo(0.12, -0.54);
+  shape.lineTo(-0.12, -0.54);
   shape.closePath();
   return shape;
 }
@@ -42,8 +53,9 @@ function makeDownhillSlalomWarningSign() {
   const postMaterial = new THREE.MeshStandardMaterial({ color: MOUNTAIN_WARNING_POST, roughness: 0.82, metalness: 0.18 });
   const snowMaterial = new THREE.MeshStandardMaterial({ color: 0xeaf1f4, roughness: 1, metalness: 0 });
 
-  const post = new THREE.Mesh(new THREE.BoxGeometry(0.38, 4.2, 0.38), postMaterial);
-  post.position.set(0, 2.1, -0.05);
+  const post = new THREE.Mesh(new THREE.BoxGeometry(0.38, 4.6, 0.38), postMaterial);
+  // Keep the support fully behind the plate so it cannot read as part of the symbol.
+  post.position.set(0, 2.3, -0.30);
   post.name = 'Mountain warning sign dark post';
   root.add(post);
 
@@ -60,28 +72,28 @@ function makeDownhillSlalomWarningSign() {
     }),
     yellow
   );
-  plate.position.set(0, 4.58, -0.09);
+  plate.position.set(0, MOUNTAIN_WARNING_PLATE_Y, -0.09);
   plate.name = 'Mountain warning sign yellow plate';
   root.add(plate);
 
   const border = new THREE.Mesh(new THREE.ShapeGeometry(warningTriangleShape(0.86)), ink);
-  border.position.set(0, 4.58, 0.101);
+  border.position.set(0, MOUNTAIN_WARNING_PLATE_Y, 0.105);
   border.name = 'Mountain warning sign black border';
   root.add(border);
 
   const face = new THREE.Mesh(new THREE.ShapeGeometry(warningTriangleShape(0.70)), yellow);
-  face.position.set(0, 4.58, 0.108);
+  face.position.set(0, MOUNTAIN_WARNING_PLATE_Y, 0.115);
   face.name = 'Mountain warning sign yellow face';
   root.add(face);
 
-  const exclamationBar = new THREE.Mesh(new THREE.BoxGeometry(0.34, 1.42, 0.08), ink);
-  exclamationBar.position.set(0, 4.78, 0.16);
-  exclamationBar.rotation.z = -0.03;
+  // A flat front graphic keeps the symbol independent of the post and plate depth.
+  const exclamationBar = new THREE.Mesh(new THREE.ShapeGeometry(warningExclamationBarShape()), ink);
+  exclamationBar.position.set(0, MOUNTAIN_WARNING_PLATE_Y + 0.20, 0.14);
   exclamationBar.name = 'Mountain warning sign exclamation bar';
   root.add(exclamationBar);
 
-  const exclamationDot = new THREE.Mesh(new THREE.SphereGeometry(0.23, 10, 7), ink);
-  exclamationDot.position.set(0, 3.82, 0.16);
+  const exclamationDot = new THREE.Mesh(new THREE.CircleGeometry(0.22, 16), ink);
+  exclamationDot.position.set(0, MOUNTAIN_WARNING_PLATE_Y - 0.76, 0.142);
   exclamationDot.name = 'Mountain warning sign exclamation dot';
   root.add(exclamationDot);
 
