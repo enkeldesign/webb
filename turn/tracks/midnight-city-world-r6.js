@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { installMidnightCityWorld as installMidnightCityWorldR5 } from './midnight-city-world-r5.js?base=20260801-r5';
+import { installMidnightCityWorld as installMidnightCityWorldR5 } from './midnight-city-world-r5.js?build=20260913-r223';
 
 const TRACK_Y = 0.16;
 const SHOWCASE_CENTER = Object.freeze({ x: 80, z: 75 });

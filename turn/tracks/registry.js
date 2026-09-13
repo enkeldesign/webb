@@ -40,7 +40,7 @@ const WORLD_INSTALLER_LOADERS = Object.freeze({
   },
   async 'midnight-city'({ scene, samples, trackWidth, runtime }) {
     const { installMidnightCityWorld } = await import(
-      './midnight-city-world-r11.js?build=20260819-r176-upward-road-normals'
+      './midnight-city-world-r11.js?build=20260913-r223'
     );
     return installMidnightCityWorld({ scene, samples, trackWidth, runtime });
   },

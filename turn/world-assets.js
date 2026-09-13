@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { installCountrysideWorld } from './tracks/countryside-world-r531.js?revision=r532-countryside-nature-polish';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 
 const CITY_BUILDER_COMMIT = '4535092b740b378b700efd9df9e27a631815b84a';
 const PLATFORMER_COMMIT = '3fa8a04b1c01ab23db43123d4ce814a34c3fc7f0';
@@ -17,10 +18,12 @@ const ASSETS = {
 
 const loader = new GLTFLoader();
 const modelCache = new Map();
-const blackOutlineMaterial = new THREE.MeshBasicMaterial({
-  color: 0x08090a,
-  side: THREE.BackSide
-});
+const blackOutlineMaterial = graphicsProfile.outlines
+  ? new THREE.MeshBasicMaterial({
+      color: 0x08090a,
+      side: THREE.BackSide
+    })
+  : null;
 
 function isYourTurnRecipient() {
   return globalThis.document?.documentElement?.dataset?.turnDeployment === 'yourturn';
@@ -66,6 +69,8 @@ async function loadModel(key) {
 }
 
 function addOutline(root, scale = 1.025) {
+  if (!graphicsProfile.outlines) return;
+
   const meshes = [];
   root.traverse((node) => {
     if (node.isMesh) meshes.push(node);

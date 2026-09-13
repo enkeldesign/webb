@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 
 const INK = 0x070811;
 const ROAD = 0x20242d;
@@ -281,11 +282,13 @@ function makeStreetLights(world, samples, trackWidth) {
     world.add(mesh);
   }
 
-  for (let index = 0; index < samples.length; index += 90) {
-    const sample = samples[index];
-    const light = new THREE.PointLight(WARM_LIGHT, 7.5, 74, 1.65);
-    light.position.copy(sample.point).setY(sample.point.y + 8.4);
-    world.add(light);
+  if (graphicsProfile.pointLights) {
+    for (let index = 0; index < samples.length; index += 90) {
+      const sample = samples[index];
+      const light = new THREE.PointLight(WARM_LIGHT, 7.5, 74, 1.65);
+      light.position.copy(sample.point).setY(sample.point.y + 8.4);
+      world.add(light);
+    }
   }
 }
 

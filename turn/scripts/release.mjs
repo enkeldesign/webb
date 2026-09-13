@@ -26,7 +26,15 @@ const companionPaths = Object.freeze([
   'turn/ui/about-history-bootstrap-r165.js',
   'turn/content/about-history-current.js',
   'turn/design.html',
-  'turn/design-dialogs.html'
+  'turn/design-dialogs.html',
+  'turn/tracks/registry.js',
+  'turn/tracks/midnight-city-world-r2.js',
+  'turn/tracks/midnight-city-world-r3.js',
+  'turn/tracks/midnight-city-world-r4.js',
+  'turn/tracks/midnight-city-world-r5.js',
+  'turn/tracks/midnight-city-world-r6.js',
+  'turn/tracks/midnight-city-world-r7.js',
+  'turn/tracks/midnight-city-world-r11.js'
 ]);
 
 export async function loadReleaseDefinition() {
@@ -362,6 +370,18 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
     return source.replace(
       /(export const CURRENT_RELEASE = Object\.freeze\(\{\s*version: ')[^']+(',\s*build: ')[^']+(')/,
       `$1${release.version}$2${release.id}$3`
+    );
+  }
+  if (repositoryPath === 'turn/tracks/registry.js') {
+    return source.replace(
+      /(await import\(\s*'\.\/midnight-city-world-r11\.js\?build=)[^']+('\s*\))/,
+      `$1${release.cacheKey}$2`
+    );
+  }
+  if (/^turn\/tracks\/midnight-city-world-r(?:2|3|4|5|6|7|11)\.js$/.test(repositoryPath)) {
+    return source.replace(
+      /(from '\.\/midnight-city-world(?:-r\d+)?\.js\?build=)[^']+(')/,
+      `$1${release.cacheKey}$2`
     );
   }
   assert.ok(repositoryPath === 'turn/design.html' || repositoryPath === 'turn/design-dialogs.html',
