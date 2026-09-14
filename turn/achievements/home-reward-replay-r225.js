@@ -58,7 +58,8 @@ function saveReplayState(pending, presented, storage = globalThis.localStorage) 
 
 function homeIsReady() {
   return Boolean(
-    document.documentElement.classList.contains('turn-home-ready')
+    document.visibilityState !== 'hidden'
+    && document.documentElement.classList.contains('turn-home-ready')
     && document.body.classList.contains('turn-home-open')
     && document.querySelector('.m8-home:not([hidden])')
   );
@@ -210,6 +211,7 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
   window.addEventListener(SUPPORT_HOME_ENDED_EVENT, handleSupportFeedbackEnded);
   window.addEventListener('turn:achievements-ready', handleAchievementsReady);
   document.addEventListener('turn:home-ready', handleHomeReady);
+  document.addEventListener('visibilitychange', handleHomeReady);
   scheduleHomeReplay();
 
   installed = Object.freeze({
@@ -226,6 +228,7 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
       window.removeEventListener(SUPPORT_HOME_ENDED_EVENT, handleSupportFeedbackEnded);
       window.removeEventListener('turn:achievements-ready', handleAchievementsReady);
       document.removeEventListener('turn:home-ready', handleHomeReady);
+      document.removeEventListener('visibilitychange', handleHomeReady);
       installed = null;
     }
   });

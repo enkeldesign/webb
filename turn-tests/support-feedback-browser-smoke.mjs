@@ -55,15 +55,15 @@ async function setup(browser, { type = 'safety', trophies = 975, persisted = nul
     globalThis.feedbackEvents = [];
     window.addEventListener('turn:trophy-road-toast-shown', (event) => {
       const toast = document.querySelector('.turn-trophy-reward-toast');
-      feedbackEvents.push({ type: 'reward', ids: event.detail.ids, at: performance.now(),
+      globalThis.feedbackEvents.push({ type: 'reward', ids: event.detail.ids, at: globalThis.performance.now(),
         home: document.body.classList.contains('turn-home-open'),
         visible: !toast.hidden && toast.classList.contains('is-visible') });
     });
     window.addEventListener('turn:trophy-road-updated', (event) => {
-      feedbackEvents.push({ type: 'earned', ids: event.detail.unlocked });
+      globalThis.feedbackEvents.push({ type: 'earned', ids: event.detail.unlocked });
     });
     for (const phase of ['started', 'ended']) window.addEventListener(`turn:support-home-feedback-${phase}`, () => {
-      feedbackEvents.push({ type: phase, at: performance.now() });
+      globalThis.feedbackEvents.push({ type: phase, at: globalThis.performance.now() });
     });
     if (home) {
       document.querySelector('.m8-home').hidden = false;
@@ -71,7 +71,7 @@ async function setup(browser, { type = 'safety', trophies = 975, persisted = nul
     }
     const ready = new Promise((resolve) => window.addEventListener('turn:support-challenges-ready', resolve, { once: true }));
     const achievements = await import(url('/turn/achievements.js'));
-    achievements.installAchievements(__turnRuntime);
+    achievements.installAchievements(globalThis.__turnRuntime);
     achievements.installAchievementChallengeExpansion();
     await ready;
   }, { type, trophies, persisted, home });
@@ -104,7 +104,7 @@ async function snapshot(page) {
       const node = document.querySelector(selector);
       return Boolean(node && !node.hidden && node.classList.contains('is-visible'));
     };
-    const support = __turnSupportChallenges;
+    const support = globalThis.__turnSupportChallenges;
     return {
       race: visible('.turn-support-bonus-toast:not(.turn-support-home-toast)'),
       home: visible('.turn-support-home-toast'),
@@ -113,12 +113,12 @@ async function snapshot(page) {
       indicator: Boolean(document.querySelector('.turn-support-completion-indicator')),
       completed: support.state.completed,
       active: support.state.active,
-      trophies: __turnAchievements.getTrophies(),
-      bonuses: __turnAchievements.getState().bonuses,
-      unlocked: __turnAchievements.getState().unlocked,
+      trophies: globalThis.__turnAchievements.getTrophies(),
+      bonuses: globalThis.__turnAchievements.getState().bonuses,
+      unlocked: globalThis.__turnAchievements.getState().unlocked,
       pending: localStorage.getItem('turn-support-feedback-v1'),
       replay: JSON.parse(localStorage.getItem('turn-home-reward-replay-v1')),
-      events: feedbackEvents,
+      events: globalThis.feedbackEvents,
       pillText: document.querySelector('.turn-support-bonus-toast:not(.turn-support-home-toast)').textContent
     };
   });
@@ -129,12 +129,30 @@ for (const [name, browserType] of [['Chromium', chromium], ['WebKit', webkit]]) 
   try {
     // Real runtime/store/view and release import map. Only the host race shell is a fixture.
     const solo = await setup(browser);
+    const routing = await solo.page.evaluate(async () => {
+      let track = '';
+      let car = '';
+      document.querySelector('.track-card').addEventListener('click', (event) => { track = event.currentTarget.dataset.trackId; });
+      document.querySelector('.m8-track-continue').addEventListener('click', () => {
+        const lot = document.createElement('section');
+        lot.className = 'lot-screen';
+        lot.innerHTML = '<button class="lot-car-option" data-car-id="sedan-sports">SPORTS CAR</button>';
+        lot.querySelector('button').addEventListener('click', (event) => { car = event.currentTarget.dataset.carId; });
+        document.body.appendChild(lot);
+      });
+      globalThis.__turnSupportChallenges.trigger.click();
+      document.querySelector('[data-support-start]').click();
+      await Promise.resolve();
+      document.querySelector('.lot-screen').remove();
+      return { track, car };
+    });
+    assert.deepEqual(routing, { track: 'countryside', car: 'sedan-sports' }, 'START CHALLENGE selects its track and recommended owned car');
     await lap(solo.page, { valid: false });
     assert.equal((await snapshot(solo.page)).bonuses['support:safety:countryside'], undefined, 'Invalid laps cannot complete support');
-    await solo.page.evaluate(() => { __turnRuntime.state.vehicleId = 'sedan'; });
+    await solo.page.evaluate(() => { globalThis.__turnRuntime.state.vehicleId = 'sedan'; });
     await lap(solo.page);
     assert.equal((await snapshot(solo.page)).bonuses['support:safety:countryside'], undefined, 'Recommended car is required');
-    await solo.page.evaluate(() => { __turnRuntime.state.vehicleId = 'sedan-sports'; });
+    await solo.page.evaluate(() => { globalThis.__turnRuntime.state.vehicleId = 'sedan-sports'; });
     await lap(solo.page);
     let state = await snapshot(solo.page);
     assert.equal(state.race, true, `${name}: support-only completion shows its race pill`);
@@ -152,6 +170,20 @@ for (const [name, browserType] of [['Chromium', chromium], ['WebKit', webkit]]) 
     assert.equal(state.home && state.indicator, true);
     await solo.page.clock.runFor(500);
     assert.equal((await snapshot(solo.page)).reward, false);
+    await solo.page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+      document.dispatchEvent(new globalThis.Event('visibilitychange'));
+    });
+    await solo.page.clock.runFor(200);
+    state = await snapshot(solo.page);
+    assert.ok(state.pending, 'Backgrounding cannot consume challenge feedback');
+    assert.ok(state.replay.pending.length, 'A reward shown to a hidden page still needs a Home reprise');
+    await solo.page.evaluate(() => {
+      delete document.visibilityState;
+      document.dispatchEvent(new globalThis.Event('visibilitychange'));
+    });
+    await solo.page.clock.runFor(32);
+    assert.equal((await snapshot(solo.page)).home, true, 'Returning to the foreground restores pending feedback');
     await showHome(solo.page, false);
     state = await snapshot(solo.page);
     assert.equal(state.home || state.indicator, false, 'Leaving Home removes its feedback');
