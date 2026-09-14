@@ -213,6 +213,6 @@ export const CHANGELOG = Object.freeze([
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.19.12',
-  build: '2026.09.14-r226',
+  build: '2026.09.14-r227',
   note: 'TURN 1.19.12 raises and clarifies MOUNTAIN’s summit warning sign while keeping its placement unchanged.'
 });
