@@ -21,6 +21,8 @@ import { TROPHY_ROAD_REWARDS, rewardForTrack } from '../turn/progression/trophy-
 import { TRACK_COLOR_CUES } from '../turn/accessibility/color-cues.js';
 import { TRACK_COLOR_RULES } from '../turn/achievements/chromatic-camouflage-r183.js';
 
+const release = JSON.parse(await fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'));
+
 const [
   definitions,
   definitionsBase,
@@ -141,8 +143,8 @@ assert.match(definitionsBase, /storageRevision: 'mountain-r1'/,
 assert.match(paceNotes, /pace-notes-base\.js/);
 assert.match(paceNotesBase, /const MOUNTAIN_PACE_NOTES/,
   'The retired short-course pace map remains available only as the retained base');
-assert.match(registry, /mountain-world-long\.js\?build=20260914-r228/);
-assert.match(longWorld, /mountain-world-r3\.js\?build=20260914-r228/);
+assert.match(registry, new RegExp(`mountain-world-long\\.js\\?build=${release.cacheKey}`));
+assert.match(longWorld, new RegExp(`mountain-world-r3\\.js\\?build=${release.cacheKey}`));
 assert.match(longWorld, /installBaseMountainWorld/);
 assert.match(longWorld, /installMountainLongExtension/);
 assert.match(longWorld, /BASE_WORLD_SAMPLE_COUNT = 1080/);
