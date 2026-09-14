@@ -2,6 +2,16 @@ import fs from 'node:fs';
 
 const releasePath = 'turn/release.json';
 const historyPath = 'turn/content/about-history-current.js';
+const releaseScriptPath = 'turn/scripts/release.mjs';
+
+let releaseScript = fs.readFileSync(releaseScriptPath, 'utf8');
+if (!releaseScript.includes("'/turn/achievements/support-challenge-feedback.js': ['', '?revision=r244-reward-toast-guide']")) {
+  const marker = `  imports['/turn/achievements/catalog-production.js?revision=r241-learning-achievements-base']\n    = \`/turn/achievements/catalog-production.js?build=\${release.cacheKey}\`;\n}`;
+  const replacement = `  imports['/turn/achievements/catalog-production.js?revision=r241-learning-achievements-base']\n    = \`/turn/achievements/catalog-production.js?build=\${release.cacheKey}\`;\n\n  // Support-feedback modules are active production code. Keep historical import\n  // specifiers as aliases, but route every active identity through the current\n  // release build instead of minting another manual revision namespace.\n  const releaseOwnedModules = {\n    '/turn/achievements/support-challenges.js': [''],\n    '/turn/achievements/support-challenge-feedback.js': ['', '?revision=r244-reward-toast-guide'],\n    '/turn/achievements/view.js': ['', '?revision=r244-reward-toast-guide'],\n    '/turn/achievements/home-reward-replay-r225.js': ['', '?revision=r244-reward-toast-guide']\n  };\n  for (const [pathname, suffixes] of Object.entries(releaseOwnedModules)) {\n    const target = \`\${pathname}?build=\${release.cacheKey}\`;\n    for (const suffix of suffixes) imports[\`\${pathname}\${suffix}\`] = target;\n    for (const [specifier, existing] of Object.entries(imports)) {\n      if (typeof existing !== 'string') continue;\n      if (new URL(existing, 'https://enkel.design/turn/').pathname === pathname) {\n        imports[specifier] = target;\n      }\n    }\n  }\n}`;
+  if (!releaseScript.includes(marker)) throw new Error('Could not find achievement progression release routing insertion point.');
+  releaseScript = releaseScript.replace(marker, replacement);
+  fs.writeFileSync(releaseScriptPath, releaseScript);
+}
 
 const release = JSON.parse(fs.readFileSync(releasePath, 'utf8'));
 if (release.version !== '1.20.2' || release.id !== '2026.09.14-r234' || release.cacheKey !== '20260914-r234') {
@@ -55,4 +65,4 @@ if (!history.includes('SUPPORT_CHALLENGE_LIFECYCLE_HISTORY')) {
   fs.writeFileSync(historyPath, history);
 }
 
-console.log('TURN 1.20.2 / 2026.09.14-r234 release metadata prepared.');
+console.log('TURN 1.20.2 / 2026.09.14-r234 release metadata and build routing prepared.');
