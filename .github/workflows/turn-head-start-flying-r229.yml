@@ -1,0 +1,55 @@
+name: TURN HEAD START flying-lap r229 updater
+
+on:
+  push:
+    branches:
+      - fix/head-start-flying-lap-r229
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/head-start-flying-lap-r229
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Correct HEAD START flying-lap behavior
+        run: python3 .github/turn-head-start-flying-r229.py
+
+      - name: Synchronize release surfaces
+        run: node turn/scripts/release.mjs --write
+
+      - name: Validate focused achievement and release contracts
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-tests/release-production.mjs
+          node turn-tests/release-composition-production.mjs --base=b86075c5ae72603ac2e971bf9753def5f0777ea2
+          node turn-tests/achievement-polling-production.mjs
+          node turn-lab/tests/achievements-production.mjs
+          node turn-lab/tests/chromatic-camouflage-production.mjs
+          node turn-lab/tests/trophy-road-production.mjs
+          git diff --check
+
+      - name: Commit corrected HEAD START release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn turn-next turn-lab yourturn turn-tests
+          git commit -m "Correct HEAD START flying-lap sequence"
+          git push origin HEAD:fix/head-start-flying-lap-r229
