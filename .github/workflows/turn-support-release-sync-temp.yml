@@ -109,9 +109,9 @@ jobs:
           node turn-tests/release-composition-production.mjs --base origin/main
           npx --yes eslint@9.39.1 turn/achievements/support-challenges.js turn/achievements/runtime.js turn/achievements/store.js turn-tests/support-challenges-production.mjs
 
-      - name: Commit synchronized release and remove temporary workflow
+      - name: Commit synchronized release
         run: |
-          rm .github/workflows/turn-support-release-sync-temp.yml
+          git checkout -- .github/workflows/turn-lab-tests.yml
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A
