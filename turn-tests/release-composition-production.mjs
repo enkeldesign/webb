@@ -24,8 +24,9 @@ const crossDeploymentCompatibilityRoutes = Object.freeze({
   '/turn/vehicle/car-models.js?revision=r252-supercar-outward-rims': criticalReleaseTargets['/turn/vehicle/car-models.js'],
   '/turn/vehicle/car-models.js?revision=r253-supercar-release': criticalReleaseTargets['/turn/vehicle/car-models.js'],
   '/turn/achievements/trophy-road-showcase.js?revision=r243-mountain-1300': `/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release&build=${currentRelease.cacheKey}`,
-  '/turn/achievements/challenge-expansion-r166.js?revision=r166-bella-records': '/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling',
-  '/turn/achievements/challenge-expansion-r166.js?revision=r241-learning-achievements': '/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling',
+  '/turn/achievements/challenge-expansion-r166.js?revision=r166-bella-records': `/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=${currentRelease.cacheKey}`,
+  '/turn/achievements/challenge-expansion-r166.js?revision=r241-learning-achievements': `/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=${currentRelease.cacheKey}`,
+  '/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling': `/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=${currentRelease.cacheKey}`,
   '/turn/vehicle/shift-profile.js?revision=r232-double-shift': '/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility',
   '/turn/vehicle/shift-profile.js?revision=r253-supercar-release': '/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility',
   '/turn/vehicle/flow-shift.js?revision=r248-supercar': '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility',
@@ -52,6 +53,7 @@ function productionPresentationRoutes(release) {
     '/turn/achievements/catalog-production.js?revision=r222-awd-label': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
     '/turn/achievements/catalog-production.js?revision=r240-trophy-road-2': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
     '/turn/achievements/catalog-production.js?revision=r241-learning-achievements': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
+    '/turn/achievements/catalog-production.js?revision=r241-learning-achievements-base': `/turn/achievements/catalog-production.js?build=${release.cacheKey}`,
     '/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims': '/turn/garage/lot-showroom-track-icon.js?revision=r2-swift-lot-ui'
   });
 }
@@ -72,6 +74,8 @@ const requiredActiveModules = Object.freeze([
   'turn/vehicle/shift-profile.js',
   'turn/vehicle/wheel-animation-rig.js',
   'turn/achievements/catalog-track-icons.js',
+  'turn/achievements/catalog-production.js',
+  'turn/achievements/challenge-expansion-r166.js',
   'turn/achievements/trophy-road-feedback.js',
   'turn/achievements/trophy-road-showcase.js',
   'turn/progression/trophy-road-track-icons.js',

@@ -198,6 +198,20 @@ function synchronizeVisualResourceTargets(importMap, release) {
   }
 }
 
+function synchronizeAchievementProgressionTargets(importMap, release) {
+  const imports = importMap.imports ||= {};
+  const challengeTarget = `/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=${release.cacheKey}`;
+  for (const specifier of [
+    '/turn/achievements/challenge-expansion-r166.js?revision=r166-bella-records',
+    '/turn/achievements/challenge-expansion-r166.js?revision=r241-learning-achievements',
+    '/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling'
+  ]) {
+    imports[specifier] = challengeTarget;
+  }
+  imports['/turn/achievements/catalog-production.js?revision=r241-learning-achievements-base']
+    = `/turn/achievements/catalog-production.js?build=${release.cacheKey}`;
+}
+
 function synchronizeGraphicsRuntimeTarget(importMap, release) {
   const imports = importMap.imports ||= {};
   const nativeTarget = imports['three-native']
@@ -244,6 +258,7 @@ function renderSharedResourceImports(source, release) {
     const importMap = JSON.parse(jsonText);
     synchronizeScoreStoreTargets(importMap, release);
     synchronizeVisualResourceTargets(importMap, release);
+    synchronizeAchievementProgressionTargets(importMap, release);
     synchronizeGraphicsRuntimeTarget(importMap, release);
     synchronizeLowGraphicsProducerTargets(importMap, release);
     return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
@@ -274,6 +289,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeRivalStorageTargets(importMap, release);
   synchronizeScoreStoreTargets(importMap, release);
   synchronizeVisualResourceTargets(importMap, release);
+  synchronizeAchievementProgressionTargets(importMap, release);
   synchronizeGraphicsRuntimeTarget(importMap, release);
   synchronizeLowGraphicsProducerTargets(importMap, release);
   synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);

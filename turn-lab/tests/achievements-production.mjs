@@ -92,19 +92,19 @@ assert.equal(
   1775,
   'The base catalog must stay separate from production progression balancing'
 );
-assert.equal(ACHIEVEMENTS.length, 60,
-  'Production TURN must expose 47 core achievements plus 13 scoring achievements');
-assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 60,
+assert.equal(ACHIEVEMENTS.length, 61,
+  'Production TURN must expose 48 core achievements plus 13 scoring achievements');
+assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 61,
   'Production achievement ids must remain unique');
-assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
-  'GOT STARTED must remain the master of the eleven prerequisite Getting Started achievements, not recursively require itself');
-assert.equal(totalAvailableTrophies(), 4575,
-  'The learning and balance pass must expose the complete 4,575-trophy supply');
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 12,
+  'GOT STARTED must remain the master of the twelve prerequisite Getting Started achievements, not recursively require itself');
+assert.equal(totalAvailableTrophies(), 4625,
+  'The learning and balance pass must expose the complete 4,625-trophy supply');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300,
   'Trophy Road uses the first 2300 trophies while the full catalog retains headroom');
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  4575
+  4625
 );
 assert.ok(ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.trophies)));
 assert.ok(ACHIEVEMENTS.every((achievement) => !Object.hasOwn(achievement, 'points')));
@@ -133,6 +133,14 @@ assert.equal(
   byId('catch-the-charge')?.description,
   'With BOOST full, keep using DRIFT to build purple OVERCHARGE. Slide to GAS to catch it before it leaks away.'
 );
+assert.equal(byId('head-start')?.title, 'HEAD START');
+assert.equal(byId('head-start')?.trophies, 50);
+assert.equal(byId('head-start')?.category, 'onboarding');
+assert.equal(byId('head-start')?.description,
+  'Beat your previous valid lap and cross the line with OVERCHARGE built up.');
+assert.equal(byId('head-start')?.recommendation,
+  'Keep racing after the finish. Time Trial targets are set for flying starts.');
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('head-start'), true);
 assert.equal(byId('golden-hour')?.title, 'MAYDAY!');
 assert.equal(byId('golden-hour')?.trophies, 100);
 assert.equal(byId('golden-hour')?.hidden, true);
@@ -546,8 +554,8 @@ assert.match(challengeSource, /reason === 'lap-started'/);
 for (const entry of [productionEntry, labEntry]) {
   assert.match(
     entry,
-    /"\/turn\/achievements\/challenge-expansion-r166\.js\?revision=r166-bella-records": "\/turn\/achievements\/challenge-expansion-r166\.js\?revision=r256-achievement-polling"/,
-    'Installed builds must route old challenge-achievement modules to the event-driven implementation'
+    /"\/turn\/achievements\/challenge-expansion-r166\.js\?revision=r166-bella-records": "\/turn\/achievements\/challenge-expansion-r166\.js\?revision=r256-achievement-polling&build=\d{8}-r\d+"/,
+    'Installed builds must route old challenge-achievement modules to the current build of the event-driven implementation'
   );
 }
 

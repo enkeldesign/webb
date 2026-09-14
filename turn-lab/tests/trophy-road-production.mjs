@@ -164,7 +164,7 @@ assert.deepEqual(productionRewardIdsForTrophies(2100), through2100);
 assert.deepEqual(productionRewardIdsForTrophies(2200), through2200);
 assert.deepEqual(productionRewardIdsForTrophies(2299), through2200);
 assert.deepEqual(productionRewardIdsForTrophies(2300), through2300);
-assert.deepEqual(productionRewardIdsForTrophies(4575), productionRewardIds);
+assert.deepEqual(productionRewardIdsForTrophies(4625), productionRewardIds);
 
 assert.equal(getProductionTrophyRoadReward('mountain')?.threshold, 1300);
 assert.equal(getProductionTrophyRoadReward('paintjob')?.threshold, 800);
