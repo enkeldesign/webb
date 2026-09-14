@@ -141,8 +141,8 @@ assert.match(definitionsBase, /storageRevision: 'mountain-r1'/,
 assert.match(paceNotes, /pace-notes-base\.js/);
 assert.match(paceNotesBase, /const MOUNTAIN_PACE_NOTES/,
   'The retired short-course pace map remains available only as the retained base');
-assert.match(registry, /mountain-world-long\.js\?build=20260914-r226/);
-assert.match(longWorld, /mountain-world-r3\.js\?build=20260914-r226/);
+assert.match(registry, /mountain-world-long\.js\?build=20260914-r227/);
+assert.match(longWorld, /mountain-world-r3\.js\?build=20260914-r227/);
 assert.match(longWorld, /installBaseMountainWorld/);
 assert.match(longWorld, /installMountainLongExtension/);
 assert.match(longWorld, /BASE_WORLD_SAMPLE_COUNT = 1080/);
