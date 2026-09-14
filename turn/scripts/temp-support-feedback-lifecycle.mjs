@@ -1,129 +1,58 @@
 import fs from 'node:fs';
 
-function update(path, transform) {
-  const before = fs.readFileSync(path, 'utf8');
-  const after = transform(before);
-  if (after === before) throw new Error(`No change made to ${path}`);
-  fs.writeFileSync(path, after);
+const releasePath = 'turn/release.json';
+const historyPath = 'turn/content/about-history-current.js';
+
+const release = JSON.parse(fs.readFileSync(releasePath, 'utf8'));
+if (release.version !== '1.20.2' || release.id !== '2026.09.14-r234' || release.cacheKey !== '20260914-r234') {
+  fs.writeFileSync(releasePath, `${JSON.stringify({
+    version: '1.20.2',
+    id: '2026.09.14-r234',
+    cacheKey: '20260914-r234'
+  }, null, 2)}\n`);
 }
 
-function replaceOnce(source, before, after, label) {
-  const first = source.indexOf(before);
-  if (first < 0) throw new Error(`Missing ${label}`);
-  if (source.indexOf(before, first + before.length) >= 0) throw new Error(`Ambiguous ${label}`);
-  return source.slice(0, first) + after + source.slice(first + before.length);
+let history = fs.readFileSync(historyPath, 'utf8');
+if (!history.includes('SUPPORT_CHALLENGE_LIFECYCLE_HISTORY')) {
+  const block = `const SUPPORT_CHALLENGE_LIFECYCLE_HISTORY = Object.freeze({
+  period: '14 September',
+  title: 'Support feedback has one owner',
+  paragraphs: Object.freeze([
+    'TURN 1.20.2 makes support-challenge feedback use explicit game and Home lifecycle events instead of observing and rewriting other toast elements. SAFETY and other race challenges now publish their compact completion pill directly when the support target is cleared.',
+    'When CHOOSE TRACK opens after a completed challenge, TURN replays the pill with the temporary trophy check first. Trophy Road reward presentation is held by the achievement runtime until that support feedback finishes, then resumes in the normal reward queue.'
+  ]),
+  milestones: Object.freeze([
+    'Reliable in-race support completion pill for SAFETY and other race challenges',
+    'Explicit CHOOSE TRACK replay lifecycle with ordered Trophy Road rewards',
+    'TURN 1.20.2 · 2026.09.14-r234'
+  ])
+});
+
+`;
+  const marker = 'const previousLatest = BASE_CHANGELOG.at(-1);';
+  if (!history.includes(marker)) throw new Error('Could not find current history insertion point.');
+  history = history.replace(marker, `${block}${marker}`);
+
+  const developmentTail = `  SUPPORT_CHALLENGE_HISTORY,\n  SUPPORT_CHALLENGE_FEEDBACK_HISTORY\n]);`;
+  if (!history.includes(developmentTail)) throw new Error('Could not find current development history tail.');
+  history = history.replace(
+    developmentTail,
+    `  SUPPORT_CHALLENGE_HISTORY,\n  SUPPORT_CHALLENGE_FEEDBACK_HISTORY,\n  SUPPORT_CHALLENGE_LIFECYCLE_HISTORY\n]);`
+  );
+
+  const changelogTail = `      Object.freeze(['1.20.1 r233', 'Makes START CHALLENGE preselect both the recommended track and owned car, and replaces the large challenge completion block with the compact pill cue.']),\n      Object.freeze(['Ordered support feedback', 'Shows challenge and same-lap achievement feedback together, then gives Trophy Road rewards their own turn; CHOOSE TRACK replays the challenge cue while its trophy notification pulses away.'])`;
+  if (!history.includes(changelogTail)) throw new Error('Could not find current support changelog tail.');
+  history = history.replace(
+    changelogTail,
+    `${changelogTail},\n      Object.freeze(['1.20.2 r234', 'Makes race support completion and CHOOSE TRACK reprise reliable by replacing toast DOM interception with explicit lifecycle events.']),\n      Object.freeze(['One feedback queue', 'Lets support feedback temporarily hold Trophy Road reward presentation, then returns control to the normal achievement reward queue after the pill and trophy check finish.'])`
+  );
+
+  history = history.replace(
+    `  version: '1.20.1',\n  build: '2026.09.14-r233',\n  note: 'TURN 1.20.1 polishes support challenge routing and completion feedback.'`,
+    `  version: '1.20.2',\n  build: '2026.09.14-r234',\n  note: 'TURN 1.20.2 makes support challenge completion and reward feedback reliable.'`
+  );
+
+  fs.writeFileSync(historyPath, history);
 }
 
-update('turn/achievements/runtime.js', (source) => {
-  source = replaceOnce(
-    source,
-    `    rewardToastTimer: 0,\n    samplingTimer: 0,`,
-    `    rewardToastTimer: 0,\n    rewardPresentationHolds: new Set(),\n    samplingTimer: 0,`,
-    'runtime reward hold state'
-  );
-
-  source = replaceOnce(
-    source,
-    `  function scheduleRewardToastFlush(delay = 0) {\n    window.clearTimeout(session.rewardToastTimer);\n    session.rewardToastTimer = window.setTimeout(() => {\n      session.rewardToastTimer = 0;\n      view.showRewardToastBatch(session.pendingToastRewards.splice(0));\n    }, delay);\n  }`,
-    `  function scheduleRewardToastFlush(delay = 0) {\n    window.clearTimeout(session.rewardToastTimer);\n    session.rewardToastTimer = 0;\n    if (session.rewardPresentationHolds.size) return;\n    session.rewardToastTimer = window.setTimeout(() => {\n      session.rewardToastTimer = 0;\n      if (session.rewardPresentationHolds.size) return;\n      const batch = session.pendingToastRewards.splice(0);\n      if (batch.length) view.showRewardToastBatch(batch);\n    }, delay);\n  }`,
-    'runtime reward flush'
-  );
-
-  const queueRewards = `  function queueRewards(rewards, { delay = 0 } = {}) {\n    for (const reward of rewards) {\n      if (!reward || session.pendingToastRewards.some((item) => item.id === reward.id)) continue;\n      session.pendingToastRewards.push(reward);\n    }\n    view.syncTriggers();\n    view.render();\n    if (delay >= 0) scheduleRewardToastFlush(delay);\n  }`;
-  source = replaceOnce(
-    source,
-    queueRewards,
-    `${queueRewards}\n\n  function holdRewardPresentation(key) {\n    if (typeof key !== 'string' || !key) return false;\n    session.rewardPresentationHolds.add(key);\n    window.clearTimeout(session.rewardToastTimer);\n    session.rewardToastTimer = 0;\n    view.hideRewardToast();\n    return true;\n  }\n\n  function releaseRewardPresentation(key, { delay = 0 } = {}) {\n    if (typeof key !== 'string' || !key) return false;\n    const removed = session.rewardPresentationHolds.delete(key);\n    if (!session.rewardPresentationHolds.size && session.pendingToastRewards.length) {\n      scheduleRewardToastFlush(delay);\n    }\n    return removed;\n  }`,
-    'runtime reward queue'
-  );
-
-  source = replaceOnce(
-    source,
-    `    unlock: (id, context = {}) => unlock([id], context, { delay: 0 }),\n    grantBonus,\n    getTrophies: () => store.trophyTotal(),`,
-    `    unlock: (id, context = {}) => unlock([id], context, { delay: 0 }),\n    grantBonus,\n    holdRewardPresentation,\n    releaseRewardPresentation,\n    hideRewardToast: view.hideRewardToast,\n    showRewardToastBatch: view.showRewardToastBatch,\n    getTrophies: () => store.trophyTotal(),`,
-    'runtime public feedback API'
-  );
-  return source;
-});
-
-update('turn/achievements/view.js', (source) => {
-  source = replaceOnce(
-    source,
-    `  function showToast(toastElement, batch, { reward = false } = {}) {`,
-    `  function showToast(toastElement, batch, { reward = false, announce = true } = {}) {`,
-    'view toast signature'
-  );
-
-  source = replaceOnce(
-    source,
-    `    const alreadyVisible = !toastElement.hidden && toastElement.classList.contains('is-visible');`,
-    `    if (reward && announce) {\n      window.dispatchEvent(new CustomEvent('turn:trophy-road-toast-shown', {\n        detail: { ids: batch.map((item) => item.id).filter(Boolean) }\n      }));\n    }\n\n    const alreadyVisible = !toastElement.hidden && toastElement.classList.contains('is-visible');`,
-    'view reward presentation event'
-  );
-
-  source = replaceOnce(
-    source,
-    `  function showRewardToastBatch(batch) {\n    showToast(rewardToast, batch, { reward: true });\n  }`,
-    `  function showRewardToastBatch(batch, { announce = true } = {}) {\n    showToast(rewardToast, batch, { reward: true, announce });\n  }`,
-    'view reward batch API'
-  );
-
-  source = replaceOnce(
-    source,
-    `    showRewardToastBatch,\n    open,`,
-    `    showRewardToastBatch,\n    hideRewardToast,\n    open,`,
-    'view public hide API'
-  );
-  return source;
-});
-
-update('turn/m8-home.js', (source) => replaceOnce(
-  source,
-  `    syncSelection();\n    scheduleEnhancedLotWarmup();\n    requestAnimationFrame(() => {`,
-  `    syncSelection();\n    scheduleEnhancedLotWarmup();\n    window.dispatchEvent(new CustomEvent('turn:home-shown', { detail: { focus } }));\n    requestAnimationFrame(() => {`,
-  'Home shown lifecycle event'
-));
-
-update('turn/achievements/support-challenges.js', (source) => {
-  const before = `title: \`+${'${reward}'} TROPHIES\``;
-  const after = `title: \`+${'${reward}'} 🏆\``;
-  const count = source.split(before).length - 1;
-  if (count !== 2) throw new Error(`Expected 2 support reward labels, found ${count}`);
-  return source.replaceAll(before, after);
-});
-
-update('turn-tests/support-challenges-production.mjs', (source) => {
-  source = replaceOnce(
-    source,
-    `const facadeSource = await fs.readFile(new URL('../turn/achievements.js', import.meta.url), 'utf8');\nconst config = normalizeSupportChallengeConfig(rawConfig);`,
-    `const facadeSource = await fs.readFile(new URL('../turn/achievements.js', import.meta.url), 'utf8');\nconst runtimeSource = await fs.readFile(new URL('../turn/achievements/runtime.js', import.meta.url), 'utf8');\nconst viewSource = await fs.readFile(new URL('../turn/achievements/view.js', import.meta.url), 'utf8');\nconst homeSource = await fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8');\nconst homeReplaySource = await fs.readFile(new URL('../turn/achievements/home-reward-replay-r225.js', import.meta.url), 'utf8');\nconst config = normalizeSupportChallengeConfig(rawConfig);`,
-    'support regression source inputs'
-  );
-
-  source = replaceOnce(
-    source,
-    `assert.match(feedbackSource, /turn:achievements-updated/,\n  'Challenge completion must coordinate with same-lap achievement feedback');\nassert.match(feedbackSource, /turn:trophy-bonus/,\n  'Challenge completion must follow the authoritative support bonus event');\nassert.match(feedbackSource, /turn-trophy-reward-toast/,\n  'Trophy Road reward feedback must be deferred while challenge/achievement feedback owns the cue lane');`,
-    `assert.match(feedbackSource, /turn:trophy-bonus/,\n  'Challenge completion must follow the authoritative support bonus event');\nassert.match(feedbackSource, /turn:home-shown/,\n  'Home challenge replay must use the canonical Home lifecycle rather than watching DOM state');\nassert.match(feedbackSource, /holdRewardPresentation/,\n  'Home challenge replay must acquire the achievement runtime reward hold before presenting');\nassert.match(feedbackSource, /releaseRewardPresentation/,\n  'Home challenge replay must release the runtime reward hold after its pill and notification finish');\nassert.doesNotMatch(feedbackSource, /achievementObserver|rewardObserver|supportObserver|bodyObserver/,\n  'Support feedback must not coordinate achievement and reward ordering by observing toast DOM');\nassert.match(runtimeSource, /rewardPresentationHolds: new Set\\(\\)/,\n  'The achievement runtime must own reward presentation holds');\nassert.ok(runtimeSource.includes('if (session.rewardPresentationHolds.size) return;'),\n  'Queued Trophy Road rewards must stay queued while a presentation hold is active');\nassert.match(viewSource, /turn:trophy-road-toast-shown/,\n  'The achievement view must publish reward presentation explicitly');\nassert.match(homeSource, /turn:home-shown/,\n  'Home navigation must publish a real Home shown lifecycle event');\nassert.match(homeReplaySource, /turn:support-home-feedback-started/,\n  'Home reward replay must pause while support feedback owns the cue lane');\nassert.match(homeReplaySource, /turn:support-home-feedback-ended/,\n  'Home reward replay must resume after support feedback ends');\nassert.doesNotMatch(homeReplaySource, /new MutationObserver/,\n  'Home reward replay must use explicit presentation and Home lifecycle events rather than DOM observation');`,
-    'support regression feedback contract'
-  );
-  return source;
-});
-
-update('turn-lab/tests/stat-legend-production.mjs', (source) => replaceOnce(
-  source,
-  `assert.match(homeRewardReplay, /consume\\(currentIds\\)/,\n  'If the ordinary reward toast first appears after Home is already open, it must count as the Home reminder instead of duplicating immediately');`,
-  `assert.match(homeRewardReplay, /turn:trophy-road-toast-shown/,\n  'The ordinary reward toast must explicitly tell Home replay when it has actually been presented');\nassert.match(homeRewardReplay, /turn:support-home-feedback-started/,\n  'Home reward replay must yield to support completion feedback before replaying a reward');\nassert.match(homeRewardReplay, /turn:support-home-feedback-ended/,\n  'Home reward replay must resume only after support completion feedback is finished');`,
-  'Home reward replay regression assertions'
-));
-
-update('turn-tests/home-navigation-production.mjs', (source) => {
-  const anchor = `assert.match(homeSource, /showHome\\(\\{ focus: true \\}\\)/);`;
-  return replaceOnce(
-    source,
-    anchor,
-    `${anchor}\nassert.match(homeSource, /turn:home-shown/, 'Home navigation must publish an explicit shown lifecycle event for queued feedback');`,
-    'Home lifecycle regression assertion'
-  );
-});
-
-console.log('Support feedback lifecycle refactor applied.');
+console.log('TURN 1.20.2 / 2026.09.14-r234 release metadata prepared.');
