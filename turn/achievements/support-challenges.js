@@ -80,7 +80,7 @@ export function normalizeSupportChallengeConfig(value) {
       rewardPerPart: positiveInteger(raw.learning?.rewardPerPart, 5),
       description: typeof raw.learning?.description === 'string' && raw.learning.description.trim()
         ? raw.learning.description.trim()
-        : 'Open every part of HOW TO PLAY. Each new part you open while this challenge is active earns 5 trophies.'
+        : 'Open every part of HOW TO PLAY.'
     }),
     safety: Object.freeze({
       enabled: raw.safety?.enabled === true,
@@ -156,7 +156,8 @@ export function normalizeSupportChallengeState(value) {
         vehicleId: typeof value.active.vehicleId === 'string' ? value.active.vehicleId : '',
         sourceAchievementId: typeof value.active.sourceAchievementId === 'string'
           ? value.active.sourceAchievementId
-          : ''
+          : '',
+        baselineParts: stringArray(value.active.baselineParts)
       }
     : null;
   return {
@@ -224,7 +225,7 @@ function firstOwnedVehicle(vehicleIds, storage = globalThis.localStorage) {
 function sourceAchievementId(type, trackId) {
   if (type === 'winner') return `${trackId}-winner`;
   if (type === 'safety') return `${trackId}-safety`;
-  if (type === 'drift') return `${trackId}-drift`;
+  if (type === 'drift') return `${trackId}-drift-score`;
   if (type === 'learning') return LEARN_TO_PLAY_ACHIEVEMENT_ID;
   return '';
 }
@@ -312,6 +313,17 @@ function formatTime(seconds) {
   return `${minutes}:${remainder}`;
 }
 
+function activeChallengeIsConfigured(active, config) {
+  if (!active) return false;
+  if (active.type === 'learning') return config.learning.enabled;
+  const section = config[active.type];
+  if (!section?.enabled) return false;
+  if (active.type === 'safety' || active.type === 'drift') {
+    return positiveNumber(section.targets?.[active.trackId]) != null;
+  }
+  return active.type === 'winner';
+}
+
 function challengePresentation(active, config, achievements) {
   if (!active) return null;
   if (active.type === 'learning') {
@@ -321,7 +333,7 @@ function challengePresentation(active, config, achievements) {
       title: config.learning.title,
       eyebrow: 'HOW TO PLAY',
       reward: `+${config.learning.rewardPerPart} EACH`,
-      objective: config.learning.description,
+      objective: `${config.learning.description} Each new part you open while this challenge is active earns ${config.learning.rewardPerPart} trophies.`,
       explanation: `${count} of ${HOW_TO_PLAY_DISCLOSURE_IDS.length} parts opened.`,
       startLabel: 'OPEN HOW TO PLAY'
     };
@@ -602,6 +614,7 @@ export async function installSupportChallenges({
   let achievementUnlockedThisTask = false;
   let offerScheduled = false;
   let toastTimer = 0;
+  let restoreTriggerFocus = true;
 
   function save() {
     saveSupportState(state, storage);
@@ -613,7 +626,7 @@ export async function installSupportChallenges({
 
   function currentChallenge() {
     const active = state.active;
-    if (!active) return null;
+    if (!active || !activeChallengeIsConfigured(active, config)) return null;
     if (active.sourceAchievementId && achievements.store.isUnlocked(active.sourceAchievementId)) return null;
     if (achievements.store.trophyTotal() >= config.stopAtTrophies) return null;
     return active;
@@ -703,7 +716,10 @@ export async function installSupportChallenges({
       type: candidate.type,
       trackId: candidate.trackId,
       vehicleId: candidate.vehicleId,
-      sourceAchievementId: candidate.sourceAchievementId
+      sourceAchievementId: candidate.sourceAchievementId,
+      baselineParts: candidate.type === 'learning'
+        ? [...(achievements.store.state.progress?.howToPlayDisclosures || [])]
+        : []
     };
     state.lapsSinceChallengeProgress = 0;
     state.seenActiveKey = '';
@@ -791,17 +807,21 @@ export async function installSupportChallenges({
   function openChallenge() {
     if (!state.active) return;
     state.seenActiveKey = state.active.key;
+    restoreTriggerFocus = true;
     save();
     render();
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
-    closeButton.focus();
+    startButton.focus();
   }
 
   function closeChallenge({ restoreFocus = true } = {}) {
+    restoreTriggerFocus = restoreFocus;
     if (typeof dialog.close === 'function' && dialog.open) dialog.close();
-    else dialog.removeAttribute('open');
-    if (restoreFocus) trigger.focus({ preventScroll: true });
+    else {
+      dialog.removeAttribute('open');
+      if (restoreFocus) trigger.focus({ preventScroll: true });
+    }
   }
 
   function startChallenge() {
@@ -841,7 +861,8 @@ export async function installSupportChallenges({
     if (event.target === dialog) closeChallenge();
   });
   dialog.addEventListener('close', () => {
-    if (document.activeElement !== trigger && !home.hidden) trigger.focus({ preventScroll: true });
+    if (restoreTriggerFocus && !home.hidden) trigger.focus({ preventScroll: true });
+    restoreTriggerFocus = true;
   });
 
   window.addEventListener('turn:achievements-updated', () => {
@@ -878,15 +899,18 @@ export async function installSupportChallenges({
     const active = state.active;
     const partId = event.detail?.disclosureId;
     if (active?.type !== 'learning' || !HOW_TO_PLAY_DISCLOSURE_IDS.includes(partId)) return;
-    const reward = config.learning.rewardPerPart;
-    const bonusId = `support:how-to-play:${partId}`;
-    const granted = grantBonus(bonusId, reward, {
-      reason: 'support-how-to-play'
-    }, {
-      label: 'HOW TO PLAY',
-      title: `+${reward} TROPHIES`
-    });
-    if (granted) state.lapsSinceChallengeProgress = 0;
+
+    if (!active.baselineParts?.includes(partId)) {
+      const reward = config.learning.rewardPerPart;
+      const bonusId = `support:how-to-play:${partId}`;
+      const granted = grantBonus(bonusId, reward, {
+        reason: 'support-how-to-play'
+      }, {
+        label: 'HOW TO PLAY',
+        title: `+${reward} TROPHIES`
+      });
+      if (granted) state.lapsSinceChallengeProgress = 0;
+    }
 
     const opened = achievements.store.state.progress?.howToPlayDisclosures || [];
     if (
@@ -902,9 +926,6 @@ export async function installSupportChallenges({
   });
 
   window.addEventListener('turn:trophy-road-updated', render);
-  window.addEventListener('storage', (event) => {
-    if (event.key === SUPPORT_CHALLENGE_STORAGE_KEY || event.key === 'turn-achievements-v1') render();
-  });
 
   if (state.active?.sourceAchievementId && achievements.store.isUnlocked(state.active.sourceAchievementId)) {
     state.active = null;
