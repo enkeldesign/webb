@@ -24,6 +24,7 @@ function defaultStoredState() {
   return {
     version: STORAGE_VERSION,
     unlocked: {},
+    bonuses: {},
     seen: [],
     progress: {
       tracks: [],
@@ -57,6 +58,21 @@ function normalizedUnlockRecord(record) {
   };
 }
 
+function normalizedBonusRecord(record) {
+  if (!record || typeof record !== 'object') return null;
+  const trophies = Number(record.trophies);
+  if (!Number.isFinite(trophies) || trophies <= 0) return null;
+  return {
+    trophies: Math.max(1, Math.round(trophies)),
+    grantedAt: Number.isFinite(Number(record.grantedAt))
+      ? Number(record.grantedAt)
+      : Date.now(),
+    trackId: typeof record.trackId === 'string' ? record.trackId : '',
+    vehicleId: typeof record.vehicleId === 'string' ? record.vehicleId : '',
+    reason: typeof record.reason === 'string' ? record.reason : ''
+  };
+}
+
 function totalTrophiesFromUnlocked(unlocked) {
   return Object.keys(unlocked).reduce((total, id) => {
     const achievement = getAchievement(id);
@@ -64,6 +80,17 @@ function totalTrophiesFromUnlocked(unlocked) {
     const trophies = Number(achievement?.trophies);
     return total + (Number.isFinite(trophies) ? trophies : 0);
   }, 0);
+}
+
+function totalTrophiesFromBonuses(bonuses) {
+  return Object.values(bonuses || {}).reduce((total, record) => {
+    const trophies = Number(record?.trophies);
+    return total + (Number.isFinite(trophies) && trophies > 0 ? trophies : 0);
+  }, 0);
+}
+
+function totalTrophies(unlocked, bonuses) {
+  return totalTrophiesFromUnlocked(unlocked) + totalTrophiesFromBonuses(bonuses);
 }
 
 function knownUnlockedIds(unlocked) {
@@ -85,6 +112,13 @@ export function normalizeAchievementState(value) {
     unlocked[id] = normalized;
   }
 
+  const bonuses = {};
+  for (const [id, record] of Object.entries(value.bonuses || {})) {
+    if (typeof id !== 'string' || !id) continue;
+    const normalized = normalizedBonusRecord(record);
+    if (normalized) bonuses[id] = normalized;
+  }
+
   const tracks = normalizedStringArray(value.progress?.tracks, TRACK_IDS);
   const blankTracks = normalizedStringArray(value.progress?.blankTracks, TRACK_IDS);
   const driveByEarParts = normalizedStringArray(
@@ -102,7 +136,7 @@ export function normalizeAchievementState(value) {
 
   const sourceVersion = Number(value.version || 0);
   const rewardIds = TROPHY_ROAD_REWARDS.map((reward) => reward.id);
-  const earnedRewardIds = rewardIdsForTrophies(totalTrophiesFromUnlocked(unlocked));
+  const earnedRewardIds = rewardIdsForTrophies(totalTrophies(unlocked, bonuses));
   const storedRewardIds = migrateStoredRewardIdsForVersion(
     normalizedStringArray(value.rewards?.unlocked, rewardIds),
     sourceVersion
@@ -133,6 +167,7 @@ export function normalizeAchievementState(value) {
   return {
     version: STORAGE_VERSION,
     unlocked,
+    bonuses,
     seen: normalizedStringArray(value.seen).filter((id) => Boolean(unlocked[id])),
     progress: {
       tracks,
@@ -204,11 +239,15 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   }
 
   function trophyTotal() {
-    return totalTrophiesFromUnlocked(state.unlocked);
+    return totalTrophies(state.unlocked, state.bonuses);
   }
 
   function isRewardUnlocked(id) {
     return state.rewards.unlocked.includes(id);
+  }
+
+  function hasBonus(id) {
+    return Boolean(typeof id === 'string' && id && state.bonuses[id]);
   }
 
   function unlock(id, context = {}) {
@@ -222,6 +261,24 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     };
     requestSave();
     return achievement;
+  }
+
+  function grantBonus(id, trophies, context = {}) {
+    const normalizedId = typeof id === 'string' ? id.trim() : '';
+    const normalizedTrophies = Math.round(Number(trophies));
+    if (!normalizedId || !Number.isFinite(normalizedTrophies) || normalizedTrophies <= 0 || hasBonus(normalizedId)) {
+      return null;
+    }
+    const bonus = {
+      trophies: normalizedTrophies,
+      grantedAt: Date.now(),
+      trackId: typeof context.trackId === 'string' ? context.trackId : '',
+      vehicleId: typeof context.vehicleId === 'string' ? context.vehicleId : '',
+      reason: typeof context.reason === 'string' ? context.reason : ''
+    };
+    state.bonuses[normalizedId] = bonus;
+    requestSave();
+    return Object.freeze({ id: normalizedId, ...bonus });
   }
 
   function syncRewards() {
@@ -303,6 +360,8 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     batch,
     isUnlocked,
     unlock,
+    grantBonus,
+    hasBonus,
     trophyTotal,
     isRewardUnlocked,
     syncRewards,
