@@ -16,6 +16,7 @@ export const CATCH_GAS_MIN_OVERCHARGE = 0.001;
 
 const GOT_STARTED_ID = 'got-started';
 const CATCH_THE_CHARGE_ID = 'catch-the-charge';
+const HEAD_START_ID = 'head-start';
 const OVERCHARGE_CATCH_EVENT = 'turn:overcharge-catch';
 
 function normalizedTracks(value) {
@@ -59,6 +60,23 @@ export function qualifiesForCatchGas({
     && caught === true
     && Number(overcharge) >= CATCH_GAS_MIN_OVERCHARGE
     && visible === true;
+}
+
+export function qualifiesForHeadStart({
+  previousTime = null,
+  currentTime = null,
+  overcharge = 0,
+  valid = false
+} = {}) {
+  const previous = Number(previousTime);
+  const current = Number(currentTime);
+  return valid === true
+    && Number.isFinite(previous)
+    && previous > 5
+    && Number.isFinite(current)
+    && current > 5
+    && current < previous
+    && Number(overcharge) >= CATCH_GAS_MIN_OVERCHARGE;
 }
 
 function winnerAchievementId(trackId) {
@@ -117,6 +135,7 @@ export function installAchievementChallengeExpansion({
 
   const progress = loadProgress(storage);
   let currentLap = null;
+  let previousValidLap = null;
   let catchGasUnlocked = Boolean(
     achievements.getState?.().unlocked?.[CATCH_THE_CHARGE_ID]
   );
@@ -156,8 +175,10 @@ export function installAchievementChallengeExpansion({
 
   function beginLap() {
     const state = runtime.state;
+    const trackId = state.trackId || globalThis.__turnGetTrackId?.() || '';
+    if (previousValidLap?.trackId && previousValidLap.trackId !== trackId) previousValidLap = null;
     currentLap = {
-      trackId: state.trackId || globalThis.__turnGetTrackId?.() || '',
+      trackId,
       vehicleId: state.vehicleId || '',
       rivalCountAtStart: Array.isArray(state.competitorLaps) ? state.competitorLaps.length : 0
     };
@@ -212,6 +233,21 @@ export function installAchievementChallengeExpansion({
     if (!attempt || !TRACK_IDS.includes(attempt.trackId)) return;
 
     const context = achievementContext(attempt.trackId, attempt.vehicleId, detail?.time);
+    const currentTime = Number(detail?.time);
+    const validLap = detail?.valid !== false && Number.isFinite(currentTime) && currentTime > 5;
+    const previousTime = previousValidLap?.trackId === attempt.trackId
+      ? previousValidLap.time
+      : null;
+    if (qualifiesForHeadStart({
+      previousTime,
+      currentTime,
+      overcharge: globalThis.__turnBoostOvercharge,
+      valid: validLap
+    })) {
+      achievements.unlock(HEAD_START_ID, context);
+    }
+    if (validLap) previousValidLap = { trackId: attempt.trackId, time: currentTime };
+
     let changed = false;
     if (qualifiesForArmyLap(attempt, detail)) {
       achievements.unlock(winnerAchievementId(attempt.trackId), context);
@@ -238,10 +274,14 @@ export function installAchievementChallengeExpansion({
     // is published after that reset and after the just-finished lap has joined the
     // rival list, so it is the correct boundary for the next achievement attempt.
     if (reason === 'lap-started' || reason === 'lap-completed') beginLap();
-    if (reason === 'race-reset') resetLap();
+    if (reason === 'race-reset') {
+      resetLap();
+      previousValidLap = null;
+    }
     if (Object.prototype.hasOwnProperty.call(event.detail || {}, 'running')
         && event.detail.running === false) {
       resetLap();
+      previousValidLap = null;
     }
   };
   const handleLapResult = (event) => completeLap(event.detail || {});

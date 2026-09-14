@@ -155,6 +155,20 @@ const MOUNTAIN_WARNING_READABILITY_HISTORY = Object.freeze({
   ])
 });
 
+const HEAD_START_HISTORY = Object.freeze({
+  period: '14 September',
+  title: 'HEAD START teaches the flying lap',
+  paragraphs: Object.freeze([
+    'TURN 1.19.13 adds HEAD START to Getting Started. It awards 50 trophies for beating the previous valid lap while crossing the line with OVERCHARGE built up.',
+    'The lesson encourages drivers to keep racing through start/finish and prepare the next lap with momentum and charge before taking on Time Trial targets set for flying starts.'
+  ]),
+  milestones: Object.freeze([
+    '50-trophy HEAD START lesson in Getting Started',
+    'Faster consecutive valid lap with OVERCHARGE at the line',
+    'TURN 1.19.13 · 2026.09.14-r228'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -177,7 +191,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   LOW_GRAPHICS_RENDER_ONLY_HISTORY,
   MOUNTAIN_WARNING_HISTORY,
   MOUNTAIN_WARNING_PLACEMENT_HISTORY,
-  MOUNTAIN_WARNING_READABILITY_HISTORY
+  MOUNTAIN_WARNING_READABILITY_HISTORY,
+  HEAD_START_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -206,13 +221,15 @@ export const CHANGELOG = Object.freeze([
     date: '14 September',
     entries: Object.freeze([
       Object.freeze(['1.19.12 r226', 'Raises the MOUNTAIN summit warning plate slightly without moving its tested road position.']),
-      Object.freeze(['Clear warning symbol', 'Keeps the support behind the plate and gives the front a tapered exclamation bar with a separate round dot.'])
+      Object.freeze(['Clear warning symbol', 'Keeps the support behind the plate and gives the front a tapered exclamation bar with a separate round dot.']),
+      Object.freeze(['1.19.13 r228', 'Adds HEAD START to Getting Started for 50 trophies: beat the previous valid lap while carrying OVERCHARGE across the line.']),
+      Object.freeze(['Flying-start lesson', 'Encourages continuous laps and prepares drivers for Time Trial targets set for flying starts.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.12',
-  build: '2026.09.14-r227',
-  note: 'TURN 1.19.12 raises and clarifies MOUNTAIN’s summit warning sign while keeping its placement unchanged.'
+  version: '1.19.13',
+  build: '2026.09.14-r228',
+  note: 'TURN 1.19.13 adds HEAD START to Getting Started as preparation for flying-lap Time Trials.'
 });

@@ -38,6 +38,7 @@ export {
   qualifiesForArmyLap,
   qualifiesForCatchGas,
   qualifiesForCleanLap,
+  qualifiesForHeadStart,
   installAchievementChallengeExpansion
 } from './achievements/challenge-expansion-r166.js?revision=r256-achievement-polling';
 export {

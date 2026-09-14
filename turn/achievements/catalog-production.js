@@ -57,6 +57,16 @@ export const CATCH_THE_CHARGE_ACHIEVEMENT = Object.freeze({
   icon: 'charge'
 });
 
+export const HEAD_START_ACHIEVEMENT = Object.freeze({
+  id: 'head-start',
+  category: base.CATEGORY.ONBOARDING,
+  trophies: 50,
+  title: 'HEAD START',
+  description: 'Beat your previous valid lap and cross the line with OVERCHARGE built up.',
+  recommendation: 'Keep racing after the finish. Time Trial targets are set for flying starts.',
+  icon: 'charge'
+});
+
 export const GOT_STARTED_ACHIEVEMENT = Object.freeze({
   id: 'got-started',
   category: base.CATEGORY.ONBOARDING,
@@ -88,7 +98,8 @@ export const DRIVE_BY_EAR_ACHIEVEMENT = Object.freeze({
 
 export const ONBOARDING_ACHIEVEMENT_IDS = Object.freeze([
   ...base.ONBOARDING_ACHIEVEMENT_IDS,
-  CATCH_THE_CHARGE_ACHIEVEMENT.id
+  CATCH_THE_CHARGE_ACHIEVEMENT.id,
+  HEAD_START_ACHIEVEMENT.id
 ]);
 
 const SAFETY_TARGET_LABELS = Object.freeze({
@@ -161,6 +172,7 @@ const onboardingInsertionIndex = firstNonOnboardingIndex >= 0
 const withGotStarted = [
   ...rebalancedBaseAchievements.slice(0, onboardingInsertionIndex),
   CATCH_THE_CHARGE_ACHIEVEMENT,
+  HEAD_START_ACHIEVEMENT,
   GOT_STARTED_ACHIEVEMENT,
   LEARN_TO_PLAY_ACHIEVEMENT,
   DRIVE_BY_EAR_ACHIEVEMENT,

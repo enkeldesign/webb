@@ -35,9 +35,10 @@ const release = JSON.parse(releaseSource);
 const achievement = getAchievement(CHROMATIC_CAMOUFLAGE_ID);
 const mayday = getAchievement('golden-hour');
 const catchTheCharge = getAchievement('catch-the-charge');
+const headStart = getAchievement('head-start');
 const gotStarted = getAchievement('got-started');
 
-assert.equal(ACHIEVEMENTS.length, 60,
+assert.equal(ACHIEVEMENTS.length, 61,
   'Production TURN should expose the complete achievement and scoring catalog');
 assert.equal(GOT_STARTED_ACHIEVEMENT, gotStarted);
 assert.equal(gotStarted?.title, 'GOT STARTED');
@@ -53,9 +54,13 @@ assert.equal(
   catchTheCharge?.description,
   'With BOOST full, keep using DRIFT to build purple OVERCHARGE. Slide to GAS to catch it before it leaks away.'
 );
-assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
-  'GOT STARTED must require every Getting Started lesson, including CATCH THE CHARGE, without requiring itself');
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 12,
+  'GOT STARTED must require every Getting Started lesson, including HEAD START, without requiring itself');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('catch-the-charge'), true);
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('head-start'), true);
+assert.equal(headStart?.title, 'HEAD START');
+assert.equal(headStart?.trophies, 50);
+assert.match(headStart?.description || '', /previous valid lap/);
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('got-started'), false);
 for (const id of ['drive-by-ear', 'learn-to-play']) {
   assert.equal(getAchievement(id)?.category, 'ways-to-play');
@@ -162,7 +167,7 @@ challengeApi.disconnect();
 
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
-  4575,
+  4625,
   'The learning and balance pass must expose the complete trophy supply'
 );
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300);

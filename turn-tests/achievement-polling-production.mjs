@@ -3,8 +3,17 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import {
   CHALLENGE_PROGRESS_STORAGE_KEY,
-  installAchievementChallengeExpansion
+  installAchievementChallengeExpansion,
+  qualifiesForHeadStart
 } from '../turn/achievements/challenge-expansion-r166.js';
+
+assert.equal(qualifiesForHeadStart({ previousTime: 20, currentTime: 19, overcharge: 0.2, valid: true }), true);
+assert.equal(qualifiesForHeadStart({ previousTime: 20, currentTime: 20, overcharge: 0.2, valid: true }), false,
+  'HEAD START requires an actual improvement over the previous valid lap');
+assert.equal(qualifiesForHeadStart({ previousTime: 20, currentTime: 19, overcharge: 0, valid: true }), false,
+  'HEAD START requires OVERCHARGE at the finish line');
+assert.equal(qualifiesForHeadStart({ previousTime: 20, currentTime: 19, overcharge: 0.2, valid: false }), false,
+  'HEAD START must not accept an invalid lap');
 
 function listenerRegistry() {
   const listeners = new Map();
@@ -49,6 +58,7 @@ async function verifyChallengeAchievementLifecycle() {
   replaceGlobal('addEventListener', events.add);
   replaceGlobal('removeEventListener', events.remove);
   replaceGlobal('document', documentRef);
+  replaceGlobal('__turnBoostOvercharge', 0);
   replaceGlobal('setInterval', () => {
     intervalStarts += 1;
     return intervalStarts;
@@ -116,6 +126,25 @@ async function verifyChallengeAchievementLifecycle() {
   api.completeLap({ time: 14, onCourseThroughout: true });
   assert.ok(unlocked['countryside-safety'],
     'The clean-lap achievement must consume the canonical result instead of polling offRoad');
+
+  globalThis.__turnBoostOvercharge = 0.25;
+  api.beginLap();
+  api.completeLap({ time: 20, valid: true, onCourseThroughout: false });
+  assert.equal(unlocked['head-start'], undefined,
+    'HEAD START needs a previous valid lap before it can unlock');
+
+  globalThis.__turnBoostOvercharge = 0;
+  api.beginLap();
+  api.completeLap({ time: 19, valid: true, onCourseThroughout: false });
+  assert.equal(unlocked['head-start'], undefined,
+    'A faster lap without OVERCHARGE must not unlock HEAD START');
+
+  globalThis.__turnBoostOvercharge = 0.2;
+  api.beginLap();
+  api.completeLap({ time: 18, valid: true, onCourseThroughout: false });
+  assert.ok(unlocked['head-start'],
+    'A faster valid lap with OVERCHARGE at the line must unlock HEAD START');
+
   assert.equal(intervalStarts, 0);
   assert.equal(unlocks.filter(({ id }) => id === 'catch-the-charge').length, 1);
 
