@@ -6,7 +6,7 @@ import {
 import {
   createAchievementStore,
   normalizeAchievementState
-} from './store.js?revision=r243-mountain-1300';
+} from './store.js?revision=r271-support-bonuses';
 import {
   allOnboardingComplete,
   createAchievementView
@@ -216,6 +216,27 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     view.syncTriggers();
     view.render();
     return unlocked;
+  }
+
+  function grantBonus(id, trophies, context = {}, options = {}) {
+    let bonus = null;
+    let rewards = [];
+    store.batch(() => {
+      bonus = store.grantBonus(id, trophies, context);
+      if (bonus) rewards = store.syncRewards();
+    });
+    if (!bonus) return null;
+
+    view.syncTriggers();
+    view.render();
+    window.dispatchEvent(new CustomEvent('turn:trophy-bonus', {
+      detail: { ...bonus, total: store.trophyTotal() }
+    }));
+    if (rewards.length) {
+      announceRewardUpdate(rewards);
+      queueRewards(rewards, { delay: Number.isFinite(Number(options.rewardDelay)) ? Number(options.rewardDelay) : 3900 });
+    }
+    return bonus;
   }
 
   function importStoredTimeTrials() {
@@ -573,6 +594,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     open: view.open,
     close: view.close,
     unlock: (id, context = {}) => unlock([id], context, { delay: 0 }),
+    grantBonus,
     getTrophies: () => store.trophyTotal(),
     getState: () => normalizeAchievementState(store.state)
   });
