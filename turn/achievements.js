@@ -1,5 +1,5 @@
 import './achievements/home-reward-replay-r225.js?revision=r244-reward-toast-guide';
-import './achievements/support-challenges.js?revision=r271-support-challenges';
+import './achievements/support-challenges.js';
 
 export {
   ACHIEVEMENTS,
@@ -15,7 +15,7 @@ export {
   loadAchievementState,
   normalizeAchievementState,
   totalAvailableTrophies
-} from './achievements/store.js?revision=r271-support-bonuses';
+} from './achievements/store.js?revision=r243-mountain-1300';
 export {
   DRIVE_BY_EAR_ACHIEVEMENT_ID,
   DRIVE_BY_EAR_PART_IDS,
@@ -50,4 +50,4 @@ export {
   isPaintUnlocked,
   prepareTrophyRoadProfile
 } from './progression/trophy-road-perks-r164.js?revision=r243-mountain-1300';
-export { installAchievements } from './achievements/runtime.js?revision=r271-support-bonuses';
+export { installAchievements } from './achievements/runtime.js?revision=r244-reward-toast-guide';
