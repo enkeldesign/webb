@@ -1,0 +1,54 @@
+name: TURN LOW GRAPHICS copy update
+
+on:
+  push:
+    branches:
+      - fix/low-graphics-copy-r227
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/low-graphics-copy-r227
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Update LOW GRAPHICS copy and build
+        run: python .github/turn-low-graphics-copy-r227.py
+
+      - name: Synchronize release surfaces
+        run: node turn/scripts/release.mjs --write
+
+      - name: Validate LOW GRAPHICS and release contracts
+        shell: bash
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-tests/release-production.mjs
+          node turn-tests/release-composition-production.mjs
+          node turn-tests/low-graphics-production.mjs
+          node turn-lab/tests/multi-track-production.mjs
+          git diff --check
+
+      - name: Commit copy cleanup
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn turn-next turn-lab yourturn turn-tests
+          git commit -m "Simplify LOW GRAPHICS settings copy"
+          git push origin HEAD:fix/low-graphics-copy-r227
