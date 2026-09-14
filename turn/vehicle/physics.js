@@ -17,6 +17,16 @@ const DRIFT_FLOW_PENALTY_SCALE = 0.65;
 const DRIFT_HIGH_SLIP_PENALTY_SCALE = 0.80;
 export const OVERDRIVE_BUILD_SECONDS = 5;
 export const OVERDRIVE_MAX_SPEED_MULTIPLIER = 1.06;
+export const OVERCHARGE_BOOST_POWER_MULTIPLIER = 1.2;
+
+export function resolveOverchargedBoostPowerMultiplier({
+  boostActive = false,
+  overcharge = 0
+} = {}) {
+  return boostActive === true && nonNegativeNumber(overcharge, 0) > 0
+    ? OVERCHARGE_BOOST_POWER_MULTIPLIER
+    : 1;
+}
 
 export function vehicleIgnoresOffRoadPenalty(vehicleId) {
   return OFFROAD_CAPABLE_VEHICLE_IDS.has(String(vehicleId || ''));
@@ -262,8 +272,14 @@ function updateVehiclePhysicsStateCore({
     lerp(43, 36, offRoadPenalty) *
     accelerationMultiplier *
     (driftHeld ? driftEngineMultiplier : 1);
+  const overchargedBoostPowerMultiplier = resolveOverchargedBoostPowerMultiplier({
+    boostActive: effectiveBoostActive,
+    overcharge: boostOvercharge
+  });
   const boostPower = effectiveBoostActive
-    ? lerp(36, 16, offRoadPenalty) * tuningBoostPowerMultiplier
+    ? lerp(36, 16, offRoadPenalty)
+      * tuningBoostPowerMultiplier
+      * overchargedBoostPowerMultiplier
     : 0;
   state.velocity.addScaledVector(
     forward,

@@ -68,7 +68,7 @@ function updateDriftAndBoostCopy(dialog) {
           <li><strong>BUILD</strong><span>With BOOST full, keep using DRIFT.</span></li>
           <li><strong>CATCH</strong><span>Slide to GAS before OVERCHARGE leaks away.</span></li>
           <li><strong>HOLD</strong><span>Stay on GAS to hold the OVERCHARGE you caught.</span></li>
-          <li><strong>SPEND</strong><span>Slide to BOOST. OVERCHARGE is spent before normal BOOST.</span></li>
+          <li><strong>SPEND</strong><span>Slide to BOOST. OVERCHARGE burns first as a stronger burst, then normal BOOST continues.</span></li>
         </ol>
         <p class="m8-overcharge-leak"><strong>WATCH THE PEAK</strong> Uncaught OVERCHARGE leaks. At its peak, it starts leaking even while you keep using DRIFT.</p>
       </div>

@@ -5,9 +5,11 @@ import { CAR_CATALOG, deriveVehicleTuning, getVehicleStatTotal } from '../../tur
 import {
   OVERDRIVE_BUILD_SECONDS,
   OVERDRIVE_MAX_SPEED_MULTIPLIER,
+  OVERCHARGE_BOOST_POWER_MULTIPLIER,
   getOverdriveSpeedMultiplier,
   getVehicleSpeedLimit,
   resolveDriftSpeedMultiplier,
+  resolveOverchargedBoostPowerMultiplier,
   resolveOverchargedControlMultiplier,
   resolveVehicleOverchargedAccelerationMultiplier,
   updateVehicleOverdriveState,
@@ -144,6 +146,17 @@ assert.match(physicsSource, /driftLockAmount \* lockDragAdd/,
   'LOCK must apply the selected vehicle’s gated handbrake-like speed cost');
 assert.match(physicsSource, /\* tuningBoostPowerMultiplier/,
   'BOOST POWER must scale actual boost acceleration');
+assert.equal(OVERCHARGE_BOOST_POWER_MULTIPLIER, 1.2,
+  'OVERCHARGE must add a deliberate 20 percent boost-thrust kick');
+assert.equal(resolveOverchargedBoostPowerMultiplier({ boostActive: false, overcharge: 1 }), 1,
+  'Stored OVERCHARGE must not change propulsion until BOOST is actually active');
+assert.equal(resolveOverchargedBoostPowerMultiplier({ boostActive: true, overcharge: 0 }), 1,
+  'Ordinary BOOST must retain its existing boost-power tuning');
+assert.equal(resolveOverchargedBoostPowerMultiplier({ boostActive: true, overcharge: 0.01 }), 1.2,
+  'Any actively consumed OVERCHARGE must use the stronger boost-thrust tier');
+assert.match(physicsSource,
+  /lerp\(36, 16, offRoadPenalty\)[\s\S]*tuningBoostPowerMultiplier[\s\S]*overchargedBoostPowerMultiplier/,
+  'The OVERCHARGE kick must multiply boost thrust after the vehicle BOOST POWER tuning');
 assert.match(physicsSource, /boostSpeedMultiplier: tuningBoostSpeedMultiplier/,
   'BOOST POWER must scale the actual boosted speed ceiling');
 assert.match(controlsSource, /getBoostDrainSeconds\(\)[\s\S]*__turnVehicleTuning\?\.boostDurationSeconds/,

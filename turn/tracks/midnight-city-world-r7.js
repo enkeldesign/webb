@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { installMidnightCityWorld as installMidnightCityWorldR6 } from './midnight-city-world-r6.js?build=20260914-r230';
+import { installMidnightCityWorld as installMidnightCityWorldR6 } from './midnight-city-world-r6.js?build=20260914-r231';
 
 const TRACK_Y = 0.16;
 const COMMONS_CENTER = Object.freeze({ x: 80, z: 75 });
