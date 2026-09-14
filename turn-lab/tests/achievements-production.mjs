@@ -23,7 +23,7 @@ import {
   qualifyingTimeTrial,
   totalAvailableTrophies
 } from '../../turn/achievements.js';
-import { TRACK_IDS } from '../../turn/achievements/catalog.js';
+import { ICONS, TRACK_IDS } from '../../turn/achievements/catalog.js';
 import { ACHIEVEMENTS as BASE_ACHIEVEMENTS } from '../../turn/achievements/catalog-base.js';
 import { createAchievementStore } from '../../turn/achievements/store.js';
 import { TROPHY_ROAD_STORAGE_VERSION } from '../../turn/progression/trophy-road.js';
@@ -140,6 +140,13 @@ assert.equal(byId('head-start')?.description,
   'Finish a valid lap with OVERCHARGE, then use that carried OVERCHARGE with BOOST to beat it on the next lap.');
 assert.equal(byId('head-start')?.recommendation,
   'Build OVERCHARGE before the line, catch it with GAS, then BOOST after crossing for a flying start.');
+assert.equal(byId('head-start')?.icon, 'headStart');
+assert.match(ICONS.headStart || '', /rotate\(24 400 300\)/,
+  'HEAD START must keep the tilted top-down flying car from the supplied artwork');
+assert.match(ICONS.headStart || '', /Checkered finish/,
+  'HEAD START must keep its authored two-row finish-line motif');
+assert.match(ICONS.headStart || '', /Launch streaks/,
+  'HEAD START must keep the two launch streaks under the car');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('head-start'), true);
 assert.equal(byId('golden-hour')?.title, 'MAYDAY!');
 assert.equal(byId('golden-hour')?.trophies, 100);
