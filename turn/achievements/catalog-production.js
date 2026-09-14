@@ -14,10 +14,66 @@ import {
   AUTHORED_SAFETY_ICON
 } from '../ui/authored-icons.js?revision=r245-shared-drift-safety-icons';
 
+export const HEAD_START_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" aria-hidden="true">
+  <g fill="currentColor" stroke="none">
+    <!-- Flying car -->
+    <g transform="rotate(24 400 300)">
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="
+          M 320 82
+          H 480
+          Q 520 82 520 122
+          V 454
+          Q 520 494 480 494
+          H 320
+          Q 280 494 280 454
+          V 122
+          Q 280 82 320 82
+          Z
+
+          M 326 142
+          H 474
+          Q 490 142 490 158
+          V 220
+          H 310
+          V 158
+          Q 310 142 326 142
+          Z
+
+          M 310 372
+          H 490
+          V 434
+          Q 490 450 474 450
+          H 326
+          Q 310 450 310 434
+          Z
+        "
+      />
+    </g>
+
+    <!-- Launch streaks -->
+    <path d="M 290 500 L 332 520 L 268 636 Z" />
+    <path d="M 386 520 L 430 542 L 362 650 Z" />
+
+    <!-- Checkered finish -->
+    <rect x="80" y="642" width="80" height="68" />
+    <rect x="240" y="642" width="80" height="68" />
+    <rect x="400" y="642" width="80" height="68" />
+    <rect x="560" y="642" width="80" height="68" />
+    <rect x="160" y="710" width="80" height="68" />
+    <rect x="320" y="710" width="80" height="68" />
+    <rect x="480" y="710" width="80" height="68" />
+    <rect x="640" y="710" width="80" height="68" />
+  </g>
+</svg>`;
+
 export const ICONS = Object.freeze({
   ...base.ICONS,
   drift: AUTHORED_DRIFT_ICON,
-  safety: AUTHORED_SAFETY_ICON
+  safety: AUTHORED_SAFETY_ICON,
+  headStart: HEAD_START_ICON
 });
 
 const DRIVE_BY_EAR_FAMILY_ICON = 'blind';
@@ -64,7 +120,7 @@ export const HEAD_START_ACHIEVEMENT = Object.freeze({
   title: 'HEAD START',
   description: 'Finish a valid lap with OVERCHARGE, then use that carried OVERCHARGE with BOOST to beat it on the next lap.',
   recommendation: 'Build OVERCHARGE before the line, catch it with GAS, then BOOST after crossing for a flying start.',
-  icon: 'charge'
+  icon: 'headStart'
 });
 
 export const GOT_STARTED_ACHIEVEMENT = Object.freeze({

@@ -183,6 +183,21 @@ const HEAD_START_FLYING_LAP_HISTORY = Object.freeze({
   ])
 });
 
+
+const HEAD_START_ICON_HISTORY = Object.freeze({
+  period: '14 September',
+  title: 'HEAD START gets its own flying-start symbol',
+  paragraphs: Object.freeze([
+    'TURN 1.19.14 gives HEAD START a dedicated monochrome icon based on the supplied sketch: a tilted top-down car launching over a checkered finish line.',
+    'Only the pictogram changes. The existing achievement icon box, locked/unlocked styling and surrounding card design remain owned by TURN.'
+  ]),
+  milestones: Object.freeze([
+    'Tilted top-down car with two launch streaks',
+    'Two-row checkered finish motif inside the existing achievement icon box',
+    'TURN 1.19.14 · 2026.09.14-r230'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -207,7 +222,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   MOUNTAIN_WARNING_PLACEMENT_HISTORY,
   MOUNTAIN_WARNING_READABILITY_HISTORY,
   HEAD_START_HISTORY,
-  HEAD_START_FLYING_LAP_HISTORY
+  HEAD_START_FLYING_LAP_HISTORY,
+  HEAD_START_ICON_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -240,13 +256,15 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.19.13 r228', 'Adds HEAD START to Getting Started for 50 trophies: beat the previous valid lap while carrying OVERCHARGE across the line.']),
       Object.freeze(['Flying-start lesson', 'Encourages continuous laps and prepares drivers for Time Trial targets set for flying starts.']),
       Object.freeze(['1.19.14 r229', 'Corrects HEAD START: cross the setup lap with OVERCHARGE, spend that carried OVERCHARGE with BOOST on the next lap, and beat the setup time.']),
-      Object.freeze(['Two-lap flying-start sequence', 'An invalid next lap breaks the attempt, so the achievement now directly teaches the build-up lap used before Time Trial runs.'])
+      Object.freeze(['Two-lap flying-start sequence', 'An invalid next lap breaks the attempt, so the achievement now directly teaches the build-up lap used before Time Trial runs.']),
+      Object.freeze(['1.19.14 r230', 'Gives HEAD START its own flying-start icon: a tilted top-down car launching over a checkered finish line.']),
+      Object.freeze(['Achievement pictogram only', 'Keeps the existing achievement icon box and state styling unchanged while replacing the reused charge symbol.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.19.14',
-  build: '2026.09.14-r229',
-  note: 'TURN 1.19.14 corrects HEAD START to reward a setup lap followed by a boosted flying lap.'
+  build: '2026.09.14-r230',
+  note: 'TURN 1.19.14 gives HEAD START a dedicated flying-start achievement icon.'
 });
