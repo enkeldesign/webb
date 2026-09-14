@@ -1,0 +1,230 @@
+name: Temporary OVERCHARGED boost apply
+
+on:
+  push:
+    branches:
+      - sol/overcharged-boost-power
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: sol/overcharged-boost-power
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Apply gameplay, guide, test and release edits
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          import re
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one match, found {count}: {old[:80]!r}')
+              p.write_text(text.replace(old, new, 1))
+
+          physics = Path('turn/vehicle/physics.js')
+          text = physics.read_text()
+          marker = "export const OVERDRIVE_MAX_SPEED_MULTIPLIER = 1.06;\n"
+          addition = """export const OVERDRIVE_MAX_SPEED_MULTIPLIER = 1.06;
+          export const OVERCHARGE_BOOST_POWER_MULTIPLIER = 1.2;
+
+          export function resolveOverchargedBoostPowerMultiplier({
+            boostActive = false,
+            overcharge = 0
+          } = {}) {
+            return boostActive === true && nonNegativeNumber(overcharge, 0) > 0
+              ? OVERCHARGE_BOOST_POWER_MULTIPLIER
+              : 1;
+          }
+          """
+          if text.count(marker) != 1:
+              raise SystemExit('physics: OVERDRIVE multiplier marker mismatch')
+          text = text.replace(marker, addition, 1)
+          old_boost = """  const boostPower = effectiveBoostActive
+              ? lerp(36, 16, offRoadPenalty) * tuningBoostPowerMultiplier
+              : 0;
+          """
+          new_boost = """  const overchargedBoostPowerMultiplier = resolveOverchargedBoostPowerMultiplier({
+              boostActive: effectiveBoostActive,
+              overcharge: boostOvercharge
+            });
+            const boostPower = effectiveBoostActive
+              ? lerp(36, 16, offRoadPenalty)
+                * tuningBoostPowerMultiplier
+                * overchargedBoostPowerMultiplier
+              : 0;
+          """
+          if text.count(old_boost) != 1:
+              raise SystemExit('physics: boost-power block mismatch')
+          physics.write_text(text.replace(old_boost, new_boost, 1))
+
+          test = Path('turn-lab/tests/vehicle-drift-production.mjs')
+          text = test.read_text()
+          old_import = """  OVERDRIVE_BUILD_SECONDS,
+            OVERDRIVE_MAX_SPEED_MULTIPLIER,
+            getOverdriveSpeedMultiplier,
+          """
+          new_import = """  OVERDRIVE_BUILD_SECONDS,
+            OVERDRIVE_MAX_SPEED_MULTIPLIER,
+            OVERCHARGE_BOOST_POWER_MULTIPLIER,
+            getOverdriveSpeedMultiplier,
+          """
+          if text.count(old_import) != 1:
+              raise SystemExit('vehicle drift test: constant import marker mismatch')
+          text = text.replace(old_import, new_import, 1)
+          old_resolve_import = """  resolveDriftSpeedMultiplier,
+            resolveOverchargedControlMultiplier,
+          """
+          new_resolve_import = """  resolveDriftSpeedMultiplier,
+            resolveOverchargedBoostPowerMultiplier,
+            resolveOverchargedControlMultiplier,
+          """
+          if text.count(old_resolve_import) != 1:
+              raise SystemExit('vehicle drift test: resolver import marker mismatch')
+          text = text.replace(old_resolve_import, new_resolve_import, 1)
+          anchor = """assert.match(physicsSource, /\\* tuningBoostPowerMultiplier/,
+            'BOOST POWER must scale actual boost acceleration');
+          """
+          assertions = """assert.match(physicsSource, /\\* tuningBoostPowerMultiplier/,
+            'BOOST POWER must scale actual boost acceleration');
+          assert.equal(OVERCHARGE_BOOST_POWER_MULTIPLIER, 1.2,
+            'OVERCHARGE must add a deliberate 20 percent boost-thrust kick');
+          assert.equal(resolveOverchargedBoostPowerMultiplier({ boostActive: false, overcharge: 1 }), 1,
+            'Stored OVERCHARGE must not change propulsion until BOOST is actually active');
+          assert.equal(resolveOverchargedBoostPowerMultiplier({ boostActive: true, overcharge: 0 }), 1,
+            'Ordinary BOOST must retain its existing boost-power tuning');
+          assert.equal(resolveOverchargedBoostPowerMultiplier({ boostActive: true, overcharge: 0.01 }), 1.2,
+            'Any actively consumed OVERCHARGE must use the stronger boost-thrust tier');
+          assert.match(physicsSource,
+            /lerp\\(36, 16, offRoadPenalty\\)[\\s\\S]*tuningBoostPowerMultiplier[\\s\\S]*overchargedBoostPowerMultiplier/,
+            'The OVERCHARGE kick must multiply boost thrust after the vehicle BOOST POWER tuning');
+          """
+          if text.count(anchor) != 1:
+              raise SystemExit('vehicle drift test: BOOST POWER assertion marker mismatch')
+          test.write_text(text.replace(anchor, assertions, 1))
+
+          replace_once(
+              'turn/m8-home.js',
+              'With BOOST full, keep using DRIFT to build purple OVERCHARGE. GAS catches it and BOOST spends it.',
+              'With BOOST full, keep using DRIFT to build purple OVERCHARGE. GAS catches it; BOOST spends it first as a short stronger burst before normal BOOST.'
+          )
+          replace_once(
+              'turn/ui/how-to-play-guide.js',
+              '<li><strong>SPEND</strong><span>Slide to BOOST. OVERCHARGE is spent before normal BOOST.</span></li>',
+              '<li><strong>SPEND</strong><span>Slide to BOOST. OVERCHARGE burns first as a stronger burst, then normal BOOST continues.</span></li>'
+          )
+
+          guide_test = Path('turn-tests/how-to-play-guide-production.mjs')
+          guide_text = guide_test.read_text()
+          guide_anchor = "assert.match(guide, /Engine and BOOST/);\n"
+          if guide_text.count(guide_anchor) != 1:
+              raise SystemExit('how-to-play test: guide marker mismatch')
+          guide_text = guide_text.replace(
+              guide_anchor,
+              guide_anchor + "assert.match(guide, /OVERCHARGE burns first as a stronger burst, then normal BOOST continues/);\n",
+              1
+          )
+          guide_test.write_text(guide_text)
+
+          release_path = Path('turn/release.json')
+          release = json.loads(release_path.read_text())
+          if release != {
+              'version': '1.19.14',
+              'id': '2026.09.14-r230',
+              'cacheKey': '20260914-r230'
+          }:
+              raise SystemExit(f'unexpected release baseline: {release}')
+          release_path.write_text(json.dumps({
+              'version': '1.19.15',
+              'id': '2026.09.14-r231',
+              'cacheKey': '20260914-r231'
+          }, indent=2) + '\n')
+
+          history = Path('turn/content/about-history-current.js')
+          text = history.read_text()
+          history_marker = "\nconst previousLatest = BASE_CHANGELOG.at(-1);\n"
+          history_block = """
+          const OVERCHARGED_BOOST_HISTORY = Object.freeze({
+            period: '14 September',
+            title: 'OVERCHARGE hits harder',
+            paragraphs: Object.freeze([
+              'TURN 1.19.15 makes the OVERCHARGE portion of BOOST deliver 20% more boost thrust. The stronger acceleration lasts only while saved OVERCHARGE is being consumed; normal BOOST immediately returns to ordinary power.',
+              'The boosted speed ceiling is unchanged, so OVERCHARGE improves the launch and corner-exit kick without raising normal BOOST top speed. Vehicle perks that react to OVERCHARGE continue to layer on top of the stronger shared burst.'
+            ]),
+            milestones: Object.freeze([
+              '20% more boost thrust while OVERCHARGE is being consumed',
+              'Normal BOOST power and boosted top-speed ceiling remain unchanged',
+              'TURN 1.19.15 · 2026.09.14-r231'
+            ])
+          });
+
+          const previousLatest = BASE_CHANGELOG.at(-1);
+          """
+          if text.count(history_marker) != 1:
+              raise SystemExit('history: previousLatest marker mismatch')
+          text = text.replace(history_marker, '\n' + history_block, 1)
+          dev_old = """  HEAD_START_FLYING_LAP_HISTORY,
+            HEAD_START_ICON_HISTORY
+          ]);
+          """
+          dev_new = """  HEAD_START_FLYING_LAP_HISTORY,
+            HEAD_START_ICON_HISTORY,
+            OVERCHARGED_BOOST_HISTORY
+          ]);
+          """
+          if text.count(dev_old) != 1:
+              raise SystemExit('history: development history marker mismatch')
+          text = text.replace(dev_old, dev_new, 1)
+          changelog_old = """      Object.freeze(['1.19.14 r230', 'Gives HEAD START its own flying-start icon: a tilted top-down car launching over a checkered finish line.']),
+                Object.freeze(['Achievement pictogram only', 'Keeps the existing achievement icon box and state styling unchanged while replacing the reused charge symbol.'])
+          """
+          changelog_new = """      Object.freeze(['1.19.14 r230', 'Gives HEAD START its own flying-start icon: a tilted top-down car launching over a checkered finish line.']),
+                Object.freeze(['Achievement pictogram only', 'Keeps the existing achievement icon box and state styling unchanged while replacing the reused charge symbol.']),
+                Object.freeze(['1.19.15 r231', 'Makes the OVERCHARGE portion of BOOST deliver 20% more boost thrust while it is being consumed.']),
+                Object.freeze(['Stronger burst, same ceiling', 'Returns immediately to ordinary BOOST power after OVERCHARGE is spent and leaves the boosted top-speed ceiling unchanged.'])
+          """
+          if text.count(changelog_old) != 1:
+              raise SystemExit('history: changelog marker mismatch')
+          text = text.replace(changelog_old, changelog_new, 1)
+          text, count = re.subn(
+              r"note: 'TURN 1\.19\.14 gives HEAD START a dedicated flying-start achievement icon\.'",
+              "note: 'TURN 1.19.15 makes OVERCHARGE a stronger short BOOST burst.'",
+              text,
+              count=1
+          )
+          if count != 1:
+              raise SystemExit('history: current release note marker mismatch')
+          history.write_text(text)
+          PY
+
+          node turn/scripts/release.mjs --write
+          node turn/scripts/release.mjs --check
+          node turn-lab/tests/vehicle-drift-production.mjs
+          node turn-tests/how-to-play-guide-production.mjs
+          node turn-tests/about-history-production.mjs
+          node turn-tests/release-production.mjs
+          node turn-tests/release-composition-production.mjs
+
+      - name: Commit generated release and gameplay change
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn turn-lab turn-next yourturn
+          git commit -m "Make OVERCHARGED boost hit harder" \
+            -m "Give consumed OVERCHARGE 20% more boost thrust while keeping normal BOOST and the boosted speed ceiling unchanged. Update the player guide, regression coverage, history and release identity to TURN 1.19.15 / r231."
+          git push origin HEAD:sol/overcharged-boost-power
