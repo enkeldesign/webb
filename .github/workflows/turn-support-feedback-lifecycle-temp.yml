@@ -27,8 +27,13 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Apply lifecycle refactor
-        run: node turn/scripts/temp-support-feedback-lifecycle.mjs
+      - name: Apply lifecycle refactor if needed
+        run: |
+          if grep -q "rewardPresentationHolds: new Set()" turn/achievements/runtime.js; then
+            echo "Lifecycle refactor already committed."
+          else
+            node turn/scripts/temp-support-feedback-lifecycle.mjs
+          fi
 
       - name: Verify focused contracts
         run: |
@@ -41,6 +46,24 @@ jobs:
           node turn-tests/home-navigation-production.mjs
           node turn-lab/tests/stat-legend-production.mjs
           git diff --check
+
+      - name: Install browser smoke dependencies
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium webkit
+
+      - name: Start static TURN server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/turn-support-feedback-http.log 2>&1 &
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:8000/ >/dev/null && exit 0
+            sleep 0.5
+          done
+          cat /tmp/turn-support-feedback-http.log
+          exit 1
+
+      - name: Verify support feedback in browsers
+        run: node turn-tests/support-feedback-browser-smoke.mjs
 
       - name: Commit verified refactor
         run: |
@@ -55,7 +78,7 @@ jobs:
             turn-tests/home-navigation-production.mjs \
             turn-lab/tests/stat-legend-production.mjs
           if git diff --cached --quiet; then
-            echo "No verified lifecycle changes to commit."
+            echo "No lifecycle changes to commit."
             exit 0
           fi
           git commit -m "Coordinate support feedback through explicit lifecycle"
