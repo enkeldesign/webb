@@ -47,7 +47,7 @@ assert.match(guide, /How to catch and use OVERCHARGE/);
 assert.match(guide, /<strong>BUILD<\/strong><span>With BOOST full, keep using DRIFT\.<\/span>/);
 assert.match(guide, /<strong>CATCH<\/strong><span>Slide to GAS before OVERCHARGE leaks away\.<\/span>/);
 assert.match(guide, /<strong>HOLD<\/strong><span>Stay on GAS to hold the OVERCHARGE you caught\.<\/span>/);
-assert.match(guide, /<strong>SPEND<\/strong><span>Slide to BOOST\. OVERCHARGE is spent before normal BOOST\.<\/span>/);
+assert.match(guide, /<strong>SPEND<\/strong><span>Slide to BOOST\. OVERCHARGE burns first as a stronger burst, then normal BOOST continues\.<\/span>/);
 assert.match(guide, /Uncaught OVERCHARGE leaks\. At its peak, it starts leaking even while you keep using DRIFT/);
 
 assert.match(guide, /title: 'SHIFT'/);
