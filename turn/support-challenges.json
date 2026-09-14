@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "enabled": true,
+  "offerAfterValidLapsWithoutTrophy": 6,
+  "rerollAfterAdditionalValidLaps": 10,
+  "stopAtTrophies": 2300,
+  "priority": ["winner", "learning", "safety", "drift"],
+  "trackOrder": [
+    "countryside",
+    "airport",
+    "cliffside",
+    "harbor",
+    "midnight-city",
+    "mountain"
+  ],
+  "winner": {
+    "enabled": true,
+    "reward": 25,
+    "cars": {
+      "countryside": ["race", "sedan-sports", "suv", "race-future", "convertible"],
+      "airport": ["race", "race-future", "sedan-sports", "suv", "police"],
+      "cliffside": ["sedan-sports", "race", "convertible", "suv", "sedan"],
+      "harbor": ["sedan-sports", "suv", "race", "convertible", "sedan"],
+      "midnight-city": ["race", "sedan-sports", "suv", "race-future", "police"],
+      "mountain": ["convertible", "monster-truck", "suv", "sedan-sports", "race"]
+    }
+  },
+  "learning": {
+    "enabled": true,
+    "title": "DID YOU READ ALL OF IT?",
+    "rewardPerPart": 5,
+    "description": "Open every part of HOW TO PLAY."
+  },
+  "safety": {
+    "enabled": true,
+    "reward": 25,
+    "cleanLapExplanation": "A clean lap means staying on the road from start to finish. Going off-road breaks the clean lap.",
+    "targets": {
+      "countryside": 18,
+      "airport": 24,
+      "cliffside": 24,
+      "harbor": 36,
+      "midnight-city": 84,
+      "mountain": 84
+    },
+    "cars": {
+      "countryside": ["sedan-sports", "suv", "race", "convertible", "sedan"],
+      "airport": ["race", "sedan-sports", "suv", "sedan", "convertible"],
+      "cliffside": ["sedan-sports", "convertible", "suv", "race", "sedan"],
+      "harbor": ["sedan-sports", "suv", "convertible", "sedan", "race"],
+      "midnight-city": ["sedan-sports", "suv", "race", "convertible", "sedan"],
+      "mountain": ["convertible", "suv", "sedan-sports", "sedan", "race"]
+    }
+  },
+  "drift": {
+    "enabled": true,
+    "requiredReward": "drift-attack",
+    "reward": 25,
+    "targets": {
+      "countryside": 5000,
+      "airport": 7000,
+      "cliffside": 12000,
+      "harbor": 11000,
+      "midnight-city": 12000,
+      "mountain": 12000
+    },
+    "cars": {
+      "countryside": ["convertible", "vintage-racer", "monster-truck", "van", "toy-racer"],
+      "airport": ["convertible", "vintage-racer", "toy-racer", "monster-truck", "van"],
+      "cliffside": ["convertible", "vintage-racer", "monster-truck", "van", "toy-racer"],
+      "harbor": ["convertible", "vintage-racer", "monster-truck", "van", "toy-racer"],
+      "midnight-city": ["convertible", "vintage-racer", "monster-truck", "van", "toy-racer"],
+      "mountain": ["convertible", "monster-truck", "vintage-racer", "van", "toy-racer"]
+    }
+  }
+}

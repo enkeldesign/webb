@@ -200,6 +200,12 @@ function synchronizeVisualResourceTargets(importMap, release) {
 
 function synchronizeAchievementProgressionTargets(importMap, release) {
   const imports = importMap.imports ||= {};
+  const storeTarget = `/turn/achievements/store.js?build=${release.cacheKey}`;
+  for (const specifier of [
+    '/turn/achievements/store.js',
+    '/turn/achievements/store.js?revision=r240-trophy-road-2',
+    '/turn/achievements/store.js?revision=r243-mountain-1300'
+  ]) imports[specifier] = storeTarget;
   const challengeTarget = `/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=${release.cacheKey}`;
   for (const specifier of [
     '/turn/achievements/challenge-expansion-r166.js?revision=r166-bella-records',
