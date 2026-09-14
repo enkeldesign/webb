@@ -6,7 +6,7 @@ import {
 import {
   createAchievementStore,
   normalizeAchievementState
-} from './store.js?revision=r271-support-bonuses';
+} from './store.js?revision=r243-mountain-1300';
 import {
   allOnboardingComplete,
   createAchievementView

@@ -213,6 +213,20 @@ const OVERCHARGED_BOOST_HISTORY = Object.freeze({
   ])
 });
 
+const SUPPORT_CHALLENGE_HISTORY = Object.freeze({
+  period: '14 September',
+  title: 'Trophy Road offers a hand when progress stalls',
+  paragraphs: Object.freeze([
+    'TURN 1.20.0 adds support challenges after six valid laps without earning trophies. It prioritises remaining WINNER opportunities when four saved rivals are available, then HOW TO PLAY, SAFETY and—once unlocked—DRIFT.',
+    'The challenge rules live in turn/support-challenges.json: thresholds, rewards, easier support targets and recommended cars can be tuned as data. Bonus trophies advance Trophy Road without creating extra achievements.'
+  ]),
+  milestones: Object.freeze([
+    'Contextual WINNER and SAFETY challenges, plus DRIFT after DRIFT ATTACK unlocks',
+    'DID YOU READ ALL OF IT? pays 5 trophies for each previously unread HOW TO PLAY part',
+    'TURN 1.20.0 · 2026.09.14-r232'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -239,7 +253,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   HEAD_START_HISTORY,
   HEAD_START_FLYING_LAP_HISTORY,
   HEAD_START_ICON_HISTORY,
-  OVERCHARGED_BOOST_HISTORY
+  OVERCHARGED_BOOST_HISTORY,
+  SUPPORT_CHALLENGE_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -276,13 +291,15 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.19.14 r230', 'Gives HEAD START its own flying-start icon: a tilted top-down car launching over a checkered finish line.']),
       Object.freeze(['Achievement pictogram only', 'Keeps the existing achievement icon box and state styling unchanged while replacing the reused charge symbol.']),
       Object.freeze(['1.19.15 r231', 'Makes the OVERCHARGE portion of BOOST deliver 20% more boost thrust while it is being consumed.']),
-      Object.freeze(['Stronger burst, same ceiling', 'Returns immediately to ordinary BOOST power after OVERCHARGE is spent and leaves the boosted top-speed ceiling unchanged.'])
+      Object.freeze(['Stronger burst, same ceiling', 'Returns immediately to ordinary BOOST power after OVERCHARGE is spent and leaves the boosted top-speed ceiling unchanged.']),
+      Object.freeze(['1.20.0 r232', 'Adds adaptive Trophy Road support challenges when progress stalls: WINNER, HOW TO PLAY, SAFETY and, after it unlocks, DRIFT.']),
+      Object.freeze(['Progress without guesswork', 'Recommends an owned car, explains that a clean lap stays on-road from start to finish, awards 5 trophies for each previously unread HOW TO PLAY part, and offers a reroll after continued attempts.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.15',
-  build: '2026.09.14-r231',
-  note: 'TURN 1.19.15 makes OVERCHARGE a stronger short BOOST burst.'
+  version: '1.20.0',
+  build: '2026.09.14-r232',
+  note: 'TURN 1.20.0 adds adaptive Trophy Road support challenges for stalled progress.'
 });
