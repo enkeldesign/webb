@@ -30,7 +30,9 @@ jobs:
           node-version: '24'
 
       - name: Apply HEAD START achievement
-        run: python3 .github/turn-head-start-r228.py
+        run: |
+          python3 .github/turn-head-start-r228.py
+          python3 .github/turn-head-start-r228-test-fix.py
 
       - name: Synchronize release surfaces
         run: node turn/scripts/release.mjs --write
