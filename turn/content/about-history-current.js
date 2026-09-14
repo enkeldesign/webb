@@ -198,6 +198,21 @@ const HEAD_START_ICON_HISTORY = Object.freeze({
   ])
 });
 
+
+const OVERCHARGED_BOOST_HISTORY = Object.freeze({
+  period: '14 September',
+  title: 'OVERCHARGE hits harder',
+  paragraphs: Object.freeze([
+    'TURN 1.19.15 makes the OVERCHARGE portion of BOOST deliver 20% more boost thrust. The stronger acceleration lasts only while saved OVERCHARGE is being consumed; normal BOOST immediately returns to ordinary power.',
+    'The boosted speed ceiling is unchanged, so OVERCHARGE improves the launch and corner-exit kick without raising normal BOOST top speed. Vehicle perks that react to OVERCHARGE continue to layer on top of the stronger shared burst.'
+  ]),
+  milestones: Object.freeze([
+    '20% more boost thrust while OVERCHARGE is being consumed',
+    'Normal BOOST power and boosted top-speed ceiling remain unchanged',
+    'TURN 1.19.15 · 2026.09.14-r231'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -223,7 +238,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   MOUNTAIN_WARNING_READABILITY_HISTORY,
   HEAD_START_HISTORY,
   HEAD_START_FLYING_LAP_HISTORY,
-  HEAD_START_ICON_HISTORY
+  HEAD_START_ICON_HISTORY,
+  OVERCHARGED_BOOST_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -258,13 +274,15 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.19.14 r229', 'Corrects HEAD START: cross the setup lap with OVERCHARGE, spend that carried OVERCHARGE with BOOST on the next lap, and beat the setup time.']),
       Object.freeze(['Two-lap flying-start sequence', 'An invalid next lap breaks the attempt, so the achievement now directly teaches the build-up lap used before Time Trial runs.']),
       Object.freeze(['1.19.14 r230', 'Gives HEAD START its own flying-start icon: a tilted top-down car launching over a checkered finish line.']),
-      Object.freeze(['Achievement pictogram only', 'Keeps the existing achievement icon box and state styling unchanged while replacing the reused charge symbol.'])
+      Object.freeze(['Achievement pictogram only', 'Keeps the existing achievement icon box and state styling unchanged while replacing the reused charge symbol.']),
+      Object.freeze(['1.19.15 r231', 'Makes the OVERCHARGE portion of BOOST deliver 20% more boost thrust while it is being consumed.']),
+      Object.freeze(['Stronger burst, same ceiling', 'Returns immediately to ordinary BOOST power after OVERCHARGE is spent and leaves the boosted top-speed ceiling unchanged.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.14',
-  build: '2026.09.14-r230',
-  note: 'TURN 1.19.14 gives HEAD START a dedicated flying-start achievement icon.'
+  version: '1.19.15',
+  build: '2026.09.14-r231',
+  note: 'TURN 1.19.15 makes OVERCHARGE a stronger short BOOST burst.'
 });
