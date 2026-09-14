@@ -819,6 +819,7 @@ export async function installM8HomeNavigation() {
     syncTrackBestVisibility();
     syncSelection();
     scheduleEnhancedLotWarmup();
+    window.dispatchEvent(new CustomEvent('turn:home-shown', { detail: { focus } }));
     requestAnimationFrame(() => {
       syncScrollButtons();
       if (focus) home.querySelector('#m8HomeTitle')?.focus?.();

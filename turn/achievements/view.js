@@ -762,7 +762,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
     });
   }
 
-  function showToast(toastElement, batch, { reward = false } = {}) {
+  function showToast(toastElement, batch, { reward = false, announce = true } = {}) {
     if (!batch.length) return;
     const timerKey = reward ? 'reward' : 'achievement';
     if (timerKey === 'reward') {
@@ -797,6 +797,12 @@ export function createAchievementView({ store, session, utilityGroup }) {
       ? `${batch.length === 1 ? 'Trophy Road reward unlocked' : `${batch.length} Trophy Road rewards unlocked`}. ${batch.map((item) => item.shortTitle).join(', ')}.${needsHowToPlay ? ' See How to Play for instructions.' : ''} Open Achievements.`
       : `${batch.length === 1 ? 'Achievement unlocked' : `${batch.length} achievements unlocked`}. ${batch.map((achievement) => achievement.title).join(', ')}. ${total} trophies.`);
 
+    if (reward && announce) {
+      window.dispatchEvent(new CustomEvent('turn:trophy-road-toast-shown', {
+        detail: { ids: batch.map((item) => item.id).filter(Boolean) }
+      }));
+    }
+
     const alreadyVisible = !toastElement.hidden && toastElement.classList.contains('is-visible');
     toastElement.hidden = false;
     if (!alreadyVisible) {
@@ -828,8 +834,8 @@ export function createAchievementView({ store, session, utilityGroup }) {
     showToast(toast, batch);
   }
 
-  function showRewardToastBatch(batch) {
-    showToast(rewardToast, batch, { reward: true });
+  function showRewardToastBatch(batch, { announce = true } = {}) {
+    showToast(rewardToast, batch, { reward: true, announce });
   }
 
   function hideRewardToast() {
@@ -861,6 +867,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
     pulseRaceTrigger,
     showToastBatch,
     showRewardToastBatch,
+    hideRewardToast,
     open,
     close
   });

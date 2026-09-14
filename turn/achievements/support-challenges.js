@@ -791,7 +791,7 @@ export async function installSupportChallenges({
       reason: `support-${active.type}`
     };
     const granted = grantBonus(`support:${active.key}`, reward, context, {
-      title: `+${reward} TROPHIES`
+      title: `+${reward} 🏆`
     });
     if (!granted && !achievements.store.hasBonus?.(`support:${active.key}`)) return false;
     if (!state.completed.includes(active.key)) state.completed.push(active.key);
@@ -907,7 +907,7 @@ export async function installSupportChallenges({
         reason: 'support-how-to-play'
       }, {
         label: 'HOW TO PLAY',
-        title: `+${reward} TROPHIES`
+        title: `+${reward} 🏆`
       });
       if (granted) state.lapsSinceChallengeProgress = 0;
     }

@@ -112,6 +112,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     pendingToastRewards: [],
     toastTimer: 0,
     rewardToastTimer: 0,
+    rewardPresentationHolds: new Set(),
     samplingTimer: 0,
     listenCloselyMs: 0,
     lastSampleAt: performance.now(),
@@ -151,9 +152,13 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
 
   function scheduleRewardToastFlush(delay = 0) {
     window.clearTimeout(session.rewardToastTimer);
+    session.rewardToastTimer = 0;
+    if (session.rewardPresentationHolds.size) return;
     session.rewardToastTimer = window.setTimeout(() => {
       session.rewardToastTimer = 0;
-      view.showRewardToastBatch(session.pendingToastRewards.splice(0));
+      if (session.rewardPresentationHolds.size) return;
+      const batch = session.pendingToastRewards.splice(0);
+      if (batch.length) view.showRewardToastBatch(batch);
     }, delay);
   }
 
@@ -175,6 +180,24 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     view.syncTriggers();
     view.render();
     if (delay >= 0) scheduleRewardToastFlush(delay);
+  }
+
+  function holdRewardPresentation(key) {
+    if (typeof key !== 'string' || !key) return false;
+    session.rewardPresentationHolds.add(key);
+    window.clearTimeout(session.rewardToastTimer);
+    session.rewardToastTimer = 0;
+    view.hideRewardToast();
+    return true;
+  }
+
+  function releaseRewardPresentation(key, { delay = 0 } = {}) {
+    if (typeof key !== 'string' || !key) return false;
+    const removed = session.rewardPresentationHolds.delete(key);
+    if (!session.rewardPresentationHolds.size && session.pendingToastRewards.length) {
+      scheduleRewardToastFlush(delay);
+    }
+    return removed;
   }
 
   function unlock(ids, context, options = {}) {
@@ -595,6 +618,10 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     close: view.close,
     unlock: (id, context = {}) => unlock([id], context, { delay: 0 }),
     grantBonus,
+    holdRewardPresentation,
+    releaseRewardPresentation,
+    hideRewardToast: view.hideRewardToast,
+    showRewardToastBatch: view.showRewardToastBatch,
     getTrophies: () => store.trophyTotal(),
     getState: () => normalizeAchievementState(store.state)
   });

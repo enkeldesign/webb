@@ -118,7 +118,11 @@ assert.match(homeRewardReplay, /if \(!addedThisSession\.has\(id\)\) return true;
   'Rewards carried across sessions must be ready for immediate Home replay');
 assert.match(homeRewardReplay, /if \(shownAwayFromHome\.has\(id\)\) return true;/,
   'A reward already shown in-race must be deliberately shown again after returning Home');
-assert.match(homeRewardReplay, /consume\(currentIds\)/,
-  'If the ordinary reward toast first appears after Home is already open, it must count as the Home reminder instead of duplicating immediately');
+assert.match(homeRewardReplay, /turn:trophy-road-toast-shown/,
+  'The ordinary reward toast must explicitly tell Home replay when it has actually been presented');
+assert.match(homeRewardReplay, /turn:support-home-feedback-started/,
+  'Home reward replay must yield to support completion feedback before replaying a reward');
+assert.match(homeRewardReplay, /turn:support-home-feedback-ended/,
+  'Home reward replay must resume only after support completion feedback is finished');
 
 console.log(`TURN ${release.id} route-independent vehicle stat legend and persistent Home reward reminder passed.`);

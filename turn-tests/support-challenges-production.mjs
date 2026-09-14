@@ -16,6 +16,10 @@ const rawConfig = JSON.parse(await fs.readFile(new URL('../turn/support-challeng
 const source = await fs.readFile(new URL('../turn/achievements/support-challenges.js', import.meta.url), 'utf8');
 const feedbackSource = await fs.readFile(new URL('../turn/achievements/support-challenge-feedback.js', import.meta.url), 'utf8');
 const facadeSource = await fs.readFile(new URL('../turn/achievements.js', import.meta.url), 'utf8');
+const runtimeSource = await fs.readFile(new URL('../turn/achievements/runtime.js', import.meta.url), 'utf8');
+const viewSource = await fs.readFile(new URL('../turn/achievements/view.js', import.meta.url), 'utf8');
+const homeSource = await fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8');
+const homeReplaySource = await fs.readFile(new URL('../turn/achievements/home-reward-replay-r225.js', import.meta.url), 'utf8');
 const config = normalizeSupportChallengeConfig(rawConfig);
 
 assert.equal(config.enabled, true);
@@ -54,12 +58,30 @@ assert.match(feedbackSource, /turn-support-home-toast/,
   'Challenge completion must replay as a compact success toast on Home');
 assert.match(feedbackSource, /turn-support-completion-indicator/,
   'Home completion feedback must animate the challenge notification before it disappears');
-assert.match(feedbackSource, /turn:achievements-updated/,
-  'Challenge completion must coordinate with same-lap achievement feedback');
 assert.match(feedbackSource, /turn:trophy-bonus/,
   'Challenge completion must follow the authoritative support bonus event');
-assert.match(feedbackSource, /turn-trophy-reward-toast/,
-  'Trophy Road reward feedback must be deferred while challenge/achievement feedback owns the cue lane');
+assert.match(feedbackSource, /turn:home-shown/,
+  'Home challenge replay must use the canonical Home lifecycle rather than watching DOM state');
+assert.match(feedbackSource, /holdRewardPresentation/,
+  'Home challenge replay must acquire the achievement runtime reward hold before presenting');
+assert.match(feedbackSource, /releaseRewardPresentation/,
+  'Home challenge replay must release the runtime reward hold after its pill and notification finish');
+assert.doesNotMatch(feedbackSource, /achievementObserver|rewardObserver|supportObserver|bodyObserver/,
+  'Support feedback must not coordinate achievement and reward ordering by observing toast DOM');
+assert.match(runtimeSource, /rewardPresentationHolds: new Set\(\)/,
+  'The achievement runtime must own reward presentation holds');
+assert.ok(runtimeSource.includes('if (session.rewardPresentationHolds.size) return;'),
+  'Queued Trophy Road rewards must stay queued while a presentation hold is active');
+assert.match(viewSource, /turn:trophy-road-toast-shown/,
+  'The achievement view must publish reward presentation explicitly');
+assert.match(homeSource, /turn:home-shown/,
+  'Home navigation must publish a real Home shown lifecycle event');
+assert.match(homeReplaySource, /turn:support-home-feedback-started/,
+  'Home reward replay must pause while support feedback owns the cue lane');
+assert.match(homeReplaySource, /turn:support-home-feedback-ended/,
+  'Home reward replay must resume after support feedback ends');
+assert.doesNotMatch(homeReplaySource, /new MutationObserver/,
+  'Home reward replay must use explicit presentation and Home lifecycle events rather than DOM observation');
 assert.match(feedbackSource, /border-radius:\s*999px/,
   'Challenge success feedback must use the compact pill presentation');
 assert.doesNotMatch(feedbackSource, /revision=/,
