@@ -256,6 +256,9 @@ jobs:
       - name: Run achievement system regression
         run: node turn-lab/tests/achievements-production.mjs
 
+      - name: Run Trophy Road support challenge regression
+        run: node turn-tests/support-challenges-production.mjs
+
       - name: Run achievement and Bella polling lifecycle regression
         run: node turn-tests/achievement-polling-production.mjs
 
