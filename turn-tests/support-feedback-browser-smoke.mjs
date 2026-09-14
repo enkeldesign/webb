@@ -139,9 +139,16 @@ for (const [name, browserType] of [['Chromium', chromium], ['WebKit', webkit]]) 
     // Let the in-race cue finish before reproducing the later Home reprise.
     await new Promise((resolve) => setTimeout(resolve, 3450));
 
+    // Model the reported case accurately: the Trophy Road reward was earned and
+    // its ordinary banner was already presented during the race, so Home owes a
+    // reprise rather than waiting to learn whether the live queue will show it.
     window.dispatchEvent(new CustomEvent('turn:trophy-road-updated', {
       detail: { unlocked: ['awd-traction'], trophies }
     }));
+    window.dispatchEvent(new CustomEvent('turn:trophy-road-toast-shown', {
+      detail: { ids: ['awd-traction'] }
+    }));
+
     const home = document.querySelector('.m8-home');
     home.hidden = false;
     document.body.classList.add('turn-home-open');
