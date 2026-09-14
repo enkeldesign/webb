@@ -29,7 +29,7 @@
     "enabled": true,
     "title": "DID YOU READ ALL OF IT?",
     "rewardPerPart": 5,
-    "description": "Open every part of HOW TO PLAY. Each new part you open while this challenge is active earns 5 trophies."
+    "description": "Open every part of HOW TO PLAY."
   },
   "safety": {
     "enabled": true,
