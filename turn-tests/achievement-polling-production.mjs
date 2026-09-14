@@ -7,13 +7,47 @@ import {
   qualifiesForHeadStart
 } from '../turn/achievements/challenge-expansion-r166.js';
 
-assert.equal(qualifiesForHeadStart({ previousTime: 20, currentTime: 19, overcharge: 0.2, valid: true }), true);
-assert.equal(qualifiesForHeadStart({ previousTime: 20, currentTime: 20, overcharge: 0.2, valid: true }), false,
-  'HEAD START requires an actual improvement over the previous valid lap');
-assert.equal(qualifiesForHeadStart({ previousTime: 20, currentTime: 19, overcharge: 0, valid: true }), false,
-  'HEAD START requires OVERCHARGE at the finish line');
-assert.equal(qualifiesForHeadStart({ previousTime: 20, currentTime: 19, overcharge: 0.2, valid: false }), false,
-  'HEAD START must not accept an invalid lap');
+assert.equal(qualifiesForHeadStart({
+  setupTime: 20,
+  currentTime: 19,
+  setupOvercharge: 0.2,
+  carriedOverchargeAtStart: 0.2,
+  carriedOverchargeSpent: 0.1,
+  valid: true
+}), true);
+assert.equal(qualifiesForHeadStart({
+  setupTime: 20,
+  currentTime: 20,
+  setupOvercharge: 0.2,
+  carriedOverchargeAtStart: 0.2,
+  carriedOverchargeSpent: 0.1,
+  valid: true
+}), false, 'HEAD START requires the flying lap to beat the setup lap');
+assert.equal(qualifiesForHeadStart({
+  setupTime: 20,
+  currentTime: 19,
+  setupOvercharge: 0,
+  carriedOverchargeAtStart: 0.2,
+  carriedOverchargeSpent: 0.1,
+  valid: true
+}), false, 'The setup lap must cross the line with OVERCHARGE');
+assert.equal(qualifiesForHeadStart({
+  setupTime: 20,
+  currentTime: 19,
+  setupOvercharge: 0.2,
+  carriedOverchargeAtStart: 0.2,
+  carriedOverchargeSpent: 0,
+  valid: true
+}), false, 'The flying lap must actually spend carried OVERCHARGE with BOOST');
+assert.equal(qualifiesForHeadStart({
+  setupTime: 20,
+  currentTime: 19,
+  setupOvercharge: 0.2,
+  carriedOverchargeAtStart: 0.2,
+  carriedOverchargeSpent: 0.1,
+  valid: false
+}), false, 'HEAD START must not accept an invalid flying lap');
+
 
 function listenerRegistry() {
   const listeners = new Map();
@@ -127,23 +161,41 @@ async function verifyChallengeAchievementLifecycle() {
   assert.ok(unlocked['countryside-safety'],
     'The clean-lap achievement must consume the canonical result instead of polling offRoad');
 
+  assert.equal(events.count('turn:boost-outcome'), 1,
+    'HEAD START should consume semantic BOOST outcomes rather than poll controls');
+
   globalThis.__turnBoostOvercharge = 0.25;
   api.beginLap();
   api.completeLap({ time: 20, valid: true, onCourseThroughout: false });
   assert.equal(unlocked['head-start'], undefined,
-    'HEAD START needs a previous valid lap before it can unlock');
+    'Crossing with OVERCHARGE arms the next lap but does not unlock HEAD START itself');
 
-  globalThis.__turnBoostOvercharge = 0;
   api.beginLap();
+  events.emit('turn:lap-invalid');
+  globalThis.__turnBoostOvercharge = 0.1;
+  api.beginLap();
+  globalThis.__turnBoostOvercharge = 0;
+  events.emit('turn:boost-outcome', { useful: true, overchargeSpent: 0.1 });
   api.completeLap({ time: 19, valid: true, onCourseThroughout: false });
   assert.equal(unlocked['head-start'], undefined,
-    'A faster lap without OVERCHARGE must not unlock HEAD START');
+    'An invalid next lap must break the setup-to-flying-lap attempt');
 
-  globalThis.__turnBoostOvercharge = 0.2;
+  globalThis.__turnBoostOvercharge = 0.3;
   api.beginLap();
-  api.completeLap({ time: 18, valid: true, onCourseThroughout: false });
+  api.completeLap({ time: 21, valid: true, onCourseThroughout: false });
+  globalThis.__turnBoostOvercharge = 0.3;
+  api.beginLap();
+  api.completeLap({ time: 20, valid: true, onCourseThroughout: false });
+  assert.equal(unlocked['head-start'], undefined,
+    'Beating a setup lap without spending carried OVERCHARGE must not unlock HEAD START');
+
+  globalThis.__turnBoostOvercharge = 0.3;
+  api.beginLap();
+  globalThis.__turnBoostOvercharge = 0;
+  events.emit('turn:boost-outcome', { useful: true, overchargeSpent: 0.3 });
+  api.completeLap({ time: 19, valid: true, onCourseThroughout: false });
   assert.ok(unlocked['head-start'],
-    'A faster valid lap with OVERCHARGE at the line must unlock HEAD START');
+    'HEAD START unlocks when the next lap spends carried OVERCHARGE with BOOST and beats the setup lap');
 
   assert.equal(intervalStarts, 0);
   assert.equal(unlocks.filter(({ id }) => id === 'catch-the-charge').length, 1);
@@ -152,6 +204,7 @@ async function verifyChallengeAchievementLifecycle() {
   assert.equal(events.count('turn:ui-state-change'), 0);
   assert.equal(events.count('turn:lap-result'), 0);
   assert.equal(events.count('turn:lap-invalid'), 0);
+  assert.equal(events.count('turn:boost-outcome'), 0);
   assert.equal(events.count('turn:achievements-updated'), 0);
 }
 

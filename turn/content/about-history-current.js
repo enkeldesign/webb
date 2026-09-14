@@ -169,6 +169,20 @@ const HEAD_START_HISTORY = Object.freeze({
   ])
 });
 
+const HEAD_START_FLYING_LAP_HISTORY = Object.freeze({
+  period: '14 September',
+  title: 'HEAD START rewards the flying lap',
+  paragraphs: Object.freeze([
+    'TURN 1.19.14 corrects HEAD START so its setup and payoff happen on consecutive laps. The first valid lap must cross with OVERCHARGE remaining; the next valid lap must actually spend carried OVERCHARGE with BOOST and beat the setup time.',
+    'An invalid next lap breaks the attempt. The lesson now directly teaches the build-up lap and flying-start technique used to reach Time Trial targets.'
+  ]),
+  milestones: Object.freeze([
+    'Setup lap crosses with OVERCHARGE greater than zero',
+    'Next lap spends carried OVERCHARGE with BOOST and beats the setup lap',
+    'TURN 1.19.14 · 2026.09.14-r229'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -192,7 +206,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   MOUNTAIN_WARNING_HISTORY,
   MOUNTAIN_WARNING_PLACEMENT_HISTORY,
   MOUNTAIN_WARNING_READABILITY_HISTORY,
-  HEAD_START_HISTORY
+  HEAD_START_HISTORY,
+  HEAD_START_FLYING_LAP_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -223,13 +238,15 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.19.12 r226', 'Raises the MOUNTAIN summit warning plate slightly without moving its tested road position.']),
       Object.freeze(['Clear warning symbol', 'Keeps the support behind the plate and gives the front a tapered exclamation bar with a separate round dot.']),
       Object.freeze(['1.19.13 r228', 'Adds HEAD START to Getting Started for 50 trophies: beat the previous valid lap while carrying OVERCHARGE across the line.']),
-      Object.freeze(['Flying-start lesson', 'Encourages continuous laps and prepares drivers for Time Trial targets set for flying starts.'])
+      Object.freeze(['Flying-start lesson', 'Encourages continuous laps and prepares drivers for Time Trial targets set for flying starts.']),
+      Object.freeze(['1.19.14 r229', 'Corrects HEAD START: cross the setup lap with OVERCHARGE, spend that carried OVERCHARGE with BOOST on the next lap, and beat the setup time.']),
+      Object.freeze(['Two-lap flying-start sequence', 'An invalid next lap breaks the attempt, so the achievement now directly teaches the build-up lap used before Time Trial runs.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.19.13',
-  build: '2026.09.14-r228',
-  note: 'TURN 1.19.13 adds HEAD START to Getting Started as preparation for flying-lap Time Trials.'
+  version: '1.19.14',
+  build: '2026.09.14-r229',
+  note: 'TURN 1.19.14 corrects HEAD START to reward a setup lap followed by a boosted flying lap.'
 });
