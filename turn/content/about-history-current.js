@@ -241,6 +241,20 @@ const SUPPORT_CHALLENGE_FEEDBACK_HISTORY = Object.freeze({
   ])
 });
 
+const SUPPORT_CHALLENGE_LIFECYCLE_HISTORY = Object.freeze({
+  period: '14 September',
+  title: 'Support feedback has one owner',
+  paragraphs: Object.freeze([
+    'TURN 1.20.2 makes support-challenge feedback use explicit game and Home lifecycle events instead of observing and rewriting other toast elements. SAFETY and other race challenges now publish their compact completion pill directly when the support target is cleared.',
+    'When CHOOSE TRACK opens after a completed challenge, TURN replays the pill with the temporary trophy check first. Trophy Road reward presentation is held by the achievement runtime until that support feedback finishes, then resumes in the normal reward queue.'
+  ]),
+  milestones: Object.freeze([
+    'Reliable in-race support completion pill for SAFETY and other race challenges',
+    'Explicit CHOOSE TRACK replay lifecycle with ordered Trophy Road rewards',
+    'TURN 1.20.2 · 2026.09.14-r234'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -269,7 +283,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   HEAD_START_ICON_HISTORY,
   OVERCHARGED_BOOST_HISTORY,
   SUPPORT_CHALLENGE_HISTORY,
-  SUPPORT_CHALLENGE_FEEDBACK_HISTORY
+  SUPPORT_CHALLENGE_FEEDBACK_HISTORY,
+  SUPPORT_CHALLENGE_LIFECYCLE_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -310,13 +325,15 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.20.0 r232', 'Adds adaptive Trophy Road support challenges when progress stalls: WINNER, HOW TO PLAY, SAFETY and, after it unlocks, DRIFT.']),
       Object.freeze(['Progress without guesswork', 'Recommends an owned car, explains that a clean lap stays on-road from start to finish, awards 5 trophies for each previously unread HOW TO PLAY part, and offers a reroll after continued attempts.']),
       Object.freeze(['1.20.1 r233', 'Makes START CHALLENGE preselect both the recommended track and owned car, and replaces the large challenge completion block with the compact pill cue.']),
-      Object.freeze(['Ordered support feedback', 'Shows challenge and same-lap achievement feedback together, then gives Trophy Road rewards their own turn; CHOOSE TRACK replays the challenge cue while its trophy notification pulses away.'])
+      Object.freeze(['Ordered support feedback', 'Shows challenge and same-lap achievement feedback together, then gives Trophy Road rewards their own turn; CHOOSE TRACK replays the challenge cue while its trophy notification pulses away.']),
+      Object.freeze(['1.20.2 r234', 'Makes race support completion and CHOOSE TRACK reprise reliable by replacing toast DOM interception with explicit lifecycle events.']),
+      Object.freeze(['One feedback queue', 'Lets support feedback temporarily hold Trophy Road reward presentation, then returns control to the normal achievement reward queue after the pill and trophy check finish.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.20.1',
-  build: '2026.09.14-r233',
-  note: 'TURN 1.20.1 polishes support challenge routing and completion feedback.'
+  version: '1.20.2',
+  build: '2026.09.14-r234',
+  note: 'TURN 1.20.2 makes support challenge completion and reward feedback reliable.'
 });
