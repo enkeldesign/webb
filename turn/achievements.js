@@ -1,5 +1,6 @@
 import './achievements/home-reward-replay-r225.js?revision=r244-reward-toast-guide';
 import './achievements/support-challenges.js';
+import './achievements/support-challenge-feedback.js';
 
 export {
   ACHIEVEMENTS,
