@@ -137,9 +137,9 @@ assert.equal(byId('head-start')?.title, 'HEAD START');
 assert.equal(byId('head-start')?.trophies, 50);
 assert.equal(byId('head-start')?.category, 'onboarding');
 assert.equal(byId('head-start')?.description,
-  'Beat your previous valid lap and cross the line with OVERCHARGE built up.');
+  'Finish a valid lap with OVERCHARGE, then use that carried OVERCHARGE with BOOST to beat it on the next lap.');
 assert.equal(byId('head-start')?.recommendation,
-  'Keep racing after the finish. Time Trial targets are set for flying starts.');
+  'Build OVERCHARGE before the line, catch it with GAS, then BOOST after crossing for a flying start.');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('head-start'), true);
 assert.equal(byId('golden-hour')?.title, 'MAYDAY!');
 assert.equal(byId('golden-hour')?.trophies, 100);
@@ -543,6 +543,8 @@ assert.doesNotMatch(challengeSource, /runtime\.state\.offRoad/,
   'Clean-lap achievements must consume the physics-owned lap result');
 assert.match(challengeSource, /detail\?\.onCourseThroughout/);
 assert.match(challengeSource, /OVERCHARGE_CATCH_EVENT = 'turn:overcharge-catch'/);
+assert.match(challengeSource, /BOOST_OUTCOME_EVENT = 'turn:boost-outcome'/);
+assert.match(challengeSource, /carriedOverchargeSpent/);
 assert.match(challengeSource, /achievements\.unlock\(\s*CATCH_THE_CHARGE_ID/,
   'A qualifying GAS catch must unlock CATCH THE CHARGE directly');
 assert.match(challengeSource, /achievements\.unlock\('an-army-of-me'/);

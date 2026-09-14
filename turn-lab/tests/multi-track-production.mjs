@@ -160,6 +160,8 @@ const spatialIndex = createTrackSpatialIndex(trackA, { cellSize: 16 });
 spatialIndex.replaceSamples(trackB);
 assert.equal(spatialIndex.find({ x: 19, z: 98 }).index, findNearestTrackBruteForce(trackB, { x: 19, z: 98 }).index);
 
+const release = JSON.parse(await fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'));
+
 const [
   definitions,
   definitionsBase,
@@ -197,7 +199,7 @@ assert.match(definitions, /sampleCount: 2160/);
 assert.doesNotMatch(definitionsBase, /id: 'track-6-tba'/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
 assert.match(catalog, /MOUNTAIN_CONTROL_POINTS\.map/);
-assert.match(registry, /mountain-world-long\.js\?build=20260914-r228/);
+assert.match(registry, new RegExp(`mountain-world-long\\.js\\?build=${release.cacheKey}`));
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'mountain'/);
 assert.match(manager, /track\.fogNear/);

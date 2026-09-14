@@ -62,8 +62,8 @@ export const HEAD_START_ACHIEVEMENT = Object.freeze({
   category: base.CATEGORY.ONBOARDING,
   trophies: 50,
   title: 'HEAD START',
-  description: 'Beat your previous valid lap and cross the line with OVERCHARGE built up.',
-  recommendation: 'Keep racing after the finish. Time Trial targets are set for flying starts.',
+  description: 'Finish a valid lap with OVERCHARGE, then use that carried OVERCHARGE with BOOST to beat it on the next lap.',
+  recommendation: 'Build OVERCHARGE before the line, catch it with GAS, then BOOST after crossing for a flying start.',
   icon: 'charge'
 });
 

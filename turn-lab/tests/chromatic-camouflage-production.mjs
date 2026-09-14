@@ -60,7 +60,8 @@ assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('catch-the-charge'), true);
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('head-start'), true);
 assert.equal(headStart?.title, 'HEAD START');
 assert.equal(headStart?.trophies, 50);
-assert.match(headStart?.description || '', /previous valid lap/);
+assert.match(headStart?.description || '', /carried OVERCHARGE/);
+assert.match(headStart?.description || '', /next lap/);
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('got-started'), false);
 for (const id of ['drive-by-ear', 'learn-to-play']) {
   assert.equal(getAchievement(id)?.category, 'ways-to-play');

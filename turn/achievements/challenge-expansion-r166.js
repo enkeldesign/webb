@@ -18,6 +18,7 @@ const GOT_STARTED_ID = 'got-started';
 const CATCH_THE_CHARGE_ID = 'catch-the-charge';
 const HEAD_START_ID = 'head-start';
 const OVERCHARGE_CATCH_EVENT = 'turn:overcharge-catch';
+const BOOST_OUTCOME_EVENT = 'turn:boost-outcome';
 
 function normalizedTracks(value) {
   if (!Array.isArray(value)) return [];
@@ -63,20 +64,24 @@ export function qualifiesForCatchGas({
 }
 
 export function qualifiesForHeadStart({
-  previousTime = null,
+  setupTime = null,
   currentTime = null,
-  overcharge = 0,
+  setupOvercharge = 0,
+  carriedOverchargeAtStart = 0,
+  carriedOverchargeSpent = 0,
   valid = false
 } = {}) {
-  const previous = Number(previousTime);
+  const setup = Number(setupTime);
   const current = Number(currentTime);
   return valid === true
-    && Number.isFinite(previous)
-    && previous > 5
+    && Number.isFinite(setup)
+    && setup > 5
     && Number.isFinite(current)
     && current > 5
-    && current < previous
-    && Number(overcharge) >= CATCH_GAS_MIN_OVERCHARGE;
+    && current < setup
+    && Number(setupOvercharge) > 0
+    && Number(carriedOverchargeAtStart) > 0
+    && Number(carriedOverchargeSpent) > 0;
 }
 
 function winnerAchievementId(trackId) {
@@ -135,7 +140,7 @@ export function installAchievementChallengeExpansion({
 
   const progress = loadProgress(storage);
   let currentLap = null;
-  let previousValidLap = null;
+  let headStartSetup = null;
   let catchGasUnlocked = Boolean(
     achievements.getState?.().unlocked?.[CATCH_THE_CHARGE_ID]
   );
@@ -176,11 +181,14 @@ export function installAchievementChallengeExpansion({
   function beginLap() {
     const state = runtime.state;
     const trackId = state.trackId || globalThis.__turnGetTrackId?.() || '';
-    if (previousValidLap?.trackId && previousValidLap.trackId !== trackId) previousValidLap = null;
+    if (headStartSetup?.trackId && headStartSetup.trackId !== trackId) headStartSetup = null;
     currentLap = {
       trackId,
       vehicleId: state.vehicleId || '',
-      rivalCountAtStart: Array.isArray(state.competitorLaps) ? state.competitorLaps.length : 0
+      rivalCountAtStart: Array.isArray(state.competitorLaps) ? state.competitorLaps.length : 0,
+      headStartSetup: headStartSetup ? { ...headStartSetup } : null,
+      overchargeAtStart: Math.max(0, Number(globalThis.__turnBoostOvercharge) || 0),
+      carriedOverchargeSpent: 0
     };
   }
 
@@ -223,6 +231,18 @@ export function installAchievementChallengeExpansion({
     return unlocked;
   }
 
+  function sampleBoostOutcome(detail = {}) {
+    if (!currentLap?.headStartSetup) return 0;
+    const overchargeSpent = Math.max(0, Number(detail?.overchargeSpent) || 0);
+    if (overchargeSpent <= 0) return currentLap.carriedOverchargeSpent;
+    const currentOvercharge = Math.max(0, Number(globalThis.__turnBoostOvercharge) || 0);
+    currentLap.carriedOverchargeSpent = Math.max(
+      currentLap.carriedOverchargeSpent,
+      Math.max(0, currentLap.overchargeAtStart - currentOvercharge)
+    );
+    return currentLap.carriedOverchargeSpent;
+  }
+
   function resetLap() {
     currentLap = null;
   }
@@ -235,18 +255,27 @@ export function installAchievementChallengeExpansion({
     const context = achievementContext(attempt.trackId, attempt.vehicleId, detail?.time);
     const currentTime = Number(detail?.time);
     const validLap = detail?.valid !== false && Number.isFinite(currentTime) && currentTime > 5;
-    const previousTime = previousValidLap?.trackId === attempt.trackId
-      ? previousValidLap.time
-      : null;
+    const finishOvercharge = Math.max(0, Number(globalThis.__turnBoostOvercharge) || 0);
+    const activeBoostSpent = globalThis.__turnBoostActive === true
+      ? Math.max(0, attempt.overchargeAtStart - finishOvercharge)
+      : 0;
+    const carriedOverchargeSpent = Math.max(
+      Math.max(0, Number(attempt.carriedOverchargeSpent) || 0),
+      activeBoostSpent
+    );
     if (qualifiesForHeadStart({
-      previousTime,
+      setupTime: attempt.headStartSetup?.time,
       currentTime,
-      overcharge: globalThis.__turnBoostOvercharge,
+      setupOvercharge: attempt.headStartSetup?.overcharge,
+      carriedOverchargeAtStart: attempt.overchargeAtStart,
+      carriedOverchargeSpent,
       valid: validLap
     })) {
       achievements.unlock(HEAD_START_ID, context);
     }
-    if (validLap) previousValidLap = { trackId: attempt.trackId, time: currentTime };
+    headStartSetup = validLap && finishOvercharge > 0
+      ? { trackId: attempt.trackId, time: currentTime, overcharge: finishOvercharge }
+      : null;
 
     let changed = false;
     if (qualifiesForArmyLap(attempt, detail)) {
@@ -276,16 +305,20 @@ export function installAchievementChallengeExpansion({
     if (reason === 'lap-started' || reason === 'lap-completed') beginLap();
     if (reason === 'race-reset') {
       resetLap();
-      previousValidLap = null;
+      headStartSetup = null;
     }
     if (Object.prototype.hasOwnProperty.call(event.detail || {}, 'running')
         && event.detail.running === false) {
       resetLap();
-      previousValidLap = null;
+      headStartSetup = null;
     }
   };
   const handleLapResult = (event) => completeLap(event.detail || {});
-  const handleLapInvalid = () => resetLap();
+  const handleLapInvalid = () => {
+    resetLap();
+    headStartSetup = null;
+  };
+  const handleBoostOutcome = (event) => sampleBoostOutcome(event.detail || {});
   const handleOverchargeCatch = (event) => sampleCatchGas({
     caught: true,
     overcharge: event.detail?.amount
@@ -303,6 +336,7 @@ export function installAchievementChallengeExpansion({
   globalThis.addEventListener?.('turn:ui-state-change', handleUiState);
   globalThis.addEventListener?.('turn:lap-result', handleLapResult);
   globalThis.addEventListener?.('turn:lap-invalid', handleLapInvalid);
+  globalThis.addEventListener?.(BOOST_OUTCOME_EVENT, handleBoostOutcome);
   globalThis.addEventListener?.('turn:achievements-updated', handleAchievementsUpdated);
   startCatchGasMonitoring();
 
@@ -316,6 +350,7 @@ export function installAchievementChallengeExpansion({
       globalThis.removeEventListener?.('turn:ui-state-change', handleUiState);
       globalThis.removeEventListener?.('turn:lap-result', handleLapResult);
       globalThis.removeEventListener?.('turn:lap-invalid', handleLapInvalid);
+      globalThis.removeEventListener?.(BOOST_OUTCOME_EVENT, handleBoostOutcome);
       globalThis.removeEventListener?.('turn:achievements-updated', handleAchievementsUpdated);
       stopCatchGasMonitoring();
       delete globalThis.__turnAchievementChallengeExpansion;
