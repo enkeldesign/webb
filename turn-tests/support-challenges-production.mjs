@@ -7,10 +7,15 @@ import {
   normalizeSupportChallengeConfig,
   normalizeSupportChallengeState
 } from '../turn/achievements/support-challenges.js';
+import {
+  isRaceSupportBonusId
+} from '../turn/achievements/support-challenge-feedback.js';
 import { createAchievementStore, normalizeAchievementState } from '../turn/achievements/store.js';
 
 const rawConfig = JSON.parse(await fs.readFile(new URL('../turn/support-challenges.json', import.meta.url), 'utf8'));
 const source = await fs.readFile(new URL('../turn/achievements/support-challenges.js', import.meta.url), 'utf8');
+const feedbackSource = await fs.readFile(new URL('../turn/achievements/support-challenge-feedback.js', import.meta.url), 'utf8');
+const facadeSource = await fs.readFile(new URL('../turn/achievements.js', import.meta.url), 'utf8');
 const config = normalizeSupportChallengeConfig(rawConfig);
 
 assert.equal(config.enabled, true);
@@ -29,6 +34,36 @@ assert.ok(source.includes('storedRivalCount(trackId, { runtime, storage }) < RIV
 assert.ok(source.includes('detail?.onCourseThroughout === true'), 'SAFETY support must consume the physics-owned clean-lap result');
 assert.ok(source.includes('baselineParts'), 'HOW TO PLAY support must remember what was already read before the challenge');
 assert.ok(source.includes('REROLL CHALLENGE'), 'Continued stalled progress must expose the reroll action');
+
+assert.equal(isRaceSupportBonusId('support:winner:airport'), true);
+assert.equal(isRaceSupportBonusId('support:safety:harbor'), true);
+assert.equal(isRaceSupportBonusId('support:drift:mountain'), true);
+assert.equal(isRaceSupportBonusId('support:how-to-play:dbe'), false);
+assert.match(facadeSource, /import '\.\/achievements\/support-challenge-feedback\.js';/,
+  'The production achievement facade must install the challenge feedback coordinator without a manual revision identifier');
+assert.doesNotMatch(
+  facadeSource.match(/import '\.\/achievements\/support-challenge-feedback\.js[^']*';/)?.[0] || '',
+  /revision=/,
+  'The support feedback module must use the canonical revision-free import path'
+);
+assert.match(feedbackSource, /\[data-support-start\]/,
+  'START CHALLENGE must arm the recommended vehicle before the existing track navigation runs');
+assert.match(feedbackSource, /\.lot-car-option\[data-car-id=/,
+  'The recommended owned car must be selected in The Lot');
+assert.match(feedbackSource, /turn-support-home-toast/,
+  'Challenge completion must replay as a compact success toast on Home');
+assert.match(feedbackSource, /turn-support-completion-indicator/,
+  'Home completion feedback must animate the challenge notification before it disappears');
+assert.match(feedbackSource, /turn:achievements-updated/,
+  'Challenge completion must coordinate with same-lap achievement feedback');
+assert.match(feedbackSource, /turn:trophy-bonus/,
+  'Challenge completion must follow the authoritative support bonus event');
+assert.match(feedbackSource, /turn-trophy-reward-toast/,
+  'Trophy Road reward feedback must be deferred while challenge/achievement feedback owns the cue lane');
+assert.match(feedbackSource, /border-radius:\s*999px/,
+  'Challenge success feedback must use the compact pill presentation');
+assert.doesNotMatch(feedbackSource, /revision=/,
+  'The new support feedback module must not invent manual revision identities');
 
 const normalized = normalizeSupportChallengeState({
   dryValidLaps: 6.9,
