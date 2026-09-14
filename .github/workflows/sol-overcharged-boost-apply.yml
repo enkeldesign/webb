@@ -127,14 +127,11 @@ jobs:
               '<li><strong>SPEND</strong><span>Slide to BOOST. OVERCHARGE is spent before normal BOOST.</span></li>',
               '<li><strong>SPEND</strong><span>Slide to BOOST. OVERCHARGE burns first as a stronger burst, then normal BOOST continues.</span></li>'
           )
-
-          guide_test = Path('turn-tests/how-to-play-guide-production.mjs')
-          guide_text = guide_test.read_text()
-          old_spend_assertion = r"assert.match(guide, /<strong>SPEND<\\/strong><span>Slide to BOOST\\. OVERCHARGE is spent before normal BOOST\\.<\\/span>/);"
-          new_spend_assertion = r"assert.match(guide, /<strong>SPEND<\\/strong><span>Slide to BOOST\\. OVERCHARGE burns first as a stronger burst, then normal BOOST continues\\.<\\/span>/);"
-          if guide_text.count(old_spend_assertion) != 1:
-              raise SystemExit('how-to-play test: SPEND assertion marker mismatch')
-          guide_test.write_text(guide_text.replace(old_spend_assertion, new_spend_assertion, 1))
+          replace_once(
+              'turn-tests/how-to-play-guide-production.mjs',
+              'OVERCHARGE is spent before normal BOOST',
+              'OVERCHARGE burns first as a stronger burst, then normal BOOST continues'
+          )
 
           release_path = Path('turn/release.json')
           release = json.loads(release_path.read_text())
