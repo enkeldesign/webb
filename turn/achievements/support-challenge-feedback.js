@@ -8,6 +8,13 @@ const HOME_SHOWN_EVENT = 'turn:home-shown';
 const SUPPORT_HOME_STARTED_EVENT = 'turn:support-home-feedback-started';
 const SUPPORT_HOME_ENDED_EVENT = 'turn:support-home-feedback-ended';
 const SUPPORT_REWARD_HOLD = 'support-home-feedback';
+const PILL_LANE_STEP_PX = 52;
+const PILL_LANE_SURFACES = Object.freeze([
+  '#message.show',
+  '.turn-support-bonus-toast.is-visible:not([hidden])',
+  '.turn-screen-blank-toast:not([hidden])',
+  '.rival-onboarding.is-visible:not([hidden])'
+]);
 
 let installed = null;
 
@@ -62,8 +69,14 @@ function installStyles() {
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
+    #message,
+    .turn-support-bonus-toast,
+    body .turn-screen-blank-toast,
+    .rival-onboarding {
+      margin-top: var(--turn-pill-lane-offset, 0px) !important;
+    }
     .turn-support-bonus-toast {
-      top: calc(max(8px, env(safe-area-inset-top)) + clamp(82px, 17vh, 112px)) !important;
+      top: 22% !important;
       bottom: auto !important;
       display: flex !important;
       align-items: center;
@@ -124,6 +137,45 @@ function installStyles() {
     }
   `;
   document.head.appendChild(style);
+}
+
+function installPillLaneCoordinator() {
+  const tracked = new Set();
+
+  const update = () => {
+    let slot = 0;
+    const next = new Set();
+    for (const selector of PILL_LANE_SURFACES) {
+      for (const node of document.querySelectorAll(selector)) {
+        if (!(node instanceof HTMLElement)) continue;
+        next.add(node);
+        node.style.setProperty('--turn-pill-lane-offset', `${slot * PILL_LANE_STEP_PX}px`);
+        slot += 1;
+      }
+    }
+    for (const node of tracked) {
+      if (!next.has(node)) node.style.removeProperty('--turn-pill-lane-offset');
+    }
+    tracked.clear();
+    for (const node of next) tracked.add(node);
+  };
+
+  // Only visibility structure participates in the lane. Styling the offset does
+  // not trigger this observer, so it cannot recurse on its own presentation work.
+  const observer = new MutationObserver(update);
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'hidden']
+  });
+  update();
+
+  return () => {
+    observer.disconnect();
+    for (const node of tracked) node.style.removeProperty('--turn-pill-lane-offset');
+    tracked.clear();
+  };
 }
 
 function recommendedLotButton(vehicleId) {
@@ -216,6 +268,7 @@ function dispatchSupportHomeEvent(type, completion) {
 export function installSupportChallengeFeedback({ storage = globalThis.localStorage } = {}) {
   if (installed || typeof document === 'undefined' || typeof window === 'undefined') return installed;
   installStyles();
+  const disconnectPillLane = installPillLaneCoordinator();
 
   let homeFeedbackBusy = false;
   let homeFeedbackTimer = 0;
@@ -324,6 +377,7 @@ export function installSupportChallengeFeedback({ storage = globalThis.localStor
     disconnect() {
       disconnected = true;
       finishHomeFeedback();
+      disconnectPillLane();
       document.removeEventListener('click', handleStart, true);
       window.removeEventListener('turn:trophy-bonus', handleBonus);
       window.removeEventListener(HOME_SHOWN_EVENT, handleHomeShown);
