@@ -108,6 +108,7 @@ assert.ok(homeSource.indexOf('raceSession.selectVehicle(selection)') < homeSourc
 assert.ok(homeSource.indexOf('showTrackIntro(trackId)') < homeSource.indexOf('raceSession.startGame(pendingAccess?.fullscreenPromise)'));
 assert.match(homeSource, /runtime\.openLot = leaveRaceForHome/);
 assert.match(homeSource, /showHome\(\{ focus: true \}\)/);
+assert.match(homeSource, /turn:home-shown/, 'Home navigation must publish an explicit shown lifecycle event for queued feedback');
 assert.match(homeSource, /turn-steering-mode-v1/);
 assert.match(homeSource, /saveDriveByEarEnabled/);
 assert.match(homeSource, /__turnResetRivals/);

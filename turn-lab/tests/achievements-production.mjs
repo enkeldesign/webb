@@ -530,8 +530,11 @@ assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 for (const entry of [productionEntry, labEntry]) {
   assert.match(entry, /"\/turn\/achievements\/time-trials\.js\?revision=r166-bella-records": "\/turn\/achievements\/time-trials\.js\?revision=r224-sprint-targets"/,
     'Production and Lab must route cached achievement imports to the new Sprint targets');
-  assert.match(entry, /"\/turn\/achievements\/view\.js\?revision=r166-bella-records": "\/turn\/achievements\/view\.js\?revision=r244-reward-toast-guide"/,
-    'Production and Lab must route cached achievement views to the corrected modal header');
+  const release = JSON.parse(await fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'));
+  const map = JSON.parse(entry.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1]);
+  assert.equal(map.imports['/turn/achievements/view.js?revision=r166-bella-records'],
+    `/turn/achievements/view.js?build=${release.cacheKey}`,
+    'Production and Lab must route cached achievement views to the current release presenter');
   assert.match(entry, /"\/turn\/achievements\/catalog-base\.js\?revision=r222-awd-label": "\/turn\/achievements\/catalog-base\.js\?revision=r241-trophy-balance"/,
     'Installed builds must not retain the old LISTEN CLOSELY trophy value');
   assert.match(entry, /"\/turn\/achievements\/scoring-achievements\.js\?revision=r2-calibrated-targets": "\/turn\/achievements\/scoring-achievements\.js\?revision=r3-trophy-balance"/,

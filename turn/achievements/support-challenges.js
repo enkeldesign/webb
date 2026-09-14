@@ -118,7 +118,9 @@ export async function loadSupportChallengeConfig({
       if (!response?.ok) throw new Error(`TURN support challenge rules returned ${response?.status || 'an error'}.`);
       const raw = await response.json();
       const config = normalizeSupportChallengeConfig(raw);
-      if (persistent) persistent.setItem(SUPPORT_CHALLENGE_CONFIG_CACHE_KEY, JSON.stringify(raw));
+      try {
+        persistent?.setItem(SUPPORT_CHALLENGE_CONFIG_CACHE_KEY, JSON.stringify(raw));
+      } catch (_) { /* Live rules still work when offline caching is unavailable. */ }
       return config;
     } catch (_) {}
   }
@@ -614,6 +616,8 @@ export async function installSupportChallenges({
   let achievementUnlockedThisTask = false;
   let offerScheduled = false;
   let toastTimer = 0;
+  let toastConcealTimer = 0;
+  let toastShowFrame = 0;
   let restoreTriggerFocus = true;
 
   function save() {
@@ -687,15 +691,23 @@ export async function installSupportChallenges({
     rerollButton.hidden = !reroll;
   }
 
-  function showBonusToast(label, text) {
+  function hideBonusToast() {
     clearTimeout(toastTimer);
+    clearTimeout(toastConcealTimer);
+    cancelAnimationFrame(toastShowFrame);
+    bonusToast.classList.remove('is-visible');
+    bonusToast.hidden = true;
+  }
+
+  function showBonusToast(label, text) {
+    hideBonusToast();
     bonusToast.querySelector('span').textContent = label;
     bonusToast.querySelector('strong').textContent = text;
     bonusToast.hidden = false;
-    requestAnimationFrame(() => bonusToast.classList.add('is-visible'));
+    toastShowFrame = requestAnimationFrame(() => bonusToast.classList.add('is-visible'));
     toastTimer = window.setTimeout(() => {
       bonusToast.classList.remove('is-visible');
-      window.setTimeout(() => { bonusToast.hidden = true; }, 220);
+      toastConcealTimer = window.setTimeout(() => { bonusToast.hidden = true; }, 220);
     }, 3200);
   }
 
@@ -705,7 +717,12 @@ export async function installSupportChallenges({
     state.dryValidLaps = 0;
     state.lapsSinceChallengeProgress = 0;
     save();
-    showBonusToast(label, title || `+${bonus.trophies} TROPHIES`);
+    // Wait for every listener on this lap/learning event to finish awarding.
+    // The runtime then pairs this cue with any achievement from the same event.
+    queueMicrotask(() => achievements.queueSupportFeedback(() => {
+      if (label === 'CHALLENGE COMPLETE' && document.body.classList.contains('turn-home-open')) return;
+      showBonusToast(label, title || `+${bonus.trophies} 🏆`);
+    }));
     return bonus;
   }
 
@@ -791,7 +808,7 @@ export async function installSupportChallenges({
       reason: `support-${active.type}`
     };
     const granted = grantBonus(`support:${active.key}`, reward, context, {
-      title: `+${reward} TROPHIES`
+      title: `+${reward} 🏆`
     });
     if (!granted && !achievements.store.hasBonus?.(`support:${active.key}`)) return false;
     if (!state.completed.includes(active.key)) state.completed.push(active.key);
@@ -907,7 +924,7 @@ export async function installSupportChallenges({
         reason: 'support-how-to-play'
       }, {
         label: 'HOW TO PLAY',
-        title: `+${reward} TROPHIES`
+        title: `+${reward} 🏆`
       });
       if (granted) state.lapsSinceChallengeProgress = 0;
     }
@@ -925,7 +942,10 @@ export async function installSupportChallenges({
     render();
   });
 
-  window.addEventListener('turn:trophy-road-updated', render);
+  // Reward unlocks can be nested inside the normal achievement lap handler.
+  // Retire the challenge only after its own listener can award the same lap.
+  window.addEventListener('turn:trophy-road-updated', () => queueMicrotask(render));
+  window.addEventListener('turn:home-shown', hideBonusToast);
 
   if (state.active?.sourceAchievementId && achievements.store.isUnlocked(state.active.sourceAchievementId)) {
     state.active = null;
@@ -947,6 +967,7 @@ export async function installSupportChallenges({
     render
   });
   globalThis.__turnSupportChallenges = api;
+  window.dispatchEvent(new CustomEvent('turn:support-challenges-ready'));
   return api;
 }
 

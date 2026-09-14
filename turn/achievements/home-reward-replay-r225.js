@@ -1,15 +1,13 @@
 import {
-  TROPHY_ROAD_REWARD_ICONS,
   getTrophyRoadReward
 } from '../progression/trophy-road-perks-r164.js?revision=r243-mountain-1300';
-import { rewardBatchNeedsHowToPlay } from './reward-toast-guide.js?revision=r244-reward-toast-guide';
 
 const PENDING_STORAGE_KEY = 'turn-home-reward-replay-v1';
 const ACHIEVEMENT_STORAGE_KEY = 'turn-achievements-v1';
 const HOME_REPLAY_DELAY_MS = 350;
 const CURRENT_SESSION_FALLBACK_MS = 9000;
-const TOAST_VISIBLE_MS = 3600;
-const TOAST_CONCEAL_MS = 220;
+const SUPPORT_HOME_STARTED_EVENT = 'turn:support-home-feedback-started';
+const SUPPORT_HOME_ENDED_EVENT = 'turn:support-home-feedback-ended';
 
 let installed = null;
 
@@ -60,55 +58,11 @@ function saveReplayState(pending, presented, storage = globalThis.localStorage) 
 
 function homeIsReady() {
   return Boolean(
-    document.documentElement.classList.contains('turn-home-ready')
+    document.visibilityState !== 'hidden'
+    && document.documentElement.classList.contains('turn-home-ready')
     && document.body.classList.contains('turn-home-open')
     && document.querySelector('.m8-home:not([hidden])')
   );
-}
-
-function rewardToastElement() {
-  return document.querySelector('.turn-trophy-reward-toast');
-}
-
-function toastIsVisible(toast) {
-  return Boolean(toast && !toast.hidden && toast.classList.contains('is-visible'));
-}
-
-function writeRewardToast(toast, rewards) {
-  const first = rewards[0];
-  const needsHowToPlay = rewardBatchNeedsHowToPlay(rewards);
-  toast.querySelector('.turn-achievement-toast-icon').innerHTML = TROPHY_ROAD_REWARD_ICONS[first.icon] || '';
-  toast.querySelector('[data-achievement-toast-label]').textContent = rewards.length === 1
-    ? 'TROPHY ROAD REWARD'
-    : `${rewards.length} TROPHY ROAD REWARDS`;
-  toast.querySelector('[data-achievement-toast-title]').textContent = rewards.length === 1
-    ? first.title
-    : `${first.title} + ${rewards.length - 1} MORE`;
-  toast.querySelector('[data-achievement-toast-badge]').textContent = 'UNLOCKED';
-  const guide = toast.querySelector('[data-trophy-reward-guide]');
-  if (guide) guide.hidden = !needsHowToPlay;
-  toast.setAttribute(
-    'aria-label',
-    `${rewards.length === 1 ? 'Trophy Road reward unlocked' : `${rewards.length} Trophy Road rewards unlocked`}. ${rewards.map((reward) => reward.shortTitle).join(', ')}.${needsHowToPlay ? ' See How to Play for instructions.' : ''} Open Achievements.`
-  );
-}
-
-function presentRewardToast(toast, rewards, onShown) {
-  if (!toast || !rewards.length) return false;
-  writeRewardToast(toast, rewards);
-  toast.hidden = false;
-  toast.classList.remove('is-visible');
-  requestAnimationFrame(() => {
-    toast.classList.add('is-visible');
-    onShown?.();
-  });
-  globalThis.setTimeout(() => {
-    toast.classList.remove('is-visible');
-    globalThis.setTimeout(() => {
-      toast.hidden = true;
-    }, TOAST_CONCEAL_MS);
-  }, TOAST_VISIBLE_MS);
-  return true;
 }
 
 export function installHomeRewardReplay({ storage = globalThis.localStorage } = {}) {
@@ -124,16 +78,14 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
   saveReplayState(pending, presented, storage);
 
   // These distinguish rewards earned during this document from rewards carried
-  // across a closed/reopened app. A carried reward has no live race-toast timer,
+  // across a closed/reopened app. A carried reward has no live runtime queue,
   // so it can be replayed as soon as Home is ready next session.
   const addedThisSession = new Set();
   const shownAwayFromHome = new Set();
   const addedAt = new Map();
+  const queuedForReplay = new Set();
   let replayTimer = 0;
-  let replayInProgress = false;
-  let observedToast = null;
-  let toastWasVisible = false;
-  let toastObserver = null;
+  let supportFeedbackActive = false;
 
   const persist = () => saveReplayState(pending, presented, storage);
 
@@ -148,6 +100,7 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
       addedThisSession.delete(id);
       shownAwayFromHome.delete(id);
       addedAt.delete(id);
+      queuedForReplay.delete(id);
     }
     if (changed) persist();
   }
@@ -156,37 +109,10 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
     return ids.map((id) => getTrophyRoadReward(id)).filter(Boolean);
   }
 
-  function ensureToastObserver() {
-    const toast = rewardToastElement();
-    if (!toast || toast === observedToast) return toast;
-    toastObserver?.disconnect();
-    observedToast = toast;
-    toastWasVisible = toastIsVisible(toast);
-    toastObserver = new MutationObserver(() => {
-      const visible = toastIsVisible(toast);
-      if (visible && !toastWasVisible && !replayInProgress) {
-        const currentIds = [...pending].filter((id) => addedThisSession.has(id));
-        if (homeIsReady()) {
-          // The ordinary race reward toast reached the player only after they had
-          // already returned Home. That already satisfies the Home reminder, so do
-          // not immediately show a duplicate copy of the same message.
-          consume(currentIds);
-        } else {
-          for (const id of currentIds) shownAwayFromHome.add(id);
-        }
-      }
-      toastWasVisible = visible;
-    });
-    toastObserver.observe(toast, {
-      attributes: true,
-      attributeFilter: ['class', 'hidden']
-    });
-    return toast;
-  }
-
   function idsReadyForHomeReplay() {
     const now = Date.now();
     return [...pending].filter((id) => {
+      if (queuedForReplay.has(id)) return false;
       if (!addedThisSession.has(id)) return true;
       if (shownAwayFromHome.has(id)) return true;
       const started = Number(addedAt.get(id)) || now;
@@ -194,21 +120,21 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
     });
   }
 
+  function showReplayRewards(rewards) {
+    const achievements = globalThis.__turnAchievements;
+    if (!achievements?.showRewardToastBatch) return false;
+    for (const reward of rewards) queuedForReplay.add(reward.id);
+    achievements.showRewardToastBatch(rewards);
+    return true;
+  }
+
   function flushHomeReplay() {
     replayTimer = 0;
-    if (!homeIsReady() || !pending.size) return;
-    const toast = ensureToastObserver();
-    if (!toast) {
-      replayTimer = globalThis.setTimeout(flushHomeReplay, 120);
-      return;
-    }
-    if (toastIsVisible(toast)) {
-      replayTimer = globalThis.setTimeout(flushHomeReplay, 300);
-      return;
-    }
+    if (supportFeedbackActive || !homeIsReady() || !pending.size) return;
 
     const ids = idsReadyForHomeReplay();
     if (!ids.length) {
+      if ([...pending].every((id) => queuedForReplay.has(id))) return;
       const waits = [...pending]
         .filter((id) => addedThisSession.has(id))
         .map((id) => CURRENT_SESSION_FALLBACK_MS - (Date.now() - (addedAt.get(id) || Date.now())));
@@ -222,19 +148,14 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
       consume(ids);
       return;
     }
-
-    replayInProgress = true;
-    presentRewardToast(toast, rewards, () => {
-      consume(ids);
-      // Keep the observer from treating our deliberately replayed toast as the
-      // original in-race presentation.
-      toastWasVisible = true;
-      replayInProgress = false;
-    });
+    if (!showReplayRewards(rewards)) {
+      replayTimer = globalThis.setTimeout(flushHomeReplay, 120);
+      return;
+    }
   }
 
   function scheduleHomeReplay(delay = HOME_REPLAY_DELAY_MS) {
-    if (!homeIsReady() || !pending.size) return;
+    if (supportFeedbackActive || !homeIsReady() || !pending.size) return;
     globalThis.clearTimeout(replayTimer);
     replayTimer = globalThis.setTimeout(flushHomeReplay, delay);
   }
@@ -251,26 +172,46 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
       addedAt.set(id, now);
     }
     persist();
-    ensureToastObserver();
     scheduleHomeReplay();
   }
 
-  let homeWasOpen = document.body.classList.contains('turn-home-open');
-  const homeObserver = new MutationObserver(() => {
-    ensureToastObserver();
-    const open = document.body.classList.contains('turn-home-open');
-    if (open && !homeWasOpen) scheduleHomeReplay();
-    homeWasOpen = open;
-  });
-  homeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  function handleRewardToastShown(event) {
+    const ids = normalizedIds(event.detail?.ids)
+      .filter((id) => pending.has(id));
+    if (!ids.length) return;
+    if (homeIsReady()) {
+      consume(ids);
+      return;
+    }
+    for (const id of ids) {
+      queuedForReplay.delete(id);
+      shownAwayFromHome.add(id);
+    }
+  }
 
-  const toastMountObserver = new MutationObserver(() => ensureToastObserver());
-  toastMountObserver.observe(document.body, { childList: true });
+  function handleSupportFeedbackStarted() {
+    supportFeedbackActive = true;
+    globalThis.clearTimeout(replayTimer);
+    replayTimer = 0;
+  }
 
+  function handleSupportFeedbackEnded() {
+    supportFeedbackActive = false;
+    scheduleHomeReplay(220);
+  }
+
+  const handleHomeShown = () => scheduleHomeReplay();
   const handleHomeReady = () => scheduleHomeReplay();
+  const handleAchievementsReady = () => scheduleHomeReplay();
+
   window.addEventListener('turn:trophy-road-updated', handleRewardUpdate);
+  window.addEventListener('turn:trophy-road-toast-shown', handleRewardToastShown);
+  window.addEventListener('turn:home-shown', handleHomeShown);
+  window.addEventListener(SUPPORT_HOME_STARTED_EVENT, handleSupportFeedbackStarted);
+  window.addEventListener(SUPPORT_HOME_ENDED_EVENT, handleSupportFeedbackEnded);
+  window.addEventListener('turn:achievements-ready', handleAchievementsReady);
   document.addEventListener('turn:home-ready', handleHomeReady);
-  ensureToastObserver();
+  document.addEventListener('visibilitychange', handleHomeReady);
   scheduleHomeReplay();
 
   installed = Object.freeze({
@@ -280,11 +221,14 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
     flush: flushHomeReplay,
     disconnect() {
       globalThis.clearTimeout(replayTimer);
-      homeObserver.disconnect();
-      toastMountObserver.disconnect();
-      toastObserver?.disconnect();
       window.removeEventListener('turn:trophy-road-updated', handleRewardUpdate);
+      window.removeEventListener('turn:trophy-road-toast-shown', handleRewardToastShown);
+      window.removeEventListener('turn:home-shown', handleHomeShown);
+      window.removeEventListener(SUPPORT_HOME_STARTED_EVENT, handleSupportFeedbackStarted);
+      window.removeEventListener(SUPPORT_HOME_ENDED_EVENT, handleSupportFeedbackEnded);
+      window.removeEventListener('turn:achievements-ready', handleAchievementsReady);
       document.removeEventListener('turn:home-ready', handleHomeReady);
+      document.removeEventListener('visibilitychange', handleHomeReady);
       installed = null;
     }
   });

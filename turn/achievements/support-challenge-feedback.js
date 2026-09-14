@@ -2,12 +2,14 @@ const SUPPORT_FEEDBACK_STORAGE_KEY = 'turn-support-feedback-v1';
 const RACE_SUPPORT_BONUS_PATTERN = /^support:(?:winner|safety|drift):/;
 const SUPPORT_PILL_VISIBLE_MS = 3200;
 const TOAST_CONCEAL_MS = 220;
-const REWARD_TOAST_VISIBLE_MS = 3600;
 const LOT_SELECTION_TIMEOUT_MS = 12000;
-const ACHIEVEMENT_FALLBACK_MS = 5600;
 const STYLE_ID = 'turn-support-challenge-feedback-styles';
+const HOME_SHOWN_EVENT = 'turn:home-shown';
+const SUPPORT_HOME_STARTED_EVENT = 'turn:support-home-feedback-started';
+const SUPPORT_HOME_ENDED_EVENT = 'turn:support-home-feedback-ended';
+const SUPPORT_REWARD_HOLD = 'support-home-feedback';
 
-let installed = false;
+let installed = null;
 
 export function isRaceSupportBonusId(id) {
   return typeof id === 'string' && RACE_SUPPORT_BONUS_PATTERN.test(id);
@@ -156,22 +158,6 @@ function homeIsOpen() {
   );
 }
 
-function supportToastElement() {
-  return document.querySelector('.turn-support-bonus-toast:not(.turn-support-home-toast)');
-}
-
-function achievementToastElement() {
-  return document.querySelector('.turn-achievement-toast:not(.turn-trophy-reward-toast)');
-}
-
-function rewardToastElement() {
-  return document.querySelector('.turn-trophy-reward-toast');
-}
-
-function toastIsVisible(toast) {
-  return Boolean(toast && !toast.hidden && toast.classList.contains('is-visible'));
-}
-
 function setSupportPillCopy(toast, { label = 'CHALLENGE COMPLETE', trophies = 0 } = {}) {
   if (!toast) return;
   const labelNode = toast.querySelector('span');
@@ -180,16 +166,12 @@ function setSupportPillCopy(toast, { label = 'CHALLENGE COMPLETE', trophies = 0 
   if (valueNode) valueNode.textContent = `+${Math.max(0, Math.round(Number(trophies) || 0))} 🏆`;
 }
 
-function revealSupportPill(toast, completion, { duration = SUPPORT_PILL_VISIBLE_MS } = {}) {
+function revealSupportPill(toast, completion) {
   if (!toast || !completion) return false;
   setSupportPillCopy(toast, completion);
   toast.hidden = false;
   toast.classList.remove('is-visible');
   globalThis.requestAnimationFrame(() => toast.classList.add('is-visible'));
-  globalThis.setTimeout(() => {
-    toast.classList.remove('is-visible');
-    globalThis.setTimeout(() => { toast.hidden = true; }, TOAST_CONCEAL_MS);
-  }, duration);
   return true;
 }
 
@@ -225,267 +207,134 @@ function makeCompletionIndicator() {
   return indicator;
 }
 
-function snapshotRewardToast(toast) {
-  if (!toast) return null;
-  const guide = toast.querySelector('[data-trophy-reward-guide]');
-  return {
-    icon: toast.querySelector('.turn-achievement-toast-icon')?.innerHTML || '',
-    label: toast.querySelector('[data-achievement-toast-label]')?.textContent || '',
-    title: toast.querySelector('[data-achievement-toast-title]')?.textContent || '',
-    badge: toast.querySelector('[data-achievement-toast-badge]')?.textContent || '',
-    guideHidden: guide ? guide.hidden : true,
-    ariaLabel: toast.getAttribute('aria-label') || '',
-    interceptedAt: Date.now()
-  };
-}
-
-function restoreRewardToast(toast, snapshot) {
-  if (!toast || !snapshot) return;
-  const icon = toast.querySelector('.turn-achievement-toast-icon');
-  const label = toast.querySelector('[data-achievement-toast-label]');
-  const title = toast.querySelector('[data-achievement-toast-title]');
-  const badge = toast.querySelector('[data-achievement-toast-badge]');
-  const guide = toast.querySelector('[data-trophy-reward-guide]');
-  if (icon) icon.innerHTML = snapshot.icon;
-  if (label) label.textContent = snapshot.label;
-  if (title) title.textContent = snapshot.title;
-  if (badge) badge.textContent = snapshot.badge;
-  if (guide) guide.hidden = snapshot.guideHidden;
-  if (snapshot.ariaLabel) toast.setAttribute('aria-label', snapshot.ariaLabel);
-}
-
-function concealToastImmediately(toast) {
-  if (!toast) return;
-  toast.classList.remove('is-visible');
-  toast.hidden = true;
+function dispatchSupportHomeEvent(type, completion) {
+  window.dispatchEvent(new CustomEvent(type, {
+    detail: completion ? { ...completion } : {}
+  }));
 }
 
 export function installSupportChallengeFeedback({ storage = globalThis.localStorage } = {}) {
   if (installed || typeof document === 'undefined' || typeof window === 'undefined') return installed;
-  installed = true;
   installStyles();
 
-  let recentAchievementIds = [];
-  let recentAchievementClearTimer = 0;
-  let lastRaceCompletion = null;
-  let raceAwaitingAchievement = false;
-  let raceRewardBlocked = false;
-  let achievementFallbackTimer = 0;
   let homeFeedbackBusy = false;
-  let homeFeedbackShownFor = '';
-  let deferredReward = null;
-  let deferredRewardTimer = 0;
-  let supportObserver = null;
-  let supportObservedNode = null;
-  let achievementObserver = null;
-  let achievementObservedNode = null;
-  let rewardObserver = null;
-  let rewardObservedNode = null;
+  let homeFeedbackTimer = 0;
+  let homeConcealTimer = 0;
+  let pending = loadPendingCompletion(storage);
+  let active = null;
+  let pill = null;
+  let indicator = null;
+  let disconnected = false;
 
-  function rewardBlocked() {
-    return raceRewardBlocked || homeFeedbackBusy;
+  function beginHomeFeedback(completion) {
+    globalThis.__turnAchievements?.holdRewardPresentation?.(SUPPORT_REWARD_HOLD);
+    dispatchSupportHomeEvent(SUPPORT_HOME_STARTED_EVENT, completion);
   }
 
-  function scheduleDeferredReward() {
-    globalThis.clearTimeout(deferredRewardTimer);
-    if (!deferredReward || rewardBlocked()) return;
-    const safeAt = deferredReward.snapshot.interceptedAt + REWARD_TOAST_VISIBLE_MS + TOAST_CONCEAL_MS + 80;
-    const wait = Math.max(120, safeAt - Date.now());
-    deferredRewardTimer = globalThis.setTimeout(() => {
-      deferredRewardTimer = 0;
-      if (!deferredReward || rewardBlocked()) return;
-      const toast = rewardToastElement();
-      if (!toast) {
-        scheduleDeferredReward();
-        return;
-      }
-      const pending = deferredReward;
-      deferredReward = null;
-      restoreRewardToast(toast, pending.snapshot);
-      toast.hidden = false;
-      toast.classList.remove('is-visible');
-      globalThis.requestAnimationFrame(() => toast.classList.add('is-visible'));
-      globalThis.setTimeout(() => {
-        toast.classList.remove('is-visible');
-        globalThis.setTimeout(() => { toast.hidden = true; }, TOAST_CONCEAL_MS);
-      }, REWARD_TOAST_VISIBLE_MS);
-    }, wait);
-  }
-
-  function deferVisibleReward(toast) {
-    const snapshot = snapshotRewardToast(toast);
-    if (!snapshot) return;
-    deferredReward = { snapshot };
-    concealToastImmediately(toast);
-  }
-
-  function handleSupportToastMutation(toast) {
-    if (!toastIsVisible(toast)) return;
-    if (lastRaceCompletion) setSupportPillCopy(toast, lastRaceCompletion);
-    if (!raceAwaitingAchievement) return;
-    concealToastImmediately(toast);
-  }
-
-  function handleAchievementToastMutation(toast) {
-    const visible = toastIsVisible(toast);
-    if (visible && raceAwaitingAchievement && lastRaceCompletion) {
-      raceAwaitingAchievement = false;
-      globalThis.clearTimeout(achievementFallbackTimer);
-      achievementFallbackTimer = 0;
-      const supportToast = supportToastElement();
-      if (supportToast) revealSupportPill(supportToast, lastRaceCompletion);
-      return;
+  function finishHomeFeedback({ consume = false } = {}) {
+    const completion = active;
+    if (!completion) return;
+    globalThis.clearTimeout(homeFeedbackTimer);
+    globalThis.clearTimeout(homeConcealTimer);
+    pill?.remove();
+    indicator?.remove();
+    pill = indicator = null;
+    active = null;
+    if (consume && pending?.id === completion.id && pending?.at === completion.at) {
+      pending = null;
+      clearPendingCompletion(storage);
     }
-    if (!visible && raceRewardBlocked && !raceAwaitingAchievement) {
-      raceRewardBlocked = false;
-      scheduleDeferredReward();
-    }
-  }
-
-  function handleRewardToastMutation(toast) {
-    if (!toastIsVisible(toast)) return;
-    if (rewardBlocked()) {
-      deferVisibleReward(toast);
-      return;
-    }
-    // A normally queued reward reached the player after the challenge/achievement
-    // sequence ended. It owns the presentation now; a previously intercepted copy
-    // would only duplicate it.
-    deferredReward = null;
-    globalThis.clearTimeout(deferredRewardTimer);
-    deferredRewardTimer = 0;
-  }
-
-  function ensureToastObservers() {
-    const supportToast = supportToastElement();
-    if (supportToast && supportToast !== supportObservedNode) {
-      supportObserver?.disconnect();
-      supportObservedNode = supportToast;
-      supportObserver = new MutationObserver(() => handleSupportToastMutation(supportToast));
-      supportObserver.observe(supportToast, { attributes: true, attributeFilter: ['class', 'hidden'], childList: true, subtree: true });
-    }
-
-    const achievementToast = achievementToastElement();
-    if (achievementToast && achievementToast !== achievementObservedNode) {
-      achievementObserver?.disconnect();
-      achievementObservedNode = achievementToast;
-      achievementObserver = new MutationObserver(() => handleAchievementToastMutation(achievementToast));
-      achievementObserver.observe(achievementToast, { attributes: true, attributeFilter: ['class', 'hidden'] });
-    }
-
-    const rewardToast = rewardToastElement();
-    if (rewardToast && rewardToast !== rewardObservedNode) {
-      rewardObserver?.disconnect();
-      rewardObservedNode = rewardToast;
-      rewardObserver = new MutationObserver(() => handleRewardToastMutation(rewardToast));
-      rewardObserver.observe(rewardToast, { attributes: true, attributeFilter: ['class', 'hidden'] });
-    }
+    homeFeedbackBusy = false;
+    globalThis.__turnAchievements?.releaseRewardPresentation?.(SUPPORT_REWARD_HOLD, { delay: 120 });
+    dispatchSupportHomeEvent(SUPPORT_HOME_ENDED_EVENT, completion);
   }
 
   function showHomeCompletion(completion) {
-    if (!completion || !homeIsOpen() || homeFeedbackBusy || homeFeedbackShownFor === completion.id) return false;
+    if (!completion || !homeIsOpen() || homeFeedbackBusy) return false;
     homeFeedbackBusy = true;
-    homeFeedbackShownFor = completion.id;
-    ensureToastObservers();
+    active = completion;
+    beginHomeFeedback(completion);
 
-    const pill = makeHomePill({ label: 'CHALLENGE COMPLETE', trophies: completion.trophies });
-    const indicator = makeCompletionIndicator();
+    pill = makeHomePill({ label: 'CHALLENGE COMPLETE', trophies: completion.trophies });
+    indicator = makeCompletionIndicator();
 
-    globalThis.setTimeout(() => {
+    globalThis.clearTimeout(homeFeedbackTimer);
+    globalThis.clearTimeout(homeConcealTimer);
+    homeFeedbackTimer = globalThis.setTimeout(() => {
+      homeFeedbackTimer = 0;
       pill.classList.remove('is-visible');
-      globalThis.setTimeout(() => pill.remove(), TOAST_CONCEAL_MS);
       indicator?.remove();
-      clearPendingCompletion(storage);
-      homeFeedbackBusy = false;
-      scheduleDeferredReward();
+      homeConcealTimer = globalThis.setTimeout(() => {
+        homeConcealTimer = 0;
+        finishHomeFeedback({ consume: true });
+        maybeShowPendingHomeCompletion();
+      }, TOAST_CONCEAL_MS);
     }, SUPPORT_PILL_VISIBLE_MS);
     return true;
   }
 
   function maybeShowPendingHomeCompletion() {
-    if (!homeIsOpen()) return false;
-    const pending = loadPendingCompletion(storage);
+    if (disconnected || document.visibilityState === 'hidden' || !homeIsOpen()
+      || !globalThis.__turnAchievements || !document.querySelector('.turn-support-challenge-trigger')) return false;
     return showHomeCompletion(pending);
   }
 
-  document.addEventListener('click', (event) => {
+  const handleStart = (event) => {
     const start = event.target?.closest?.('[data-support-start]');
     if (!start) return;
     const active = globalThis.__turnSupportChallenges?.state?.active;
     if (!active || active.type === 'learning' || !active.trackId || !active.vehicleId) return;
     // The existing support handler remains authoritative for track selection and
-    // navigation. Arm the Lot selection first so its recommended car is selected
-    // as soon as the showroom DOM is created, before the next paint.
+    // navigation. Arm the recommended Lot choice before that handler opens it.
     selectRecommendedLotCar(active.vehicleId);
-  }, true);
+  };
+  document.addEventListener('click', handleStart, true);
 
-  window.addEventListener('turn:achievements-updated', (event) => {
-    recentAchievementIds = Array.isArray(event.detail?.unlocked)
-      ? event.detail.unlocked.filter((id) => typeof id === 'string' && id)
-      : [];
-    globalThis.clearTimeout(recentAchievementClearTimer);
-    recentAchievementClearTimer = globalThis.setTimeout(() => {
-      recentAchievementIds = [];
-      recentAchievementClearTimer = 0;
-    }, 0);
-  });
-
-  window.addEventListener('turn:trophy-bonus', (event) => {
+  const handleBonus = (event) => {
     const detail = event.detail || {};
     if (!isRaceSupportBonusId(detail.id)) return;
-    const completion = {
+    pending = {
       id: detail.id,
       trophies: Math.max(1, Math.round(Number(detail.trophies) || 0)),
       at: Date.now()
     };
-    lastRaceCompletion = completion;
-    savePendingCompletion(completion, storage);
-    ensureToastObservers();
+    savePendingCompletion(pending, storage);
+  };
+  window.addEventListener('turn:trophy-bonus', handleBonus);
 
-    if (recentAchievementIds.length) {
-      raceAwaitingAchievement = true;
-      raceRewardBlocked = true;
-      globalThis.clearTimeout(achievementFallbackTimer);
-      achievementFallbackTimer = globalThis.setTimeout(() => {
-        if (!raceAwaitingAchievement || !lastRaceCompletion) return;
-        raceAwaitingAchievement = false;
-        raceRewardBlocked = false;
-        const toast = supportToastElement();
-        if (toast) revealSupportPill(toast, lastRaceCompletion);
-        scheduleDeferredReward();
-      }, ACHIEVEMENT_FALLBACK_MS);
-    }
-  });
+  const handleHomeShown = () => maybeShowPendingHomeCompletion();
+  const handleAchievementsReady = () => maybeShowPendingHomeCompletion();
+  const handleHomeHidden = () => finishHomeFeedback();
+  const handleVisibility = () => {
+    if (document.visibilityState === 'hidden') finishHomeFeedback();
+    else maybeShowPendingHomeCompletion();
+  };
+  window.addEventListener(HOME_SHOWN_EVENT, handleHomeShown);
+  window.addEventListener('turn:home-hidden', handleHomeHidden);
+  window.addEventListener('turn:achievements-ready', handleAchievementsReady);
+  window.addEventListener('turn:support-challenges-ready', handleAchievementsReady);
+  document.addEventListener('visibilitychange', handleVisibility);
 
-  const bodyObserver = new MutationObserver(() => {
-    ensureToastObservers();
-    maybeShowPendingHomeCompletion();
-  });
-  bodyObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class', 'hidden']
-  });
+  queueMicrotask(maybeShowPendingHomeCompletion);
 
-  ensureToastObservers();
-  maybeShowPendingHomeCompletion();
-
-  return Object.freeze({
+  installed = Object.freeze({
     storageKey: SUPPORT_FEEDBACK_STORAGE_KEY,
     selectRecommendedLotCar,
     showPendingHomeCompletion: maybeShowPendingHomeCompletion,
     disconnect() {
-      supportObserver?.disconnect();
-      achievementObserver?.disconnect();
-      rewardObserver?.disconnect();
-      bodyObserver.disconnect();
-      globalThis.clearTimeout(recentAchievementClearTimer);
-      globalThis.clearTimeout(achievementFallbackTimer);
-      globalThis.clearTimeout(deferredRewardTimer);
-      installed = false;
+      disconnected = true;
+      finishHomeFeedback();
+      document.removeEventListener('click', handleStart, true);
+      window.removeEventListener('turn:trophy-bonus', handleBonus);
+      window.removeEventListener(HOME_SHOWN_EVENT, handleHomeShown);
+      window.removeEventListener('turn:home-hidden', handleHomeHidden);
+      window.removeEventListener('turn:achievements-ready', handleAchievementsReady);
+      window.removeEventListener('turn:support-challenges-ready', handleAchievementsReady);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      installed = null;
     }
   });
+  return installed;
 }
 
 if (typeof document !== 'undefined' && typeof window !== 'undefined') {

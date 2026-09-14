@@ -110,8 +110,10 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     pendingTrackEntryPulse: false,
     pendingToastAchievements: [],
     pendingToastRewards: [],
+    pendingSupportFeedback: [],
     toastTimer: 0,
     rewardToastTimer: 0,
+    rewardPresentationHolds: new Set(),
     samplingTimer: 0,
     listenCloselyMs: 0,
     lastSampleAt: performance.now(),
@@ -146,14 +148,21 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     session.toastTimer = window.setTimeout(() => {
       session.toastTimer = 0;
       view.showToastBatch(session.pendingToastAchievements.splice(0));
+      for (const show of session.pendingSupportFeedback.splice(0)) show();
+      if (session.pendingToastRewards.length) scheduleRewardToastFlush(REWARD_TOAST_OFFSET_MS);
     }, delay);
   }
 
   function scheduleRewardToastFlush(delay = 0) {
     window.clearTimeout(session.rewardToastTimer);
+    session.rewardToastTimer = 0;
+    if (session.rewardPresentationHolds.size) return;
     session.rewardToastTimer = window.setTimeout(() => {
       session.rewardToastTimer = 0;
-      view.showRewardToastBatch(session.pendingToastRewards.splice(0));
+      if (session.rewardPresentationHolds.size) return;
+      if (session.pendingToastAchievements.length) return;
+      const batch = session.pendingToastRewards.splice(0);
+      if (batch.length) view.showRewardToastBatch(batch);
     }, delay);
   }
 
@@ -175,6 +184,30 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     view.syncTriggers();
     view.render();
     if (delay >= 0) scheduleRewardToastFlush(delay);
+  }
+
+  function holdRewardPresentation(key) {
+    if (typeof key !== 'string' || !key) return false;
+    session.rewardPresentationHolds.add(key);
+    window.clearTimeout(session.rewardToastTimer);
+    session.rewardToastTimer = 0;
+    const interrupted = view.hideRewardToast();
+    if (interrupted.length) queueRewards(interrupted, { delay: -1 });
+    return true;
+  }
+
+  function releaseRewardPresentation(key, { delay = 0 } = {}) {
+    if (typeof key !== 'string' || !key) return false;
+    const removed = session.rewardPresentationHolds.delete(key);
+    if (!session.rewardPresentationHolds.size && session.pendingToastRewards.length) {
+      scheduleRewardToastFlush(delay);
+    }
+    return removed;
+  }
+
+  function queueSupportFeedback(show) {
+    if (session.pendingToastAchievements.length) session.pendingSupportFeedback.push(show);
+    else show();
   }
 
   function unlock(ids, context, options = {}) {
@@ -595,6 +628,11 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     close: view.close,
     unlock: (id, context = {}) => unlock([id], context, { delay: 0 }),
     grantBonus,
+    queueSupportFeedback,
+    holdRewardPresentation,
+    releaseRewardPresentation,
+    hideRewardToast: view.hideRewardToast,
+    showRewardToastBatch: (batch) => queueRewards(batch),
     getTrophies: () => store.trophyTotal(),
     getState: () => normalizeAchievementState(store.state)
   });

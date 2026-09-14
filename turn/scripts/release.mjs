@@ -216,6 +216,26 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
   }
   imports['/turn/achievements/catalog-production.js?revision=r241-learning-achievements-base']
     = `/turn/achievements/catalog-production.js?build=${release.cacheKey}`;
+
+  // Support-feedback modules are active production code. Keep historical import
+  // specifiers as aliases, but route every active identity through the current
+  // release build instead of minting another manual revision namespace.
+  const releaseOwnedModules = {
+    '/turn/achievements/support-challenges.js': [''],
+    '/turn/achievements/support-challenge-feedback.js': ['', '?revision=r244-reward-toast-guide'],
+    '/turn/achievements/view.js': ['', '?revision=r244-reward-toast-guide'],
+    '/turn/achievements/home-reward-replay-r225.js': ['', '?revision=r244-reward-toast-guide']
+  };
+  for (const [pathname, suffixes] of Object.entries(releaseOwnedModules)) {
+    const target = `${pathname}?build=${release.cacheKey}`;
+    for (const suffix of suffixes) imports[`${pathname}${suffix}`] = target;
+    for (const [specifier, existing] of Object.entries(imports)) {
+      if (typeof existing !== 'string') continue;
+      if (new URL(existing, 'https://enkel.design/turn/').pathname === pathname) {
+        imports[specifier] = target;
+      }
+    }
+  }
 }
 
 function synchronizeGraphicsRuntimeTarget(importMap, release) {
