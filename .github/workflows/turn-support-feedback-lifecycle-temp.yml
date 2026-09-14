@@ -27,15 +27,13 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Apply lifecycle refactor if needed
+      - name: Prepare and generate TURN 1.20.2
         run: |
-          if grep -q "rewardPresentationHolds: new Set()" turn/achievements/runtime.js; then
-            echo "Lifecycle refactor already committed."
-          else
-            node turn/scripts/temp-support-feedback-lifecycle.mjs
-          fi
+          node turn/scripts/temp-support-feedback-lifecycle.mjs
+          node turn/scripts/release.mjs --write
+          node turn/scripts/release.mjs --check
 
-      - name: Verify focused contracts
+      - name: Verify focused and release contracts
         run: |
           node --check turn/achievements/support-challenge-feedback.js
           node --check turn/achievements/home-reward-replay-r225.js
@@ -45,11 +43,13 @@ jobs:
           node turn-tests/support-challenges-production.mjs
           node turn-tests/home-navigation-production.mjs
           node turn-lab/tests/stat-legend-production.mjs
+          node turn-tests/release-production.mjs
+          node turn-tests/release-composition-production.mjs --base origin/main
           git diff --check
 
       - name: Install browser smoke dependencies
         run: |
-          npm install --no-save playwright@1.55.0
+          npm install --no-save --package-lock=false playwright@1.55.0
           npx playwright install --with-deps chromium webkit
 
       - name: Start static TURN server
@@ -62,24 +62,26 @@ jobs:
           cat /tmp/turn-support-feedback-http.log
           exit 1
 
-      - name: Verify support feedback in browsers
+      - name: Verify support feedback in Chromium and WebKit
         run: node turn-tests/support-feedback-browser-smoke.mjs
 
-      - name: Commit verified refactor
+      - name: Commit generated release surfaces
+        shell: bash
         run: |
           git config user.name "enkeldesign"
           git config user.email "75029856+enkeldesign@users.noreply.github.com"
-          git add \
-            turn/achievements/runtime.js \
-            turn/achievements/view.js \
-            turn/m8-home.js \
-            turn/achievements/support-challenges.js \
-            turn-tests/support-challenges-production.mjs \
-            turn-tests/home-navigation-production.mjs \
-            turn-lab/tests/stat-legend-production.mjs
+          while IFS= read -r file; do
+            case "$file" in
+              .github/workflows/turn-support-feedback-lifecycle-temp.yml|turn/scripts/temp-support-feedback-lifecycle.mjs)
+                ;;
+              *)
+                git add -- "$file"
+                ;;
+            esac
+          done < <(git diff --name-only)
           if git diff --cached --quiet; then
-            echo "No lifecycle changes to commit."
+            echo "Release surfaces already synchronized."
             exit 0
           fi
-          git commit -m "Coordinate support feedback through explicit lifecycle"
+          git commit -m "Release TURN 1.20.2 r234"
           git push origin HEAD:sol/support-feedback-lifecycle
