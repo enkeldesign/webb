@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - sol/pill-toast-lane-r235
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
