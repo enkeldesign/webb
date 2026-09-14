@@ -110,6 +110,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     pendingTrackEntryPulse: false,
     pendingToastAchievements: [],
     pendingToastRewards: [],
+    pendingSupportFeedback: [],
     toastTimer: 0,
     rewardToastTimer: 0,
     rewardPresentationHolds: new Set(),
@@ -147,6 +148,8 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     session.toastTimer = window.setTimeout(() => {
       session.toastTimer = 0;
       view.showToastBatch(session.pendingToastAchievements.splice(0));
+      for (const show of session.pendingSupportFeedback.splice(0)) show();
+      if (session.pendingToastRewards.length) scheduleRewardToastFlush(REWARD_TOAST_OFFSET_MS);
     }, delay);
   }
 
@@ -157,6 +160,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     session.rewardToastTimer = window.setTimeout(() => {
       session.rewardToastTimer = 0;
       if (session.rewardPresentationHolds.size) return;
+      if (session.pendingToastAchievements.length) return;
       const batch = session.pendingToastRewards.splice(0);
       if (batch.length) view.showRewardToastBatch(batch);
     }, delay);
@@ -187,7 +191,8 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     session.rewardPresentationHolds.add(key);
     window.clearTimeout(session.rewardToastTimer);
     session.rewardToastTimer = 0;
-    view.hideRewardToast();
+    const interrupted = view.hideRewardToast();
+    if (interrupted.length) queueRewards(interrupted, { delay: -1 });
     return true;
   }
 
@@ -198,6 +203,11 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       scheduleRewardToastFlush(delay);
     }
     return removed;
+  }
+
+  function queueSupportFeedback(show) {
+    if (session.pendingToastAchievements.length) session.pendingSupportFeedback.push(show);
+    else show();
   }
 
   function unlock(ids, context, options = {}) {
@@ -618,10 +628,11 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     close: view.close,
     unlock: (id, context = {}) => unlock([id], context, { delay: 0 }),
     grantBonus,
+    queueSupportFeedback,
     holdRewardPresentation,
     releaseRewardPresentation,
     hideRewardToast: view.hideRewardToast,
-    showRewardToastBatch: view.showRewardToastBatch,
+    showRewardToastBatch: (batch) => queueRewards(batch),
     getTrophies: () => store.trophyTotal(),
     getState: () => normalizeAchievementState(store.state)
   });

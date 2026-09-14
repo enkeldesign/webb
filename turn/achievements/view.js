@@ -460,6 +460,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
   let rewardToastConcealTimer = 0;
   let toastShowFrame = 0;
   let rewardToastShowFrame = 0;
+  let activeRewardBatch = [];
   let attentionTimer = 0;
   let attentionFrame = 0;
   let dialogDirty = true;
@@ -762,10 +763,11 @@ export function createAchievementView({ store, session, utilityGroup }) {
     });
   }
 
-  function showToast(toastElement, batch, { reward = false, announce = true } = {}) {
+  function showToast(toastElement, batch, { reward = false } = {}) {
     if (!batch.length) return;
     const timerKey = reward ? 'reward' : 'achievement';
     if (timerKey === 'reward') {
+      activeRewardBatch = [...batch];
       window.clearTimeout(rewardToastHideTimer);
       window.clearTimeout(rewardToastConcealTimer);
       if (rewardToastShowFrame) window.cancelAnimationFrame(rewardToastShowFrame);
@@ -797,11 +799,11 @@ export function createAchievementView({ store, session, utilityGroup }) {
       ? `${batch.length === 1 ? 'Trophy Road reward unlocked' : `${batch.length} Trophy Road rewards unlocked`}. ${batch.map((item) => item.shortTitle).join(', ')}.${needsHowToPlay ? ' See How to Play for instructions.' : ''} Open Achievements.`
       : `${batch.length === 1 ? 'Achievement unlocked' : `${batch.length} achievements unlocked`}. ${batch.map((achievement) => achievement.title).join(', ')}. ${total} trophies.`);
 
-    if (reward && announce) {
-      window.dispatchEvent(new CustomEvent('turn:trophy-road-toast-shown', {
+    const announceShown = () => {
+      if (reward) window.dispatchEvent(new CustomEvent('turn:trophy-road-toast-shown', {
         detail: { ids: batch.map((item) => item.id).filter(Boolean) }
       }));
-    }
+    };
 
     const alreadyVisible = !toastElement.hidden && toastElement.classList.contains('is-visible');
     toastElement.hidden = false;
@@ -811,16 +813,20 @@ export function createAchievementView({ store, session, utilityGroup }) {
         toastElement.classList.add('is-visible');
         if (reward) rewardToastShowFrame = 0;
         else toastShowFrame = 0;
+        announceShown();
       });
       if (reward) rewardToastShowFrame = frame;
       else toastShowFrame = frame;
-    }
+    } else announceShown();
 
     const timer = window.setTimeout(() => {
       toastElement.classList.remove('is-visible');
       const concealTimer = window.setTimeout(() => {
         toastElement.hidden = true;
-        if (reward) rewardToastConcealTimer = 0;
+        if (reward) {
+          rewardToastConcealTimer = 0;
+          activeRewardBatch = [];
+        }
         else toastConcealTimer = 0;
       }, 220);
       if (reward) rewardToastConcealTimer = concealTimer;
@@ -834,11 +840,13 @@ export function createAchievementView({ store, session, utilityGroup }) {
     showToast(toast, batch);
   }
 
-  function showRewardToastBatch(batch, { announce = true } = {}) {
-    showToast(rewardToast, batch, { reward: true, announce });
+  function showRewardToastBatch(batch) {
+    showToast(rewardToast, batch, { reward: true });
   }
 
   function hideRewardToast() {
+    const interrupted = activeRewardBatch;
+    activeRewardBatch = [];
     window.clearTimeout(rewardToastHideTimer);
     window.clearTimeout(rewardToastConcealTimer);
     rewardToastHideTimer = 0;
@@ -847,6 +855,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
     rewardToastShowFrame = 0;
     rewardToast.classList.remove('is-visible');
     rewardToast.hidden = true;
+    return interrupted;
   }
 
   function openRewardToast() {

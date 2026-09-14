@@ -82,6 +82,7 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
   const addedThisSession = new Set();
   const shownAwayFromHome = new Set();
   const addedAt = new Map();
+  const queuedForReplay = new Set();
   let replayTimer = 0;
   let supportFeedbackActive = false;
 
@@ -98,6 +99,7 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
       addedThisSession.delete(id);
       shownAwayFromHome.delete(id);
       addedAt.delete(id);
+      queuedForReplay.delete(id);
     }
     if (changed) persist();
   }
@@ -109,6 +111,7 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
   function idsReadyForHomeReplay() {
     const now = Date.now();
     return [...pending].filter((id) => {
+      if (queuedForReplay.has(id)) return false;
       if (!addedThisSession.has(id)) return true;
       if (shownAwayFromHome.has(id)) return true;
       const started = Number(addedAt.get(id)) || now;
@@ -119,7 +122,8 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
   function showReplayRewards(rewards) {
     const achievements = globalThis.__turnAchievements;
     if (!achievements?.showRewardToastBatch) return false;
-    achievements.showRewardToastBatch(rewards, { announce: false });
+    for (const reward of rewards) queuedForReplay.add(reward.id);
+    achievements.showRewardToastBatch(rewards);
     return true;
   }
 
@@ -129,6 +133,7 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
 
     const ids = idsReadyForHomeReplay();
     if (!ids.length) {
+      if ([...pending].every((id) => queuedForReplay.has(id))) return;
       const waits = [...pending]
         .filter((id) => addedThisSession.has(id))
         .map((id) => CURRENT_SESSION_FALLBACK_MS - (Date.now() - (addedAt.get(id) || Date.now())));
@@ -146,7 +151,6 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
       replayTimer = globalThis.setTimeout(flushHomeReplay, 120);
       return;
     }
-    consume(ids);
   }
 
   function scheduleHomeReplay(delay = HOME_REPLAY_DELAY_MS) {
@@ -172,13 +176,16 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
 
   function handleRewardToastShown(event) {
     const ids = normalizedIds(event.detail?.ids)
-      .filter((id) => pending.has(id) && addedThisSession.has(id));
+      .filter((id) => pending.has(id));
     if (!ids.length) return;
     if (homeIsReady()) {
       consume(ids);
       return;
     }
-    for (const id of ids) shownAwayFromHome.add(id);
+    for (const id of ids) {
+      queuedForReplay.delete(id);
+      shownAwayFromHome.add(id);
+    }
   }
 
   function handleSupportFeedbackStarted() {

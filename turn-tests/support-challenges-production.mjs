@@ -127,4 +127,12 @@ assert.ok(requestedUrl.includes('fresh=12345'));
 assert.equal(requestedOptions?.cache, 'no-store');
 assert.ok(memory.get(SUPPORT_CHALLENGE_CONFIG_CACHE_KEY), 'Fetched rules must retain a last-known-good offline copy');
 
+const uncached = await loadSupportChallengeConfig({
+  storage: { getItem: () => null, setItem: () => { throw new Error('quota'); } },
+  fetchImpl: async () => ({ ok: true, json: async () => rawConfig })
+});
+assert.equal(uncached.enabled, true, 'A cache write failure must not discard valid live challenge rules');
+const offline = await loadSupportChallengeConfig({ storage, fetchImpl: async () => { throw new Error('offline'); } });
+assert.equal(offline.enabled, true, 'Offline play must use the last known good rules');
+
 console.log('TURN Trophy Road support challenge regression passed.');

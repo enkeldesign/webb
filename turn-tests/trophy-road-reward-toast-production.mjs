@@ -36,10 +36,8 @@ assert.match(view, /rewardBatchNeedsHowToPlay\(batch\)/);
 assert.match(view, /See How to Play for instructions\.[^`]*Open Achievements\./,
   'The live announcement must include both the guidance and toast action');
 
-assert.match(replay, /rewardBatchNeedsHowToPlay\(rewards\)/,
-  'Home reward replay must preserve the same conditional guide');
-assert.match(replay, /querySelector\('\[data-trophy-reward-guide\]'\)/);
-assert.match(replay, /See How to Play for instructions\.[^`]*Open Achievements\./);
+assert.match(replay, /achievements\.showRewardToastBatch\(rewards\)/,
+  'Home reward replay must use the shared reward presenter, including its guide and accessible action');
 
 assert.match(css, /\.turn-trophy-reward-toast \{[\s\S]*?pointer-events: auto;[\s\S]*?touch-action: manipulation;/,
   'The full reward toast is a touch-friendly activation target');

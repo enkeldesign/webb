@@ -829,6 +829,7 @@ export async function installM8HomeNavigation() {
   function hideHome() {
     home.hidden = true;
     document.body.classList.remove('turn-home-open');
+    window.dispatchEvent(new CustomEvent('turn:home-hidden'));
   }
 
   async function continueToTrack() {

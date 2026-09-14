@@ -9,7 +9,7 @@ const SUPPORT_HOME_STARTED_EVENT = 'turn:support-home-feedback-started';
 const SUPPORT_HOME_ENDED_EVENT = 'turn:support-home-feedback-ended';
 const SUPPORT_REWARD_HOLD = 'support-home-feedback';
 
-let installed = false;
+let installed = null;
 
 export function isRaceSupportBonusId(id) {
   return typeof id === 'string' && RACE_SUPPORT_BONUS_PATTERN.test(id);
@@ -215,20 +215,35 @@ function dispatchSupportHomeEvent(type, completion) {
 
 export function installSupportChallengeFeedback({ storage = globalThis.localStorage } = {}) {
   if (installed || typeof document === 'undefined' || typeof window === 'undefined') return installed;
-  installed = true;
   installStyles();
 
   let homeFeedbackBusy = false;
   let homeFeedbackTimer = 0;
   let homeConcealTimer = 0;
+  let pending = loadPendingCompletion(storage);
+  let active = null;
+  let pill = null;
+  let indicator = null;
+  let disconnected = false;
 
   function beginHomeFeedback(completion) {
     globalThis.__turnAchievements?.holdRewardPresentation?.(SUPPORT_REWARD_HOLD);
     dispatchSupportHomeEvent(SUPPORT_HOME_STARTED_EVENT, completion);
   }
 
-  function finishHomeFeedback(completion) {
-    clearPendingCompletion(storage);
+  function finishHomeFeedback({ consume = false } = {}) {
+    const completion = active;
+    if (!completion) return;
+    globalThis.clearTimeout(homeFeedbackTimer);
+    globalThis.clearTimeout(homeConcealTimer);
+    pill?.remove();
+    indicator?.remove();
+    pill = indicator = null;
+    active = null;
+    if (consume && pending?.id === completion.id && pending?.at === completion.at) {
+      pending = null;
+      clearPendingCompletion(storage);
+    }
     homeFeedbackBusy = false;
     globalThis.__turnAchievements?.releaseRewardPresentation?.(SUPPORT_REWARD_HOLD, { delay: 120 });
     dispatchSupportHomeEvent(SUPPORT_HOME_ENDED_EVENT, completion);
@@ -237,10 +252,11 @@ export function installSupportChallengeFeedback({ storage = globalThis.localStor
   function showHomeCompletion(completion) {
     if (!completion || !homeIsOpen() || homeFeedbackBusy) return false;
     homeFeedbackBusy = true;
+    active = completion;
     beginHomeFeedback(completion);
 
-    const pill = makeHomePill({ label: 'CHALLENGE COMPLETE', trophies: completion.trophies });
-    const indicator = makeCompletionIndicator();
+    pill = makeHomePill({ label: 'CHALLENGE COMPLETE', trophies: completion.trophies });
+    indicator = makeCompletionIndicator();
 
     globalThis.clearTimeout(homeFeedbackTimer);
     globalThis.clearTimeout(homeConcealTimer);
@@ -250,19 +266,20 @@ export function installSupportChallengeFeedback({ storage = globalThis.localStor
       indicator?.remove();
       homeConcealTimer = globalThis.setTimeout(() => {
         homeConcealTimer = 0;
-        pill.remove();
-        finishHomeFeedback(completion);
+        finishHomeFeedback({ consume: true });
+        maybeShowPendingHomeCompletion();
       }, TOAST_CONCEAL_MS);
     }, SUPPORT_PILL_VISIBLE_MS);
     return true;
   }
 
   function maybeShowPendingHomeCompletion() {
-    if (!homeIsOpen()) return false;
-    return showHomeCompletion(loadPendingCompletion(storage));
+    if (disconnected || document.visibilityState === 'hidden' || !homeIsOpen()
+      || !globalThis.__turnAchievements || !document.querySelector('.turn-support-challenge-trigger')) return false;
+    return showHomeCompletion(pending);
   }
 
-  document.addEventListener('click', (event) => {
+  const handleStart = (event) => {
     const start = event.target?.closest?.('[data-support-start]');
     if (!start) return;
     const active = globalThis.__turnSupportChallenges?.state?.active;
@@ -270,37 +287,54 @@ export function installSupportChallengeFeedback({ storage = globalThis.localStor
     // The existing support handler remains authoritative for track selection and
     // navigation. Arm the recommended Lot choice before that handler opens it.
     selectRecommendedLotCar(active.vehicleId);
-  }, true);
+  };
+  document.addEventListener('click', handleStart, true);
 
-  window.addEventListener('turn:trophy-bonus', (event) => {
+  const handleBonus = (event) => {
     const detail = event.detail || {};
     if (!isRaceSupportBonusId(detail.id)) return;
-    savePendingCompletion({
+    pending = {
       id: detail.id,
       trophies: Math.max(1, Math.round(Number(detail.trophies) || 0)),
       at: Date.now()
-    }, storage);
-  });
+    };
+    savePendingCompletion(pending, storage);
+  };
+  window.addEventListener('turn:trophy-bonus', handleBonus);
 
   const handleHomeShown = () => maybeShowPendingHomeCompletion();
   const handleAchievementsReady = () => maybeShowPendingHomeCompletion();
+  const handleHomeHidden = () => finishHomeFeedback();
+  const handleVisibility = () => {
+    if (document.visibilityState === 'hidden') finishHomeFeedback();
+    else maybeShowPendingHomeCompletion();
+  };
   window.addEventListener(HOME_SHOWN_EVENT, handleHomeShown);
+  window.addEventListener('turn:home-hidden', handleHomeHidden);
   window.addEventListener('turn:achievements-ready', handleAchievementsReady);
+  window.addEventListener('turn:support-challenges-ready', handleAchievementsReady);
+  document.addEventListener('visibilitychange', handleVisibility);
 
   queueMicrotask(maybeShowPendingHomeCompletion);
 
-  return Object.freeze({
+  installed = Object.freeze({
     storageKey: SUPPORT_FEEDBACK_STORAGE_KEY,
     selectRecommendedLotCar,
     showPendingHomeCompletion: maybeShowPendingHomeCompletion,
     disconnect() {
-      globalThis.clearTimeout(homeFeedbackTimer);
-      globalThis.clearTimeout(homeConcealTimer);
+      disconnected = true;
+      finishHomeFeedback();
+      document.removeEventListener('click', handleStart, true);
+      window.removeEventListener('turn:trophy-bonus', handleBonus);
       window.removeEventListener(HOME_SHOWN_EVENT, handleHomeShown);
+      window.removeEventListener('turn:home-hidden', handleHomeHidden);
       window.removeEventListener('turn:achievements-ready', handleAchievementsReady);
-      installed = false;
+      window.removeEventListener('turn:support-challenges-ready', handleAchievementsReady);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      installed = null;
     }
   });
+  return installed;
 }
 
 if (typeof document !== 'undefined' && typeof window !== 'undefined') {
