@@ -58,13 +58,13 @@ jobs:
               raise SystemExit('Expected loadCarSource implementation not found')
           car_path.write_text(source.replace(old, new, 1))
 
-          workflow_path = Path('.github/workflows/turn-lab-tests.yml')
-          workflow = workflow_path.read_text()
-          needle = "        run: node turn-tests/car-visual-lifecycle-production.mjs\n"
-          addition = needle + "\n      - name: Run car source failure-recovery regression\n        run: node turn-tests/car-source-retry-production.mjs\n"
-          if needle not in workflow:
-              raise SystemExit('Canonical car visual test command not found')
-          workflow_path.write_text(workflow.replace(needle, addition, 1))
+          lifecycle_path = Path('turn-tests/car-visual-lifecycle-production.mjs')
+          lifecycle = lifecycle_path.read_text()
+          marker = "} from '../turn/vehicle/car-visual-resources.js';\n\nconst read ="
+          replacement = "} from '../turn/vehicle/car-visual-resources.js';\n\nawait import('./car-source-retry-production.mjs');\n\nconst read ="
+          if marker not in lifecycle:
+              raise SystemExit('Car visual lifecycle import marker not found')
+          lifecycle_path.write_text(lifecycle.replace(marker, replacement, 1))
 
           release_path = Path('turn/release.json')
           release = json.loads(release_path.read_text())
@@ -202,12 +202,13 @@ jobs:
           EOF
 
           node turn-tests/car-source-retry-production.mjs
+          node turn-tests/car-visual-lifecycle-production.mjs
           node turn/scripts/release.mjs --write
           git rm .github/workflows/tmp-r237-car-retry.yml
       - name: Commit prepared r237 change
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add turn turn-next turn-lab turn-tests yourturn .github/workflows/turn-lab-tests.yml
+          git add turn turn-next turn-lab turn-tests yourturn
           git commit -m "Recover car sources after transient failures"
           git push origin HEAD:fix/car-source-retry-r237
