@@ -11,7 +11,8 @@ import {
 
 const OFFROAD_CAPABLE_VEHICLE_IDS = new Set(['monster-truck']);
 const OVERDRIVE_VEHICLE_ID = 'race-future';
-const OVERDRIVE_MIN_SPEED = 8;
+export const OVERDRIVE_MIN_SPEED_KMH = 200;
+const OVERDRIVE_MIN_SPEED = OVERDRIVE_MIN_SPEED_KMH / 3.6;
 const DRIFT_FLOW_SLIP_ANGLE = Math.PI / 12;
 const DRIFT_HIGH_SLIP_ANGLE = Math.PI * 70 / 180;
 const DRIFT_FLOW_PENALTY_SCALE = 0.65;
@@ -85,15 +86,17 @@ export function updateVehicleOverdriveState({
   if (!state) return 1;
   if (!vehicleHasOverdrive(state.vehicleId)) {
     state.overdriveCleanSeconds = 0;
+    state.overdriveMilestoneSeen = false;
     return 1;
   }
 
   const previousCleanSeconds = nonNegativeNumber(state.overdriveCleanSeconds, 0);
   if (offRoad || collided) {
     state.overdriveCleanSeconds = 0;
-    if (previousCleanSeconds > 0) {
+    if (state.overdriveMilestoneSeen === true) {
       showCompactRacePill('OVERDRIVE LOST', { tone: 'blue' });
     }
+    state.overdriveMilestoneSeen = false;
     return 1;
   }
 
@@ -105,6 +108,7 @@ export function updateVehicleOverdriveState({
     const nextMilestonePercent = Math.floor((nextBonusPercent + 1e-6) / 10) * 10;
     if (nextMilestonePercent >= 10 && nextMilestonePercent > previousMilestonePercent) {
       showCompactRacePill(`OVERDRIVE ${nextMilestonePercent}%`, { tone: 'blue' });
+      state.overdriveMilestoneSeen = true;
     }
   }
 

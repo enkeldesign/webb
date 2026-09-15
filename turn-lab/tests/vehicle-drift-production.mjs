@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import { CAR_CATALOG, deriveVehicleTuning, getVehicleStatTotal } from '../../turn/vehicle/catalog.js';
 import {
   OVERDRIVE_BUILD_SECONDS,
+  OVERDRIVE_MIN_SPEED_KMH,
   OVERDRIVE_SPEED_GAIN_PER_BUILD,
   OVERCHARGE_BOOST_POWER_MULTIPLIER,
   getOverdriveSpeedMultiplier,
@@ -452,12 +453,13 @@ assert.equal(
 const futureRacer = CAR_CATALOG.find((car) => car.id === 'race-future');
 assert.ok(futureRacer, 'Future Racer must remain in the vehicle catalog');
 assert.equal(futureRacer.perk?.title, 'OVERDRIVE');
-assert.equal(OVERDRIVE_BUILD_SECONDS, 5, 'OVERDRIVE must retain five clean seconds as its gain interval');
-assert.equal(OVERDRIVE_SPEED_GAIN_PER_BUILD, 0.05, 'Each clean OVERDRIVE interval must add five percent to the speed ceiling');
+assert.equal(OVERDRIVE_BUILD_SECONDS, 5, 'OVERDRIVE must retain five qualifying seconds as its gain interval');
+assert.equal(OVERDRIVE_MIN_SPEED_KMH, 200, 'OVERDRIVE build time must require at least 200 km/h');
+assert.equal(OVERDRIVE_SPEED_GAIN_PER_BUILD, 0.05, 'Each qualifying OVERDRIVE interval must add five percent to the speed ceiling');
 assert.match(physicsSource, /showCompactRacePill\(`OVERDRIVE \$\{nextMilestonePercent\}%`, \{ tone: 'blue' \}\)/,
   'OVERDRIVE must announce each 10 percent speed-cap milestone through the thin blue pill');
-assert.match(physicsSource, /showCompactRacePill\('OVERDRIVE LOST', \{ tone: 'blue' \}\)/,
-  'Leaving the track or colliding must announce OVERDRIVE LOST through the thin blue pill');
+assert.match(physicsSource, /if \(state\.overdriveMilestoneSeen === true\) \{[\s\S]*showCompactRacePill\('OVERDRIVE LOST', \{ tone: 'blue' \}\)/,
+  'OVERDRIVE LOST must only appear after the player has seen an OVERDRIVE milestone pill');
 assert.equal(vehicleHasOverdrive(futureRacer.id), true, 'Future Racer must own OVERDRIVE');
 for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race-future')) {
   assert.equal(vehicleHasOverdrive(car.id), false, `${car.name} must not receive OVERDRIVE`);
@@ -468,21 +470,28 @@ assert.equal(getOverdriveSpeedMultiplier(5), 1.05);
 assert.equal(getOverdriveSpeedMultiplier(10), 1.10);
 assert.equal(getOverdriveSpeedMultiplier(20), 1.20, 'OVERDRIVE must keep climbing with no speed-ceiling cap');
 
-const overdriveState = { vehicleId: 'race-future', speed: 40, overdriveCleanSeconds: 0 };
-updateVehicleOverdriveState({ state: overdriveState, dt: 2.5, speed: 40 });
+const overdriveThresholdSpeed = OVERDRIVE_MIN_SPEED_KMH / 3.6;
+const overdriveState = { vehicleId: 'race-future', speed: overdriveThresholdSpeed, overdriveCleanSeconds: 0 };
+updateVehicleOverdriveState({ state: overdriveState, dt: 2.5, speed: overdriveThresholdSpeed });
 assert.equal(overdriveState.overdriveCleanSeconds, 2.5);
 assert.ok(Math.abs(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds) - 1.025) < 1e-12);
-updateVehicleOverdriveState({ state: overdriveState, dt: 2.5, speed: 40 });
+updateVehicleOverdriveState({ state: overdriveState, dt: 2.5, speed: overdriveThresholdSpeed - 0.01 });
+assert.equal(overdriveState.overdriveCleanSeconds, 2.5, 'Dropping below 200 km/h must pause OVERDRIVE without losing progress');
+updateVehicleOverdriveState({ state: overdriveState, dt: 2.5, speed: overdriveThresholdSpeed });
 assert.equal(overdriveState.overdriveCleanSeconds, 5);
 assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.05);
-updateVehicleOverdriveState({ state: overdriveState, dt: 5, speed: 40 });
+assert.notEqual(overdriveState.overdriveMilestoneSeen, true, 'The 5% state must not claim that a milestone pill was shown');
+updateVehicleOverdriveState({ state: overdriveState, dt: 5, speed: overdriveThresholdSpeed });
 assert.equal(overdriveState.overdriveCleanSeconds, 10);
 assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.10);
+assert.equal(overdriveState.overdriveMilestoneSeen, true, 'The first 10% pill must arm OVERDRIVE LOST feedback');
 updateVehicleOverdriveState({ state: overdriveState, offRoad: true });
 assert.equal(overdriveState.overdriveCleanSeconds, 0, 'Leaving the road must reset OVERDRIVE immediately');
+assert.equal(overdriveState.overdriveMilestoneSeen, false, 'Losing OVERDRIVE must disarm LOST feedback until another milestone is shown');
 overdriveState.overdriveCleanSeconds = 5;
 updateVehicleOverdriveState({ state: overdriveState, collided: true });
 assert.equal(overdriveState.overdriveCleanSeconds, 0, 'A collision must reset OVERDRIVE immediately');
+assert.equal(overdriveState.overdriveMilestoneSeen, false, 'A pre-milestone collision must not arm or retain LOST feedback');
 updateVehicleOverdriveState({ state: overdriveState, dt: 5, speed: 0 });
 assert.equal(overdriveState.overdriveCleanSeconds, 0, 'Standing still must not preload OVERDRIVE');
 
