@@ -447,13 +447,18 @@ async function loadEmbeddedSupercarSource(car) {
 
 async function loadCarSource(carId) {
   const car = getCarDefinition(carId);
-  if (!sourceCache.has(car.id)) {
-    const sourcePromise = car.id === 'supercar'
+  let sourcePromise = sourceCache.get(car.id);
+  if (!sourcePromise) {
+    const loadPromise = car.id === 'supercar'
       ? loadEmbeddedSupercarSource(car)
       : loaderForPack(car.pack).loadAsync(assetUrl(car.asset)).then((gltf) => gltf.scene);
+    sourcePromise = loadPromise.catch((error) => {
+      if (sourceCache.get(car.id) === sourcePromise) sourceCache.delete(car.id);
+      throw error;
+    });
     sourceCache.set(car.id, sourcePromise);
   }
-  return sourceCache.get(car.id);
+  return sourcePromise;
 }
 
 function loaderForPack(pack) {

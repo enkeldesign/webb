@@ -14,6 +14,8 @@ import {
   retainCarVisualResources
 } from '../turn/vehicle/car-visual-resources.js';
 
+await import('./car-source-retry-production.mjs');
+
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const entry = await read('turn/index.html');
 const lowGraphics = process.argv.includes('--low-graphics');

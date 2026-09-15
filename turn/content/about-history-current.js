@@ -334,6 +334,6 @@ export const CHANGELOG = Object.freeze([
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.20.2',
-  build: '2026.09.15-r236',
+  build: '2026.09.15-r237',
   note: 'TURN 1.20.2 makes support challenge completion and reward feedback reliable.'
 });
