@@ -102,6 +102,23 @@ assert.equal(installTurnPlatform(platform), platform);
 assert.equal(getTurnPlatform(), platform);
 assert.equal(requireTurnPlatform(), platform);
 
+// The production shell cache-busts platform-context.js while motion historically
+// reaches the same physical file through another module URL. Those identities must
+// share exactly one installed adapter so a future native host cannot be bypassed.
+const contextUrl = new URL('../turn/platform/platform-context.js', import.meta.url);
+const alternateContextA = await import(`${contextUrl.href}?identity=packaging-a`);
+const alternateContextB = await import(`${contextUrl.href}?identity=packaging-b`);
+assert.equal(alternateContextA.getTurnPlatform(), platform);
+assert.equal(alternateContextB.getTurnPlatform(), platform);
+assert.equal(alternateContextA.requireTurnPlatform(), platform);
+assert.equal(alternateContextB.installTurnPlatform(platform), platform);
+const competingPlatform = { ...platform };
+assert.throws(
+  () => alternateContextA.installTurnPlatform(competingPlatform),
+  /already been installed/,
+  'A second module identity must not acquire independent platform ownership'
+);
+
 const adaptedPose = motionPoseFromGravity({
   accelerationIncludingGravity: { x: 2, y: 0, z: 0 }
 });
@@ -186,7 +203,10 @@ const nextApp = fs.readFileSync(new URL('../turn-next/app.js', import.meta.url),
 const motionBridgeSource = fs.readFileSync(new URL('../turn/motion-lifecycle-bridge.js', import.meta.url), 'utf8');
 const displayBridgeSource = fs.readFileSync(new URL('../turn/display-lifecycle-bridge.js', import.meta.url), 'utf8');
 const webPlatformSource = fs.readFileSync(new URL('../turn/platform/web-platform.js', import.meta.url), 'utf8');
+const platformContextSource = fs.readFileSync(new URL('../turn/platform/platform-context.js', import.meta.url), 'utf8');
 
+assert.match(platformContextSource, /Symbol\.for\('turn\.platform\.context'\)/);
+assert.doesNotMatch(platformContextSource, /let installedPlatform = null/);
 assert.match(productionApp, /installMotionLifecycleBridge\(\{ platform: webPlatform \}\)/);
 assert.match(productionApp, /installDisplayLifecycleBridge\(\{ platform: webPlatform \}\)/);
 assert.match(productionApp, /turnMotionLifecycle = 'platform-m5'/);
