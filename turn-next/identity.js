@@ -1,5 +1,6 @@
 (() => {
   let worldModeLoading = false;
+  let tileShowcaseLoading = false;
 
   function rewriteInstallCopy(root) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -38,11 +39,15 @@
     document.documentElement.dataset.turnLegacyStart = 'retired';
   }
 
-  function installWorldModeWhenReady() {
-    if (worldModeLoading || globalThis.__turnNextWorldMode) return true;
+  function runtimeReady() {
     const home = globalThis.__turnNextHome || globalThis.__turnHome;
     const menu = globalThis.__turnHomeLayout?.menu;
-    if (!globalThis.__turnRuntime || !globalThis.__turnNextRaceSession || !home || !menu) return false;
+    return Boolean(globalThis.__turnRuntime && globalThis.__turnNextRaceSession && home && menu);
+  }
+
+  function installWorldModeWhenReady() {
+    if (worldModeLoading || globalThis.__turnNextWorldMode) return true;
+    if (!runtimeReady()) return false;
 
     worldModeLoading = true;
     import('/turn-next/world-mode.js')
@@ -54,10 +59,26 @@
     return true;
   }
 
-  function scheduleWorldMode() {
+  function installTileShowcaseWhenReady() {
+    if (tileShowcaseLoading || globalThis.__turnNextTileShowcase) return true;
+    if (!runtimeReady()) return false;
+
+    tileShowcaseLoading = true;
+    import('/turn-next/tile-showcase/mode.js')
+      .then(({ installTileShowcaseMode }) => installTileShowcaseMode())
+      .catch((error) => {
+        tileShowcaseLoading = false;
+        console.warn('TURN NEXT: TILE TRACK experiment could not install.', error);
+      });
+    return true;
+  }
+
+  function scheduleExperiments() {
     let attempts = 0;
     const tryInstall = () => {
-      if (installWorldModeWhenReady()) return;
+      const worldInstalled = installWorldModeWhenReady();
+      const tileInstalled = installTileShowcaseWhenReady();
+      if (worldInstalled && tileInstalled) return;
       attempts += 1;
       if (attempts < 240) requestAnimationFrame(tryInstall);
     };
@@ -77,7 +98,7 @@
       observer.observe(gate, { childList: true, subtree: true, characterData: true });
     }
 
-    scheduleWorldMode();
+    scheduleExperiments();
     const source = globalThis.__TURN_BUILD__;
     console.info(`TURN NEXT: test runtime loaded from TURN ${source?.id || 'unknown source'}.`);
   }
