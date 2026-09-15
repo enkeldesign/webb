@@ -1,0 +1,414 @@
+name: TURN r239 perk feedback prep
+
+on:
+  push:
+    branches:
+      - feat/perk-feedback-overdrive-r239
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/perk-feedback-overdrive-r239
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply r239 source and regression updates
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          function read(path) { return fs.readFileSync(path, 'utf8'); }
+          function write(path, text) { fs.writeFileSync(path, text); }
+          function replaceOnce(path, before, after) {
+            const source = read(path);
+            const count = source.split(before).length - 1;
+            if (count !== 1) throw new Error(`${path}: expected one match, found ${count}\n${before}`);
+            write(path, source.replace(before, after));
+          }
+
+          write('turn/release.json', JSON.stringify({
+            version: '1.20.3',
+            id: '2026.09.15-r239',
+            cacheKey: '20260915-r239'
+          }, null, 2) + '\n');
+
+          replaceOnce('turn/vehicle/physics.js',
+          `export const OVERDRIVE_BUILD_SECONDS = 5;
+          export const OVERDRIVE_MAX_SPEED_MULTIPLIER = 1.06;`,
+          `export const OVERDRIVE_BUILD_SECONDS = 5;
+          export const OVERDRIVE_SPEED_GAIN_PER_BUILD = 0.06;`);
+
+          replaceOnce('turn/vehicle/physics.js',
+          `export function getOverdriveSpeedMultiplier(cleanSeconds = 0) {
+            const progress = clamp(nonNegativeNumber(cleanSeconds, 0) / OVERDRIVE_BUILD_SECONDS, 0, 1);
+            return 1 + (OVERDRIVE_MAX_SPEED_MULTIPLIER - 1) * progress;
+          }`,
+          `export function getOverdriveSpeedMultiplier(cleanSeconds = 0) {
+            const cleanBuilds = nonNegativeNumber(cleanSeconds, 0) / OVERDRIVE_BUILD_SECONDS;
+            return 1 + OVERDRIVE_SPEED_GAIN_PER_BUILD * cleanBuilds;
+          }`);
+
+          replaceOnce('turn/vehicle/physics.js',
+          `    state.overdriveCleanSeconds = clamp(
+                nonNegativeNumber(state.overdriveCleanSeconds, 0) + nonNegativeNumber(dt, 0),
+                0,
+                OVERDRIVE_BUILD_SECONDS
+              );`,
+          `    state.overdriveCleanSeconds =
+                nonNegativeNumber(state.overdriveCleanSeconds, 0) + nonNegativeNumber(dt, 0);`);
+
+          replaceOnce('turn/vehicle/perk-presentation.js',
+          `export const FUTURE_RACER_REWARD_PERK_DESCRIPTION =
+            'After a few seconds of clean driving on-track the speed cap starts increasing. Leaving the track or colliding resets it.';
+          
+          export const FUTURE_RACER_CAR_PERK_DESCRIPTION =
+            'A few seconds of staying on-track raises the speed cap. Leaving the track or colliding resets it.';`,
+          `export const FUTURE_RACER_REWARD_PERK_DESCRIPTION =
+            'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.';
+          
+          export const FUTURE_RACER_CAR_PERK_DESCRIPTION =
+            'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.';`);
+
+          replaceOnce('turn/progression/trophy-road.js',
+          `    perkTitle: 'OVERDRIVE',
+              perkDescription: 'A few seconds of staying on-track raises the speed cap. Leaving the track or colliding resets it.',
+              description: 'Unlock the Future Racer: built for advanced time trials.<br><strong>OVERDRIVE:</strong> A few seconds of staying on-track raises the speed cap. Leaving the track or colliding resets it.'`,
+          `    perkTitle: 'OVERDRIVE',
+              perkDescription: 'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.',
+              description: 'Unlock the Future Racer: built for advanced time trials.<br><strong>OVERDRIVE:</strong> Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.'`);
+
+          replaceOnce('turn/achievements/support-challenge-feedback.js',
+          `let installed = null;`,
+          `let installed = null;
+          let activeCompactRacePill = null;
+          let compactRacePillTimer = 0;
+          let compactRacePillConcealTimer = 0;`);
+
+          replaceOnce('turn/achievements/support-challenge-feedback.js',
+          `    .turn-support-bonus-toast strong { letter-spacing: .025em !important; }
+              .turn-support-completion-indicator {`,
+          `    .turn-support-bonus-toast strong { letter-spacing: .025em !important; }
+              .turn-support-bonus-toast.turn-compact-race-pill--blue {
+                background: var(--turn-action-information, #38d9ff) !important;
+              }
+              #message.turn-graduated-pill {
+                width: max-content !important;
+                min-width: 0 !important;
+                max-width: min(92vw, 560px) !important;
+                padding: 8px 16px !important;
+                border: 4px solid var(--turn-ink, #08090a) !important;
+                border-radius: 999px !important;
+                background: var(--turn-action-warning, #ffd43b) !important;
+                box-shadow: 5px 5px 0 var(--turn-ink, #08090a) !important;
+                font-size: clamp(.66rem, 1.6vw, .86rem) !important;
+                font-weight: 950 !important;
+                letter-spacing: .045em !important;
+                line-height: 1 !important;
+                white-space: nowrap;
+              }
+              .turn-support-completion-indicator {`);
+
+          replaceOnce('turn/achievements/support-challenge-feedback.js',
+          `  const update = () => {
+              let slot = 0;`,
+          `  const update = () => {
+              const message = document.querySelector('#message');
+              if (message instanceof HTMLElement) {
+                const graduated = message.classList.contains('show')
+                  && /^GRADUATED · /.test(message.textContent || '');
+                message.classList.toggle('turn-graduated-pill', graduated);
+              }
+          
+              let slot = 0;`);
+
+          replaceOnce('turn/achievements/support-challenge-feedback.js',
+          `function recommendedLotButton(vehicleId) {`,
+          `function clearCompactRacePill() {
+            globalThis.clearTimeout(compactRacePillTimer);
+            globalThis.clearTimeout(compactRacePillConcealTimer);
+            compactRacePillTimer = 0;
+            compactRacePillConcealTimer = 0;
+            activeCompactRacePill?.remove();
+            activeCompactRacePill = null;
+          }
+          
+          export function showCompactRacePill(label, { tone = 'blue', duration = 1800 } = {}) {
+            const copy = String(label || '').trim();
+            if (!copy || typeof document === 'undefined' || !document.body) return false;
+            installStyles();
+            clearCompactRacePill();
+          
+            const toast = document.createElement('div');
+            const normalizedTone = tone === 'blue' ? 'blue' : 'yellow';
+            toast.className = \`turn-support-bonus-toast turn-compact-race-pill turn-compact-race-pill--\${normalizedTone}\`;
+            toast.hidden = false;
+            toast.setAttribute('role', 'status');
+            toast.setAttribute('aria-live', 'polite');
+            toast.setAttribute('aria-atomic', 'true');
+            const span = document.createElement('span');
+            span.textContent = copy;
+            toast.appendChild(span);
+            document.body.appendChild(toast);
+            activeCompactRacePill = toast;
+          
+            globalThis.requestAnimationFrame(() => {
+              if (activeCompactRacePill === toast) toast.classList.add('is-visible');
+            });
+            compactRacePillTimer = globalThis.setTimeout(() => {
+              if (activeCompactRacePill !== toast) return;
+              compactRacePillTimer = 0;
+              toast.classList.remove('is-visible');
+              compactRacePillConcealTimer = globalThis.setTimeout(() => {
+                if (activeCompactRacePill === toast) clearCompactRacePill();
+              }, TOAST_CONCEAL_MS);
+            }, Math.max(400, Number(duration) || 1800));
+            return true;
+          }
+          
+          function recommendedLotButton(vehicleId) {`);
+
+          replaceOnce('turn/vehicle/flow-shift.js',
+          `import {
+            applyVehicleShiftTuning,
+            clearVehicleShiftTuningTransition,
+            isVehicleShiftResetReason
+          } from './shift-tuning.js?revision=r254-flow-shift-authority';`,
+          `import {
+            applyVehicleShiftTuning,
+            clearVehicleShiftTuningTransition,
+            isVehicleShiftResetReason
+          } from './shift-tuning.js?revision=r254-flow-shift-authority';
+          import { showCompactRacePill } from '/turn/achievements/support-challenge-feedback.js';`);
+
+          replaceOnce('turn/vehicle/flow-shift.js',
+          `  syncFlowShiftPresentation(state);
+          }
+          
+          function onFlowScore(event) {`,
+          `  syncFlowShiftPresentation(state);
+            if (previousGreatFlow !== nextGreatFlow) {
+              showCompactRacePill(nextGreatFlow ? 'FLOW SHIFT ACTIVE' : 'FLOW SHIFT LOST', {
+                tone: 'blue',
+                duration: 1800
+              });
+            }
+          }
+          
+          function onFlowScore(event) {`);
+
+          replaceOnce('turn/scripts/release.mjs',
+          `function synchronizeGraphicsRuntimeTarget(importMap, release) {`,
+          `function synchronizePerkFeedbackTargets(importMap, release) {
+            const imports = importMap.imports ||= {};
+            const flowShiftTarget = \`/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=\${release.cacheKey}\`;
+            for (const specifier of [
+              '/turn/vehicle/flow-shift.js?revision=r248-supercar',
+              '/turn/vehicle/flow-shift.js?revision=r253-supercar-release',
+              '/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority',
+              '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility'
+            ]) imports[specifier] = flowShiftTarget;
+          
+            const perkPresentationTarget = \`/turn/vehicle/perk-presentation.js?build=\${release.cacheKey}\`;
+            for (const specifier of [
+              '/turn/vehicle/perk-presentation.js',
+              '/turn/vehicle/perk-presentation.js?revision=r220-apex-grip'
+            ]) imports[specifier] = perkPresentationTarget;
+          
+            imports['/turn/progression/trophy-road.js?revision=r253-supercar-release-base']
+              = \`/turn/progression/trophy-road.js?build=\${release.cacheKey}\`;
+          }
+          
+          function synchronizeGraphicsRuntimeTarget(importMap, release) {`);
+
+          replaceOnce('turn/scripts/release.mjs',
+          `    synchronizeAchievementProgressionTargets(importMap, release);
+              synchronizeGraphicsRuntimeTarget(importMap, release);`,
+          `    synchronizeAchievementProgressionTargets(importMap, release);
+              synchronizePerkFeedbackTargets(importMap, release);
+              synchronizeGraphicsRuntimeTarget(importMap, release);`);
+
+          replaceOnce('turn/scripts/release.mjs',
+          `  synchronizeAchievementProgressionTargets(importMap, release);
+            synchronizeGraphicsRuntimeTarget(importMap, release);`,
+          `  synchronizeAchievementProgressionTargets(importMap, release);
+            synchronizePerkFeedbackTargets(importMap, release);
+            synchronizeGraphicsRuntimeTarget(importMap, release);`);
+
+          replaceOnce('turn-lab/tests/vehicle-drift-production.mjs',
+          `  OVERDRIVE_BUILD_SECONDS,
+            OVERDRIVE_MAX_SPEED_MULTIPLIER,`,
+          `  OVERDRIVE_BUILD_SECONDS,
+            OVERDRIVE_SPEED_GAIN_PER_BUILD,`);
+
+          replaceOnce('turn-lab/tests/vehicle-drift-production.mjs',
+          `assert.equal(OVERDRIVE_BUILD_SECONDS, 5, 'OVERDRIVE must take five clean seconds to fully build');
+          assert.equal(OVERDRIVE_MAX_SPEED_MULTIPLIER, 1.06, 'OVERDRIVE must top out at a small 6% speed-ceiling bonus');`,
+          `assert.equal(OVERDRIVE_BUILD_SECONDS, 5, 'OVERDRIVE must retain five clean seconds as its gain interval');
+          assert.equal(OVERDRIVE_SPEED_GAIN_PER_BUILD, 0.06, 'Each clean OVERDRIVE interval must add six percent to the speed ceiling');`);
+
+          replaceOnce('turn-lab/tests/vehicle-drift-production.mjs',
+          `assert.equal(getOverdriveSpeedMultiplier(5), 1.06);
+          assert.equal(getOverdriveSpeedMultiplier(20), 1.06, 'OVERDRIVE must clamp at its designed ceiling');`,
+          `assert.equal(getOverdriveSpeedMultiplier(5), 1.06);
+          assert.equal(getOverdriveSpeedMultiplier(10), 1.12);
+          assert.equal(getOverdriveSpeedMultiplier(20), 1.24, 'OVERDRIVE must keep climbing with no speed-ceiling cap');`);
+
+          replaceOnce('turn-lab/tests/vehicle-drift-production.mjs',
+          `updateVehicleOverdriveState({ state: overdriveState, dt: 2.5, speed: 40 });
+          assert.equal(overdriveState.overdriveCleanSeconds, 5);
+          assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.06);`,
+          `updateVehicleOverdriveState({ state: overdriveState, dt: 2.5, speed: 40 });
+          assert.equal(overdriveState.overdriveCleanSeconds, 5);
+          assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.06);
+          updateVehicleOverdriveState({ state: overdriveState, dt: 5, speed: 40 });
+          assert.equal(overdriveState.overdriveCleanSeconds, 10);
+          assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.12);`);
+
+          replaceOnce('turn-tests/post-soak-production.mjs',
+          `  'After a few seconds of clean driving on-track the speed cap starts increasing. Leaving the track or colliding resets it.'`,
+          `  'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.'`);
+          replaceOnce('turn-tests/post-soak-production.mjs',
+          `  'A few seconds of staying on-track raises the speed cap. Leaving the track or colliding resets it.'`,
+          `  'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.'`);
+
+          replaceOnce('turn-tests/flow-shift-tuning-production.mjs',
+          `import assert from 'node:assert/strict';`,
+          `import assert from 'node:assert/strict';
+          import fs from 'node:fs/promises';`);
+          replaceOnce('turn-tests/flow-shift-tuning-production.mjs',
+          `const STAT_KEYS = Object.freeze([`,
+          `const flowShiftSource = await fs.readFile(new URL('../turn/vehicle/flow-shift.js', import.meta.url), 'utf8');
+          assert.match(flowShiftSource, /showCompactRacePill\(nextGreatFlow \? 'FLOW SHIFT ACTIVE' : 'FLOW SHIFT LOST'/,
+            'SUPERCAR must announce FLOW SHIFT threshold activation and loss through the compact race pill');
+          assert.match(flowShiftSource, /tone: 'blue'/,
+            'FLOW SHIFT activation and loss pills must use the blue information treatment');
+          
+          const STAT_KEYS = Object.freeze([`);
+
+          replaceOnce('turn-tests/support-challenges-production.mjs',
+          `import {
+            isRaceSupportBonusId
+          } from '../turn/achievements/support-challenge-feedback.js';`,
+          `import {
+            isRaceSupportBonusId,
+            showCompactRacePill
+          } from '../turn/achievements/support-challenge-feedback.js';`);
+          replaceOnce('turn-tests/support-challenges-production.mjs',
+          `assert.equal(isRaceSupportBonusId('support:how-to-play:dbe'), false);`,
+          `assert.equal(isRaceSupportBonusId('support:how-to-play:dbe'), false);
+          assert.equal(showCompactRacePill('FLOW SHIFT ACTIVE'), false,
+            'Compact race feedback must remain safe to import in non-DOM regression environments');`);
+          replaceOnce('turn-tests/support-challenges-production.mjs',
+          `assert.match(feedbackSource, /border-radius:\\s\*999px/,
+            'Challenge success feedback must use the compact pill presentation');`,
+          `assert.match(feedbackSource, /border-radius:\\s\*999px/,
+            'Challenge success feedback must use the compact pill presentation');
+          assert.match(feedbackSource, /turn-graduated-pill/,
+            'LEARNER CAR GRADUATED feedback must reuse the thin compact pill geometry');
+          assert.match(feedbackSource, /turn-action-warning, #ffd43b/,
+            'LEARNER CAR GRADUATED feedback must remain yellow');
+          assert.match(feedbackSource, /turn-compact-race-pill--blue/,
+            'FLOW SHIFT feedback must reuse the compact pill with a blue information treatment');`);
+
+          replaceOnce('turn-tests/release-composition-production.mjs',
+          `  '/turn/vehicle/flow-shift.js?revision=r248-supercar': '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility',
+            '/turn/vehicle/flow-shift.js?revision=r253-supercar-release': '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility',
+            '/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority': '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility',`,
+          `  '/turn/vehicle/flow-shift.js?revision=r248-supercar': \`/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=\${currentRelease.cacheKey}\`,
+            '/turn/vehicle/flow-shift.js?revision=r253-supercar-release': \`/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=\${currentRelease.cacheKey}\`,
+            '/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority': \`/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=\${currentRelease.cacheKey}\`,
+            '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility': \`/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=\${currentRelease.cacheKey}\`,
+            '/turn/vehicle/perk-presentation.js': \`/turn/vehicle/perk-presentation.js?build=\${currentRelease.cacheKey}\`,
+            '/turn/vehicle/perk-presentation.js?revision=r220-apex-grip': \`/turn/vehicle/perk-presentation.js?build=\${currentRelease.cacheKey}\`,
+            '/turn/progression/trophy-road.js?revision=r253-supercar-release-base': \`/turn/progression/trophy-road.js?build=\${currentRelease.cacheKey}\`,`);
+
+          replaceOnce('turn/content/about-history-current.js',
+          `const previousLatest = BASE_CHANGELOG.at(-1);`,
+          `const PERK_FEEDBACK_OVERDRIVE_HISTORY = Object.freeze({
+            period: '15 September',
+            title: 'Perk feedback gets lighter and OVERDRIVE keeps climbing',
+            paragraphs: Object.freeze([
+              'TURN 1.20.3 gives LEARNER CAR’s GRADUATED changes the same thin pill language as challenge completion while keeping them yellow. SUPERCAR now announces FLOW SHIFT ACTIVE and FLOW SHIFT LOST in blue compact pills, using the shared cue lane so race feedback staggers instead of overlapping.',
+              'FUTURE RACER’s OVERDRIVE no longer stops at +6%. The existing +6% per five clean seconds curve continues for as long as the car stays on-track without a collision; leaving the road or hitting something still resets it.'
+            ]),
+            milestones: Object.freeze([
+              'Thin yellow GRADUATED pills and blue FLOW SHIFT ACTIVE / LOST pills',
+              'Uncapped OVERDRIVE at +6% speed ceiling per five clean seconds',
+              'TURN 1.20.3 · 2026.09.15-r239'
+            ])
+          });
+          
+          const previousLatest = BASE_CHANGELOG.at(-1);`);
+
+          replaceOnce('turn/content/about-history-current.js',
+          `  SUPPORT_CHALLENGE_FEEDBACK_HISTORY,
+            SUPPORT_CHALLENGE_LIFECYCLE_HISTORY
+          ]);`,
+          `  SUPPORT_CHALLENGE_FEEDBACK_HISTORY,
+            SUPPORT_CHALLENGE_LIFECYCLE_HISTORY,
+            PERK_FEEDBACK_OVERDRIVE_HISTORY
+          ]);`);
+
+          replaceOnce('turn/content/about-history-current.js',
+          `  Object.freeze({
+              date: '14 September',
+              entries: Object.freeze([`,
+          `  Object.freeze({
+              date: '14 September',
+              entries: Object.freeze([`);
+
+          replaceOnce('turn/content/about-history-current.js',
+          `      Object.freeze(['One feedback queue', 'Lets support feedback temporarily hold Trophy Road reward presentation, then returns control to the normal achievement reward queue after the pill and trophy check finish.'])
+              ])
+            })
+          ]);`,
+          `      Object.freeze(['One feedback queue', 'Lets support feedback temporarily hold Trophy Road reward presentation, then returns control to the normal achievement reward queue after the pill and trophy check finish.'])
+              ])
+            }),
+            Object.freeze({
+              date: '15 September',
+              entries: Object.freeze([
+                Object.freeze(['1.20.3 r239', 'Uses the thin challenge-style pill for LEARNER CAR GRADUATED feedback, adds blue FLOW SHIFT ACTIVE / LOST pills, and lets FUTURE RACER OVERDRIVE keep raising its speed ceiling.']),
+                Object.freeze(['Uncapped OVERDRIVE', 'Keeps the existing +6% per five clean seconds rate indefinitely until the car leaves the road or collides.'])
+              ])
+            })
+          ]);`);
+
+          replaceOnce('turn/content/about-history-current.js',
+          `export const CURRENT_RELEASE = Object.freeze({
+            version: '1.20.2',
+            build: '2026.09.15-r238',
+            note: 'TURN 1.20.2 makes support challenge completion and reward feedback reliable.'
+          });`,
+          `export const CURRENT_RELEASE = Object.freeze({
+            version: '1.20.3',
+            build: '2026.09.15-r239',
+            note: 'TURN 1.20.3 makes perk feedback lighter and lets OVERDRIVE keep climbing.'
+          });`);
+          NODE
+      - name: Synchronize release surfaces
+        run: node turn/scripts/release.mjs --write
+      - name: Run focused regressions
+        run: |
+          node turn/scripts/release.mjs
+          node turn-tests/support-challenges-production.mjs
+          node turn-tests/flow-shift-tuning-production.mjs
+          node turn-tests/post-soak-production.mjs
+          node turn-lab/tests/vehicle-drift-production.mjs
+          node turn-tests/release-composition-production.mjs --base-ref=origin/main
+      - name: Remove temporary workflow and commit
+        run: |
+          rm .github/workflows/tmp-r239-perk-feedback.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Refine perk feedback and uncap OVERDRIVE"
+          git push origin HEAD:feat/perk-feedback-overdrive-r239
