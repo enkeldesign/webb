@@ -1,0 +1,121 @@
+from pathlib import Path
+
+
+def replace(path, before, after, count=1):
+    p = Path(path)
+    s = p.read_text()
+    actual = s.count(before)
+    if actual != count:
+        raise SystemExit(f'{path}: expected {count} occurrence(s) of {before!r}, found {actual}')
+    p.write_text(s.replace(before, after))
+
+
+# Runtime: continuous +5% per five clean seconds, uncapped; thin blue feedback every 10% and on loss.
+p = Path('turn/vehicle/physics.js')
+s = p.read_text()
+import_marker = "import { trackPitch, trackSurfaceY } from '../tracks/elevation.js?build=20260725-r67';\n"
+pill_import = "import { showCompactRacePill } from '../achievements/support-challenge-feedback.js';\n"
+if pill_import not in s:
+    if s.count(import_marker) != 1:
+        raise SystemExit('physics import marker missing')
+    s = s.replace(import_marker, import_marker + pill_import, 1)
+if s.count('export const OVERDRIVE_SPEED_GAIN_PER_BUILD = 0.06;') != 1:
+    raise SystemExit('OVERDRIVE gain constant missing')
+s = s.replace('export const OVERDRIVE_SPEED_GAIN_PER_BUILD = 0.06;', 'export const OVERDRIVE_SPEED_GAIN_PER_BUILD = 0.05;', 1)
+old_block = """  if (offRoad || collided) {
+    state.overdriveCleanSeconds = 0;
+    return 1;
+  }
+
+  if (nonNegativeNumber(speed, 0) >= OVERDRIVE_MIN_SPEED) {
+    state.overdriveCleanSeconds =
+      nonNegativeNumber(state.overdriveCleanSeconds, 0) + nonNegativeNumber(dt, 0);
+  }
+
+  return getOverdriveSpeedMultiplier(state.overdriveCleanSeconds);
+"""
+new_block = """  const previousCleanSeconds = nonNegativeNumber(state.overdriveCleanSeconds, 0);
+  if (offRoad || collided) {
+    state.overdriveCleanSeconds = 0;
+    if (previousCleanSeconds > 0) {
+      showCompactRacePill('OVERDRIVE LOST', { tone: 'blue' });
+    }
+    return 1;
+  }
+
+  if (nonNegativeNumber(speed, 0) >= OVERDRIVE_MIN_SPEED) {
+    state.overdriveCleanSeconds = previousCleanSeconds + nonNegativeNumber(dt, 0);
+    const previousBonusPercent = (getOverdriveSpeedMultiplier(previousCleanSeconds) - 1) * 100;
+    const nextBonusPercent = (getOverdriveSpeedMultiplier(state.overdriveCleanSeconds) - 1) * 100;
+    const previousMilestonePercent = Math.floor((previousBonusPercent + 1e-6) / 10) * 10;
+    const nextMilestonePercent = Math.floor((nextBonusPercent + 1e-6) / 10) * 10;
+    if (nextMilestonePercent >= 10 && nextMilestonePercent > previousMilestonePercent) {
+      showCompactRacePill(`OVERDRIVE ${nextMilestonePercent}%`, { tone: 'blue' });
+    }
+  }
+
+  return getOverdriveSpeedMultiplier(state.overdriveCleanSeconds);
+"""
+if s.count(old_block) != 1:
+    raise SystemExit('OVERDRIVE runtime block missing')
+p.write_text(s.replace(old_block, new_block, 1))
+
+# Exact requested copy everywhere the perk is presented.
+requested_copy = 'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.'
+replace('turn/vehicle/perk-presentation.js', 'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.', requested_copy, 2)
+replace('turn/vehicle/catalog.js', 'A few seconds of staying on-track raises the speed cap. Leaving the track or colliding resets it.', requested_copy)
+replace('turn/progression/trophy-road.js', 'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.', requested_copy, 2)
+replace('turn-tests/post-soak-production.mjs', 'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.', requested_copy, 2)
+replace('turn-lab/tests/trophy-road-production.mjs', "assert.match(futurePerk?.perkDescription || '', /every five clean seconds/i);", "assert.equal(futurePerk?.perkDescription, 'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.');")
+
+# OVERDRIVE mechanics regression: exact continuous curve and feedback wiring.
+p = Path('turn-lab/tests/vehicle-drift-production.mjs')
+s = p.read_text()
+pairs = [
+    ("assert.equal(OVERDRIVE_SPEED_GAIN_PER_BUILD, 0.06, 'Each clean OVERDRIVE interval must add six percent to the speed ceiling');", "assert.equal(OVERDRIVE_SPEED_GAIN_PER_BUILD, 0.05, 'Each clean OVERDRIVE interval must add five percent to the speed ceiling');"),
+    ('assert.ok(Math.abs(getOverdriveSpeedMultiplier(2.5) - 1.03) < 1e-12);', 'assert.ok(Math.abs(getOverdriveSpeedMultiplier(2.5) - 1.025) < 1e-12);'),
+    ('assert.equal(getOverdriveSpeedMultiplier(5), 1.06);', 'assert.equal(getOverdriveSpeedMultiplier(5), 1.05);'),
+    ('assert.equal(getOverdriveSpeedMultiplier(10), 1.12);', 'assert.equal(getOverdriveSpeedMultiplier(10), 1.10);'),
+    ("assert.equal(getOverdriveSpeedMultiplier(20), 1.24, 'OVERDRIVE must keep climbing with no speed-ceiling cap');", "assert.equal(getOverdriveSpeedMultiplier(20), 1.20, 'OVERDRIVE must keep climbing with no speed-ceiling cap');"),
+    ('assert.ok(Math.abs(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds) - 1.03) < 1e-12);', 'assert.ok(Math.abs(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds) - 1.025) < 1e-12);'),
+    ('assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.06);', 'assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.05);'),
+    ('assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.12);', 'assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.10);')
+]
+for old, new in pairs:
+    if s.count(old) != 1:
+        raise SystemExit(f'vehicle drift regression marker missing: {old}')
+    s = s.replace(old, new, 1)
+marker = "assert.equal(OVERDRIVE_SPEED_GAIN_PER_BUILD, 0.05, 'Each clean OVERDRIVE interval must add five percent to the speed ceiling');\n"
+feedback_assertions = """assert.match(physicsSource, /showCompactRacePill\\(`OVERDRIVE \\$\\{nextMilestonePercent\\}%`, \\{ tone: 'blue' \\}\\)/,
+  'OVERDRIVE must announce each 10 percent speed-cap milestone through the thin blue pill');
+assert.match(physicsSource, /showCompactRacePill\\('OVERDRIVE LOST', \\{ tone: 'blue' \\}\\)/,
+  'Leaving the track or colliding must announce OVERDRIVE LOST through the thin blue pill');
+"""
+if s.count(marker) != 1:
+    raise SystemExit('OVERDRIVE feedback assertion marker missing')
+s = s.replace(marker, marker + feedback_assertions, 1)
+p.write_text(s)
+
+# Fold this into the already-unmerged 1.20.4/r240 release history.
+p = Path('turn/content/about-history-current.js')
+s = p.read_text()
+old = "    'The blue FLOW SHIFT ACTIVE / LOST pills continue to follow the same threshold transition, so the feedback now marks the harder ×3 state without changing the perk’s +3 benefit.'"
+new = "    'The blue FLOW SHIFT ACTIVE / LOST pills continue to follow the same threshold transition. FUTURE RACER OVERDRIVE is retuned to +5% speed cap per five clean seconds, announces every 10% milestone in a thin blue pill, and shows OVERDRIVE LOST when leaving the track or colliding.'"
+if s.count(old) != 1:
+    raise SystemExit('r240 history paragraph marker missing')
+s = s.replace(old, new, 1)
+old = "    '×2 keeps ordinary SHIFT balance',\n    'TURN 1.20.4 · 2026.09.15-r240'"
+new = "    '×2 keeps ordinary SHIFT balance',\n    'OVERDRIVE +5% per five seconds with blue 10% milestone / LOST pills',\n    'TURN 1.20.4 · 2026.09.15-r240'"
+if s.count(old) != 1:
+    raise SystemExit('r240 history milestone marker missing')
+s = s.replace(old, new, 1)
+old = "      Object.freeze(['1.20.4 r240', 'Raises SUPERCAR FLOW SHIFT activation from FLOW ×2 to FLOW ×3; ×2 now keeps ordinary SHIFT balance.'])"
+new = "      Object.freeze(['1.20.4 r240', 'Raises SUPERCAR FLOW SHIFT activation from FLOW ×2 to FLOW ×3 and retunes FUTURE RACER OVERDRIVE to +5% per five clean seconds with blue 10% milestone and LOST pills.'])"
+if s.count(old) != 1:
+    raise SystemExit('r240 changelog marker missing')
+s = s.replace(old, new, 1)
+old = "  note: 'TURN 1.20.4 makes FLOW SHIFT a FLOW ×3 reward.'"
+new = "  note: 'TURN 1.20.4 makes FLOW SHIFT a FLOW ×3 reward and gives OVERDRIVE clearer milestone feedback.'"
+if s.count(old) != 1:
+    raise SystemExit('r240 note marker missing')
+p.write_text(s.replace(old, new, 1))
