@@ -1,0 +1,53 @@
+name: TURN r239 OVERDRIVE copy regression fix
+
+on:
+  push:
+    branches:
+      - feat/perk-feedback-overdrive-r239
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/perk-feedback-overdrive-r239
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Update stale OVERDRIVE copy contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('turn-lab/tests/trophy-road-production.mjs')
+          source = p.read_text()
+          before = """assert.match(futurePerk?.perkDescription || '', /few seconds/i);
+          assert.doesNotMatch(futurePerk?.perkDescription || '', /5\\/5|6%|exceeds/i,
+            'OVERDRIVE copy should describe the behavior without exposing its beyond-scale tuning');"""
+          after = """assert.match(futurePerk?.perkDescription || '', /every five clean seconds/i);
+          assert.match(futurePerk?.perkDescription || '', /another 6%/i);
+          assert.match(futurePerk?.perkDescription || '', /no ceiling/i,
+            'OVERDRIVE copy must explain its uncapped clean-driving speed growth');"""
+          if source.count(before) != 1:
+              raise SystemExit(f'Expected stale OVERDRIVE assertion block once, found {source.count(before)}')
+          p.write_text(source.replace(before, after, 1))
+          PY
+      - name: Verify Trophy Road and release
+        run: |
+          node turn-lab/tests/trophy-road-production.mjs
+          node turn-lab/tests/vehicle-drift-production.mjs
+          node turn/scripts/release.mjs --check
+          node turn-tests/release-composition-production.mjs --base-ref=origin/main
+      - name: Remove temporary workflow and commit
+        run: |
+          rm .github/workflows/tmp-r239-overdrive-copy-test.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Update OVERDRIVE Trophy Road contract"
+          git push origin HEAD:feat/perk-feedback-overdrive-r239
