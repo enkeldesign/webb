@@ -1,3 +1,4 @@
+// OVERDRIVE deliberately has no top-end ceiling; keep the five-second gain explicit in player-facing copy.
 export const FUTURE_RACER_REWARD_PERK_DESCRIPTION =
   'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.';
 
