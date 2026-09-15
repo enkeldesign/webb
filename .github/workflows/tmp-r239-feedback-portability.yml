@@ -27,9 +27,7 @@ jobs:
           p = Path('turn/achievements/support-challenge-feedback.js')
           source = p.read_text()
 
-          before = """function installPillLaneCoordinator() {
-            const tracked = new Set();
-          """
+          before = "function installPillLaneCoordinator() {\n  const tracked = new Set();"
           after = """function installPillLaneCoordinator() {
             if (
               typeof globalThis.MutationObserver !== 'function'
@@ -37,8 +35,7 @@ jobs:
               || typeof document.querySelectorAll !== 'function'
             ) return () => {};
           
-            const tracked = new Set();
-          """
+            const tracked = new Set();"""
           if source.count(before) != 1:
               raise SystemExit(f'pill coordinator marker count={source.count(before)}')
           source = source.replace(before, after, 1)
@@ -49,19 +46,15 @@ jobs:
               raise SystemExit(f'compact pill remove marker count={source.count(before)}')
           source = source.replace(before, after, 1)
 
-          before = """  globalThis.requestAnimationFrame(() => {
-            if (activeCompactRacePill === toast) toast.classList.add('is-visible');
-          });
-          """
-          after = """  const reveal = () => {
+          start = "globalThis.requestAnimationFrame(() => {\n    if (activeCompactRacePill === toast) toast.classList.add('is-visible');\n  });"
+          replacement = """const reveal = () => {
             if (activeCompactRacePill === toast) toast.classList.add('is-visible');
           };
             if (typeof globalThis.requestAnimationFrame === 'function') globalThis.requestAnimationFrame(reveal);
-            else globalThis.setTimeout(reveal, 0);
-          """
-          if source.count(before) != 1:
-              raise SystemExit(f'compact pill RAF marker count={source.count(before)}')
-          source = source.replace(before, after, 1)
+            else globalThis.setTimeout(reveal, 0);"""
+          if source.count(start) != 1:
+              raise SystemExit(f'compact pill RAF marker count={source.count(start)}')
+          source = source.replace(start, replacement, 1)
 
           p.write_text(source)
           PY
