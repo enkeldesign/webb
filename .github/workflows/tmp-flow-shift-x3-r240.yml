@@ -1,4 +1,4 @@
-name: TURN FLOW SHIFT x3 r240
+name: "TURN FLOW SHIFT x3 r240"
 
 on:
   push:
@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   update:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Apply FLOW SHIFT x3 balance change
+      - name: Apply balance change
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -31,56 +30,46 @@ jobs:
               s = p.read_text()
               actual = s.count(before)
               if actual != count:
-                  raise SystemExit(f'{path}: expected {count} occurrence(s) of {before!r}, found {actual}')
+                  raise SystemExit(f'{path}: expected {count}, found {actual}')
               p.write_text(s.replace(before, after))
 
-          replace('turn/vehicle/flow-shift.js',
-                  "export const FLOW_SHIFT_MIN_MULTIPLIER = 2;",
-                  "export const FLOW_SHIFT_MIN_MULTIPLIER = 3;")
-          replace('turn/vehicle/flow-shift.js',
-                  "// Below ×2 the regular SHIFT implementation has already applied its normal",
-                  "// Below ×3 the regular SHIFT implementation has already applied its normal")
-
-          for path in [
-              'turn/vehicle/perk-presentation.js',
-              'turn/vehicle/catalog.js'
-          ]:
-              replace(path, 'FLOW ×2 or higher', 'FLOW ×3 or higher')
+          replace('turn/vehicle/flow-shift.js', 'export const FLOW_SHIFT_MIN_MULTIPLIER = 2;', 'export const FLOW_SHIFT_MIN_MULTIPLIER = 3;')
+          replace('turn/vehicle/flow-shift.js', '// Below ×2 the regular SHIFT implementation has already applied its normal', '// Below ×3 the regular SHIFT implementation has already applied its normal')
+          replace('turn/vehicle/perk-presentation.js', 'FLOW ×2 or higher', 'FLOW ×3 or higher')
+          replace('turn/vehicle/catalog.js', 'FLOW ×2 or higher', 'FLOW ×3 or higher')
 
           p = Path('turn/progression/trophy-road.js')
           s = p.read_text()
           if s.count('FLOW ×2') != 3:
-              raise SystemExit(f'trophy-road FLOW ×2 count={s.count("FLOW ×2")}')
+              raise SystemExit('unexpected Trophy Road FLOW ×2 count')
           p.write_text(s.replace('FLOW ×2', 'FLOW ×3'))
 
           p = Path('turn-tests/flow-shift-tuning-production.mjs')
           s = p.read_text()
-          s = s.replace(
-              "  installFlowShiftRuntime,\n  resolveFlowShiftStats",
-              "  FLOW_SHIFT_MIN_MULTIPLIER,\n  installFlowShiftRuntime,\n  isGreatFlow,\n  resolveFlowShiftStats"
-          )
+          old = "  installFlowShiftRuntime,\n  resolveFlowShiftStats"
+          new = "  FLOW_SHIFT_MIN_MULTIPLIER,\n  installFlowShiftRuntime,\n  isGreatFlow,\n  resolveFlowShiftStats"
+          if s.count(old) != 1:
+              raise SystemExit('flow shift tuning import marker missing')
+          s = s.replace(old, new, 1)
           marker = "const flowShiftSource = await fs.readFile(new URL('../turn/vehicle/flow-shift.js', import.meta.url), 'utf8');\n"
           if s.count(marker) != 1:
-              raise SystemExit('flow shift tuning import marker missing')
+              raise SystemExit('flow shift tuning source marker missing')
           s = s.replace(marker, marker + "assert.equal(FLOW_SHIFT_MIN_MULTIPLIER, 3, 'FLOW SHIFT must activate at FLOW ×3');\nassert.equal(isGreatFlow(2), false, 'FLOW ×2 must remain ordinary SHIFT');\nassert.equal(isGreatFlow(3), true, 'FLOW ×3 must activate FLOW SHIFT');\n", 1)
-          if s.count("multiplier: 2") != 2:
-              raise SystemExit(f'flow shift tuning multiplier fixture count={s.count("multiplier: 2")}')
-          s = s.replace('multiplier: 2', 'multiplier: 3')
-          p.write_text(s)
+          if s.count('multiplier: 2') != 2:
+              raise SystemExit('unexpected tuning multiplier fixture count')
+          p.write_text(s.replace('multiplier: 2', 'multiplier: 3'))
 
           p = Path('turn-tests/flow-shift-accessibility-production.mjs')
           s = p.read_text()
           if s.count('multiplier: 2') != 1:
-              raise SystemExit(f'flow shift accessibility multiplier fixture count={s.count("multiplier: 2")}')
+              raise SystemExit('unexpected accessibility multiplier fixture count')
           p.write_text(s.replace('multiplier: 2', 'multiplier: 3'))
 
-          replace('turn-lab/tests/trophy-road-production.mjs',
-                  '/FLOW ×2 or higher/', '/FLOW ×3 or higher/')
+          replace('turn-lab/tests/trophy-road-production.mjs', '/FLOW ×2 or higher/', '/FLOW ×3 or higher/')
 
           p = Path('turn/content/about-history-current.js')
           s = p.read_text()
-          insertion = """
-const FLOW_SHIFT_X3_HISTORY = Object.freeze({
+          history = """const FLOW_SHIFT_X3_HISTORY = Object.freeze({
   period: '15 September',
   title: 'FLOW SHIFT asks for deeper FLOW',
   paragraphs: Object.freeze([
@@ -97,31 +86,29 @@ const FLOW_SHIFT_X3_HISTORY = Object.freeze({
 """
           marker = 'const previousLatest = BASE_CHANGELOG.at(-1);\n'
           if s.count(marker) != 1:
-              raise SystemExit('about-history current insertion marker missing')
-          s = s.replace(marker, insertion + marker, 1)
-          before = "  PERK_FEEDBACK_OVERDRIVE_HISTORY\n]);"
-          after = "  PERK_FEEDBACK_OVERDRIVE_HISTORY,\n  FLOW_SHIFT_X3_HISTORY\n]);"
-          if s.count(before) != 1:
-              raise SystemExit('about-history development list marker missing')
-          s = s.replace(before, after, 1)
-          before = "      Object.freeze(['Uncapped OVERDRIVE', 'Keeps the existing +6% per five clean seconds rate indefinitely until the car leaves the road or collides.'])"
-          after = before + ",\n      Object.freeze(['1.20.4 r240', 'Raises SUPERCAR FLOW SHIFT activation from FLOW ×2 to FLOW ×3; ×2 now keeps ordinary SHIFT balance.'])"
-          if s.count(before) != 1:
-              raise SystemExit('about-history changelog marker missing')
-          s = s.replace(before, after, 1)
-          before = "  note: 'TURN 1.20.3 makes perk feedback lighter and lets OVERDRIVE keep climbing.'"
-          after = "  note: 'TURN 1.20.4 makes FLOW SHIFT a FLOW ×3 reward.'"
-          if s.count(before) != 1:
-              raise SystemExit('about-history current note marker missing')
-          s = s.replace(before, after, 1)
-          p.write_text(s)
+              raise SystemExit('history insertion marker missing')
+          s = s.replace(marker, history + marker, 1)
+          old = "  PERK_FEEDBACK_OVERDRIVE_HISTORY\n]);"
+          new = "  PERK_FEEDBACK_OVERDRIVE_HISTORY,\n  FLOW_SHIFT_X3_HISTORY\n]);"
+          if s.count(old) != 1:
+              raise SystemExit('history list marker missing')
+          s = s.replace(old, new, 1)
+          old = "      Object.freeze(['Uncapped OVERDRIVE', 'Keeps the existing +6% per five clean seconds rate indefinitely until the car leaves the road or collides.'])"
+          new = old + ",\n      Object.freeze(['1.20.4 r240', 'Raises SUPERCAR FLOW SHIFT activation from FLOW ×2 to FLOW ×3; ×2 now keeps ordinary SHIFT balance.'])"
+          if s.count(old) != 1:
+              raise SystemExit('changelog marker missing')
+          s = s.replace(old, new, 1)
+          old = "  note: 'TURN 1.20.3 makes perk feedback lighter and lets OVERDRIVE keep climbing.'"
+          new = "  note: 'TURN 1.20.4 makes FLOW SHIFT a FLOW ×3 reward.'"
+          if s.count(old) != 1:
+              raise SystemExit('current release note marker missing')
+          p.write_text(s.replace(old, new, 1))
 
-          release = {
+          Path('turn/release.json').write_text(json.dumps({
               'version': '1.20.4',
               'id': '2026.09.15-r240',
               'cacheKey': '20260915-r240'
-          }
-          Path('turn/release.json').write_text(json.dumps(release, indent=2) + '\n')
+          }, indent=2) + '\n')
           PY
       - name: Synchronize release surfaces
         run: node turn/scripts/release.mjs --write
@@ -133,7 +120,7 @@ const FLOW_SHIFT_X3_HISTORY = Object.freeze({
           node turn-lab/tests/garage-production.mjs
           node turn/scripts/release.mjs --check
           node turn-tests/release-composition-production.mjs --base-ref=origin/main
-      - name: Commit clean r240 change
+      - name: Commit clean release
         run: |
           rm .github/workflows/tmp-flow-shift-x3-r240.yml
           git config user.name github-actions[bot]
