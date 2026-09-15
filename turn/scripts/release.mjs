@@ -238,6 +238,12 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
   }
 }
 
+function synchronizePlatformContextTarget(importMap, release) {
+  const imports = importMap.imports ||= {};
+  imports['/turn/platform/platform-context.js']
+    = `/turn/platform/platform-context.js?build=${release.cacheKey}`;
+}
+
 function synchronizePerkFeedbackTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   const flowShiftTarget = `/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=${release.cacheKey}`;
@@ -305,6 +311,7 @@ function renderSharedResourceImports(source, release) {
     synchronizeScoreStoreTargets(importMap, release);
     synchronizeVisualResourceTargets(importMap, release);
     synchronizeAchievementProgressionTargets(importMap, release);
+    synchronizePlatformContextTarget(importMap, release);
     synchronizePerkFeedbackTargets(importMap, release);
     synchronizeGraphicsRuntimeTarget(importMap, release);
     synchronizeLowGraphicsProducerTargets(importMap, release);
@@ -337,6 +344,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeScoreStoreTargets(importMap, release);
   synchronizeVisualResourceTargets(importMap, release);
   synchronizeAchievementProgressionTargets(importMap, release);
+  synchronizePlatformContextTarget(importMap, release);
   synchronizePerkFeedbackTargets(importMap, release);
   synchronizeGraphicsRuntimeTarget(importMap, release);
   synchronizeLowGraphicsProducerTargets(importMap, release);
