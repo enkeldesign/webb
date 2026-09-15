@@ -1,0 +1,55 @@
+name: "TURN r240 OVERDRIVE patch v2"
+
+on:
+  push:
+    branches:
+      - balance/flow-shift-x3-r240
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: balance/flow-shift-x3-r240
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Apply corrected patch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('.github/workflows/tmp-overdrive-r240.yml')
+          s = p.read_text()
+          old = "replace('turn/progression/trophy-road.js', 'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.', copy)"
+          new = "replace('turn/progression/trophy-road.js', 'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.', copy, 2)"
+          if s.count(old) != 1:
+              raise SystemExit('helper Trophy Road marker missing')
+          s = s.replace(old, new, 1)
+          start = s.index("          python - <<'PY'\n") + len("          python - <<'PY'\n")
+          end = s.index("\n          PY\n", start)
+          lines = s[start:end].splitlines()
+          script = '\n'.join(line[10:] if line.startswith('          ') else line for line in lines) + '\n'
+          Path('/tmp/overdrive_patch.py').write_text(script)
+          PY
+          python /tmp/overdrive_patch.py
+      - name: Verify focused regressions
+        run: |
+          node --check turn/vehicle/physics.js
+          node turn-lab/tests/vehicle-drift-production.mjs
+          node turn-tests/post-soak-production.mjs
+          node turn-lab/tests/trophy-road-production.mjs
+          node turn-tests/release-composition-production.mjs --base origin/main
+      - name: Commit clean change
+        run: |
+          rm .github/workflows/tmp-overdrive-r240.yml .github/workflows/tmp-overdrive-r240-v2.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Retune OVERDRIVE and add milestone feedback"
+          git push origin HEAD:balance/flow-shift-x3-r240
