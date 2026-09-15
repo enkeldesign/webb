@@ -260,6 +260,25 @@ function synchronizePerkFeedbackTargets(importMap, release) {
     '/turn/vehicle/perk-presentation.js?revision=r220-apex-grip'
   ]) imports[specifier] = perkPresentationTarget;
 
+  const catalogPath = '/turn/vehicle/catalog.js';
+const catalogTarget = `${catalogPath}?build=${release.cacheKey}`;
+const legacyCatalogSpecifiers = [
+  '/turn/vehicle/catalog.js?revision=r253-supercar-release',
+  '/turn/vehicle/catalog.js?source=20260729-r118-m8',
+  '/turn/vehicle/catalog.js?build=20260806-r161',
+  '/turn/vehicle/catalog.js?build=20260724-r59',
+  '/turn/vehicle/catalog.js?revision=r230-vehicle-perks',
+  '/turn/vehicle/catalog.js?build=20260720-r20&revision=r246-lot-saved-paint'
+];
+imports[catalogPath] = catalogTarget;
+for (const [specifier, existing] of Object.entries(imports)) {
+  if (typeof existing !== 'string') continue;
+  if (new URL(existing, 'https://enkel.design/turn/').pathname === catalogPath) {
+    imports[specifier] = catalogTarget;
+  }
+}
+for (const specifier of legacyCatalogSpecifiers) imports[specifier] = catalogTarget;
+
   imports['/turn/progression/trophy-road.js?revision=r253-supercar-release-base']
     = `/turn/progression/trophy-road.js?build=${release.cacheKey}`;
 }

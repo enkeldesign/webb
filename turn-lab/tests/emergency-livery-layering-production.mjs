@@ -141,8 +141,8 @@ assert.match(semantic, /turnPoliceGreyMask/,
   'Police grey treatment must target neutral mid-grey pixels instead of flattening the service livery');
 assert.match(semantic, /car: '\.\/assets\/cars\/palettes\/car-kit\.png'/);
 
-const canonicalCatalogTarget = '/turn/vehicle/catalog.js?revision=r253-supercar-release';
 const release = JSON.parse(await fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'));
+const canonicalCatalogTarget = `/turn/vehicle/catalog.js?build=${release.cacheKey}`;
 const expectedCatalogTargets = [
   ['/turn/vehicle/catalog.js', canonicalCatalogTarget],
   ['/turn/vehicle/catalog.js?build=20260804-r157-factory-colors', canonicalCatalogTarget],
