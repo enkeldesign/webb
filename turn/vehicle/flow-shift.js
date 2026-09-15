@@ -7,6 +7,7 @@ import {
   clearVehicleShiftTuningTransition,
   isVehicleShiftResetReason
 } from './shift-tuning.js?revision=r254-flow-shift-authority';
+import { showCompactRacePill } from '../achievements/support-challenge-feedback.js';
 
 export const FLOW_SHIFT_VEHICLE_ID = 'supercar';
 export const FLOW_SHIFT_MIN_MULTIPLIER = 2;
@@ -332,6 +333,12 @@ function setFlowMultiplier(multiplier) {
     applyCurrentFlowShift(state, { greatFlow: false });
   }
   syncFlowShiftPresentation(state);
+  if (previousGreatFlow !== nextGreatFlow) {
+    showCompactRacePill(nextGreatFlow ? 'FLOW SHIFT ACTIVE' : 'FLOW SHIFT LOST', {
+      tone: 'blue',
+      duration: 1800
+    });
+  }
 }
 
 function onFlowScore(event) {

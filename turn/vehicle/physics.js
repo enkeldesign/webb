@@ -16,7 +16,7 @@ const DRIFT_HIGH_SLIP_ANGLE = Math.PI * 70 / 180;
 const DRIFT_FLOW_PENALTY_SCALE = 0.65;
 const DRIFT_HIGH_SLIP_PENALTY_SCALE = 0.80;
 export const OVERDRIVE_BUILD_SECONDS = 5;
-export const OVERDRIVE_MAX_SPEED_MULTIPLIER = 1.06;
+export const OVERDRIVE_SPEED_GAIN_PER_BUILD = 0.06;
 export const OVERCHARGE_BOOST_POWER_MULTIPLIER = 1.2;
 
 export function resolveOverchargedBoostPowerMultiplier({
@@ -37,8 +37,8 @@ export function vehicleHasOverdrive(vehicleId) {
 }
 
 export function getOverdriveSpeedMultiplier(cleanSeconds = 0) {
-  const progress = clamp(nonNegativeNumber(cleanSeconds, 0) / OVERDRIVE_BUILD_SECONDS, 0, 1);
-  return 1 + (OVERDRIVE_MAX_SPEED_MULTIPLIER - 1) * progress;
+  const cleanBuilds = nonNegativeNumber(cleanSeconds, 0) / OVERDRIVE_BUILD_SECONDS;
+  return 1 + OVERDRIVE_SPEED_GAIN_PER_BUILD * cleanBuilds;
 }
 
 export function resolveOverchargedControlMultiplier({
@@ -93,11 +93,8 @@ export function updateVehicleOverdriveState({
   }
 
   if (nonNegativeNumber(speed, 0) >= OVERDRIVE_MIN_SPEED) {
-    state.overdriveCleanSeconds = clamp(
-      nonNegativeNumber(state.overdriveCleanSeconds, 0) + nonNegativeNumber(dt, 0),
-      0,
-      OVERDRIVE_BUILD_SECONDS
-    );
+    state.overdriveCleanSeconds =
+      nonNegativeNumber(state.overdriveCleanSeconds, 0) + nonNegativeNumber(dt, 0);
   }
 
   return getOverdriveSpeedMultiplier(state.overdriveCleanSeconds);

@@ -255,6 +255,20 @@ const SUPPORT_CHALLENGE_LIFECYCLE_HISTORY = Object.freeze({
   ])
 });
 
+const PERK_FEEDBACK_OVERDRIVE_HISTORY = Object.freeze({
+  period: '15 September',
+  title: 'Perk feedback gets lighter and OVERDRIVE keeps climbing',
+  paragraphs: Object.freeze([
+    'TURN 1.20.3 gives LEARNER CAR’s GRADUATED changes the same thin pill language as challenge completion while keeping them yellow. SUPERCAR now announces FLOW SHIFT ACTIVE and FLOW SHIFT LOST in blue compact pills, using the shared cue lane so race feedback staggers instead of overlapping.',
+    'FUTURE RACER’s OVERDRIVE no longer stops at +6%. The existing +6% per five clean seconds curve continues for as long as the car stays on-track without a collision; leaving the road or hitting something still resets it.'
+  ]),
+  milestones: Object.freeze([
+    'Thin yellow GRADUATED pills and blue FLOW SHIFT ACTIVE / LOST pills',
+    'Uncapped OVERDRIVE at +6% speed ceiling per five clean seconds',
+    'TURN 1.20.3 · 2026.09.15-r239'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -284,7 +298,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   OVERCHARGED_BOOST_HISTORY,
   SUPPORT_CHALLENGE_HISTORY,
   SUPPORT_CHALLENGE_FEEDBACK_HISTORY,
-  SUPPORT_CHALLENGE_LIFECYCLE_HISTORY
+  SUPPORT_CHALLENGE_LIFECYCLE_HISTORY,
+  PERK_FEEDBACK_OVERDRIVE_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -329,11 +344,18 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.20.2 r234', 'Fixes same-lap challenge bonuses and ordered completion feedback, preserves interrupted Home replays, and keeps live challenge rules working when offline caching fails.']),
       Object.freeze(['One feedback queue', 'Lets support feedback temporarily hold Trophy Road reward presentation, then returns control to the normal achievement reward queue after the pill and trophy check finish.'])
     ])
+  }),
+  Object.freeze({
+    date: '15 September',
+    entries: Object.freeze([
+      Object.freeze(['1.20.3 r239', 'Uses the thin challenge-style pill for LEARNER CAR GRADUATED feedback, adds blue FLOW SHIFT ACTIVE / LOST pills, and lets FUTURE RACER OVERDRIVE keep raising its speed ceiling.']),
+      Object.freeze(['Uncapped OVERDRIVE', 'Keeps the existing +6% per five clean seconds rate indefinitely until the car leaves the road or collides.'])
+    ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.20.2',
-  build: '2026.09.15-r238',
-  note: 'TURN 1.20.2 makes support challenge completion and reward feedback reliable.'
+  version: '1.20.3',
+  build: '2026.09.15-r239',
+  note: 'TURN 1.20.3 makes perk feedback lighter and lets OVERDRIVE keep climbing.'
 });

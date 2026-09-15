@@ -143,11 +143,11 @@ assert.ok(Math.abs(steeringAfterFrames(namedIPadProfile, 24, 120)) > 0.99,
 
 assert.equal(
   FUTURE_RACER_REWARD_PERK_DESCRIPTION,
-  'After a few seconds of clean driving on-track the speed cap starts increasing. Leaving the track or colliding resets it.'
+  'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.'
 );
 assert.equal(
   FUTURE_RACER_CAR_PERK_DESCRIPTION,
-  'A few seconds of staying on-track raises the speed cap. Leaving the track or colliding resets it.'
+  'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.'
 );
 assert.equal(
   vehiclePerkPresentation('race-future', { title: 'OVERDRIVE', description: 'old' }).description,

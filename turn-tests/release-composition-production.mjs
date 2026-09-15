@@ -29,9 +29,13 @@ const crossDeploymentCompatibilityRoutes = Object.freeze({
   '/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling': `/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=${currentRelease.cacheKey}`,
   '/turn/vehicle/shift-profile.js?revision=r232-double-shift': '/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility',
   '/turn/vehicle/shift-profile.js?revision=r253-supercar-release': '/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility',
-  '/turn/vehicle/flow-shift.js?revision=r248-supercar': '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility',
-  '/turn/vehicle/flow-shift.js?revision=r253-supercar-release': '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility',
-  '/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority': '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility',
+  '/turn/vehicle/flow-shift.js?revision=r248-supercar': `/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=${currentRelease.cacheKey}`,
+  '/turn/vehicle/flow-shift.js?revision=r253-supercar-release': `/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=${currentRelease.cacheKey}`,
+  '/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority': `/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=${currentRelease.cacheKey}`,
+  '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility': `/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=${currentRelease.cacheKey}`,
+  '/turn/vehicle/perk-presentation.js': `/turn/vehicle/perk-presentation.js?build=${currentRelease.cacheKey}`,
+  '/turn/vehicle/perk-presentation.js?revision=r220-apex-grip': `/turn/vehicle/perk-presentation.js?build=${currentRelease.cacheKey}`,
+  '/turn/progression/trophy-road.js?revision=r253-supercar-release-base': `/turn/progression/trophy-road.js?build=${currentRelease.cacheKey}`,
   '/turn/ui/shift-feedback.js?revision=r232-double-shift': '/turn/ui/shift-feedback.js?revision=r255-flow-shift-accessibility',
   '/turn/ui/shift-feedback.js?revision=r253-supercar-release': '/turn/ui/shift-feedback.js?revision=r255-flow-shift-accessibility'
 });

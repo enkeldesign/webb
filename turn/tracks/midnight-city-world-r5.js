@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { installMidnightCityWorld as installMidnightCityWorldR4 } from './midnight-city-world-r4.js?build=20260915-r238';
+import { installMidnightCityWorld as installMidnightCityWorldR4 } from './midnight-city-world-r4.js?build=20260915-r239';
 
 const TRACK_Y = 0.16;
 const CITY_BUILDER_COMMIT = '4535092b740b378b700efd9df9e27a631815b84a';
