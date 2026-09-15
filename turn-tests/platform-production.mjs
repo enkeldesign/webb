@@ -102,6 +102,23 @@ assert.equal(installTurnPlatform(platform), platform);
 assert.equal(getTurnPlatform(), platform);
 assert.equal(requireTurnPlatform(), platform);
 
+// The production shell cache-busts platform-context.js while motion historically
+// reaches the same physical file through another module URL. Those identities must
+// share exactly one installed adapter so a future native host cannot be bypassed.
+const contextUrl = new URL('../turn/platform/platform-context.js', import.meta.url);
+const alternateContextA = await import(`${contextUrl.href}?identity=packaging-a`);
+const alternateContextB = await import(`${contextUrl.href}?identity=packaging-b`);
+assert.equal(alternateContextA.getTurnPlatform(), platform);
+assert.equal(alternateContextB.getTurnPlatform(), platform);
+assert.equal(alternateContextA.requireTurnPlatform(), platform);
+assert.equal(alternateContextB.installTurnPlatform(platform), platform);
+const competingPlatform = { ...platform };
+assert.throws(
+  () => alternateContextA.installTurnPlatform(competingPlatform),
+  /already been installed/,
+  'A second module identity must not acquire independent platform ownership'
+);
+
 const adaptedPose = motionPoseFromGravity({
   accelerationIncludingGravity: { x: 2, y: 0, z: 0 }
 });
@@ -186,6 +203,25 @@ const nextApp = fs.readFileSync(new URL('../turn-next/app.js', import.meta.url),
 const motionBridgeSource = fs.readFileSync(new URL('../turn/motion-lifecycle-bridge.js', import.meta.url), 'utf8');
 const displayBridgeSource = fs.readFileSync(new URL('../turn/display-lifecycle-bridge.js', import.meta.url), 'utf8');
 const webPlatformSource = fs.readFileSync(new URL('../turn/platform/web-platform.js', import.meta.url), 'utf8');
+const platformContextSource = fs.readFileSync(new URL('../turn/platform/platform-context.js', import.meta.url), 'utf8');
+
+assert.match(platformContextSource, /Symbol\.for\('turn\.platform\.context'\)/);
+assert.doesNotMatch(platformContextSource, /let installedPlatform = null/);
+
+const releaseIdentity = JSON.parse(fs.readFileSync(new URL('../turn/release.json', import.meta.url), 'utf8'));
+const canonicalPlatformContext = '/turn/platform/platform-context.js?build=' + releaseIdentity.cacheKey;
+for (const [shellName, shellPath] of [
+  ['TURN', '../turn/index.html'],
+  ['TURN NEXT', '../turn-next/index.html'],
+  ['TURN LAB', '../turn-lab/index.html'],
+  ['YOUR TURN', '../yourturn/index.html']
+]) {
+  const shellSource = fs.readFileSync(new URL(shellPath, import.meta.url), 'utf8');
+  assert.ok(
+    shellSource.includes('"/turn/platform/platform-context.js": "' + canonicalPlatformContext + '"'),
+    shellName + ' must resolve platform-context.js to the current TURN build identity'
+  );
+}
 
 assert.match(productionApp, /installMotionLifecycleBridge\(\{ platform: webPlatform \}\)/);
 assert.match(productionApp, /installDisplayLifecycleBridge\(\{ platform: webPlatform \}\)/);

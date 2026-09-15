@@ -11,24 +11,41 @@ const REQUIRED_PORTS = Object.freeze({
   ])
 });
 
-let installedPlatform = null;
+// Share ownership across cache-busted ESM identities so every shell sees one adapter.
+const PLATFORM_REGISTRY_KEY = Symbol.for('turn.platform.context');
+
+function platformRegistry() {
+  const existing = globalThis[PLATFORM_REGISTRY_KEY];
+  if (existing) return existing;
+
+  const registry = { installedPlatform: null };
+  Object.defineProperty(globalThis, PLATFORM_REGISTRY_KEY, {
+    configurable: false,
+    enumerable: false,
+    writable: false,
+    value: registry
+  });
+  return registry;
+}
 
 export function installTurnPlatform(platform) {
   validateTurnPlatform(platform);
+  const registry = platformRegistry();
 
-  if (installedPlatform && installedPlatform !== platform) {
+  if (registry.installedPlatform && registry.installedPlatform !== platform) {
     throw new Error('TURN platform has already been installed.');
   }
 
-  installedPlatform = platform;
-  return installedPlatform;
+  registry.installedPlatform = platform;
+  return registry.installedPlatform;
 }
 
 export function getTurnPlatform() {
-  return installedPlatform;
+  return platformRegistry().installedPlatform;
 }
 
 export function requireTurnPlatform() {
+  const installedPlatform = getTurnPlatform();
   if (!installedPlatform) {
     throw new Error('TURN platform has not been installed.');
   }
