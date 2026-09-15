@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Canonicalize vehicle catalog targets
+      - name: Canonicalize vehicle catalog compatibility targets
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -30,6 +30,14 @@ jobs:
           marker = "  imports['/turn/progression/trophy-road.js?revision=r253-supercar-release-base']\n    = `/turn/progression/trophy-road.js?build=${release.cacheKey}`;\n"
           addition = """  const catalogPath = '/turn/vehicle/catalog.js';
           const catalogTarget = `${catalogPath}?build=${release.cacheKey}`;
+          const legacyCatalogSpecifiers = [
+            '/turn/vehicle/catalog.js?revision=r253-supercar-release',
+            '/turn/vehicle/catalog.js?source=20260729-r118-m8',
+            '/turn/vehicle/catalog.js?build=20260806-r161',
+            '/turn/vehicle/catalog.js?build=20260724-r59',
+            '/turn/vehicle/catalog.js?revision=r230-vehicle-perks',
+            '/turn/vehicle/catalog.js?build=20260720-r20&revision=r246-lot-saved-paint'
+          ];
           imports[catalogPath] = catalogTarget;
           for (const [specifier, existing] of Object.entries(imports)) {
             if (typeof existing !== 'string') continue;
@@ -37,6 +45,7 @@ jobs:
               imports[specifier] = catalogTarget;
             }
           }
+          for (const specifier of legacyCatalogSpecifiers) imports[specifier] = catalogTarget;
 
           """
           if s.count(marker) != 1:
@@ -65,6 +74,43 @@ jobs:
           if s.count(marker) != 1:
               raise SystemExit('release composition visual-owner marker missing')
           p.write_text(s.replace(marker, replacement, 1))
+
+          replacements = {
+            'turn-lab/tests/garage-production.mjs': (
+              "const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r253-supercar-release';",
+              "const vehicleCatalogTarget = `/turn/vehicle/catalog.js?build=${release.cacheKey}`;"
+            ),
+            'turn-lab/tests/audio-foundation-production.mjs': (
+              "const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r253-supercar-release';",
+              "const vehicleCatalogTarget = `/turn/vehicle/catalog.js?build=${release.cacheKey}`;"
+            ),
+            'turn-lab/tests/paint-lock-observer-production.mjs': (
+              "const canonicalLotCatalog = '/turn/vehicle/catalog.js?revision=r253-supercar-release';",
+              "const canonicalLotCatalog = `/turn/vehicle/catalog.js?build=${release.cacheKey}`;"
+            ),
+          }
+          for path, (old, new) in replacements.items():
+              p = Path(path)
+              s = p.read_text()
+              if s.count(old) != 1:
+                  raise SystemExit(f'{path}: catalog expectation marker count={s.count(old)}')
+              p.write_text(s.replace(old, new, 1))
+
+          p = Path('turn-lab/tests/stat-legend-production.mjs')
+          s = p.read_text()
+          old = "  '/turn/vehicle/catalog.js?revision=r253-supercar-release',\n  'Production must publish fresh shared stat definitions through the canonical vehicle catalog'"
+          new = "  `/turn/vehicle/catalog.js?build=${release.cacheKey}`,\n  'Production must publish fresh shared stat definitions through the canonical vehicle catalog'"
+          if s.count(old) != 1:
+              raise SystemExit('stat legend catalog expectation marker missing')
+          p.write_text(s.replace(old, new, 1))
+
+          p = Path('turn-lab/tests/emergency-livery-layering-production.mjs')
+          s = p.read_text()
+          old = "const canonicalCatalogTarget = '/turn/vehicle/catalog.js?revision=r253-supercar-release';\nconst release = JSON.parse(await fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'));"
+          new = "const release = JSON.parse(await fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'));\nconst canonicalCatalogTarget = `/turn/vehicle/catalog.js?build=${release.cacheKey}`;"
+          if s.count(old) != 1:
+              raise SystemExit('emergency catalog expectation marker missing')
+          p.write_text(s.replace(old, new, 1))
           PY
       - name: Regenerate release surfaces
         run: node turn/scripts/release.mjs --write
@@ -75,6 +121,11 @@ jobs:
           node turn-tests/flow-shift-tuning-production.mjs
           node turn-tests/flow-shift-accessibility-production.mjs
           node turn-lab/tests/trophy-road-production.mjs
+          node turn-lab/tests/garage-production.mjs
+          node turn-lab/tests/stat-legend-production.mjs
+          node turn-lab/tests/audio-foundation-production.mjs
+          node turn-lab/tests/paint-lock-observer-production.mjs
+          node turn-lab/tests/emergency-livery-layering-production.mjs
       - name: Commit clean fix
         run: |
           rm .github/workflows/tmp-r240-catalog-identity.yml
