@@ -17,6 +17,27 @@ Completed foundations:
 - audible limit cue on every rearmed hard crossing
 - first-per-side VoiceOver announcement during each race
 
+## TILE TRACK experiment
+
+TURN NEXT contains an additive **TILE TRACK** showcase for Kenney's CC0 3D Road Tiles. It starts from the current canonical TURN runtime and does not change production TURN or the generated TURN NEXT entry files.
+
+The showcase intentionally tests the visual/physical authoring idea before any semantic track system:
+
+- a long authored closed route with green, water/engineered and beige regions
+- one global Kenney tile scale chosen to keep the road footprint near current TURN road width
+- a continuous TURN drive surface beneath the modular visual construction so the first experiment can judge layout, scale and feel independently of future tile semantics
+- substantial elevation, including a long climb, high section, descents and a raised water district
+- car height sampled from the drive surface and smoothed X-axis pitch derived from the road immediately ahead/behind the car
+- the normal TURN chase camera remains responsible for camera readability rather than inheriting car pitch directly
+- many different Kenney tile meshes placed from simple authored placement data
+- repeated low-poly scenery uses instancing
+- competitive lap/record state is suppressed while the experiment is active
+- leaving the experiment restores the previously selected canonical TURN track
+
+No generated pace notes, Drive By Ear road semantics, spatial-audio guidance or generalized tile vocabulary are introduced in this phase. Those are follow-up decisions only if the showcase proves useful.
+
+The supplied Kenney pack is CC0. Runtime mesh delivery uses a commit-pinned public mirror of the same pack so TURN NEXT does not need to duplicate hundreds of small model files in this repository.
+
 ## WORLD experiment
 
 TURN NEXT also contains an isolated real-world free-roam experiment. It is intentionally additive and does not change the generated TURN NEXT parity entry files or production TURN.
