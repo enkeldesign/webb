@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 
 import {
   deriveVehicleTuningForCar,
@@ -14,6 +15,12 @@ import {
   applyVehicleShiftTuning,
   isVehicleShiftResetReason
 } from '../turn/vehicle/shift-tuning.js';
+
+const flowShiftSource = await fs.readFile(new URL('../turn/vehicle/flow-shift.js', import.meta.url), 'utf8');
+assert.ok(flowShiftSource.includes("showCompactRacePill(nextGreatFlow ? 'FLOW SHIFT ACTIVE' : 'FLOW SHIFT LOST'"),
+  'SUPERCAR must announce FLOW SHIFT threshold activation and loss through the compact race pill');
+assert.match(flowShiftSource, /tone: 'blue'/,
+  'FLOW SHIFT activation and loss pills must use the blue information treatment');
 
 const STAT_KEYS = Object.freeze([
   'speed',

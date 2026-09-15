@@ -17,6 +17,9 @@ const PILL_LANE_SURFACES = Object.freeze([
 ]);
 
 let installed = null;
+let activeCompactRacePill = null;
+let compactRacePillTimer = 0;
+let compactRacePillConcealTimer = 0;
 
 export function isRaceSupportBonusId(id) {
   return typeof id === 'string' && RACE_SUPPORT_BONUS_PATTERN.test(id);
@@ -110,6 +113,24 @@ function installStyles() {
       line-height: 1 !important;
     }
     .turn-support-bonus-toast strong { letter-spacing: .025em !important; }
+    .turn-support-bonus-toast.turn-compact-race-pill--blue {
+      background: var(--turn-action-information, #38d9ff) !important;
+    }
+    #message.turn-graduated-pill {
+      width: max-content !important;
+      min-width: 0 !important;
+      max-width: min(92vw, 560px) !important;
+      padding: 8px 16px !important;
+      border: 4px solid var(--turn-ink, #08090a) !important;
+      border-radius: 999px !important;
+      background: var(--turn-action-warning, #ffd43b) !important;
+      box-shadow: 5px 5px 0 var(--turn-ink, #08090a) !important;
+      font-size: clamp(.66rem, 1.6vw, .86rem) !important;
+      font-weight: 950 !important;
+      letter-spacing: .045em !important;
+      line-height: 1 !important;
+      white-space: nowrap;
+    }
     .turn-support-completion-indicator {
       pointer-events: none !important;
       animation: turn-support-completion-pulse 3.2s ease-out both;
@@ -140,9 +161,22 @@ function installStyles() {
 }
 
 function installPillLaneCoordinator() {
+  if (
+    typeof globalThis.MutationObserver !== 'function'
+    || typeof globalThis.HTMLElement !== 'function'
+    || typeof document.querySelectorAll !== 'function'
+  ) return () => {};
+
   const tracked = new Set();
 
   const update = () => {
+    const message = document.querySelector('#message');
+    if (message instanceof HTMLElement) {
+      const graduated = message.classList.contains('show')
+        && /^GRADUATED · /.test(message.textContent || '');
+      message.classList.toggle('turn-graduated-pill', graduated);
+    }
+
     let slot = 0;
     const next = new Set();
     for (const selector of PILL_LANE_SURFACES) {
@@ -176,6 +210,50 @@ function installPillLaneCoordinator() {
     for (const node of tracked) node.style.removeProperty('--turn-pill-lane-offset');
     tracked.clear();
   };
+}
+
+function clearCompactRacePill() {
+  globalThis.clearTimeout(compactRacePillTimer);
+  globalThis.clearTimeout(compactRacePillConcealTimer);
+  compactRacePillTimer = 0;
+  compactRacePillConcealTimer = 0;
+  activeCompactRacePill?.remove?.();
+  activeCompactRacePill = null;
+}
+
+export function showCompactRacePill(label, { tone = 'blue', duration = 1800 } = {}) {
+  const copy = String(label || '').trim();
+  if (!copy || typeof document === 'undefined' || !document.body) return false;
+  installStyles();
+  clearCompactRacePill();
+
+  const toast = document.createElement('div');
+  const normalizedTone = tone === 'blue' ? 'blue' : 'yellow';
+  toast.className = `turn-support-bonus-toast turn-compact-race-pill turn-compact-race-pill--${normalizedTone}`;
+  toast.hidden = false;
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  toast.setAttribute('aria-atomic', 'true');
+  const span = document.createElement('span');
+  span.textContent = copy;
+  toast.appendChild(span);
+  document.body.appendChild(toast);
+  activeCompactRacePill = toast;
+
+  const reveal = () => {
+  if (activeCompactRacePill === toast) toast.classList.add('is-visible');
+};
+  if (typeof globalThis.requestAnimationFrame === 'function') globalThis.requestAnimationFrame(reveal);
+  else globalThis.setTimeout(reveal, 0);
+  compactRacePillTimer = globalThis.setTimeout(() => {
+    if (activeCompactRacePill !== toast) return;
+    compactRacePillTimer = 0;
+    toast.classList.remove('is-visible');
+    compactRacePillConcealTimer = globalThis.setTimeout(() => {
+      if (activeCompactRacePill === toast) clearCompactRacePill();
+    }, TOAST_CONCEAL_MS);
+  }, Math.max(400, Number(duration) || 1800));
+  return true;
 }
 
 function recommendedLotButton(vehicleId) {

@@ -219,9 +219,10 @@ assert.match(mountainReward?.description || '', /waterfall/i);
 
 const futurePerk = getProductionTrophyRoadReward('future-racer');
 assert.equal(futurePerk?.perkTitle, 'OVERDRIVE');
-assert.match(futurePerk?.perkDescription || '', /few seconds/i);
-assert.doesNotMatch(futurePerk?.perkDescription || '', /5\/5|6%|exceeds/i,
-  'OVERDRIVE copy should describe the behavior without exposing its beyond-scale tuning');
+assert.match(futurePerk?.perkDescription || '', /every five clean seconds/i);
+assert.match(futurePerk?.perkDescription || '', /another 6%/i);
+assert.match(futurePerk?.perkDescription || '', /no ceiling/i,
+  'OVERDRIVE copy must explain its uncapped clean-driving speed growth');
 assert.match(futurePerk?.description || '', /<strong>OVERDRIVE:<\/strong>/);
 
 const racePerk = getProductionTrophyRoadReward('race-car');

@@ -8,7 +8,8 @@ import {
   normalizeSupportChallengeState
 } from '../turn/achievements/support-challenges.js';
 import {
-  isRaceSupportBonusId
+  isRaceSupportBonusId,
+  showCompactRacePill
 } from '../turn/achievements/support-challenge-feedback.js';
 import { createAchievementStore, normalizeAchievementState } from '../turn/achievements/store.js';
 
@@ -43,6 +44,8 @@ assert.equal(isRaceSupportBonusId('support:winner:airport'), true);
 assert.equal(isRaceSupportBonusId('support:safety:harbor'), true);
 assert.equal(isRaceSupportBonusId('support:drift:mountain'), true);
 assert.equal(isRaceSupportBonusId('support:how-to-play:dbe'), false);
+assert.equal(showCompactRacePill('FLOW SHIFT ACTIVE'), false,
+  'Compact race feedback must remain safe to import in non-DOM regression environments');
 assert.match(facadeSource, /import '\.\/achievements\/support-challenge-feedback\.js';/,
   'The production achievement facade must install the challenge feedback coordinator without a manual revision identifier');
 assert.doesNotMatch(
@@ -84,6 +87,16 @@ assert.doesNotMatch(homeReplaySource, /new MutationObserver/,
   'Home reward replay must use explicit presentation and Home lifecycle events rather than DOM observation');
 assert.match(feedbackSource, /border-radius:\s*999px/,
   'Challenge success feedback must use the compact pill presentation');
+assert.match(feedbackSource, /turn-graduated-pill/,
+  'LEARNER CAR GRADUATED feedback must reuse the thin compact pill geometry');
+assert.match(feedbackSource, /turn-action-warning, #ffd43b/,
+  'LEARNER CAR GRADUATED feedback must remain yellow');
+assert.match(feedbackSource, /turn-compact-race-pill--blue/,
+  'FLOW SHIFT feedback must reuse the compact pill with a blue information treatment');
+assert.match(feedbackSource, /typeof globalThis\.MutationObserver !== 'function'/,
+  'The shared pill lane must stay import-safe in partial DOM environments without MutationObserver');
+assert.match(feedbackSource, /typeof globalThis\.requestAnimationFrame === 'function'/,
+  'Compact race pills must tolerate partial DOM environments without requestAnimationFrame');
 assert.doesNotMatch(feedbackSource, /revision=/,
   'The new support feedback module must not invent manual revision identities');
 
