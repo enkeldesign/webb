@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   prepare:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -126,7 +125,7 @@ const adaptedPose = motionPoseFromGravity({
 """
           if marker not in test:
               raise SystemExit('Platform production test insertion point not found')
-          test_path.write_text(test.replace(marker, replacement, 1))
+          test = test.replace(marker, replacement, 1)
 
           source_marker = """const webPlatformSource = fs.readFileSync(new URL('../turn/platform/web-platform.js', import.meta.url), 'utf8');
 
@@ -137,9 +136,9 @@ const platformContextSource = fs.readFileSync(new URL('../turn/platform/platform
 assert.match(platformContextSource, /Symbol\\.for\\('turn\\.platform\\.context'\\)/);
 assert.doesNotMatch(platformContextSource, /let installedPlatform = null/);
 assert.match(productionApp"""
-          if source_marker not in test_path.read_text():
+          if source_marker not in test:
               raise SystemExit('Platform source assertion insertion point not found')
-          test_path.write_text(test_path.read_text().replace(source_marker, source_replacement, 1))
+          test_path.write_text(test.replace(source_marker, source_replacement, 1))
 
           release_path = Path('turn/release.json')
           release = json.loads(release_path.read_text())
