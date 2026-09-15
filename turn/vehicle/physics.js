@@ -1,6 +1,7 @@
 import { resolveWorldCollisionState } from '../race/world-collision.js?build=20260723-r53';
 import { recordLapCourseSafetyState } from '../race/course-safety.js?revision=r186-road-edge-latch';
 import { trackPitch, trackSurfaceY } from '../tracks/elevation.js?build=20260725-r67';
+import { showCompactRacePill } from '../achievements/support-challenge-feedback.js';
 import {
   advanceVehiclePerkRuntimeState,
   resolveVehicleLockDragAdd,
@@ -16,7 +17,7 @@ const DRIFT_HIGH_SLIP_ANGLE = Math.PI * 70 / 180;
 const DRIFT_FLOW_PENALTY_SCALE = 0.65;
 const DRIFT_HIGH_SLIP_PENALTY_SCALE = 0.80;
 export const OVERDRIVE_BUILD_SECONDS = 5;
-export const OVERDRIVE_SPEED_GAIN_PER_BUILD = 0.06;
+export const OVERDRIVE_SPEED_GAIN_PER_BUILD = 0.05;
 export const OVERCHARGE_BOOST_POWER_MULTIPLIER = 1.2;
 
 export function resolveOverchargedBoostPowerMultiplier({
@@ -87,14 +88,24 @@ export function updateVehicleOverdriveState({
     return 1;
   }
 
+  const previousCleanSeconds = nonNegativeNumber(state.overdriveCleanSeconds, 0);
   if (offRoad || collided) {
     state.overdriveCleanSeconds = 0;
+    if (previousCleanSeconds > 0) {
+      showCompactRacePill('OVERDRIVE LOST', { tone: 'blue' });
+    }
     return 1;
   }
 
   if (nonNegativeNumber(speed, 0) >= OVERDRIVE_MIN_SPEED) {
-    state.overdriveCleanSeconds =
-      nonNegativeNumber(state.overdriveCleanSeconds, 0) + nonNegativeNumber(dt, 0);
+    state.overdriveCleanSeconds = previousCleanSeconds + nonNegativeNumber(dt, 0);
+    const previousBonusPercent = (getOverdriveSpeedMultiplier(previousCleanSeconds) - 1) * 100;
+    const nextBonusPercent = (getOverdriveSpeedMultiplier(state.overdriveCleanSeconds) - 1) * 100;
+    const previousMilestonePercent = Math.floor((previousBonusPercent + 1e-6) / 10) * 10;
+    const nextMilestonePercent = Math.floor((nextBonusPercent + 1e-6) / 10) * 10;
+    if (nextMilestonePercent >= 10 && nextMilestonePercent > previousMilestonePercent) {
+      showCompactRacePill(`OVERDRIVE ${nextMilestonePercent}%`, { tone: 'blue' });
+    }
   }
 
   return getOverdriveSpeedMultiplier(state.overdriveCleanSeconds);

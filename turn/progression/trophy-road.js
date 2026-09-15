@@ -111,8 +111,8 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     vehicleIds: Object.freeze(['race-future']),
     icon: 'future',
     perkTitle: 'OVERDRIVE',
-    perkDescription: 'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.',
-    description: 'Unlock the Future Racer: built for advanced time trials.<br><strong>OVERDRIVE:</strong> Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.'
+    perkDescription: 'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.',
+    description: 'Unlock the Future Racer: built for advanced time trials.<br><strong>OVERDRIVE:</strong> The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.'
   }),
   Object.freeze({
     id: 'rally-racer',

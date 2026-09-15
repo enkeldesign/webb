@@ -219,10 +219,7 @@ assert.match(mountainReward?.description || '', /waterfall/i);
 
 const futurePerk = getProductionTrophyRoadReward('future-racer');
 assert.equal(futurePerk?.perkTitle, 'OVERDRIVE');
-assert.match(futurePerk?.perkDescription || '', /every five clean seconds/i);
-assert.match(futurePerk?.perkDescription || '', /another 6%/i);
-assert.match(futurePerk?.perkDescription || '', /no ceiling/i,
-  'OVERDRIVE copy must explain its uncapped clean-driving speed growth');
+assert.equal(futurePerk?.perkDescription, 'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.');
 assert.match(futurePerk?.description || '', /<strong>OVERDRIVE:<\/strong>/);
 
 const racePerk = getProductionTrophyRoadReward('race-car');

@@ -274,11 +274,12 @@ const FLOW_SHIFT_X3_HISTORY = Object.freeze({
   title: 'FLOW SHIFT asks for deeper FLOW',
   paragraphs: Object.freeze([
     'TURN 1.20.4 moves SUPERCAR’s FLOW SHIFT activation from FLOW ×2 to FLOW ×3. Ordinary SHIFT remains in effect at ×1 and ×2; reaching ×3 or higher removes SHIFT’s three reductions while the perk is active.',
-    'The blue FLOW SHIFT ACTIVE / LOST pills continue to follow the same threshold transition, so the feedback now marks the harder ×3 state without changing the perk’s +3 benefit.'
+    'The blue FLOW SHIFT ACTIVE / LOST pills continue to follow the same threshold transition. FUTURE RACER OVERDRIVE is retuned to +5% speed cap per five clean seconds, announces every 10% milestone in a thin blue pill, and shows OVERDRIVE LOST when leaving the track or colliding.'
   ]),
   milestones: Object.freeze([
     'FLOW SHIFT activates at FLOW ×3 instead of ×2',
     '×2 keeps ordinary SHIFT balance',
+    'OVERDRIVE +5% per five seconds with blue 10% milestone / LOST pills',
     'TURN 1.20.4 · 2026.09.15-r240'
   ])
 });
@@ -365,7 +366,7 @@ export const CHANGELOG = Object.freeze([
     entries: Object.freeze([
       Object.freeze(['1.20.3 r239', 'Uses the thin challenge-style pill for LEARNER CAR GRADUATED feedback, adds blue FLOW SHIFT ACTIVE / LOST pills, and lets FUTURE RACER OVERDRIVE keep raising its speed ceiling.']),
       Object.freeze(['Uncapped OVERDRIVE', 'Keeps the existing +6% per five clean seconds rate indefinitely until the car leaves the road or collides.']),
-      Object.freeze(['1.20.4 r240', 'Raises SUPERCAR FLOW SHIFT activation from FLOW ×2 to FLOW ×3; ×2 now keeps ordinary SHIFT balance.'])
+      Object.freeze(['1.20.4 r240', 'Raises SUPERCAR FLOW SHIFT activation from FLOW ×2 to FLOW ×3 and retunes FUTURE RACER OVERDRIVE to +5% per five clean seconds with blue 10% milestone and LOST pills.'])
     ])
   })
 ]);
@@ -373,5 +374,5 @@ export const CHANGELOG = Object.freeze([
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.20.4',
   build: '2026.09.15-r240',
-  note: 'TURN 1.20.4 makes FLOW SHIFT a FLOW ×3 reward.'
+  note: 'TURN 1.20.4 makes FLOW SHIFT a FLOW ×3 reward and gives OVERDRIVE clearer milestone feedback.'
 });
