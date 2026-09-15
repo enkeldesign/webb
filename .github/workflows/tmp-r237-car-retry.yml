@@ -60,20 +60,16 @@ jobs:
 
           workflow_path = Path('.github/workflows/turn-lab-tests.yml')
           workflow = workflow_path.read_text()
-          needle = """      - name: Run car visual ownership and preview lifecycle regression
-                run: node turn-tests/car-visual-lifecycle-production.mjs
-          """
-          addition = needle + """
-                - name: Run car source failure-recovery regression
-                  run: node turn-tests/car-source-retry-production.mjs
-          """
+          needle = "        run: node turn-tests/car-visual-lifecycle-production.mjs\n"
+          addition = needle + "\n      - name: Run car source failure-recovery regression\n        run: node turn-tests/car-source-retry-production.mjs\n"
           if needle not in workflow:
-              raise SystemExit('Canonical car visual test step not found')
+              raise SystemExit('Canonical car visual test command not found')
           workflow_path.write_text(workflow.replace(needle, addition, 1))
 
           release_path = Path('turn/release.json')
           release = json.loads(release_path.read_text())
-          if release != {'version': '1.20.2', 'id': '2026.09.15-r236', 'cacheKey': '20260915-r236'}:
+          expected = {'version': '1.20.2', 'id': '2026.09.15-r236', 'cacheKey': '20260915-r236'}
+          if release != expected:
               raise SystemExit(f'Unexpected base release: {release}')
           release.update(id='2026.09.15-r237', cacheKey='20260915-r237')
           release_path.write_text(json.dumps(release, indent=2) + '\n')
@@ -122,7 +118,6 @@ jobs:
             }
           );
 
-          // A failed background preload must evict only its own rejected cache entry.
           const failedPreload = loadCarSource('sedan').catch(() => null);
           assert.equal(attempts.length, 1);
           attempts[0].reject(new Error('injected preload failure'));
@@ -138,7 +133,6 @@ jobs:
           assert.equal(await loadCarSource('sedan'), sedanSource);
           assert.equal(attempts.length, 2, 'Successful source remains cached after retry');
 
-          // Two interactive requests still coalesce onto one underlying load.
           const classicFirst = loadCarSource('classic');
           const classicSecond = loadCarSource('classic');
           assert.equal(attempts.length, 3, 'Concurrent same-car requests must share one source load');
@@ -147,7 +141,6 @@ jobs:
           assert.equal(await classicFirst, classicSource);
           assert.equal(await classicSecond, classicSource);
 
-          // An older rejection must not erase a newer cache owner.
           const staleAttempt = loadCarSource('truck').catch(() => null);
           assert.equal(attempts.length, 4);
           const newerSourcePromise = Promise.resolve({ id: 'newer-source' });
@@ -157,44 +150,9 @@ jobs:
           assert.equal(sourceCache.get('truck'), newerSourcePromise,
             'Guarded eviction must preserve a newer source cache owner');
 
-          // The already-shipped generation cleanup must make the same visual identity retryable
-          // after failure for both the player and a rival/ghost host.
+          const visualRequests = [];
           const installCarVisual = vm.runInNewContext(
             `${section(main, 'async function installCarVisual(', '\nasync function applyVehicleSelection')}\ninstallCarVisual`,
-            {
-              disposeCarVisual() {},
-              createCarVisual(options) {
-                const request = { ...deferred(), options };
-                visualRequests.push(request);
-                return request.promise;
-              },
-              visualRequests: []
-            }
-          );
-          const visualRequests = installCarVisual.constructor('return visualRequests')?.();
-          EOF
-
-          # Finish the visual retry portion without relying on a VM-global extraction trick.
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('turn-tests/car-source-retry-production.mjs')
-          source = path.read_text()
-          source = source.replace("""          const installCarVisual = vm.runInNewContext(
-            `${section(main, 'async function installCarVisual(', '\\nasync function applyVehicleSelection')}\\ninstallCarVisual`,
-            {
-              disposeCarVisual() {},
-              createCarVisual(options) {
-                const request = { ...deferred(), options };
-                visualRequests.push(request);
-                return request.promise;
-              },
-              visualRequests: []
-            }
-          );
-          const visualRequests = installCarVisual.constructor('return visualRequests')?.();
-          """, """const visualRequests = [];
-          const installCarVisual = vm.runInNewContext(
-            `${section(main, 'async function installCarVisual(', '\\nasync function applyVehicleSelection')}\\ninstallCarVisual`,
             {
               disposeCarVisual() {},
               createCarVisual(options) {
@@ -220,8 +178,7 @@ jobs:
             const host = makeHost();
             const selection = { carId: 'sedan', color: '#123456', secondaryColor: '#abcdef', ghost };
             const failed = installCarVisual(host, selection);
-            const first = visualRequests.at(-1);
-            first.reject(new Error(ghost ? 'rival failure' : 'player failure'));
+            visualRequests.at(-1).reject(new Error(ghost ? 'rival failure' : 'player failure'));
             await assert.rejects(failed, ghost ? /rival failure/ : /player failure/);
             assert.equal(host.userData.turnVisualPendingKey, null,
               'Failed visual generation must clear the current pending identity');
@@ -242,10 +199,9 @@ jobs:
           await proveVisualRetry(true);
 
           console.log('Car source and visual failure-recovery regression passed.');
-          """)
-          path.write_text(source)
-          PY
+          EOF
 
+          node turn-tests/car-source-retry-production.mjs
           node turn/scripts/release.mjs --write
           git rm .github/workflows/tmp-r237-car-retry.yml
       - name: Commit prepared r237 change
