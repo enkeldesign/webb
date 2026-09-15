@@ -144,7 +144,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
   }),
   supercar: Object.freeze({
     title: 'FLOW SHIFT',
-    description: 'At FLOW ×2 or higher, SHIFT adds its three attribute points without reductions. SHIFT again moves the boost to the other three attributes.'
+    description: 'At FLOW ×3 or higher, SHIFT adds its three attribute points without reductions. SHIFT again moves the boost to the other three attributes.'
   }),
   'sedan-sports': Object.freeze({
     title: 'DRIFT DEMON',

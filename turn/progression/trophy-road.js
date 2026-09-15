@@ -133,8 +133,8 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     vehicleIds: Object.freeze(['supercar']),
     icon: 'supercar',
     perkTitle: 'FLOW SHIFT',
-    perkDescription: 'At FLOW ×2 or higher, SHIFT adds three attribute points without reductions. SHIFT again moves the boost to the other three attributes.',
-    description: 'Unlock the Supercar: a low, wide road-going machine with a powerful boost package.<br><strong>FLOW SHIFT:</strong> At FLOW ×2 or higher, SHIFT adds three attribute points without reductions. SHIFT again moves the boost to the other three attributes. Lose FLOW ×2 and the current SHIFT returns to its normal 18-point balance.'
+    perkDescription: 'At FLOW ×3 or higher, SHIFT adds three attribute points without reductions. SHIFT again moves the boost to the other three attributes.',
+    description: 'Unlock the Supercar: a low, wide road-going machine with a powerful boost package.<br><strong>FLOW SHIFT:</strong> At FLOW ×3 or higher, SHIFT adds three attribute points without reductions. SHIFT again moves the boost to the other three attributes. Lose FLOW ×3 and the current SHIFT returns to its normal 18-point balance.'
   }),
   Object.freeze({
     id: 'awd-traction',

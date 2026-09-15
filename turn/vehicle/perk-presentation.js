@@ -6,7 +6,7 @@ export const FUTURE_RACER_CAR_PERK_DESCRIPTION =
   'Every five clean seconds on-track adds another 6% to the speed cap with no ceiling. Leaving the track or colliding resets it.';
 
 export const SUPERCAR_FLOW_SHIFT_PERK_DESCRIPTION =
-  'At FLOW ×2 or higher, SHIFT adds its three attribute points without reductions. SHIFT again moves the boost to the other three attributes.';
+  'At FLOW ×3 or higher, SHIFT adds its three attribute points without reductions. SHIFT again moves the boost to the other three attributes.';
 
 export function vehiclePerkPresentation(vehicleId, perk) {
   if (!perk) return null;

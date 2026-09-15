@@ -351,7 +351,7 @@ try {
     'The production gameplay controls must expose SHIFT and its live region');
   assert.equal(shiftBubble.disabled, false, 'The configured unlocked SHIFT control must be interactive');
 
-  eventTarget.emit('turn:flow-score-event', { type: 'score', multiplier: 2 });
+  eventTarget.emit('turn:flow-score-event', { type: 'score', multiplier: 3 });
   assert.equal(
     shiftBubble.getAttribute('aria-label'),
     'FLOW SHIFT ready. Activate to add its three attribute points without reductions.'

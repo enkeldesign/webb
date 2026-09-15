@@ -270,7 +270,7 @@ assert.equal(getCarDefinition('toy-racer').perk?.title, 'TWITCHY TURNY');
 const supercarPerk = getProductionTrophyRoadReward('supercar');
 assert.equal(supercarPerk?.threshold, 2300);
 assert.equal(supercarPerk?.perkTitle, 'FLOW SHIFT');
-assert.match(supercarPerk?.perkDescription || '', /FLOW ×2 or higher/);
+assert.match(supercarPerk?.perkDescription || '', /FLOW ×3 or higher/);
 assert.match(supercarPerk?.perkDescription || '', /adds three attribute points without reductions/);
 assert.equal(getCarDefinition('supercar').perk?.title, 'FLOW SHIFT');
 assert.match(supercarPerk?.description || '', /<strong>FLOW SHIFT:<\/strong>/);
