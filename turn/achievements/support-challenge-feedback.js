@@ -161,6 +161,12 @@ function installStyles() {
 }
 
 function installPillLaneCoordinator() {
+  if (
+    typeof globalThis.MutationObserver !== 'function'
+    || typeof globalThis.HTMLElement !== 'function'
+    || typeof document.querySelectorAll !== 'function'
+  ) return () => {};
+
   const tracked = new Set();
 
   const update = () => {
@@ -211,7 +217,7 @@ function clearCompactRacePill() {
   globalThis.clearTimeout(compactRacePillConcealTimer);
   compactRacePillTimer = 0;
   compactRacePillConcealTimer = 0;
-  activeCompactRacePill?.remove();
+  activeCompactRacePill?.remove?.();
   activeCompactRacePill = null;
 }
 
@@ -234,9 +240,11 @@ export function showCompactRacePill(label, { tone = 'blue', duration = 1800 } = 
   document.body.appendChild(toast);
   activeCompactRacePill = toast;
 
-  globalThis.requestAnimationFrame(() => {
-    if (activeCompactRacePill === toast) toast.classList.add('is-visible');
-  });
+  const reveal = () => {
+  if (activeCompactRacePill === toast) toast.classList.add('is-visible');
+};
+  if (typeof globalThis.requestAnimationFrame === 'function') globalThis.requestAnimationFrame(reveal);
+  else globalThis.setTimeout(reveal, 0);
   compactRacePillTimer = globalThis.setTimeout(() => {
     if (activeCompactRacePill !== toast) return;
     compactRacePillTimer = 0;
