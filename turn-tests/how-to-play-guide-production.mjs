@@ -40,6 +40,8 @@ assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong
 assert.match(guide, /BRAKE stops at zero without reversing/);
 assert.match(guide, /slide outward into <strong>REVERSE<\/strong>/);
 assert.match(guide, /slide outward past it into <strong>LOCK<\/strong>/);
+assert.match(guide, /<strong>Clean driving<\/strong> simply means staying on the track/);
+assert.match(guide, /some perks and achievements combine it with speed or time targets/);
 assert.match(guide, /<strong>DRIFT<\/strong> charges <strong>BOOST<\/strong> as you slide/);
 assert.match(guide, /With BOOST full, keep using DRIFT to build purple <strong>OVERCHARGE<\/strong>/);
 assert.match(guide, /<details class="m8-guide-disclosure m8-overcharge-guide" data-how-to-play-disclosure="catch-and-use-overcharge">/);

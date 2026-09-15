@@ -178,7 +178,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
   }),
   'race-future': Object.freeze({
     title: 'OVERDRIVE',
-    description: 'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.'
+    description: 'The longer you drive fast and clean, the higher the speed cap becomes. Leaving the track or colliding resets it.'
   }),
   firetruck: SIRENS_PERK,
   police: SIRENS_PERK,

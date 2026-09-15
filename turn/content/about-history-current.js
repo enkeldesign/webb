@@ -284,6 +284,21 @@ const FLOW_SHIFT_X3_HISTORY = Object.freeze({
   ])
 });
 
+const OVERDRIVE_FAST_CLEAN_HISTORY = Object.freeze({
+  period: '15 September',
+  title: 'OVERDRIVE rewards fast clean driving',
+  paragraphs: Object.freeze([
+    'TURN 1.20.5 makes OVERDRIVE build only while FUTURE RACER is travelling at 200 km/h or faster. Slowing below 200 km/h pauses the build without losing it; leaving the track or colliding still resets all accumulated OVERDRIVE.',
+    'OVERDRIVE LOST now appears only after at least one 10% milestone pill has been shown. HOW TO PLAY also defines clean driving consistently across TURN as staying on the track, while speed and time requirements remain separate challenge conditions.'
+  ]),
+  milestones: Object.freeze([
+    'OVERDRIVE build requires 200 km/h or more and pauses below the threshold',
+    'OVERDRIVE LOST only after visible milestone feedback',
+    'HOW TO PLAY defines clean driving as staying on track',
+    'TURN 1.20.5 · 2026.09.15-r241'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -315,7 +330,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   SUPPORT_CHALLENGE_FEEDBACK_HISTORY,
   SUPPORT_CHALLENGE_LIFECYCLE_HISTORY,
   PERK_FEEDBACK_OVERDRIVE_HISTORY,
-  FLOW_SHIFT_X3_HISTORY
+  FLOW_SHIFT_X3_HISTORY,
+  OVERDRIVE_FAST_CLEAN_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -366,13 +382,15 @@ export const CHANGELOG = Object.freeze([
     entries: Object.freeze([
       Object.freeze(['1.20.3 r239', 'Uses the thin challenge-style pill for LEARNER CAR GRADUATED feedback, adds blue FLOW SHIFT ACTIVE / LOST pills, and lets FUTURE RACER OVERDRIVE keep raising its speed ceiling.']),
       Object.freeze(['Uncapped OVERDRIVE', 'Keeps the existing +6% per five clean seconds rate indefinitely until the car leaves the road or collides.']),
-      Object.freeze(['1.20.4 r240', 'Raises SUPERCAR FLOW SHIFT activation from FLOW ×2 to FLOW ×3 and retunes FUTURE RACER OVERDRIVE to +5% per five clean seconds with blue 10% milestone and LOST pills.'])
+      Object.freeze(['1.20.4 r240', 'Raises SUPERCAR FLOW SHIFT activation from FLOW ×2 to FLOW ×3 and retunes FUTURE RACER OVERDRIVE to +5% per five clean seconds with blue 10% milestone and LOST pills.']),
+      Object.freeze(['1.20.5 r241', 'Builds FUTURE RACER OVERDRIVE only at 200 km/h or faster, pauses progress below that speed, and only shows OVERDRIVE LOST after visible milestone feedback.']),
+      Object.freeze(['Clean driving', 'Defines clean driving in HOW TO PLAY as staying on the track; speed and time targets remain separate requirements.'])
     ])
   })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.20.4',
-  build: '2026.09.15-r240',
-  note: 'TURN 1.20.4 makes FLOW SHIFT a FLOW ×3 reward and gives OVERDRIVE clearer milestone feedback.'
+  version: '1.20.5',
+  build: '2026.09.15-r241',
+  note: 'TURN 1.20.5 makes OVERDRIVE reward fast clean driving and clarifies clean driving across TURN.'
 });

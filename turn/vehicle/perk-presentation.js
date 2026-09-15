@@ -1,9 +1,9 @@
-// OVERDRIVE deliberately has no top-end ceiling; keep the five-second gain explicit in player-facing copy.
+// OVERDRIVE deliberately has no top-end ceiling; player-facing copy describes the fast, clean-driving requirement without exposing tuning numbers.
 export const FUTURE_RACER_REWARD_PERK_DESCRIPTION =
-  'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.';
+  'The longer you drive fast and clean, the higher the speed cap becomes. Leaving the track or colliding resets it.';
 
 export const FUTURE_RACER_CAR_PERK_DESCRIPTION =
-  'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.';
+  'The longer you drive fast and clean, the higher the speed cap becomes. Leaving the track or colliding resets it.';
 
 // FLOW ×2 remains ordinary SHIFT; the no-reduction perk starts at the ×3 boundary.
 export const SUPERCAR_FLOW_SHIFT_PERK_DESCRIPTION =

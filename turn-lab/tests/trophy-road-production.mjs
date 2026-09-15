@@ -219,7 +219,7 @@ assert.match(mountainReward?.description || '', /waterfall/i);
 
 const futurePerk = getProductionTrophyRoadReward('future-racer');
 assert.equal(futurePerk?.perkTitle, 'OVERDRIVE');
-assert.equal(futurePerk?.perkDescription, 'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.');
+assert.equal(futurePerk?.perkDescription, 'The longer you drive fast and clean, the higher the speed cap becomes. Leaving the track or colliding resets it.');
 assert.match(futurePerk?.description || '', /<strong>OVERDRIVE:<\/strong>/);
 
 const racePerk = getProductionTrophyRoadReward('race-car');
