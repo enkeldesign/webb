@@ -1,0 +1,75 @@
+name: TURN r239 platform release fix v2
+
+on:
+  push:
+    branches:
+      - feat/perk-feedback-overdrive-r239
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/perk-feedback-overdrive-r239
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Make platform-context release-owned
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('turn/scripts/release.mjs')
+          source = p.read_text()
+          marker = "function synchronizePerkFeedbackTargets(importMap, release) {"
+          helper = """function synchronizePlatformContextTarget(importMap, release) {
+            const imports = importMap.imports ||= {};
+            imports['/turn/platform/platform-context.js']
+              = `/turn/platform/platform-context.js?build=${release.cacheKey}`;
+          }
+          
+          """
+          if helper.strip() not in source:
+              if source.count(marker) != 1:
+                  raise SystemExit('Expected one perk feedback helper marker')
+              source = source.replace(marker, helper + marker, 1)
+
+          replacements = [
+              (
+                  "    synchronizeAchievementProgressionTargets(importMap, release);\n    synchronizePerkFeedbackTargets(importMap, release);",
+                  "    synchronizeAchievementProgressionTargets(importMap, release);\n    synchronizePlatformContextTarget(importMap, release);\n    synchronizePerkFeedbackTargets(importMap, release);"
+              ),
+              (
+                  "  synchronizeAchievementProgressionTargets(importMap, release);\n  synchronizePerkFeedbackTargets(importMap, release);",
+                  "  synchronizeAchievementProgressionTargets(importMap, release);\n  synchronizePlatformContextTarget(importMap, release);\n  synchronizePerkFeedbackTargets(importMap, release);"
+              )
+          ]
+          for before, after in replacements:
+              if source.count(before) != 1:
+                  raise SystemExit(f'Expected one release synchronization call site, found {source.count(before)}')
+              source = source.replace(before, after, 1)
+          p.write_text(source)
+          PY
+      - name: Regenerate and verify release surfaces
+        run: |
+          node turn/scripts/release.mjs --write
+          node turn/scripts/release.mjs --check
+          node turn-tests/platform-production.mjs
+          node turn-tests/release-composition-production.mjs --base-ref=origin/main
+          node turn-tests/support-challenges-production.mjs
+          node turn-tests/flow-shift-tuning-production.mjs
+          node turn-lab/tests/vehicle-drift-production.mjs
+      - name: Remove temporary workflows and commit
+        run: |
+          rm .github/workflows/tmp-r239-platform-release-fix.yml
+          rm .github/workflows/tmp-r239-platform-release-fix-v2.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Advance platform context with TURN releases"
+          git push origin HEAD:feat/perk-feedback-overdrive-r239
