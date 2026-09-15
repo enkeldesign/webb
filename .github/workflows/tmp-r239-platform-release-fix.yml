@@ -38,11 +38,21 @@ jobs:
               if source.count(marker) != 1:
                   raise SystemExit('Expected one perk feedback helper marker')
               source = source.replace(marker, helper + marker, 1)
-          call_marker = "    synchronizeAchievementProgressionTargets(importMap, release);\n    synchronizePerkFeedbackTargets(importMap, release);"
-          call_replacement = "    synchronizeAchievementProgressionTargets(importMap, release);\n    synchronizePlatformContextTarget(importMap, release);\n    synchronizePerkFeedbackTargets(importMap, release);"
-          if source.count(call_marker) != 2:
-              raise SystemExit(f'Expected two release synchronization call sites, found {source.count(call_marker)}')
-          source = source.replace(call_marker, call_replacement)
+
+          replacements = [
+              (
+                  "    synchronizeAchievementProgressionTargets(importMap, release);\n    synchronizePerkFeedbackTargets(importMap, release);",
+                  "    synchronizeAchievementProgressionTargets(importMap, release);\n    synchronizePlatformContextTarget(importMap, release);\n    synchronizePerkFeedbackTargets(importMap, release);"
+              ),
+              (
+                  "  synchronizeAchievementProgressionTargets(importMap, release);\n  synchronizePerkFeedbackTargets(importMap, release);",
+                  "  synchronizeAchievementProgressionTargets(importMap, release);\n  synchronizePlatformContextTarget(importMap, release);\n  synchronizePerkFeedbackTargets(importMap, release);"
+              )
+          ]
+          for before, after in replacements:
+              if source.count(before) != 1:
+                  raise SystemExit(f'Expected one release synchronization call site, found {source.count(before)}')
+              source = source.replace(before, after, 1)
           p.write_text(source)
           PY
       - name: Regenerate and verify release surfaces
