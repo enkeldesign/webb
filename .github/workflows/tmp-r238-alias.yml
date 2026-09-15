@@ -1,0 +1,29 @@
+name: Temporary TURN r238 alias preparation
+
+on:
+  push:
+    branches:
+      - fix/platform-context-identity-r238
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/platform-context-identity-r238
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node turn-tests/tmp-r238-platform-alias-prep.mjs
+      - run: git rm turn-tests/tmp-r238-platform-alias-prep.mjs .github/workflows/tmp-r238-alias.yml
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn turn-next turn-lab turn-tests yourturn
+          git commit -m "Canonicalize TURN platform context release identity"
+          git push origin HEAD:fix/platform-context-identity-r238
