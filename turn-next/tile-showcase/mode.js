@@ -16,18 +16,17 @@ const TILE_FOOTPRINT = 3 * TILE_SCALE;
 const SAMPLE_COUNT = 920;
 const CAR_CLEARANCE = 0.18;
 const PITCH_RESPONSE = 10.5;
-const TILE_STEP = 20;
 const loader = new GLTFLoader();
 const tileCache = new Map();
 let installed = false;
 
 const CONTROL_POINTS = Object.freeze([
-  [0, 0, 1], [92, -18, 4], [168, -74, 13], [226, -158, 26],
-  [196, -250, 40], [105, -326, 51], [8, -308, 54], [-82, -238, 45],
-  [-132, -132, 28], [-104, -28, 10], [-42, 72, 3], [-116, 154, 6],
-  [-218, 178, 8], [-308, 112, 10], [-300, 10, 14], [-232, -102, 21],
-  [-302, -220, 31], [-248, -338, 24], [-116, -400, 16], [44, -408, 11],
-  [194, -354, 7], [302, -254, 4], [334, -118, 2], [282, 4, 1], [142, 66, 1]
+  [0, 0, 1], [84, -18, 4], [156, -68, 13], [216, -150, 26],
+  [190, -238, 40], [104, -312, 51], [10, -300, 54], [-72, -232, 45],
+  [-124, -132, 28], [-100, -34, 10], [-40, 68, 3], [-112, 146, 6],
+  [-210, 170, 8], [-296, 108, 10], [-292, 14, 14], [-228, -94, 21],
+  [-296, -214, 31], [-242, -328, 24], [-112, -390, 16], [42, -398, 11],
+  [186, -348, 7], [292, -252, 4], [324, -120, 2], [274, 2, 1], [136, 62, 1]
 ]);
 
 export async function installTileShowcaseMode() {
@@ -41,15 +40,7 @@ export async function installTileShowcaseMode() {
   installed = true;
   installStylesheet();
   const hud = createHud();
-  const session = {
-    active: false,
-    loading: false,
-    data: null,
-    snapshot: null,
-    frame: 0,
-    smoothedPitch: 0,
-    returnFocus: null
-  };
+  const session = { active: false, loading: false, data: null, snapshot: null, frame: 0, smoothedPitch: 0, returnFocus: null };
   const launcher = createLauncher(menu, () => void startShowcase(session, { runtime, raceSession, home }, hud));
   session.returnFocus = launcher;
   hud.querySelector('[data-tile-leave]').addEventListener('click', () => void leaveShowcase(session, { runtime, raceSession, home }, hud));
@@ -92,7 +83,7 @@ function createHud() {
   hud.className = 'turn-next-tile-hud';
   hud.hidden = true;
   hud.setAttribute('aria-label', 'Tile track experiment');
-  hud.innerHTML = '<strong>TILE TRACK</strong><span>Kenney · elevation showcase</span><button type="button" data-tile-leave>LEAVE</button>';
+  hud.innerHTML = '<strong>TILE TRACK</strong><span>Kenney · connected tile world</span><button type="button" data-tile-leave>LEAVE</button>';
   document.body.appendChild(hud);
   return hud;
 }
@@ -106,7 +97,6 @@ async function startShowcase(session, context, hud) {
     const access = steeringMode === 'motion'
       ? await context.raceSession.prepareMotionAccess()
       : await context.raceSession.prepareManualAccess();
-
     session.snapshot = captureSnapshot(context.runtime, context.home);
     showMessage('BUILDING TILE TRACK…', 2400);
     session.data = await buildShowcaseWorld();
@@ -142,12 +132,7 @@ async function enterShowcase(session, { runtime, raceSession, home }, hud, acces
   runtime.trackSpatialIndex.replaceSamples(runtime.samples);
   runtime.trackWidth = TRACK_WIDTH;
   runtime.trackId = TRACK_ID;
-  runtime.activeTrack = Object.freeze({
-    id: TRACK_ID,
-    name: 'TILE TRACK',
-    freeRoamDistance: 850,
-    collisionProfile: data.collisionProfile
-  });
+  runtime.activeTrack = Object.freeze({ id: TRACK_ID, name: 'TILE TRACK', freeRoamDistance: 850, collisionProfile: data.collisionProfile });
   runtime.state.trackId = TRACK_ID;
   runtime.state.trackSampleCount = runtime.samples.length;
   runtime.scene.add(data.world);
@@ -158,12 +143,10 @@ async function enterShowcase(session, { runtime, raceSession, home }, hud, acces
     runtime.scene.fog.near = 260;
     runtime.scene.fog.far = 760;
   }
-
   globalThis.__turnGetTrackId = () => TRACK_ID;
   globalThis.__turnGetCollisionProfile = () => data.collisionProfile;
   globalThis.__turnIsForgivingSurface = () => false;
   runtime.openLot = () => leaveShowcase(session, { runtime, raceSession, home }, hud);
-
   home.hideHome();
   document.body.classList.add('turn-next-tile-active');
   hud.hidden = false;
@@ -206,7 +189,6 @@ function renderShowcaseFrame(runtime, data, session, dt) {
   const index = normalizeIndex(state.nearestTrackIndex, data.samples.length);
   const surfaceY = heightAtRoad(data.samples, state.position.x, state.position.z, index);
   state.position.y = surfaceY + CAR_CLEARANCE;
-
   const forward = runtime.getForward();
   const probe = 4.2;
   const frontY = heightAtRoad(data.samples, state.position.x + forward.x * probe, state.position.z + forward.z * probe, index);
@@ -215,24 +197,12 @@ function renderShowcaseFrame(runtime, data, session, dt) {
   const alpha = 1 - Math.exp(-Math.max(0, dt || 0.016) * PITCH_RESPONSE);
   session.smoothedPitch = THREE.MathUtils.lerp(session.smoothedPitch, targetPitch, alpha);
   state.surfacePitch = session.smoothedPitch;
-
   runtime.playerCar.position.copy(state.position);
   runtime.playerCar.rotation.x = session.smoothedPitch;
   runtime.playerCar.rotation.y = state.heading + Math.PI;
   runtime.playerCar.rotation.z = -state.steering * 0.035 - state.velocity.dot(runtime.getRight()) * 0.0025;
   runtime.animateWheels?.(runtime.playerCar, state.steering, state.speed, dt);
-
-  updateRaceCameraState({
-    state,
-    camera: runtime.camera,
-    cameraPosition: runtime.cameraPosition,
-    cameraTarget: runtime.cameraTarget,
-    getForward: runtime.getForward,
-    getRight: runtime.getRight,
-    samples: data.samples,
-    maxSpeed: runtime.maxSpeed,
-    dt
-  });
+  updateRaceCameraState({ state, camera: runtime.camera, cameraPosition: runtime.cameraPosition, cameraTarget: runtime.cameraTarget, getForward: runtime.getForward, getRight: runtime.getRight, samples: data.samples, maxSpeed: runtime.maxSpeed, dt });
   return true;
 }
 
@@ -282,7 +252,6 @@ async function leaveShowcase(session, { runtime, raceSession, home }, hud) {
   runtime.state.freeRoam = false;
   document.body.classList.remove('turn-next-tile-active');
   hud.hidden = true;
-
   const snapshot = session.snapshot;
   disposeWorld(session.data?.world);
   if (snapshot) {
@@ -307,16 +276,10 @@ async function buildShowcaseWorld() {
   const world = new THREE.Group();
   world.name = 'TURN NEXT Kenney tile showcase';
   world.userData.turnNextTileShowcase = true;
-  installTerrain(world);
-  installRoad(world, samples);
   installWater(world);
   installScenery(world, samples);
-  await installKenneyTiles(world, samples);
-  return Object.freeze({
-    world,
-    samples,
-    collisionProfile: Object.freeze({ freeRoamDistance: 850, colliders: Object.freeze([]) })
-  });
+  await installConnectedKenneyWorld(world, samples);
+  return Object.freeze({ world, samples, collisionProfile: Object.freeze({ freeRoamDistance: 850, colliders: Object.freeze([]) }) });
 }
 
 function makeTrackSamples() {
@@ -338,92 +301,18 @@ function makeTrackSamples() {
   return samples;
 }
 
-function installRoad(world, samples) {
-  const geometry = new THREE.BufferGeometry();
-  const positions = [];
-  const colors = [];
-  const indices = [];
-  const asphalt = new THREE.Color(0x474b4c);
-  const highAsphalt = new THREE.Color(0x525453);
-  for (let index = 0; index < samples.length; index += 1) {
-    const sample = samples[index];
-    const half = TRACK_WIDTH / 2;
-    const left = sample.point.clone().addScaledVector(sample.normal, half);
-    const right = sample.point.clone().addScaledVector(sample.normal, -half);
-    left.y += 0.08;
-    right.y += 0.08;
-    positions.push(left.x, left.y, left.z, right.x, right.y, right.z);
-    const color = sample.point.y > 30 ? highAsphalt : asphalt;
-    colors.push(color.r, color.g, color.b, color.r, color.g, color.b);
-    const next = (index + 1) % samples.length;
-    indices.push(index * 2, index * 2 + 1, next * 2, index * 2 + 1, next * 2 + 1, next * 2);
-  }
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  const road = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, metalness: 0, side: THREE.DoubleSide }));
-  road.receiveShadow = true;
-  road.name = 'Continuous drive surface';
-  world.add(road);
-
-  const edgeGeometry = new THREE.BoxGeometry(0.24, 0.16, 3.5);
-  const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0xfff8e8, roughness: 0.9 });
-  for (let index = 0; index < samples.length; index += 8) {
-    const sample = samples[index];
-    const next = samples[(index + 4) % samples.length];
-    const yaw = Math.atan2(next.point.x - sample.point.x, next.point.z - sample.point.z);
-    for (const side of [-1, 1]) {
-      const marker = new THREE.Mesh(edgeGeometry, edgeMaterial);
-      marker.position.copy(sample.point).addScaledVector(sample.normal, side * (TRACK_WIDTH / 2 + 0.22));
-      marker.position.y += 0.2;
-      marker.rotation.y = yaw;
-      marker.castShadow = false;
-      marker.receiveShadow = true;
-      world.add(marker);
-    }
-  }
-}
-
-function installTerrain(world) {
-  const green = new THREE.Mesh(
-    new THREE.BoxGeometry(760, 5, 510),
-    new THREE.MeshStandardMaterial({ color: 0x91bd38, roughness: 1, flatShading: true })
-  );
-  green.position.set(70, -4, -125);
-  green.receiveShadow = true;
-  world.add(green);
-
-  const beige = new THREE.Mesh(
-    new THREE.BoxGeometry(610, 5, 430),
-    new THREE.MeshStandardMaterial({ color: 0xd6c38b, roughness: 1, flatShading: true })
-  );
-  beige.position.set(-60, -3.5, -300);
-  beige.receiveShadow = true;
-  world.add(beige);
-
-  const upland = new THREE.Mesh(
-    new THREE.ConeGeometry(150, 75, 7),
-    new THREE.MeshStandardMaterial({ color: 0x7ba632, roughness: 1, flatShading: true })
-  );
-  upland.position.set(40, 10, -275);
-  upland.rotation.y = 0.34;
-  upland.receiveShadow = true;
-  world.add(upland);
-}
-
 function installWater(world) {
   const water = new THREE.Mesh(
-    new THREE.PlaneGeometry(290, 210),
+    new THREE.PlaneGeometry(330, 240),
     new THREE.MeshStandardMaterial({ color: 0x79c9d7, roughness: 0.65, metalness: 0.04, transparent: true, opacity: 0.9 })
   );
   water.rotation.x = -Math.PI / 2;
-  water.position.set(-205, 1.2, 135);
+  water.position.set(-205, -1.8, 135);
   world.add(water);
 }
 
 function installScenery(world, samples) {
-  const treeCount = 150;
+  const treeCount = 120;
   const trunkGeometry = new THREE.CylinderGeometry(0.65, 0.8, 4.2, 5);
   const crownGeometry = new THREE.ConeGeometry(2.4, 7.6, 5);
   const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x76533b, roughness: 1 });
@@ -435,9 +324,9 @@ function installScenery(world, samples) {
   for (let index = 0; index < treeCount; index += 1) {
     const sample = samples[Math.floor(random() * samples.length * 0.56) % samples.length];
     const side = random() < 0.5 ? -1 : 1;
-    const offset = 18 + random() * 62;
+    const offset = 30 + random() * 82;
     dummy.position.copy(sample.point).addScaledVector(sample.normal, side * offset);
-    dummy.position.y = Math.max(2.1, sample.point.y * 0.55) + 2;
+    dummy.position.y = sample.point.y - 2 + 2.1;
     dummy.rotation.y = random() * Math.PI * 2;
     dummy.scale.setScalar(0.7 + random() * 0.8);
     dummy.updateMatrix();
@@ -453,47 +342,75 @@ function installScenery(world, samples) {
   world.add(trunks, crowns);
 }
 
-async function installKenneyTiles(world, samples) {
-  const placements = buildTilePlacements(samples);
+async function installConnectedKenneyWorld(world, samples) {
+  const placements = buildConnectedTilePlacements(samples);
   const uniqueIds = [...new Set(placements.map((placement) => placement.id))];
   await Promise.allSettled(uniqueIds.map((id) => loadTile(id)));
   for (const placement of placements) {
     const template = tileCache.get(placement.id);
     if (!template) continue;
-    const instance = makeTileInstance(template, placement);
-    world.add(instance);
+    world.add(makeTileInstance(template, placement));
   }
 }
 
-function buildTilePlacements(samples) {
+function buildConnectedTilePlacements(samples) {
   const placements = [];
-  const regions = [
-    { from: 0, to: 0.43, ids: GREEN_TILE_IDS },
-    { from: 0.43, to: 0.63, ids: WATER_TILE_IDS },
-    { from: 0.63, to: 1, ids: BEIGE_TILE_IDS }
-  ];
+  const used = new Set();
+  const totalLength = samples.at(-1)?.distance || 1;
+  const routeStep = TILE_FOOTPRINT * 0.94;
+  const sideOffsets = [-2, -1, 0, 1, 2];
+  const regionFor = (progress) => progress < 0.42
+    ? { ids: GREEN_TILE_IDS, kind: 'green' }
+    : progress < 0.64
+      ? { ids: WATER_TILE_IDS, kind: 'water' }
+      : { ids: BEIGE_TILE_IDS, kind: 'beige' };
+
+  let distance = 0;
   let serial = 0;
-  for (let index = 0; index < samples.length; index += TILE_STEP) {
-    const progress = index / samples.length;
-    const region = regions.find((candidate) => progress >= candidate.from && progress < candidate.to) || regions.at(-1);
-    const id = region.ids[serial % region.ids.length];
-    const sample = samples[index];
-    const ahead = samples[(index + Math.floor(TILE_STEP / 2)) % samples.length];
-    placements.push({ id, point: sample.point.clone(), yaw: Math.atan2(ahead.point.x - sample.point.x, ahead.point.z - sample.point.z), road: true, side: 0 });
-    if (serial % 2 === 0) {
-      const side = serial % 4 === 0 ? 1 : -1;
-      const sideId = region.ids[(serial * 3 + 5) % region.ids.length];
-      placements.push({
-        id: sideId,
-        point: sample.point.clone().addScaledVector(sample.normal, side * (TILE_FOOTPRINT * 1.15)),
-        yaw: Math.atan2(ahead.point.x - sample.point.x, ahead.point.z - sample.point.z) + (side > 0 ? Math.PI / 2 : -Math.PI / 2),
-        road: false,
-        side
-      });
+  while (distance < totalLength) {
+    const sample = sampleAtDistance(samples, distance);
+    const ahead = sampleAtDistance(samples, distance + routeStep * 0.6);
+    const progress = distance / totalLength;
+    const region = regionFor(progress);
+    const yaw = Math.atan2(ahead.point.x - sample.point.x, ahead.point.z - sample.point.z);
+
+    for (const lane of sideOffsets) {
+      const point = sample.point.clone().addScaledVector(sample.normal, lane * TILE_FOOTPRINT);
+      const gridKey = `${Math.round(point.x / TILE_FOOTPRINT)}:${Math.round(point.z / TILE_FOOTPRINT)}:${Math.round(point.y / (TILE_FOOTPRINT * 0.5))}`;
+      if (used.has(gridKey)) continue;
+      used.add(gridKey);
+      let idIndex = serial + lane * 7;
+      if (lane === 0) idIndex = serial;
+      const ids = region.ids;
+      const id = ids[((idIndex % ids.length) + ids.length) % ids.length];
+      placements.push({ id, point, yaw, road: lane === 0, side: lane, region: region.kind });
     }
+
+    distance += routeStep;
     serial += 1;
   }
   return placements;
+}
+
+function sampleAtDistance(samples, target) {
+  const total = samples.at(-1)?.distance || 1;
+  const wrapped = ((target % total) + total) % total;
+  let low = 0;
+  let high = samples.length - 1;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (samples[mid].distance < wrapped) low = mid + 1;
+    else high = mid;
+  }
+  const b = samples[low];
+  const a = samples[normalizeIndex(low - 1, samples.length)];
+  const span = Math.max(0.0001, b.distance - a.distance);
+  const t = THREE.MathUtils.clamp((wrapped - a.distance) / span, 0, 1);
+  const point = a.point.clone().lerp(b.point, t);
+  const tangent = a.tangent.clone().lerp(b.tangent, t).normalize();
+  const horizontal = new THREE.Vector3(tangent.x, 0, tangent.z).normalize();
+  const normal = new THREE.Vector3(-horizontal.z, 0, horizontal.x);
+  return { point, tangent, normal };
 }
 
 async function loadTile(id) {
@@ -530,7 +447,7 @@ function makeTileInstance(template, placement) {
   wrapper.add(clone);
   wrapper.scale.setScalar(TILE_SCALE);
   wrapper.position.copy(placement.point);
-  wrapper.position.y += placement.road ? -0.02 : -0.18;
+  wrapper.position.y -= 0.03;
   wrapper.rotation.y = placement.yaw + Math.PI / 2;
   return wrapper;
 }
@@ -563,5 +480,5 @@ function showMessage(text, duration = 1600) {
   if (!message) return;
   message.textContent = text;
   message.classList.add('show');
-  window.setTimeout(() => message.classList.remove('show'), duration);
+  globalThis.setTimeout(() => message.classList.remove('show'), duration);
 }
