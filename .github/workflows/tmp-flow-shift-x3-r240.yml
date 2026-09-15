@@ -69,21 +69,21 @@ jobs:
 
           p = Path('turn/content/about-history-current.js')
           s = p.read_text()
-          history = """const FLOW_SHIFT_X3_HISTORY = Object.freeze({
-  period: '15 September',
-  title: 'FLOW SHIFT asks for deeper FLOW',
-  paragraphs: Object.freeze([
-    'TURN 1.20.4 moves SUPERCAR’s FLOW SHIFT activation from FLOW ×2 to FLOW ×3. Ordinary SHIFT remains in effect at ×1 and ×2; reaching ×3 or higher removes SHIFT’s three reductions while the perk is active.',
-    'The blue FLOW SHIFT ACTIVE / LOST pills continue to follow the same threshold transition, so the feedback now marks the harder ×3 state without changing the perk’s +3 benefit.'
-  ]),
-  milestones: Object.freeze([
-    'FLOW SHIFT activates at FLOW ×3 instead of ×2',
-    '×2 keeps ordinary SHIFT balance',
-    'TURN 1.20.4 · 2026.09.15-r240'
-  ])
-});
-
-"""
+          history = (
+              "const FLOW_SHIFT_X3_HISTORY = Object.freeze({\n"
+              "  period: '15 September',\n"
+              "  title: 'FLOW SHIFT asks for deeper FLOW',\n"
+              "  paragraphs: Object.freeze([\n"
+              "    'TURN 1.20.4 moves SUPERCAR’s FLOW SHIFT activation from FLOW ×2 to FLOW ×3. Ordinary SHIFT remains in effect at ×1 and ×2; reaching ×3 or higher removes SHIFT’s three reductions while the perk is active.',\n"
+              "    'The blue FLOW SHIFT ACTIVE / LOST pills continue to follow the same threshold transition, so the feedback now marks the harder ×3 state without changing the perk’s +3 benefit.'\n"
+              "  ]),\n"
+              "  milestones: Object.freeze([\n"
+              "    'FLOW SHIFT activates at FLOW ×3 instead of ×2',\n"
+              "    '×2 keeps ordinary SHIFT balance',\n"
+              "    'TURN 1.20.4 · 2026.09.15-r240'\n"
+              "  ])\n"
+              "});\n\n"
+          )
           marker = 'const previousLatest = BASE_CHANGELOG.at(-1);\n'
           if s.count(marker) != 1:
               raise SystemExit('history insertion marker missing')
