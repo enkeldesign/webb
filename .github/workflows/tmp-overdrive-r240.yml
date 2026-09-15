@@ -1,0 +1,42 @@
+name: TURN r240 OVERDRIVE source patch
+
+on:
+  push:
+    branches:
+      - balance/flow-shift-x3-r240
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: balance/flow-shift-x3-r240
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Apply source patch
+        run: python .github/tmp-overdrive-r240.py
+      - name: Verify focused contracts
+        run: |
+          node --check turn/vehicle/physics.js
+          node turn-lab/tests/vehicle-drift-production.mjs
+          node turn-tests/post-soak-production.mjs
+          node turn-lab/tests/trophy-road-production.mjs
+          node turn-tests/flow-shift-tuning-production.mjs
+          node turn-tests/flow-shift-accessibility-production.mjs
+          node turn/scripts/release.mjs --check
+          node turn-tests/release-composition-production.mjs --base origin/main
+      - name: Commit source-only head
+        run: |
+          rm .github/tmp-overdrive-r240.py .github/workflows/tmp-overdrive-r240.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Retune OVERDRIVE and add milestone feedback"
+          git push origin HEAD:balance/flow-shift-x3-r240
