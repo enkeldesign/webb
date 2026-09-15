@@ -11,6 +11,7 @@ const REQUIRED_PORTS = Object.freeze({
   ])
 });
 
+// Share ownership across cache-busted ESM identities so every shell sees one adapter.
 const PLATFORM_REGISTRY_KEY = Symbol.for('turn.platform.context');
 
 function platformRegistry() {
