@@ -207,6 +207,22 @@ const platformContextSource = fs.readFileSync(new URL('../turn/platform/platform
 
 assert.match(platformContextSource, /Symbol\.for\('turn\.platform\.context'\)/);
 assert.doesNotMatch(platformContextSource, /let installedPlatform = null/);
+
+const releaseIdentity = JSON.parse(fs.readFileSync(new URL('../turn/release.json', import.meta.url), 'utf8'));
+const canonicalPlatformContext = '/turn/platform/platform-context.js?build=' + releaseIdentity.cacheKey;
+for (const [shellName, shellPath] of [
+  ['TURN', '../turn/index.html'],
+  ['TURN NEXT', '../turn-next/index.html'],
+  ['TURN LAB', '../turn-lab/index.html'],
+  ['YOUR TURN', '../yourturn/index.html']
+]) {
+  const shellSource = fs.readFileSync(new URL(shellPath, import.meta.url), 'utf8');
+  assert.ok(
+    shellSource.includes('"/turn/platform/platform-context.js": "' + canonicalPlatformContext + '"'),
+    shellName + ' must resolve platform-context.js to the current TURN build identity'
+  );
+}
+
 assert.match(productionApp, /installMotionLifecycleBridge\(\{ platform: webPlatform \}\)/);
 assert.match(productionApp, /installDisplayLifecycleBridge\(\{ platform: webPlatform \}\)/);
 assert.match(productionApp, /turnMotionLifecycle = 'platform-m5'/);
