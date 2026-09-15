@@ -28,15 +28,13 @@ jobs:
           from pathlib import Path
           p = Path('turn-lab/tests/trophy-road-production.mjs')
           s = p.read_text()
-          old = """assert.match(futurePerk?.perkDescription || '', /every five clean seconds/i);
-          assert.match(futurePerk?.perkDescription || '', /another 6%/i);
+          exact = "assert.equal(futurePerk?.perkDescription, 'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.');"
+          stale = """assert.match(futurePerk?.perkDescription || '', /another 6%/i);
           assert.match(futurePerk?.perkDescription || '', /no ceiling/i,
             'OVERDRIVE copy must explain its uncapped clean-driving speed growth');"""
-          new = """assert.equal(futurePerk?.perkDescription,
-            'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.');"""
-          if s.count(old) != 1:
-              raise SystemExit('stale Trophy Road OVERDRIVE copy contract missing')
-          p.write_text(s.replace(old, new, 1))
+          if s.count(exact) != 1 or s.count(stale) != 1:
+              raise SystemExit('post-patch Trophy Road OVERDRIVE contract shape unexpected')
+          p.write_text(s.replace(exact + '\n' + stale, exact, 1))
           PY
       - name: Verify focused contracts
         run: |
