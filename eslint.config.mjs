@@ -25,6 +25,7 @@ export default [
       'turn-next/m8-home.js',
       'turn-next/world-data.js',
       'turn-next/world-mode.js',
+      'turn-next/tile-showcase/*.js',
       'turn/input/motion.js',
       'turn/motion-safe-zone.js',
       'turn/platform/*.js',
