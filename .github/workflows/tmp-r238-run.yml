@@ -1,0 +1,28 @@
+name: Temporary TURN r238 preparation
+
+on:
+  push:
+    branches:
+      - fix/platform-context-identity-r238
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/platform-context-identity-r238
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node turn-tests/tmp-r238-platform-prep.mjs
+      - run: git rm turn-tests/tmp-r238-platform-prep.mjs .github/workflows/tmp-r238-run.yml
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn turn-next turn-lab turn-tests yourturn
+          git commit -m "Share TURN platform context across module identities"
+          git push origin HEAD:fix/platform-context-identity-r238
