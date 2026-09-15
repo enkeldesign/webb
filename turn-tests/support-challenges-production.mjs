@@ -93,6 +93,10 @@ assert.match(feedbackSource, /turn-action-warning, #ffd43b/,
   'LEARNER CAR GRADUATED feedback must remain yellow');
 assert.match(feedbackSource, /turn-compact-race-pill--blue/,
   'FLOW SHIFT feedback must reuse the compact pill with a blue information treatment');
+assert.match(feedbackSource, /typeof globalThis\.MutationObserver !== 'function'/,
+  'The shared pill lane must stay import-safe in partial DOM environments without MutationObserver');
+assert.match(feedbackSource, /typeof globalThis\.requestAnimationFrame === 'function'/,
+  'Compact race pills must tolerate partial DOM environments without requestAnimationFrame');
 assert.doesNotMatch(feedbackSource, /revision=/,
   'The new support feedback module must not invent manual revision identities');
 
