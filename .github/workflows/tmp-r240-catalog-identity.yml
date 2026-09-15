@@ -45,6 +45,11 @@ jobs:
 
           p = Path('turn-tests/release-composition-production.mjs')
           s = p.read_text()
+          old = "  '/turn/vehicle/catalog.js': '/turn/vehicle/catalog.js?revision=r253-supercar-release',"
+          new = "  '/turn/vehicle/catalog.js': `/turn/vehicle/catalog.js?build=${currentRelease.cacheKey}` ,"
+          if s.count(old) != 1:
+              raise SystemExit('critical vehicle catalog route marker missing')
+          s = s.replace(old, new, 1)
           marker = "for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['TURN NEXT', nextImportMap], ['YOUR TURN', yourTurnImportMap]]) {\n  assert.equal(importMap.imports['/turn/vehicle/car-visual-resources.js'],"
           replacement = """for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['TURN NEXT', nextImportMap], ['YOUR TURN', yourTurnImportMap]]) {
             const catalogTarget = `/turn/vehicle/catalog.js?build=${headGraph.release.cacheKey}`;
