@@ -115,6 +115,9 @@ jobs:
       - name: Run production race and replay regression tests
         run: node turn-tests/race-production.mjs
 
+      - name: Run Spectate UI-state snapshot regression
+        run: node turn-tests/spectate-ui-state-production.mjs
+
       - name: Run rival persistence transaction regression
         run: node turn-tests/rival-persistence-production.mjs
 
