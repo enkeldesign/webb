@@ -25,9 +25,10 @@ The showcase intentionally tests the visual/physical authoring idea before any s
 
 - a long authored closed route with green, water/engineered and beige regions
 - one global Kenney tile scale chosen to keep the road footprint near current TURN road width
-- a continuous TURN drive surface beneath the modular visual construction so the first experiment can judge layout, scale and feel independently of future tile semantics
-- substantial elevation, including a long climb, high section, descents and a raised water district
-- car height sampled from the drive surface and smoothed X-axis pitch derived from the road immediately ahead/behind the car
+- the visible road and surrounding ground are composed from connected Kenney tiles; there is no separate rendered TURN asphalt ribbon underneath
+- route-adjacent ground tiles are placed continuously around the drive line so the scene reads as one tiled world rather than isolated props on a background plane
+- substantial elevation, including a long climb, high section and descents
+- car height is sampled from the route profile and smoothed X-axis pitch is derived from the road immediately ahead/behind the car
 - the normal TURN chase camera remains responsible for camera readability rather than inheriting car pitch directly
 - many different Kenney tile meshes placed from simple authored placement data
 - repeated low-poly scenery uses instancing
