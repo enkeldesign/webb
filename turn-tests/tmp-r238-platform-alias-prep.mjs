@@ -23,8 +23,9 @@ addPlatformAlias('turn/index.html');
 addPlatformAlias('turn-lab/index.html');
 addPlatformAlias('yourturn/index.html');
 
-// TURN NEXT entry is generated from production TURN. Regenerate rather than hand-edit it.
+// Refresh TURN NEXT's parity identity first, then canonicalize its own import map.
 execFileSync('node', ['turn-next/scripts/build-parity-entry.mjs'], { stdio: 'inherit' });
+addPlatformAlias('turn-next/index.html');
 
 const testPath = 'turn-tests/platform-production.mjs';
 let testSource = fs.readFileSync(testPath, 'utf8');
