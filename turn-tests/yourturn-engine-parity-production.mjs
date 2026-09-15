@@ -67,10 +67,10 @@ for (const catalogSpecifier of [
     `YOUR TURN must use TURN's exact canonical vehicle catalog route for ${catalogSpecifier}`
   );
   assert.equal(yourTurnCatalogUrl.pathname, '/turn/vehicle/catalog.js');
-  assert.match(
+  assert.equal(
     yourTurnCatalogUrl.search,
-    /r253-supercar-release/,
-    'TURN and YOUR TURN must cache-bust the shared vehicle catalog instead of carrying stale or separate data'
+    `?build=${release.cacheKey}`,
+    'TURN and YOUR TURN must cache-bust the shared vehicle catalog through the current release build'
   );
 }
 

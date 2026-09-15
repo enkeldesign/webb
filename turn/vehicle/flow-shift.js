@@ -10,7 +10,7 @@ import {
 import { showCompactRacePill } from '../achievements/support-challenge-feedback.js';
 
 export const FLOW_SHIFT_VEHICLE_ID = 'supercar';
-export const FLOW_SHIFT_MIN_MULTIPLIER = 2;
+export const FLOW_SHIFT_MIN_MULTIPLIER = 3;
 
 const FLOW_SHIFT_STAT_KEYS = Object.freeze([
   'speed',
@@ -380,7 +380,7 @@ function onShiftChange(event) {
       applyCurrentFlowShift(state, { greatFlow: true });
     }
   } else {
-    // Below ×2 the regular SHIFT implementation has already applied its normal
+    // Below ×3 the regular SHIFT implementation has already applied its normal
     // +3 / -3 tuning before this semantic event is dispatched.
     state.flowShiftGainKeys = null;
     state.vehicleEffectiveTuning = state.vehicleTuning || null;

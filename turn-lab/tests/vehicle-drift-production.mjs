@@ -453,27 +453,31 @@ const futureRacer = CAR_CATALOG.find((car) => car.id === 'race-future');
 assert.ok(futureRacer, 'Future Racer must remain in the vehicle catalog');
 assert.equal(futureRacer.perk?.title, 'OVERDRIVE');
 assert.equal(OVERDRIVE_BUILD_SECONDS, 5, 'OVERDRIVE must retain five clean seconds as its gain interval');
-assert.equal(OVERDRIVE_SPEED_GAIN_PER_BUILD, 0.06, 'Each clean OVERDRIVE interval must add six percent to the speed ceiling');
+assert.equal(OVERDRIVE_SPEED_GAIN_PER_BUILD, 0.05, 'Each clean OVERDRIVE interval must add five percent to the speed ceiling');
+assert.match(physicsSource, /showCompactRacePill\(`OVERDRIVE \$\{nextMilestonePercent\}%`, \{ tone: 'blue' \}\)/,
+  'OVERDRIVE must announce each 10 percent speed-cap milestone through the thin blue pill');
+assert.match(physicsSource, /showCompactRacePill\('OVERDRIVE LOST', \{ tone: 'blue' \}\)/,
+  'Leaving the track or colliding must announce OVERDRIVE LOST through the thin blue pill');
 assert.equal(vehicleHasOverdrive(futureRacer.id), true, 'Future Racer must own OVERDRIVE');
 for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race-future')) {
   assert.equal(vehicleHasOverdrive(car.id), false, `${car.name} must not receive OVERDRIVE`);
 }
 assert.equal(getOverdriveSpeedMultiplier(0), 1);
-assert.ok(Math.abs(getOverdriveSpeedMultiplier(2.5) - 1.03) < 1e-12);
-assert.equal(getOverdriveSpeedMultiplier(5), 1.06);
-assert.equal(getOverdriveSpeedMultiplier(10), 1.12);
-assert.equal(getOverdriveSpeedMultiplier(20), 1.24, 'OVERDRIVE must keep climbing with no speed-ceiling cap');
+assert.ok(Math.abs(getOverdriveSpeedMultiplier(2.5) - 1.025) < 1e-12);
+assert.equal(getOverdriveSpeedMultiplier(5), 1.05);
+assert.equal(getOverdriveSpeedMultiplier(10), 1.10);
+assert.equal(getOverdriveSpeedMultiplier(20), 1.20, 'OVERDRIVE must keep climbing with no speed-ceiling cap');
 
 const overdriveState = { vehicleId: 'race-future', speed: 40, overdriveCleanSeconds: 0 };
 updateVehicleOverdriveState({ state: overdriveState, dt: 2.5, speed: 40 });
 assert.equal(overdriveState.overdriveCleanSeconds, 2.5);
-assert.ok(Math.abs(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds) - 1.03) < 1e-12);
+assert.ok(Math.abs(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds) - 1.025) < 1e-12);
 updateVehicleOverdriveState({ state: overdriveState, dt: 2.5, speed: 40 });
 assert.equal(overdriveState.overdriveCleanSeconds, 5);
-assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.06);
+assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.05);
 updateVehicleOverdriveState({ state: overdriveState, dt: 5, speed: 40 });
 assert.equal(overdriveState.overdriveCleanSeconds, 10);
-assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.12);
+assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.10);
 updateVehicleOverdriveState({ state: overdriveState, offRoad: true });
 assert.equal(overdriveState.overdriveCleanSeconds, 0, 'Leaving the road must reset OVERDRIVE immediately');
 overdriveState.overdriveCleanSeconds = 5;

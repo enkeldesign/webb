@@ -144,7 +144,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
   }),
   supercar: Object.freeze({
     title: 'FLOW SHIFT',
-    description: 'At FLOW ×2 or higher, SHIFT adds its three attribute points without reductions. SHIFT again moves the boost to the other three attributes.'
+    description: 'At FLOW ×3 or higher, SHIFT adds its three attribute points without reductions. SHIFT again moves the boost to the other three attributes.'
   }),
   'sedan-sports': Object.freeze({
     title: 'DRIFT DEMON',
@@ -178,7 +178,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
   }),
   'race-future': Object.freeze({
     title: 'OVERDRIVE',
-    description: 'A few seconds of staying on-track raises the speed cap. Leaving the track or colliding resets it.'
+    description: 'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.'
   }),
   firetruck: SIRENS_PERK,
   police: SIRENS_PERK,

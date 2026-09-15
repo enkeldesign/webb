@@ -13,7 +13,7 @@ const comparedExtensions = new Set(['.css', '.js', '.mjs']);
 const currentRelease = JSON.parse(await fs.readFile(path.join(repositoryRoot, 'turn/release.json'), 'utf8'));
 
 const criticalReleaseTargets = Object.freeze({
-  '/turn/vehicle/catalog.js': '/turn/vehicle/catalog.js?revision=r253-supercar-release',
+  '/turn/vehicle/catalog.js': `/turn/vehicle/catalog.js?build=${currentRelease.cacheKey}` ,
   '/turn/vehicle/car-models.js': `/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=${currentRelease.cacheKey}`
 });
 
@@ -414,6 +414,15 @@ for (const file of ['car-models.js', 'car-visual-resources.js', 'learner-car-liv
   assertSingleActiveIdentity(headGraph, `turn/vehicle/${file}`, 'Production TURN visual ownership');
 }
 for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['TURN NEXT', nextImportMap], ['YOUR TURN', yourTurnImportMap]]) {
+  const catalogTarget = `/turn/vehicle/catalog.js?build=${headGraph.release.cacheKey}`;
+  assert.equal(importMap.imports['/turn/vehicle/catalog.js'], catalogTarget,
+    `${label} must route the canonical vehicle catalog through the current release build`);
+  for (const target of Object.values(importMap.imports || {})) {
+    if (typeof target !== 'string') continue;
+    if (new URL(target, productionDocumentUrl).pathname !== '/turn/vehicle/catalog.js') continue;
+    assert.equal(target, catalogTarget,
+      `${label} must route every active vehicle catalog alias through the current release build`);
+  }
   assert.equal(importMap.imports['/turn/vehicle/car-visual-resources.js'],
     `/turn/vehicle/car-visual-resources.js?build=${headGraph.release.cacheKey}`,
     `${label} must use the current visual resource owner`);

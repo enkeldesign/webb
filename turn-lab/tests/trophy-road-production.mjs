@@ -219,10 +219,7 @@ assert.match(mountainReward?.description || '', /waterfall/i);
 
 const futurePerk = getProductionTrophyRoadReward('future-racer');
 assert.equal(futurePerk?.perkTitle, 'OVERDRIVE');
-assert.match(futurePerk?.perkDescription || '', /every five clean seconds/i);
-assert.match(futurePerk?.perkDescription || '', /another 6%/i);
-assert.match(futurePerk?.perkDescription || '', /no ceiling/i,
-  'OVERDRIVE copy must explain its uncapped clean-driving speed growth');
+assert.equal(futurePerk?.perkDescription, 'The longer you drive cleanly and stay on track, the higher the speed cap becomes. Leaving the track or colliding resets it.');
 assert.match(futurePerk?.description || '', /<strong>OVERDRIVE:<\/strong>/);
 
 const racePerk = getProductionTrophyRoadReward('race-car');
@@ -270,7 +267,7 @@ assert.equal(getCarDefinition('toy-racer').perk?.title, 'TWITCHY TURNY');
 const supercarPerk = getProductionTrophyRoadReward('supercar');
 assert.equal(supercarPerk?.threshold, 2300);
 assert.equal(supercarPerk?.perkTitle, 'FLOW SHIFT');
-assert.match(supercarPerk?.perkDescription || '', /FLOW ×2 or higher/);
+assert.match(supercarPerk?.perkDescription || '', /FLOW ×3 or higher/);
 assert.match(supercarPerk?.perkDescription || '', /adds three attribute points without reductions/);
 assert.equal(getCarDefinition('supercar').perk?.title, 'FLOW SHIFT');
 assert.match(supercarPerk?.description || '', /<strong>FLOW SHIFT:<\/strong>/);

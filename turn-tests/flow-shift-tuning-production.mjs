@@ -7,7 +7,9 @@ import {
   getVehicleStatTotal
 } from '../turn/vehicle/catalog.js';
 import {
+  FLOW_SHIFT_MIN_MULTIPLIER,
   installFlowShiftRuntime,
+  isGreatFlow,
   resolveFlowShiftStats
 } from '../turn/vehicle/flow-shift.js';
 import {
@@ -17,6 +19,9 @@ import {
 } from '../turn/vehicle/shift-tuning.js';
 
 const flowShiftSource = await fs.readFile(new URL('../turn/vehicle/flow-shift.js', import.meta.url), 'utf8');
+assert.equal(FLOW_SHIFT_MIN_MULTIPLIER, 3, 'FLOW SHIFT must activate at FLOW ×3');
+assert.equal(isGreatFlow(2), false, 'FLOW ×2 must remain ordinary SHIFT');
+assert.equal(isGreatFlow(3), true, 'FLOW ×3 must activate FLOW SHIFT');
 assert.ok(flowShiftSource.includes("showCompactRacePill(nextGreatFlow ? 'FLOW SHIFT ACTIVE' : 'FLOW SHIFT LOST'"),
   'SUPERCAR must announce FLOW SHIFT threshold activation and loss through the compact race pill');
 assert.match(flowShiftSource, /tone: 'blue'/,
@@ -157,7 +162,7 @@ function finishTuningTransition(expectedStats, expectedTuning, label) {
 }
 
 try {
-  eventTarget.emit('turn:flow-score-event', { type: 'score', multiplier: 2 });
+  eventTarget.emit('turn:flow-score-event', { type: 'score', multiplier: 3 });
   publishOrdinaryShift({ active: false, stats: baseStats, gainKeys: DEFAULT_GAINS });
   assertPublishedState(state, defaultFlowStats, defaultFlowTuning, 'FLOW SHIFT default');
 
@@ -201,7 +206,7 @@ try {
   });
 
   for (const reason of ['runtime-ready', 'race-started', 'race-reset', 'track-changed', 'home-open']) {
-    eventTarget.emit('turn:flow-score-event', { type: 'score', multiplier: 2 });
+    eventTarget.emit('turn:flow-score-event', { type: 'score', multiplier: 3 });
     publishOrdinaryShift({ active: false, stats: baseStats, gainKeys: DEFAULT_GAINS });
     publishOrdinaryShift({ active: true, stats: ordinaryUpStats, gainKeys: UP_GAINS });
     assert.ok(state.vehicleTuning.topSpeedMultiplier > upFlowTuning.topSpeedMultiplier,
