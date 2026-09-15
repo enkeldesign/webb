@@ -35,7 +35,7 @@ const replacement = `assert.match(platformContextSource, /Symbol\\.for\\('turn\\
 assert.doesNotMatch(platformContextSource, /let installedPlatform = null/);
 
 const releaseIdentity = JSON.parse(fs.readFileSync(new URL('../turn/release.json', import.meta.url), 'utf8'));
-const canonicalPlatformContext = \\`/turn/platform/platform-context.js?build=\${releaseIdentity.cacheKey}\\`;
+const canonicalPlatformContext = '/turn/platform/platform-context.js?build=' + releaseIdentity.cacheKey;
 for (const [shellName, shellPath] of [
   ['TURN', '../turn/index.html'],
   ['TURN NEXT', '../turn-next/index.html'],
@@ -44,8 +44,8 @@ for (const [shellName, shellPath] of [
 ]) {
   const shellSource = fs.readFileSync(new URL(shellPath, import.meta.url), 'utf8');
   assert.ok(
-    shellSource.includes(\`"/turn/platform/platform-context.js": "\${canonicalPlatformContext}"\`),
-    \\`\${shellName} must resolve platform-context.js to the current TURN build identity\\`
+    shellSource.includes('"/turn/platform/platform-context.js": "' + canonicalPlatformContext + '"'),
+    shellName + ' must resolve platform-context.js to the current TURN build identity'
   );
 }
 
