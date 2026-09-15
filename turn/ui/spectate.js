@@ -11,9 +11,15 @@ const spectate = {
   snapshot: null
 };
 
-function notifyUiState(reason) {
+function notifyUiState(runtime, reason) {
+  const state = runtime?.state || {};
   window.dispatchEvent(new CustomEvent('turn:ui-state-change', {
-    detail: { reason }
+    detail: {
+      reason,
+      mode: state.mode,
+      running: state.running,
+      trackId: state.trackId || runtime?.trackId || globalThis.__turnGetTrackId?.() || ''
+    }
   }));
 }
 
@@ -162,14 +168,14 @@ function installPublicApi(runtime) {
     globalThis.__turnDriftHeld = false;
     playerCar.visible = false;
     runtime.setRacePosition(null, state.competitorLaps.length + 1);
-    notifyUiState('spectate-started');
+    notifyUiState(runtime, 'spectate-started');
     return true;
   };
 
   globalThis.__turnNextSpectateV3 = () => {
     if (!spectate.active || !state.competitorLaps.length) return false;
     spectate.index = (spectate.index + 1) % state.competitorLaps.length;
-    notifyUiState('spectate-next');
+    notifyUiState(runtime, 'spectate-next');
     return true;
   };
 
@@ -195,7 +201,7 @@ function installPublicApi(runtime) {
       car.visible = false;
       hideCompetitorLabels(car);
     }
-    notifyUiState('spectate-stopped');
+    notifyUiState(runtime, 'spectate-stopped');
     return true;
   };
 }
