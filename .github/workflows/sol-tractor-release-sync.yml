@@ -1,0 +1,128 @@
+name: Temporary TURN Tractor release sync
+
+on:
+  push:
+    branches:
+      - sol/tractor-smv
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: sol/tractor-smv
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Add r242 and r243 release history
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'turn/content/about-history-current.js';
+          let source = fs.readFileSync(path, 'utf8');
+
+          if (!source.includes('const HOME_TAGLINE_FLOW_HISTORY')) {
+            const anchor = "const previousLatest = BASE_CHANGELOG.at(-1);";
+            if (!source.includes(anchor)) throw new Error('History insertion anchor missing');
+            const addition = `const HOME_TAGLINE_FLOW_HISTORY = Object.freeze({
+            period: '16 September',
+            title: 'FLOW joins the home promise',
+            paragraphs: Object.freeze([
+              'TURN 1.20.5 build r242 updates the Home tagline to TILT. DRIFT. FLOW., bringing the scoring mechanic into the game’s short top-level promise without changing gameplay.',
+              'The build increment keeps the Home copy change cache-safe while the semantic release version remains 1.20.5.'
+            ]),
+            milestones: Object.freeze([
+              'Home tagline: TILT. DRIFT. FLOW.',
+              'TURN 1.20.5 · 2026.09.16-r242'
+            ])
+          });
+
+          const TRACTOR_SMV_HISTORY = Object.freeze({
+            period: '16 September',
+            title: 'TRACTOR slows things down for non-visual practice',
+            paragraphs: Object.freeze([
+              'TURN 1.21.0 adds TRACTOR as a start-available Kenney Car Kit vehicle with the SMV perk. Its 1 / 1 / 5 / 1 / 5 / 5 attributes keep the normal 18-point vehicle budget while its green body and yellow secondary paint give it a distinct factory identity.',
+              'SMV limits added propulsion to 50 km/h on DRIFT, 75 km/h on GAS and 100 km/h on BOOST without forcibly removing existing momentum. This makes it suitable for blank screen and non-visual driving practice. Once SHIFT is available, its only legal one-point setup becomes 2 / 2 / 4 / 2 / 4 / 4, providing a small built-in difficulty step.'
+            ]),
+            milestones: Object.freeze([
+              'Start-available TRACTOR with SMV perk',
+              '50 / 75 / 100 km/h DRIFT, GAS and BOOST propulsive ceilings',
+              'SHIFT progression to 2 / 2 / 4 / 2 / 4 / 4',
+              'TURN 1.21.0 · 2026.09.16-r243'
+            ])
+          });
+
+          `;
+            source = source.replace(anchor, addition + anchor);
+          }
+
+          if (!source.includes('HOME_TAGLINE_FLOW_HISTORY,\n  TRACTOR_SMV_HISTORY')) {
+            const anchor = '  OVERDRIVE_FAST_CLEAN_HISTORY\n]);';
+            if (!source.includes(anchor)) throw new Error('Development history anchor missing');
+            source = source.replace(anchor, '  OVERDRIVE_FAST_CLEAN_HISTORY,\n  HOME_TAGLINE_FLOW_HISTORY,\n  TRACTOR_SMV_HISTORY\n]);');
+          }
+
+          if (!source.includes("date: '16 September'")) {
+            const anchor = "  })\n]);\n\nexport const CURRENT_RELEASE";
+            if (!source.includes(anchor)) throw new Error('Changelog insertion anchor missing');
+            const addition = `  }),
+          Object.freeze({
+            date: '16 September',
+            entries: Object.freeze([
+              Object.freeze(['1.20.5 r242', 'Updates the Home tagline to TILT. DRIFT. FLOW. and advances the build identity for the copy change.']),
+              Object.freeze(['1.21.0 r243', 'Adds the start-available TRACTOR with the SMV perk for slower blank screen and non-visual driving practice.']),
+              Object.freeze(['SMV practice speeds', 'Limits added propulsion to 50 km/h on DRIFT, 75 km/h on GAS and 100 km/h on BOOST while preserving existing momentum.']),
+              Object.freeze(['TRACTOR SHIFT step', 'Uses the normal SHIFT system to move from 1 / 1 / 5 / 1 / 5 / 5 to 2 / 2 / 4 / 2 / 4 / 4.'])
+            ])
+          })
+          ]);
+
+          export const CURRENT_RELEASE`;
+            source = source.replace(anchor, addition);
+          }
+
+          source = source.replace(
+            /note: 'TURN 1\.20\.5 makes OVERDRIVE reward fast clean driving and clarifies clean driving across TURN\.'/,
+            "note: 'TURN 1.21.0 adds TRACTOR and its SMV perk for slower blank screen and non-visual driving practice.'"
+          );
+
+          fs.writeFileSync(path, source);
+          NODE
+
+      - name: Synchronize release surfaces
+        run: node turn/scripts/release.mjs --write
+
+      - name: Verify release source of truth
+        run: node turn/scripts/release.mjs --check
+
+      - name: Run focused Tractor regressions
+        run: |
+          node turn-tests/tractor-smv-production.mjs
+          node turn-lab/tests/garage-production.mjs
+          node turn-lab/tests/shift-production.mjs
+          node turn-lab/tests/balance-and-checkpoints.mjs
+          node turn-lab/tests/car-orientation-production.mjs
+          node turn-lab/tests/semantic-car-finish-production.mjs
+
+      - name: Commit synchronized release files
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'Release surfaces already synchronized.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn turn-next turn-lab/index.html yourturn/index.html
+          git commit -m 'Synchronize TURN r242 and r243 release surfaces'
+          git push origin HEAD:sol/tractor-smv
