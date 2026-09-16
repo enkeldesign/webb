@@ -20,6 +20,7 @@ on:
       - 'turn-next/scripts/**'
       - 'yourturn/index.html'
       - 'turn-tests/release-*.mjs'
+      - 'turn-tests/startup-shell-contract.mjs'
       - '.github/workflows/turn-release-composition.yml'
   push:
     branches:
@@ -39,6 +40,7 @@ on:
       - 'turn-next/scripts/**'
       - 'yourturn/index.html'
       - 'turn-tests/release-*.mjs'
+      - 'turn-tests/startup-shell-contract.mjs'
       - '.github/workflows/turn-release-composition.yml'
 
 concurrency:
@@ -67,6 +69,9 @@ jobs:
 
       - name: Verify release entrypoint contract
         run: node turn-tests/release-production.mjs
+
+      - name: Verify startup shell contract
+        run: node turn-tests/startup-shell-contract.mjs
 
       - name: Verify active release composition
         env:
