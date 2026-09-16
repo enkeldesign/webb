@@ -24,7 +24,10 @@ jobs:
           node-version: '24'
 
       - name: Prepare DBE 101 vehicle change and release surfaces
-        run: node turn/scripts/temporary-dbe-smv-r249.mjs
+        run: |
+          node turn/scripts/temporary-dbe-smv-r249.mjs
+          node turn/scripts/temporary-dbe-smv-r249-runtime-sync.mjs
+          node turn/scripts/release.mjs --write
 
       - name: Verify focused DBE and release contracts
         run: |
@@ -43,7 +46,7 @@ jobs:
       - name: Commit prepared release
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "4189826+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "TURN: use slow-moving vehicle for DBE 101 and publish r249"
           git push origin HEAD:sol/dbe-101-smv-r249
