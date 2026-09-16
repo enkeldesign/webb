@@ -11,6 +11,12 @@ import {
 
 const OFFROAD_CAPABLE_VEHICLE_IDS = new Set(['monster-truck']);
 const OVERDRIVE_VEHICLE_ID = 'race-future';
+const SMV_VEHICLE_ID = 'tractor';
+export const SMV_SPEED_LIMITS_KMH = Object.freeze({
+  drift: 50,
+  gas: 75,
+  boost: 100
+});
 export const OVERDRIVE_MIN_SPEED_KMH = 200;
 const OVERDRIVE_MIN_SPEED = OVERDRIVE_MIN_SPEED_KMH / 3.6;
 const DRIFT_FLOW_SLIP_ANGLE = Math.PI / 12;
@@ -36,6 +42,20 @@ export function vehicleIgnoresOffRoadPenalty(vehicleId) {
 
 export function vehicleHasOverdrive(vehicleId) {
   return String(vehicleId || '') === OVERDRIVE_VEHICLE_ID;
+}
+
+export function getSmvPropulsiveSpeedLimit({
+  vehicleId = '',
+  perkUnlocked = false,
+  boostActive = false,
+  driftHeld = false,
+  throttle = 0
+} = {}) {
+  if (String(vehicleId || '') !== SMV_VEHICLE_ID || perkUnlocked !== true) return Infinity;
+  if (boostActive) return SMV_SPEED_LIMITS_KMH.boost / 3.6;
+  if (driftHeld) return SMV_SPEED_LIMITS_KMH.drift / 3.6;
+  if (nonNegativeNumber(throttle, 0) > 0) return SMV_SPEED_LIMITS_KMH.gas / 3.6;
+  return Infinity;
 }
 
 export function getOverdriveSpeedMultiplier(cleanSeconds = 0) {
@@ -293,9 +313,20 @@ function updateVehiclePhysicsStateCore({
       * tuningBoostPowerMultiplier
       * overchargedBoostPowerMultiplier
     : 0;
+  const propulsionStep = (driveThrottle * enginePower + boostPower) * dt;
+  const smvPropulsiveLimit = getSmvPropulsiveSpeedLimit({
+    vehicleId: state.vehicleId,
+    perkUnlocked: state.vehiclePerkUnlocked,
+    boostActive: effectiveBoostActive,
+    driftHeld,
+    throttle: driveThrottle
+  });
+  const availablePropulsion = Number.isFinite(smvPropulsiveLimit)
+    ? Math.max(0, smvPropulsiveLimit - Math.max(0, forwardSpeed))
+    : Infinity;
   state.velocity.addScaledVector(
     forward,
-    (driveThrottle * enginePower + boostPower) * dt
+    Math.min(propulsionStep, availablePropulsion)
   );
 
   if (brakingOrReversing) {
