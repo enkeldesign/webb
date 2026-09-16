@@ -17,6 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: sol/dbe-101-smv-r249
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
