@@ -10,7 +10,7 @@ const shiftSource = await fs.readFile(new URL('../turn/vehicle/shift-profile.js'
 assert.match(catalogSource, /\['tractor', 'Tractor', 'car', \{ speed: 1, acceleration: 1, control: 5, drift: 1, boostPower: 5, boostDuration: 5 \}/);
 assert.match(catalogSource, /tractor: Object\.freeze\(\{[\s\S]*title: 'SMV'[\s\S]*blank screen and non-visual driving practice/);
 assert.match(catalogSource, /tractor: Object\.freeze\(\{ fallback: '#4f7f36' \}\)/);
-assert.match(catalogSource, /tractor: Object\.freeze\(\{ fallback: '#ffcc00'/);
+assert.match(catalogSource, /tractor: Object\.freeze\(\{ fallback: '#666000' \}\)/);
 assert.match(lotSource, /'classic',[\s\S]*'tractor',[\s\S]*'truck'/);
 assert.match(trophyOrderSource, /'classic',[\s\S]*'tractor',[\s\S]*'truck'/,
   'The enhanced Trophy Road order must keep Learner Car first and Tractor second');

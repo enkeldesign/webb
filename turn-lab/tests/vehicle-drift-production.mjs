@@ -295,7 +295,7 @@ assert.equal(suv.defaultColor, '#0555aa', 'Luxury SUV factory paint must remain 
 const awd = CAR_CATALOG.find((car) => car.id === 'convertible');
 assert.ok(awd, 'AWD must remain in the stable Convertible catalog slot');
 assert.equal(awd.defaultColor, '#776655', 'AWD factory paint must use the approved brown primary');
-assert.equal(awd.defaultSecondaryColor, '#393329', 'AWD factory paint must use the approved dark brown secondary');
+assert.equal(awd.defaultSecondaryColor, '#aa9988', 'AWD factory paint must use the approved warm neutral secondary');
 
 const raceCar = CAR_CATALOG.find((car) => car.id === 'race');
 assert.ok(raceCar, 'Race Car must remain in the vehicle catalog');

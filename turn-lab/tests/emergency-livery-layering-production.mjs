@@ -31,7 +31,7 @@ function importMapFrom(source) {
 
 const expectedFactoryColors = new Map([
   ['classic', ['#ffcc00', '#222222']],
-  ['convertible', ['#776655', '#393329']],
+  ['convertible', ['#776655', '#aa9988']],
   ['suv', ['#0555aa', '#163f7a']],
   ['van', ['#ff7700', '#222222']],
   ['race', ['#5d503f', '#222222']],

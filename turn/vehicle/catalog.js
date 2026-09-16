@@ -3,7 +3,7 @@ export const LEGACY_VEHICLE_ID = 'sedan';
 export const DEFAULT_VEHICLE_COLOR = '#ffcc00';
 export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
-export const VEHICLE_SELECTION_VERSION = 6;
+export const VEHICLE_SELECTION_VERSION = 7;
 export const VEHICLE_STAT_BUDGET = 18;
 export const SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666';
 export const MAXED_VEHICLE_STATS = Object.freeze({
@@ -61,7 +61,7 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
   sedan: Object.freeze({ fallback: '#163f45' }),
   van: Object.freeze({ fallback: '#222222' }),
   suv: Object.freeze({ fallback: '#163f7a' }),
-  convertible: Object.freeze({ fallback: '#393329' }),
+  convertible: Object.freeze({ fallback: '#aa9988' }),
   'vintage-racer': Object.freeze({ fallback: '#222222' }),
   'toy-racer': Object.freeze({ fallback: '#ffcc00' }),
   'monster-truck': Object.freeze({ fallback: '#4f5504' }),
@@ -69,7 +69,7 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
   race: Object.freeze({ fallback: '#222222' }),
   supercar: Object.freeze({ fallback: '#ffbb00', p3: Object.freeze([1, 0.69, 0]) }),
   'sedan-sports': Object.freeze({ fallback: '#252a35', p3: Object.freeze([0.13, 0.15, 0.21]) }),
-  tractor: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
+  tractor: Object.freeze({ fallback: '#666000' }),
   firetruck: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   police: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
   ambulance: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) })
@@ -98,7 +98,11 @@ const REPLACED_FACTORY_PAINT_BY_ID = Object.freeze({
   ]),
   convertible: Object.freeze([
     Object.freeze({ color: '#0555aa', secondaryColor: '#163f7a' }),
-    Object.freeze({ color: '#ff4fa3', secondaryColor: '#792766' })
+    Object.freeze({ color: '#ff4fa3', secondaryColor: '#792766' }),
+    Object.freeze({ color: '#776655', secondaryColor: '#393329' })
+  ]),
+  tractor: Object.freeze([
+    Object.freeze({ color: '#4f7f36', secondaryColor: '#ffcc00' })
   ]),
   suv: Object.freeze([
     Object.freeze({ color: '#7d123e', secondaryColor: '#2f0918' })

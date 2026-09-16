@@ -9,7 +9,7 @@ import {
 import { getTrackStorageRevision } from '../tracks/definitions.js';
 
 export const RIVAL_LIMIT = 4;
-export const RIVAL_STORAGE_VERSION = 7;
+export const RIVAL_STORAGE_VERSION = 8;
 
 const DEFAULT_TRACK_ID = 'countryside';
 const GHOST_KEY = 'turn-three-ghost-v4';

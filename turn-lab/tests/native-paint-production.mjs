@@ -18,7 +18,7 @@ assert.deepEqual(
     color: '#0555aa',
     secondaryColor: '#163f7a'
   }, { migrateReplacedFactoryPaint: true }),
-  { carId: 'convertible', color: '#776655', secondaryColor: '#393329', factoryPaint: true },
+  { carId: 'convertible', color: '#776655', secondaryColor: '#aa9988', factoryPaint: true },
   'The briefly shipped blue AWD factory pair must migrate to the current brown pair atomically'
 );
 assert.deepEqual(
@@ -27,8 +27,26 @@ assert.deepEqual(
     color: '#ff4fa3',
     secondaryColor: '#792766'
   }, { migrateReplacedFactoryPaint: true }),
-  { carId: 'convertible', color: '#776655', secondaryColor: '#393329', factoryPaint: true },
+  { carId: 'convertible', color: '#776655', secondaryColor: '#aa9988', factoryPaint: true },
   'The previous pink AWD factory pair must migrate to the current brown pair atomically'
+);
+assert.deepEqual(
+  catalog.normalizeStoredVehiclePaint({
+    carId: 'convertible',
+    color: '#776655',
+    secondaryColor: '#393329'
+  }, { migrateReplacedFactoryPaint: true }),
+  { carId: 'convertible', color: '#776655', secondaryColor: '#aa9988', factoryPaint: true },
+  'The previous brown AWD factory secondary must migrate to #aa9988 without rewriting custom paint'
+);
+assert.deepEqual(
+  catalog.normalizeStoredVehiclePaint({
+    carId: 'tractor',
+    color: '#4f7f36',
+    secondaryColor: '#ffcc00'
+  }, { migrateReplacedFactoryPaint: true }),
+  { carId: 'tractor', color: '#4f7f36', secondaryColor: '#666000', factoryPaint: true },
+  'The previous Tractor factory yellow must migrate to the new olive secondary'
 );
 assert.deepEqual(
   catalog.normalizeStoredVehiclePaint({
@@ -77,13 +95,13 @@ selectionStorage.setItem(catalog.VEHICLE_SELECTION_KEY, JSON.stringify({
 assert.deepEqual(catalog.loadVehicleSelection(), {
   carId: 'convertible',
   color: '#776655',
-  secondaryColor: '#393329'
+  secondaryColor: '#aa9988'
 });
 assert.deepEqual(JSON.parse(selectionStorage.getItem(catalog.VEHICLE_SELECTION_KEY)), {
   version: catalog.VEHICLE_SELECTION_VERSION,
   carId: 'convertible',
   color: '#776655',
-  secondaryColor: '#393329',
+  secondaryColor: '#aa9988',
   factoryPaint: true
 });
 
@@ -107,6 +125,10 @@ assert.deepEqual(secondaryCars[7].secondaryPaint.meshNames, []);
 assert.equal(secondaryCars[8].secondaryPaint.label, 'Bonnet & rims');
 assert.deepEqual(secondaryCars[8].secondaryPaint.meshNames, []);
 assert.ok(secondaryCars.slice(9, 13).every((car) => car.secondaryPaint.label === 'Lower body trim'));
+const awd = catalog.getCarDefinition('convertible');
+assert.equal(awd.defaultSecondaryColor, '#aa9988');
+const tractor = catalog.getCarDefinition('tractor');
+assert.equal(tractor.defaultSecondaryColor, '#666000');
 const supercar = catalog.getCarDefinition('supercar');
 assert.equal(supercar.defaultColor, '#000000');
 assert.equal(supercar.defaultSecondaryColor, '#ffbb00');
@@ -180,7 +202,7 @@ assert.match(main, /vehicleSecondaryColor: initialVehicleSelection\.secondaryCol
 assert.match(main, /secondaryColor: state\.vehicleSecondaryColor/);
 assert.match(lapSystem, /factoryPaint: paint\.factoryPaint/,
   'New rivals must record whether their colors came from the factory pair');
-assert.match(rivalStorage, /RIVAL_STORAGE_VERSION = 7/,
+assert.match(rivalStorage, /RIVAL_STORAGE_VERSION = 8/,
   'Track-scoped rivals must version the AWD and SUV paint migration');
 assert.match(rivalStorage, /normalizeStoredVehiclePaint\(/,
   'Rival previews must use the same car-specific paint normalization as The Lot');
@@ -205,7 +227,7 @@ assert.deepEqual(
     carSecondaryColor: '#163f7a',
     frames: replayFrames
   })),
-  { carId: 'convertible', carColor: '#776655', carSecondaryColor: '#393329', factoryPaint: true },
+  { carId: 'convertible', carColor: '#776655', carSecondaryColor: '#aa9988', factoryPaint: true },
   'Saved blue AWD ghosts from the swapped release must follow the current brown factory paint'
 );
 assert.deepEqual(
@@ -218,7 +240,7 @@ assert.deepEqual(
     carSecondaryColor: '#792766',
     frames: replayFrames
   })),
-  { carId: 'convertible', carColor: '#776655', carSecondaryColor: '#393329', factoryPaint: true },
+  { carId: 'convertible', carColor: '#776655', carSecondaryColor: '#aa9988', factoryPaint: true },
   'Saved pink AWD ghosts from the previous factory pair must follow the current brown factory paint'
 );
 assert.deepEqual(

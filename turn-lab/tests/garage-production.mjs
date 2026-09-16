@@ -49,7 +49,7 @@ assert.equal(tractor.pack, 'car');
 assert.equal(tractor.asset, './assets/cars/tractor.glb');
 assert.equal(tractor.surfaceProfileId, 'tractor');
 assert.equal(tractor.defaultColor, '#4f7f36');
-assert.equal(tractor.defaultSecondaryColor, '#ffcc00');
+assert.equal(tractor.defaultSecondaryColor, '#666000');
 assert.equal(tractor.perk?.title, 'SMV');
 assert.equal(
   tractor.perk?.description,
@@ -338,7 +338,7 @@ assert.match(lapSystem, /factoryPaint: paint\.factoryPaint/);
 assert.match(lapPolicy, /isSportsSedanEasterEgg/);
 assert.match(lapPolicy, /const ranked = !isSportsSedanEasterEgg/);
 assert.match(lapPolicy, /saveGhost: ranked \? options\?\.saveGhost : undefined/);
-assert.match(rivalStorage, /RIVAL_STORAGE_VERSION = 7/);
+assert.match(rivalStorage, /RIVAL_STORAGE_VERSION = 8/);
 assert.match(rivalStorage, /trackRevision: storageTrackId\(activeTrackId\)/);
 assert.match(rivalStorage, /normalizeStoredVehiclePaint\(/);
 assert.match(rivalStorage, /migrateReplacedFactoryPaint: sourceVersion < RIVAL_STORAGE_VERSION/);

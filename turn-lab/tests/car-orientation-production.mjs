@@ -143,7 +143,7 @@ assert.equal(awd.pack, 'car');
 assert.equal(awd.asset, './assets/cars/suv.glb');
 assert.equal(awd.surfaceProfileId, 'suv');
 assert.equal(awd.defaultColor, '#776655');
-assert.equal(awd.defaultSecondaryColor, '#393329');
+assert.equal(awd.defaultSecondaryColor, '#aa9988');
 assert.deepEqual(awd.stats, { speed: 2, acceleration: 3, control: 4, drift: 4, boostPower: 2, boostDuration: 3 });
 assert.equal(catalog.getVehicleStatTotal(awd.stats), catalog.VEHICLE_STAT_BUDGET);
 assert.equal(suv.name, 'SUV');
