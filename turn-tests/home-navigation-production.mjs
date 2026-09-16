@@ -50,7 +50,7 @@ assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
 assert.doesNotMatch(nextApp, /installM8HomeNavigation|installM8HomeFixedLayout|m8-home-card-scroll/);
 
 for (const requiredCopy of [
-  'TILT. DRIFT.',
+  'TILT. DRIFT. FLOW.',
   'BEAT YOUR BEST.',
   'HOW TO PLAY',
   'CHOOSE YOUR TRACK',
