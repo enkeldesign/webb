@@ -31,18 +31,16 @@ jobs:
             raise SystemExit('Expected Lot trophy order anchor not found')
           p.write_text(s.replace(old, new, 1))
 
-          p = Path('turn-tests/m8-lot-selection-production.mjs')
+          p = Path('turn-tests/tractor-smv-production.mjs')
           s = p.read_text()
-          anchor = "assert.match(\n  showroom,\n  /export const LOT_CAR_ORDER = Object\\.freeze\\(\\[\\s*'classic',\\s*'tractor',/,\n  'The Learner Car must be first in The Lot and the Tractor must follow it'\n);"
-          addition = anchor + "\nassert.match(\n  trophyOrder,\n  /export const LOT_TROPHY_ORDER = Object\\.freeze\\(\\[\\s*'classic',\\s*'tractor',/,\n  'The enhanced Lot order must keep Learner Car first and Tractor second'\n);"
-          if "const trophyOrder =" not in s:
-            import_anchor = "const showroom = await fs.readFile(new URL('../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8');"
-            if import_anchor not in s:
-              raise SystemExit('M8 import anchor not found')
-            s = s.replace(import_anchor, import_anchor + "\nconst trophyOrder = await fs.readFile(new URL('../turn/garage/lot-trophy-order.js', import.meta.url), 'utf8');", 1)
-          if anchor not in s:
-            raise SystemExit('M8 order assertion anchor not found')
-          s = s.replace(anchor, addition, 1)
+          import_anchor = "const lotSource = await fs.readFile(new URL('../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8');"
+          if import_anchor not in s:
+            raise SystemExit('Tractor regression import anchor not found')
+          s = s.replace(import_anchor, import_anchor + "\nconst trophyOrderSource = await fs.readFile(new URL('../turn/garage/lot-trophy-order.js', import.meta.url), 'utf8');", 1)
+          assertion_anchor = "assert.match(lotSource, /'classic',[\\s\\S]*'tractor',[\\s\\S]*'truck'/);"
+          if assertion_anchor not in s:
+            raise SystemExit('Tractor order assertion anchor not found')
+          s = s.replace(assertion_anchor, assertion_anchor + "\nassert.match(trophyOrderSource, /'classic',[\\s\\S]*'tractor',[\\s\\S]*'truck'/,\n  'The enhanced Trophy Road order must keep Learner Car first and Tractor second');", 1)
           p.write_text(s)
 
           p = Path('turn/release.json')
@@ -55,14 +53,14 @@ jobs:
           PY
       - name: Synchronize release surfaces
         run: node turn/scripts/release.mjs --write
-      - name: Verify focused Lot regression
-        run: node turn-tests/m8-lot-selection-production.mjs
+      - name: Verify focused Tractor regression
+        run: node turn-tests/tractor-smv-production.mjs
       - name: Verify release source of truth
         run: node turn/scripts/release.mjs --check
       - name: Commit r246 changes
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add turn turn-lab turn-next yourturn turn-tests/m8-lot-selection-production.mjs
+          git add turn turn-lab turn-next yourturn turn-tests/tractor-smv-production.mjs
           git commit -m 'Keep Tractor second in enhanced Lot order and publish r246'
           git push
