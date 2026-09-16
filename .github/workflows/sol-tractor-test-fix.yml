@@ -23,12 +23,10 @@ jobs:
           const fs = require('node:fs');
           const path = 'turn-lab/tests/semantic-car-finish-production.mjs';
           let source = fs.readFileSync(path, 'utf8');
-          const before = `  assert.deepEqual(
-            (json.images || []).map((image) => image.uri),
-            ['Textures/colormap.png'],
-            \`\${car.name} must retain its authored palette reference\`
-          );`;
-          const after = `  const authoredImages = json.images || [];
+          if (source.includes("const authoredImages = json.images || []")) process.exit(0);
+          const pattern = /  assert\.deepEqual\(\n\s+\(json\.images \|\| \[\]\)\.map\(\(image\) => image\.uri\),\n\s+\['Textures\/colormap\.png'\],\n\s+`\$\{car\.name\} must retain its authored palette reference`\n\s+\);/;
+          if (!pattern.test(source)) throw new Error('Semantic palette assertion anchor not found');
+          source = source.replace(pattern, `  const authoredImages = json.images || [];
           if (car.id === 'tractor') {
             assert.equal(authoredImages.length, 1, 'Tractor must preserve its one authored embedded palette image');
             assert.equal(authoredImages[0].mimeType, 'image/png', 'Tractor embedded palette must remain PNG');
@@ -40,15 +38,17 @@ jobs:
               ['Textures/colormap.png'],
               \`\${car.name} must retain its authored palette reference\`
             );
-          }`;
-          if (!source.includes(before)) throw new Error('Semantic palette assertion anchor not found');
-          source = source.replace(before, after);
+          }`);
           fs.writeFileSync(path, source);
           NODE
 
       - name: Commit regression fix
         shell: bash
         run: |
+          if git diff --quiet; then
+            echo 'Semantic regression already updated.'
+            exit 0
+          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add turn-lab/tests/semantic-car-finish-production.mjs
