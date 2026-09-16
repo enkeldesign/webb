@@ -1,0 +1,49 @@
+name: Temporary DBE 101 slow-moving vehicle release
+
+on:
+  push:
+    branches:
+      - sol/dbe-101-smv-r249
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: github.event.head_commit.message == 'Prepare DBE 101 slow-moving vehicle release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: sol/dbe-101-smv-r249
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Prepare DBE 101 vehicle change and release surfaces
+        run: node turn/scripts/temporary-dbe-smv-r249.mjs
+
+      - name: Verify focused DBE and release contracts
+        run: |
+          node --check turn/training/drive-by-ear-training.js
+          node --check turn/training/stages.js
+          node --check turn/training/view.js
+          node --check turn/scripts/release.mjs
+          node turn-tests/drive-by-ear-training-production.mjs
+          node turn-tests/tractor-smv-production.mjs
+          node turn-tests/about-history-production.mjs
+          node turn-tests/release-production.mjs
+          node turn-tests/release-composition-production.mjs
+          node turn/scripts/release.mjs --check
+          git diff --check
+
+      - name: Commit prepared release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "4189826+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "TURN: use slow-moving vehicle for DBE 101 and publish r249"
+          git push origin HEAD:sol/dbe-101-smv-r249
