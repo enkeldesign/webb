@@ -54,7 +54,7 @@ export const TRAINING_STAGES = Object.freeze([
       [50, 282], [90, 298], [140, 300], [200, 300], [250, 310],
       [290, 335], [315, 370], [325, 415], [325, 470], [325, 530]
     ],
-    notes: [note(0.10, RIGHT, 1), note(0.49, LEFT, 2)]
+    notes: [note(0.19, RIGHT, 1), note(0.55, LEFT, 2)]
   }),
   stage({
     id: 'dbe-training-3',
@@ -69,7 +69,7 @@ export const TRAINING_STAGES = Object.freeze([
       [0, 0], [0, 60], [0, 120], [0, 180], [5, 225], [20, 265],
       [48, 295], [88, 312], [138, 316], [198, 316], [260, 316]
     ],
-    notes: [note(0.17, RIGHT, 1)]
+    notes: [note(0.27, RIGHT, 1)]
   }),
   stage({
     id: 'dbe-training-4',
@@ -85,7 +85,7 @@ export const TRAINING_STAGES = Object.freeze([
       [-22, 263], [-46, 280], [-75, 285], [-104, 280], [-128, 263],
       [-144, 239], [-150, 210], [-150, 160], [-150, 100], [-150, 35]
     ],
-    notes: [note(0.16, LEFT, 3, true)]
+    notes: [note(0.27, LEFT, 3, true)]
   }),
   stage({
     id: 'dbe-training-5',
@@ -105,6 +105,6 @@ export const TRAINING_STAGES = Object.freeze([
     ],
     // The matching progress values intentionally enqueue one linked phrase:
     // BIP BIP right, followed by BIP BEEP left.
-    notes: [note(0.08, RIGHT, 1), note(0.43, RIGHT, 2), note(0.43, LEFT, 2, true)]
+    notes: [note(0.15, RIGHT, 1), note(0.45, RIGHT, 2), note(0.45, LEFT, 2, true)]
   })
 ]);
