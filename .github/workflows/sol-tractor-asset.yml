@@ -1,0 +1,48 @@
+name: Temporary restore Kenney Tractor asset
+
+on:
+  push:
+    branches:
+      - sol/tractor-smv
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: sol/tractor-smv
+          fetch-depth: 0
+
+      - name: Restore exact Kenney Car Kit 3.1 Tractor
+        shell: bash
+        run: |
+          curl --fail --location --silent --show-error \
+            'https://raw.githubusercontent.com/Arslan12216775/kenney_car-kit/master/Models/GLB%20format/tractor.glb' \
+            --output turn/assets/cars/tractor.glb
+          test "$(git hash-object turn/assets/cars/tractor.glb)" = '27220bed41b40c5f9f7809339d1df0e8df14f825'
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'turn/assets/cars/KENNEY-CAR-KIT.md';
+          let text = fs.readFileSync(path, 'utf8');
+          if (!text.includes('- `tractor.glb`')) {
+            text = text.replace('- `police.glb`\n', '- `police.glb`\n- `tractor.glb`\n');
+            fs.writeFileSync(path, text);
+          }
+          NODE
+
+      - name: Commit restored asset
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'Exact Tractor asset already present.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn/assets/cars/tractor.glb turn/assets/cars/KENNEY-CAR-KIT.md
+          git commit -m 'Restore exact Kenney Tractor asset'
+          git push origin HEAD:sol/tractor-smv
