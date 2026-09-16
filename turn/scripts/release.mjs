@@ -244,6 +244,17 @@ function synchronizePlatformContextTarget(importMap, release) {
     = `/turn/platform/platform-context.js?build=${release.cacheKey}`;
 }
 
+function synchronizeDriveByEarTrainingTargets(importMap, release) {
+  const pathname = '/turn/training/drive-by-ear-training.js';
+  const target = `${pathname}?build=${release.cacheKey}`;
+  for (const [specifier, existing] of Object.entries(importMap.imports || {})) {
+    if (typeof existing !== 'string') continue;
+    if (new URL(existing, 'https://enkel.design/turn/').pathname === pathname) {
+      importMap.imports[specifier] = target;
+    }
+  }
+}
+
 function synchronizePerkFeedbackTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   const flowShiftTarget = `/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=${release.cacheKey}`;
@@ -331,6 +342,7 @@ function renderSharedResourceImports(source, release) {
     synchronizeVisualResourceTargets(importMap, release);
     synchronizeAchievementProgressionTargets(importMap, release);
     synchronizePlatformContextTarget(importMap, release);
+    synchronizeDriveByEarTrainingTargets(importMap, release);
     synchronizePerkFeedbackTargets(importMap, release);
     synchronizeGraphicsRuntimeTarget(importMap, release);
     synchronizeLowGraphicsProducerTargets(importMap, release);
@@ -364,6 +376,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeVisualResourceTargets(importMap, release);
   synchronizeAchievementProgressionTargets(importMap, release);
   synchronizePlatformContextTarget(importMap, release);
+  synchronizeDriveByEarTrainingTargets(importMap, release);
   synchronizePerkFeedbackTargets(importMap, release);
   synchronizeGraphicsRuntimeTarget(importMap, release);
   synchronizeLowGraphicsProducerTargets(importMap, release);
