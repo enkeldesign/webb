@@ -20,6 +20,12 @@ const KENNEY_PROFILE_BY_ID = Object.freeze({
     secondary: [[3, 4], [3, 5]],
     rims: [[5, 4], [5, 5]]
   }),
+  tractor: profile({
+    primary: [[3, 4], [3, 5]],
+    secondary: [[4, 2], [4, 3]],
+    rims: [[5, 4], [5, 5]],
+    rimRole: 'secondary'
+  }),
   'sedan-sports': profile({
     primary: [[6, 2], [6, 3]],
     secondary: [[3, 4], [3, 5]],
