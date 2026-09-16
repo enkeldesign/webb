@@ -5,6 +5,7 @@ TURN includes these unmodified model files from Kenney's **Car Kit 3.1**:
 - `ambulance.glb`
 - `firetruck.glb`
 - `police.glb`
+- `tractor.glb`
 
 `training-car.glb` uses the kit's `taxi.glb` body and four independently
 addressable wheel meshes. An earlier conversion removed the Taxi roof sign;
