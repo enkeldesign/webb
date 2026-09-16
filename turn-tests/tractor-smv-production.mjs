@@ -10,8 +10,11 @@ assert.match(catalogSource, /\['tractor', 'Tractor', 'car', \{ speed: 1, acceler
 assert.match(catalogSource, /tractor: Object\.freeze\(\{[\s\S]*title: 'SMV'[\s\S]*blank screen and non-visual driving practice/);
 assert.match(catalogSource, /tractor: Object\.freeze\(\{ fallback: '#4f7f36' \}\)/);
 assert.match(catalogSource, /tractor: Object\.freeze\(\{ fallback: '#ffcc00'/);
-assert.match(lotSource, /'sedan-sports',[\s\S]*'tractor',[\s\S]*'race',[\s\S]*'vintage-racer'/);
-assert.match(physicsSource, /drift: 50,[\s\S]*gas: 75,[\s\S]*boost: 100/);
+assert.match(lotSource, /'classic',[\s\S]*'tractor',[\s\S]*'truck'/);
+assert.match(physicsSource, /SMV_SPEED_LIMITS_KMH[\s\S]*drift: 40,[\s\S]*gas: 60,[\s\S]*boost: 80/);
+assert.match(physicsSource, /SMV_SHIFT_SPEED_LIMITS_KMH[\s\S]*drift: 50,[\s\S]*gas: 70,[\s\S]*boost: 90/);
+assert.match(physicsSource, /shiftActive: state\.shiftActive === true/,
+  'SMV speed ceilings must follow the live SHIFT state');
 assert.match(physicsSource, /getSmvPropulsiveSpeedLimit/);
 assert.match(physicsSource, /Math\.max\(0, smvPropulsiveLimit - Math\.max\(0, forwardSpeed\)\)/,
   'SMV must limit added propulsion without clamping away existing momentum');
@@ -23,4 +26,4 @@ const shifted = tractorBase.map((value, index) => index === 0 || index === 1 || 
 assert.deepEqual(shifted, [2, 2, 4, 2, 4, 4], 'Tractor generic SHIFT step must produce the intended intermediate difficulty profile');
 assert.equal(shifted.reduce((sum, value) => sum + value, 0), 18);
 
-console.log('TURN Tractor SMV catalog, Lot order, propulsion ceilings and SHIFT profile checks passed.');
+console.log('TURN Tractor SMV catalog, Lot order, base/SHIFT ceilings and SHIFT profile checks passed.');

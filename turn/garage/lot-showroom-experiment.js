@@ -37,13 +37,13 @@ let paintControlSerial = 0;
 
 export const LOT_CAR_ORDER = Object.freeze([
   'classic',
+  'tractor',
   'truck',
   'sedan',
   'van',
   'suv',
   'convertible',
   'sedan-sports',
-  'tractor',
   'race',
   'vintage-racer',
   'race-future',

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { installMidnightCityWorld as installMidnightCityWorldR3 } from './midnight-city-world-r3.js?build=20260916-r244';
+import { installMidnightCityWorld as installMidnightCityWorldR3 } from './midnight-city-world-r3.js?build=20260916-r245';
 
 const TRACK_Y = 0.16;
 const WARM_LIGHT = 0xffd27a;
