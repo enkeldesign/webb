@@ -43,6 +43,7 @@ export const LOT_CAR_ORDER = Object.freeze([
   'suv',
   'convertible',
   'sedan-sports',
+  'tractor',
   'race',
   'vintage-racer',
   'race-future',
@@ -60,6 +61,7 @@ const LOT_CARS = Object.freeze(LOT_CAR_ORDER.map((id) => CAR_BY_ID.get(id)).filt
 const CAR_DESCRIPTIONS = Object.freeze({
   convertible: 'A compact all-wheel-drive utility car with a short wheelbase, high ride height and sure-footed handling.',
   classic: 'A small, upright classic car with rounded bodywork and a friendly shape.',
+  tractor: 'A compact farm tractor with a tall cab, narrow front wheels and oversized rear tyres.',
   'vintage-racer': 'A narrow vintage racer with exposed wheels, a contrasting bonnet stripe and matching deck trim.',
   'toy-racer': 'A grey-and-gold competition car with a low stance, high rear wing and rally-bred trim.',
   'monster-truck': 'A tall off-road truck with oversized tyres, exposed suspension and a rugged roll cage.',
@@ -93,7 +95,7 @@ export function showTheLot({ initialSelection } = {}) {
         <div class="lot-progress-summary" aria-live="polite">
           <span class="lot-progress-lock" aria-hidden="true">${LOCK_ICON}</span>
           <span>
-            <strong data-lot-available>16 / 16 AVAILABLE</strong>
+            <strong data-lot-available>17 / 17 AVAILABLE</strong>
             <small data-lot-next-unlock>All cars available</small>
           </span>
         </div>

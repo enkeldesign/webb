@@ -8,11 +8,11 @@ const catalogSource = await fs.readFile(path.join(turnDir, 'vehicle/catalog.js')
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 const expectedIds = [
   'convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck',
-  'race-future', 'race', 'sedan-sports', 'sedan', 'suv', 'firetruck',
+  'race-future', 'race', 'sedan-sports', 'tractor', 'sedan', 'suv', 'firetruck',
   'police', 'ambulance', 'truck', 'van', 'supercar'
 ];
 
-assert.equal(catalog.CAR_CATALOG.length, 16, 'The Lot must contain exactly 16 cars');
+assert.equal(catalog.CAR_CATALOG.length, 17, 'The Lot must contain exactly 17 cars');
 assert.deepEqual(catalog.CAR_CATALOG.map((car) => car.id), expectedIds, 'The Lot car order changed unexpectedly');
 for (const car of catalog.CAR_CATALOG) {
   if (car.id === 'supercar') {
@@ -35,6 +35,7 @@ const vintageRacer = catalog.getCarDefinition('vintage-racer');
 const rallyRacer = catalog.getCarDefinition('toy-racer');
 const futureRacer = catalog.getCarDefinition('race-future');
 const learnerCar = catalog.getCarDefinition('classic');
+const tractor = catalog.getCarDefinition('tractor');
 const supercar = catalog.getCarDefinition('supercar');
 assert.equal(catalog.DEFAULT_VEHICLE_ID, 'classic');
 assert.equal(learnerCar.name, 'Learner Car');
@@ -43,6 +44,21 @@ assert.equal(learnerCar.asset, './assets/cars/training-car.glb');
 assert.equal(learnerCar.surfaceProfileId, 'training-car');
 assert.equal(learnerCar.defaultColor, '#ffcc00');
 assert.equal(learnerCar.defaultSecondaryColor, '#222222');
+assert.equal(tractor.name, 'Tractor');
+assert.equal(tractor.pack, 'car');
+assert.equal(tractor.asset, './assets/cars/tractor.glb');
+assert.equal(tractor.surfaceProfileId, 'tractor');
+assert.equal(tractor.defaultColor, '#4f7f36');
+assert.equal(tractor.defaultSecondaryColor, '#ffcc00');
+assert.equal(tractor.perk?.title, 'SMV');
+assert.equal(
+  tractor.perk?.description,
+  'A Slow-Moving Vehicle that’s not much to look at. Which makes it ideal for blank screen and non-visual driving practice.'
+);
+assert.deepEqual(
+  tractor.stats,
+  { speed: 1, acceleration: 1, control: 5, drift: 1, boostPower: 5, boostDuration: 5 }
+);
 assert.equal(vintageRacer.name, 'Vintage Racer');
 assert.equal(vintageRacer.perk?.title, 'DRIFTAGE');
 assert.equal(rallyRacer.id, 'toy-racer', 'Rally Racer must preserve the Toy Racer stable storage/ghost id');
@@ -338,6 +354,7 @@ assert.match(catalogSource, /MAXED_VEHICLE_STATS/);
 assert.match(catalogSource, /'toy-racer', 'Rally Racer'/);
 assert.match(catalogSource, /title: 'DRIFTAGE'/);
 assert.match(catalogSource, /title: 'TWITCHY TURNY'/);
+assert.match(catalogSource, /title: 'SMV'/);
 assert.match(carModels, /loadCarSource\(car\.id\)/);
 assert.match(easterEggUi, /getEffectiveVehicleStats/);
 assert.match(easterEggUi, /isSportsSedanEasterEgg/);

@@ -45,6 +45,7 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
   race: Object.freeze({ fallback: '#5d503f' }),
   supercar: Object.freeze({ fallback: '#000000' }),
   'sedan-sports': Object.freeze({ fallback: '#5e3c87', p3: Object.freeze([0.36, 0.19, 0.56]) }),
+  tractor: Object.freeze({ fallback: '#4f7f36' }),
   sedan: Object.freeze({ fallback: '#2b6a70', p3: Object.freeze([0.12, 0.41, 0.43]) }),
   suv: Object.freeze({ fallback: '#0555aa', p3: Object.freeze([0.02, 0.333, 0.667]) }),
   firetruck: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) }),
@@ -68,6 +69,7 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
   race: Object.freeze({ fallback: '#222222' }),
   supercar: Object.freeze({ fallback: '#ffbb00', p3: Object.freeze([1, 0.69, 0]) }),
   'sedan-sports': Object.freeze({ fallback: '#252a35', p3: Object.freeze([0.13, 0.15, 0.21]) }),
+  tractor: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   firetruck: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   police: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
   ambulance: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) })
@@ -152,6 +154,10 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
     rewardId: 'sports-car-drift-demon',
     threshold: 2100
   }),
+  tractor: Object.freeze({
+    title: 'SMV',
+    description: 'A Slow-Moving Vehicle that’s not much to look at. Which makes it ideal for blank screen and non-visual driving practice.'
+  }),
   sedan: Object.freeze({
     title: 'DOUBLE SHIFT',
     description: 'SHIFT moves 2 points between attributes instead of 1.',
@@ -217,6 +223,7 @@ const RAW_CARS = [
   ['race-future', 'Future Racer', 'car', { speed: 5, acceleration: 5, control: 3, drift: 1, boostPower: 3, boostDuration: 1 }, 0.96, 0, 1.42],
   ['race', 'Race Car', 'car', { speed: 5, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 1 }, 0.94, 0, 1.55],
   ['sedan-sports', 'Sports Car', 'car', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 2 }, 0.98, 0, 1.12],
+  ['tractor', 'Tractor', 'car', { speed: 1, acceleration: 1, control: 5, drift: 1, boostPower: 5, boostDuration: 5 }, 1.00, 0, 0.62],
   ['sedan', 'Sedan', 'car', { speed: 3, acceleration: 3, control: 3, drift: 3, boostPower: 3, boostDuration: 3 }, 1.00, 0, 1.00],
   ['suv', 'SUV', 'car', { speed: 3, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 2 }, 1.05, 0, 0.90],
   ['firetruck', 'Fire Truck', 'car', { speed: 2, acceleration: 2, control: 4, drift: 4, boostPower: 1, boostDuration: 5 }, 1.10, 0, 0.66],
@@ -257,6 +264,9 @@ const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({
   }),
   'sedan-sports': Object.freeze({
     secondaryPaint: Object.freeze({ label: 'Sport trim', meshNames: Object.freeze([]) })
+  }),
+  tractor: Object.freeze({
+    secondaryPaint: Object.freeze({ label: 'Bonnet & rims', meshNames: Object.freeze([]) })
   }),
   race: Object.freeze({
     secondaryPaint: Object.freeze({ label: 'Aero trim', meshNames: Object.freeze([]) })

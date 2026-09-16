@@ -35,7 +35,7 @@ assert.ok(
   'Semantic native car finishes must remain part of TURN 1.10.4 or later'
 );
 assert.match(release.id, /^\d{4}\.\d{2}\.\d{2}-r\d+$/);
-assert.equal(catalog.CAR_CATALOG.length, 16);
+assert.equal(catalog.CAR_CATALOG.length, 17);
 assert.deepEqual(
   catalog.CAR_CATALOG
     .filter((car) => !car.fixedLivery && !car.secondaryPaint)
@@ -43,6 +43,12 @@ assert.deepEqual(
   [],
   'Every non-emergency car must expose its native or deliberately mounted secondary surface'
 );
+const tractorDefinition = catalog.getCarDefinition('tractor');
+assert.equal(tractorDefinition.secondaryPaint?.label, 'Bonnet & rims');
+assert.equal(tractorDefinition.defaultColor, '#4f7f36');
+assert.equal(tractorDefinition.defaultSecondaryColor, '#ffcc00');
+assert.match(semanticSource, /tractor: profile\(\{[\s\S]*primary: \[\[3, 4\], \[3, 5\]\][\s\S]*secondary: \[\[4, 2\], \[4, 3\]\][\s\S]*rims: \[\[5, 4\], \[5, 5\]\][\s\S]*rimRole: 'secondary'/,
+  'Tractor must paint its authored body green and its bonnet and rims with the secondary yellow');
 const supercarDefinition = catalog.getCarDefinition('supercar');
 assert.equal(supercarDefinition.secondaryPaint?.label, 'Rims',
   'Supercar secondary paint must be its deliberately mounted Kenney rims');
@@ -83,11 +89,19 @@ for (const car of catalog.CAR_CATALOG.filter((candidate) => !['rgsdev', 'cosmo']
   assert.ok(paletteContracts.has(car.pack), `${car.name} must resolve to a known Kenney palette family`);
   const glb = await fs.readFile(new URL(`../../turn/${car.asset.replace(/^\.\//, '')}`, import.meta.url));
   const json = readGlbJson(glb, car.id);
+  const authoredImages = json.images || [];
+if (car.id === 'tractor') {
+  assert.equal(authoredImages.length, 1, 'Tractor must preserve its one authored embedded palette image');
+  assert.equal(authoredImages[0].mimeType, 'image/png', 'Tractor embedded palette must remain PNG');
+  assert.ok(Number.isInteger(authoredImages[0].bufferView),
+    'Tractor must retain the source GLB embedded palette instead of inventing an external texture dependency');
+} else {
   assert.deepEqual(
-    (json.images || []).map((image) => image.uri),
+    authoredImages.map((image) => image.uri),
     ['Textures/colormap.png'],
     `${car.name} must retain its authored palette reference`
   );
+}
   const primitives = (json.meshes || []).flatMap((mesh) => mesh.primitives || []);
   assert.ok(primitives.length > 0, `${car.name} must contain renderable primitives`);
   assert.ok(primitives.every((primitive) => Number.isInteger(primitive.attributes?.TEXCOORD_0)),
