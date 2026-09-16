@@ -19,90 +19,27 @@ jobs:
           node-version: '24'
       - name: Make Tractor SMV SHIFT raise the speed ceilings
         run: |
-          node <<'NODE'
-          const fs = require('node:fs');
+          python - <<'PY'
+          from pathlib import Path
 
-          const physicsPath = 'turn/vehicle/physics.js';
-          let physics = fs.readFileSync(physicsPath, 'utf8');
-          physics = physics.replace(
-`export const SMV_SPEED_LIMITS_KMH = Object.freeze({
-  drift: 50,
-  gas: 75,
-  boost: 100
-});`,
-`// These are the user-facing HUD ceilings. TURN's production HUD intentionally
-// uses 2.9 displayed km/h per simulation speed unit, so SMV converts from that
-// scale rather than physical 3.6 km/h per m/s.
-const TURN_HUD_SPEED_SCALE = 2.9;
-export const SMV_SPEED_LIMITS_KMH = Object.freeze({
-  drift: 40,
-  gas: 60,
-  boost: 80
-});
-export const SMV_SHIFT_SPEED_LIMITS_KMH = Object.freeze({
-  drift: 50,
-  gas: 70,
-  boost: 90
-});`);
-          physics = physics.replace(
-`  boostActive = false,
-  driftHeld = false,
-  throttle = 0
-} = {}) {
-  if (String(vehicleId || '') !== SMV_VEHICLE_ID || perkUnlocked !== true) return Infinity;
-  if (boostActive) return SMV_SPEED_LIMITS_KMH.boost / 3.6;
-  if (driftHeld) return SMV_SPEED_LIMITS_KMH.drift / 3.6;
-  if (nonNegativeNumber(throttle, 0) > 0) return SMV_SPEED_LIMITS_KMH.gas / 3.6;
-  return Infinity;
-}`,
-`  boostActive = false,
-  driftHeld = false,
-  throttle = 0,
-  shiftActive = false
-} = {}) {
-  if (String(vehicleId || '') !== SMV_VEHICLE_ID || perkUnlocked !== true) return Infinity;
-  const limits = shiftActive === true ? SMV_SHIFT_SPEED_LIMITS_KMH : SMV_SPEED_LIMITS_KMH;
-  if (boostActive) return limits.boost / TURN_HUD_SPEED_SCALE;
-  if (driftHeld) return limits.drift / TURN_HUD_SPEED_SCALE;
-  if (nonNegativeNumber(throttle, 0) > 0) return limits.gas / TURN_HUD_SPEED_SCALE;
-  return Infinity;
-}`);
-          physics = physics.replace(
-`    boostActive: effectiveBoostActive,
-    driftHeld,
-    throttle: driveThrottle
-  });`,
-`    boostActive: effectiveBoostActive,
-    driftHeld,
-    throttle: driveThrottle,
-    shiftActive: state.shiftActive === true
-  });`);
-          fs.writeFileSync(physicsPath, physics);
+          p = Path('turn/vehicle/physics.js')
+          s = p.read_text()
+          s = s.replace("export const SMV_SPEED_LIMITS_KMH = Object.freeze({\n  drift: 50,\n  gas: 75,\n  boost: 100\n});", "// These are the user-facing HUD ceilings. TURN's production HUD intentionally\n// uses 2.9 displayed km/h per simulation speed unit, so SMV converts from that\n// scale rather than physical 3.6 km/h per m/s.\nconst TURN_HUD_SPEED_SCALE = 2.9;\nexport const SMV_SPEED_LIMITS_KMH = Object.freeze({\n  drift: 40,\n  gas: 60,\n  boost: 80\n});\nexport const SMV_SHIFT_SPEED_LIMITS_KMH = Object.freeze({\n  drift: 50,\n  gas: 70,\n  boost: 90\n});")
+          s = s.replace("  boostActive = false,\n  driftHeld = false,\n  throttle = 0\n} = {}) {\n  if (String(vehicleId || '') !== SMV_VEHICLE_ID || perkUnlocked !== true) return Infinity;\n  if (boostActive) return SMV_SPEED_LIMITS_KMH.boost / 3.6;\n  if (driftHeld) return SMV_SPEED_LIMITS_KMH.drift / 3.6;\n  if (nonNegativeNumber(throttle, 0) > 0) return SMV_SPEED_LIMITS_KMH.gas / 3.6;\n  return Infinity;\n}", "  boostActive = false,\n  driftHeld = false,\n  throttle = 0,\n  shiftActive = false\n} = {}) {\n  if (String(vehicleId || '') !== SMV_VEHICLE_ID || perkUnlocked !== true) return Infinity;\n  const limits = shiftActive === true ? SMV_SHIFT_SPEED_LIMITS_KMH : SMV_SPEED_LIMITS_KMH;\n  if (boostActive) return limits.boost / TURN_HUD_SPEED_SCALE;\n  if (driftHeld) return limits.drift / TURN_HUD_SPEED_SCALE;\n  if (nonNegativeNumber(throttle, 0) > 0) return limits.gas / TURN_HUD_SPEED_SCALE;\n  return Infinity;\n}")
+          s = s.replace("    boostActive: effectiveBoostActive,\n    driftHeld,\n    throttle: driveThrottle\n  });", "    boostActive: effectiveBoostActive,\n    driftHeld,\n    throttle: driveThrottle,\n    shiftActive: state.shiftActive === true\n  });")
+          p.write_text(s)
 
-          const tractorTestPath = 'turn-tests/tractor-smv-production.mjs';
-          let test = fs.readFileSync(tractorTestPath, 'utf8');
-          test = test.replace(
-`assert.match(lotSource, /'sedan-sports',[\\s\\S]*'tractor',[\\s\\S]*'race',[\\s\\S]*'vintage-racer'/);
-assert.match(physicsSource, /drift: 50,[\\s\\S]*gas: 75,[\\s\\S]*boost: 100/);`,
-`assert.match(lotSource, /'classic',[\\s\\S]*'tractor',[\\s\\S]*'truck'/);
-assert.match(physicsSource, /SMV_SPEED_LIMITS_KMH[\\s\\S]*drift: 40,[\\s\\S]*gas: 60,[\\s\\S]*boost: 80/);
-assert.match(physicsSource, /SMV_SHIFT_SPEED_LIMITS_KMH[\\s\\S]*drift: 50,[\\s\\S]*gas: 70,[\\s\\S]*boost: 90/);
-assert.match(physicsSource, /shiftActive: state\\.shiftActive === true/,
-  'SMV speed ceilings must follow the live SHIFT state');`);
-          test = test.replace(
-`console.log('TURN Tractor SMV catalog, Lot order, propulsion ceilings and SHIFT profile checks passed.');`,
-`console.log('TURN Tractor SMV catalog, Lot order, base/SHIFT ceilings and SHIFT profile checks passed.');`);
-          fs.writeFileSync(tractorTestPath, test);
+          p = Path('turn-tests/tractor-smv-production.mjs')
+          s = p.read_text()
+          s = s.replace("assert.match(lotSource, /'sedan-sports',[\\s\\S]*'tractor',[\\s\\S]*'race',[\\s\\S]*'vintage-racer'/);\nassert.match(physicsSource, /drift: 50,[\\s\\S]*gas: 75,[\\s\\S]*boost: 100/);", "assert.match(lotSource, /'classic',[\\s\\S]*'tractor',[\\s\\S]*'truck'/);\nassert.match(physicsSource, /SMV_SPEED_LIMITS_KMH[\\s\\S]*drift: 40,[\\s\\S]*gas: 60,[\\s\\S]*boost: 80/);\nassert.match(physicsSource, /SMV_SHIFT_SPEED_LIMITS_KMH[\\s\\S]*drift: 50,[\\s\\S]*gas: 70,[\\s\\S]*boost: 90/);\nassert.match(physicsSource, /shiftActive: state\\.shiftActive === true/,\n  'SMV speed ceilings must follow the live SHIFT state');")
+          s = s.replace("console.log('TURN Tractor SMV catalog, Lot order, propulsion ceilings and SHIFT profile checks passed.');", "console.log('TURN Tractor SMV catalog, Lot order, base/SHIFT ceilings and SHIFT profile checks passed.');")
+          p.write_text(s)
 
-          const historyPath = 'turn/content/about-history-current.js';
-          let history = fs.readFileSync(historyPath, 'utf8');
-          history = history.replace(
-`    '50 / 75 / 100 km/h DRIFT, GAS and BOOST propulsive ceilings',
-    'SHIFT progression to 2 / 2 / 4 / 2 / 4 / 4',`,
-`    '40 / 60 / 80 km/h DRIFT, GAS and BOOST practice ceilings',
-    'SHIFT progression to 2 / 2 / 4 / 2 / 4 / 4 and 50 / 70 / 90 km/h ceilings',`);
-          fs.writeFileSync(historyPath, history);
-          NODE
+          p = Path('turn/content/about-history-current.js')
+          s = p.read_text()
+          s = s.replace("    '50 / 75 / 100 km/h DRIFT, GAS and BOOST propulsive ceilings',\n    'SHIFT progression to 2 / 2 / 4 / 2 / 4 / 4',", "    '40 / 60 / 80 km/h DRIFT, GAS and BOOST practice ceilings',\n    'SHIFT progression to 2 / 2 / 4 / 2 / 4 / 4 and 50 / 70 / 90 km/h ceilings',")
+          p.write_text(s)
+          PY
       - name: Verify focused Tractor and Lot regressions
         run: |
           node turn-tests/tractor-smv-production.mjs
