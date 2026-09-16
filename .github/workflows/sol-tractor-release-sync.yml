@@ -23,30 +23,66 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Harden GLB regression parsing
+      - name: Repair Tractor GLB container
         shell: bash
         run: |
           node <<'NODE'
+          const assert = require('node:assert/strict');
           const fs = require('node:fs');
+          const path = 'turn/assets/cars/tractor.glb';
+          const original = fs.readFileSync(path);
+          assert.equal(original.toString('utf8', 0, 4), 'glTF', 'Tractor must be a GLB');
+          assert.equal(original.readUInt32LE(4), 2, 'Tractor GLB must use version 2');
 
-          {
-            const path = 'turn-lab/tests/car-orientation-production.mjs';
-            let source = fs.readFileSync(path, 'utf8');
-            const before = "      return JSON.parse(buffer.subarray(offset + 8, offset + 8 + length).toString('utf8').trim());";
-            const after = "      const jsonText = buffer.subarray(offset + 8, offset + 8 + length).toString('utf8');\n      const jsonEnd = jsonText.lastIndexOf('}');\n      assert.ok(jsonEnd >= 0, `${carId} JSON chunk must contain an object`);\n      return JSON.parse(jsonText.slice(0, jsonEnd + 1));";
-            if (source.includes(before)) source = source.replace(before, after);
-            source = source.replace('passed for all 16 models.', 'passed for all 17 models.');
-            fs.writeFileSync(path, source);
+          let hasJson = false;
+          let hasBin = false;
+          for (let offset = 12; offset + 8 <= original.length;) {
+            const length = original.readUInt32LE(offset);
+            const type = original.toString('utf8', offset + 4, offset + 8);
+            if (type === 'JSON') hasJson = true;
+            if (type === 'BIN\u0000') hasBin = true;
+            offset += 8 + length;
           }
+          if (hasJson && hasBin) process.exit(0);
 
-          {
-            const path = 'turn-lab/tests/semantic-car-finish-production.mjs';
-            let source = fs.readFileSync(path, 'utf8');
-            const before = "    if (type === 'JSON') json = JSON.parse(data.toString('utf8').trim());";
-            const after = "    if (type === 'JSON') {\n      const jsonText = data.toString('utf8');\n      const jsonEnd = jsonText.lastIndexOf('}');\n      assert.ok(jsonEnd >= 0, `${carId} JSON chunk must contain an object`);\n      json = JSON.parse(jsonText.slice(0, jsonEnd + 1));\n    }";
-            if (source.includes(before)) source = source.replace(before, after);
-            fs.writeFileSync(path, source);
+          const text = original.subarray(20).toString('utf8');
+          let json = null;
+          let jsonEnd = -1;
+          for (let index = text.indexOf('}'); index >= 0; index = text.indexOf('}', index + 1)) {
+            try {
+              json = JSON.parse(text.slice(0, index + 1));
+              jsonEnd = index + 1;
+              break;
+            } catch (_) {}
           }
+          assert.ok(json && jsonEnd > 0, 'Tractor malformed JSON chunk must still contain recoverable glTF JSON');
+          const binaryLength = Number(json.buffers?.[0]?.byteLength);
+          assert.ok(Number.isInteger(binaryLength) && binaryLength > 0, 'Tractor glTF JSON must declare its BIN buffer length');
+          assert.ok(binaryLength < original.length, 'Tractor BIN buffer must fit inside the source file');
+
+          const jsonBytes = Buffer.from(text.slice(0, jsonEnd), 'utf8');
+          const jsonPadding = (4 - (jsonBytes.length % 4)) % 4;
+          const paddedJson = Buffer.concat([jsonBytes, Buffer.alloc(jsonPadding, 0x20)]);
+          const binary = original.subarray(original.length - binaryLength);
+          const binPadding = (4 - (binary.length % 4)) % 4;
+          const paddedBinary = Buffer.concat([binary, Buffer.alloc(binPadding)]);
+          const totalLength = 12 + 8 + paddedJson.length + 8 + paddedBinary.length;
+
+          const header = Buffer.alloc(12);
+          header.write('glTF', 0, 4, 'ascii');
+          header.writeUInt32LE(2, 4);
+          header.writeUInt32LE(totalLength, 8);
+          const jsonHeader = Buffer.alloc(8);
+          jsonHeader.writeUInt32LE(paddedJson.length, 0);
+          jsonHeader.write('JSON', 4, 4, 'ascii');
+          const binHeader = Buffer.alloc(8);
+          binHeader.writeUInt32LE(paddedBinary.length, 0);
+          binHeader.writeUInt32LE(0x004e4942, 4);
+
+          const repaired = Buffer.concat([header, jsonHeader, paddedJson, binHeader, paddedBinary]);
+          assert.equal(repaired.length, totalLength);
+          fs.writeFileSync(path, repaired);
+          console.log(`Repaired Tractor GLB container: ${original.length} -> ${repaired.length} bytes.`);
           NODE
 
       - name: Add r242 and r243 release history
@@ -149,6 +185,6 @@ jobs:
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add turn turn-next turn-lab/index.html turn-lab/tests/car-orientation-production.mjs turn-lab/tests/semantic-car-finish-production.mjs yourturn/index.html
+          git add turn turn-next turn-lab/index.html yourturn/index.html
           git commit -m 'Synchronize TURN r242 and r243 release surfaces'
           git push origin HEAD:sol/tractor-smv
