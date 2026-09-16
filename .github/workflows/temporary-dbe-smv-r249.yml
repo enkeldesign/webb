@@ -27,6 +27,7 @@ jobs:
         run: |
           node turn/scripts/temporary-dbe-smv-r249.mjs
           node turn/scripts/temporary-dbe-smv-r249-runtime-sync.mjs
+          node turn/scripts/temporary-dbe-smv-r249-test-sync.mjs
           node turn/scripts/release.mjs --write
 
       - name: Verify focused DBE and release contracts
