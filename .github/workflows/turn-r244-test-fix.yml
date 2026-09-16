@@ -1,0 +1,39 @@
+name: TURN r244 stale test fix
+
+on:
+  push:
+    branches:
+      - sol/fix-turn-loading-r244
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update Tractor native-paint expectation
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'turn-lab/tests/native-paint-production.mjs';
+          let source = fs.readFileSync(path, 'utf8');
+          source = source.replace(
+            "['convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck', 'race-future', 'race', 'sedan-sports', 'sedan', 'suv', 'truck', 'van', 'supercar']",
+            "['convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck', 'race-future', 'race', 'sedan-sports', 'tractor', 'sedan', 'suv', 'truck', 'van', 'supercar']"
+          );
+          source = source.replace(
+            "assert.ok(secondaryCars.slice(8, 12).every((car) => car.secondaryPaint.label === 'Lower body trim'));",
+            "assert.equal(secondaryCars[8].secondaryPaint.label, 'Bonnet & rims');\nassert.deepEqual(secondaryCars[8].secondaryPaint.meshNames, []);\nassert.ok(secondaryCars.slice(9, 13).every((car) => car.secondaryPaint.label === 'Lower body trim'));"
+          );
+          fs.writeFileSync(path, source);
+          NODE
+      - name: Commit stale-test correction
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn-lab/tests/native-paint-production.mjs
+          git commit -m 'Update Tractor native paint regression'
+          git push
