@@ -35,7 +35,7 @@ assert.ok(
   'Semantic native car finishes must remain part of TURN 1.10.4 or later'
 );
 assert.match(release.id, /^\d{4}\.\d{2}\.\d{2}-r\d+$/);
-assert.equal(catalog.CAR_CATALOG.length, 16);
+assert.equal(catalog.CAR_CATALOG.length, 17);
 assert.deepEqual(
   catalog.CAR_CATALOG
     .filter((car) => !car.fixedLivery && !car.secondaryPaint)
@@ -43,6 +43,12 @@ assert.deepEqual(
   [],
   'Every non-emergency car must expose its native or deliberately mounted secondary surface'
 );
+const tractorDefinition = catalog.getCarDefinition('tractor');
+assert.equal(tractorDefinition.secondaryPaint?.label, 'Bonnet & rims');
+assert.equal(tractorDefinition.defaultColor, '#4f7f36');
+assert.equal(tractorDefinition.defaultSecondaryColor, '#ffcc00');
+assert.match(semanticSource, /tractor: profile\(\{[\s\S]*primary: \[\[3, 4\], \[3, 5\]\][\s\S]*secondary: \[\[4, 2\], \[4, 3\]\][\s\S]*rims: \[\[5, 4\], \[5, 5\]\][\s\S]*rimRole: 'secondary'/,
+  'Tractor must paint its authored body green and its bonnet and rims with the secondary yellow');
 const supercarDefinition = catalog.getCarDefinition('supercar');
 assert.equal(supercarDefinition.secondaryPaint?.label, 'Rims',
   'Supercar secondary paint must be its deliberately mounted Kenney rims');
