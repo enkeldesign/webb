@@ -372,6 +372,20 @@ const DBE_SMV_TRAINING_HISTORY = Object.freeze({
   ])
 });
 
+const DBE_SMV_PACE_TIMING_HISTORY = Object.freeze({
+  period: '16 September',
+  title: 'DRIVE BY EAR 101 brings pace notes closer',
+  paragraphs: Object.freeze([
+    'TURN 1.21.0 build r250 moves the authored DRIVE BY EAR 101 pace notes closer to their curve entries for the slow-moving vehicle’s lower practice speeds. The cue still arrives before the steering action, but the learner no longer waits through a long straight after hearing it.',
+    'The final linked right–left phrase remains one sequence, preserving BIP BIP right followed by BIP BEEP left while bringing the whole phrase closer to the paired curves.'
+  ]),
+  milestones: Object.freeze([
+    'Later cues in all four pace-note training parts',
+    'Linked right–left phrase remains one sequence',
+    'TURN 1.21.0 · 2026.09.16-r250'
+  ])
+});
+
 const FACTORY_SECONDARY_PAINT_HISTORY = Object.freeze({
   period: '16 September',
   title: 'Factory secondary paint gets tuned',
@@ -424,7 +438,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   TRACTOR_SMV_TUNING_HISTORY,
   FACTORY_SECONDARY_PAINT_HISTORY,
   TRACTOR_RELEASE_CLEANUP_HISTORY,
-  DBE_SMV_TRAINING_HISTORY
+  DBE_SMV_TRAINING_HISTORY,
+  DBE_SMV_PACE_TIMING_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -495,13 +510,15 @@ Object.freeze({
     Object.freeze(['1.21.0 r248', 'Aligns TRACTOR release history and regression coverage with the shipped SMV tuning and #666000 secondary paint; gameplay is unchanged.']),
     Object.freeze(['TRACTOR regression coverage', 'Exercises the normal and SHIFT SMV speed resolver directly while retaining the no-forced-clamp propulsion contract.']),
     Object.freeze(['1.21.0 r249', 'Uses the slow-moving vehicle throughout DRIVE BY EAR 101 so blank-screen and non-visual practice starts at the deliberately governed SMV speeds.']),
-    Object.freeze(['DBE 101 vehicle', 'Uses the temporary vehicle’s factory paint, restores the player’s selection on exit, and routes legacy training imports to the current build.'])
+    Object.freeze(['DBE 101 vehicle', 'Uses the temporary vehicle’s factory paint, restores the player’s selection on exit, and routes legacy training imports to the current build.']),
+    Object.freeze(['1.21.0 r250', 'Moves DRIVE BY EAR 101 pace notes closer to their curves for the slow-moving vehicle’s lower practice speeds.']),
+    Object.freeze(['Closer pace-note timing', 'Keeps each cue on the approach while reducing the wait between hearing the BIPs and reaching the turn.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.21.0',
-  build: '2026.09.16-r249',
+  build: '2026.09.16-r250',
   note: 'TURN 1.21.0 adds TRACTOR and its SMV perk for slower blank screen and non-visual driving practice.'
 });

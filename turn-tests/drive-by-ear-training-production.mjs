@@ -76,8 +76,8 @@ assert.deepEqual(
   [[-1, 1, false], [1, 2, false]],
   'Training ear values must use the physical-device mapping: right negative, left positive'
 );
-assert.ok(part2.notes[0].progress <= 0.10, 'The first Part 2 BIP must play on the long straight');
-assert.ok(part2.notes[1].progress <= 0.49, 'The second Part 2 cue must play before its curve');
+assert.equal(part2.notes[0].progress, 0.19, 'The first Part 2 BIP must stay on the straight but sit closer to the gentle right');
+assert.equal(part2.notes[1].progress, 0.55, 'The second Part 2 cue must sit closer to its broader left');
 assert.ok(part2.points[3][1] >= 180, 'Part 2 must begin with a long straight');
 
 assert.equal(part3.notes.length, 1);
@@ -85,7 +85,7 @@ assert.deepEqual(
   [part3.notes[0].direction, part3.notes[0].severity, part3.notes[0].long],
   [-1, 1, false]
 );
-assert.ok(part3.notes[0].progress <= 0.17, 'Part 3 BIP must play well before the gentle right');
+assert.equal(part3.notes[0].progress, 0.27, 'Part 3 BIP must play on the final straight approach to the gentle right');
 assert.equal(part3.startOffset, -(ROAD_HALF_WIDTH + 4));
 
 assert.equal(part4.notes.length, 1, 'Part 4 must describe one uninterrupted curve');
@@ -94,6 +94,7 @@ assert.deepEqual(
   [1, 3, true],
   'Part 4 must play BIP BIP BEEP in the physically verified left ear'
 );
+assert.equal(part4.notes[0].progress, 0.27, 'Part 4 phrase must play closer to the long tight left at SMV practice speed');
 assert.match(part4.lead, /BIP BIP BEEP/);
 assert.match(part4.lead, /held final BEEP/);
 
@@ -103,6 +104,11 @@ assert.deepEqual(
   part5.notes.map(({ direction, severity, long }) => [direction, severity, long]),
   [[-1, 1, false], [-1, 2, false], [1, 2, true]],
   'Part 5 must end with BIP BIP right followed by BIP BEEP left'
+);
+assert.deepEqual(
+  part5.notes.map(({ progress }) => progress),
+  [0.15, 0.45, 0.45],
+  'Part 5 pace notes must sit close to their curve entries at SMV practice speed'
 );
 assert.equal(
   part5.notes[1].progress,
