@@ -152,7 +152,7 @@ function createDialogs() {
           <button type="button" data-training-cancel aria-label="Close Drive By Ear 101">×</button>
         </header>
         <div class="turn-dbe-training-copy">
-          <p data-training-intro-copy>Learn TURN's spatial guidance one layer at a time. Training temporarily uses the Training Car and puts Drive By Ear at 95% of the sound mix. Your car and audio choices return when you leave.</p>
+          <p data-training-intro-copy>Learn TURN's spatial guidance one layer at a time. Training temporarily uses the slow-moving vehicle and puts Drive By Ear at 95% of the sound mix. Your car and audio choices return when you leave.</p>
 
           <section class="turn-dbe-training-sound-key" aria-labelledby="turnDbeSoundKeyTitle">
             <h3 id="turnDbeSoundKeyTitle">Know which sound is speaking</h3>

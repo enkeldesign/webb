@@ -6,7 +6,8 @@ import {
   RAIL_ASSIST_START,
   RECOVERY_LIMIT,
   ROAD_HALF_WIDTH,
-  TRAINING_STAGES
+  TRAINING_STAGES,
+  TRAINING_VEHICLE_ID
 } from '../turn/training/stages.js';
 import {
   DRIVE_BY_EAR_PART_COMPLETED_EVENT,
@@ -31,17 +32,28 @@ const productionImports = JSON.parse(importMapText).imports;
 assert.match(fixedLayout, /training\/drive-by-ear-training\.js\?build=\$\{buildKey\}-r151-dbe-training-device-fixes/);
 assert.match(fixedLayout, /installDriveByEarTraining\(globalThis\.__turnRuntime\)/);
 assert.match(fixedLayout, /driveByEarTraining/);
-assert.match(
-  index,
-  /"\/turn\/training\/drive-by-ear-training\.js\?build=20260817-r172-r151-dbe-training-device-fixes": "\/turn\/training\/drive-by-ear-training\.js\?build=20260905-r201&revision=r241-learning-achievements"/,
-  'Production must map the established training import to the learning-achievement module identity'
-);
 assert.equal(
   productionImports['/turn/race/session-orchestrator.js?source=20260729-r118-m8'],
   `/turn/race/session-orchestrator.js?build=${release.cacheKey}`,
   'Production must map the start-announcement-aware race session through the current release identity'
 );
+assert.equal(
+  productionImports['/turn/training/drive-by-ear-training.js?build=20260817-r172-r151-dbe-training-device-fixes'],
+  `/turn/training/drive-by-ear-training.js?build=${release.cacheKey}`,
+  'Legacy DBE 101 entrypoints must route to the current release build instead of a stale training module'
+);
+assert.equal(
+  productionImports['/turn/training/stages.js'],
+  `/turn/training/stages.js?build=${release.cacheKey}`,
+  'Changed DBE stage definitions must have a release-bound module identity'
+);
+assert.equal(
+  productionImports['/turn/training/view.js'],
+  `/turn/training/view.js?build=${release.cacheKey}`,
+  'Changed DBE view code must have a release-bound module identity'
+);
 
+assert.equal(TRAINING_VEHICLE_ID, 'tractor', 'DBE 101 must use the slow-moving vehicle');
 assert.equal(TRAINING_STAGES.length, 5, 'Training must contain exactly five authored parts');
 assert.deepEqual(DRIVE_BY_EAR_PART_IDS, TRAINING_STAGES.map((stage) => stage.id),
   'The DRIVE BY EAR achievement must require every authored training part exactly once');
@@ -176,7 +188,18 @@ assert.equal(
 assert.match(view, /card\.scrollTop = 0/);
 assert.match(view, /behavior: 'instant'/);
 
+assert.match(training, /from '\/turn\/training\/stages\.js'/);
+assert.match(training, /from '\/turn\/training\/view\.js'/);
 assert.match(training, /setAudioEnabled\?\.\(true\)/);
+assert.match(training, /carId: TRAINING_VEHICLE_ID/);
+assert.match(training, /color: getVehicleDefaultColor\(TRAINING_VEHICLE_ID\)/);
+assert.match(training, /secondaryColor: getVehicleDefaultSecondaryColor\(TRAINING_VEHICLE_ID\)/);
+assert.match(training, /temporarily uses the slow-moving vehicle/);
+assert.match(view, /temporarily uses the slow-moving vehicle/);
+assert.doesNotMatch(training, /Training Car/, 'DBE 101 runtime copy must call it the slow-moving vehicle');
+assert.doesNotMatch(view, /Training Car/, 'DBE 101 dialog copy must call it the slow-moving vehicle');
+assert.doesNotMatch(training, /DEFAULT_VEHICLE_COLOR|DEFAULT_VEHICLE_SECONDARY_COLOR/,
+  'DBE 101 must use the slow-moving vehicle factory paint rather than Learner Car defaults');
 assert.match(training, /setDriveByEarEnabled\?\.\(true\)/);
 assert.match(training, /setBalance\?\.\(TRAINING_BALANCE\)/);
 assert.match(training, /restorePreferenceStorage\(session\.snapshot\)/);

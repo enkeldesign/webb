@@ -5,9 +5,9 @@ import {
 } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
 import { activateTrack } from '/turn/tracks/track-manager.js?source=20260729-r118-m8';
 import {
-  DEFAULT_VEHICLE_COLOR,
-  DEFAULT_VEHICLE_SECONDARY_COLOR,
-  VEHICLE_SELECTION_KEY
+  VEHICLE_SELECTION_KEY,
+  getVehicleDefaultColor,
+  getVehicleDefaultSecondaryColor
 } from '/turn/vehicle/catalog.js?build=20260720-r19';
 import { buildTrainingCourse, disposeTrainingWorld } from './course.js';
 import {
@@ -16,9 +16,9 @@ import {
   ROAD_HALF_WIDTH,
   SAFETY_ASSIST_START,
   TRAINING_BALANCE,
-  TRAINING_CAR_ID,
+  TRAINING_VEHICLE_ID,
   TRAINING_STAGES
-} from './stages.js';
+} from '/turn/training/stages.js';
 import {
   closeSourceDialog,
   hideTrainingDialog,
@@ -27,7 +27,7 @@ import {
   renderTrainingNavigation,
   showTrainingDialog,
   updatePartDialog
-} from './view.js';
+} from '/turn/training/view.js';
 
 const TRAINING_REVISION = 'r241-learning-achievements';
 const AUDIO_ENABLED_STORAGE_KEY = 'turn-audio-enabled-v1';
@@ -163,7 +163,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       session.returnFocus = entryPoints?.homeButton || trigger;
     }
     view.introDialog.querySelector('[data-training-intro-copy]').textContent =
-      "Learn TURN's spatial guidance one layer at a time. Choose any part below. Training temporarily uses the Training Car and puts Drive By Ear at 95% of the sound mix. Your car and audio choices return when you leave.";
+      "Learn TURN's spatial guidance one layer at a time. Choose any part below. Training temporarily uses the slow-moving vehicle and puts Drive By Ear at 95% of the sound mix. Your car and audio choices return when you leave.";
     showTrainingDialog(view.introDialog, '[data-training-stage="0"]');
   }
 
@@ -175,7 +175,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       session.snapshot = captureSnapshot();
       session.preparedAccess = await prepareAccess();
       await applyTemporaryPreferences();
-      await applyTrainingCar();
+      await applyTrainingVehicle();
       session.active = true;
       await startStage(stageIndex, { first: true });
     } catch (error) {
@@ -577,11 +577,11 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     await globalThis.__turnAudio?.unlock?.();
   }
 
-  async function applyTrainingCar() {
+  async function applyTrainingVehicle() {
     await raceSession.selectVehicle({
-      carId: TRAINING_CAR_ID,
-      color: DEFAULT_VEHICLE_COLOR,
-      secondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR
+      carId: TRAINING_VEHICLE_ID,
+      color: getVehicleDefaultColor(TRAINING_VEHICLE_ID),
+      secondaryColor: getVehicleDefaultSecondaryColor(TRAINING_VEHICLE_ID)
     });
     restoreStorage(VEHICLE_SELECTION_KEY, session.snapshot?.storage?.vehicle);
   }

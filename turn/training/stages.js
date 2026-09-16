@@ -1,6 +1,6 @@
 export const TRAINING_BALANCE = 0.95;
 export const BALANCE_SUGGESTION_THRESHOLD = 75;
-export const TRAINING_CAR_ID = 'classic';
+export const TRAINING_VEHICLE_ID = 'tractor';
 export const SAMPLE_COUNT = 720;
 export const FINISH_PROGRESS = 0.94;
 export const ROAD_HALF_WIDTH = 13.5;

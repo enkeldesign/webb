@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { graphicsProfile } from '/turn/graphics-profile.js';
-import { installMidnightCityWorld as installMidnightCityWorldR2 } from './midnight-city-world-r2.js?build=20260916-r248';
+import { installMidnightCityWorld as installMidnightCityWorldR2 } from './midnight-city-world-r2.js?build=20260916-r249';
 
 const WARM_LIGHT = 0xffd27a;
 const PLAYER_FILL = 0xffe3b3;
