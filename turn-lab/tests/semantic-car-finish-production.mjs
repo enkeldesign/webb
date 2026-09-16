@@ -46,9 +46,9 @@ assert.deepEqual(
 const tractorDefinition = catalog.getCarDefinition('tractor');
 assert.equal(tractorDefinition.secondaryPaint?.label, 'Bonnet & rims');
 assert.equal(tractorDefinition.defaultColor, '#4f7f36');
-assert.equal(tractorDefinition.defaultSecondaryColor, '#ffcc00');
+assert.equal(tractorDefinition.defaultSecondaryColor, '#666000');
 assert.match(semanticSource, /tractor: profile\(\{[\s\S]*primary: \[\[3, 4\], \[3, 5\]\][\s\S]*secondary: \[\[4, 2\], \[4, 3\]\][\s\S]*rims: \[\[5, 4\], \[5, 5\]\][\s\S]*rimRole: 'secondary'/,
-  'Tractor must paint its authored body green and its bonnet and rims with the secondary yellow');
+  'Tractor must paint its authored body green and its bonnet and rims with the configured secondary factory colour');
 const supercarDefinition = catalog.getCarDefinition('supercar');
 assert.equal(supercarDefinition.secondaryPaint?.label, 'Rims',
   'Supercar secondary paint must be its deliberately mounted Kenney rims');
