@@ -89,11 +89,19 @@ for (const car of catalog.CAR_CATALOG.filter((candidate) => !['rgsdev', 'cosmo']
   assert.ok(paletteContracts.has(car.pack), `${car.name} must resolve to a known Kenney palette family`);
   const glb = await fs.readFile(new URL(`../../turn/${car.asset.replace(/^\.\//, '')}`, import.meta.url));
   const json = readGlbJson(glb, car.id);
+  const authoredImages = json.images || [];
+if (car.id === 'tractor') {
+  assert.equal(authoredImages.length, 1, 'Tractor must preserve its one authored embedded palette image');
+  assert.equal(authoredImages[0].mimeType, 'image/png', 'Tractor embedded palette must remain PNG');
+  assert.ok(Number.isInteger(authoredImages[0].bufferView),
+    'Tractor must retain the source GLB embedded palette instead of inventing an external texture dependency');
+} else {
   assert.deepEqual(
-    (json.images || []).map((image) => image.uri),
+    authoredImages.map((image) => image.uri),
     ['Textures/colormap.png'],
     `${car.name} must retain its authored palette reference`
   );
+}
   const primitives = (json.meshes || []).flatMap((mesh) => mesh.primitives || []);
   assert.ok(primitives.length > 0, `${car.name} must contain renderable primitives`);
   assert.ok(primitives.every((primitive) => Number.isInteger(primitive.attributes?.TEXCOORD_0)),
