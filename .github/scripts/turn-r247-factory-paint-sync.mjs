@@ -39,7 +39,9 @@ replaceOnce('turn-tests/tractor-smv-production.mjs',
 
 {
   const path = 'turn-lab/tests/native-paint-production.mjs';
-  let source = fs.readFileSync(path, 'utf8').replaceAll("secondaryColor: '#393329'", "secondaryColor: '#aa9988'");
+  let source = fs.readFileSync(path, 'utf8')
+    .replaceAll("secondaryColor: '#393329'", "secondaryColor: '#aa9988'")
+    .replaceAll("carSecondaryColor: '#393329'", "carSecondaryColor: '#aa9988'");
   const anchor = `assert.deepEqual(
   catalog.normalizeStoredVehiclePaint({
     carId: 'convertible',
