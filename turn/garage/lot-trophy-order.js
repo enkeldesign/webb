@@ -1,5 +1,6 @@
 export const LOT_TROPHY_ORDER = Object.freeze([
   'classic',
+  'tractor',
   'truck',
   'sedan',
   'van',

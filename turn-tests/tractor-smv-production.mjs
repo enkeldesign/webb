@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 const physicsSource = await fs.readFile(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8');
 const catalogSource = await fs.readFile(new URL('../turn/vehicle/catalog.js', import.meta.url), 'utf8');
 const lotSource = await fs.readFile(new URL('../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8');
+const trophyOrderSource = await fs.readFile(new URL('../turn/garage/lot-trophy-order.js', import.meta.url), 'utf8');
 const shiftSource = await fs.readFile(new URL('../turn/vehicle/shift-profile.js', import.meta.url), 'utf8');
 
 assert.match(catalogSource, /\['tractor', 'Tractor', 'car', \{ speed: 1, acceleration: 1, control: 5, drift: 1, boostPower: 5, boostDuration: 5 \}/);
@@ -11,6 +12,8 @@ assert.match(catalogSource, /tractor: Object\.freeze\(\{[\s\S]*title: 'SMV'[\s\S
 assert.match(catalogSource, /tractor: Object\.freeze\(\{ fallback: '#4f7f36' \}\)/);
 assert.match(catalogSource, /tractor: Object\.freeze\(\{ fallback: '#ffcc00'/);
 assert.match(lotSource, /'classic',[\s\S]*'tractor',[\s\S]*'truck'/);
+assert.match(trophyOrderSource, /'classic',[\s\S]*'tractor',[\s\S]*'truck'/,
+  'The enhanced Trophy Road order must keep Learner Car first and Tractor second');
 assert.match(physicsSource, /SMV_SPEED_LIMITS_KMH[\s\S]*drift: 40,[\s\S]*gas: 60,[\s\S]*boost: 80/);
 assert.match(physicsSource, /SMV_SHIFT_SPEED_LIMITS_KMH[\s\S]*drift: 50,[\s\S]*gas: 70,[\s\S]*boost: 90/);
 assert.match(physicsSource, /shiftActive: state\.shiftActive === true/,
