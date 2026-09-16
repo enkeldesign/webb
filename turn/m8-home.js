@@ -647,7 +647,7 @@ export async function installM8HomeNavigation() {
       <header class="m8-home-head">
         <img class="m8-home-logo" src="/turn/TURNicon.PNG?icon=${ICON_REVISION}" alt="TURN">
         <div class="m8-home-pitch">
-          <p>TILT. DRIFT.<br>BEAT YOUR BEST.</p>
+          <p>TILT. DRIFT. FLOW.<br>BEAT YOUR BEST.</p>
           <button class="m8-how-button" type="button">HOW TO PLAY</button>
         </div>
         <span class="m8-home-build">TURN NEXT · M8 · SOURCE 2026.07.29-R118</span>
