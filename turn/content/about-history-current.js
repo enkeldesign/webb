@@ -299,6 +299,34 @@ const OVERDRIVE_FAST_CLEAN_HISTORY = Object.freeze({
   ])
 });
 
+const HOME_TAGLINE_FLOW_HISTORY = Object.freeze({
+  period: '16 September',
+  title: 'FLOW joins the home promise',
+  paragraphs: Object.freeze([
+    'TURN 1.20.5 build r242 updates the Home tagline to TILT. DRIFT. FLOW., bringing the scoring mechanic into the game’s short top-level promise without changing gameplay.',
+    'The build increment keeps the Home copy change cache-safe while the semantic release version remains 1.20.5.'
+  ]),
+  milestones: Object.freeze([
+    'Home tagline: TILT. DRIFT. FLOW.',
+    'TURN 1.20.5 · 2026.09.16-r242'
+  ])
+});
+
+const TRACTOR_SMV_HISTORY = Object.freeze({
+  period: '16 September',
+  title: 'TRACTOR slows things down for non-visual practice',
+  paragraphs: Object.freeze([
+    'TURN 1.21.0 adds TRACTOR as a start-available Kenney Car Kit vehicle with the SMV perk. Its 1 / 1 / 5 / 1 / 5 / 5 attributes keep the normal 18-point vehicle budget while its green body and yellow secondary paint give it a distinct factory identity.',
+    'SMV limits added propulsion to 50 km/h on DRIFT, 75 km/h on GAS and 100 km/h on BOOST without forcibly removing existing momentum. This makes it suitable for blank screen and non-visual driving practice. Once SHIFT is available, its only legal one-point setup becomes 2 / 2 / 4 / 2 / 4 / 4, providing a small built-in difficulty step.'
+  ]),
+  milestones: Object.freeze([
+    'Start-available TRACTOR with SMV perk',
+    '50 / 75 / 100 km/h DRIFT, GAS and BOOST propulsive ceilings',
+    'SHIFT progression to 2 / 2 / 4 / 2 / 4 / 4',
+    'TURN 1.21.0 · 2026.09.16-r243'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -331,7 +359,9 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   SUPPORT_CHALLENGE_LIFECYCLE_HISTORY,
   PERK_FEEDBACK_OVERDRIVE_HISTORY,
   FLOW_SHIFT_X3_HISTORY,
-  OVERDRIVE_FAST_CLEAN_HISTORY
+  OVERDRIVE_FAST_CLEAN_HISTORY,
+  HOME_TAGLINE_FLOW_HISTORY,
+  TRACTOR_SMV_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -386,11 +416,20 @@ export const CHANGELOG = Object.freeze([
       Object.freeze(['1.20.5 r241', 'Builds FUTURE RACER OVERDRIVE only at 200 km/h or faster, pauses progress below that speed, and only shows OVERDRIVE LOST after visible milestone feedback.']),
       Object.freeze(['Clean driving', 'Defines clean driving in HOW TO PLAY as staying on the track; speed and time targets remain separate requirements.'])
     ])
-  })
+  }),
+Object.freeze({
+  date: '16 September',
+  entries: Object.freeze([
+    Object.freeze(['1.20.5 r242', 'Updates the Home tagline to TILT. DRIFT. FLOW. and advances the build identity for the copy change.']),
+    Object.freeze(['1.21.0 r243', 'Adds the start-available TRACTOR with the SMV perk for slower blank screen and non-visual driving practice.']),
+    Object.freeze(['SMV practice speeds', 'Limits added propulsion to 50 km/h on DRIFT, 75 km/h on GAS and 100 km/h on BOOST while preserving existing momentum.']),
+    Object.freeze(['TRACTOR SHIFT step', 'Uses the normal SHIFT system to move from 1 / 1 / 5 / 1 / 5 / 5 to 2 / 2 / 4 / 2 / 4 / 4.'])
+  ])
+})
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.20.5',
-  build: '2026.09.15-r241',
-  note: 'TURN 1.20.5 makes OVERDRIVE reward fast clean driving and clarifies clean driving across TURN.'
+  version: '1.21.0',
+  build: '2026.09.16-r243',
+  note: 'TURN 1.21.0 adds TRACTOR and its SMV perk for slower blank screen and non-visual driving practice.'
 });
