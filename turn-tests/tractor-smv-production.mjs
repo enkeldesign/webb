@@ -16,7 +16,7 @@ assert.match(physicsSource, /getSmvPropulsiveSpeedLimit/);
 assert.match(physicsSource, /Math\.max\(0, smvPropulsiveLimit - Math\.max\(0, forwardSpeed\)\)/,
   'SMV must limit added propulsion without clamping away existing momentum');
 assert.match(physicsSource, /Math\.min\(propulsionStep, availablePropulsion\)/);
-assert.match(shiftSource, /const SHIFT_AMOUNT = 1/);
+assert.match(shiftSource, /VEHICLE_SHIFT_STANDARD_AMOUNT = 1/);
 
 const tractorBase = [1, 1, 5, 1, 5, 5];
 const shifted = tractorBase.map((value, index) => index === 0 || index === 1 || index === 3 ? value + 1 : value - 1);
