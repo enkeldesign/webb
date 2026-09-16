@@ -12,10 +12,19 @@ import {
 const OFFROAD_CAPABLE_VEHICLE_IDS = new Set(['monster-truck']);
 const OVERDRIVE_VEHICLE_ID = 'race-future';
 const SMV_VEHICLE_ID = 'tractor';
+// These are the user-facing HUD ceilings. TURN's production HUD intentionally
+// uses 2.9 displayed km/h per simulation speed unit, so SMV converts from that
+// scale rather than physical 3.6 km/h per m/s.
+const TURN_HUD_SPEED_SCALE = 2.9;
 export const SMV_SPEED_LIMITS_KMH = Object.freeze({
+  drift: 40,
+  gas: 60,
+  boost: 80
+});
+export const SMV_SHIFT_SPEED_LIMITS_KMH = Object.freeze({
   drift: 50,
-  gas: 75,
-  boost: 100
+  gas: 70,
+  boost: 90
 });
 export const OVERDRIVE_MIN_SPEED_KMH = 200;
 const OVERDRIVE_MIN_SPEED = OVERDRIVE_MIN_SPEED_KMH / 3.6;
@@ -49,12 +58,14 @@ export function getSmvPropulsiveSpeedLimit({
   perkUnlocked = false,
   boostActive = false,
   driftHeld = false,
-  throttle = 0
+  throttle = 0,
+  shiftActive = false
 } = {}) {
   if (String(vehicleId || '') !== SMV_VEHICLE_ID || perkUnlocked !== true) return Infinity;
-  if (boostActive) return SMV_SPEED_LIMITS_KMH.boost / 3.6;
-  if (driftHeld) return SMV_SPEED_LIMITS_KMH.drift / 3.6;
-  if (nonNegativeNumber(throttle, 0) > 0) return SMV_SPEED_LIMITS_KMH.gas / 3.6;
+  const limits = shiftActive === true ? SMV_SHIFT_SPEED_LIMITS_KMH : SMV_SPEED_LIMITS_KMH;
+  if (boostActive) return limits.boost / TURN_HUD_SPEED_SCALE;
+  if (driftHeld) return limits.drift / TURN_HUD_SPEED_SCALE;
+  if (nonNegativeNumber(throttle, 0) > 0) return limits.gas / TURN_HUD_SPEED_SCALE;
   return Infinity;
 }
 
@@ -319,7 +330,8 @@ function updateVehiclePhysicsStateCore({
     perkUnlocked: state.vehiclePerkUnlocked,
     boostActive: effectiveBoostActive,
     driftHeld,
-    throttle: driveThrottle
+    throttle: driveThrottle,
+    shiftActive: state.shiftActive === true
   });
   const availablePropulsion = Number.isFinite(smvPropulsiveLimit)
     ? Math.max(0, smvPropulsiveLimit - Math.max(0, forwardSpeed))

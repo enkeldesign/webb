@@ -321,8 +321,8 @@ const TRACTOR_SMV_HISTORY = Object.freeze({
   ]),
   milestones: Object.freeze([
     'Start-available TRACTOR with SMV perk',
-    '50 / 75 / 100 km/h DRIFT, GAS and BOOST propulsive ceilings',
-    'SHIFT progression to 2 / 2 / 4 / 2 / 4 / 4',
+    '40 / 60 / 80 km/h DRIFT, GAS and BOOST practice ceilings',
+    'SHIFT progression to 2 / 2 / 4 / 2 / 4 / 4 and 50 / 70 / 90 km/h ceilings',
     'TURN 1.21.0 · 2026.09.16-r243'
   ])
 });
