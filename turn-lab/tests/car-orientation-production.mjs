@@ -21,6 +21,7 @@ const expectedQuarterTurns = new Map([
   ['race-future', 0],
   ['race', 0],
   ['sedan-sports', 0],
+  ['tractor', 0],
   ['sedan', 0],
   ['suv', 0],
   ['firetruck', 0],
@@ -40,6 +41,7 @@ const expectedVisualScales = new Map([
   ['race-future', 0.96],
   ['race', 0.94],
   ['sedan-sports', 0.98],
+  ['tractor', 1],
   ['sedan', 1],
   ['suv', 1.05],
   ['firetruck', 1.10],
@@ -342,7 +344,7 @@ assert.match(
 assert.match(main, /animateWheelRig\(car, \{ steerAngle, speed, dt \}\)/,
   'The gameplay wheel animator must use the shared steering-and-spin behavior');
 
-console.log(`TURN ${release.id} car orientation, trajectory steering, visible wheel integration and surface-specific visual sizing passed for all 16 models.`);
+console.log(`TURN ${release.id} car orientation, trajectory steering, visible wheel integration and surface-specific visual sizing passed for all 17 models.`);
 
 function assertClose(actual, expected, label) {
   assert.ok(
