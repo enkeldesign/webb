@@ -90,7 +90,7 @@ assert.deepEqual(JSON.parse(selectionStorage.getItem(catalog.VEHICLE_SELECTION_K
 const secondaryCars = catalog.CAR_CATALOG.filter((car) => car.secondaryPaint);
 assert.deepEqual(
   secondaryCars.map((car) => car.id),
-  ['convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck', 'race-future', 'race', 'sedan-sports', 'sedan', 'suv', 'truck', 'van', 'supercar'],
+  ['convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck', 'race-future', 'race', 'sedan-sports', 'tractor', 'sedan', 'suv', 'truck', 'van', 'supercar'],
   'Every player-repaintable car should expose a semantic second picker'
 );
 assert.equal(secondaryCars[0].secondaryPaint.label, 'Lower body trim');
@@ -104,7 +104,9 @@ assert.equal(secondaryCars[5].secondaryPaint.label, 'Aero accents');
 assert.equal(secondaryCars[6].secondaryPaint.label, 'Aero trim');
 assert.equal(secondaryCars[7].secondaryPaint.label, 'Sport trim');
 assert.deepEqual(secondaryCars[7].secondaryPaint.meshNames, []);
-assert.ok(secondaryCars.slice(8, 12).every((car) => car.secondaryPaint.label === 'Lower body trim'));
+assert.equal(secondaryCars[8].secondaryPaint.label, 'Bonnet & rims');
+assert.deepEqual(secondaryCars[8].secondaryPaint.meshNames, []);
+assert.ok(secondaryCars.slice(9, 13).every((car) => car.secondaryPaint.label === 'Lower body trim'));
 const supercar = catalog.getCarDefinition('supercar');
 assert.equal(supercar.defaultColor, '#000000');
 assert.equal(supercar.defaultSecondaryColor, '#ffbb00');
