@@ -187,6 +187,9 @@ jobs:
       - name: Run DRIFT handling contract regression
         run: node turn-lab/tests/vehicle-drift-production.mjs
 
+      - name: Run Tractor SMV regression
+        run: node turn-tests/tractor-smv-production.mjs
+
       - name: Run Trophy Road vehicle perk regression
         run: node turn-lab/tests/vehicle-perks-production.mjs
 

@@ -317,13 +317,43 @@ const TRACTOR_SMV_HISTORY = Object.freeze({
   title: 'TRACTOR slows things down for non-visual practice',
   paragraphs: Object.freeze([
     'TURN 1.21.0 adds TRACTOR as a start-available Kenney Car Kit vehicle with the SMV perk. Its 1 / 1 / 5 / 1 / 5 / 5 attributes keep the normal 18-point vehicle budget while its green body and yellow secondary paint give it a distinct factory identity.',
-    'SMV limits added propulsion to 50 km/h on DRIFT, 75 km/h on GAS and 100 km/h on BOOST without forcibly removing existing momentum. This makes it suitable for blank screen and non-visual driving practice. Once SHIFT is available, its only legal one-point setup becomes 2 / 2 / 4 / 2 / 4 / 4, providing a small built-in difficulty step.'
+    'The first SMV build limits added propulsion to 50 km/h on DRIFT, 75 km/h on GAS and 100 km/h on BOOST without forcibly removing existing momentum. The standard SHIFT profile can change its attributes to 2 / 2 / 4 / 2 / 4 / 4, while these initial SMV ceilings themselves remain fixed.'
   ]),
   milestones: Object.freeze([
     'Start-available TRACTOR with SMV perk',
-    '40 / 60 / 80 km/h DRIFT, GAS and BOOST practice ceilings',
-    'SHIFT progression to 2 / 2 / 4 / 2 / 4 / 4 and 50 / 70 / 90 km/h ceilings',
+    'Initial 50 / 75 / 100 km/h DRIFT, GAS and BOOST propulsion ceilings',
+    'Standard SHIFT attribute profile: 2 / 2 / 4 / 2 / 4 / 4',
     'TURN 1.21.0 · 2026.09.16-r243'
+  ])
+});
+
+const TRACTOR_SMV_TUNING_HISTORY = Object.freeze({
+  period: '16 September',
+  title: 'TRACTOR practice speeds become progressive',
+  paragraphs: Object.freeze([
+    'TURN 1.21.0 build r245 retunes SMV to 40 / 60 / 80 km/h on DRIFT, GAS and BOOST, then raises those ceilings to 50 / 70 / 90 km/h while SHIFT is active. The live SHIFT state now changes both the ordinary attribute profile and the SMV propulsion ceiling, making SHIFT a real step up in blank screen practice speed.',
+    'The same build keeps LEARNER CAR as the canonical default and first Lot car with TRACTOR second. Build r246 fixes the enhanced Trophy Road ordering layer too, so the visible rail, previous/next controls and keyboard cycling all preserve LEARNER CAR → TRACTOR → TRUCK.'
+  ]),
+  milestones: Object.freeze([
+    '40 / 60 / 80 km/h base SMV ceilings and 50 / 70 / 90 km/h with SHIFT',
+    'LEARNER CAR remains the default and first Lot car; TRACTOR is second',
+    'Enhanced Lot cycling aligned in r246',
+    'TURN 1.21.0 · 2026.09.16-r245–r246'
+  ])
+});
+
+const TRACTOR_RELEASE_CLEANUP_HISTORY = Object.freeze({
+  period: '16 September',
+  title: 'TRACTOR release records and regressions align',
+  paragraphs: Object.freeze([
+    'TURN 1.21.0 build r248 reconciles the r243, r245 and r246 release record with the behavior that actually shipped, and updates the semantic native-finish regression to TRACTOR’s current #666000 factory secondary paint.',
+    'The dedicated TRACTOR regression now exercises the live SMV speed-limit resolver directly for normal and SHIFT inputs, while retaining the contract that SMV limits newly added propulsion instead of forcibly clamping existing momentum. Gameplay tuning is unchanged.'
+  ]),
+  milestones: Object.freeze([
+    'Release history matches the shipped SMV progression',
+    'Semantic paint regression follows #666000 factory secondary paint',
+    'Direct normal and SHIFT SMV resolver coverage',
+    'TURN 1.21.0 · 2026.09.16-r248'
   ])
 });
 
@@ -376,7 +406,9 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   OVERDRIVE_FAST_CLEAN_HISTORY,
   HOME_TAGLINE_FLOW_HISTORY,
   TRACTOR_SMV_HISTORY,
-  FACTORY_SECONDARY_PAINT_HISTORY
+  TRACTOR_SMV_TUNING_HISTORY,
+  FACTORY_SECONDARY_PAINT_HISTORY,
+  TRACTOR_RELEASE_CLEANUP_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -439,14 +471,19 @@ Object.freeze({
     Object.freeze(['1.21.0 r243', 'Adds the start-available TRACTOR with the SMV perk for slower blank screen and non-visual driving practice.']),
     Object.freeze(['SMV practice speeds', 'Limits added propulsion to 50 km/h on DRIFT, 75 km/h on GAS and 100 km/h on BOOST while preserving existing momentum.']),
     Object.freeze(['TRACTOR SHIFT step', 'Uses the normal SHIFT system to move from 1 / 1 / 5 / 1 / 5 / 5 to 2 / 2 / 4 / 2 / 4 / 4.']),
+    Object.freeze(['1.21.0 r245', 'Retunes TRACTOR SMV to 40 / 60 / 80 km/h and 50 / 70 / 90 with SHIFT, while keeping LEARNER CAR as the default and first Lot car.']),
+    Object.freeze(['SMV SHIFT progression', 'Lets live SHIFT state raise the TRACTOR propulsion ceilings as well as applying its 2 / 2 / 4 / 2 / 4 / 4 attribute profile.']),
+    Object.freeze(['1.21.0 r246', 'Keeps TRACTOR immediately after LEARNER CAR in the enhanced Lot order, including previous/next and keyboard cycling.']),
     Object.freeze(['1.21.0 r247', 'Retunes factory secondary paint: TRACTOR to #666000 and AWD to #aa9988 while keeping their body colours unchanged.']),
-    Object.freeze(['Factory paint migration', 'Moves existing factory-painted selections and saved rivals to the new secondary colours without changing custom PAINTJOB combinations.'])
+    Object.freeze(['Factory paint migration', 'Moves existing factory-painted selections and saved rivals to the new secondary colours without changing custom PAINTJOB combinations.']),
+    Object.freeze(['1.21.0 r248', 'Aligns TRACTOR release history and regression coverage with the shipped SMV tuning and #666000 secondary paint; gameplay is unchanged.']),
+    Object.freeze(['TRACTOR regression coverage', 'Exercises the normal and SHIFT SMV speed resolver directly while retaining the no-forced-clamp propulsion contract.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.21.0',
-  build: '2026.09.16-r247',
+  build: '2026.09.16-r248',
   note: 'TURN 1.21.0 adds TRACTOR and its SMV perk for slower blank screen and non-visual driving practice.'
 });
