@@ -1,0 +1,134 @@
+name: TURN r247 factory paint sync
+
+on:
+  push:
+    branches:
+      - sol/factory-secondary-colors-r247
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Update factory secondary colours and migrations
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          def replace_once(path, old, new):
+            p = Path(path)
+            s = p.read_text()
+            if old not in s:
+              raise SystemExit(f'Expected anchor not found in {path}: {old[:100]!r}')
+            p.write_text(s.replace(old, new, 1))
+
+          # Factory colours and forward migrations for existing saved selections.
+          replace_once('turn/vehicle/catalog.js',
+            "export const VEHICLE_SELECTION_VERSION = 6;",
+            "export const VEHICLE_SELECTION_VERSION = 7;")
+          replace_once('turn/vehicle/catalog.js',
+            "  convertible: Object.freeze({ fallback: '#393329' }),",
+            "  convertible: Object.freeze({ fallback: '#aa9988' }),")
+          replace_once('turn/vehicle/catalog.js',
+            "  tractor: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),",
+            "  tractor: Object.freeze({ fallback: '#666000' }),")
+          replace_once('turn/vehicle/catalog.js',
+            "  convertible: Object.freeze([\n    Object.freeze({ color: '#0555aa', secondaryColor: '#163f7a' }),\n    Object.freeze({ color: '#ff4fa3', secondaryColor: '#792766' })\n  ]),",
+            "  convertible: Object.freeze([\n    Object.freeze({ color: '#0555aa', secondaryColor: '#163f7a' }),\n    Object.freeze({ color: '#ff4fa3', secondaryColor: '#792766' }),\n    Object.freeze({ color: '#776655', secondaryColor: '#393329' })\n  ]),\n  tractor: Object.freeze([\n    Object.freeze({ color: '#4f7f36', secondaryColor: '#ffcc00' })\n  ]),")
+
+          # Rival paint migration uses the same canonical factory-pair logic.
+          replace_once('turn/race/rival-storage.js',
+            "export const RIVAL_STORAGE_VERSION = 7;",
+            "export const RIVAL_STORAGE_VERSION = 8;")
+
+          # Focused Tractor regression.
+          replace_once('turn-tests/tractor-smv-production.mjs',
+            "assert.match(catalogSource, /tractor: Object\\.freeze\\(\\{ fallback: '#ffcc00'/);",
+            "assert.match(catalogSource, /tractor: Object\\.freeze\\(\\{ fallback: '#666000' \\}\\)/);")
+
+          # Native-paint regression: current AWD factory outputs now use #aa9988.
+          p = Path('turn-lab/tests/native-paint-production.mjs')
+          s = p.read_text().replace("secondaryColor: '#393329'", "secondaryColor: '#aa9988'")
+          anchor = "assert.deepEqual(\n  catalog.normalizeStoredVehiclePaint({\n    carId: 'convertible',\n    color: '#ff4fa3',\n    secondaryColor: '#792766'\n  }, { migrateReplacedFactoryPaint: true }),\n  { carId: 'convertible', color: '#776655', secondaryColor: '#aa9988', factoryPaint: true },\n  'The previous pink AWD factory pair must migrate to the current brown pair atomically'\n);"
+          if anchor not in s:
+            raise SystemExit('Updated AWD migration anchor not found')
+          addition = anchor + "\nassert.deepEqual(\n  catalog.normalizeStoredVehiclePaint({\n    carId: 'convertible',\n    color: '#776655',\n    secondaryColor: '#393329'\n  }, { migrateReplacedFactoryPaint: true }),\n  { carId: 'convertible', color: '#776655', secondaryColor: '#aa9988', factoryPaint: true },\n  'The previous brown AWD factory secondary must migrate to #aa9988 without rewriting custom paint'\n);\nassert.deepEqual(\n  catalog.normalizeStoredVehiclePaint({\n    carId: 'tractor',\n    color: '#4f7f36',\n    secondaryColor: '#ffcc00'\n  }, { migrateReplacedFactoryPaint: true }),\n  { carId: 'tractor', color: '#4f7f36', secondaryColor: '#666000', factoryPaint: true },\n  'The previous Tractor factory yellow must migrate to the new olive secondary'\n);"
+          s = s.replace(anchor, addition, 1)
+          supercar_anchor = "const supercar = catalog.getCarDefinition('supercar');"
+          if supercar_anchor not in s:
+            raise SystemExit('Native paint car-definition anchor not found')
+          s = s.replace(supercar_anchor,
+            "const awd = catalog.getCarDefinition('convertible');\nassert.equal(awd.defaultSecondaryColor, '#aa9988');\nconst tractor = catalog.getCarDefinition('tractor');\nassert.equal(tractor.defaultSecondaryColor, '#666000');\n" + supercar_anchor, 1)
+          p.write_text(s)
+
+          replace_once('turn-lab/tests/garage-production.mjs',
+            "assert.match(rivalStorage, /RIVAL_STORAGE_VERSION = 7/);",
+            "assert.match(rivalStorage, /RIVAL_STORAGE_VERSION = 8/);")
+
+          # History and changelog: keep semantic version 1.21.0, record build r247.
+          p = Path('turn/content/about-history-current.js')
+          s = p.read_text()
+          history_anchor = "const previousLatest = BASE_CHANGELOG.at(-1);"
+          history_block = """const FACTORY_SECONDARY_PAINT_HISTORY = Object.freeze({
+  period: '16 September',
+  title: 'Factory secondary paint gets tuned',
+  paragraphs: Object.freeze([
+    'TURN 1.21.0 build r247 retunes two factory secondary colours without changing body paint or vehicle behaviour. TRACTOR keeps its green body and changes its secondary paint to #666000; AWD keeps its brown body and changes its secondary paint to #aa9988.',
+    'Existing factory-painted vehicle selections and saved rivals migrate to the new pairs. Custom PAINTJOB combinations remain untouched.'
+  ]),
+  milestones: Object.freeze([
+    'TRACTOR factory secondary: #666000',
+    'AWD factory secondary: #aa9988',
+    'TURN 1.21.0 · 2026.09.16-r247'
+  ])
+});
+
+"""
+          if history_anchor not in s:
+            raise SystemExit('History insertion anchor not found')
+          s = s.replace(history_anchor, history_block + history_anchor, 1)
+          replace_anchor = "  HOME_TAGLINE_FLOW_HISTORY,\n  TRACTOR_SMV_HISTORY\n]);"
+          replacement = "  HOME_TAGLINE_FLOW_HISTORY,\n  TRACTOR_SMV_HISTORY,\n  FACTORY_SECONDARY_PAINT_HISTORY\n]);"
+          if replace_anchor not in s:
+            raise SystemExit('Development history list anchor not found')
+          s = s.replace(replace_anchor, replacement, 1)
+          changelog_anchor = "    Object.freeze(['TRACTOR SHIFT step', 'Uses the normal SHIFT system to move from 1 / 1 / 5 / 1 / 5 / 5 to 2 / 2 / 4 / 2 / 4 / 4.'])"
+          changelog_replacement = changelog_anchor + ",\n    Object.freeze(['1.21.0 r247', 'Retunes factory secondary paint: TRACTOR to #666000 and AWD to #aa9988 while keeping their body colours unchanged.']),\n    Object.freeze(['Factory paint migration', 'Moves existing factory-painted selections and saved rivals to the new secondary colours without changing custom PAINTJOB combinations.'])"
+          if changelog_anchor not in s:
+            raise SystemExit('16 September changelog anchor not found')
+          s = s.replace(changelog_anchor, changelog_replacement, 1)
+          p.write_text(s)
+
+          # Build-only release increment; semantic version intentionally stays 1.21.0.
+          p = Path('turn/release.json')
+          release = json.loads(p.read_text())
+          if release != {'version': '1.21.0', 'id': '2026.09.16-r246', 'cacheKey': '20260916-r246'}:
+            raise SystemExit(f'Unexpected release base: {release}')
+          release['id'] = '2026.09.16-r247'
+          release['cacheKey'] = '20260916-r247'
+          p.write_text(json.dumps(release, indent=2) + '\n')
+          PY
+      - name: Synchronize release-facing surfaces
+        run: node turn/scripts/release.mjs --write
+      - name: Run focused factory paint regressions
+        run: |
+          node turn-tests/tractor-smv-production.mjs
+          node turn-lab/tests/native-paint-production.mjs
+          node turn-lab/tests/garage-production.mjs
+      - name: Verify release source of truth
+        run: node turn/scripts/release.mjs --check
+      - name: Commit r247
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn turn-lab turn-next yourturn turn-tests
+          git commit -m 'Retune Tractor and AWD factory secondary colours and publish r247'
+          git push
