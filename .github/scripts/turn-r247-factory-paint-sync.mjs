@@ -77,6 +77,7 @@ assert.equal(awd.defaultSecondaryColor, '#aa9988');
 const tractor = catalog.getCarDefinition('tractor');
 assert.equal(tractor.defaultSecondaryColor, '#666000');
 ${carAnchor}`);
+  source = source.replace('/RIVAL_STORAGE_VERSION = 7/', '/RIVAL_STORAGE_VERSION = 8/');
   fs.writeFileSync(path, source);
 }
 
