@@ -18,7 +18,7 @@ import {
   TRAINING_BALANCE,
   TRAINING_VEHICLE_ID,
   TRAINING_STAGES
-} from './stages.js';
+} from '/turn/training/stages.js';
 import {
   closeSourceDialog,
   hideTrainingDialog,
@@ -27,7 +27,7 @@ import {
   renderTrainingNavigation,
   showTrainingDialog,
   updatePartDialog
-} from './view.js';
+} from '/turn/training/view.js';
 
 const TRAINING_REVISION = 'r241-learning-achievements';
 const AUDIO_ENABLED_STORAGE_KEY = 'turn-audio-enabled-v1';

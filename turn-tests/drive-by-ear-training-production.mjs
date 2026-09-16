@@ -42,6 +42,16 @@ assert.equal(
   `/turn/training/drive-by-ear-training.js?build=${release.cacheKey}`,
   'Legacy DBE 101 entrypoints must route to the current release build instead of a stale training module'
 );
+assert.equal(
+  productionImports['/turn/training/stages.js'],
+  `/turn/training/stages.js?build=${release.cacheKey}`,
+  'Changed DBE stage definitions must have a release-bound module identity'
+);
+assert.equal(
+  productionImports['/turn/training/view.js'],
+  `/turn/training/view.js?build=${release.cacheKey}`,
+  'Changed DBE view code must have a release-bound module identity'
+);
 
 assert.equal(TRAINING_VEHICLE_ID, 'tractor', 'DBE 101 must use the slow-moving vehicle');
 assert.equal(TRAINING_STAGES.length, 5, 'Training must contain exactly five authored parts');
@@ -178,6 +188,8 @@ assert.equal(
 assert.match(view, /card\.scrollTop = 0/);
 assert.match(view, /behavior: 'instant'/);
 
+assert.match(training, /from '\/turn\/training\/stages\.js'/);
+assert.match(training, /from '\/turn\/training\/view\.js'/);
 assert.match(training, /setAudioEnabled\?\.\(true\)/);
 assert.match(training, /carId: TRAINING_VEHICLE_ID/);
 assert.match(training, /color: getVehicleDefaultColor\(TRAINING_VEHICLE_ID\)/);

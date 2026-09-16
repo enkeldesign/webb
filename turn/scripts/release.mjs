@@ -245,12 +245,20 @@ function synchronizePlatformContextTarget(importMap, release) {
 }
 
 function synchronizeDriveByEarTrainingTargets(importMap, release) {
-  const pathname = '/turn/training/drive-by-ear-training.js';
-  const target = `${pathname}?build=${release.cacheKey}`;
-  for (const [specifier, existing] of Object.entries(importMap.imports || {})) {
-    if (typeof existing !== 'string') continue;
-    if (new URL(existing, 'https://enkel.design/turn/').pathname === pathname) {
-      importMap.imports[specifier] = target;
+  const imports = importMap.imports ||= {};
+  const releaseBoundPaths = [
+    '/turn/training/drive-by-ear-training.js',
+    '/turn/training/stages.js',
+    '/turn/training/view.js'
+  ];
+  for (const pathname of releaseBoundPaths) {
+    const target = `${pathname}?build=${release.cacheKey}`;
+    imports[pathname] = target;
+    for (const [specifier, existing] of Object.entries(imports)) {
+      if (typeof existing !== 'string') continue;
+      if (new URL(existing, 'https://enkel.design/turn/').pathname === pathname) {
+        imports[specifier] = target;
+      }
     }
   }
 }
