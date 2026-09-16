@@ -1,0 +1,129 @@
+name: Temporary DBE pace-note retiming
+
+on:
+  push:
+    branches:
+      - sol/dbe-pace-notes-r250
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.event.head_commit.message == 'Apply DBE pace-note retiming'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: sol/dbe-pace-notes-r250
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Retiming and release metadata
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              s = p.read_text()
+              if s.count(old) != 1:
+                  raise SystemExit(f'{path}: expected exactly one match for {old!r}, found {s.count(old)}')
+              p.write_text(s.replace(old, new, 1))
+
+          stages = 'turn/training/stages.js'
+          replace_once(stages,
+              'notes: [note(0.10, RIGHT, 1), note(0.49, LEFT, 2)]',
+              'notes: [note(0.19, RIGHT, 1), note(0.55, LEFT, 2)]')
+          replace_once(stages,
+              'notes: [note(0.17, RIGHT, 1)]',
+              'notes: [note(0.27, RIGHT, 1)]')
+          replace_once(stages,
+              'notes: [note(0.16, LEFT, 3, true)]',
+              'notes: [note(0.27, LEFT, 3, true)]')
+          replace_once(stages,
+              'notes: [note(0.08, RIGHT, 1), note(0.43, RIGHT, 2), note(0.43, LEFT, 2, true)]',
+              'notes: [note(0.15, RIGHT, 1), note(0.45, RIGHT, 2), note(0.45, LEFT, 2, true)]')
+
+          tests = 'turn-tests/drive-by-ear-training-production.mjs'
+          replace_once(tests,
+              "assert.ok(part2.notes[0].progress <= 0.10, 'The first Part 2 BIP must play on the long straight');\nassert.ok(part2.notes[1].progress <= 0.49, 'The second Part 2 cue must play before its curve');",
+              "assert.equal(part2.notes[0].progress, 0.19, 'The first Part 2 BIP must stay on the straight but sit closer to the gentle right');\nassert.equal(part2.notes[1].progress, 0.55, 'The second Part 2 cue must sit closer to its broader left');")
+          replace_once(tests,
+              "assert.ok(part3.notes[0].progress <= 0.17, 'Part 3 BIP must play well before the gentle right');",
+              "assert.equal(part3.notes[0].progress, 0.27, 'Part 3 BIP must play on the final straight approach to the gentle right');")
+          replace_once(tests,
+              "assert.match(part4.lead, /BIP BIP BEEP/);",
+              "assert.equal(part4.notes[0].progress, 0.27, 'Part 4 phrase must play closer to the long tight left at SMV practice speed');\nassert.match(part4.lead, /BIP BIP BEEP/);")
+          replace_once(tests,
+              "assert.equal(\n  part5.notes[1].progress,\n  part5.notes[2].progress,",
+              "assert.deepEqual(\n  part5.notes.map(({ progress }) => progress),\n  [0.15, 0.45, 0.45],\n  'Part 5 pace notes must sit close to their curve entries at SMV practice speed'\n);\nassert.equal(\n  part5.notes[1].progress,\n  part5.notes[2].progress,")
+
+          history = 'turn/content/about-history-current.js'
+          p = Path(history)
+          s = p.read_text()
+          anchor = "const FACTORY_SECONDARY_PAINT_HISTORY = Object.freeze({"
+          block = """const DBE_SMV_PACE_TIMING_HISTORY = Object.freeze({
+  period: '16 September',
+  title: 'DRIVE BY EAR 101 brings pace notes closer',
+  paragraphs: Object.freeze([
+    'TURN 1.21.0 build r250 moves the authored DRIVE BY EAR 101 pace notes closer to their curve entries for the slow-moving vehicle’s lower practice speeds. The cue still arrives before the steering action, but the learner no longer waits through a long straight after hearing it.',
+    'The final linked right–left phrase remains one sequence, preserving BIP BIP right followed by BIP BEEP left while bringing the whole phrase closer to the paired curves.'
+  ]),
+  milestones: Object.freeze([
+    'Later cues in all four pace-note training parts',
+    'Linked right–left phrase remains one sequence',
+    'TURN 1.21.0 · 2026.09.16-r250'
+  ])
+});
+
+"""
+          if s.count(anchor) != 1:
+              raise SystemExit('history insertion anchor mismatch')
+          s = s.replace(anchor, block + anchor, 1)
+          old = "  TRACTOR_RELEASE_CLEANUP_HISTORY,\n  DBE_SMV_TRAINING_HISTORY\n]);"
+          new = "  TRACTOR_RELEASE_CLEANUP_HISTORY,\n  DBE_SMV_TRAINING_HISTORY,\n  DBE_SMV_PACE_TIMING_HISTORY\n]);"
+          if s.count(old) != 1:
+              raise SystemExit('history list anchor mismatch')
+          s = s.replace(old, new, 1)
+          old = "    Object.freeze(['DBE 101 vehicle', 'Uses the temporary vehicle’s factory paint, restores the player’s selection on exit, and routes legacy training imports to the current build.'])"
+          new = "    Object.freeze(['DBE 101 vehicle', 'Uses the temporary vehicle’s factory paint, restores the player’s selection on exit, and routes legacy training imports to the current build.']),\n    Object.freeze(['1.21.0 r250', 'Moves DRIVE BY EAR 101 pace notes closer to their curves for the slow-moving vehicle’s lower practice speeds.']),\n    Object.freeze(['Closer pace-note timing', 'Keeps each cue on the approach while reducing the wait between hearing the BIPs and reaching the turn.'])"
+          if s.count(old) != 1:
+              raise SystemExit('changelog anchor mismatch')
+          s = s.replace(old, new, 1)
+          s = s.replace("build: '2026.09.16-r249'", "build: '2026.09.16-r250'", 1)
+          p.write_text(s)
+
+          release_path = Path('turn/release.json')
+          release = json.loads(release_path.read_text())
+          if release != {'version': '1.21.0', 'id': '2026.09.16-r249', 'cacheKey': '20260916-r249'}:
+              raise SystemExit(f'unexpected release baseline: {release!r}')
+          release['id'] = '2026.09.16-r250'
+          release['cacheKey'] = '20260916-r250'
+          release_path.write_text(json.dumps(release, indent=2) + '\n')
+          PY
+          node turn/scripts/release.mjs --write
+
+      - name: Verify focused DBE and release checks
+        run: |
+          node --check turn/training/stages.js
+          node turn-tests/drive-by-ear-training-production.mjs
+          node turn-tests/about-history-production.mjs
+          node turn-tests/release-production.mjs
+          node turn-tests/release-composition-production.mjs --base c479e4894fdad6341888a407ad0a7e61e75a8c48
+          node turn/scripts/release.mjs --check
+          git diff --check
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "TURN: retime DBE 101 pace notes for slow-moving vehicle"
+          git push origin HEAD:sol/dbe-pace-notes-r250
