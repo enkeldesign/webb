@@ -84,8 +84,20 @@ ${carAnchor}`);
 }
 
 replaceOnce('turn-lab/tests/garage-production.mjs',
+  "assert.equal(tractor.defaultSecondaryColor, '#ffcc00');",
+  "assert.equal(tractor.defaultSecondaryColor, '#666000');");
+replaceOnce('turn-lab/tests/garage-production.mjs',
   'assert.match(rivalStorage, /RIVAL_STORAGE_VERSION = 7/);',
   'assert.match(rivalStorage, /RIVAL_STORAGE_VERSION = 8/);');
+replaceOnce('turn-lab/tests/vehicle-drift-production.mjs',
+  "assert.equal(awd.defaultSecondaryColor, '#393329', 'AWD factory paint must use the approved dark brown secondary');",
+  "assert.equal(awd.defaultSecondaryColor, '#aa9988', 'AWD factory paint must use the approved warm neutral secondary');");
+replaceOnce('turn-lab/tests/emergency-livery-layering-production.mjs',
+  "  ['convertible', ['#776655', '#393329']],",
+  "  ['convertible', ['#776655', '#aa9988']],");
+replaceOnce('turn-lab/tests/car-orientation-production.mjs',
+  "assert.equal(awd.defaultSecondaryColor, '#393329');",
+  "assert.equal(awd.defaultSecondaryColor, '#aa9988');");
 
 {
   const path = 'turn/content/about-history-current.js';
