@@ -327,6 +327,20 @@ const TRACTOR_SMV_HISTORY = Object.freeze({
   ])
 });
 
+const FACTORY_SECONDARY_PAINT_HISTORY = Object.freeze({
+  period: '16 September',
+  title: 'Factory secondary paint gets tuned',
+  paragraphs: Object.freeze([
+    'TURN 1.21.0 build r247 retunes two factory secondary colours without changing body paint or vehicle behaviour. TRACTOR keeps its green body and changes its secondary paint to #666000; AWD keeps its brown body and changes its secondary paint to #aa9988.',
+    'Existing factory-painted vehicle selections and saved rivals migrate to the new pairs. Custom PAINTJOB combinations remain untouched.'
+  ]),
+  milestones: Object.freeze([
+    'TRACTOR factory secondary: #666000',
+    'AWD factory secondary: #aa9988',
+    'TURN 1.21.0 · 2026.09.16-r247'
+  ])
+});
+
 const previousLatest = BASE_CHANGELOG.at(-1);
 const mergedLatest = previousLatest?.date === '12 September'
   ? Object.freeze({
@@ -361,7 +375,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   FLOW_SHIFT_X3_HISTORY,
   OVERDRIVE_FAST_CLEAN_HISTORY,
   HOME_TAGLINE_FLOW_HISTORY,
-  TRACTOR_SMV_HISTORY
+  TRACTOR_SMV_HISTORY,
+  FACTORY_SECONDARY_PAINT_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -423,13 +438,15 @@ Object.freeze({
     Object.freeze(['1.20.5 r242', 'Updates the Home tagline to TILT. DRIFT. FLOW. and advances the build identity for the copy change.']),
     Object.freeze(['1.21.0 r243', 'Adds the start-available TRACTOR with the SMV perk for slower blank screen and non-visual driving practice.']),
     Object.freeze(['SMV practice speeds', 'Limits added propulsion to 50 km/h on DRIFT, 75 km/h on GAS and 100 km/h on BOOST while preserving existing momentum.']),
-    Object.freeze(['TRACTOR SHIFT step', 'Uses the normal SHIFT system to move from 1 / 1 / 5 / 1 / 5 / 5 to 2 / 2 / 4 / 2 / 4 / 4.'])
+    Object.freeze(['TRACTOR SHIFT step', 'Uses the normal SHIFT system to move from 1 / 1 / 5 / 1 / 5 / 5 to 2 / 2 / 4 / 2 / 4 / 4.']),
+    Object.freeze(['1.21.0 r247', 'Retunes factory secondary paint: TRACTOR to #666000 and AWD to #aa9988 while keeping their body colours unchanged.']),
+    Object.freeze(['Factory paint migration', 'Moves existing factory-painted selections and saved rivals to the new secondary colours without changing custom PAINTJOB combinations.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.21.0',
-  build: '2026.09.16-r246',
+  build: '2026.09.16-r247',
   note: 'TURN 1.21.0 adds TRACTOR and its SMV perk for slower blank screen and non-visual driving practice.'
 });
