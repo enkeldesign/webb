@@ -80,8 +80,10 @@ const smvLimit = (input = {}) => getSmvPropulsiveSpeedLimit({
   ...input
 });
 const approximately = (actual, expected, message) => {
-  assert.ok(Math.abs(actual - expected) < 1e-12, \
-    \\`${'${message}'}: expected ${'${expected}'}, got ${'${actual}'}\\`);
+  assert.ok(
+    Math.abs(actual - expected) < 1e-12,
+    message + ': expected ' + expected + ', got ' + actual
+  );
 };
 
 approximately(smvLimit({ driftHeld: true }), 40 / 2.9, 'Base DRIFT ceiling');
