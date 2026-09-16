@@ -26,6 +26,9 @@ jobs:
           node turn-tests/tractor-smv-production.mjs
           node turn-lab/tests/native-paint-production.mjs
           node turn-lab/tests/garage-production.mjs
+          node turn-lab/tests/vehicle-drift-production.mjs
+          node turn-lab/tests/emergency-livery-layering-production.mjs
+          node turn-lab/tests/car-orientation-production.mjs
       - name: Verify release source of truth
         run: node turn/scripts/release.mjs --check
       - name: Commit r247
