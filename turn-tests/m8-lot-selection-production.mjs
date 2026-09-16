@@ -80,6 +80,11 @@ assert.match(wrapper, /link\.addEventListener\('load', resolve/,
 
 assert.match(showroom, /overlay\.className = 'lot-screen lot-showroom'/,
   'The production car selector must mount with the stable showroom state hook');
+assert.match(
+  showroom,
+  /export const LOT_CAR_ORDER = Object\.freeze\(\[\s*'classic',\s*'tractor',/,
+  'The Learner Car must be first in The Lot and the Tractor must follow it'
+);
 assert.match(showroom, /LOT_FRAME_INTERVAL_MS = 1000 \/ 30/,
   'The live hero preview must remain capped at 30fps');
 assert.match(showroom, /document\.hidden/,
@@ -103,7 +108,7 @@ assert.match(showroom, /new globalThis\.IntersectionObserver/,
 assert.match(showroom, /rootMargin: THUMBNAIL_ROOT_MARGIN/,
   'The visibility queue should prepare nearby cards just before they scroll onscreen');
 assert.doesNotMatch(showroom, /thumbnailRenderer\.renderAll|renderAll\(cars/,
-  'Opening The Lot must never launch all 16 real-model thumbnails');
+  'Opening The Lot must never launch all 17 real-model thumbnails');
 assert.match(showroom, /revealSelectedCar\(\{ immediate: true \}\)/,
   'The saved car must be positioned before visibility observation begins');
 assert.match(showroom, /preserveDrawingBuffer: true/,

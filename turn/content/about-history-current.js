@@ -430,6 +430,6 @@ Object.freeze({
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.21.0',
-  build: '2026.09.16-r244',
+  build: '2026.09.16-r245',
   note: 'TURN 1.21.0 adds TRACTOR and its SMV perk for slower blank screen and non-visual driving practice.'
 });
