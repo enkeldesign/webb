@@ -163,7 +163,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       session.returnFocus = entryPoints?.homeButton || trigger;
     }
     view.introDialog.querySelector('[data-training-intro-copy]').textContent =
-      "Learn TURN's spatial guidance one layer at a time. Choose any part below. Training temporarily uses the slow-moving vehicle and puts Drive By Ear at 95% of the sound mix. Your car and audio choices return when you leave.";
+      "Learn TURN's spatial guidance one layer at a time. Choose any part below. Training temporarily uses the slow-moving vehicle and puts Drive By Ear at 100% of the sound mix. Your car and audio choices return when you leave.";
     showTrainingDialog(view.introDialog, '[data-training-stage="0"]');
   }
 
