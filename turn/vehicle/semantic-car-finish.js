@@ -87,7 +87,7 @@ export function installSemanticCarFinish({
   semanticPaintRecords
 }) {
   if (!car) return false;
-  if (car.id === TRACTOR_ID) installTractorSmvSign(node, car);
+  if (car.id === 'tractor') installTractorSmvSign(node, car);
   if (!material?.color) return false;
   if (car.pack === 'rgsdev') {
     return installRgsdevMaterial({
