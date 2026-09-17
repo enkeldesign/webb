@@ -1,4 +1,4 @@
-export const TRAINING_BALANCE = 0.95;
+export const TRAINING_BALANCE = 1;
 export const BALANCE_SUGGESTION_THRESHOLD = 75;
 export const TRAINING_VEHICLE_ID = 'tractor';
 export const SAMPLE_COUNT = 720;
