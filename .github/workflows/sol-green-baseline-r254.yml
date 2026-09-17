@@ -1,0 +1,163 @@
+name: SOL release baseline r254
+
+on:
+  push:
+    branches:
+      - sol/green-baseline-r254
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Repair release history and generate r254
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          release_path = Path('turn/release.json')
+          release = json.loads(release_path.read_text())
+          assert release == {
+              'version': '1.21.0',
+              'id': '2026.09.17-r253',
+              'cacheKey': '20260917-r253'
+          }, release
+          release['id'] = '2026.09.17-r254'
+          release['cacheKey'] = '20260917-r254'
+          release_path.write_text(json.dumps(release, indent=2) + '\n')
+
+          history_path = Path('turn/content/about-history-current.js')
+          source = history_path.read_text()
+          assert 'const DBE_FULL_MIX_HISTORY' not in source
+          assert 'const TRACTOR_SMV_SIGN_HISTORY' not in source
+          assert 'const RELEASE_BASELINE_HISTORY' not in source
+
+          new_history = r'''
+          const DBE_FULL_MIX_HISTORY = Object.freeze({
+            period: '17 September',
+            title: 'DRIVE BY EAR 101 turns the training mix fully toward DBE',
+            paragraphs: Object.freeze([
+              'TURN 1.21.0 build r251 sets the DRIVE BY EAR 101 sound balance to 100% Drive By Ear so the guided training foregrounds the ribbon, pace notes, surface feedback and recovery guidance without the normal music/engine mix competing for attention.',
+              'Build r252 updates the training copy to describe that 100% DBE balance accurately. The gameplay and training sequence are otherwise unchanged.'
+            ]),
+            milestones: Object.freeze([
+              '100% Drive By Ear balance throughout DRIVE BY EAR 101',
+              'Training copy synchronized with the full DBE mix',
+              'TURN 1.21.0 · 2026.09.17-r251 / r252'
+            ])
+          });
+
+          const TRACTOR_SMV_SIGN_HISTORY = Object.freeze({
+            period: '17 September',
+            title: 'TRACTOR gets its slow-moving-vehicle sign',
+            paragraphs: Object.freeze([
+              'TURN 1.21.0 build r253 adds the fluorescent orange/red slow-moving-vehicle plaque to the rear of TRACTOR, mounted close to the authored rear chassis between the back wheels.',
+              'The sign is presentation only: TRACTOR keeps the same SMV propulsion limits, SHIFT progression, handling and factory paint.'
+            ]),
+            milestones: Object.freeze([
+              'Rear fluorescent-orange/red SMV plaque on TRACTOR',
+              'No change to TRACTOR gameplay tuning',
+              'TURN 1.21.0 · 2026.09.17-r253'
+            ])
+          });
+
+          const RELEASE_BASELINE_HISTORY = Object.freeze({
+            period: '17 September',
+            title: 'Release surfaces return to one verified build',
+            paragraphs: Object.freeze([
+              'TURN 1.21.0 build r254 restores the generated release surfaces after the r251–r253 production changes. TURN, TURN NEXT, TURN LAB, YOUR TURN, About/history, design references and release-bound module identities once again describe the same current build.',
+              'This repair does not change gameplay. It restores the release source-of-truth contract so the full regression suite can verify the current production state before the responsive work begins.'
+            ]),
+            milestones: Object.freeze([
+              'Generated release surfaces synchronized to r254',
+              'r251–r253 recorded in changelog and development history',
+              'TURN 1.21.0 · 2026.09.17-r254'
+            ])
+          });
+          '''
+          anchor = '\nconst FACTORY_SECONDARY_PAINT_HISTORY = Object.freeze({'
+          assert anchor in source
+          source = source.replace(anchor, '\n' + new_history + anchor, 1)
+
+          dev_anchor = '''  DBE_SMV_TRAINING_HISTORY,
+            DBE_SMV_PACE_TIMING_HISTORY
+          ]);'''
+          assert dev_anchor in source
+          source = source.replace(
+              dev_anchor,
+              '''  DBE_SMV_TRAINING_HISTORY,
+            DBE_SMV_PACE_TIMING_HISTORY,
+            DBE_FULL_MIX_HISTORY,
+            TRACTOR_SMV_SIGN_HISTORY,
+            RELEASE_BASELINE_HISTORY
+          ]);''',
+              1
+          )
+
+          changelog_anchor = """    Object.freeze(['Closer pace-note timing', 'Keeps each cue on the approach while reducing the wait between hearing the BIPs and reaching the turn.'])
+            ])
+          })
+          ]);"""
+          assert changelog_anchor in source
+          source = source.replace(
+              changelog_anchor,
+              """    Object.freeze(['Closer pace-note timing', 'Keeps each cue on the approach while reducing the wait between hearing the BIPs and reaching the turn.'])
+            ])
+          }),
+          Object.freeze({
+            date: '17 September',
+            entries: Object.freeze([
+              Object.freeze(['1.21.0 r251', 'Sets DRIVE BY EAR 101 to a 100% Drive By Ear training balance so the guided audio layer is foregrounded throughout practice.']),
+              Object.freeze(['1.21.0 r252', 'Updates DRIVE BY EAR 101 copy to describe the 100% DBE training balance accurately.']),
+              Object.freeze(['1.21.0 r253', 'Adds the fluorescent-orange/red slow-moving-vehicle plaque to the rear of TRACTOR without changing its gameplay tuning.']),
+              Object.freeze(['1.21.0 r254', 'Restores generated release parity after r251–r253 and records those production changes in the release-facing history.']),
+              Object.freeze(['Verified baseline', 'Synchronizes TURN, TURN NEXT, TURN LAB, YOUR TURN, About/history and release-bound module identities so the full regression suite can validate one current build.'])
+            ])
+          })
+          ]);""",
+              1
+          )
+
+          old_note = "note: 'TURN 1.21.0 adds TRACTOR and its SMV perk for slower blank screen and non-visual driving practice.'"
+          assert old_note in source
+          source = source.replace(
+              old_note,
+              "note: 'TURN 1.21.0 build r254 restores one synchronized release baseline after the latest DBE 101 and TRACTOR presentation updates.'",
+              1
+          )
+          history_path.write_text(source)
+          PY
+
+          node turn/scripts/release.mjs --write
+          node turn/scripts/release.mjs --check
+          node turn-tests/release-production.mjs
+          node turn-tests/release-composition-production.mjs
+          node turn-tests/about-history-production.mjs
+
+      - name: Commit synchronized release
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No generated changes found.' >&2
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn turn-next turn-lab yourturn
+          git commit -m 'TURN: restore verified r254 release baseline'
+          git push origin HEAD:${GITHUB_REF_NAME}
