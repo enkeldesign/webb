@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { setThreeColor } from './wide-gamut.js?revision=r157-display-p3';
+import { installTractorSmvSign } from './tractor-smv-sign.js';
 
 const KENNEY_PALETTE_BY_PACK = Object.freeze({
   car: './assets/cars/palettes/car-kit.png',
@@ -85,7 +86,9 @@ export function installSemanticCarFinish({
   secondaryPaintMaterials,
   semanticPaintRecords
 }) {
-  if (!material?.color || !car) return false;
+  if (!car) return false;
+  if (car.id === 'tractor') installTractorSmvSign(node, car);
+  if (!material?.color) return false;
   if (car.pack === 'rgsdev') {
     return installRgsdevMaterial({
       material,
