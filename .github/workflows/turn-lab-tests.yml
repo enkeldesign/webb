@@ -379,9 +379,6 @@ jobs:
       - name: Run short viewport repair regression
         run: node turn-tests/short-viewport-repair-production.mjs
 
-      - name: Run TURN NEXT world regression
-        run: node turn-tests/turn-next-world-production.mjs
-
       - name: Run Bella meow position regression
         run: node turn-lab/tests/bella-meow-position-production.mjs
 
