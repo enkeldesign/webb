@@ -52,6 +52,9 @@ jobs:
       - name: Lint TURN domain modules
         run: npx --yes eslint@9.39.1
 
+      - name: Verify TURN production test inventory
+        run: node turn-tests/test-inventory.mjs
+
       - name: Verify release source of truth
         run: node turn/scripts/release.mjs --check
 
@@ -354,6 +357,54 @@ jobs:
 
       - name: Run full viewport coverage regression
         run: node turn-tests/viewport-coverage-production.mjs
+
+      - name: Run car source retry regression
+        run: node turn-tests/car-source-retry-production.mjs
+
+      - name: Run Countryside ground layering regression
+        run: node turn-tests/countryside-ground-layering-production.mjs
+
+      - name: Run drift camera regression
+        run: node turn-tests/drift-camera-production.mjs
+
+      - name: Run Harbor production regression
+        run: node turn-tests/harbor-production.mjs
+
+      - name: Run Kenney track landmark regression
+        run: node turn-tests/kenney-track-landmarks-production.mjs
+
+      - name: Run Q/E drive control regression
+        run: node turn-tests/qe-drive-controls-production.mjs
+
+      - name: Run short viewport repair regression
+        run: node turn-tests/short-viewport-repair-production.mjs
+
+      - name: Run Bella meow position regression
+        run: node turn-lab/tests/bella-meow-position-production.mjs
+
+      - name: Run hatchback and Rally Racer surface regression
+        run: node turn-lab/tests/hatchback-rally-surface-production.mjs
+
+      - name: Run MAYDAY finish performance regression
+        run: node turn-lab/tests/mayday-finish-performance.mjs
+
+      - name: Run MAYDAY presentation regression
+        run: node turn-lab/tests/mayday-presentation-production.mjs
+
+      - name: Run procedural surface polish regression
+        run: node turn-lab/tests/procedural-surface-polish-production.mjs
+
+      - name: Run start-finish line performance regression
+        run: node turn-lab/tests/start-finish-line-performance.mjs
+
+      - name: Run startup loading accessibility regression
+        run: node turn-lab/tests/startup-loading-accessibility.mjs
+
+      - name: Run startup ready orientation announcement regression
+        run: node turn-lab/tests/startup-ready-orientation-announcement.mjs
+
+      - name: Run track intro driving description regression
+        run: node turn-lab/tests/track-intro-driving-descriptions.mjs
 
       - name: Verify production release architecture
         run: node turn-tests/release-production.mjs
