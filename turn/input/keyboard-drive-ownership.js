@@ -5,7 +5,7 @@ const INTERACTIVE_SELECTOR = [
   'select',
   'textarea',
   'summary',
-  '[contenteditable="true"]',
+  '[contenteditable]:not([contenteditable="false"])',
   '[role="button"]',
   '[role="checkbox"]',
   '[role="combobox"]',
@@ -16,7 +16,8 @@ const INTERACTIVE_SELECTOR = [
   '[role="slider"]',
   '[role="spinbutton"]',
   '[role="switch"]',
-  '[role="textbox"]'
+  '[role="textbox"]',
+  '[tabindex]:not([tabindex="-1"])'
 ].join(', ');
 
 export function isKeyboardDriveInteractiveTarget(target, { environment = globalThis } = {}) {
