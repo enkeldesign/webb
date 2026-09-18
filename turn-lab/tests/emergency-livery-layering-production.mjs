@@ -146,7 +146,7 @@ const canonicalCatalogTarget = `/turn/vehicle/catalog.js?build=${release.cacheKe
 const canonicalSemanticFinishTarget = importMapFrom(productionEntry)['/turn/vehicle/semantic-car-finish.js'];
 assert.match(
   canonicalSemanticFinishTarget,
-  /^\\/turn\\/vehicle\\/semantic-car-finish\\.js\\?revision=r223-training-car-taxi&build=\\d{8}-r\\d+$/,
+  /^\/turn\/vehicle\/semantic-car-finish\.js\?revision=r223-training-car-taxi&build=\d{8}-r\d+$/,
   'Semantic car finish must use the canonical changed vehicle module with an explicit build identity'
 );
 const expectedCatalogTargets = [
