@@ -22,7 +22,6 @@ const INTERACTIVE_SELECTOR = [
 export function isKeyboardDriveInteractiveTarget(target, { environment = globalThis } = {}) {
   const ElementConstructor = environment.Element;
   if (typeof ElementConstructor !== 'function' || !(target instanceof ElementConstructor)) return false;
-  if (target.closest?.('.drive-pad')) return false;
   return Boolean(target.closest?.(INTERACTIVE_SELECTOR));
 }
 
@@ -53,6 +52,8 @@ export function createKeyboardDriveOwnership({
 
   function accepts(event = {}) {
     if (!ownsGameplay()) return false;
+    if (event.defaultPrevented || event.isComposing) return false;
+    if (event.altKey || event.ctrlKey || event.metaKey) return false;
     return !isKeyboardDriveInteractiveTarget(event.target, { environment });
   }
 
@@ -83,7 +84,8 @@ export function installKeyboardDriveOwnershipLossHandlers({
   }
 
   let released = false;
-  let observer = null;
+  let overlayObserver = null;
+  let bodyClassObserver = null;
 
   function releaseIfOwnershipLost() {
     if (!ownership.ownsGameplay()) onLost();
@@ -109,10 +111,21 @@ export function installKeyboardDriveOwnershipLossHandlers({
 
   const MutationObserverConstructor = environment.MutationObserver;
   if (typeof MutationObserverConstructor === 'function' && documentRef.body) {
-    observer = new MutationObserverConstructor(() => releaseIfOwnershipLost());
-    observer.observe(documentRef.body, {
+    bodyClassObserver = new MutationObserverConstructor(() => releaseIfOwnershipLost());
+    bodyClassObserver.observe(documentRef.body, {
       attributes: true,
-      attributeFilter: ['class', 'hidden', 'open', 'aria-hidden'],
+      attributeFilter: ['class']
+    });
+
+    overlayObserver = new MutationObserverConstructor((mutations = []) => {
+      const dialogChanged = mutations.some((mutation) =>
+        mutation?.target?.matches?.('dialog, [role="dialog"]')
+      );
+      if (dialogChanged) releaseIfOwnershipLost();
+    });
+    overlayObserver.observe(documentRef.body, {
+      attributes: true,
+      attributeFilter: ['hidden', 'open', 'aria-hidden'],
       subtree: true
     });
   }
@@ -121,7 +134,8 @@ export function installKeyboardDriveOwnershipLossHandlers({
     release() {
       if (released) return;
       released = true;
-      observer?.disconnect?.();
+      overlayObserver?.disconnect?.();
+      bodyClassObserver?.disconnect?.();
       windowRef.removeEventListener?.('turn:ui-state-change', onUiStateChange);
       windowRef.removeEventListener?.('blur', onLost);
       windowRef.removeEventListener?.('pagehide', onLost);
