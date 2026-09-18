@@ -13,7 +13,6 @@ class FakeElement {
   }
 
   closest(selector) {
-    if (this.kind === 'drive-pad' && selector === '.drive-pad') return this;
     const matches = {
       button: ['button', '[role="button"]'],
       input: ['input'],
@@ -23,6 +22,12 @@ class FakeElement {
       textbox: ['textarea', '[role="textbox"]']
     };
     return (matches[this.kind] || []).some((token) => selector.includes(token)) ? this : null;
+  }
+
+  matches(selector) {
+    if (this.kind === 'dialog') return selector.includes('dialog');
+    if (this.kind === 'role-dialog') return selector.includes('[role="dialog"]');
+    return false;
   }
 }
 
@@ -91,8 +96,9 @@ function createEnvironment() {
     documentListeners.get(name)?.(event);
   }
 
-  function notifyMutation() {
-    for (const observer of mutationObservers) observer.callback([]);
+  function notifyMutation(kind = 'dialog') {
+    const mutation = { target: new FakeElement(kind) };
+    for (const observer of mutationObservers) observer.callback([mutation]);
   }
 
   return {
@@ -107,13 +113,27 @@ function createEnvironment() {
   };
 }
 
-function keyEvent({ code, key, target = new FakeElement('game'), repeat = false } = {}) {
-  let prevented = false;
+function keyEvent({
+  code,
+  key,
+  target = new FakeElement('game'),
+  repeat = false,
+  altKey = false,
+  ctrlKey = false,
+  metaKey = false,
+  isComposing = false,
+  alreadyPrevented = false
+} = {}) {
+  let prevented = alreadyPrevented;
   return {
     code,
     key,
     target,
     repeat,
+    altKey,
+    ctrlKey,
+    metaKey,
+    isComposing,
     preventDefault() { prevented = true; },
     get defaultPrevented() { return prevented; }
   };
@@ -194,6 +214,26 @@ const inputR = keyEvent({ code: 'KeyR', key: 'r', target: new FakeElement('input
 harness.dispatchWindow('keydown', inputR);
 assert.equal(resetCount, 1, 'R typed into an input must not reset the race');
 assert.equal(inputR.defaultPrevented, false);
+
+const ctrlR = keyEvent({ code: 'KeyR', key: 'r', ctrlKey: true });
+harness.dispatchWindow('keydown', ctrlR);
+assert.equal(resetCount, 1, 'Ctrl+R must remain available to the browser instead of resetting the car');
+assert.equal(ctrlR.defaultPrevented, false);
+
+const metaA = keyEvent({ code: 'KeyA', key: 'a', metaKey: true });
+harness.dispatchWindow('keydown', metaA);
+assert.equal(state.manualSteering, 0, 'Modified shortcuts must not become driving input');
+assert.equal(metaA.defaultPrevented, false);
+
+const composingW = keyEvent({ code: 'KeyW', key: 'w', isComposing: true });
+harness.dispatchWindow('keydown', composingW);
+assert.equal(state.touchGas, false, 'IME composition must not become driving input');
+assert.equal(composingW.defaultPrevented, false);
+
+const upstreamOwned = keyEvent({ code: 'KeyW', key: 'w', alreadyPrevented: true });
+harness.dispatchWindow('keydown', upstreamOwned);
+assert.equal(state.touchGas, false, 'Already-consumed keyboard events must remain owned by their original UI');
+assert.equal(upstreamOwned.defaultPrevented, true);
 
 state.running = false;
 const inactiveW = keyEvent({ code: 'KeyW', key: 'w' });
