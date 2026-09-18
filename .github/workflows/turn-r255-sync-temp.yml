@@ -1,0 +1,40 @@
+name: TEMP TURN r255 release sync
+
+on:
+  push:
+    branches:
+      - sol/keyboard-input-ownership-808
+    paths:
+      - '.github/workflows/turn-r255-sync-temp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: sol/keyboard-input-ownership-808
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Synchronize release surfaces
+        run: node turn/scripts/release.mjs --write
+
+      - name: Commit generated release surfaces
+        run: |
+          git config user.name "enkeldesign"
+          git config user.email "75029856+enkeldesign@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "Release surfaces already synchronized."
+            exit 0
+          fi
+          git add turn turn-next turn-lab yourturn
+          git commit -m "Synchronize TURN r255 release surfaces"
+          git push origin HEAD:sol/keyboard-input-ownership-808
