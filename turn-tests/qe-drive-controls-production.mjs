@@ -49,9 +49,13 @@ assert.match(source, /ownership\.accepts\(event\)/,
   'Q/E must ask the shared ownership rule before consuming input');
 assert.match(source, /installKeyboardDriveOwnershipLossHandlers/,
   'Q/E must release held Drift/Boost when keyboard ownership is lost');
+assert.match(bootstrap, /from '\/turn\/input\/qe-drive-controls\.js'/,
+  'The Q/E loader must use the canonical release-bound module identity');
 assert.match(bootstrap, /attempt < 300/,
   'The Q/E loader must wait for gameplay-controls to construct the unified drive pad');
-assert.match(index, /qe-drive-controls-bootstrap\.js\?revision=r418-qe/,
-  'Production TURN must load a cache-busted Q/E keyboard entry point');
+assert.match(index, /qe-drive-controls-bootstrap\.js\?build=\d{8}-r\d+/,
+  'Production TURN must load the Q/E bootstrap through the current release build');
+assert.match(index, /"\/turn\/input\/qe-drive-controls\.js": "\/turn\/input\/qe-drive-controls\.js\?build=\d{8}-r\d+"/,
+  'The production import map must route Q/E through the current release build');
 
 console.log('TURN Q = Drift / E = Boost unified keyboard control regression passed.');
