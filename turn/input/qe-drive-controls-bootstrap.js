@@ -1,4 +1,4 @@
-import { installQeDriveControls } from './qe-drive-controls.js?revision=r418-qe';
+import { installQeDriveControls } from '/turn/input/qe-drive-controls.js';
 
 function bootstrap(attempt = 0) {
   const result = installQeDriveControls();
