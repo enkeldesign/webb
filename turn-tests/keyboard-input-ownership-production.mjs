@@ -19,7 +19,9 @@ class FakeElement {
       radio: ['input', '[role="radio"]'],
       slider: ['input', '[role="slider"]'],
       link: ['a', '[role="link"]'],
-      textbox: ['textarea', '[role="textbox"]']
+      textbox: ['textarea', '[role="textbox"]'],
+      editable: ['[contenteditable]'],
+      focusable: ['[tabindex]']
     };
     return (matches[this.kind] || []).some((token) => selector.includes(token)) ? this : null;
   }
@@ -196,7 +198,7 @@ harness.dispatchWindow('keydown', buttonSpace);
 assert.equal(state.touchBrake, false, 'Space on a button must retain native button behavior instead of braking');
 assert.equal(buttonSpace.defaultPrevented, false);
 
-for (const kind of ['input', 'radio', 'slider', 'textbox']) {
+for (const kind of ['input', 'radio', 'slider', 'textbox', 'editable', 'focusable']) {
   const event = keyEvent({ code: 'ArrowRight', key: 'ArrowRight', target: new FakeElement(kind) });
   harness.dispatchWindow('keydown', event);
   assert.equal(state.manualSteering, 0, `Arrow keys on ${kind} controls must remain native UI input`);
