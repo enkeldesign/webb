@@ -429,6 +429,21 @@ const RELEASE_BASELINE_HISTORY = Object.freeze({
   ])
 });
 
+const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
+  period: '18 September',
+  title: 'Keyboard driving stays on the race surface',
+  paragraphs: Object.freeze([
+    'TURN 1.21.0 build r255 gives the global driving shortcuts one explicit ownership rule. Arrow keys, W/A/S/D, Space and R now affect the car only while an active race owns keyboard input; menus, dialogs and native form controls keep their normal keyboard behaviour.',
+    'Held keyboard driving input is cleared when ownership is lost through Home, The Lot, Spectate, dialogs, focus changes, page visibility or window blur. Q/E Drift and Boost use the same ownership contract, and modified browser shortcuts such as Ctrl+R remain untouched.'
+  ]),
+  milestones: Object.freeze([
+    'Race-only ownership for Arrow/WASD/Space/R driving shortcuts',
+    'Shared ownership and release handling for Q/E Drift and Boost',
+    'Held input cleared on UI, focus, visibility and route transitions',
+    'TURN 1.21.0 · 2026.09.18-r255'
+  ])
+});
+
 const FACTORY_SECONDARY_PAINT_HISTORY = Object.freeze({
   period: '16 September',
   title: 'Factory secondary paint gets tuned',
@@ -485,7 +500,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   DBE_SMV_PACE_TIMING_HISTORY,
   DBE_FULL_MIX_HISTORY,
   TRACTOR_SMV_SIGN_HISTORY,
-  RELEASE_BASELINE_HISTORY
+  RELEASE_BASELINE_HISTORY,
+  KEYBOARD_OWNERSHIP_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -570,11 +586,18 @@ Object.freeze({
     Object.freeze(['1.21.0 r254', 'Restores generated release parity after r251–r253 and records those production changes in the release-facing history.']),
     Object.freeze(['Verified baseline', 'Synchronizes TURN, TURN NEXT, TURN LAB, YOUR TURN, About/history and release-bound module identities so the full regression suite can validate one current build.'])
   ])
+}),
+Object.freeze({
+  date: '18 September',
+  entries: Object.freeze([
+    Object.freeze(['1.21.0 r255', 'Limits global Arrow/WASD/Space/R driving shortcuts to the active race surface so menus, dialogs and native controls keep keyboard ownership.']),
+    Object.freeze(['Keyboard input ownership', 'Clears held driving input when ownership is lost and applies the same rule to Q/E Drift and Boost without intercepting modified browser shortcuts.'])
+  ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.21.0',
-  build: '2026.09.17-r254',
-  note: 'TURN 1.21.0 build r254 restores one synchronized release baseline after the latest DBE 101 and TRACTOR presentation updates.'
+  build: '2026.09.18-r255',
+  note: 'TURN 1.21.0 build r255 keeps global driving shortcuts on the active race surface and restores native keyboard ownership to menus, dialogs and controls.'
 });
