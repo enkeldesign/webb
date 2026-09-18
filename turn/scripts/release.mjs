@@ -250,7 +250,8 @@ function synchronizeKeyboardDrivingTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   for (const pathname of [
     '/turn/input/keyboard-driving-controls.js',
-    '/turn/input/keyboard-drive-ownership.js'
+    '/turn/input/keyboard-drive-ownership.js',
+    '/turn/input/qe-drive-controls.js'
   ]) {
     imports[pathname] = `${pathname}?build=${release.cacheKey}`;
   }
