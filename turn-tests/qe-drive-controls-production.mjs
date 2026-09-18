@@ -43,11 +43,12 @@ assert.match(source, /dispatchKeyboardPointer\('pointermove', nextZone\)/,
   'Switching Q/E while held must move within the same unified drive surface');
 assert.match(source, /dispatchKeyboardPointer\('pointerup', activePointerZone\)/,
   'Keyboard release must leave the canonical drive surface');
-assert.match(source, /reason === 'race-reset'/);
-assert.match(source, /visibilitychange/);
-assert.match(source, /windowRef\.addEventListener\('blur', releaseAll\)/);
-assert.match(source, /interactiveTarget\(event\.target\)/,
-  'Driving shortcuts must not steal ordinary control input');
+assert.match(source, /createKeyboardDriveOwnership/,
+  'Q/E must share the canonical keyboard-driving ownership rule');
+assert.match(source, /ownership\.accepts\(event\)/,
+  'Q/E must ask the shared ownership rule before consuming input');
+assert.match(source, /installKeyboardDriveOwnershipLossHandlers/,
+  'Q/E must release held Drift/Boost when keyboard ownership is lost');
 assert.match(bootstrap, /attempt < 300/,
   'The Q/E loader must wait for gameplay-controls to construct the unified drive pad');
 assert.match(index, /qe-drive-controls-bootstrap\.js\?revision=r418-qe/,
