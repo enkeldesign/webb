@@ -1,3 +1,8 @@
+import {
+  createKeyboardDriveOwnership,
+  installKeyboardDriveOwnershipLossHandlers
+} from '/turn/input/keyboard-drive-ownership.js';
+
 const KEYBOARD_POINTER_ID = 2147483002;
 
 export const QE_DRIVE_BINDINGS = Object.freeze({
@@ -72,32 +77,11 @@ export function installQeDriveControls({ environment = globalThis } = {}) {
   let activePointerZone = null;
   let released = false;
 
-  function runtimeState() {
-    return environment.__turnRuntime?.state || null;
-  }
-
-  function hasBlockingOverlay() {
-    if (documentRef.body.classList.contains('turn-home-open')) return true;
-    if (documentRef.body.classList.contains('turn-lot-open')) return true;
-    if (documentRef.body.classList.contains('turn-spectating')) return true;
-    if (documentRef.querySelector?.('dialog[open]')) return true;
-    return Boolean(documentRef.querySelector?.('[role="dialog"]:not([hidden])'));
-  }
-
-  function interactiveTarget(target) {
-    const ElementConstructor = environment.Element;
-    if (typeof ElementConstructor !== 'function' || !(target instanceof ElementConstructor)) return false;
-    if (target.closest?.('.drive-pad')) return false;
-    return Boolean(target.closest?.(
-      'a, button, input, select, textarea, summary, [contenteditable="true"], [role="button"], [role="radio"], [role="slider"]'
-    ));
-  }
-
-  function acceptsDrivingInput(event = {}) {
-    const state = runtimeState();
-    if (!state?.running || documentRef.hidden || controls.hidden || hasBlockingOverlay()) return false;
-    return !interactiveTarget(event.target);
-  }
+  const ownership = createKeyboardDriveOwnership({
+    environment,
+    getState: () => environment.__turnRuntime?.state || null,
+    controls
+  });
 
   function createKeyboardPointerEvent(type, target) {
     const rect = target.getBoundingClientRect();
@@ -183,7 +167,7 @@ export function installQeDriveControls({ environment = globalThis } = {}) {
 
   function onKeyDown(event) {
     const zone = qeDriveZoneForEvent(event);
-    if (!zone || !acceptsDrivingInput(event)) return;
+    if (!zone || !ownership.accepts(event)) return;
     consume(event);
     held.press(identifier(event), zone);
   }
@@ -192,34 +176,22 @@ export function installQeDriveControls({ environment = globalThis } = {}) {
     const zone = qeDriveZoneForEvent(event);
     if (!zone) return;
     const key = identifier(event);
-    if (held.release(key)) consume(event);
+    if (!held.release(key)) return;
+    if (ownership.accepts(event)) consume(event);
   }
 
   function releaseAll() {
     held.clear();
   }
 
-  function onUiStateChange(event) {
-    const reason = event.detail?.reason;
-    if (!event.detail?.running || reason === 'race-reset' || reason === 'home-open' || reason === 'lot-open' || reason === 'spectate-started') {
-      releaseAll();
-    }
-  }
-
-  function onVisibilityChange() {
-    if (documentRef.hidden) releaseAll();
-  }
-
-  function onFocusIn(event) {
-    if (interactiveTarget(event.target)) releaseAll();
-  }
+  const lossHandlers = installKeyboardDriveOwnershipLossHandlers({
+    environment,
+    ownership,
+    onLost: releaseAll
+  });
 
   windowRef.addEventListener('keydown', onKeyDown, { capture: true });
   windowRef.addEventListener('keyup', onKeyUp, { capture: true });
-  windowRef.addEventListener('blur', releaseAll);
-  windowRef.addEventListener('turn:ui-state-change', onUiStateChange);
-  documentRef.addEventListener('visibilitychange', onVisibilityChange);
-  documentRef.addEventListener('focusin', onFocusIn);
 
   const api = Object.freeze({
     installed: true,
@@ -228,12 +200,9 @@ export function installQeDriveControls({ environment = globalThis } = {}) {
       if (released) return;
       released = true;
       releaseAll();
+      lossHandlers.release();
       windowRef.removeEventListener('keydown', onKeyDown, { capture: true });
       windowRef.removeEventListener('keyup', onKeyUp, { capture: true });
-      windowRef.removeEventListener('blur', releaseAll);
-      windowRef.removeEventListener('turn:ui-state-change', onUiStateChange);
-      documentRef.removeEventListener('visibilitychange', onVisibilityChange);
-      documentRef.removeEventListener('focusin', onFocusIn);
       if (environment.__turnQeDriveControls === api) delete environment.__turnQeDriveControls;
     }
   });
