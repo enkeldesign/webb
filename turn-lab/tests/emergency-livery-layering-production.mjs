@@ -152,7 +152,7 @@ const expectedCatalogTargets = [
   ['./vehicle/catalog.js?build=20260720-r20', canonicalCatalogTarget]
 ];
 const expectedEmergencyTargets = [
-  ['/turn/vehicle/semantic-car-finish.js', '/turn/vehicle/semantic-car-finish.js?revision=r223-training-car-taxi'],
+  ['/turn/vehicle/semantic-car-finish.js', '/turn/vehicle/semantic-car-finish.js?revision=r223-training-car-taxi&build=20260917-r253'],
   ['/turn/vehicle/car-models.js', `/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=${release.cacheKey}`],
   ['/turn/vehicle/emergency-livery-models.js', `/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=${release.cacheKey}`],
   ['./vehicle/car-models.js?build=20260720-r19', `/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=${release.cacheKey}`],
