@@ -376,6 +376,9 @@ jobs:
       - name: Run Q/E drive control regression
         run: node turn-tests/qe-drive-controls-production.mjs
 
+      - name: Run keyboard input ownership regression
+        run: node turn-tests/keyboard-input-ownership-production.mjs
+
       - name: Run short viewport repair regression
         run: node turn-tests/short-viewport-repair-production.mjs
 
