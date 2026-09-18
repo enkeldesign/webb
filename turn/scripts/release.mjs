@@ -25,6 +25,8 @@ const companionPaths = Object.freeze([
   'yourturn/index.html',
   'turn/ui/about-history-bootstrap-r165.js',
   'turn/content/about-history-current.js',
+  'turn/input/keyboard-driving-controls.js',
+  'turn/input/qe-drive-controls.js',
   'turn/design.html',
   'turn/design-dialogs.html',
   'turn/tracks/registry.js',
@@ -244,6 +246,17 @@ function synchronizePlatformContextTarget(importMap, release) {
     = `/turn/platform/platform-context.js?build=${release.cacheKey}`;
 }
 
+function synchronizeKeyboardDrivingTargets(importMap, release) {
+  const imports = importMap.imports ||= {};
+  for (const pathname of [
+    '/turn/input/keyboard-driving-controls.js',
+    '/turn/input/keyboard-drive-ownership.js',
+    '/turn/input/qe-drive-controls.js'
+  ]) {
+    imports[pathname] = `${pathname}?build=${release.cacheKey}`;
+  }
+}
+
 function synchronizeDriveByEarTrainingTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   const releaseBoundPaths = [
@@ -350,6 +363,7 @@ function renderSharedResourceImports(source, release) {
     synchronizeVisualResourceTargets(importMap, release);
     synchronizeAchievementProgressionTargets(importMap, release);
     synchronizePlatformContextTarget(importMap, release);
+    synchronizeKeyboardDrivingTargets(importMap, release);
     synchronizeDriveByEarTrainingTargets(importMap, release);
     synchronizePerkFeedbackTargets(importMap, release);
     synchronizeGraphicsRuntimeTarget(importMap, release);
@@ -384,6 +398,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeVisualResourceTargets(importMap, release);
   synchronizeAchievementProgressionTargets(importMap, release);
   synchronizePlatformContextTarget(importMap, release);
+  synchronizeKeyboardDrivingTargets(importMap, release);
   synchronizeDriveByEarTrainingTargets(importMap, release);
   synchronizePerkFeedbackTargets(importMap, release);
   synchronizeGraphicsRuntimeTarget(importMap, release);
@@ -485,6 +500,13 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
   }
   if (repositoryPath === 'turn/ui/about-history-bootstrap-r165.js') {
     return source.replace(/(about-history-current\.js\?build=)\d{8}-r\d+/, `$1${release.cacheKey}`);
+  }
+  if (repositoryPath === 'turn/input/keyboard-driving-controls.js'
+    || repositoryPath === 'turn/input/qe-drive-controls.js') {
+    return source.replace(
+      /(keyboard-drive-ownership\.js\?build=)\d{8}-r\d+/,
+      `$1${release.cacheKey}`
+    );
   }
   if (repositoryPath === 'turn/content/about-history-current.js') {
     // Historical entries keep their original release identities.

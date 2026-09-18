@@ -7,6 +7,7 @@ import { installKenneyWorld } from '/turn/world-assets.js';
 import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19&revision=r270-camera-hotpath';
 import { updateHudState } from '/turn/ui/hud.js?build=20260720-r19';
 import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from '/turn/input/motion.js';
+import { createKeyboardDrivingController } from '/turn/input/keyboard-driving-controls.js';
 import { updateVehiclePhysicsState } from '/turn/vehicle/physics.js?build=20260720-r19';
 import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from '/turn/race/game-state.js';
 import { createRaceSessionOrchestrator } from '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
@@ -984,22 +985,12 @@ manualSteer.addEventListener('pointercancel', () => {
   state.manualSteering = 0;
 });
 
-window.addEventListener('keydown', (event) => {
-  const key = event.key.toLowerCase();
-  if (key === 'arrowleft' || key === 'a') state.manualSteering = -1;
-  if (key === 'arrowright' || key === 'd') state.manualSteering = 1;
-  if (key === 'arrowup' || key === 'w') state.touchGas = true;
-  if (key === 'arrowdown' || key === 's' || key === ' ') state.touchBrake = true;
-  if (key === 'r') resetCar();
+const keyboardDrivingControls = createKeyboardDrivingController({
+  state,
+  resetCar,
+  controls
 });
-
-window.addEventListener('keyup', (event) => {
-  const key = event.key.toLowerCase();
-  if ((key === 'arrowleft' || key === 'a') && state.manualSteering < 0) state.manualSteering = 0;
-  if ((key === 'arrowright' || key === 'd') && state.manualSteering > 0) state.manualSteering = 0;
-  if (key === 'arrowup' || key === 'w') state.touchGas = false;
-  if (key === 'arrowdown' || key === 's' || key === ' ') state.touchBrake = false;
-});
+globalThis.__turnKeyboardDrivingControls = keyboardDrivingControls;
 
 motionButton.addEventListener('click', raceSession.requestMotion);
 manualButton.addEventListener('click', raceSession.useManualMode);
