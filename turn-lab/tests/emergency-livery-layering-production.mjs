@@ -143,6 +143,12 @@ assert.match(semantic, /car: '\.\/assets\/cars\/palettes\/car-kit\.png'/);
 
 const release = JSON.parse(await fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'));
 const canonicalCatalogTarget = `/turn/vehicle/catalog.js?build=${release.cacheKey}`;
+const canonicalSemanticFinishTarget = importMapFrom(productionEntry)['/turn/vehicle/semantic-car-finish.js'];
+assert.match(
+  canonicalSemanticFinishTarget,
+  /^\/turn\/vehicle\/semantic-car-finish\.js\?revision=r223-training-car-taxi&build=\d{8}-r\d+$/,
+  'Semantic car finish must use the canonical changed vehicle module with an explicit build identity'
+);
 const expectedCatalogTargets = [
   ['/turn/vehicle/catalog.js', canonicalCatalogTarget],
   ['/turn/vehicle/catalog.js?build=20260804-r157-factory-colors', canonicalCatalogTarget],
@@ -152,7 +158,7 @@ const expectedCatalogTargets = [
   ['./vehicle/catalog.js?build=20260720-r20', canonicalCatalogTarget]
 ];
 const expectedEmergencyTargets = [
-  ['/turn/vehicle/semantic-car-finish.js', '/turn/vehicle/semantic-car-finish.js?revision=r223-training-car-taxi'],
+  ['/turn/vehicle/semantic-car-finish.js', canonicalSemanticFinishTarget],
   ['/turn/vehicle/car-models.js', `/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=${release.cacheKey}`],
   ['/turn/vehicle/emergency-livery-models.js', `/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=${release.cacheKey}`],
   ['./vehicle/car-models.js?build=20260720-r19', `/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=${release.cacheKey}`],
