@@ -74,5 +74,5 @@ assert.deepEqual(
 );
 
 console.log(
-  `TURN test inventory passed: ${tests.length - explicitExclusions.size} classified tests across ${workflowNames.length} workflows; ${explicitExclusions.size} reviewed TURN LAB exclusions.`
+  `TURN test inventory passed: ${tests.length - explicitExclusions.size} classified tests across ${workflowNames.length} workflows; ${explicitExclusions.size} reviewed non-production exclusions.`
 );
