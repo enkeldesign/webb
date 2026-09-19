@@ -443,6 +443,19 @@ const PROJECTED_SHADOW_HISTORY = Object.freeze({
   ])
 });
 
+const DIRECTIONAL_SHADOW_HISTORY = Object.freeze({
+  period: '19 September',
+  title: 'Car shadows cast away from the light',
+  paragraphs: Object.freeze([
+    'TURN 1.21.2 tucks the narrow origin of the directional car shadow beneath the chassis and lets it widen softly away from the sun. This removes the opposite-side lobe while keeping the tight contact shadow and road-following projection.'
+  ]),
+  milestones: Object.freeze([
+    'Directional shadows begin beneath the car and extend away from the light',
+    'The same shared instanced shadow resources and draw call',
+    'TURN 1.21.2 · 2026.09.19-r257'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -516,7 +529,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   TRACTOR_SMV_SIGN_HISTORY,
   RELEASE_BASELINE_HISTORY,
   KEYBOARD_OWNERSHIP_HISTORY,
-  PROJECTED_SHADOW_HISTORY
+  PROJECTED_SHADOW_HISTORY,
+  DIRECTIONAL_SHADOW_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -613,13 +627,14 @@ Object.freeze({
   date: '19 September',
   entries: Object.freeze([
     Object.freeze(['1.21.1 r256', 'Replaces dynamic shadow maps with stable, soft contact and directional car shadows that follow the road.']),
-    Object.freeze(['Cheaper grounding', 'Player and rivals share one shadow draw call, including in LOW GRAPHICS, without a shadow-map texture or scenery shadow pass.'])
+    Object.freeze(['Cheaper grounding', 'Player and rivals share one shadow draw call, including in LOW GRAPHICS, without a shadow-map texture or scenery shadow pass.']),
+    Object.freeze(['1.21.2 r257', 'Tucks directional shadows beneath the chassis on the sun-facing side, with a narrow origin that widens away from the light.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.1',
-  build: '2026.09.19-r256',
-  note: 'TURN 1.21.1 replaces shadow maps with lightweight road-following car shadows shared by the player and rivals.'
+  version: '1.21.2',
+  build: '2026.09.19-r257',
+  note: 'TURN 1.21.2 makes directional car shadows extend away from the sun, preserving the tight contact layer and shared road-following rendering.'
 });

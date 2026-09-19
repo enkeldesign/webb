@@ -126,11 +126,14 @@ for (const browserType of [chromium, webkit]) {
           const car = new THREE.Group();
           const visual = await createCarVisual({ carId: 'sedan', color: i ? '#38d9ff' : '#ffd43b', ghost: i > 0, targetLength: 5.5 });
           shadows.setCarSize(car, visual); // Match production: measure before parenting/posing.
+          const size = new THREE.Box3().setFromObject(visual).getSize(new THREE.Vector3());
           car.add(visual);
           const sample = samples[48 + i * 6];
-          placeCar(car, sample, i % 2 ? -1 : 1, Math.PI + (terrain === 'banked-crest' ? 0.45 : 0));
+          const heading = terrain === 'flat' ? [Math.PI, Math.PI / 2, 0, -Math.PI / 2, Math.PI / 4][i]
+            : Math.PI + (terrain === 'banked-crest' ? 0.45 : 0);
+          placeCar(car, sample, i % 2 ? -1 : 1, heading);
           scene.add(car);
-          cars.push({ car, visual, sample });
+          cars.push({ car, visual, sample, size });
         }
         const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 900);
         const centerY = terrain === 'banked-crest' ? 6 : 0;
@@ -174,13 +177,13 @@ for (const browserType of [chromium, webkit]) {
         const gl = renderer.getContext();
         const pixels = new Uint8Array(renderer.domElement.width * renderer.domElement.height * 4);
         const without = new Uint8Array(pixels.length);
-        function visibleShadowPixels() {
+        function visibleShadowPixels(view = camera) {
           batch.visible = true;
-          renderer.render(scene, camera);
+          renderer.render(scene, view);
           gl.readPixels(0, 0, renderer.domElement.width, renderer.domElement.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
           batch.visible = false;
           renderer.info.reset();
-          renderer.render(scene, camera);
+          renderer.render(scene, view);
           gl.readPixels(0, 0, renderer.domElement.width, renderer.domElement.height, gl.RGBA, gl.UNSIGNED_BYTE, without);
           let darkened = 0;
           for (let i = 0; i < pixels.length; i += 4) if (without[i] - pixels[i] > 4) darkened++;
@@ -209,6 +212,52 @@ for (const browserType of [chromium, webkit]) {
           minimumMovingShadowPixels = Math.min(minimumMovingShadowPixels, visibleShadowPixels());
           if (shadows.mesh !== batch || renderer.info.memory.geometries !== geometryCount) throw new Error('Movement allocated shadow resources');
         }
+        const directionalFootprints = [];
+        if (terrain === 'flat') {
+          const cast = sun.target.position.clone().sub(sun.position).setY(0).normalize();
+          const screenRight = new THREE.Vector3().crossVectors(cast, new THREE.Vector3(0, 1, 0));
+          const extent = 8, aspect = width / height;
+          const topView = new THREE.OrthographicCamera(-extent * aspect, extent * aspect, extent, -extent, 0.1, 100);
+          topView.up.copy(cast);
+          topView.position.set(0, 30, 0);
+          topView.lookAt(0, 0.13, 0);
+          const { car, size } = cars[0];
+          for (const heading of [0, Math.PI / 4, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
+            placeCar(car, samples[60], 0, heading);
+            car.visible = true;
+            shadows.beginFrame('countryside');
+            shadows.addCar(car, samples[60]);
+            shadows.endFrame();
+            // Isolate the directional mask, using the actual shader and geometry.
+            const origin = batch.geometry.getAttribute('shadowOrigin');
+            for (let i = 0; i < batch.count; i++) if (origin.getW(i) === 1) origin.setZ(i, 0);
+            origin.needsUpdate = true;
+            for (const entry of cars) entry.car.visible = false;
+            visibleShadowPixels(topView);
+            let total = 0, castPixels = 0, sunFacingOutsidePixels = 0, rootSpan = 0, farSpan = 0;
+            const pixelWidth = renderer.domElement.width, pixelHeight = renderer.domElement.height;
+            for (let y = 0; y < pixelHeight; y++) {
+              const along = ((y + 0.5) / pixelHeight * 2 - 1) * extent;
+              let rowPixels = 0;
+              for (let x = 0; x < pixelWidth; x++) {
+                const pixel = (y * pixelWidth + x) * 4;
+                if (without[pixel] - pixels[pixel] <= 4) continue;
+                total++; rowPixels++;
+                if (along >= 0) castPixels++;
+                const across = ((x + 0.5) / pixelWidth * 2 - 1) * extent * aspect;
+                const dx = cast.x * along + screenRight.x * across;
+                const dz = cast.z * along + screenRight.z * across;
+                const carX = Math.cos(heading) * dx - Math.sin(heading) * dz;
+                const carZ = Math.sin(heading) * dx + Math.cos(heading) * dz;
+                if (along < 0 && (Math.abs(carX) > size.x / 2 || Math.abs(carZ) > size.z / 2)) sunFacingOutsidePixels++;
+              }
+              if (Math.abs(along) < 0.2) rootSpan = Math.max(rootSpan, rowPixels);
+              if (along > 1 && along < 2.5) farSpan = Math.max(farSpan, rowPixels);
+            }
+            directionalFootprints.push({ heading, sunFacingOutsidePixels, castAreaFraction: castPixels / total, rootSpan, farSpan });
+          }
+          for (const entry of cars) entry.car.visible = true;
+        }
         shadows.beginFrame('countryside');
         for (let i = 0; i < cars.length; i++) {
           cars[i].car.position.copy(poses[i].position);
@@ -225,7 +274,7 @@ for (const browserType of [chromium, webkit]) {
         const shadowGeometriesDisposed = renderer.info.memory.geometries === geometryCount - 1;
         for (const { visual } of cars) disposeCarVisual(visual);
         roadGeometry.dispose(); road.material.dispose(); renderer.dispose();
-        return { terrain, legacy, current, darkenedPixels, shadowGeometriesDisposed, shadowDrawCalls, minimumMovingShadowPixels };
+        return { terrain, legacy, current, darkenedPixels, shadowGeometriesDisposed, shadowDrawCalls, minimumMovingShadowPixels, directionalFootprints };
       }, { terrain, ...device });
       await page.screenshot({ path: `${outputDir}/shadows-${browserType.name()}-${device.name}-${terrain}.png` });
       console.log(JSON.stringify({ browser: browserType.name(), device: device.name, ...report }));
@@ -240,6 +289,11 @@ for (const browserType of [chromium, webkit]) {
       }
       assert.ok(report.minimumMovingShadowPixels > 80, 'Shadows stay visible during high speed, drifting and camera movement');
       assert.equal(report.shadowDrawCalls, 1, 'All five cars and both layers share one draw call');
+      for (const footprint of report.directionalFootprints) {
+        assert.equal(footprint.sunFacingOutsidePixels, 0, 'The cast shadow starts inside the chassis on the sun-facing side');
+        assert.ok(footprint.castAreaFraction > 0.95, 'Almost all directional area extends away from the light');
+        assert.ok(footprint.farSpan > footprint.rootSpan * 1.7, 'The cast footprint widens from a narrow root');
+      }
       assert.equal(report.shadowGeometriesDisposed, true);
       assert.deepEqual(errors, [], 'No shader, WebGL or model errors');
     }
