@@ -49,7 +49,7 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
   const bounds = new THREE.Box3();
   const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
   const ab = new THREE.Vector3(), ac = new THREE.Vector3(), normal = new THREE.Vector3();
-  const center = new THREE.Vector3(), up = new THREE.Vector3();
+  const center = new THREE.Vector3(), up = new THREE.Vector3(), edgeUp = new THREE.Vector3();
   const forward = new THREE.Vector3(), right = new THREE.Vector3(), lightDirection = new THREE.Vector3();
   const matrix = new THREE.Matrix4();
   let mesh = null, origins = null, axes = null;
@@ -103,6 +103,11 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
   function edge(target, sample, side) {
     target.copy(sample.point).addScaledVector(sample.normal, side * trackWidth / 2);
     target.y += roadHeight;
+    // Adjacent triangles must share exactly the same lifted road vertices.
+    // Separate face-normal offsets open subpixel cracks at bank/crest changes.
+    edgeUp.crossVectors(sample.tangent, sample.normal).normalize();
+    if (edgeUp.y < 0) edgeUp.negate();
+    target.addScaledVector(edgeUp, SURFACE_LIFT);
   }
 
   function triangle(opacity, halfWidth, halfLength) {
@@ -111,7 +116,7 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
     normal.crossVectors(ab, ac).normalize();
     if (normal.y < 0) normal.negate();
     matrix.makeBasis(ab, ac, normal);
-    matrix.setPosition(a.x + normal.x * SURFACE_LIFT, a.y + normal.y * SURFACE_LIFT, a.z + normal.z * SURFACE_LIFT);
+    matrix.setPosition(a);
     mesh.setMatrixAt(cursor, matrix);
     // UVs are continuous across triangle boundaries; body roll never affects them.
     const dx = a.x - center.x, dy = a.y - center.y, dz = a.z - center.z;

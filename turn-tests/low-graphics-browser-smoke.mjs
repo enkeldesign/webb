@@ -110,16 +110,25 @@ for (const browserType of [chromium, webkit]) {
         roadGeometry.computeVertexNormals();
         const road = new THREE.Mesh(roadGeometry, new THREE.MeshStandardMaterial({ color: 0x777777, side: THREE.DoubleSide }));
         scene.add(road);
+        const shadows = createCarShadows({ scene, sun, samples, trackWidth: 27 });
+        function placeCar(car, sample, side, heading) {
+          car.position.copy(sample.point).addScaledVector(sample.normal, side * 3);
+          car.position.y += 0.18;
+          const up = new THREE.Vector3().crossVectors(sample.normal, sample.tangent).normalize();
+          if (up.y < 0) up.negate();
+          const forward = new THREE.Vector3(Math.sin(heading), 0, Math.cos(heading)).projectOnPlane(up).normalize();
+          const right = new THREE.Vector3().crossVectors(up, forward).normalize();
+          car.rotation.order = 'YXZ';
+          car.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(right, up, forward));
+        }
         const cars = [];
         for (let i = 0; i < 5; i++) {
           const car = new THREE.Group();
           const visual = await createCarVisual({ carId: 'sedan', color: i ? '#38d9ff' : '#ffd43b', ghost: i > 0, targetLength: 5.5 });
+          shadows.setCarSize(car, visual); // Match production: measure before parenting/posing.
           car.add(visual);
           const sample = samples[48 + i * 6];
-          car.position.copy(sample.point).addScaledVector(sample.normal, (i % 2 ? -1 : 1) * 3);
-          car.position.y += 0.18;
-          car.rotation.x = Math.atan2(sample.tangent.y, Math.hypot(sample.tangent.x, sample.tangent.z));
-          car.rotation.y = Math.PI + (terrain === 'banked-crest' ? 0.45 : 0);
+          placeCar(car, sample, i % 2 ? -1 : 1, Math.PI + (terrain === 'banked-crest' ? 0.45 : 0));
           scene.add(car);
           cars.push({ car, visual, sample });
         }
@@ -144,8 +153,6 @@ for (const browserType of [chromium, webkit]) {
         cars[0].car.traverse((node) => { if (node.isMesh) node.castShadow = false; });
         sun.shadow.map?.dispose();
         sun.shadow.map = null;
-        const shadows = createCarShadows({ scene, sun, samples, trackWidth: 27 });
-        for (const { car, visual } of cars) shadows.setCarSize(car, visual);
         shadows.beginFrame('countryside');
         for (const { car, sample } of cars) shadows.addCar(car, sample);
         shadows.endFrame();
@@ -192,11 +199,7 @@ for (const browserType of [chromium, webkit]) {
           for (let i = 0; i < cars.length; i++) {
             const sample = samples[first + i * 6];
             const car = cars[i].car;
-            car.position.copy(sample.point).addScaledVector(sample.normal, (i % 2 ? -1 : 1) * 3);
-            car.position.y += 0.18;
-            car.rotation.x = Math.atan2(sample.tangent.y, Math.hypot(sample.tangent.x, sample.tangent.z));
-            car.rotation.y = Math.PI + Math.sin(frame) * 1.2;
-            car.rotation.z = Math.cos(frame) * 0.08;
+            placeCar(car, sample, i % 2 ? -1 : 1, Math.PI + Math.sin(frame) * 1.2);
             shadows.addCar(car, sample);
           }
           shadows.endFrame();

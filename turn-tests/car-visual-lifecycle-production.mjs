@@ -116,6 +116,22 @@ for (let frame = 0; frame < 100; frame++) {
   assert.ok(projected.mesh.count > 0, 'Curves, drift and lap transitions retain the contact footprint');
   assert.ok(projected.mesh.instanceMatrix.array.every(Number.isFinite), 'Surface transforms remain finite');
 }
+// A banked crest must be a continuous surface, with matching vertices on both
+// sides of every triangle edge; per-face lifts would leave visible pinholes.
+const liftedRoadEdges = shadowSamples.flatMap((sample) => {
+  const up = new THREE.Vector3().crossVectors(sample.tangent, sample.normal).normalize();
+  if (up.y < 0) up.negate();
+  return [-1, 1].map((side) => sample.point.clone().addScaledVector(sample.normal, side * 13.5)
+    .add(new THREE.Vector3(0, 0.13, 0)).addScaledVector(up, 0.018));
+});
+for (let i = 0; i < projected.mesh.count; i++) {
+  projected.mesh.getMatrixAt(i, shadowMatrix);
+  for (const [x, y] of [[0, 0], [1, 0], [0, 1]]) {
+    shadowVertex.set(x, y, 0).applyMatrix4(shadowMatrix);
+    assert.ok(liftedRoadEdges.some((edge) => edge.distanceTo(shadowVertex) < 0.00001),
+      'Neighboring shadow triangles must use shared road vertices across banks and crests');
+  }
+}
 const shadowDisposals = { mesh: 0, geometry: 0, material: 0 };
 projected.mesh.addEventListener('dispose', () => shadowDisposals.mesh++);
 projected.mesh.geometry.addEventListener('dispose', () => shadowDisposals.geometry++);
