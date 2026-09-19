@@ -103,9 +103,6 @@ export function installAirportEmergency({ world, samples, runtime = globalThis._
       visual.position.copy(placement.medicalResponderPoint);
       visual.rotation.y = placement.medicalResponderYaw;
       visual.visible = session.crashActive;
-      visual.traverse((node) => {
-        if (node.isMesh) node.castShadow = false;
-      });
       installResponderLightOverride(visual);
       world.add(visual);
       medicalResponder = visual;
@@ -513,8 +510,6 @@ function outlinedPrimitive(geometry, fillMaterial, scale = 1.04) {
   );
   outline.scale.setScalar(scale);
   const fill = new THREE.Mesh(geometry, fillMaterial);
-  fill.castShadow = false;
-  fill.receiveShadow = true;
   group.add(outline, fill);
   return group;
 }

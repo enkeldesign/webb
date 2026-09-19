@@ -106,8 +106,6 @@ function installOuterContourFromEdge(edge, samples, trackWidth, trackId, contour
   mesh.geometry = edge.geometry.clone();
   mesh.material = cloneMaterial(edge.material);
   mesh.name = `TURN ${trackId} outer road contour`;
-  mesh.receiveShadow = true;
-  mesh.castShadow = false;
   mesh.userData = { ...(edge.userData || {}), turnContextualRoadContour: trackId };
 
   const positions = mesh.geometry.getAttribute('position');

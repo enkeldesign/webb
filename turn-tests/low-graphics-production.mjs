@@ -65,14 +65,14 @@ assert.ok(indexSource.includes(`ui/low-graphics-setting.js?build=${release.cache
 assert.match(profileSource, /turn-low-graphics-v1/);
 assert.match(profileSource, /dprCap: lowGraphics \? 1 : Infinity/);
 assert.match(profileSource, /antialias: true/);
-assert.match(profileSource, /shadows: !lowGraphics/);
+assert.doesNotMatch(profileSource, /shadows:/);
 assert.match(profileSource, /pointLights: !lowGraphics/);
 assert.match(profileSource, /optionalScenery: true/);
 
 assert.match(runtimeSource, /from '\/turn\/graphics-profile\.js'/);
 assert.match(runtimeSource, /antialias: true/);
 assert.match(runtimeSource, /graphicsPixelRatio\(value\)/);
-assert.match(runtimeSource, /Object\.defineProperty\(this\.shadowMap, 'enabled'/);
+assert.doesNotMatch(runtimeSource, /shadowMap/);
 assert.match(runtimeSource, /class PointLight extends NativeThree\.PointLight/);
 assert.doesNotMatch(runtimeSource, /turnLowGraphicsHiddenOutline|isTurnOutline|Object3D\.prototype\.add|queueMicrotask/,
   'LOW GRAPHICS must not create contours and then hide/remove them in the shared Three runtime.');

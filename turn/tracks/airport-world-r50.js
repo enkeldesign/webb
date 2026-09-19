@@ -72,27 +72,18 @@ export function installAirportWorld({ scene, samples, trackWidth = 27 }) {
   return world;
 }
 
-function outlinedMesh(geometry, meshMaterial, scale = 1.035, {
-  castShadow = true,
-  receiveShadow = true
-} = {}) {
+function outlinedMesh(geometry, meshMaterial, scale = 1.035) {
   if (!graphicsProfile.outlines) {
     const group = new THREE.Group();
     const mesh = new THREE.Mesh(geometry, meshMaterial);
-    mesh.castShadow = castShadow;
-    mesh.receiveShadow = receiveShadow;
     group.add(mesh);
     return group;
   }
   const group = new THREE.Group();
   const outline = new THREE.Mesh(geometry, blackOutlineMaterial);
   outline.scale.setScalar(scale);
-  outline.castShadow = false;
-  outline.receiveShadow = false;
 
   const mesh = new THREE.Mesh(geometry, meshMaterial);
-  mesh.castShadow = castShadow;
-  mesh.receiveShadow = receiveShadow;
   group.add(outline, mesh);
   return group;
 }
@@ -108,7 +99,6 @@ function makeGround(world) {
   );
   grass.rotation.x = -Math.PI / 2;
   grass.position.y = -0.11;
-  grass.receiveShadow = true;
   world.add(grass);
 
   const airportBase = new THREE.Mesh(
@@ -117,7 +107,6 @@ function makeGround(world) {
   );
   airportBase.rotation.x = -Math.PI / 2;
   airportBase.position.set(0, -0.055, -36);
-  airportBase.receiveShadow = true;
   world.add(airportBase);
 
   const apron = new THREE.Mesh(
@@ -126,7 +115,6 @@ function makeGround(world) {
   );
   apron.rotation.x = -Math.PI / 2;
   apron.position.set(-8, -0.01, -49);
-  apron.receiveShadow = true;
   world.add(apron);
 
   const terminalForecourt = new THREE.Mesh(
@@ -135,7 +123,6 @@ function makeGround(world) {
   );
   terminalForecourt.rotation.x = -Math.PI / 2;
   terminalForecourt.position.set(-15, 0.005, -101);
-  terminalForecourt.receiveShadow = true;
   world.add(terminalForecourt);
 }
 
@@ -143,8 +130,7 @@ function makeRunwaySystem(world) {
   const runway = outlinedMesh(
     new THREE.BoxGeometry(540, 0.12, 62),
     material(RUNWAY, 0.98),
-    1.004,
-    { castShadow: false }
+    1.004
   );
   runway.position.set(20, 0.015, -221);
   world.add(runway);
@@ -160,7 +146,6 @@ function makeRunwaySystem(world) {
     dashes.setMatrixAt(index, marker.matrix);
   }
   dashes.instanceMatrix.needsUpdate = true;
-  dashes.receiveShadow = true;
   world.add(dashes);
 
   const thresholdGeometry = new THREE.BoxGeometry(17, 0.08, 2.1);
@@ -168,7 +153,6 @@ function makeRunwaySystem(world) {
     for (let stripe = -3; stripe <= 3; stripe += 1) {
       const threshold = new THREE.Mesh(thresholdGeometry, white);
       threshold.position.set(x, 0.13, -221 + stripe * 6.2);
-      threshold.receiveShadow = true;
       world.add(threshold);
     }
   }
@@ -193,8 +177,7 @@ function makeRunwaySystem(world) {
     const taxiway = outlinedMesh(
       new THREE.BoxGeometry(34, 0.08, 82),
       material(0x4f555c, 0.96),
-      1.006,
-      { castShadow: false }
+      1.006
     );
     taxiway.position.set(x, 0.025, -169);
     world.add(taxiway);
@@ -254,7 +237,6 @@ function makeRaceRoad(world, samples, trackWidth) {
       side: THREE.DoubleSide
     })
   );
-  road.receiveShadow = true;
   world.add(road);
 
   const curbWidth = 1.75;
@@ -298,7 +280,6 @@ function makeRaceRoad(world, samples, trackWidth) {
         side: THREE.DoubleSide
       })
     );
-    curb.receiveShadow = true;
     world.add(curb);
   }
 
@@ -368,8 +349,7 @@ function makeStartFinishDistrict(world, samples, trackWidth) {
   const signPanel = outlinedMesh(
     new THREE.BoxGeometry(17.5, 3.1, 0.62),
     material(CREAM, 0.7),
-    1.05,
-    { castShadow: false }
+    1.05
   );
   signPanel.position.set(0, 9.2, -1.28);
   gate.add(signPanel);
@@ -425,8 +405,7 @@ function makeStartFinishDistrict(world, samples, trackWidth) {
   const hutGlass = outlinedMesh(
     new THREE.BoxGeometry(8.4, 2.1, 0.45),
     material(WINDOW, 0.35, 0.08),
-    1.04,
-    { castShadow: false }
+    1.04
   );
   hutGlass.position.set(0, 3.2, -3.92);
   timingHut.add(hutGlass);
@@ -451,8 +430,7 @@ function makeTerminalCampus(world, samples) {
     const southWindow = outlinedMesh(
       new THREE.BoxGeometry(9.2, 5.4, 0.5),
       glass,
-      1.025,
-      { castShadow: false }
+      1.025
     );
     southWindow.position.set(x, 8.7, -12.25);
     terminal.add(southWindow);
@@ -481,8 +459,7 @@ function makeTerminalCampus(world, samples) {
   const hallGlass = outlinedMesh(
     new THREE.BoxGeometry(48, 4.3, 0.5),
     glass,
-    1.02,
-    { castShadow: false }
+    1.02
   );
   hallGlass.position.set(-8, 4.8, -26.65);
   terminal.add(hallGlass);
@@ -593,8 +570,7 @@ function makeHangar(world, samples, { position, size, accent }) {
   const door = outlinedMesh(
     new THREE.BoxGeometry(width * 0.72, height * 0.68, 0.72),
     material(0x23282d, 0.95),
-    1.024,
-    { castShadow: false }
+    1.024
   );
   door.position.set(0, height * 0.35, -depth / 2 - 0.4);
   hangar.add(door);
@@ -650,7 +626,6 @@ function makeAircraftApron(world, samples) {
     if (minimumTrackDistance(samples, x, z) < 24) continue;
     const cone = new THREE.Mesh(coneGeometry, coneMaterial);
     cone.position.set(x, 1, z);
-    cone.castShadow = false;
     world.add(cone);
   }
 }
@@ -843,7 +818,7 @@ function makePerimeterDetails(world, samples, trackWidth) {
 
   for (const sampleIndex of [130, 145, 160, 430, 445, 460]) {
     const sample = samples[sampleIndex];
-    const barrier = outlinedMesh(barrierGeometry, barrierMaterial, 1.035, { castShadow: false });
+    const barrier = outlinedMesh(barrierGeometry, barrierMaterial, 1.035);
     barrier.position.copy(sample.point)
       .addScaledVector(sample.normal, trackWidth / 2 + 6)
       .setY(0.45);
@@ -869,8 +844,6 @@ function makeDistantHills(world) {
     );
     mesh.position.set(...hill.position);
     mesh.scale.set(...hill.scale);
-    mesh.castShadow = false;
-    mesh.receiveShadow = false;
     world.add(mesh);
   }
 }
@@ -885,9 +858,6 @@ async function installServiceVehicles(world, samples) {
     });
 
     visual.rotation.y = slot.rotation;
-    visual.traverse((node) => {
-      if (node.isMesh) node.castShadow = false;
-    });
 
     placeScenerySafely(world, visual, samples, {
       position: slot.position,
@@ -980,8 +950,7 @@ function makeMaintenanceFallback(width, height, depth, accent) {
   const door = outlinedMesh(
     new THREE.BoxGeometry(width * 0.55, height * 0.58, 0.55),
     material(0x252a2f, 0.94),
-    1.04,
-    { castShadow: false }
+    1.04
   );
   door.position.set(0, height * 0.3, -depth / 2 - 0.32);
   building.add(door);
@@ -1021,8 +990,6 @@ function prepareStaticAsset(source, {
       return clone;
     });
     node.material = Array.isArray(node.material) ? clones : clones[0];
-    node.castShadow = false;
-    node.receiveShadow = true;
   });
 
   normalizeModelToGround(model, targetSize);
@@ -1042,8 +1009,6 @@ function prepareStaticAsset(source, {
         })
       );
       outlineMeshNode.scale.setScalar(1.018);
-      outlineMeshNode.castShadow = false;
-      outlineMeshNode.receiveShadow = false;
       mesh.add(outlineMeshNode);
     }
   }

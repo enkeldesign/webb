@@ -38,6 +38,85 @@ async function moduleUnderTest(path, bindings, exports, suffix = '') {
   }, { filename: path });
 }
 
+
+// Exercise the actual projected geometry with production Three, including slope,
+// banking, five cars, sample replacement, and idempotent GPU-resource disposal.
+const { createCarShadows } = await moduleUnderTest('turn/render/car-shadows.js', { THREE }, ['createCarShadows']);
+const shadowScene = new THREE.Scene();
+const shadowSun = new THREE.DirectionalLight();
+shadowSun.position.set(-90, 150, 70);
+const shadowSamples = [];
+const shadowCar = new THREE.Group();
+const projected = createCarShadows({ scene: shadowScene, sun: shadowSun, samples: shadowSamples, trackWidth: 27 });
+const shadowMatrix = new THREE.Matrix4();
+const shadowVertex = new THREE.Vector3();
+for (const [slope, bank] of [[0, 0], [0.7, 0], [-0.7, 0.25]]) {
+  shadowSamples.splice(0, shadowSamples.length, ...Array.from({ length: 64 }, (_, i) => ({
+    point: new THREE.Vector3(0, slope * i * 2, i * 2),
+    tangent: new THREE.Vector3(0, slope, 1).normalize(),
+    normal: new THREE.Vector3(-1, -bank, 0)
+  })));
+  shadowCar.position.set(2, 999, 40.4); // Deliberately ignore body/suspension Y.
+  shadowCar.rotation.set(0.4, 1.2, 0.5);
+  projected.beginFrame('countryside');
+  projected.addCar(shadowCar, shadowSamples[20]);
+  projected.endFrame();
+  assert.ok(projected.mesh.count > 0);
+  const singleCount = projected.mesh.count;
+  for (let i = 0; i < singleCount; i += 1) {
+    projected.mesh.getMatrixAt(i, shadowMatrix);
+    for (const [x, y] of [[0, 0], [1, 0], [0, 1]]) {
+      shadowVertex.set(x, y, 0).applyMatrix4(shadowMatrix);
+      const clearance = (shadowVertex.y - slope * shadowVertex.z - bank * shadowVertex.x - 0.13)
+        / Math.hypot(1, slope, bank);
+      assert.ok(Math.abs(clearance - 0.018) < 0.00001, 'Every shadow vertex must follow the road plane at a tiny normal offset');
+    }
+  }
+  projected.beginFrame('countryside');
+  for (let i = 0; i < 5; i += 1) projected.addCar(shadowCar, shadowSamples[20]);
+  projected.endFrame();
+  assert.equal(projected.mesh.count, singleCount * 5);
+  assert.equal(shadowScene.children.length, 1, 'Player and four rivals share one render batch');
+  const mesh = projected.mesh;
+  const geometry = mesh.geometry;
+  const instanceData = mesh.instanceMatrix.array;
+  for (let frame = 0; frame < 100; frame += 1) {
+    shadowCar.rotation.y = frame * 0.1;
+    projected.beginFrame('countryside');
+    projected.addCar(shadowCar, shadowSamples[20]);
+    projected.endFrame();
+  }
+  assert.equal(projected.mesh, mesh);
+  assert.equal(projected.mesh.geometry, geometry);
+  assert.equal(projected.mesh.instanceMatrix.array, instanceData, 'Drifting/restarts reuse the instance buffer');
+  projected.beginFrame('countryside');
+  projected.endFrame();
+  assert.equal(mesh.count, 0, 'Returning Home/hiding cars cannot leave stale instances');
+  assert.equal(mesh.material.depthWrite, false);
+  assert.equal(mesh.material.depthTest, true);
+  assert.equal(mesh.frustumCulled, false, 'Moving instances cannot be culled using stale bounds');
+}
+const shadowDisposals = { mesh: 0, geometry: 0, material: 0 };
+projected.mesh.addEventListener('dispose', () => shadowDisposals.mesh++);
+projected.mesh.geometry.addEventListener('dispose', () => shadowDisposals.geometry++);
+projected.mesh.material.addEventListener('dispose', () => shadowDisposals.material++);
+projected.dispose();
+projected.dispose();
+assert.deepEqual(shadowDisposals, { mesh: 1, geometry: 1, material: 1 });
+assert.equal(shadowScene.children.length, 0);
+
+async function checkNoLegacyShadows(directory) {
+  for (const entry of await fs.readdir(new URL(`../${directory}`, import.meta.url), { withFileTypes: true })) {
+    const pathname = `${directory}/${entry.name}`;
+    if (entry.isDirectory()) await checkNoLegacyShadows(pathname);
+    else if (entry.name.endsWith('.js')) assert.doesNotMatch(await read(pathname), /\b(?:shadowMap|castShadow|receiveShadow|PCFSoftShadowMap)\b/,
+      `${pathname} must not configure real-time shadow maps`);
+  }
+}
+await checkNoLegacyShadows('turn');
+console.log('Projected car shadows: surface alignment, shared instances, restart reuse and disposal passed.');
+if (process.argv.includes('--shadows-only')) process.exit(0);
+
 function section(source, start, end) {
   const from = source.indexOf(start);
   const to = end ? source.indexOf(end, from + start.length) : source.length;
@@ -232,7 +311,7 @@ const main = await read('turn/main.js');
 const requests = [];
 const installCarVisual = vm.runInNewContext(
   `${section(main, 'async function installCarVisual(', '\nasync function applyVehicleSelection')}\ninstallCarVisual`,
-  { disposeCarVisual, createCarVisual: (options) => { const request = { ...deferred(), options }; requests.push(request); return request.promise; } }
+  { disposeCarVisual, carShadows: { setCarSize() {} }, createCarVisual: (options) => { const request = { ...deferred(), options }; requests.push(request); return request.promise; } }
 );
 const host = new THREE.Group();
 const fallback = new THREE.Mesh(bodyGeometry, sourceMaterial);

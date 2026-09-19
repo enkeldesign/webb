@@ -77,6 +77,7 @@ const installCarVisual = vm.runInNewContext(
   `${section(main, 'async function installCarVisual(', '\nasync function applyVehicleSelection')}\ninstallCarVisual`,
   {
     disposeCarVisual() {},
+    carShadows: { setCarSize() {} },
     createCarVisual(options) {
       const request = { ...deferred(), options };
       visualRequests.push(request);

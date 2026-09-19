@@ -203,8 +203,6 @@ export async function createCarVisual({
         material.needsUpdate = true;
       }
 
-      record.node.castShadow = !ghost;
-      record.node.receiveShadow = true;
     }
 
     if (outline) addOutlines(model);
@@ -372,7 +370,6 @@ function installEmergencyLightRig(root, model, service, ownResource) {
       setThreeColor(pointLight.color, colorSpec);
       pointLight.position.copy(lamp.position);
       pointLight.position.y += lampHeight * 1.2;
-      pointLight.castShadow = false;
       root.add(pointLight);
     }
 
@@ -497,8 +494,6 @@ function addOutlines(model) {
   for (const node of originals) {
     const outline = new THREE.Mesh(node.geometry, CAR_OUTLINE_MATERIAL);
     outline.scale.setScalar(1.035);
-    outline.castShadow = false;
-    outline.receiveShadow = false;
     outline.userData.turnOutline = true;
     node.add(outline);
   }

@@ -59,8 +59,6 @@ function addInkOutline(root, scale = 1.02) {
     const outline = new THREE.Mesh(surface.geometry, inkMaterial);
     outline.name = `${surface.name || 'Landmark surface'} outline`;
     outline.scale.setScalar(scale);
-    outline.castShadow = false;
-    outline.receiveShadow = false;
     outline.userData.turnOutline = true;
     outline.userData.turnOutlined = true;
     surface.add(outline);
@@ -72,15 +70,11 @@ function prepareModel(source, {
   horizontalSpan = false,
   outlineScale = 1.02,
   outline = true,
-  castShadow = false,
-  receiveShadow = false,
   paletteLocked = false
 }) {
   const model = source.clone(true);
   model.traverse((node) => {
     if (!node?.isMesh) return;
-    node.castShadow = castShadow;
-    node.receiveShadow = receiveShadow;
     node.userData.turnOutlined = true;
     if (paletteLocked) {
       node.userData.turnPaletteLocked = true;
@@ -110,8 +104,6 @@ function outlinedPrimitive(geometry, surfaceMaterial, outlineScale = 1.035) {
   if (!graphicsProfile.outlines) {
     const root = new THREE.Group();
     const surface = new THREE.Mesh(geometry, surfaceMaterial);
-    surface.castShadow = true;
-    surface.receiveShadow = true;
     surface.userData.turnOutlined = true;
     root.add(surface);
     return root;
@@ -122,8 +114,6 @@ function outlinedPrimitive(geometry, surfaceMaterial, outlineScale = 1.035) {
   outline.scale.setScalar(outlineScale);
   outline.userData.turnOutline = true;
   outline.userData.turnOutlined = true;
-  surface.castShadow = true;
-  surface.receiveShadow = true;
   surface.userData.turnOutlined = true;
   root.add(outline, surface);
   return root;
@@ -184,8 +174,6 @@ function createCountrysideWindmill(source, samples, trackWidth) {
   const rotor = prepareModel(source, {
     targetSpan: 18.6,
     outline: false,
-    castShadow: true,
-    receiveShadow: true,
     paletteLocked: true
   });
   rotor.name = 'Kenney Fantasy Town Windmill Rotor';

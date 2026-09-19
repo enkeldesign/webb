@@ -54,7 +54,6 @@ export function showTheLot({ initialSelection } = {}) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.55));
-    renderer.shadowMap.enabled = false;
     host.appendChild(renderer.domElement);
 
     const camera = new THREE.PerspectiveCamera(43, 1, 0.1, 130);

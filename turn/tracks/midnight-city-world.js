@@ -71,7 +71,6 @@ function makeNightLighting(world) {
 
   const moon = new THREE.DirectionalLight(0xaec8ff, 1.05);
   moon.position.set(-240, 420, -180);
-  moon.castShadow = false;
   world.add(moon);
 }
 
@@ -82,7 +81,6 @@ function makeGround(world) {
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.2;
-  ground.receiveShadow = true;
   world.add(ground);
 
   const downtownGlow = new THREE.Mesh(
@@ -108,7 +106,6 @@ function makeRaceRoad(world, samples, trackWidth) {
     name: 'Midnight City race road',
     meshMaterial: material(ROAD, 0.98)
   });
-  road.receiveShadow = true;
   world.add(road);
 
   for (const side of [-1, 1]) {
@@ -120,7 +117,6 @@ function makeRaceRoad(world, samples, trackWidth) {
       name: `Midnight City road edge ${side}`,
       meshMaterial: material(ROAD_EDGE, 0.94)
     });
-    edge.receiveShadow = true;
     world.add(edge);
 
     const sidewalk = makeRibbonMesh({
@@ -131,7 +127,6 @@ function makeRaceRoad(world, samples, trackWidth) {
       name: `Midnight City sidewalk ${side}`,
       meshMaterial: material(SIDEWALK, 0.92)
     });
-    sidewalk.receiveShadow = true;
     world.add(sidewalk);
   }
 
@@ -188,7 +183,6 @@ function makeLaneDashes(world, samples) {
 
   dashes.count = cursor;
   dashes.instanceMatrix.needsUpdate = true;
-  dashes.receiveShadow = true;
   world.add(dashes);
 }
 
@@ -395,8 +389,6 @@ function installBuildingInstances(world, buildings, skyline) {
   for (let index = 0; index < bodies.length; index += 1) {
     bodies[index].count = bodyCounts[index];
     bodies[index].instanceMatrix.needsUpdate = true;
-    bodies[index].castShadow = !skyline;
-    bodies[index].receiveShadow = true;
     world.add(bodies[index]);
   }
 

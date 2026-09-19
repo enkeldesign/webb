@@ -102,6 +102,7 @@ function updateSpectatorScene(runtime, dt, scratch) {
     car.rotation.x = trackPitch(surfaceSample);
     car.rotation.y = frame.h + Math.PI;
     car.rotation.z = -frame.s * 0.03;
+    runtime.carShadows?.addCar(car, surfaceSample);
     if (car === ghostCar) animateWheels(car, frame.s, 45, dt);
   }
 

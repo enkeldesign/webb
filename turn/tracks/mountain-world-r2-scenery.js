@@ -56,7 +56,6 @@ function makeSafeGuardrails(world, samples, trackWidth) {
     posts.setMatrixAt(cursor, marker.matrix);
   });
   posts.instanceMatrix.needsUpdate = true;
-  posts.castShadow = true;
   posts.name = 'Mountain clearance-safe guardrail posts';
   world.add(posts);
 
@@ -72,7 +71,6 @@ function makeSafeGuardrails(world, samples, trackWidth) {
     rail.position.copy(midpoint);
     rail.position.y += 0.22;
     rail.rotation.y = Math.atan2(next.point.x - current.point.x, next.point.z - current.point.z);
-    rail.castShadow = true;
     rail.name = 'Mountain clearance-safe guardrail rail';
     world.add(rail);
   }
@@ -151,8 +149,6 @@ function makeSafeSnowForest(world, samples, trackWidth) {
 
   [trunks, crowns, lowers, snowCaps].forEach((mesh) => {
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
     mesh.userData.turnOutlined = true;
     world.add(mesh);
   });
@@ -209,9 +205,6 @@ function makeGroundedRockFields(world, samples, trackWidth) {
   });
   rocks.instanceMatrix.needsUpdate = true;
   caps.instanceMatrix.needsUpdate = true;
-  rocks.castShadow = true;
-  rocks.receiveShadow = true;
-  caps.castShadow = true;
   rocks.name = 'Mountain grounded clearance-safe granite';
   caps.name = 'Mountain grounded granite snow caps';
   world.add(rocks, caps);
@@ -259,8 +252,6 @@ function makeRandomSnowDrifts(world, samples, trackWidth) {
           scale * (0.8 + random() * 0.85)
         );
         if (nearestTrackDistanceXZ(mound.position, samples, 2) < trackWidth / 2 + 4.5) continue;
-        mound.castShadow = true;
-        mound.receiveShadow = true;
         mound.name = 'Mountain irregular overlapping snow drift';
         world.add(mound);
       }
@@ -394,7 +385,6 @@ function makeOpenRibbon(world, samples, halfWidth, meshMaterial, yOffset, name) 
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.computeVertexNormals();
   const mesh = new THREE.Mesh(geometry, meshMaterial);
-  mesh.receiveShadow = true;
   mesh.name = name;
   world.add(mesh);
 }
@@ -402,8 +392,6 @@ function makeOpenRibbon(world, samples, halfWidth, meshMaterial, yOffset, name) 
 function prepareAsset(root) {
   root.traverse((node) => {
     if (!node?.isMesh) return;
-    node.castShadow = true;
-    node.receiveShadow = true;
     node.userData.turnOutlined = true;
   });
   return root;

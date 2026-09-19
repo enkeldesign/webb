@@ -58,8 +58,6 @@ function outlinedPrimitive(geometry, fillMaterial, outlineScale = 1.065) {
   if (!graphicsProfile.outlines) {
     const root = new THREE.Group();
     const fill = new THREE.Mesh(geometry, fillMaterial);
-    fill.castShadow = true;
-    fill.receiveShadow = true;
     fill.userData.turnOutlined = true;
     root.add(fill);
     return root;
@@ -71,8 +69,6 @@ function outlinedPrimitive(geometry, fillMaterial, outlineScale = 1.065) {
   );
   outline.scale.setScalar(outlineScale);
   const fill = new THREE.Mesh(geometry, fillMaterial);
-  fill.castShadow = true;
-  fill.receiveShadow = true;
   group.add(outline, fill);
   return group;
 }
@@ -141,8 +137,6 @@ function applyBellaCoatGradient(scene) {
       vertexColors: true,
       toneMapped: false
     });
-    node.castShadow = true;
-    node.receiveShadow = true;
   });
 }
 

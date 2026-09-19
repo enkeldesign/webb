@@ -99,8 +99,6 @@ function makeDownhillSlalomWarningSign() {
 
   root.traverse((object) => {
     if (!object?.isMesh) return;
-    object.castShadow = true;
-    object.receiveShadow = true;
     // This prop carries its own graphic border. Do not let a later art pass
     // add a second TURN contour around it.
     object.userData.turnOutlined = true;

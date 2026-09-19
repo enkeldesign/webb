@@ -99,13 +99,11 @@ function loadAsset(key) {
   return cache.get(key);
 }
 
-function prepareModel(source, targetHeight, { castShadow = true, opacity = 1 } = {}) {
+function prepareModel(source, targetHeight, { opacity = 1 } = {}) {
   const model = source.clone(true);
 
   model.traverse((node) => {
     if (!node.isMesh) return;
-    node.castShadow = castShadow;
-    node.receiveShadow = true;
     node.userData.turnPaletteLocked = true;
 
     if (opacity < 1 && node.material) {
@@ -195,7 +193,6 @@ function addTexturedGround(world) {
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.012;
-  ground.receiveShadow = true;
   world.add(ground);
 }
 
@@ -250,7 +247,6 @@ function addShoulders(world, samples, trackWidth) {
         side: THREE.DoubleSide
       })
     );
-    shoulder.receiveShadow = true;
     world.add(shoulder);
   }
 }
@@ -276,7 +272,6 @@ function addStartFinish(world, samples, trackWidth) {
         .addScaledVector(start.tangent, (row - 0.5) * 1.35);
       tile.position.y = 0.215;
       tile.rotation.y = yaw;
-      tile.receiveShadow = true;
       world.add(tile);
     }
   }
@@ -361,9 +356,7 @@ async function addAssetDressing(world, samples, trackWidth) {
       const sample = sampleAt(samples, 135 + Math.floor(seeded01(15000 + i) * 190));
       const side = i % 2 === 0 ? 1 : -1;
       const source = sources[i % sources.length];
-      const model = prepareModel(source, 12 + seeded01(15100 + i) * 9, {
-        castShadow: i % 4 === 0
-      });
+      const model = prepareModel(source, 12 + seeded01(15100 + i) * 9);
       model.position.add(sample.point)
         .addScaledVector(sample.normal, side * (trackWidth / 2 + 11 + seeded01(15200 + i) * 29))
         .addScaledVector(sample.tangent, (seeded01(15300 + i) - 0.5) * 16);
@@ -378,7 +371,6 @@ async function addAssetDressing(world, samples, trackWidth) {
       const angle = (i / 10) * TAU + seeded01(15500 + i) * 0.28;
       const distance = 260 + seeded01(15600 + i) * 250;
       const model = prepareModel(cloud, 18 + seeded01(15700 + i) * 28, {
-        castShadow: false,
         opacity: 0.9
       });
       model.position.set(

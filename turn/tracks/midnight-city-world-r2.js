@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { graphicsProfile } from '/turn/graphics-profile.js';
-import { installMidnightCityWorld as installMidnightCityWorldR1 } from './midnight-city-world.js?build=20260918-r255';
+import { installMidnightCityWorld as installMidnightCityWorldR1 } from './midnight-city-world.js?build=20260919-r256';
 
 const WARM_LIGHT = 0xffd27a;
 const PLAYER_FILL = 0xffe3b3;
@@ -42,7 +42,6 @@ function installPlayerLightRig(playerCar) {
       const light = new THREE.PointLight(PLAYER_FILL, 6.2, 58, 1.72);
       light.name = `Midnight City player fill ${side < 0 ? 'left' : 'right'}`;
       light.position.set(side * 1.55, 2.85, 2.4);
-      light.castShadow = false;
       rig.add(light);
     }
   }
@@ -67,7 +66,6 @@ function strengthenStreetLights(world) {
     node.intensity = Math.max(node.intensity, 11.5);
     node.distance = Math.max(node.distance, 96);
     node.decay = 1.5;
-    node.castShadow = false;
     count += 1;
   });
   return count;

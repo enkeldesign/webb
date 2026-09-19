@@ -54,7 +54,6 @@ function makeGround(world) {
   );
   land.rotation.x = -Math.PI / 2;
   land.position.set(0, -0.13, 35);
-  land.receiveShadow = true;
   world.add(land);
 
   const harborApron = new THREE.Mesh(
@@ -63,7 +62,6 @@ function makeGround(world) {
   );
   harborApron.rotation.x = -Math.PI / 2;
   harborApron.position.set(-4, -0.07, 18);
-  harborApron.receiveShadow = true;
   world.add(harborApron);
 
   const water = new THREE.Mesh(
@@ -77,7 +75,6 @@ function makeGround(world) {
   );
   water.rotation.x = -Math.PI / 2;
   water.position.set(0, -0.16, -235);
-  water.receiveShadow = true;
   world.add(water);
 
   const waterGlintGeometry = new THREE.BoxGeometry(18, 0.025, 0.45);
@@ -146,7 +143,6 @@ function makeRaceRoad(world, samples, trackWidth) {
     })
   );
   road.name = 'Harbor race road';
-  road.receiveShadow = true;
   world.add(road);
 
   makeCurbs(world, samples, trackWidth);
@@ -193,7 +189,6 @@ function makeCurbs(world, samples, trackWidth) {
         side: THREE.DoubleSide
       })
     );
-    curb.receiveShadow = true;
     world.add(curb);
   }
 }
@@ -220,7 +215,6 @@ function makeCentreDashes(world, samples) {
 
   dashes.count = cursor;
   dashes.instanceMatrix.needsUpdate = true;
-  dashes.receiveShadow = true;
   world.add(dashes);
 }
 
@@ -239,7 +233,6 @@ function makeStartFinishDistrict(world, samples, trackWidth) {
       material(stripe % 2 ? CREAM : INK, 0.9)
     );
     tile.position.x = -trackWidth / 2 + (stripe + 0.5) * trackWidth / stripeCount;
-    tile.receiveShadow = true;
     line.add(tile);
   }
   world.add(line);
@@ -252,12 +245,10 @@ function makeStartFinishDistrict(world, samples, trackWidth) {
   for (const side of [-1, 1]) {
     const post = new THREE.Mesh(postGeometry, material(PETROL, 0.74, 0.08));
     post.position.set(side * (trackWidth / 2 + 2), 4.5, 0);
-    post.castShadow = true;
     gate.add(post);
   }
   const beam = new THREE.Mesh(beamGeometry, material(YELLOW, 0.72, 0.06));
   beam.position.y = 8.35;
-  beam.castShadow = true;
   gate.add(beam);
   world.add(gate);
 }
@@ -277,7 +268,6 @@ function makeContainerYards(world) {
     );
     slab.position.set(4, 0, zone.z + 8.5);
     slab.rotation.y = zone.rotation;
-    slab.receiveShadow = true;
     world.add(slab);
 
     for (let row = 0; row < zone.rows; row += 1) {
@@ -299,8 +289,6 @@ function makeContainerStack(world, x, z, stack, seed, rotation) {
     const shell = new THREE.Mesh(geometry, material(colors[(seed + level) % colors.length], 0.78, 0.06));
     shell.position.set(x + (level % 2 ? 0.7 : 0), 3.8 + level * 7.45, z);
     shell.rotation.y = rotation + (seed % 3 - 1) * 0.012;
-    shell.castShadow = true;
-    shell.receiveShadow = true;
     world.add(shell);
 
     const ribs = new THREE.Mesh(
@@ -324,7 +312,6 @@ function makeQuayDistrict(world) {
     material(0x858c8d, 0.98)
   );
   quay.position.set(0, -0.9, -174);
-  quay.receiveShadow = true;
   world.add(quay);
 
   const edge = new THREE.Mesh(
@@ -332,7 +319,6 @@ function makeQuayDistrict(world) {
     material(QUAY_EDGE, 0.9)
   );
   edge.position.set(0, 0.3, -190);
-  edge.castShadow = true;
   world.add(edge);
 
   const bollards = new THREE.InstancedMesh(
@@ -347,7 +333,6 @@ function makeQuayDistrict(world) {
     bollards.setMatrixAt(index, marker.matrix);
   }
   bollards.instanceMatrix.needsUpdate = true;
-  bollards.castShadow = true;
   world.add(bollards);
 
   makeGantryCrane(world, -115, -196, 1.04, PETROL);
@@ -366,19 +351,16 @@ function makeGantryCrane(world, x, z, scale, color) {
     const leg = new THREE.Mesh(legGeometry, steel);
     leg.position.set(side * 10.5, 15.5, 0);
     leg.rotation.z = side * -0.1;
-    leg.castShadow = true;
     crane.add(leg);
   }
 
   const beam = new THREE.Mesh(new THREE.BoxGeometry(30, 2.3, 2.5), steel);
   beam.position.set(0, 30.2, 0);
-  beam.castShadow = true;
   crane.add(beam);
 
   const boom = new THREE.Mesh(new THREE.BoxGeometry(33, 1.4, 1.7), steel);
   boom.position.set(8.5, 34.5, -5.2);
   boom.rotation.z = -0.12;
-  boom.castShadow = true;
   crane.add(boom);
 
   const cable = new THREE.Mesh(new THREE.BoxGeometry(0.25, 14, 0.25), material(INK, 0.8));
@@ -402,8 +384,6 @@ function makeWarehouses(world) {
       material(color, 0.94)
     );
     building.position.set(x, height / 2, z);
-    building.castShadow = true;
-    building.receiveShadow = true;
     world.add(building);
 
     const roof = new THREE.Mesh(
@@ -411,7 +391,6 @@ function makeWarehouses(world) {
       material(INK, 0.82, 0.08)
     );
     roof.position.set(x, height + 0.9, z);
-    roof.castShadow = true;
     world.add(roof);
 
     const door = new THREE.Mesh(
@@ -443,7 +422,6 @@ function makeCargoShip(world, x, z, scale, color, rotation) {
   );
   hull.position.y = 3.2;
   hull.scale.x = 0.98;
-  hull.castShadow = true;
   ship.add(hull);
 
   const bow = new THREE.Mesh(
@@ -454,7 +432,6 @@ function makeCargoShip(world, x, z, scale, color, rotation) {
   bow.rotation.y = Math.PI / 4;
   bow.position.set(48, 3.2, 0);
   bow.scale.set(1, 1, 0.72);
-  bow.castShadow = true;
   ship.add(bow);
 
   const deck = new THREE.Mesh(new THREE.BoxGeometry(72, 1.2, 18), material(CREAM, 0.88));
@@ -468,14 +445,12 @@ function makeCargoShip(world, x, z, scale, color, rotation) {
         material([color, BLUE, GREEN, YELLOW][(row + column) % 4], 0.78, 0.04)
       );
       container.position.set(-20 + column * 11.2, 10.7 + row * 5.2, row ? 4.1 : -4.1);
-      container.castShadow = true;
       ship.add(container);
     }
   }
 
   const bridge = new THREE.Mesh(new THREE.BoxGeometry(13, 15, 16), material(0xe5e0cf, 0.88));
   bridge.position.set(-31, 15, 0);
-  bridge.castShadow = true;
   ship.add(bridge);
 
   const windows = new THREE.Mesh(new THREE.BoxGeometry(13.3, 3, 16.3), material(0x4baec4, 0.5, 0.12));
@@ -493,7 +468,6 @@ function makeTugboat(world, x, z, scale, color, rotation) {
 
   const hull = new THREE.Mesh(new THREE.BoxGeometry(30, 6, 14), material(0x35434a, 0.76, 0.12));
   hull.position.y = 2.8;
-  hull.castShadow = true;
   tug.add(hull);
 
   const deck = new THREE.Mesh(new THREE.BoxGeometry(24, 1, 12), material(color, 0.78));
@@ -502,7 +476,6 @@ function makeTugboat(world, x, z, scale, color, rotation) {
 
   const cabin = new THREE.Mesh(new THREE.BoxGeometry(11, 9, 10), material(CREAM, 0.88));
   cabin.position.set(-3, 10.3, 0);
-  cabin.castShadow = true;
   tug.add(cabin);
 
   const chimney = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.5, 6, 7), material(INK, 0.8, 0.1));
@@ -523,7 +496,6 @@ function makeDistantHarbor(world) {
     silos.setMatrixAt(index, marker.matrix);
   }
   silos.instanceMatrix.needsUpdate = true;
-  silos.castShadow = true;
   world.add(silos);
 
   const stacks = new THREE.InstancedMesh(
@@ -538,7 +510,6 @@ function makeDistantHarbor(world) {
     stacks.setMatrixAt(index, marker.matrix);
   }
   stacks.instanceMatrix.needsUpdate = true;
-  stacks.castShadow = true;
   world.add(stacks);
 }
 

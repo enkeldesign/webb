@@ -269,7 +269,6 @@ function makeContinuousMountainBody(world, terrainHeightAt) {
     geometry,
     new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 })
   );
-  mountain.receiveShadow = true;
   mountain.name = 'Mountain continuous terrain body r3';
   mountain.userData.turnTerrainGrid = Object.freeze({ width, depth, segmentsX, segmentsZ });
   world.add(mountain);
@@ -280,7 +279,6 @@ function makeContinuousMountainBody(world, terrainHeightAt) {
   );
   catchField.rotation.x = -Math.PI / 2;
   catchField.position.set(0, -3.2, -20);
-  catchField.receiveShadow = true;
   catchField.name = 'Mountain distant snow catch plane r3';
   world.add(catchField);
 }
@@ -318,7 +316,6 @@ function makeIntegratedSnowMountains(world) {
     );
     mountain.position.set(peak.x, peak.height / 2 - 7, peak.z);
     mountain.rotation.y = peak.rotation;
-    mountain.receiveShadow = true;
     mountain.name = peak.major ? 'Mountain integrated snowy peak backdrop r3' : 'Mountain integrated snowy ridge r3';
     world.add(mountain);
   });
@@ -348,7 +345,6 @@ function makeRoadSurface(world, samples, trackWidth) {
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   const road = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.98, side: THREE.DoubleSide }));
-  road.receiveShadow = true;
   road.name = 'Mountain asphalt road r3';
   world.add(road);
 }

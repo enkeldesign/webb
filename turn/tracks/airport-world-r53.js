@@ -163,8 +163,6 @@ function prepareAircraftAsset(source, {
       return clone;
     });
     node.material = Array.isArray(node.material) ? clones : clones[0];
-    node.castShadow = false;
-    node.receiveShadow = !airborne;
   });
 
   alignAndScaleAircraft(model, targetLength, lengthToSpanRatio, airborne);
@@ -185,8 +183,6 @@ function prepareAircraftAsset(source, {
         })
       );
       outlineNode.scale.setScalar(airborne ? 1.012 : 1.018);
-      outlineNode.castShadow = false;
-      outlineNode.receiveShadow = false;
       mesh.add(outlineNode);
     }
   }

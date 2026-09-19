@@ -164,8 +164,6 @@ function createAuthenticKenneyTaxiSign({ ghost, ownResource }) {
 
   const sign = new THREE.Mesh(geometry, [yellowMaterial, faceMaterial]);
   sign.name = 'kenney-taxi-roof-sign-learner-livery';
-  sign.castShadow = !ghost;
-  sign.receiveShadow = true;
   sign.userData.turnSourceGeometry = 'Kenney Car Kit 3.1 Taxi roof sign';
   sign.userData.turnFixedLearnerLivery = true;
   return sign;

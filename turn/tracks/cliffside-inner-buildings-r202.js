@@ -122,8 +122,6 @@ function prepareBuilding(source, targetHeight) {
   const model = source.clone(true);
   model.traverse((node) => {
     if (!node.isMesh) return;
-    node.castShadow = true;
-    node.receiveShadow = true;
     node.userData.turnOutlined = true;
   });
 

@@ -66,23 +66,17 @@ export function installAirportWorld({ scene, samples, trackWidth = 27 }) {
   return world;
 }
 
-function outlinedMesh(geometry, meshMaterial, scale = 1.035, { castShadow = true, receiveShadow = true } = {}) {
+function outlinedMesh(geometry, meshMaterial, scale = 1.035) {
   if (!graphicsProfile.outlines) {
     const group = new THREE.Group();
     const mesh = new THREE.Mesh(geometry, meshMaterial);
-    mesh.castShadow = castShadow;
-    mesh.receiveShadow = receiveShadow;
     group.add(mesh);
     return group;
   }
   const group = new THREE.Group();
   const outline = new THREE.Mesh(geometry, blackOutlineMaterial);
   outline.scale.setScalar(scale);
-  outline.castShadow = false;
-  outline.receiveShadow = false;
   const mesh = new THREE.Mesh(geometry, meshMaterial);
-  mesh.castShadow = castShadow;
-  mesh.receiveShadow = receiveShadow;
   group.add(outline, mesh);
   return group;
 }
@@ -98,7 +92,6 @@ function makeGround(world) {
   );
   grass.rotation.x = -Math.PI / 2;
   grass.position.y = -0.08;
-  grass.receiveShadow = true;
   world.add(grass);
 
   const airportBase = new THREE.Mesh(
@@ -107,7 +100,6 @@ function makeGround(world) {
   );
   airportBase.rotation.x = -Math.PI / 2;
   airportBase.position.set(15, -0.035, -4);
-  airportBase.receiveShadow = true;
   world.add(airportBase);
 
   const apron = new THREE.Mesh(
@@ -116,7 +108,6 @@ function makeGround(world) {
   );
   apron.rotation.x = -Math.PI / 2;
   apron.position.set(45, 0.005, 113);
-  apron.receiveShadow = true;
   world.add(apron);
 }
 
@@ -124,8 +115,7 @@ function makeRunway(world) {
   const runway = outlinedMesh(
     new THREE.BoxGeometry(455, 0.1, 62),
     material(RUNWAY, 0.98),
-    1.006,
-    { castShadow: false }
+    1.006
   );
   runway.position.set(0, 0.015, -127);
   world.add(runway);
@@ -140,14 +130,12 @@ function makeRunway(world) {
     dashes.setMatrixAt(index, marker.matrix);
   }
   dashes.instanceMatrix.needsUpdate = true;
-  dashes.receiveShadow = true;
   world.add(dashes);
 
   for (const x of [-207, 207]) {
     for (let stripe = -3; stripe <= 3; stripe += 1) {
       const threshold = new THREE.Mesh(new THREE.BoxGeometry(17, 0.08, 2.2), white);
       threshold.position.set(x, 0.12, -127 + stripe * 6.2);
-      threshold.receiveShadow = true;
       world.add(threshold);
     }
   }
@@ -214,7 +202,6 @@ function makeRaceRoad(world, samples, trackWidth) {
       side: THREE.DoubleSide
     })
   );
-  road.receiveShadow = true;
   world.add(road);
 
   const curbWidth = 1.75;
@@ -249,7 +236,6 @@ function makeRaceRoad(world, samples, trackWidth) {
       geometry,
       new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide })
     );
-    curb.receiveShadow = true;
     world.add(curb);
   }
 
@@ -279,7 +265,7 @@ function makeAirportBuildings(world) {
 
   const glass = material(WINDOW, 0.32, 0.08);
   for (let x = -48; x <= 48; x += 12) {
-    const window = outlinedMesh(new THREE.BoxGeometry(8.5, 5.2, 0.45), glass, 1.025, { castShadow: false });
+    const window = outlinedMesh(new THREE.BoxGeometry(8.5, 5.2, 0.45), glass, 1.025);
     window.position.set(x, 8.5, -12.3);
     terminal.add(window);
   }
@@ -314,7 +300,7 @@ function makeAirportBuildings(world) {
     const body = outlinedMesh(new THREE.BoxGeometry(48, 20, 34), material(color, 0.9), 1.025);
     body.position.y = 10;
     hangar.add(body);
-    const door = outlinedMesh(new THREE.BoxGeometry(32, 13, 0.7), material(0x2d3339, 0.9), 1.025, { castShadow: false });
+    const door = outlinedMesh(new THREE.BoxGeometry(32, 13, 0.7), material(0x2d3339, 0.9), 1.025);
     door.position.set(0, 6.8, -17.4);
     hangar.add(door);
     const stripe = new THREE.Mesh(new THREE.BoxGeometry(40, 1.2, 0.4), material(YELLOW, 0.8));
@@ -353,7 +339,7 @@ async function installAircraftAssets(world, samples, fallbackRecords) {
     const { slot, fallback } = fallbackRecords[index];
     const root = new THREE.Group();
     const model = source.clone(true);
-    prepareStaticAsset(model, { outline: true, castShadow: index < 2 });
+    prepareStaticAsset(model, { outline: true, });
     normalizeModelToGround(model, slot.targetLength);
     root.add(model);
     root.rotation.y = slot.rotation;
@@ -456,9 +442,6 @@ async function installServiceVehicleAssets(world, samples) {
       outline: true
     });
     visual.rotation.y = slot.rotation;
-    visual.traverse((node) => {
-      if (node.isMesh) node.castShadow = false;
-    });
     placeScenerySafely(world, visual, samples, slot, TRACK_PROP_CLEARANCE, `service vehicle ${index + 1}`);
   }));
 }
@@ -488,7 +471,7 @@ function minimumTrackDistance(samples, x, z) {
   return Math.sqrt(bestDistanceSq);
 }
 
-function prepareStaticAsset(model, { outline = true, castShadow = false } = {}) {
+function prepareStaticAsset(model, { outline = true, } = {}) {
   const meshes = [];
   model.traverse((node) => {
     if (!node.isMesh || !node.material) return;
@@ -496,8 +479,6 @@ function prepareStaticAsset(model, { outline = true, castShadow = false } = {}) 
     const materials = Array.isArray(node.material) ? node.material : [node.material];
     const cloned = materials.map((entry) => entry.clone());
     node.material = Array.isArray(node.material) ? cloned : cloned[0];
-    node.castShadow = castShadow;
-    node.receiveShadow = true;
   });
 
   if (!outline) return;
@@ -515,8 +496,6 @@ function prepareStaticAsset(model, { outline = true, castShadow = false } = {}) 
       })
     );
     outlineMeshNode.scale.setScalar(1.025);
-    outlineMeshNode.castShadow = false;
-    outlineMeshNode.receiveShadow = false;
     mesh.add(outlineMeshNode);
   }
 }
@@ -547,8 +526,7 @@ function makeDistantWorld(world) {
     const mountain = outlinedMesh(
       new THREE.ConeGeometry(height * 0.72, height, 4),
       material(mountainColors[index % mountainColors.length], 1),
-      1.018,
-      { castShadow: false, receiveShadow: false }
+      1.018
     );
     mountain.position.set(x, height / 2 - 6, z);
     mountain.rotation.y = Math.PI / 4 + index * 0.16;

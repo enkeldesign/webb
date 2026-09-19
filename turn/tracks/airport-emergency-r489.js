@@ -362,8 +362,6 @@ function outlinedPrimitive(geometry, fillMaterial, scale = 1.04) {
   );
   outline.scale.setScalar(scale);
   const fill = new THREE.Mesh(geometry, fillMaterial);
-  fill.castShadow = false;
-  fill.receiveShadow = true;
   group.add(outline, fill);
   return group;
 }

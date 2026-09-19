@@ -109,8 +109,6 @@ function createLoader(paletteUrl) {
 function prepareSource(root) {
   root.traverse((node) => {
     if (!node?.isMesh) return;
-    node.castShadow = true;
-    node.receiveShadow = true;
     node.userData.turnOutlined = true;
   });
   return root;

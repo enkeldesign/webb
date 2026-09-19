@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { installMidnightCityWorld as installMidnightCityWorldR5 } from './midnight-city-world-r5.js?build=20260918-r255';
+import { installMidnightCityWorld as installMidnightCityWorldR5 } from './midnight-city-world-r5.js?build=20260919-r256';
 
 const TRACK_Y = 0.16;
 const SHOWCASE_CENTER = Object.freeze({ x: 80, z: 75 });
@@ -130,7 +130,6 @@ function addParkGround(group) {
   );
   lawn.rotation.x = -Math.PI / 2;
   lawn.position.y = TRACK_Y + 0.018;
-  lawn.receiveShadow = true;
   lawn.name = 'TURN Commons lawn';
   group.add(lawn);
 

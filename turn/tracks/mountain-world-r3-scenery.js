@@ -32,8 +32,6 @@ const {
 function prepareAsset(root) {
   root.traverse((node) => {
     if (!node?.isMesh) return;
-    node.castShadow = true;
-    node.receiveShadow = true;
     node.userData.turnOutlined = true;
   });
   return root;
@@ -113,7 +111,6 @@ function makeSafeGuardrails(world, samples, trackWidth, terrainHeightAt) {
   });
   posts.count = entries.length;
   posts.instanceMatrix.needsUpdate = true;
-  posts.castShadow = true;
   posts.name = 'Mountain terrain-grounded guardrail posts r3';
   world.add(posts);
 
@@ -128,7 +125,6 @@ function makeSafeGuardrails(world, samples, trackWidth, terrainHeightAt) {
     rail.position.copy(current.point).lerp(next.point, 0.5);
     rail.position.y += 0.24;
     rail.rotation.y = Math.atan2(next.point.x - current.point.x, next.point.z - current.point.z);
-    rail.castShadow = true;
     rail.name = 'Mountain terrain-grounded guardrail rail r3';
     world.add(rail);
   }
@@ -182,8 +178,6 @@ function makeSnowForest(world, samples, trackWidth, terrainHeightAt) {
   [trunks, crowns, lowers, snowCaps].forEach((mesh) => {
     mesh.count = placements.length;
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
     mesh.userData.turnOutlined = true;
     world.add(mesh);
   });
@@ -250,7 +244,6 @@ function makeOpenRibbon(world, samples, halfWidth, meshMaterial, yOffset, name) 
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.computeVertexNormals();
   const mesh = new THREE.Mesh(geometry, meshMaterial);
-  mesh.receiveShadow = true;
   mesh.name = name;
   world.add(mesh);
   return mesh;
@@ -271,8 +264,6 @@ function makeStructuralWaterfallCliff(world) {
     chunk.position.set(WATERFALL.x + dx, y, WATERFALL.z + dz);
     chunk.scale.set(sx, sy, sz);
     chunk.rotation.set(0.08, (dx + dz) * 0.011, 0.04);
-    chunk.castShadow = true;
-    chunk.receiveShadow = true;
     chunk.name = 'Mountain structural waterfall granite r3';
     world.add(chunk);
     if (y > 8) {
