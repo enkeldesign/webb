@@ -168,8 +168,6 @@ function makeAssetInstances(source, count, name) {
   if (!source || count <= 0) return null;
   const mesh = new THREE.InstancedMesh(source.geometry, source.material, count);
   mesh.name = name;
-  mesh.castShadow = false;
-  mesh.receiveShadow = true;
   mesh.userData.turnOutlined = true;
   return mesh;
 }
@@ -430,8 +428,6 @@ function installTunnelLining(world, tunnels) {
     })
   );
   mesh.name = 'Mountain carved tunnel continuous rock lining LAB';
-  mesh.castShadow = false;
-  mesh.receiveShadow = true;
   world.add(mesh);
   return { triangles: indices.length / 3, drawCalls: 1 };
 }
@@ -590,8 +586,6 @@ function installTunnelPortalArches(world, portals) {
     })
   );
   mesh.name = 'Mountain tunnel batched mountain-aligned granite arches LAB';
-  mesh.castShadow = false;
-  mesh.receiveShadow = true;
   mesh.userData.turnOutlined = true;
   world.add(mesh);
   return {
@@ -639,7 +633,6 @@ function installTunnelPortalRocks(world, source, portals, terrainHeightAt) {
   // emissive floor so the facets stay readable instead of collapsing to black.
   // This changes one material only: no light, shadow caster or draw call is added.
   mesh.material = clonePortalRockMaterials(source.material);
-  mesh.receiveShadow = false;
   let cursor = 0;
   for (const portal of portals) {
     for (const side of [-1, 1]) {
@@ -679,7 +672,6 @@ function installTunnelReflectors(world, tunnels) {
     mesh.setMatrixAt(index, marker.matrix);
   });
   mesh.instanceMatrix.needsUpdate = true;
-  mesh.castShadow = false;
   mesh.computeBoundingSphere();
   world.add(mesh);
   return { reflectors: placements.length, drawCalls: 1 };
@@ -995,8 +987,6 @@ function installLowerTerrain(world, terrainHeightAt) {
     new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0 })
   );
   mesh.name = 'Mountain lower valley continuous terrain LAB';
-  mesh.castShadow = false;
-  mesh.receiveShadow = true;
   world.add(mesh);
   return Object.freeze({ vertices: positions.length / 3, triangles: indices.length / 3, drawCalls: 1 });
 }
@@ -1087,8 +1077,6 @@ function installInstancedObject(world, source, placements, name) {
       instances.setMatrixAt(index, composed);
     });
     instances.instanceMatrix.needsUpdate = true;
-    instances.castShadow = false;
-    instances.receiveShadow = true;
     instances.userData.turnOutlined = true;
     instances.computeBoundingSphere();
     world.add(instances);
@@ -1174,7 +1162,6 @@ function installCheapVillageLights(world, samples, trackWidth, terrainHeightAt) 
   });
   for (const mesh of [core, halo, pool]) {
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.castShadow = false;
     mesh.computeBoundingSphere();
     world.add(mesh);
   }
@@ -1253,8 +1240,6 @@ function installForestReturn(world, samples, trackWidth, terrainHeightAt) {
 
   for (const mesh of [trunks, lowers, crowns, caps]) {
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.castShadow = false;
-    mesh.receiveShadow = true;
     mesh.userData.turnOutlined = true;
     mesh.computeBoundingSphere();
     world.add(mesh);
@@ -1292,8 +1277,6 @@ function installInstancedViewScreens(world, terrainHeightAt) {
   });
   for (const mesh of [rocks, caps]) {
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.castShadow = false;
-    mesh.receiveShadow = true;
     mesh.computeBoundingSphere();
     world.add(mesh);
   }

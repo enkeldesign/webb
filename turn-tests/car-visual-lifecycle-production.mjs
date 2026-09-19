@@ -96,6 +96,26 @@ for (const [slope, bank] of [[0, 0], [0.7, 0], [-0.7, 0.25]]) {
   assert.equal(mesh.material.depthTest, true);
   assert.equal(mesh.frustumCulled, false, 'Moving instances cannot be culled using stale bounds');
 }
+// Closed-loop high-speed traversal crosses the lap seam repeatedly on a curved,
+// rising and banked ribbon. Replacing samples also exercises track restart setup.
+shadowSamples.splice(0, shadowSamples.length, ...Array.from({ length: 64 }, (_, i) => {
+  const angle = i / 64 * Math.PI * 2;
+  return {
+    point: new THREE.Vector3(Math.cos(angle) * 50, Math.sin(angle * 2) * 8, Math.sin(angle) * 50),
+    tangent: new THREE.Vector3(-Math.sin(angle), Math.cos(angle * 2) * 0.32, Math.cos(angle)).normalize(),
+    normal: new THREE.Vector3(-Math.cos(angle), Math.sin(angle) * 0.2, -Math.sin(angle))
+  };
+}));
+for (let frame = 0; frame < 100; frame++) {
+  const sample = shadowSamples[(frame * 7) % shadowSamples.length];
+  shadowCar.position.copy(sample.point).addScaledVector(sample.normal, 2);
+  shadowCar.rotation.set(0.4, frame * 0.3, 0.5);
+  projected.beginFrame('countryside');
+  projected.addCar(shadowCar, sample);
+  projected.endFrame();
+  assert.ok(projected.mesh.count > 0, 'Curves, drift and lap transitions retain the contact footprint');
+  assert.ok(projected.mesh.instanceMatrix.array.every(Number.isFinite), 'Surface transforms remain finite');
+}
 const shadowDisposals = { mesh: 0, geometry: 0, material: 0 };
 projected.mesh.addEventListener('dispose', () => shadowDisposals.mesh++);
 projected.mesh.geometry.addEventListener('dispose', () => shadowDisposals.geometry++);

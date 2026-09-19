@@ -79,6 +79,8 @@ for (const browserType of [chromium, webkit]) {
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xdce8ed);
         const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        // Three resets info after the shadow pass by default; count the whole frame.
+        renderer.info.autoReset = false;
         renderer.setSize(width, height);
         renderer.setPixelRatio(low ? 1 : 1.25);
         document.body.replaceChildren(renderer.domElement);
@@ -116,6 +118,7 @@ for (const browserType of [chromium, webkit]) {
           const sample = samples[48 + i * 6];
           car.position.copy(sample.point).addScaledVector(sample.normal, (i % 2 ? -1 : 1) * 3);
           car.position.y += 0.18;
+          car.rotation.x = Math.atan2(sample.tangent.y, Math.hypot(sample.tangent.x, sample.tangent.z));
           car.rotation.y = Math.PI + (terrain === 'banked-crest' ? 0.45 : 0);
           scene.add(car);
           cars.push({ car, visual, sample });
@@ -132,6 +135,7 @@ for (const browserType of [chromium, webkit]) {
         Object.assign(sun.shadow.camera, { left: -100, right: 100, top: 100, bottom: -100 });
         road.receiveShadow = true;
         cars[0].car.traverse((node) => { if (node.isMesh) node.castShadow = true; });
+        renderer.info.reset();
         renderer.render(scene, camera);
         const legacy = { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures };
         renderer.shadowMap.enabled = false;
@@ -145,6 +149,7 @@ for (const browserType of [chromium, webkit]) {
         shadows.beginFrame('countryside');
         for (const { car, sample } of cars) shadows.addCar(car, sample);
         shadows.endFrame();
+        renderer.info.reset();
         renderer.render(scene, camera);
         const current = { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures };
         const geometryCount = renderer.info.memory.geometries;
@@ -161,14 +166,55 @@ for (const browserType of [chromium, webkit]) {
         }
         const gl = renderer.getContext();
         const pixels = new Uint8Array(renderer.domElement.width * renderer.domElement.height * 4);
-        gl.readPixels(0, 0, renderer.domElement.width, renderer.domElement.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-        batch.visible = false;
-        renderer.render(scene, camera);
         const without = new Uint8Array(pixels.length);
-        gl.readPixels(0, 0, renderer.domElement.width, renderer.domElement.height, gl.RGBA, gl.UNSIGNED_BYTE, without);
-        let darkenedPixels = 0;
-        for (let i = 0; i < pixels.length; i += 4) if (without[i] - pixels[i] > 4) darkenedPixels++;
-        batch.visible = true;
+        function visibleShadowPixels() {
+          batch.visible = true;
+          renderer.render(scene, camera);
+          gl.readPixels(0, 0, renderer.domElement.width, renderer.domElement.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+          batch.visible = false;
+          renderer.info.reset();
+          renderer.render(scene, camera);
+          gl.readPixels(0, 0, renderer.domElement.width, renderer.domElement.height, gl.RGBA, gl.UNSIGNED_BYTE, without);
+          let darkened = 0;
+          for (let i = 0; i < pixels.length; i += 4) if (without[i] - pixels[i] > 4) darkened++;
+          batch.visible = true;
+          return darkened;
+        }
+        const darkenedPixels = visibleShadowPixels();
+        const shadowDrawCalls = current.calls - renderer.info.render.calls;
+        const cameraStart = camera.position.clone();
+        const poses = cars.map(({ car }) => ({ position: car.position.clone(), rotation: car.rotation.clone() }));
+        let minimumMovingShadowPixels = Infinity;
+        for (let frame = 0; frame < 12; frame++) {
+          // Large progress jumps and alternating drift heading while the camera orbits.
+          const first = 20 + (frame * 13) % 65;
+          shadows.beginFrame('countryside');
+          for (let i = 0; i < cars.length; i++) {
+            const sample = samples[first + i * 6];
+            const car = cars[i].car;
+            car.position.copy(sample.point).addScaledVector(sample.normal, (i % 2 ? -1 : 1) * 3);
+            car.position.y += 0.18;
+            car.rotation.x = Math.atan2(sample.tangent.y, Math.hypot(sample.tangent.x, sample.tangent.z));
+            car.rotation.y = Math.PI + Math.sin(frame) * 1.2;
+            car.rotation.z = Math.cos(frame) * 0.08;
+            shadows.addCar(car, sample);
+          }
+          shadows.endFrame();
+          const target = samples[first + 12].point;
+          camera.position.set(target.x + 18 + Math.sin(frame) * 8, target.y + 22, target.z + 31);
+          camera.lookAt(target);
+          minimumMovingShadowPixels = Math.min(minimumMovingShadowPixels, visibleShadowPixels());
+          if (shadows.mesh !== batch || renderer.info.memory.geometries !== geometryCount) throw new Error('Movement allocated shadow resources');
+        }
+        shadows.beginFrame('countryside');
+        for (let i = 0; i < cars.length; i++) {
+          cars[i].car.position.copy(poses[i].position);
+          cars[i].car.rotation.copy(poses[i].rotation);
+          shadows.addCar(cars[i].car, cars[i].sample);
+        }
+        shadows.endFrame();
+        camera.position.copy(cameraStart);
+        camera.lookAt(0, centerY, 0);
         renderer.render(scene, camera);
         // Canvas retains the final inspection frame after resource cleanup.
         shadows.dispose(); shadows.dispose();
@@ -176,9 +222,11 @@ for (const browserType of [chromium, webkit]) {
         const shadowGeometriesDisposed = renderer.info.memory.geometries === geometryCount - 1;
         for (const { visual } of cars) disposeCarVisual(visual);
         roadGeometry.dispose(); road.material.dispose(); renderer.dispose();
-        return { terrain, legacy, current, darkenedPixels, shadowGeometriesDisposed, shadowDrawCalls: 1 };
+        return { terrain, legacy, current, darkenedPixels, shadowGeometriesDisposed, shadowDrawCalls, minimumMovingShadowPixels };
       }, { terrain, ...device });
       await page.screenshot({ path: `${outputDir}/shadows-${browserType.name()}-${device.name}-${terrain}.png` });
+      console.log(JSON.stringify({ browser: browserType.name(), device: device.name, ...report }));
+      await fs.writeFile(`${outputDir}/shadows-${browserType.name()}-${device.name}-${terrain}.json`, JSON.stringify(report, null, 2));
       assert.ok(report.darkenedPixels > 80, `${browserType.name()} ${device.name} ${terrain}: visible road shadows`);
       if (device.low) {
         assert.equal(report.current.calls, report.legacy.calls + 1, 'LOW gains grounding at one shared draw call');
@@ -187,10 +235,10 @@ for (const browserType of [chromium, webkit]) {
         assert.ok(report.current.calls < report.legacy.calls, 'Projected shadows remove legacy shadow-pass draw calls');
         assert.ok(report.current.textures < report.legacy.textures, 'No shadow-map texture remains');
       }
+      assert.ok(report.minimumMovingShadowPixels > 80, 'Shadows stay visible during high speed, drifting and camera movement');
+      assert.equal(report.shadowDrawCalls, 1, 'All five cars and both layers share one draw call');
       assert.equal(report.shadowGeometriesDisposed, true);
       assert.deepEqual(errors, [], 'No shader, WebGL or model errors');
-      console.log(JSON.stringify({ browser: browserType.name(), device: device.name, ...report }));
-      await fs.writeFile(`${outputDir}/shadows-${browserType.name()}-${device.name}-${terrain}.json`, JSON.stringify(report, null, 2));
     }
     await context.close();
   }

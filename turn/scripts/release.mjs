@@ -441,7 +441,7 @@ function synchronizeProjectedShadowTargets(importMap, release) {
     const url = new URL(target, 'https://enkel.design/turn/');
     if (!paths.has(url.pathname)) continue;
     url.searchParams.set('build', release.cacheKey);
-    imports[specifier] = `${url.pathname}${url.search}`;
+    imports[specifier] = `${target.split('?')[0]}${url.search}`;
   }
 }
 
@@ -575,6 +575,10 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
       `TURN LAB · production TURN ${release.version} r${revision}`
     )
     .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
+    .replace(
+      /(src="\.\/tracks\/cliffside-inner-buildings-r202\.js\?revision=r202-kenney-suburban-village)(?:&build=\d{8}-r\d+)?"/,
+      `$1&build=${release.cacheKey}"`
+    )
     .replace(
       /(src="\.\/tracks\/kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish)(?:&build=\d{8}-r\d+)?"/,
       `$1&build=${release.cacheKey}"`
