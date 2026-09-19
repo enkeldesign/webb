@@ -1,4 +1,4 @@
-name: TURN Drive By Ear training regression
+name: TURN training regression
 
 on:
   pull_request:
@@ -6,9 +6,11 @@ on:
       - main
     paths:
       - 'turn/training/**'
+      - 'turn-lab/lab-bootstrap.js'
       - 'turn/m8-home-fixed-layout.js'
       - 'turn-tests/drive-by-ear-training-production.mjs'
       - 'turn-tests/dbe-training-music-silence-production.mjs'
+      - 'turn-tests/world-playground-v2-environment.mjs'
       - 'eslint.config.mjs'
       - '.github/workflows/turn-dbe-training-tests.yml'
   push:
@@ -16,9 +18,11 @@ on:
       - main
     paths:
       - 'turn/training/**'
+      - 'turn-lab/lab-bootstrap.js'
       - 'turn/m8-home-fixed-layout.js'
       - 'turn-tests/drive-by-ear-training-production.mjs'
       - 'turn-tests/dbe-training-music-silence-production.mjs'
+      - 'turn-tests/world-playground-v2-environment.mjs'
       - 'eslint.config.mjs'
       - '.github/workflows/turn-dbe-training-tests.yml'
 
@@ -42,13 +46,16 @@ jobs:
           node-version: '24'
 
       - name: Syntax-check training modules
-        run: find turn/training -type f -name '*.js' -print0 | xargs -0 -n1 node --check && node --check turn-tests/drive-by-ear-training-production.mjs && node --check turn-tests/dbe-training-music-silence-production.mjs
+        run: find turn/training -type f -name '*.js' -print0 | xargs -0 -n1 node --check && node --check turn-tests/drive-by-ear-training-production.mjs && node --check turn-tests/dbe-training-music-silence-production.mjs && node --check turn-tests/world-playground-v2-environment.mjs
 
       - name: Lint training modules
-        run: npx --yes eslint@9.39.1 turn/training/*.js turn-tests/drive-by-ear-training-production.mjs turn-tests/dbe-training-music-silence-production.mjs
+        run: npx --yes eslint@9.39.1 turn/training/*.js turn-tests/drive-by-ear-training-production.mjs turn-tests/dbe-training-music-silence-production.mjs turn-tests/world-playground-v2-environment.mjs
 
       - name: Run Drive By Ear training regression
         run: node turn-tests/drive-by-ear-training-production.mjs
 
       - name: Run DBE 101 music silence regression
         run: node turn-tests/dbe-training-music-silence-production.mjs
+
+      - name: Run World Playground V2 environment regression
+        run: node turn-tests/world-playground-v2-environment.mjs

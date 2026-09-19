@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>TURN LAB · World V2 r2 environment inspection</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #9fc7d4; }
+    canvas { width: 100%; height: 100%; display: block; }
+    #label { position: fixed; left: 18px; top: 16px; z-index: 2; padding: 7px 10px; border: 2px solid #08090a; border-radius: 9px; background: rgba(255,248,232,.92); color: #08090a; font: 800 13px/1 system-ui,sans-serif; letter-spacing: .04em; }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="label">WORLD V2 R2 · ENVIRONMENT ONLY</div>
+  <script type="module">
+    import * as THREE from 'three';
+    import { buildWorldPlaygroundV2Environment } from '/turn/training/world-playground-v2-environment-r2.js?revision=r2-grounded-terrain';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x9fc7d4);
+    scene.fog = new THREE.Fog(0xb8d4d8, 1180, 3900);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.06;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const hemi = new THREE.HemisphereLight(0xd8eff4, 0x62705a, 1.75);
+    scene.add(hemi);
+    const sun = new THREE.DirectionalLight(0xffefd0, 3.1);
+    sun.position.set(-720, 1150, 680);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -1200;
+    sun.shadow.camera.right = 1200;
+    sun.shadow.camera.top = 1200;
+    sun.shadow.camera.bottom = -1200;
+    sun.shadow.camera.near = 50;
+    sun.shadow.camera.far = 2800;
+    sun.shadow.bias = -0.00012;
+    scene.add(sun);
+
+    const environment = buildWorldPlaygroundV2Environment();
+    scene.add(environment.world);
+
+    const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.5, 6500);
+    const views = Object.freeze({
+      overview: { p: [180, 1620, 1740], t: [-40, 35, -100], fov: 49 },
+      coast: { p: [-1240, 270, 315], t: [-930, 82, -300], fov: 49 },
+      cliffroad: { p: [-995, 88, 72], t: [-1010, 76, -155], fov: 57 },
+      mountain: { p: [-790, 430, -420], t: [-250, 145, -850], fov: 50 },
+      summitroad: { p: [-600, 215, -750], t: [-260, 188, -900], fov: 56 },
+      east: { p: [1270, 330, 670], t: [690, 32, -135], fov: 49 },
+      city: { p: [-440, 220, 930], t: [-35, 15, 485], fov: 48 },
+      harborroad: { p: [-720, 58, 615], t: [-635, 9, 410], fov: 57 }
+    });
+
+    globalThis.__turnWorldV2Visual = Object.freeze({
+      ready: true,
+      revision: 'r2-grounded-terrain',
+      setView(name) {
+        const view = views[name] || views.overview;
+        camera.position.set(...view.p);
+        camera.fov = view.fov;
+        camera.updateProjectionMatrix();
+        camera.lookAt(...view.t);
+        renderer.render(scene, camera);
+        document.querySelector('#label').textContent = `WORLD V2 R2 · ${String(name).toUpperCase()}`;
+        return true;
+      },
+      approximateLength: environment.approximateLength
+    });
+
+    function resize() {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.render(scene, camera);
+    }
+    addEventListener('resize', resize);
+    globalThis.__turnWorldV2Visual.setView('overview');
+  </script>
+</body>
+</html>
