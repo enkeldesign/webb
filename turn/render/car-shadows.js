@@ -20,14 +20,16 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
     fog: true,
     uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog]),
     vertexShader: `
-      attribute vec3 shadowOrigin;
+      attribute vec4 shadowOrigin;
       attribute vec4 shadowAxes;
       varying vec2 footprint;
       varying float strength;
+      varying float rootWidth;
       #include <fog_pars_vertex>
       void main() {
         footprint = shadowOrigin.xy + mat2(shadowAxes) * position.xy;
         strength = shadowOrigin.z;
+        rootWidth = shadowOrigin.w;
         vec4 mvPosition = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * mvPosition;
         #include <fog_vertex>
@@ -35,9 +37,14 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
     fragmentShader: `
       varying vec2 footprint;
       varying float strength;
+      varying float rootWidth;
       #include <fog_pars_fragment>
       void main() {
-        vec2 q = footprint * footprint;
+        vec2 mask = footprint;
+        // Contact keeps its original mask (rootWidth = 1). The cast footprint
+        // starts narrow beneath the car and fans out toward its soft far edge.
+        mask.x /= mix(rootWidth, 1.0, smoothstep(-1.0, 1.0, footprint.y));
+        vec2 q = mask * mask;
         float radius = dot(q, q);
         if (radius >= 1.0) discard;
         gl_FragColor = vec4(0.0, 0.0, 0.0, strength * (1.0 - smoothstep(0.2, 1.0, radius)));
@@ -81,7 +88,7 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 1, 0, 0, 0, 1, 0], 3));
-    origins = new THREE.InstancedBufferAttribute(new Float32Array(required * 3), 3).setUsage(THREE.DynamicDrawUsage);
+    origins = new THREE.InstancedBufferAttribute(new Float32Array(required * 4), 4).setUsage(THREE.DynamicDrawUsage);
     axes = new THREE.InstancedBufferAttribute(new Float32Array(required * 4), 4).setUsage(THREE.DynamicDrawUsage);
     geometry.setAttribute('shadowOrigin', origins);
     geometry.setAttribute('shadowAxes', axes);
@@ -110,7 +117,7 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
     target.addScaledVector(edgeUp, SURFACE_LIFT);
   }
 
-  function triangle(opacity, halfWidth, halfLength) {
+  function triangle(opacity, halfWidth, halfLength, rootWidth) {
     ab.subVectors(b, a);
     ac.subVectors(c, a);
     normal.crossVectors(ab, ac).normalize();
@@ -120,8 +127,8 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
     mesh.setMatrixAt(cursor, matrix);
     // UVs are continuous across triangle boundaries; body roll never affects them.
     const dx = a.x - center.x, dy = a.y - center.y, dz = a.z - center.z;
-    origins.setXYZ(cursor, (dx * right.x + dy * right.y + dz * right.z) / halfWidth,
-      (dx * forward.x + dy * forward.y + dz * forward.z) / halfLength, opacity);
+    origins.setXYZW(cursor, (dx * right.x + dy * right.y + dz * right.z) / halfWidth,
+      (dx * forward.x + dy * forward.y + dz * forward.z) / halfLength, opacity, rootWidth);
     axes.setXYZW(cursor, ab.dot(right) / halfWidth, ab.dot(forward) / halfLength,
       ac.dot(right) / halfWidth, ac.dot(forward) / halfLength);
     cursor += 1;
@@ -145,16 +152,18 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
     lightDirection.normalize();
 
     for (let layer = 0; layer < 2; layer += 1) {
+      const halfWidth = layer === 0 ? width * 0.57 : length * 0.56;
+      const halfLength = layer === 0 ? length * 0.52 : length * 0.45;
+      const rootWidth = layer === 0 ? 1 : Math.min(width, length) * 0.18 / halfWidth;
       center.set(car.position.x, groundY, car.position.z);
       if (layer === 0) {
         forward.set(Math.sin(car.rotation.y), 0, Math.cos(car.rotation.y)).projectOnPlane(up).normalize();
       } else {
         forward.copy(lightDirection);
-        center.addScaledVector(lightDirection, Math.min(1.5, length * 0.19));
+        // Only a small, narrow overlap reaches toward the sun, inside the chassis.
+        center.addScaledVector(lightDirection, halfLength - Math.min(width, length) * 0.2);
       }
       right.crossVectors(up, forward).normalize();
-      const halfWidth = layer === 0 ? width * 0.57 : length * 0.56;
-      const halfLength = layer === 0 ? length * 0.52 : length * 0.7;
       const reach = Math.hypot(halfWidth, halfLength);
       for (let offset = -span; offset <= span; offset += 1) {
         const i = (index + offset + samples.length) % samples.length;
@@ -169,10 +178,10 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
           || Math.min(a.x, b.x, c.x, nextRightX) > center.x + reach
           || Math.max(a.z, b.z, c.z, nextRightZ) < center.z - reach
           || Math.min(a.z, b.z, c.z, nextRightZ) > center.z + reach) continue;
-        triangle(layer === 0 ? 0.58 : 0.18, halfWidth, halfLength);
+        triangle(layer === 0 ? 0.58 : 0.18, halfWidth, halfLength, rootWidth);
         a.copy(c);
         edge(c, next, -1);
-        triangle(layer === 0 ? 0.58 : 0.18, halfWidth, halfLength);
+        triangle(layer === 0 ? 0.58 : 0.18, halfWidth, halfLength, rootWidth);
       }
     }
   }
