@@ -7,8 +7,6 @@ const { GRANITE_DARK, HOLIDAY_ROOT } = MOUNTAIN_R3;
 function prepareAsset(root) {
   root.traverse((node) => {
     if (!node?.isMesh) return;
-    node.castShadow = true;
-    node.receiveShadow = true;
     node.userData.turnOutlined = true;
   });
   return root;
@@ -65,8 +63,6 @@ function makeGable(z, color = 0x8a5c3f) {
   ], 3));
   geometry.computeVertexNormals();
   const mesh = new THREE.Mesh(geometry, material(color, 1, 0, { side: THREE.DoubleSide }));
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
   mesh.userData.turnOutlined = true;
   mesh.name = 'Mountain closed Holiday cabin gable native-pivot r4';
   return mesh;

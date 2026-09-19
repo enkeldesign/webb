@@ -29,7 +29,7 @@ function installLowGraphicsSetting() {
         <small id="m8LowGraphicsDescription">Better performance on older devices</small>
       </span>
     </label>
-    <p id="m8LowGraphicsRestartNote">Uses lower resolution, no shadows, no contours and cheaper lighting. Restart TURN to apply changes.</p>
+    <p id="m8LowGraphicsRestartNote">Uses lower resolution, no contours and cheaper lighting. Restart TURN to apply changes.</p>
     <button type="button" class="m8-low-graphics-restart" hidden>RESTART TURN TO APPLY</button>`;
 
   const visualSettings = list.querySelector('.m8-visual-settings');

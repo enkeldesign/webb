@@ -429,6 +429,20 @@ const RELEASE_BASELINE_HISTORY = Object.freeze({
   ])
 });
 
+const PROJECTED_SHADOW_HISTORY = Object.freeze({
+  period: '19 September',
+  title: 'Car shadows stay attached to the road',
+  paragraphs: Object.freeze([
+    'TURN 1.21.1 replaces real-time shadow maps with small, soft car shadows projected onto the road. A tight contact layer anchors each car, while a lighter directional layer follows the sun across slopes and curves.',
+    'Player and rivals share the same rendering resources. LOW GRAPHICS also keeps these inexpensive car shadows; scenery no longer casts dynamic shadows.'
+  ]),
+  milestones: Object.freeze([
+    'Road-following contact and directional shadows for player and rivals',
+    'One shared shadow draw call with no shadow-map texture or extra render pass',
+    'TURN 1.21.1 · 2026.09.19-r256'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -501,7 +515,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   DBE_FULL_MIX_HISTORY,
   TRACTOR_SMV_SIGN_HISTORY,
   RELEASE_BASELINE_HISTORY,
-  KEYBOARD_OWNERSHIP_HISTORY
+  KEYBOARD_OWNERSHIP_HISTORY,
+  PROJECTED_SHADOW_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -593,11 +608,18 @@ Object.freeze({
     Object.freeze(['1.21.0 r255', 'Limits global Arrow/WASD/Space/R driving shortcuts to the active race surface so menus, dialogs and native controls keep keyboard ownership.']),
     Object.freeze(['Keyboard input ownership', 'Clears held driving input when ownership is lost and applies the same rule to Q/E Drift and Boost without intercepting modified browser shortcuts.'])
   ])
+}),
+Object.freeze({
+  date: '19 September',
+  entries: Object.freeze([
+    Object.freeze(['1.21.1 r256', 'Replaces dynamic shadow maps with stable, soft contact and directional car shadows that follow the road.']),
+    Object.freeze(['Cheaper grounding', 'Player and rivals share one shadow draw call, including in LOW GRAPHICS, without a shadow-map texture or scenery shadow pass.'])
+  ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.0',
-  build: '2026.09.18-r255',
-  note: 'TURN 1.21.0 build r255 keeps global driving shortcuts on the active race surface and restores native keyboard ownership to menus, dialogs and controls.'
+  version: '1.21.1',
+  build: '2026.09.19-r256',
+  note: 'TURN 1.21.1 replaces shadow maps with lightweight road-following car shadows shared by the player and rivals.'
 });

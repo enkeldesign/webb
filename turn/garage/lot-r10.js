@@ -130,7 +130,6 @@ export function showTheLot({ initialSelection } = {}) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setPixelRatio(rendererPixelRatio(1.5));
-    renderer.shadowMap.enabled = false;
     host.appendChild(renderer.domElement);
 
     const camera = new THREE.PerspectiveCamera(43, 1, 0.1, 130);
@@ -673,7 +672,6 @@ function makeLotGround(lot) {
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.02;
-  ground.receiveShadow = true;
   lot.add(ground);
 
   const stripeMaterial = new THREE.MeshBasicMaterial({ color: 0xfff8e8 });

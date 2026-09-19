@@ -145,10 +145,6 @@ function buildSmvTemplate() {
   const red = new THREE.Mesh(redGeometry, redMaterial);
   const orange = new THREE.Mesh(orangeGeometry, orangeMaterial);
   orange.position.z = 0.0465;
-  red.castShadow = true;
-  red.receiveShadow = true;
-  orange.castShadow = true;
-  orange.receiveShadow = true;
   orange.renderOrder = 2;
   group.add(red, orange);
   return group;

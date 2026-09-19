@@ -32,7 +32,6 @@ function makeSnowField(world) {
   );
   field.rotation.x = -Math.PI / 2;
   field.position.set(0, -1.08, -15);
-  field.receiveShadow = true;
   field.name = 'Mountain continuous snowfield';
   world.add(field);
 
@@ -47,7 +46,6 @@ function makeSnowField(world) {
     patch.rotation.z = rotation;
     patch.scale.set(sx, sz, 1);
     patch.position.set(x, -0.98, z);
-    patch.receiveShadow = true;
     patch.name = 'Mountain exposed rock patch';
     world.add(patch);
   }
@@ -114,8 +112,6 @@ function makeIntegratedSnowMountains(world) {
     );
     mountain.position.set(peak.x, peak.height / 2 - 7, peak.z);
     mountain.rotation.y = peak.rotation;
-    mountain.receiveShadow = true;
-    mountain.castShadow = peak.major;
     mountain.name = peak.major ? 'Mountain integrated snowy peak backdrop' : 'Mountain integrated snowy ridge';
     world.add(mountain);
   });
@@ -177,8 +173,6 @@ function makeVerticalRockFace(a, b, height, rockMaterial) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.computeVertexNormals();
   const face = new THREE.Mesh(geometry, rockMaterial);
-  face.receiveShadow = true;
-  face.castShadow = true;
   return face;
 }
 
@@ -216,7 +210,6 @@ function makeRibbon(world, samples, profiles, name, palette) {
     geometry,
     new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, side: THREE.DoubleSide })
   );
-  mesh.receiveShadow = true;
   mesh.name = name;
   world.add(mesh);
   return mesh;
@@ -247,7 +240,6 @@ function makeRoad(world, samples, trackWidth) {
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   const road = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.98, side: THREE.DoubleSide }));
-  road.receiveShadow = true;
   road.name = 'Mountain asphalt road r2';
   world.add(road);
 
@@ -293,7 +285,6 @@ function makeSolidBand(world, samples, offsetA, offsetB, color, name) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.computeVertexNormals();
   const mesh = new THREE.Mesh(geometry, material(color, 0.9));
-  mesh.receiveShadow = true;
   mesh.name = name;
   world.add(mesh);
 }
@@ -316,7 +307,6 @@ function makeCentreLine(world, samples) {
   }
   dashes.count = cursor;
   dashes.instanceMatrix.needsUpdate = true;
-  dashes.receiveShadow = true;
   dashes.name = 'Mountain white centre line';
   world.add(dashes);
 }
@@ -334,7 +324,6 @@ function makeStartLine(world, samples, trackWidth) {
     marker.position.copy(start.point).addScaledVector(start.normal, (tile - (tileCount - 1) / 2) * tileWidth);
     marker.position.y += 0.26;
     marker.rotation.set(trackPitch(start), yaw, 0);
-    marker.receiveShadow = true;
     marker.name = 'Mountain village start finish';
     world.add(marker);
   }

@@ -2,6 +2,7 @@
 // TURN game core.
 
 import * as THREE from 'three';
+import { createCarShadows } from '/turn/render/car-shadows.js';
 import { graphicsProfile } from '/turn/graphics-profile.js';
 import { installKenneyWorld } from '/turn/world-assets.js';
 import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19&revision=r270-camera-hotpath';
@@ -240,8 +241,6 @@ const camera = new THREE.PerspectiveCamera(68, initialViewport.width / initialVi
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(initialViewport.width, initialViewport.height);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.querySelector('#game').appendChild(renderer.domElement);
 
@@ -250,12 +249,6 @@ scene.add(hemi);
 
 const sun = new THREE.DirectionalLight(0xfff1c1, 4.3);
 sun.position.set(-90, 150, 70);
-sun.castShadow = true;
-sun.shadow.mapSize.set(1024, 1024);
-sun.shadow.camera.left = -100;
-sun.shadow.camera.right = 100;
-sun.shadow.camera.top = 100;
-sun.shadow.camera.bottom = -100;
 scene.add(sun);
 
 const world = new THREE.Group();
@@ -294,8 +287,6 @@ function outlinedMesh(geometry, material, scale = 1.055) {
   if (!graphicsProfile.outlines) {
     const group = new THREE.Group();
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
     group.add(mesh);
     return group;
   }
@@ -303,8 +294,6 @@ function outlinedMesh(geometry, material, scale = 1.055) {
   const outline = new THREE.Mesh(geometry, blackMaterial);
   outline.scale.setScalar(scale);
   const mesh = new THREE.Mesh(geometry, material);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
   group.add(outline, mesh);
   return group;
 }
@@ -357,7 +346,6 @@ function makeRoad() {
       side: THREE.DoubleSide
     })
   );
-  road.receiveShadow = true;
   world.add(road);
 
   const curbWidth = 1.75;
@@ -404,7 +392,6 @@ function makeRoad() {
         side: THREE.DoubleSide
       })
     );
-    curb.receiveShadow = true;
     world.add(curb);
   }
 
@@ -431,7 +418,6 @@ function makeRoad() {
   }
 
   centreLine.instanceMatrix.needsUpdate = true;
-  centreLine.receiveShadow = true;
   world.add(centreLine);
 }
 
@@ -442,7 +428,6 @@ function makeScenery() {
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.02;
-  ground.receiveShadow = true;
   world.add(ground);
 
   installKenneyWorld({ world, samples, trackWidth: TRACK_WIDTH }).catch((error) => {
@@ -549,12 +534,10 @@ makeScenery();
 
 const playerCar = makeCar(0xffd43b, 1);
 world.add(playerCar);
+const carShadows = createCarShadows({ scene, sun, samples, trackWidth: TRACK_WIDTH, capacity: COMPETITOR_LIMIT + 1 });
 
 const ghostCar = makeCar(0x38d9ff, 1);
 ghostCar.visible = false;
-ghostCar.traverse((node) => {
-  if (node.isMesh) node.castShadow = false;
-});
 world.add(ghostCar);
 
 const proceduralPlayerParts = [...playerCar.children];
@@ -597,6 +580,7 @@ async function installCarVisual(root, { carId, color, secondaryColor, ghost = fa
     }
     for (const part of root.userData.turnProceduralParts || []) part.visible = false;
 
+    carShadows.setCarSize(root, visual);
     visual.userData.turnAssetVisual = true;
     root.add(visual);
     root.userData.turnVisualKey = key;
@@ -666,9 +650,6 @@ function createCompetitorCar() {
   const car = makeCar(0x38d9ff, 1);
   car.userData.turnProceduralParts = [...car.children];
   car.visible = false;
-  car.traverse((node) => {
-    if (node.isMesh) node.castShadow = false;
-  });
   world.add(car);
   return car;
 }
@@ -1168,6 +1149,7 @@ function placePlayerCar(dt) {
   playerCar.rotation.y = state.heading + Math.PI;
   playerCar.rotation.z = -state.steering * 0.035 - state.velocity.dot(getRight()) * 0.0025;
   animateWheels(playerCar, state.steering, state.speed, dt, frontWheelSteeringAngle);
+  carShadows.addCar(playerCar, surfaceSample);
 }
 
 function placeCompetitorCars(dt) {
@@ -1191,6 +1173,7 @@ function placeCompetitorCars(dt) {
     car.rotation.x = trackPitch(surfaceSample);
     car.rotation.y = frame.h + Math.PI;
     car.rotation.z = -frame.s * 0.03;
+    carShadows.addCar(car, surfaceSample);
     if (car === ghostCar) animateWheels(car, frame.s, 45, dt);
   }
 }
@@ -1357,6 +1340,7 @@ const turnRuntime = {
   competitorCars,
   ensureCompetitorCars,
   syncCompetitorVisuals,
+  carShadows,
   animateWheels,
   lapFrameAt,
   GAME_MODE,
@@ -1388,7 +1372,10 @@ window.addEventListener('turn:achievements-ready', syncSelectedVehiclePerkEntitl
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) resetVehiclePerkRuntimeState(state);
 });
-window.addEventListener('pagehide', () => resetVehiclePerkRuntimeState(state));
+window.addEventListener('pagehide', (event) => {
+  resetVehiclePerkRuntimeState(state);
+  if (!event.persisted) carShadows.dispose();
+});
 window.addEventListener('blur', () => resetVehiclePerkRuntimeState(state));
 window.dispatchEvent(new CustomEvent('turn:runtime-ready', { detail: turnRuntime }));
 publishUiState('runtime-ready');
@@ -1420,6 +1407,7 @@ renderer.setAnimationLoop((now) => {
   const frameStart = now - frameDt * 1000;
   state.lastFrame = now;
 
+  carShadows.beginFrame(state.trackId);
   if (state.running) {
     const physicsSteps = Math.max(1, Math.ceil(frameDt / MAX_PHYSICS_STEP));
     const physicsDt = frameDt / physicsSteps;
@@ -1440,11 +1428,13 @@ renderer.setAnimationLoop((now) => {
     playerCar.rotation.x = trackPitch(preview);
     playerCar.rotation.y = Math.atan2(preview.tangent.x, preview.tangent.z) + Math.PI;
     animateWheels(playerCar, Math.sin(now * 0.001) * 0.3, 28, frameDt);
+    carShadows.addCar(playerCar, preview);
     camera.position.set(0, 110, 215);
     camera.up.set(0, 1, 0);
     camera.lookAt(0, 0, 0);
   }
 
+  carShadows.endFrame();
   renderer.render(scene, camera);
   recordPerformanceFrame(state.running ? state.mode : 'preview', renderer, now);
 });

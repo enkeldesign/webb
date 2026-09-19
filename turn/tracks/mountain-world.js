@@ -89,7 +89,6 @@ function makeValleyFloor(world) {
   );
   meadow.rotation.x = -Math.PI / 2;
   meadow.position.set(0, -0.62, -15);
-  meadow.receiveShadow = true;
   meadow.name = 'Mountain textured valley meadow';
   world.add(meadow);
 
@@ -105,7 +104,6 @@ function makeValleyFloor(world) {
   villageSnow.rotation.x = -Math.PI / 2;
   villageSnow.scale.set(1.45, 0.72, 1);
   villageSnow.position.set(10, -0.5, -250);
-  villageSnow.receiveShadow = true;
   villageSnow.name = 'Mountain village snowfield';
   world.add(villageSnow);
 }
@@ -169,8 +167,6 @@ function makeBackdrop(world) {
     );
     mountain.position.set(peak.x, peak.height / 2 - 6, peak.z);
     mountain.rotation.y = peak.rotation;
-    mountain.receiveShadow = true;
-    mountain.castShadow = peak.major;
     mountain.name = peak.major ? 'Mountain snow peak backdrop' : 'Mountain distant ridge';
     world.add(mountain);
 
@@ -180,7 +176,6 @@ function makeBackdrop(world) {
     );
     cap.position.set(peak.x, peak.height * 0.83 - 6, peak.z);
     cap.rotation.y = peak.rotation;
-    cap.receiveShadow = true;
     cap.name = 'Mountain distant snow cap';
     world.add(cap);
   }
@@ -269,7 +264,6 @@ function makeTerrainRibbon(world, samples, trackWidth) {
       flatShading: true
     })
   );
-  terrain.receiveShadow = true;
   terrain.name = 'Mountain road-following textured terrain';
   world.add(terrain);
 }
@@ -316,7 +310,6 @@ function makeRoad(world, samples, trackWidth) {
     geometry,
     new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.98, metalness: 0, side: THREE.DoubleSide })
   );
-  road.receiveShadow = true;
   road.name = 'Mountain asphalt road';
   world.add(road);
 
@@ -361,7 +354,6 @@ function makeCurbs(world, samples, trackWidth) {
       geometry,
       new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide })
     );
-    curb.receiveShadow = true;
     curb.name = 'Mountain alpine blue road edge';
     world.add(curb);
   }
@@ -399,7 +391,6 @@ function makeShoulders(world, samples, trackWidth) {
       geometry,
       new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, side: THREE.DoubleSide })
     );
-    shoulder.receiveShadow = true;
     shoulder.name = 'Mountain gravel and snow shoulder';
     world.add(shoulder);
   }
@@ -423,7 +414,6 @@ function makeCentreLine(world, samples) {
   }
   dashes.count = cursor;
   dashes.instanceMatrix.needsUpdate = true;
-  dashes.receiveShadow = true;
   dashes.name = 'Mountain centre line';
   world.add(dashes);
 }
@@ -441,7 +431,6 @@ function makeStartLine(world, samples, trackWidth) {
     marker.position.copy(start.point).addScaledVector(start.normal, (tile - (tileCount - 1) / 2) * tileWidth);
     marker.position.y += 0.26;
     marker.rotation.set(trackPitch(start), yaw, 0);
-    marker.receiveShadow = true;
     marker.name = 'Mountain village start finish';
     world.add(marker);
   }
@@ -470,8 +459,6 @@ function makeSnowBanks(world, samples, trackWidth) {
     banks.setMatrixAt(cursor, marker.matrix);
   });
   banks.instanceMatrix.needsUpdate = true;
-  banks.receiveShadow = true;
-  banks.castShadow = true;
   banks.name = 'Mountain summit snowbanks';
   world.add(banks);
 }
@@ -521,8 +508,6 @@ function makeExposedGuardrails(world, samples, trackWidth) {
 
   posts.instanceMatrix.needsUpdate = true;
   rails.instanceMatrix.needsUpdate = true;
-  posts.castShadow = true;
-  rails.castShadow = true;
   posts.name = 'Mountain exposed descent guardrail posts';
   rails.name = 'Mountain exposed descent guardrails';
   world.add(posts, rails);
@@ -588,8 +573,6 @@ function makeSpruceForest(world, samples, trackWidth) {
 
   for (const mesh of [trunks, crowns, lowers]) {
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
     mesh.userData.turnOutlined = true;
   }
   trunks.name = 'Mountain spruce trunks';
@@ -644,9 +627,6 @@ function makeRockFields(world, samples, trackWidth) {
   });
   rocks.instanceMatrix.needsUpdate = true;
   snowCaps.instanceMatrix.needsUpdate = true;
-  rocks.castShadow = true;
-  rocks.receiveShadow = true;
-  snowCaps.castShadow = true;
   rocks.name = 'Mountain Cliffside-style granite rock fields';
   snowCaps.name = 'Mountain snow-capped rocks';
   world.add(rocks, snowCaps);
@@ -765,7 +745,6 @@ function makeVillage(world, samples, trackWidth) {
   plaza.rotation.x = -Math.PI / 2;
   plaza.position.set(VILLAGE_CENTER.x + 16, -0.36, VILLAGE_CENTER.z - 4);
   plaza.scale.set(1.25, 0.82, 1);
-  plaza.receiveShadow = true;
   plaza.name = 'Mountain village textured stone plaza';
   world.add(plaza);
 
@@ -812,14 +791,10 @@ function makeChalet({ wall, roof, scale = 1, index = 0, windows = 2 }) {
 
   const body = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material(wall, 1));
   body.position.y = height / 2;
-  body.castShadow = true;
-  body.receiveShadow = true;
   group.add(body);
 
   const roofMesh = new THREE.Mesh(makeGabledRoofGeometry(width + 3.6 * scale, depth + 3 * scale, 5.3 * scale), material(roof, 0.92));
   roofMesh.position.y = height;
-  roofMesh.castShadow = true;
-  roofMesh.receiveShadow = true;
   group.add(roofMesh);
 
   const snowRoof = new THREE.Mesh(
@@ -834,7 +809,6 @@ function makeChalet({ wall, roof, scale = 1, index = 0, windows = 2 }) {
   for (const side of [-1, 1]) {
     const beam = new THREE.Mesh(new THREE.BoxGeometry(0.7 * scale, height * 0.88, 0.5 * scale), beamMaterial);
     beam.position.set(side * width * 0.31, height * 0.48, depth / 2 + 0.26 * scale);
-    beam.castShadow = true;
     group.add(beam);
   }
   const crossBeam = new THREE.Mesh(new THREE.BoxGeometry(width * 0.72, 0.65 * scale, 0.5 * scale), beamMaterial);
@@ -856,7 +830,6 @@ function makeChalet({ wall, roof, scale = 1, index = 0, windows = 2 }) {
 
   const chimney = new THREE.Mesh(new THREE.BoxGeometry(1.5 * scale, 5.2 * scale, 1.5 * scale), material(0x80746a, 1));
   chimney.position.set(width * (index % 2 ? -0.22 : 0.22), height + 3.1 * scale, -depth * 0.12);
-  chimney.castShadow = true;
   group.add(chimney);
   return group;
 }
@@ -886,20 +859,16 @@ function makeVillageChurch() {
   const roof = material(0x53636b, 0.94);
   const nave = new THREE.Mesh(new THREE.BoxGeometry(15, 10, 22), walls);
   nave.position.y = 5;
-  nave.castShadow = true;
   group.add(nave);
   const naveRoof = new THREE.Mesh(makeGabledRoofGeometry(18, 25, 6), roof);
   naveRoof.position.y = 10;
-  naveRoof.castShadow = true;
   group.add(naveRoof);
   const tower = new THREE.Mesh(new THREE.BoxGeometry(8, 21, 8), walls);
   tower.position.set(0, 10.5, -8);
-  tower.castShadow = true;
   group.add(tower);
   const steeple = new THREE.Mesh(new THREE.ConeGeometry(6.2, 12, 4), roof);
   steeple.position.set(0, 27, -8);
   steeple.rotation.y = Math.PI / 4;
-  steeple.castShadow = true;
   group.add(steeple);
   const glow = new THREE.Mesh(
     new THREE.BoxGeometry(2.7, 4.4, 0.25),
@@ -925,13 +894,11 @@ function makeVillageFences(world) {
     for (const side of [-1, 1]) {
       const post = new THREE.Mesh(postGeometry, wood);
       post.position.set(side * 2.3, 0.8, 0);
-      post.castShadow = true;
       group.add(post);
     }
     for (const y of [0.65, 1.22]) {
       const rail = new THREE.Mesh(railGeometry, wood);
       rail.position.y = y;
-      rail.castShadow = true;
       group.add(rail);
     }
     group.position.set(x, 0, z);
@@ -955,7 +922,6 @@ function makeVillageLamps(world) {
   for (const [x, z] of positions) {
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 5.5, 7), poleMaterial);
     pole.position.set(x, 2.75, z);
-    pole.castShadow = true;
     pole.name = 'Mountain village lantern post';
     world.add(pole);
     const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.78, 8, 6), glowMaterial);
@@ -972,12 +938,10 @@ function makeVillageSign(world, start, trackWidth) {
   for (const x of [-2.7, 2.7]) {
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.6, 5.8, 0.6), postMaterial);
     post.position.set(x, 2.9, 0);
-    post.castShadow = true;
     group.add(post);
   }
   const board = new THREE.Mesh(new THREE.BoxGeometry(7.4, 2.2, 0.55), signMaterial);
   board.position.y = 5.2;
-  board.castShadow = true;
   group.add(board);
   group.position.copy(start.point).addScaledVector(start.normal, trackWidth / 2 + 8.8);
   group.position.y = 0;
@@ -994,8 +958,6 @@ function loadKenneyVillageLandmarks(world) {
         const root = gltf.scene;
         root.traverse((node) => {
           if (!node?.isMesh) return;
-          node.castShadow = true;
-          node.receiveShadow = true;
           node.userData.turnOutlined = true;
         });
         configure(root);

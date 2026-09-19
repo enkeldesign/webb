@@ -24,7 +24,6 @@ export const graphicsProfile = Object.freeze({
   lowGraphics,
   dprCap: lowGraphics ? 1 : Infinity,
   antialias: true,
-  shadows: !lowGraphics,
   outlines: !lowGraphics,
   pointLights: !lowGraphics,
   optionalScenery: true

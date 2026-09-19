@@ -97,8 +97,6 @@ function makeInnerHighlands(world, samples, trackWidth, peakCentre) {
     })
   );
   highlands.name = 'Cliffside Inner Highlands';
-  highlands.castShadow = true;
-  highlands.receiveShadow = true;
   world.add(highlands);
 }
 
@@ -155,8 +153,6 @@ function makeGroundedPineForest(world, samples, trackWidth, peakCentre) {
 
   for (const mesh of [trunks, crowns, crownTips]) {
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
     world.add(mesh);
   }
 }
@@ -190,8 +186,6 @@ function makeHighlandOutcrops(world, samples, trackWidth, peakCentre) {
   }
 
   rocks.instanceMatrix.needsUpdate = true;
-  rocks.castShadow = true;
-  rocks.receiveShadow = true;
   world.add(rocks);
 }
 

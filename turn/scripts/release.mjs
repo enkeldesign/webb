@@ -356,6 +356,95 @@ function synchronizeLowGraphicsProducerTargets(importMap, release) {
   }
 }
 
+// Shadow producers changed together when removing the legacy renderer path.
+// Keep existing aliases, but advance their effective URLs in every shared shell.
+function synchronizeProjectedShadowTargets(importMap, release) {
+  const imports = importMap.imports ||= {};
+  const paths = new Set([
+    "/turn/garage/lot-r10.js",
+    "/turn/garage/lot.js",
+    "/turn/graphics-profile.js",
+    "/turn/main.js",
+    "/turn/performance-monitor.js",
+    "/turn/performance-profile.js",
+    "/turn/render/car-shadows.js",
+    "/turn/three-runtime.js",
+    "/turn/tracks/airport-emergency-r489.js",
+    "/turn/tracks/airport-emergency-r490.js",
+    "/turn/tracks/airport-emergency-r491.js",
+    "/turn/tracks/airport-emergency-r492.js",
+    "/turn/tracks/airport-emergency-r493.js",
+    "/turn/tracks/airport-emergency-r494.js",
+    "/turn/tracks/airport-world-r50.js",
+    "/turn/tracks/airport-world-r52.js",
+    "/turn/tracks/airport-world-r53.js",
+    "/turn/tracks/airport-world.js",
+    "/turn/tracks/cliffside-inner-buildings-r201.js",
+    "/turn/tracks/cliffside-inner-buildings-r202.js",
+    "/turn/tracks/cliffside-world-r76.js",
+    "/turn/tracks/cliffside-world.js",
+    "/turn/tracks/contextual-road-edges.js",
+    "/turn/tracks/countryside-bella-r166.js",
+    "/turn/tracks/countryside-world-r531.js",
+    "/turn/tracks/harbor-world-r82.js",
+    "/turn/tracks/harbor-world.js",
+    "/turn/tracks/kenney-track-landmarks-r517.js",
+    "/turn/tracks/midnight-city-world-r2.js",
+    "/turn/tracks/midnight-city-world-r3.js",
+    "/turn/tracks/midnight-city-world-r4.js",
+    "/turn/tracks/midnight-city-world-r5.js",
+    "/turn/tracks/midnight-city-world-r6.js",
+    "/turn/tracks/midnight-city-world.js",
+    "/turn/tracks/mountain-long-extension-r1.js",
+    "/turn/tracks/mountain-world-r2-scenery.js",
+    "/turn/tracks/mountain-world-r2-terrain.js",
+    "/turn/tracks/mountain-world-r3-polish.js",
+    "/turn/tracks/mountain-world-r3-scenery.js",
+    "/turn/tracks/mountain-world-r3-terrain.js",
+    "/turn/tracks/mountain-world-r3.js",
+    "/turn/tracks/mountain-world-r4-cabin-fix.js",
+    "/turn/tracks/mountain-world-r4-visual-polish.js",
+    "/turn/tracks/mountain-world-r5-suburban-village.js",
+    "/turn/tracks/mountain-world-r6-night.js",
+    "/turn/tracks/mountain-world.js",
+    "/turn/tracks/night-player-spotlight-r560.js",
+    "/turn/tracks/start-area-polish-r519.js",
+    "/turn/training/course.js",
+    "/turn/ui/low-graphics-setting.js",
+    "/turn/ui/spectate.js",
+    "/turn/vehicle/car-models.js",
+    "/turn/vehicle/learner-car-livery.js",
+    "/turn/vehicle/tractor-smv-sign.js",
+    "/turn/world-art-pass.js",
+    "/turn/world-assets.js",
+    "/turn/world-beauty.js"
+  ]);
+  for (const pathname of paths) {
+    if (!imports[pathname]) imports[pathname] = `${pathname}?build=${release.cacheKey}`;
+  }
+  // These already-shipped specifiers were previously outside the import map.
+  for (const specifier of [
+    '/turn/performance-monitor.js?build=20260720-r20',
+    '/turn/tracks/airport-emergency-r494.js?revision=r496-hud-depth',
+    '/turn/tracks/airport-world-r52.js?build=20260722-r52',
+    '/turn/tracks/cliffside-inner-buildings-r202.js?revision=r202-kenney-suburban-village',
+    '/turn/tracks/contextual-road-edges.js?revision=r518-signature-yellow',
+    '/turn/tracks/harbor-world.js?base=20260725-r80',
+    '/turn/tracks/mountain-long-extension-r1.js?revision=mountain-long-r18',
+    '/turn/tracks/night-player-spotlight-r560.js?revision=r175-reconcile'
+  ]) {
+    const pathname = new URL(specifier, 'https://enkel.design').pathname;
+    imports[specifier] = `${pathname}?build=${release.cacheKey}`;
+  }
+  for (const [specifier, target] of Object.entries(imports)) {
+    if (typeof target !== 'string') continue;
+    const url = new URL(target, 'https://enkel.design/turn/');
+    if (!paths.has(url.pathname)) continue;
+    url.searchParams.set('build', release.cacheKey);
+    imports[specifier] = `${target.split('?')[0]}${url.search}`;
+  }
+}
+
 function renderSharedResourceImports(source, release) {
   return source.replace(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/, (_, jsonText) => {
     const importMap = JSON.parse(jsonText);
@@ -368,6 +457,7 @@ function renderSharedResourceImports(source, release) {
     synchronizePerkFeedbackTargets(importMap, release);
     synchronizeGraphicsRuntimeTarget(importMap, release);
     synchronizeLowGraphicsProducerTargets(importMap, release);
+    synchronizeProjectedShadowTargets(importMap, release);
     return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
   });
 }
@@ -403,6 +493,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizePerkFeedbackTargets(importMap, release);
   synchronizeGraphicsRuntimeTarget(importMap, release);
   synchronizeLowGraphicsProducerTargets(importMap, release);
+  synchronizeProjectedShadowTargets(importMap, release);
   synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);
   // These presentation modules now use the release build instead of a new
   // hand-maintained revision. Advance every alias, including installed routes.
@@ -432,6 +523,10 @@ export function renderReleaseIndex(source, release) {
     // Update the canonical build prefix while preserving an explicit per-asset
     // revision such as "-icon-20260730" after it.
     .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
+    .replace(
+      /(src="\.\/tracks\/cliffside-inner-buildings-r202\.js\?revision=r202-kenney-suburban-village)(?:&build=\d{8}-r\d+)?"/,
+      `$1&build=${release.cacheKey}"`
+    )
     .replace(
       /(src="\.\/tracks\/kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish)(?:&build=\d{8}-r\d+)?"/,
       `$1&build=${release.cacheKey}"`
@@ -480,6 +575,10 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
       `TURN LAB · production TURN ${release.version} r${revision}`
     )
     .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
+    .replace(
+      /(src="\.\/tracks\/cliffside-inner-buildings-r202\.js\?revision=r202-kenney-suburban-village)(?:&build=\d{8}-r\d+)?"/,
+      `$1&build=${release.cacheKey}"`
+    )
     .replace(
       /(src="\.\/tracks\/kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish)(?:&build=\d{8}-r\d+)?"/,
       `$1&build=${release.cacheKey}"`

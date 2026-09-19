@@ -124,7 +124,6 @@ export function installPerformanceMonitor({ getMode, getTrackStats } = {}) {
         mode: getMode?.() || null,
         samples: timeline.count,
         profile: currentPerformanceProfile(),
-        shadowPolicy: currentTrackShadowPolicy(),
         scoringHud,
         ...summary,
         ...render,
@@ -203,14 +202,8 @@ function currentPerformanceProfile() {
   return Object.freeze({
     active: false,
     dprCap: 2,
-    shadowsEnabled: true,
-    shadowMapSize: 1024,
-    label: 'DPR≤2.00 · shadows 1024'
+    label: 'DPR≤2.00 · projected car shadows'
   });
-}
-
-function currentTrackShadowPolicy() {
-  return globalThis.__turnTrackShadowPolicy || null;
 }
 
 function normalizeRenderers(renderers) {
@@ -258,8 +251,7 @@ function formatSnapshot(snapshot) {
   const scoreHud = snapshot.scoringHud || { drift: 'unknown', flow: 'unknown' };
   return [
     `TURN PERF · ${snapshot.label}`,
-    snapshot.profile?.label || 'DPR≤2.00 · shadows 1024',
-    snapshot.shadowPolicy?.label || null,
+    snapshot.profile?.label || 'DPR≤2.00 · projected car shadows',
     `score HUD D:${scoreHud.drift} · F:${scoreHud.flow}`,
     `${snapshot.fps.toFixed(1)} fps · p50 ${snapshot.p50Ms.toFixed(1)} · p95 ${snapshot.p95Ms.toFixed(1)} ms`,
     `cpu/frame phy ${snapshot.physicsMs.toFixed(2)} · score ${snapshot.scoringMs.toFixed(2)} · HUD ${snapshot.hudMs.toFixed(2)} · render ${snapshot.renderMs.toFixed(2)} ms`,

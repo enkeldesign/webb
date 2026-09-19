@@ -3,9 +3,7 @@ import fs from 'node:fs/promises';
 import { createTrackSpatialIndex, findNearestTrackBruteForce } from '../../turn/race/track-spatial-index.js';
 import { performanceModeRequested, summarizeFrameSamples } from '../../turn/performance-monitor.js';
 import {
-  isLegacyTabletScreen,
-  performanceProfileFromSearch,
-  shadowsEnabledForTrack
+  performanceProfileFromSearch
 } from '../../turn/performance-profile.js';
 import { replayFrameAt } from '../../turn/race/replay-system.js';
 
@@ -54,8 +52,6 @@ const baselineProfile = performanceProfileFromSearch('?perf=1', 2, { touchOptimi
 assert.equal(baselineProfile.active, false, 'Perf diagnostics alone must not add a separate desktop quality tier');
 assert.equal(baselineProfile.dprCap, 1.5, 'Desktop TURN must retain its DPR 1.5 ceiling');
 assert.equal(baselineProfile.pixelRatio, 1.5);
-assert.equal(baselineProfile.shadowsEnabled, true);
-assert.equal(baselineProfile.shadowMapSize, 1024);
 assert.equal(baselineProfile.touchOptimized, false);
 
 // Touch hardware does the same gameplay work at a saner fill-rate/shadow cost.
@@ -64,8 +60,6 @@ assert.equal(touchProfile.active, false, 'Mobile thermal defaults are production
 assert.equal(touchProfile.touchOptimized, true);
 assert.equal(touchProfile.dprCap, 1.25, 'Touch devices must cap pixel density at 1.25 for long-session thermal headroom');
 assert.equal(touchProfile.pixelRatio, 1.25);
-assert.equal(touchProfile.shadowsEnabled, true);
-assert.equal(touchProfile.shadowMapSize, 512, 'Touch devices must use the cheaper production shadow map');
 
 const dprProfile = performanceProfileFromSearch('?perf=1&dpr=1.25', 2, { touchOptimized: false });
 assert.equal(dprProfile.active, true);
@@ -78,56 +72,17 @@ assert.equal(lowDprProfile.dprCap, 0.75, 'Diagnostic DPR overrides must stay wit
 const highDprProfile = performanceProfileFromSearch('?perf=1&dpr=9', 3, { touchOptimized: false });
 assert.equal(highDprProfile.dprCap, 1.5, 'No diagnostic profile may exceed the desktop production cap');
 
-const shadowProfile = performanceProfileFromSearch('?perf=1&shadow=512', 2, { touchOptimized: false });
-assert.equal(shadowProfile.active, true);
-assert.equal(shadowProfile.shadowsEnabled, true);
-assert.equal(shadowProfile.shadowMapSize, 512);
-const noShadowProfile = performanceProfileFromSearch('?perf=1&shadow=off', 2, { touchOptimized: false });
-assert.equal(noShadowProfile.shadowsEnabled, false);
-assert.match(noShadowProfile.label, /shadows off/);
-const ignoredProfile = performanceProfileFromSearch('?dpr=1&shadow=off', 2, { touchOptimized: false });
-assert.equal(ignoredProfile.active, false, 'Renderer overrides must be ignored outside explicit perf mode');
+// Old shadow-map diagnostics must not restore a hidden legacy rendering path.
+for (const setting of ['512', '1024', 'off']) {
+  const profile = performanceProfileFromSearch(`?perf=1&shadow=${setting}`, 2, { touchOptimized: true });
+  assert.equal(profile.active, false);
+  assert.equal(profile.dprCap, 1.25);
+  assert.equal('shadowMapSize' in profile, false);
+  assert.match(profile.label, /projected car shadows/);
+}
+const ignoredProfile = performanceProfileFromSearch('?dpr=1', 2, { touchOptimized: false });
+assert.equal(ignoredProfile.active, false);
 assert.equal(ignoredProfile.dprCap, 1.5);
-assert.equal(ignoredProfile.pixelRatio, 1.5, 'Normal desktop play must retain the desktop DPR cap');
-assert.equal(ignoredProfile.shadowsEnabled, true);
-
-const touchDiagnosticOverride = performanceProfileFromSearch('?perf=1&dpr=1.5&shadow=1024', 3, { touchOptimized: true });
-assert.equal(touchDiagnosticOverride.active, true, 'Perf mode may deliberately restore heavier settings for A/B diagnosis');
-assert.equal(touchDiagnosticOverride.dprCap, 1.5);
-assert.equal(touchDiagnosticOverride.shadowMapSize, 1024);
-
-// The 10.2-inch legacy iPad class keeps all MOUNTAIN lights but skips the
-// expensive global shadow map on that track only.
-const legacyTabletProfile = performanceProfileFromSearch('', 2, {
-  touchOptimized: true,
-  legacyTablet: true
-});
-assert.equal(legacyTabletProfile.legacyTablet, true);
-assert.equal(legacyTabletProfile.shadowOverride, false);
-assert.equal(shadowsEnabledForTrack(legacyTabletProfile, 'mountain'), false,
-  'Legacy tablets must skip MOUNTAIN track shadows');
-assert.equal(shadowsEnabledForTrack(legacyTabletProfile, 'countryside'), true,
-  'Legacy-tablet shadows must return on every other track');
-assert.equal(shadowsEnabledForTrack(touchProfile, 'mountain'), true,
-  'Modern touch devices must retain MOUNTAIN shadows');
-
-const legacyTabletShadowOverride = performanceProfileFromSearch('?perf=1&shadow=512', 2, {
-  touchOptimized: true,
-  legacyTablet: true
-});
-assert.equal(legacyTabletShadowOverride.shadowOverride, true);
-assert.equal(shadowsEnabledForTrack(legacyTabletShadowOverride, 'mountain'), true,
-  'Explicit perf diagnostics must be able to restore MOUNTAIN shadows for A/B checks');
-assert.equal(shadowsEnabledForTrack(noShadowProfile, 'countryside'), false,
-  'The global no-shadow diagnostic must still win on every track');
-assert.equal(isLegacyTabletScreen({ touchOptimized: true, width: 1080, height: 810 }), true,
-  'The iPad 9 CSS screen size must receive the MOUNTAIN shadow reduction');
-assert.equal(isLegacyTabletScreen({ touchOptimized: true, width: 852, height: 393 }), false,
-  'The iPhone 16 must not be mistaken for a legacy tablet');
-assert.equal(isLegacyTabletScreen({ touchOptimized: true, width: 1180, height: 820 }), false,
-  'Newer full-size iPads must retain the complete MOUNTAIN shadow treatment');
-assert.equal(isLegacyTabletScreen({ touchOptimized: false, width: 1080, height: 810 }), false,
-  'A same-sized precise-pointer display must retain normal shadows');
 
 const replayLap = {
   time: 2,
@@ -224,31 +179,17 @@ assert.equal(
   'Trophy Road must receive the fresh throttled preview renderer instead of a cached full-refresh module'
 );
 assert.match(app, /performance-profile\.js\?revision=r187-legacy-tablet-mountain-shadows/,
-  'The installed runtime must request the track-aware mobile shadow profile under a fresh URL');
+  'The existing profile alias remains a compatibility route to the current DPR profile');
 assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile installation must run before gameplay starts');
 assert.ok(app.indexOf('./performance-profile.js') < app.indexOf('./main.js'), 'The DPR cap must be ready before main.js creates the runtime');
 assert.match(profile, /DEFAULT_DPR_CAP = 1\.5/, 'Desktop production DPR ceiling must stay at 1.5');
 assert.match(profile, /TOUCH_DPR_CAP = 1\.25/, 'Touch production must reserve thermal headroom with DPR 1.25');
-assert.match(profile, /TOUCH_SHADOW_MAP_SIZE = 512/, 'Touch devices must use the cheaper 512px shadow map');
 assert.match(profile, /maxTouchPoints/);
 assert.match(profile, /pointer: coarse/);
-assert.match(profile, /LEGACY_TABLET_MAX_LONG_SIDE = 1080/,
-  'The legacy-tablet policy must include the iPad 9 landscape width');
-assert.match(profile, /LEGACY_TABLET_MIN_SHORT_SIDE = 700/,
-  'Phones must remain outside the legacy-tablet policy');
-assert.match(profile, /function shadowsEnabledForTrack\(profile, trackId\)/);
-assert.match(profile, /function isLegacyTabletScreen\(/);
-assert.match(profile, /normalizedTrackId === MOUNTAIN_TRACK_ID/,
-  'The production shadow reduction must be restricted to MOUNTAIN');
-assert.match(profile, /renderer\.shadowMap\.enabled = enabled/,
-  'Track changes must apply the resolved shadow policy to the renderer');
-assert.match(profile, /globalThis\.__turnTrackShadowPolicy = diagnostics/,
-  'Perf diagnostics must expose the active track shadow policy');
 assert.match(profile, /MAX_DPR_CAP = 1\.5/, 'Diagnostics must never restore the retired DPR 2 tier');
 assert.match(profile, /if \(!runtime\?\.renderer\) return;/, 'The renderer profile must apply even without a diagnostic override');
 assert.doesNotMatch(profile, /if \(!profile\.active \|\| !runtime\?\.renderer\) return;/, 'Normal play must not bypass its device-appropriate DPR cap');
 assert.match(profile, /renderer\.setPixelRatio = \(value\) =>/, 'The DPR cap must survive TURN resize calls');
-assert.match(profile, /renderer\.shadowMap\.enabled = profile\.shadowsEnabled/, 'Shadow A/B testing must remain available without a second loop');
 assert.doesNotMatch(profile, /requestAnimationFrame|setAnimationLoop|setInterval/, 'Performance profiles must add no animation loop');
 assert.match(worldAssets, /groundSink = 0/, 'Only explicitly sunk base-world assets may move below terrain');
 assert.match(worldAssets, /model\.position\.y -= groundSink/, 'The first tree belt must sink in shared placement rather than edit the source asset');
@@ -262,8 +203,6 @@ assert.doesNotMatch(worldRender, /requestAnimationFrame|setAnimationLoop|setInte
 assert.match(replay, /const replayFrameCache = new WeakMap\(\)/, 'Replay interpolation must cache the last sample per saved lap');
 assert.match(replay, /return cached\.frame/, 'Repeated same-time replay lookups must take the cache fast path');
 assert.match(monitor, /profile: currentPerformanceProfile\(\)/, 'Every performance snapshot must record its active renderer profile');
-assert.match(monitor, /shadowPolicy: currentTrackShadowPolicy\(\)/,
-  'Every performance snapshot must report a track-specific shadow reduction');
 assert.match(monitor, /actual DPR/, 'The overlay must distinguish requested profile from actual renderer DPR');
 assert.match(main, /mainSceneOcclusion/);
 assert.match(main, /HUD_UPDATE_INTERVAL_MS = 1000 \/ 30/);
@@ -280,7 +219,6 @@ assert.match(spectate, /turn:ui-state-change/);
 assert.match(hud, /function setText\(/);
 assert.doesNotMatch(physics, /getForward\(\)\.clone\(\)/);
 assert.doesNotMatch(camera, /state\.position\.clone\(\)/);
-assert.match(cars, /record\.node\.castShadow = !ghost/);
 assert.doesNotMatch(lot, /root\.scale\.lerp\(new THREE\.Vector3/);
 assert.match(lot, /recordPerformanceFrame/);
 assert.match(lot, /LOT_FRAME_INTERVAL_MS = 1000 \/ 30/,

@@ -174,13 +174,9 @@ function makeVillage(world, placements) {
   for (const mesh of [walls, roofs, doors, windows]) {
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
   }
   for (const mesh of [wallOutlines, roofOutlines]) {
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.castShadow = false;
-    mesh.receiveShadow = false;
   }
 
   village.add(wallOutlines, walls, roofOutlines, roofs, doors, windows);

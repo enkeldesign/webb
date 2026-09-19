@@ -91,25 +91,9 @@ assert.match(
   'Production must bind the screen-reader coordinator follow-up to the current release cache identity'
 );
 
-// Touch hardware keeps 60 Hz gameplay but should not redraw the complete dynamic
-// shadow map at 60 Hz too. The profile piggybacks the existing renderer call rather
-// than adding another timer or animation loop.
-assert.match(performanceProfile, /TOUCH_SHADOW_REFRESH_INTERVAL_MS = 1000 \/ 30/);
-assert.match(performanceProfile, /function installTouchShadowRefreshCap\(renderer, profile, runtime\)/);
-assert.match(performanceProfile, /renderer\.shadowMap\.autoUpdate = false/,
-  'Touch rendering should explicitly own shadow refresh cadence');
-assert.match(performanceProfile, /renderer\.userData\.turnOriginalRender = originalRender/,
-  'The runtime renderer must only be wrapped once');
-assert.match(performanceProfile, /now - lastShadowRefreshAt >= TOUCH_SHADOW_REFRESH_INTERVAL_MS/);
-assert.match(performanceProfile, /renderer\.shadowMap\.needsUpdate = true/);
-assert.match(performanceProfile, /syncTrackShadowPolicy\(\)/,
-  'Touch shadow throttling must update its policy when the selected track changes');
-assert.match(performanceProfile, /renderer\.shadowMap\.enabled = enabled/,
-  'The renderer must restore normal shadows after leaving legacy-tablet MOUNTAIN');
-assert.match(performanceProfile, /renderer\.shadowMap\.autoUpdate = true/,
-  'Desktop and non-touch rendering must retain full-refresh shadow behavior');
-assert.doesNotMatch(performanceProfile, /setInterval|requestAnimationFrame|setAnimationLoop/,
-  'Shadow throttling must add no independent scheduling loop');
+// Projected shadows update with car poses; the old renderer wrapper is gone.
+assert.doesNotMatch(performanceProfile, /shadowMap|ShadowRefresh|turnOriginalRender|setInterval|requestAnimationFrame|setAnimationLoop/,
+  'The DPR profile must not wrap rendering or schedule shadow-map refreshes');
 
 // Achievements need 100 ms samples while driving, but should contribute zero timer
 // wake-ups while the player is on Home, in The Lot, backgrounded, or otherwise idle.
@@ -225,10 +209,8 @@ assert.match(harborOptimized, /function batchContainerYards\(world\)/);
 assert.match(harborOptimized, /const shellsByColor = new Map\(\)/);
 assert.match(harborOptimized, /new THREE\.InstancedMesh\(containerGeometry, material, entries\.length\)/);
 assert.match(harborOptimized, /new THREE\.InstancedMesh\(ribGeometry, ribMaterial, ribs\.length\)/);
-assert.match(harborOptimized, /batch\.castShadow = true/,
-  'Batching must preserve the established container shadows');
-assert.match(harborOptimized, /batch\.receiveShadow = true/,
-  'Batching must preserve the established container shadow reception');
+
+
 assert.match(harborOptimized, /gameplayGeometryUnchanged: true/,
   'Harbor batching must remain a rendering-only optimization');
 assert.doesNotMatch(harborOptimized, /setAnimationLoop|requestAnimationFrame|setInterval/,
@@ -271,4 +253,4 @@ assert.match(bellaBootstrap, /RETRY_DELAYS_MS = Object\.freeze/);
 assert.doesNotMatch(bellaBootstrap, /setInterval/,
   'The independent Bella bootstrap must use bounded startup retries rather than a fixed polling interval');
 
-console.log(`TURN ${release.id} long-session timers, touch shadows, accessibility observers, screen-reader speech contracts, scenery batching/contours, cache and Bella audio lifecycle passed.`);
+console.log(`TURN ${release.id} long-session timers, projected shadows, accessibility observers, screen-reader speech contracts, scenery batching/contours, cache and Bella audio lifecycle passed.`);

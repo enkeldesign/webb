@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { installMidnightCityWorld as installMidnightCityWorldR3 } from './midnight-city-world-r3.js?build=20260918-r255';
+import { installMidnightCityWorld as installMidnightCityWorldR3 } from './midnight-city-world-r3.js?build=20260919-r256';
 
 const TRACK_Y = 0.16;
 const WARM_LIGHT = 0xffd27a;
@@ -236,8 +236,6 @@ function installBuildingBodies(world, buildings) {
     const mesh = meshes[index];
     mesh.count = counts[index];
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.castShadow = false;
-    mesh.receiveShadow = true;
     world.add(mesh);
   }
 }

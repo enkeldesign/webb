@@ -475,9 +475,6 @@ async function makeResponder({ carId, color, secondaryColor, name, position, yaw
   visual.position.copy(position);
   visual.rotation.y = yaw;
   visual.visible = false;
-  visual.traverse((node) => {
-    if (node.isMesh) node.castShadow = false;
-  });
   installResponderLightOverride(visual);
   return { service: carId, visual };
 }
@@ -776,8 +773,6 @@ function outlinedPrimitive(geometry, fillMaterial, scale = 1.04) {
   if (!graphicsProfile.outlines) {
     const root = new THREE.Group();
     const fill = new THREE.Mesh(geometry, fillMaterial);
-    fill.castShadow = true;
-    fill.receiveShadow = true;
     fill.userData.turnOutlined = true;
     root.add(fill);
     return root;
@@ -789,8 +784,6 @@ function outlinedPrimitive(geometry, fillMaterial, scale = 1.04) {
   );
   outline.scale.setScalar(scale);
   const fill = new THREE.Mesh(geometry, fillMaterial);
-  fill.castShadow = false;
-  fill.receiveShadow = true;
   group.add(outline, fill);
   return group;
 }

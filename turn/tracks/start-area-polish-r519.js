@@ -81,8 +81,6 @@ function addInkContour(mesh, scale = 1.05) {
   const outline = new THREE.Mesh(mesh.geometry, inkOutlineMaterial());
   outline.name = `${mesh.name || 'Start banner'} black contour`;
   outline.scale.setScalar(scale);
-  outline.castShadow = false;
-  outline.receiveShadow = false;
   outline.userData.turnStartBannerContour = true;
   mesh.add(outline);
   mesh.userData.turnStartBannerContour = true;

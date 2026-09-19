@@ -20,8 +20,6 @@ const {
 function prepareAsset(root) {
   root.traverse((node) => {
     if (!node?.isMesh) return;
-    node.castShadow = true;
-    node.receiveShadow = true;
     node.userData.turnOutlined = true;
   });
   return root;
@@ -120,8 +118,6 @@ function makeGable(z, color = 0x8a5c3f) {
   ], 3));
   geometry.computeVertexNormals();
   const gable = new THREE.Mesh(geometry, material(color, 1, 0, { side: THREE.DoubleSide }));
-  gable.castShadow = true;
-  gable.receiveShadow = true;
   gable.userData.turnOutlined = true;
   gable.name = 'Mountain closed Holiday cabin gable r4';
   return gable;
@@ -337,7 +333,6 @@ function makeLayeredDistantMountains(world) {
     );
     peak.position.set(x, height / 2 - 9, z);
     peak.rotation.y = rotation;
-    peak.receiveShadow = true;
     peak.name = `Mountain distant layered ridge r4 ${index + 1}`;
     world.add(peak);
   });

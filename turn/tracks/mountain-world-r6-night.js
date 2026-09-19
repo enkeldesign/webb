@@ -150,7 +150,6 @@ function installStreetlightPoolsAndFill(world, terrainHeightAt) {
     const light = new THREE.PointLight(WARM_LIGHT, 8.4, 66, 1.65);
     light.name = `Mountain warm streetlight fill r6 ${cursor + 1}`;
     light.position.set(center.x, bounds.max.y - size.y * 0.20, center.z);
-    light.castShadow = false;
     world.add(light);
     cursor += 1;
   }
@@ -360,7 +359,6 @@ function installHouseWindowGlow(world, samples) {
     const light = new THREE.PointLight(WINDOW_LIGHT, 2.8, 25, 1.85);
     light.name = `Mountain house window spill r6 ${index + 1}`;
     light.position.set(center.x, box.min.y + (box.max.y - box.min.y) * 0.36, center.z);
-    light.castShadow = false;
     world.add(light);
     spillLightCount += 1;
   });

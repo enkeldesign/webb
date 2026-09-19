@@ -129,8 +129,8 @@ assert.match(index, /kenney-track-landmarks-r517\.js\?revision=r532-countryside-
 assert.match(index, /app\.js\?build=[^"']*-r532-countryside-nature/);
 assert.match(labIndex, new RegExp(`world-assets\\.js\\?build=${release.cacheKey}&revision=r532-countryside-nature-polish`));
 
-assert.equal(sha256(bella), '5b98671d235f3cc6b3c38f81bf336f9fcd4d853698ed2715a260093237e776b2',
-  'BELLA and her rescue tree implementation must remain byte-for-byte unchanged');
+assert.equal(sha256(bella), 'b09d2bdcb419fd920769855d201f0a7da7e2f2390b28168cc32ba6433f474f5f',
+  'BELLA and her rescue tree must stay at the reviewed baseline after retiring shadow flags');
 assert.equal(sha256(bellaRescue), '8cf0a88055a01e3baec7aab44924c059ade29515971d9c7918d75a8781018b10',
   'BELLA rescue adapter must remain at the reviewed lifecycle-gated baseline');
 

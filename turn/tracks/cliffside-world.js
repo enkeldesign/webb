@@ -54,7 +54,6 @@ function makeOcean(world) {
   );
   ocean.rotation.x = -Math.PI / 2;
   ocean.position.set(-45, SEA_LEVEL, 30);
-  ocean.receiveShadow = true;
   world.add(ocean);
 
   const horizon = new THREE.Mesh(
@@ -120,7 +119,6 @@ function makeTerrainRibbon(world, samples, trackWidth) {
       flatShading: true
     })
   );
-  terrain.receiveShadow = true;
   world.add(terrain);
 
   const skirtPositions = [];
@@ -144,7 +142,6 @@ function makeTerrainRibbon(world, samples, trackWidth) {
   skirtGeometry.setAttribute('position', new THREE.Float32BufferAttribute(skirtPositions, 3));
   skirtGeometry.computeVertexNormals();
   const skirt = new THREE.Mesh(skirtGeometry, material(0x554c46, 1));
-  skirt.receiveShadow = true;
   world.add(skirt);
 }
 
@@ -196,7 +193,6 @@ function makeRoad(world, samples, trackWidth) {
       side: THREE.DoubleSide
     })
   );
-  road.receiveShadow = true;
   world.add(road);
 
   makeCurbs(world, samples, trackWidth);
@@ -237,7 +233,6 @@ function makeCurbs(world, samples, trackWidth) {
       geometry,
       new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide })
     );
-    curb.receiveShadow = true;
     world.add(curb);
   }
 }
@@ -276,7 +271,6 @@ function makeShoulders(world, samples, trackWidth) {
       geometry,
       new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, side: THREE.DoubleSide })
     );
-    shoulder.receiveShadow = true;
     world.add(shoulder);
   }
 }
@@ -299,7 +293,6 @@ function makeCentreLine(world, samples) {
   }
   dashes.count = cursor;
   dashes.instanceMatrix.needsUpdate = true;
-  dashes.receiveShadow = true;
   world.add(dashes);
 }
 
@@ -317,7 +310,6 @@ function makeStartLine(world, samples, trackWidth) {
     marker.position.copy(start.point).addScaledVector(start.normal, (tile - (tileCount - 1) / 2) * tileWidth);
     marker.position.y += 0.25;
     marker.rotation.set(trackPitch(start), yaw, 0);
-    marker.receiveShadow = true;
     world.add(marker);
   }
 }
@@ -360,8 +352,6 @@ function makeGuardrail(world, samples, trackWidth) {
   rails.count = cursor;
   posts.instanceMatrix.needsUpdate = true;
   rails.instanceMatrix.needsUpdate = true;
-  posts.castShadow = true;
-  rails.castShadow = true;
   world.add(posts, rails);
 }
 
@@ -414,8 +404,6 @@ function makePineForest(world, samples, trackWidth) {
   for (const mesh of [trunks, crowns, crownTips]) {
     mesh.count = cursor;
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
     world.add(mesh);
   }
 }
@@ -445,8 +433,6 @@ function makeCliffRocks(world, samples, trackWidth) {
   }
   rocks.count = cursor;
   rocks.instanceMatrix.needsUpdate = true;
-  rocks.castShadow = true;
-  rocks.receiveShadow = true;
   world.add(rocks);
 }
 
@@ -463,8 +449,6 @@ function makeStoneGate(world, samples, trackWidth) {
     column.position.y = sample.point.y + 4.3;
     column.scale.set(1.15, 1.75, 1.1);
     column.rotation.set(0.2 * side, 0.5 * side, 0.12 * side);
-    column.castShadow = true;
-    column.receiveShadow = true;
     gate.add(column);
   }
 
@@ -472,8 +456,6 @@ function makeStoneGate(world, samples, trackWidth) {
   lintel.position.copy(sample.point);
   lintel.position.y = sample.point.y + 10.5;
   lintel.rotation.set(trackPitch(sample), Math.atan2(sample.tangent.x, sample.tangent.z), 0.03);
-  lintel.castShadow = true;
-  lintel.receiveShadow = true;
   gate.add(lintel);
   world.add(gate);
 }
@@ -511,7 +493,6 @@ function makeDistantIslands(world) {
     island.position.set(x, y, z);
     island.scale.set(scale * 1.5, scale * 0.58, scale);
     island.rotation.set(0.2, x * 0.001, 0.08);
-    island.receiveShadow = true;
     world.add(island);
   }
 }
@@ -521,8 +502,6 @@ function outlinedBox(width, height, depth, meshMaterial) {
     const group = new THREE.Group();
     const geometry = new THREE.BoxGeometry(width, height, depth);
     const mesh = new THREE.Mesh(geometry, meshMaterial);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
     group.add(mesh);
     return group;
   }
@@ -531,8 +510,6 @@ function outlinedBox(width, height, depth, meshMaterial) {
   const outline = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: INK, side: THREE.BackSide }));
   outline.scale.setScalar(1.035);
   const mesh = new THREE.Mesh(geometry, meshMaterial);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
   group.add(outline, mesh);
   return group;
 }

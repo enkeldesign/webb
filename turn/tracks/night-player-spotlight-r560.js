@@ -93,7 +93,6 @@ function applyNightSpotlightConfig(rig, light, target) {
     NIGHT_SPOTLIGHT_CONFIG.lightLocal.z
   );
   light.target = target;
-  light.castShadow = false;
 
   // If a stale module graph ever left another SpotLight in the named rig,
   // retain only the canonical one rather than stacking invisible performance

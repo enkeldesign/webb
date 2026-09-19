@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { installMidnightCityWorld as installMidnightCityWorldR4 } from './midnight-city-world-r4.js?build=20260918-r255';
+import { installMidnightCityWorld as installMidnightCityWorldR4 } from './midnight-city-world-r4.js?build=20260919-r256';
 
 const TRACK_Y = 0.16;
 const CITY_BUILDER_COMMIT = '4535092b740b378b700efd9df9e27a631815b84a';
@@ -204,7 +204,6 @@ function installParks(world, samples, trackWidth) {
     );
     lawn.rotation.x = -Math.PI / 2;
     lawn.position.y = TRACK_Y + 0.015;
-    lawn.receiveShadow = true;
     group.add(lawn);
 
     const path = new THREE.Mesh(
@@ -561,7 +560,6 @@ function installLoreRoads(world, samples, trackWidth) {
       })
     );
     road.position.z = 25;
-    road.receiveShadow = true;
     group.add(road);
 
     const centreLine = new THREE.Mesh(
@@ -765,8 +763,6 @@ function prepareAsset(source, { targetSize, tint, tintAmount }) {
       return clone;
     });
     node.material = Array.isArray(node.material) ? materials : materials[0];
-    node.castShadow = false;
-    node.receiveShadow = true;
   });
 
   model.updateMatrixWorld(true);

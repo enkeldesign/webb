@@ -190,8 +190,6 @@ function installMedicalEntrance(world) {
 
   entrance.traverse((node) => {
     if (!node.isMesh) return;
-    node.castShadow = false;
-    node.receiveShadow = true;
   });
 
   entrance.position.set(MEDICAL_WINDOW_X, 0, 12.68);

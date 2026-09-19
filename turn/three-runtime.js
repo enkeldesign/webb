@@ -28,15 +28,5 @@ export class WebGLRenderer extends NativeThree.WebGLRenderer {
     const nativeSetPixelRatio = this.setPixelRatio.bind(this);
     this.setPixelRatio = (value) => nativeSetPixelRatio(graphicsPixelRatio(value));
     this.setPixelRatio(globalThis.devicePixelRatio || 1);
-
-    this.shadowMap.enabled = false;
-    try {
-      Object.defineProperty(this.shadowMap, 'enabled', {
-        configurable: true,
-        enumerable: true,
-        get: () => false,
-        set: () => false
-      });
-    } catch (_) {}
   }
 }

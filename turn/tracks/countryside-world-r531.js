@@ -178,8 +178,6 @@ function addInkOutline(root, scale = 1.022) {
     const outline = new THREE.Mesh(surface.geometry, inkMaterial);
     outline.name = `${surface.name || 'Countryside surface'} outline`;
     outline.scale.setScalar(scale);
-    outline.castShadow = false;
-    outline.receiveShadow = false;
     outline.userData.turnOutline = true;
     outline.userData.turnOutlined = true;
     surface.add(outline);
@@ -192,15 +190,11 @@ function prepareModel(source, {
   semantic = null,
   outline = false,
   outlineScale = 1.022,
-  castShadow = true,
-  receiveShadow = true
 } = {}) {
   const model = source.clone(true);
   model.traverse((node) => {
     if (!node?.isMesh) return;
     cloneAndTuneMaterials(node, semantic);
-    node.castShadow = castShadow;
-    node.receiveShadow = receiveShadow;
     node.userData.turnOutlined = true;
     node.userData.turnPaletteLocked = true;
     node.userData.turnCountrysideAsset = REVISION;
@@ -232,7 +226,6 @@ function sceneryGround(name, position, width, depth, yaw, color, y = 0.006) {
   mesh.position.copy(position);
   mesh.position.y = y;
   mesh.rotation.y = yaw;
-  mesh.receiveShadow = true;
   mesh.userData.turnNoAutoOutline = true;
   mesh.userData.turnSceneryOnly = true;
   mesh.userData.turnPaletteLocked = true;
@@ -338,7 +331,6 @@ function installVillage(root, sources, samples, trackWidth, protectedPoint) {
       const drivewayOutward = spec.row === 'near' ? spec.outward + 8.5 : spec.outward - 8.5;
       placePrepared(village, drivewaySource, {
         targetSpan: 8.5,
-        castShadow: false
       }, {
         name: `Birchfield private drive ${index + 1}`,
         position: pointInFrame(frame, drivewayOutward, spec.along, 0.046),
@@ -354,8 +346,6 @@ function installVillage(root, sources, samples, trackWidth, protectedPoint) {
     for (const along of [-31, -15.5, 0, 15.5, 31]) {
       placePrepared(village, fenceSource, {
         targetSpan: 14,
-        castShadow: false,
-        receiveShadow: true
       }, {
         name: 'Birchfield rear garden fence',
         position: pointInFrame(frame, 75, along, 0.03),
@@ -375,7 +365,6 @@ function installVillage(root, sources, samples, trackWidth, protectedPoint) {
       placePrepared(village, bushSource, {
         targetHeight: scale,
         semantic: 'bush',
-        castShadow: false
       }, {
         name: 'Birchfield garden shrub',
         position,
@@ -421,7 +410,6 @@ function installFarmFields(root, sources, samples, trackWidth, protectedPoint) {
         placePrepared(farm, cropBedSource, {
           targetSpan: 7.2,
           semantic: 'cropBed',
-          castShadow: false
         }, {
           name: 'Windmill farm ordered crop bed',
           position,
@@ -436,7 +424,6 @@ function installFarmFields(root, sources, samples, trackWidth, protectedPoint) {
         placePrepared(farm, cropSource, {
           targetHeight: wheat ? 1.8 : 2.45,
           semantic: wheat ? 'wheat' : 'corn',
-          castShadow: false
         }, {
           name: wheat ? 'Windmill farm wheat' : 'Windmill farm corn',
           position: position.clone().setY(0.08),
@@ -455,7 +442,6 @@ function installFarmFields(root, sources, samples, trackWidth, protectedPoint) {
       placePrepared(farm, fenceSource, {
         targetSpan: 8.2,
         semantic: 'wood',
-        castShadow: false
       }, {
         name: 'Windmill farm roadside fence',
         position: pointInFrame(frame, 17.5, along, 0.035),
@@ -468,7 +454,6 @@ function installFarmFields(root, sources, samples, trackWidth, protectedPoint) {
     placePrepared(farm, gateSource, {
       targetSpan: 9,
       semantic: 'wood',
-      castShadow: true
     }, {
       name: 'Windmill farm gate',
       position: pointInFrame(frame, 17.5, 0, 0.035),
@@ -511,7 +496,6 @@ function installOrchard(root, sources, samples, trackWidth, protectedPoint) {
       placePrepared(orchard, source, {
         targetHeight: 9.4 + (trees % 3) * 0.7,
         semantic: 'tree',
-        castShadow: trees % 3 === 0
       }, {
         name: 'Countryside orchard tree',
         position,
@@ -528,7 +512,6 @@ function installOrchard(root, sources, samples, trackWidth, protectedPoint) {
       placePrepared(orchard, fence, {
         targetSpan: 8,
         semantic: 'wood',
-        castShadow: false
       }, {
         name: 'Orchard roadside fence',
         position: pointInFrame(frame, 18, along, 0.035),
@@ -578,7 +561,6 @@ function installForestEdge(root, sources, samples, trackWidth, protectedPoint) {
       placePrepared(forest, forestTrees[index % forestTrees.length], {
         targetHeight: height,
         semantic: 'tree',
-        castShadow: index % 3 === 0
       }, {
         name: 'Managed forest canopy tree',
         position,
@@ -596,7 +578,6 @@ function installForestEdge(root, sources, samples, trackWidth, protectedPoint) {
       placePrepared(forest, largeBush, {
         targetHeight: height,
         semantic: 'bush',
-        castShadow: false
       }, {
         name: 'Managed forest understorey bush',
         position,
@@ -647,7 +628,6 @@ function installNatureLandscape(root, sources, samples, trackWidth, protectedPoi
       placePrepared(copse, trees[(copseIndex + treeIndex) % trees.length], {
         targetHeight: height + (copseIndex % 2) * 0.8,
         semantic: 'tree',
-        castShadow: treeIndex === 1 || treeIndex === 3
       }, {
         name: `${spec.label} canopy tree`,
         position,
@@ -665,7 +645,6 @@ function installNatureLandscape(root, sources, samples, trackWidth, protectedPoi
       placePrepared(copse, bushes[(copseIndex + bushIndex) % bushes.length], {
         targetHeight: height,
         semantic: 'bush',
-        castShadow: false
       }, {
         name: `${spec.label} understorey bush`,
         position,
@@ -682,7 +661,6 @@ function installNatureLandscape(root, sources, samples, trackWidth, protectedPoi
         placePrepared(copse, meadowGrass, {
           targetSpan: span,
           semantic: 'grass',
-          castShadow: false
         }, {
           name: `${spec.label} meadow grass`,
           position,
@@ -699,7 +677,6 @@ function installNatureLandscape(root, sources, samples, trackWidth, protectedPoi
         placePrepared(copse, rocks[copseIndex % rocks.length], {
           targetSpan: 2.8 + (copseIndex % 3) * 0.55,
           semantic: 'rock',
-          castShadow: false
         }, {
           name: `${spec.label} field rock`,
           position,
@@ -716,7 +693,6 @@ function installNatureLandscape(root, sources, samples, trackWidth, protectedPoi
         placePrepared(copse, stump, {
           targetHeight: 2.7,
           semantic: 'wood',
-          castShadow: false
         }, {
           name: 'Woodland approach old stump',
           position,
@@ -748,8 +724,6 @@ function installLakeLife(root, sources, samples) {
       targetSpan: 5.6,
       outline: true,
       outlineScale: 1.024,
-      castShadow: false,
-      receiveShadow: false
     }, {
       name: 'Countryside moored rowboat',
       position: islandCentre.clone().add(new THREE.Vector3(-23, LAKE_LEVEL + 0.02, 4.5)),
@@ -764,7 +738,6 @@ function installLakeLife(root, sources, samples) {
       placePrepared(lake, rock, {
         targetSpan: scale,
         semantic: 'rock',
-        castShadow: false
       }, {
         name: 'Countryside island shoreline rock',
         position: islandCentre.clone().add(new THREE.Vector3(x, 0.06, z)),
@@ -812,9 +785,6 @@ async function installParkedCars(root, samples, trackWidth) {
     car.userData.turnStaticSceneryCar = true;
     car.userData.turnSceneryOnly = true;
     car.userData.turnCountrysideDistrict = spec.district;
-    car.traverse((node) => {
-      if (node?.isMesh) node.castShadow = false;
-    });
     root.add(car);
     return car;
   }));

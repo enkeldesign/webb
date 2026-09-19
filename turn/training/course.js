@@ -54,7 +54,6 @@ function makeGround(samples) {
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.set((minX + maxX) / 2, -0.03, (minZ + maxZ) / 2);
-  ground.receiveShadow = true;
   return ground;
 }
 
@@ -80,7 +79,6 @@ function makeRoad(samples, trackWidth) {
     geometry,
     new THREE.MeshStandardMaterial({ color: 0x454a50, roughness: 0.92 })
   );
-  road.receiveShadow = true;
   return road;
 }
 

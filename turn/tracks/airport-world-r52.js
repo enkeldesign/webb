@@ -47,7 +47,6 @@ function makeCapsule(zone, radius, color, y) {
   const body = new THREE.Mesh(new THREE.PlaneGeometry(radius * 2, length), material);
   body.rotation.x = Math.PI / 2;
   body.position.y = y;
-  body.receiveShadow = true;
   group.add(body);
 
   const capGeometry = new THREE.CircleGeometry(radius, 28);
@@ -55,7 +54,6 @@ function makeCapsule(zone, radius, color, y) {
     const cap = new THREE.Mesh(capGeometry, material);
     cap.rotation.x = Math.PI / 2;
     cap.position.set(0, y, direction * length / 2);
-    cap.receiveShadow = true;
     group.add(cap);
   }
 

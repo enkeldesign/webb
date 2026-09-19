@@ -29,7 +29,6 @@ function makeDeepRoadFoundations(world, samples, trackWidth) {
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geometry.computeVertexNormals();
     const foundation = new THREE.Mesh(geometry, foundationMaterial);
-    foundation.receiveShadow = true;
     foundation.name = 'Mountain deep retaining road foundation r3';
     world.add(foundation);
   }

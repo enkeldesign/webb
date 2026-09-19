@@ -57,8 +57,6 @@ function addContour(mesh, scale = 1.055) {
   const outline = new THREE.Mesh(mesh.geometry, OUTLINE_MATERIAL);
   outline.name = 'TURN outline';
   outline.scale.setScalar(scale);
-  outline.castShadow = false;
-  outline.receiveShadow = false;
   outline.userData.turnOutline = true;
   outline.frustumCulled = mesh.frustumCulled;
   mesh.add(outline);
@@ -212,7 +210,6 @@ function makeRibbon(outer, inner, y, material) {
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   const mesh = new THREE.Mesh(geometry, material);
-  mesh.receiveShadow = true;
   mesh.userData.turnNoAutoOutline = true;
   return mesh;
 }
@@ -230,7 +227,6 @@ function makeShape(points, material, y) {
   const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), material);
   mesh.rotation.x = -Math.PI / 2;
   mesh.position.y = y;
-  mesh.receiveShadow = true;
   mesh.userData.turnNoAutoOutline = true;
   return mesh;
 }
@@ -315,8 +311,6 @@ function addLake(world, samples) {
     rock.position.y = 0.75 + seeded01(43000 + i) * 0.7;
     rock.scale.y = 0.55 + seeded01(44000 + i) * 0.45;
     rock.rotation.set(seeded01(45000 + i), seeded01(46000 + i) * TAU, seeded01(47000 + i));
-    rock.castShadow = true;
-    rock.receiveShadow = true;
     contourObject(rock, 1.09);
     world.add(rock);
   }
@@ -357,7 +351,6 @@ function addLakeIsland(world, center) {
     );
     rock.scale.y = 0.65 + seeded01(51000 + i) * 0.65;
     rock.rotation.y = seeded01(52000 + i) * TAU;
-    rock.castShadow = true;
     contourObject(rock, 1.09);
     world.add(rock);
   }
@@ -408,8 +401,6 @@ function addDistantMountains(world, samples) {
         center.z + Math.sin(angle) * distance
       );
       mountain.rotation.y = -angle + seeded01(57000 + i) * 0.7;
-      mountain.castShadow = false;
-      mountain.receiveShadow = false;
       contourObject(mountain, back ? 1.032 : 1.045);
       world.add(mountain);
 

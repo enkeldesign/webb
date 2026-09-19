@@ -85,8 +85,6 @@ function batchContainerYards(world) {
       batch.setMatrixAt(index, entries[index].matrix);
     }
     batch.instanceMatrix.needsUpdate = true;
-    batch.castShadow = true;
-    batch.receiveShadow = true;
     world.add(batch);
     drawGroups += 1;
   }

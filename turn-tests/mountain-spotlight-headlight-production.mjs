@@ -22,7 +22,7 @@ assert.match(sharedHeadlight, /distance: 220/,
   'The shared spotlight should retain the approved 220 m racing-speed range');
 assert.match(sharedHeadlight, /new Set\(\['midnight-city', 'mountain'\]\)/,
   'Exactly the two night tracks should share the same spotlight configuration');
-assert.match(sharedHeadlight, /light\.castShadow = false/,
+assert.doesNotMatch(sharedHeadlight, /castShadow|shadowMap/,
   'The shared headlight must never allocate a dynamic shadow map');
 assert.match(sharedHeadlight, /lightLocal: Object\.freeze\(\{ x: 0, y: 0\.82, z: -0\.85 \}\)/,
   'The emitter should sit close to the front of the car');

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { graphicsProfile } from '/turn/graphics-profile.js';
-import { installMidnightCityWorld as installMidnightCityWorldR2 } from './midnight-city-world-r2.js?build=20260918-r255';
+import { installMidnightCityWorld as installMidnightCityWorldR2 } from './midnight-city-world-r2.js?build=20260919-r256';
 
 const WARM_LIGHT = 0xffd27a;
 const PLAYER_FILL = 0xffe3b3;
@@ -66,7 +66,6 @@ function replacePlayerLighting(playerCar) {
     const fill = new THREE.PointLight(PLAYER_FILL, 3.1, 17, 2);
     fill.name = 'Midnight City player visibility fill';
     fill.position.set(0, 2.55, 0.45);
-    fill.castShadow = false;
     rig.add(fill);
   }
 
@@ -136,7 +135,6 @@ function alignSparseStreetLights(world, samples, trackWidth) {
     for (const light of lights) {
       light.visible = false;
       light.intensity = 0;
-      light.castShadow = false;
       light.userData.turnLowGraphicsDisabledLight = true;
     }
     return { active: 0, disabled: lights.length };
@@ -164,7 +162,6 @@ function alignSparseStreetLights(world, samples, trackWidth) {
     light.intensity = 7.2;
     light.distance = 62;
     light.decay = 1.9;
-    light.castShadow = false;
     light.name = `Midnight City anchored street light ${active + 1}`;
     active += 1;
   }
