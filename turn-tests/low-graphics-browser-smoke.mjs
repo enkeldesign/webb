@@ -1,8 +1,34 @@
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
 import fs from 'node:fs/promises';
 import { chromium, webkit } from 'playwright';
 
 const TARGET = process.env.TURN_LOW_GRAPHICS_URL || 'http://127.0.0.1:8000/turn/';
+
+// Inspect rendered coverage, not the shader formula. A row of overlapping blobs
+// can look connected at its faint edge but split into islands at higher opacity.
+function inspectShadowCoverage(pixels, without, width, height) {
+  const count = width * height, queue = new Int32Array(count);
+  return [4, 10].map((threshold) => {
+    const mask = new Uint8Array(count);
+    let total = 0, largest = 0, components = 0;
+    for (let i = 0; i < count; i++) if (without[i * 4] - pixels[i * 4] > threshold) { mask[i] = 1; total++; }
+    for (let start = 0; start < count; start++) {
+      if (!mask[start]) continue;
+      let head = 0, tail = 1;
+      queue[0] = start; mask[start] = 0;
+      while (head < tail) {
+        const i = queue[head++], x = i % width;
+        for (const next of [x ? i - 1 : -1, x + 1 < width ? i + 1 : -1, i - width, i + width]) {
+          if (next >= 0 && next < count && mask[next]) { mask[next] = 0; queue[tail++] = next; }
+        }
+      }
+      if (tail > 3) components++;
+      largest = Math.max(largest, tail);
+    }
+    return { threshold, components, pixels: total, connectedFraction: total ? largest / total : 0 };
+  });
+}
 
 for (const browserType of [chromium, webkit]) {
   const browser = await browserType.launch({ headless: true });
@@ -71,6 +97,7 @@ for (const browserType of [chromium, webkit]) {
     await page.route('**/shadow-validation.html', (route) => route.fulfill({ contentType: 'text/html',
       body: `<!doctype html><meta charset="utf-8">${fixtureImportMap}<style>body{margin:0;background:#eee}canvas{display:block}</style>` }));
     await page.goto(new URL('shadow-validation.html', TARGET).href);
+    await page.addScriptTag({ content: `window.inspectShadowCoverage = ${inspectShadowCoverage};` });
     for (const terrain of ['flat', 'steep', 'banked-crest']) {
       const report = await page.evaluate(async ({ terrain, width, height, low }) => {
         const THREE = await import('three');
@@ -212,7 +239,7 @@ for (const browserType of [chromium, webkit]) {
           minimumMovingShadowPixels = Math.min(minimumMovingShadowPixels, visibleShadowPixels());
           if (shadows.mesh !== batch || renderer.info.memory.geometries !== geometryCount) throw new Error('Movement allocated shadow resources');
         }
-        const directionalFootprints = [];
+        const directionalFootprints = [], inspectionFrames = [];
         if (terrain === 'flat') {
           const cast = sun.target.position.clone().sub(sun.position).setY(0).normalize();
           const screenRight = new THREE.Vector3().crossVectors(cast, new THREE.Vector3(0, 1, 0));
@@ -235,6 +262,7 @@ for (const browserType of [chromium, webkit]) {
             for (const entry of cars) entry.car.visible = false;
             visibleShadowPixels(topView);
             let total = 0, castPixels = 0, sunFacingOutsidePixels = 0, rootSpan = 0, farSpan = 0;
+            let widestRow = -1, tipAlong = 0;
             const pixelWidth = renderer.domElement.width, pixelHeight = renderer.domElement.height;
             for (let y = 0; y < pixelHeight; y++) {
               const along = ((y + 0.5) / pixelHeight * 2 - 1) * extent;
@@ -243,7 +271,7 @@ for (const browserType of [chromium, webkit]) {
                 const pixel = (y * pixelWidth + x) * 4;
                 if (without[pixel] - pixels[pixel] <= 4) continue;
                 total++; rowPixels++;
-                if (along >= 0) castPixels++;
+                if (along >= 0) { castPixels++; tipAlong = Math.max(tipAlong, along); }
                 const across = ((x + 0.5) / pixelWidth * 2 - 1) * extent * aspect;
                 const dx = cast.x * along + screenRight.x * across;
                 const dz = cast.z * along + screenRight.z * across;
@@ -252,9 +280,27 @@ for (const browserType of [chromium, webkit]) {
                 if (along < 0 && (Math.abs(carX) > size.x / 2 || Math.abs(carZ) > size.z / 2)) sunFacingOutsidePixels++;
               }
               if (Math.abs(along) < 0.2) rootSpan = Math.max(rootSpan, rowPixels);
-              if (along > 1 && along < 2.5) farSpan = Math.max(farSpan, rowPixels);
+              if (along > 1 && along < 2.5 && rowPixels > farSpan) { farSpan = rowPixels; widestRow = y; }
             }
-            directionalFootprints.push({ heading, sunFacingOutsidePixels, castAreaFraction: castPixels / total, rootSpan, farSpan });
+            let peak = 0, softWidth = 0, coreWidth = 0;
+            for (let x = 0; x < pixelWidth; x++) {
+              const pixel = (widestRow * pixelWidth + x) * 4;
+              peak = Math.max(peak, without[pixel] - pixels[pixel]);
+            }
+            for (let x = 0; x < pixelWidth; x++) {
+              const pixel = (widestRow * pixelWidth + x) * 4;
+              const darkness = without[pixel] - pixels[pixel];
+              if (darkness > peak * 0.25) softWidth++;
+              if (darkness > peak * 0.75) coreWidth++;
+            }
+            directionalFootprints.push({ heading, sunFacingOutsidePixels, castAreaFraction: castPixels / total,
+              rootSpan, farSpan, visibleLength: tipAlong, carLength: size.z,
+              edgeFadeFraction: (softWidth - coreWidth) / softWidth,
+              coverage: window.inspectShadowCoverage(pixels, without, pixelWidth, pixelHeight) });
+            if (heading === 0 && width === 1080 && !low) {
+              renderer.render(scene, topView);
+              inspectionFrames.push({ name: 'directional-mask', data: renderer.domElement.toDataURL() });
+            }
           }
           for (const entry of cars) entry.car.visible = true;
         }
@@ -268,14 +314,29 @@ for (const browserType of [chromium, webkit]) {
         camera.position.copy(cameraStart);
         camera.lookAt(0, centerY, 0);
         renderer.render(scene, camera);
+        if (width === 1080 && !low) {
+          const target = cars[0].car.position;
+          camera.position.set(target.x + 4, target.y + 4, target.z + 8);
+          camera.lookAt(target.x, target.y, target.z - 2);
+          renderer.render(scene, camera);
+          inspectionFrames.push({ name: 'close', data: renderer.domElement.toDataURL() });
+          camera.position.copy(cameraStart);
+          camera.lookAt(0, centerY, 0);
+          renderer.render(scene, camera);
+        }
         // Canvas retains the final inspection frame after resource cleanup.
         shadows.dispose(); shadows.dispose();
         renderer.renderLists.dispose();
         const shadowGeometriesDisposed = renderer.info.memory.geometries === geometryCount - 1;
         for (const { visual } of cars) disposeCarVisual(visual);
         roadGeometry.dispose(); road.material.dispose(); renderer.dispose();
-        return { terrain, legacy, current, darkenedPixels, shadowGeometriesDisposed, shadowDrawCalls, minimumMovingShadowPixels, directionalFootprints };
+        return { terrain, legacy, current, darkenedPixels, shadowGeometriesDisposed, shadowDrawCalls, minimumMovingShadowPixels, directionalFootprints, inspectionFrames };
       }, { terrain, ...device });
+      for (const frame of report.inspectionFrames) {
+        await fs.writeFile(`${outputDir}/shadows-${browserType.name()}-${device.name}-${terrain}-${frame.name}.png`,
+          Buffer.from(frame.data.split(',')[1], 'base64'));
+      }
+      delete report.inspectionFrames;
       await page.screenshot({ path: `${outputDir}/shadows-${browserType.name()}-${device.name}-${terrain}.png` });
       console.log(JSON.stringify({ browser: browserType.name(), device: device.name, ...report }));
       await fs.writeFile(`${outputDir}/shadows-${browserType.name()}-${device.name}-${terrain}.json`, JSON.stringify(report, null, 2));
@@ -293,11 +354,98 @@ for (const browserType of [chromium, webkit]) {
         assert.equal(footprint.sunFacingOutsidePixels, 0, 'The cast shadow starts inside the chassis on the sun-facing side');
         assert.ok(footprint.castAreaFraction > 0.95, 'Almost all directional area extends away from the light');
         assert.ok(footprint.farSpan > footprint.rootSpan * 1.7, 'The cast footprint widens from a narrow root');
+        assert.ok(footprint.visibleLength > footprint.carLength * 0.6, 'Softening retains useful cast length');
+        assert.ok(footprint.edgeFadeFraction > 0.22, 'The directional body has a broad soft edge, not a hard plateau');
+        for (const coverage of footprint.coverage) {
+          assert.equal(coverage.components, 1, 'Directional coverage stays a single connected shape at faint and darker levels');
+          assert.ok(coverage.connectedFraction > 0.995, 'No separate visible shadow blobs');
+        }
       }
       assert.equal(report.shadowGeometriesDisposed, true);
       assert.deepEqual(errors, [], 'No shader, WebGL or model errors');
     }
     await context.close();
   }
+  // Inspect the real Countryside road, overlays, car and race camera as well as
+  // the isolated surfaces above. Keep paired frames so authored road patches
+  // cannot be mistaken for projected-shadow geometry during visual review.
+  const liveContext = await browser.newContext({ viewport: { width: 1080, height: 810 }, hasTouch: true });
+  const livePage = await liveContext.newPage();
+  await livePage.goto(TARGET, { waitUntil: 'domcontentloaded' });
+  await livePage.locator('#playBrowserButton').click();
+  await livePage.waitForFunction(() => {
+    const runtime = globalThis.__turnRuntime;
+    return runtime?.playerCar.userData.turnVisualKey
+      && runtime.world.children.some((node) => node.geometry?.parameters?.height === 0.018 && node.position.y === 0.174);
+  }, null, { timeout: 90000 });
+  await livePage.addScriptTag({ content: `window.inspectShadowCoverage = ${inspectShadowCoverage};` });
+  const liveReport = await livePage.evaluate(async () => {
+    const { updateRaceCameraState } = await import('/turn/render/camera.js');
+    const runtime = globalThis.__turnRuntime;
+    const { renderer, scene, camera, state, samples, playerCar: car, carShadows: shadows } = runtime;
+    renderer.setAnimationLoop(null);
+    renderer.setPixelRatio(1);
+    renderer.setSize(1080, 810);
+    camera.aspect = 1080 / 810;
+    camera.updateProjectionMatrix();
+    const gl = renderer.getContext(), width = renderer.domElement.width, height = renderer.domElement.height;
+    const pixels = new Uint8Array(width * height * 4), without = new Uint8Array(pixels.length);
+    const frames = [];
+    const cases = [
+      { name: 'road-wear', index: 38, speed: 0 },
+      { name: 'close', index: 38, speed: 0, close: true },
+      { name: 'drift', index: 160, speed: 65, drift: 0.6 },
+      { name: 'lap-end', index: samples.length - 4, speed: 65 },
+      { name: 'lap-start', index: 4, speed: 65 }
+    ];
+    for (const pose of cases) {
+      const sample = samples[pose.index];
+      car.visible = true;
+      car.position.copy(sample.point).addScaledVector(sample.normal, 3);
+      car.position.y += 0.18;
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z) + (pose.drift || 0);
+      car.rotation.set(0, state.heading + Math.PI, 0);
+      state.position.copy(car.position);
+      state.speed = pose.speed;
+      state.velocity.copy(sample.tangent).multiplyScalar(pose.speed);
+      state.nearestTrackIndex = pose.index;
+      for (let i = 0; i < 90; i++) updateRaceCameraState({ ...runtime, dt: 1 / 60 });
+      if (pose.close) {
+        camera.position.copy(car.position).addScaledVector(sample.tangent, -8);
+        camera.position.y += 4;
+        camera.lookAt(car.position.x + sample.tangent.x * 2, car.position.y, car.position.z + sample.tangent.z * 2);
+      }
+      shadows.beginFrame('countryside'); shadows.addCar(car, sample); shadows.endFrame();
+      renderer.render(scene, camera);
+      const withShadow = renderer.domElement.toDataURL();
+      shadows.mesh.visible = false;
+      renderer.render(scene, camera);
+      const withoutShadow = renderer.domElement.toDataURL();
+      shadows.mesh.visible = true;
+      car.visible = false;
+      const origins = shadows.mesh.geometry.getAttribute('shadowOrigin');
+      for (let i = 0; i < shadows.mesh.count; i++) if (origins.getW(i) === 1) origins.setZ(i, 0);
+      origins.needsUpdate = true;
+      renderer.render(scene, camera);
+      gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      shadows.mesh.visible = false;
+      renderer.render(scene, camera);
+      gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, without);
+      frames.push({ name: pose.name, withShadow, withoutShadow,
+        coverage: window.inspectShadowCoverage(pixels, without, width, height) });
+    }
+    return frames;
+  });
+  for (const frame of liveReport) {
+    for (const key of ['withShadow', 'withoutShadow']) {
+      await fs.writeFile(`${outputDir}/shadows-${browserType.name()}-production-${frame.name}-${key}.png`,
+        Buffer.from(frame[key].split(',')[1], 'base64'));
+      delete frame[key];
+    }
+    assert.ok(frame.coverage[0].pixels > 40, `Production ${frame.name} retains a visible directional shadow`);
+  }
+  await fs.writeFile(`${outputDir}/shadows-${browserType.name()}-production.json`, JSON.stringify(liveReport, null, 2));
+  console.log(JSON.stringify({ browser: browserType.name(), production: liveReport }));
+  await liveContext.close();
   await browser.close();
 }

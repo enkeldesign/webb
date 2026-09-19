@@ -40,14 +40,21 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
       varying float rootWidth;
       #include <fog_pars_fragment>
       void main() {
-        vec2 mask = footprint;
-        // Contact keeps its original mask (rootWidth = 1). The cast footprint
-        // starts narrow beneath the car and fans out toward its soft far edge.
-        mask.x /= mix(rootWidth, 1.0, smoothstep(-1.0, 1.0, footprint.y));
-        vec2 q = mask * mask;
-        float radius = dot(q, q);
-        if (radius >= 1.0) discard;
-        gl_FragColor = vec4(0.0, 0.0, 0.0, strength * (1.0 - smoothstep(0.2, 1.0, radius)));
+        float coverage;
+        if (rootWidth == 1.0) {
+          // Preserve the tight, dark chassis contact exactly.
+          vec2 q = footprint * footprint;
+          coverage = 1.0 - smoothstep(0.2, 1.0, dot(q, q));
+        } else {
+          // One continuous rounded field, shared across every road triangle.
+          // A narrow root stays under the chassis; the widening body has no
+          // flat opacity plateau or squared-off end to reveal a polygon.
+          float along = clamp(footprint.y * 0.5 + 0.5, 0.0, 1.0);
+          vec2 mask = vec2(footprint.x / mix(rootWidth, 1.0, along), footprint.y);
+          coverage = (1.0 - smoothstep(0.0, 1.0, dot(mask, mask))) * (1.0 - 0.45 * along);
+        }
+        if (coverage <= 0.0) discard;
+        gl_FragColor = vec4(0.0, 0.0, 0.0, strength * coverage);
         #include <fog_fragment>
       }`
   });

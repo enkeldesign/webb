@@ -456,6 +456,19 @@ const DIRECTIONAL_SHADOW_HISTORY = Object.freeze({
   ])
 });
 
+const SOFT_SHADOW_HISTORY = Object.freeze({
+  period: '19 September',
+  title: 'One soft cast shadow beneath each car',
+  paragraphs: Object.freeze([
+    'TURN 1.21.3 rounds and softens the directional car shadow into one continuous tapered shape. It keeps its length and hidden attachment beneath the chassis, with a gradual fade toward the far end.'
+  ]),
+  milestones: Object.freeze([
+    'A continuous soft directional silhouette without a squared-off outer edge',
+    'Tight contact shadows and shared road-following rendering retained',
+    'TURN 1.21.3 · 2026.09.19-r258'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -530,7 +543,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   RELEASE_BASELINE_HISTORY,
   KEYBOARD_OWNERSHIP_HISTORY,
   PROJECTED_SHADOW_HISTORY,
-  DIRECTIONAL_SHADOW_HISTORY
+  DIRECTIONAL_SHADOW_HISTORY,
+  SOFT_SHADOW_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -628,13 +642,14 @@ Object.freeze({
   entries: Object.freeze([
     Object.freeze(['1.21.1 r256', 'Replaces dynamic shadow maps with stable, soft contact and directional car shadows that follow the road.']),
     Object.freeze(['Cheaper grounding', 'Player and rivals share one shadow draw call, including in LOW GRAPHICS, without a shadow-map texture or scenery shadow pass.']),
-    Object.freeze(['1.21.2 r257', 'Tucks directional shadows beneath the chassis on the sun-facing side, with a narrow origin that widens away from the light.'])
+    Object.freeze(['1.21.2 r257', 'Tucks directional shadows beneath the chassis on the sun-facing side, with a narrow origin that widens away from the light.']),
+    Object.freeze(['1.21.3 r258', 'Softens the directional car shadow into one continuous rounded shape, preserving its length and tight attachment beneath the chassis.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.2',
-  build: '2026.09.19-r257',
-  note: 'TURN 1.21.2 makes directional car shadows extend away from the sun, preserving the tight contact layer and shared road-following rendering.'
+  version: '1.21.3',
+  build: '2026.09.19-r258',
+  note: 'TURN 1.21.3 gives directional car shadows a continuous rounded silhouette and a softer outward fade, retaining their length and tight contact beneath each car.'
 });
