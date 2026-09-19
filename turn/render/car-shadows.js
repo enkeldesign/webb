@@ -41,7 +41,8 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
       #include <fog_pars_fragment>
       void main() {
         float coverage;
-        if (rootWidth == 1.0) {
+        // Contact is 1, directional is <= 0.33; interpolation can round 1 down.
+        if (rootWidth > 0.5) {
           // Preserve the tight, dark chassis contact exactly.
           vec2 q = footprint * footprint;
           coverage = 1.0 - smoothstep(0.2, 1.0, dot(q, q));

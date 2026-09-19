@@ -7,12 +7,20 @@ const TARGET = process.env.TURN_LOW_GRAPHICS_URL || 'http://127.0.0.1:8000/turn/
 
 // Inspect rendered coverage, not the shader formula. A row of overlapping blobs
 // can look connected at its faint edge but split into islands at higher opacity.
-function inspectShadowCoverage(pixels, without, width, height) {
+function inspectShadowCoverage(pixels, without, width, height, thresholds = [4, 10]) {
   const count = width * height, queue = new Int32Array(count);
-  return [4, 10].map((threshold) => {
+  return thresholds.map((threshold) => {
     const mask = new Uint8Array(count);
-    let total = 0, largest = 0, components = 0;
+    let total = 0, largest = 0, components = 0, interiorGaps = 0;
     for (let i = 0; i < count; i++) if (without[i * 4] - pixels[i * 4] > threshold) { mask[i] = 1; total++; }
+    for (let y = 0; y < height; y++) {
+      let first = -1, last = -1, filled = 0;
+      for (let x = 0; x < width; x++) if (mask[y * width + x]) {
+        if (first < 0) first = x;
+        last = x; filled++;
+      }
+      if (first >= 0) interiorGaps += last - first + 1 - filled;
+    }
     for (let start = 0; start < count; start++) {
       if (!mask[start]) continue;
       let head = 0, tail = 1;
@@ -26,7 +34,8 @@ function inspectShadowCoverage(pixels, without, width, height) {
       if (tail > 3) components++;
       largest = Math.max(largest, tail);
     }
-    return { threshold, components, pixels: total, connectedFraction: total ? largest / total : 0 };
+    return { threshold, components, pixels: total, connectedFraction: total ? largest / total : 0,
+      interiorGapFraction: total ? interiorGaps / total : 0 };
   });
 }
 
@@ -239,7 +248,7 @@ for (const browserType of [chromium, webkit]) {
           minimumMovingShadowPixels = Math.min(minimumMovingShadowPixels, visibleShadowPixels());
           if (shadows.mesh !== batch || renderer.info.memory.geometries !== geometryCount) throw new Error('Movement allocated shadow resources');
         }
-        const directionalFootprints = [], inspectionFrames = [];
+        const directionalFootprints = [], inspectionFrames = [], contactCoverage = [];
         if (terrain === 'flat') {
           const cast = sun.target.position.clone().sub(sun.position).setY(0).normalize();
           const screenRight = new THREE.Vector3().crossVectors(cast, new THREE.Vector3(0, 1, 0));
@@ -303,6 +312,23 @@ for (const browserType of [chromium, webkit]) {
             }
           }
           for (const entry of cars) entry.car.visible = true;
+          // A close, unobstructed contact mask must have no internal stripes or
+          // holes, including at darker thresholds where precision cracks show.
+          const sample = samples[60];
+          placeCar(car, sample, 0, 0);
+          shadows.beginFrame('countryside'); shadows.addCar(car, sample); shadows.endFrame();
+          const origin = batch.geometry.getAttribute('shadowOrigin');
+          for (let i = 0; i < batch.count; i++) if (origin.getW(i) < 0.5) origin.setZ(i, 0);
+          origin.needsUpdate = true;
+          for (const entry of cars) entry.car.visible = false;
+          camera.position.set(4, 4, 8);
+          camera.lookAt(0, 0.13, -2);
+          visibleShadowPixels();
+          let peak = 0;
+          for (let i = 0; i < pixels.length; i += 4) peak = Math.max(peak, without[i] - pixels[i]);
+          contactCoverage.push(...window.inspectShadowCoverage(pixels, without,
+            renderer.domElement.width, renderer.domElement.height, [peak * 0.4, peak * 0.7]));
+          for (const entry of cars) entry.car.visible = true;
         }
         shadows.beginFrame('countryside');
         for (let i = 0; i < cars.length; i++) {
@@ -330,7 +356,8 @@ for (const browserType of [chromium, webkit]) {
         const shadowGeometriesDisposed = renderer.info.memory.geometries === geometryCount - 1;
         for (const { visual } of cars) disposeCarVisual(visual);
         roadGeometry.dispose(); road.material.dispose(); renderer.dispose();
-        return { terrain, legacy, current, darkenedPixels, shadowGeometriesDisposed, shadowDrawCalls, minimumMovingShadowPixels, directionalFootprints, inspectionFrames };
+        return { terrain, legacy, current, darkenedPixels, shadowGeometriesDisposed, shadowDrawCalls, minimumMovingShadowPixels,
+          directionalFootprints, contactCoverage, inspectionFrames };
       }, { terrain, ...device });
       for (const frame of report.inspectionFrames) {
         await fs.writeFile(`${outputDir}/shadows-${browserType.name()}-${device.name}-${terrain}-${frame.name}.png`,
@@ -360,6 +387,10 @@ for (const browserType of [chromium, webkit]) {
           assert.equal(coverage.components, 1, 'Directional coverage stays a single connected shape at faint and darker levels');
           assert.ok(coverage.connectedFraction > 0.995, 'No separate visible shadow blobs');
         }
+      }
+      for (const coverage of report.contactCoverage) {
+        assert.ok(coverage.pixels > 80, 'The tight dark contact shadow remains visible');
+        assert.ok(coverage.interiorGapFraction < 0.001, 'The close contact shadow has no internal stripes or pinholes');
       }
       assert.equal(report.shadowGeometriesDisposed, true);
       assert.deepEqual(errors, [], 'No shader, WebGL or model errors');
