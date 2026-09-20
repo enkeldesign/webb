@@ -82,7 +82,6 @@ function makeGround(world) {
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.2;
   world.add(ground);
-
 }
 
 function makeRaceRoad(world, samples, trackWidth) {
