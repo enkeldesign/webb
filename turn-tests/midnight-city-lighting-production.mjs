@@ -94,6 +94,8 @@ assert.match(baseWorldSource, /const ROAD = 0x20242d;/,
   'MIDNIGHT CITY race asphalt must keep its established color');
 assert.match(baseWorldSource, /const GROUND = 0x080d16;/,
   'MIDNIGHT CITY off-road base ground must remain distinctly darker than the race asphalt');
+assert.doesNotMatch(baseWorldSource, /downtownGlow|CircleGeometry\(520, 64\)|color: 0x16213d/,
+  'MIDNIGHT CITY must not stack a second large colored surface above the canonical off-road ground');
 assert.match(sharedNightSkySource, /mountain-moon\.png/);
 assert.match(sharedNightSkySource, /'midnight-city': Object\.freeze/);
 assert.match(sharedNightSkySource, /horizon: 0x4a2866/);
