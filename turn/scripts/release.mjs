@@ -269,6 +269,12 @@ function synchronizeSettingsUiTargets(importMap, release) {
   }
 }
 
+function synchronizeNightSkyTargets(importMap, release) {
+  const imports = importMap.imports ||= {};
+  imports['/turn/tracks/shared-night-sky.js']
+    = `/turn/tracks/shared-night-sky.js?build=${release.cacheKey}`;
+}
+
 function synchronizeDriveByEarTrainingTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   const releaseBoundPaths = [
@@ -472,6 +478,7 @@ function renderSharedResourceImports(source, release) {
     synchronizeGraphicsRuntimeTarget(importMap, release);
     synchronizeLowGraphicsProducerTargets(importMap, release);
     synchronizeProjectedShadowTargets(importMap, release);
+    synchronizeNightSkyTargets(importMap, release);
     return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
   });
 }
@@ -509,6 +516,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeGraphicsRuntimeTarget(importMap, release);
   synchronizeLowGraphicsProducerTargets(importMap, release);
   synchronizeProjectedShadowTargets(importMap, release);
+  synchronizeNightSkyTargets(importMap, release);
   synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);
   // These presentation modules now use the release build instead of a new
   // hand-maintained revision. Advance every alias, including installed routes.

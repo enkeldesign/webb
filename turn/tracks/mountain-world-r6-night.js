@@ -1,103 +1,14 @@
 import * as THREE from 'three';
+import { installSharedNightSky } from '/turn/tracks/shared-night-sky.js';
 
 const REVISION = 'r6-night-treatment';
-const SKY_TEXTURE_URL = new URL('../assets/mountain/mountain-night-sky.jpg', import.meta.url).href;
-const MOON_TEXTURE_URL = new URL('../assets/mountain/mountain-moon.png', import.meta.url).href;
 const WARM_LIGHT = 0xffd27a;
 const STREET_POOL_LIGHT = 0xffb000;
 const WINDOW_LIGHT = 0xffc766;
 const MOON_BLUE = 0xaed3ff;
 const STREETLIGHT_PREFIX = 'Mountain Kenney Holiday lit streetlight r4';
 const HOUSE_PREFIX = 'Mountain Kenney Suburban house r5';
-const SKY_DISTANCE = 840;
-const SKY_IMAGE_ASPECT = 2;
-const MOON_DISTANCE = 810;
-const MOON_SIZE = 174;
 const WINDOW_SURFACE_OFFSET = 0.025;
-
-// Chosen from the established MOUNTAIN aerial showcase camera so the moon
-// lands at roughly 23% from the left and 19% from the top, matching the night
-// art-direction mockup. Keeping this as a world-space direction makes the moon
-// behave like a distant celestial object while the camera moves around the lap.
-const MOON_DIRECTION = new THREE.Vector3(-0.353323, -0.140080, 0.924954).normalize();
-
-function configureColorTexture(texture, { mipmaps = true } = {}) {
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.generateMipmaps = mipmaps;
-  texture.minFilter = mipmaps ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.needsUpdate = true;
-  return texture;
-}
-
-async function loadNightTexture(url, options) {
-  const texture = await new THREE.TextureLoader().loadAsync(url);
-  return configureColorTexture(texture, options);
-}
-
-function installStarSky(world, texture) {
-  // The generated asset is intentionally a tiny flat 2:1 star field rather
-  // than a large equirectangular panorama. Keep it crisp by using it as a
-  // distant camera-facing backdrop with cover sizing, instead of magnifying it
-  // around an entire 360-degree sphere.
-  texture.wrapS = THREE.ClampToEdgeWrapping;
-  texture.wrapT = THREE.ClampToEdgeWrapping;
-  texture.needsUpdate = true;
-
-  const sky = new THREE.Mesh(
-    new THREE.PlaneGeometry(1, 1),
-    new THREE.MeshBasicMaterial({
-      map: texture,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-      depthTest: true,
-      fog: false,
-      toneMapped: false
-    })
-  );
-  // Keep the established diagnostic name even though r6 now uses a flat
-  // camera-centred backdrop rather than stretching the tiny texture as a dome.
-  sky.name = 'Mountain star field skydome r6';
-  sky.frustumCulled = false;
-  sky.renderOrder = -100;
-  const forward = new THREE.Vector3();
-  sky.onBeforeRender = (_renderer, _scene, camera) => {
-    camera.getWorldDirection(forward);
-    sky.position.copy(camera.position).addScaledVector(forward, SKY_DISTANCE);
-    sky.quaternion.copy(camera.quaternion);
-
-    const visibleHeight = 2 * SKY_DISTANCE * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
-    const visibleWidth = visibleHeight * camera.aspect;
-    const coverHeight = Math.max(visibleHeight, visibleWidth / SKY_IMAGE_ASPECT) * 1.03;
-    sky.scale.set(coverHeight * SKY_IMAGE_ASPECT, coverHeight, 1);
-    sky.updateMatrixWorld(true);
-  };
-  world.add(sky);
-  return sky;
-}
-
-function installMoon(world, texture) {
-  const material = new THREE.SpriteMaterial({
-    map: texture,
-    color: 0xffffff,
-    transparent: true,
-    alphaTest: 0.025,
-    depthTest: true,
-    depthWrite: false,
-    fog: false,
-    toneMapped: false
-  });
-  const moon = new THREE.Sprite(material);
-  moon.name = 'Mountain full moon sprite r6';
-  moon.scale.set(MOON_SIZE, MOON_SIZE, 1);
-  moon.frustumCulled = false;
-  moon.onBeforeRender = (_renderer, _scene, camera) => {
-    moon.position.copy(camera.position).addScaledVector(MOON_DIRECTION, MOON_DISTANCE);
-    moon.updateMatrixWorld(true);
-  };
-  world.add(moon);
-  return moon;
-}
 
 function collectNamed(world, prefix) {
   const result = [];
@@ -395,20 +306,10 @@ function strengthenMoonlitWater(world) {
 export async function installMountainR6Night(world, samples, _trackWidth, terrainContext) {
   if (!world || !Array.isArray(samples) || !samples.length) return world;
 
-  const errors = [];
-  let starSky = null;
-  let moon = null;
-
-  const [skyResult, moonResult] = await Promise.allSettled([
-    loadNightTexture(SKY_TEXTURE_URL),
-    loadNightTexture(MOON_TEXTURE_URL, { mipmaps: false })
-  ]);
-
-  if (skyResult.status === 'fulfilled') starSky = installStarSky(world, skyResult.value);
-  else errors.push(`star field: ${String(skyResult.reason?.message || skyResult.reason)}`);
-
-  if (moonResult.status === 'fulfilled') moon = installMoon(world, moonResult.value);
-  else errors.push(`moon: ${String(moonResult.reason?.message || moonResult.reason)}`);
+  const skyRuntime = installSharedNightSky(world, { trackId: 'mountain' });
+  await skyRuntime?.ready;
+  const skyContract = world.userData.turnSharedNightSky;
+  const errors = skyRuntime?.errors ? [...skyRuntime.errors] : [];
 
   const streetlights = installStreetlightPoolsAndFill(world, terrainContext?.terrainHeightAt);
   const windows = installHouseWindowGlow(world, samples);
@@ -416,11 +317,12 @@ export async function installMountainR6Night(world, samples, _trackWidth, terrai
 
   world.userData.turnMountainR6Night = Object.freeze({
     revision: REVISION,
-    starSky: Boolean(starSky),
-    moon: Boolean(moon),
-    moonDirection: Object.freeze(MOON_DIRECTION.toArray()),
-    moonDistance: MOON_DISTANCE,
-    moonSize: MOON_SIZE,
+    starSky: Boolean(skyRuntime?.sky),
+    moon: Boolean(skyRuntime?.moon),
+    proceduralSharedSky: Boolean(skyContract?.procedural),
+    moonDirection: skyContract?.moonDirection || 'shared-southern-celestial-anchor',
+    moonDistance: skyContract?.moonDistance ?? null,
+    moonSize: skyContract?.moonApparentSize ?? null,
     streetLightPoolCount: streetlights.poolCount,
     streetLightPointLightCount: streetlights.pointLightCount,
     litHouseCount: windows.houseCount,
