@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import vm from 'node:vm';
+import * as THREE from '../postal/vendor/three.module.min.js';
+import { installAssetWheelRig } from '../turn/vehicle/wheel-animation-rig.js';
 
 const [releaseSource, index, labIndex, main, continuity] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
@@ -11,9 +14,9 @@ const [releaseSource, index, labIndex, main, continuity] = await Promise.all([
 
 const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
-assert.match(index, /render\/skid-continuity-r198\.js\?revision=r198-skid-continuity/,
+assert.match(index, new RegExp(`render/skid-continuity-r198\\.js\\?revision=r198-skid-continuity&build=${release.cacheKey}`),
   'Production TURN must load the fresh skid continuity renderer');
-assert.match(labIndex, /render\/skid-continuity-r198\.js\?revision=r198-skid-continuity/,
+assert.match(labIndex, new RegExp(`render/skid-continuity-r198\\.js\\?revision=r198-skid-continuity&build=${release.cacheKey}`),
   'TURN LAB must exercise the same skid continuity renderer as production');
 
 const declarations = section(main, 'const SKID_HISTORY_CAPACITY', '\nconst smokePool');
@@ -68,10 +71,92 @@ assert.match(continuity, /addEventListener\('turn:track-changed', clearSkids\)/,
   'Changing tracks must clear skid history immediately');
 assert.match(continuity, /event\.detail\?\.reason === 'race-reset'/,
   'Restarting a race must clear skid history immediately');
-assert.match(continuity, /skidLine\.onBeforeRender = updateSkids/,
-  'The corrected renderer must stay inside the existing render loop rather than adding another animation loop');
+assert.match(continuity, /runtime\.scene\.onBeforeRender = function skidFrame/,
+  'Skids must update before Three uploads geometry, using the existing render loop');
 assert.doesNotMatch(continuity, /requestAnimationFrame|setAnimationLoop|setInterval|setTimeout/,
   'The continuity fix must not add another timer or animation loop');
+
+// Execute the real renderer against the authored wheel rig. Fixed rear offsets
+// and a late line callback both fail the current-frame endpoint assertions.
+const events = new Map();
+const { installSkidContinuity } = vm.runInNewContext(
+  continuity.replace(/^import .*;$/m, '').replace('export function', 'function')
+    + '\n({ installSkidContinuity })',
+  { THREE, console, addEventListener: (type, callback) => events.set(type, callback) }
+);
+const scene = new THREE.Scene(), world = new THREE.Group(), car = new THREE.Group();
+scene.add(world); world.add(car);
+const legacy = new THREE.LineSegments(
+  new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(1080), 3)),
+  new THREE.LineBasicMaterial({ transparent: true, opacity: 0.52 })
+);
+legacy.frustumCulled = false; world.add(legacy);
+const state = { running: true, position: new THREE.Vector3(), speed: 70, driftAmount: 0.8, nearestTrackIndex: 0 };
+const sample = { tangent: new THREE.Vector3(0, 0.35, 1).normalize(), normal: new THREE.Vector3(-1, -0.2, 0) };
+let chainedFrames = 0;
+scene.onBeforeRender = () => { chainedFrames++; };
+const skids = installSkidContinuity({ scene, world, playerCar: car, state, samples: [sample] });
+assert.equal(installSkidContinuity(), skids, 'Installing twice must reuse the existing renderer');
+assert.equal(legacy.visible, false);
+const buffer = skids.line.geometry.attributes.position.array;
+const center = new THREE.Vector3();
+let frames = 0;
+function renderFrame() {
+  car.position.copy(state.position);
+  scene.updateMatrixWorld(true);
+  scene.onBeforeRender(null, scene, null, null);
+  frames++;
+  assert.equal(skids.line.geometry.attributes.position.array, buffer, 'Motion must reuse the fixed GPU buffer');
+}
+
+for (const [width, axle, scale, reversed] of [[2.5, 3.2, 0.8, false], [4, 2.6, 1.2, true], [2, 4.5, 1.1, false]]) {
+  car.clear();
+  const model = new THREE.Group(), rearWheels = [];
+  model.scale.setScalar(scale);
+  car.add(model);
+  for (const side of [-1, 1]) for (const front of [true, false]) {
+    const wheel = new THREE.Group();
+    const role = front !== reversed ? 'front' : 'back';
+    wheel.name = `wheel-${role}-${side < 0 ? 'left' : 'right'}`;
+    wheel.position.set(side * width / 2, 0.6, (front ? -1 : 1) * axle / 2);
+    model.add(wheel);
+    if (!front) rearWheels.push(wheel);
+  }
+  Object.assign(car.userData, installAssetWheelRig({ model, frontRole: reversed ? 'back' : 'front', createGroup: () => new THREE.Group() }));
+  skids.clear();
+  for (let frame = 0; frame < 100; frame++) {
+    state.position.set(frame * 0.4, 0, frame * 4);
+    state.position.y = state.position.z * 0.35 + state.position.x * 0.2 + 0.18;
+    car.rotation.set(0.2, Math.PI + frame * 0.03, 0.08);
+    renderFrame();
+    if (frame === 0) continue;
+    assert.ok(skids.line.geometry.drawRange.count >= 4 && skids.line.geometry.drawRange.count <= 120);
+    for (let wheel = 0; wheel < 2; wheel++) {
+      center.setFromMatrixPosition(rearWheels[wheel].matrixWorld);
+      const offset = wheel * 6;
+      assert.ok(Math.abs(buffer[offset] - center.x) < 0.0001 && Math.abs(buffer[offset + 2] - center.z) < 0.0001,
+        'This frame must start each skid at the actual rear wheel, including model size, drift heading and body roll');
+      const clearance = (buffer[offset + 1] - buffer[offset + 2] * 0.35 - buffer[offset] * 0.2 - 0.18) / Math.hypot(1, 0.35, 0.2);
+      assert.ok(Math.abs(clearance - 0.01) < 0.0001, 'Wheel marks follow slope and banking at a tiny surface offset');
+    }
+  }
+}
+assert.equal(chainedFrames, frames, 'The existing scene callback still runs exactly once per render');
+const priorStroke = buffer.slice(0, 12);
+state.driftAmount = 0;
+renderFrame();
+state.driftAmount = 0.8;
+state.position.z += 8;
+renderFrame();
+assert.deepEqual(buffer.slice(0, 12), priorStroke, 'Resuming a drift must preserve old strokes without bridging across the grip interval');
+state.position.z += 100;
+renderFrame();
+assert.equal(skids.line.geometry.drawRange.count, 0, 'A teleport starts a new stroke instead of joining distant wheel positions');
+events.get('turn:track-changed')();
+assert.equal(skids.line.geometry.drawRange.count, 0);
+state.running = false;
+renderFrame();
+assert.equal(skids.line.geometry.drawRange.count, 0, 'Returning Home clears visible tracks');
 
 const simulation = createRingSimulation(3);
 simulation.push([1, 2, 3, 4, 5, 6]);

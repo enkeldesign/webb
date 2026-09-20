@@ -469,6 +469,19 @@ const SOFT_SHADOW_HISTORY = Object.freeze({
   ])
 });
 
+const WHEEL_CONTACT_HISTORY = Object.freeze({
+  period: '20 September',
+  title: 'Lighter shadows and tire marks that meet the wheels',
+  paragraphs: Object.freeze([
+    'TURN 1.21.4 lightens the tight shadow beneath each car. Skid marks now start at the actual rear tires for each vehicle and update in the same rendered frame, keeping the tracks attached while drifting at speed.'
+  ]),
+  milestones: Object.freeze([
+    'Lighter contact shadows with the soft directional shape preserved',
+    'Skid marks follow each car’s rear axle and the current road slope',
+    'TURN 1.21.4 · 2026.09.20-r259'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -544,7 +557,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   KEYBOARD_OWNERSHIP_HISTORY,
   PROJECTED_SHADOW_HISTORY,
   DIRECTIONAL_SHADOW_HISTORY,
-  SOFT_SHADOW_HISTORY
+  SOFT_SHADOW_HISTORY,
+  WHEEL_CONTACT_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -645,11 +659,17 @@ Object.freeze({
     Object.freeze(['1.21.2 r257', 'Tucks directional shadows beneath the chassis on the sun-facing side, with a narrow origin that widens away from the light.']),
     Object.freeze(['1.21.3 r258', 'Softens the directional car shadow into one continuous rounded shape, preserving its length and tight attachment beneath the chassis.'])
   ])
+}),
+Object.freeze({
+  date: '20 September',
+  entries: Object.freeze([
+    Object.freeze(['1.21.4 r259', 'Lightens the shadow beneath each car and attaches skid marks to its actual rear wheels without a frame of delay.'])
+  ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.3',
-  build: '2026.09.19-r258',
-  note: 'TURN 1.21.3 gives directional car shadows a continuous rounded silhouette and a softer outward fade, retaining their length and tight contact beneath each car.'
+  version: '1.21.4',
+  build: '2026.09.20-r259',
+  note: 'TURN 1.21.4 lightens contact shadows and keeps skid marks attached to each car’s rear tires while drifting.'
 });
