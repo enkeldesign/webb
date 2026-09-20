@@ -90,6 +90,18 @@ assert.match(easterEggSource, /installNightPlayerSpotlight\(options\.runtime\?\.
 assert.match(easterEggSource, /installSharedNightSky\(world, \{ trackId: 'midnight-city' \}\)/);
 assert.match(easterEggSource, /world\.ready = Promise\.resolve\(inheritedReady\)/);
 assert.match(easterEggSource, /nightSkyVariation: 'restrained-purple-horizon-glow'/);
+assert.match(easterEggSource, /installLowCityInfill\(world, options\.samples \|\| \[\], options\.trackWidth \|\| 27\)/);
+assert.match(easterEggSource, /lowCityTechnique: 'three-instanced-draw-call-low-rise-infill-plus-three-pinned-Kenney-landmarks'/);
+assert.match(easterEggSource, /Midnight City low-city building bodies/);
+assert.match(easterEggSource, /Midnight City low-city shopfront and roofline glow/);
+assert.match(easterEggSource, /Midnight City low-city rooftop units/);
+assert.match(easterEggSource, /building-small-a\.glb/);
+assert.match(easterEggSource, /building-small-c\.glb/);
+assert.match(easterEggSource, /building-garage\.glb/);
+assert.match(easterEggSource, /lowCityAddsDynamicLights: false/);
+assert.match(easterEggSource, /isLowCityPlacementClear/);
+assert.doesNotMatch(easterEggSource, /function installLowCityInfill[\s\S]*?new THREE\.(?:PointLight|SpotLight|DirectionalLight|HemisphereLight)/,
+  'MIDNIGHT CITY low-city infill must add no real lights');
 assert.match(baseWorldSource, /const ROAD = 0x20242d;/,
   'MIDNIGHT CITY race asphalt must keep its established color');
 assert.match(baseWorldSource, /const GROUND = 0x080d16;/,
