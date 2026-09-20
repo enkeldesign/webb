@@ -18,17 +18,19 @@ let moonTexturePromise = null;
 const SKY_STYLES = Object.freeze({
   mountain: Object.freeze({
     zenith: 0x010614,
-    horizon: 0x1e4a78,
-    glow: 0x4c88bd,
-    glowStrength: 0.12,
-    starStrength: 0.92
+    horizon: 0x2f6598,
+    glow: 0x69a8d8,
+    glowStrength: 0.14,
+    horizonReach: 0.72,
+    starStrength: 0.88
   }),
   'midnight-city': Object.freeze({
     zenith: 0x030619,
-    horizon: 0x35164f,
-    glow: 0x9d4bb8,
-    glowStrength: 0.14,
-    starStrength: 0.52
+    horizon: 0x4a2866,
+    glow: 0xb65dcc,
+    glowStrength: 0.17,
+    horizonReach: 0.80,
+    starStrength: 0.48
   })
 });
 
@@ -49,6 +51,7 @@ const FRAGMENT_SHADER = `
   uniform vec3 uHorizonColor;
   uniform vec3 uGlowColor;
   uniform float uGlowStrength;
+  uniform float uHorizonReach;
   uniform float uStarStrength;
 
   float hash21(vec2 point) {
@@ -58,16 +61,16 @@ const FRAGMENT_SHADER = `
   }
 
   float starField(vec2 sampleUv) {
-    vec2 cellUv = sampleUv * vec2(88.0, 44.0);
+    vec2 cellUv = sampleUv * vec2(72.0, 36.0);
     vec2 cell = floor(cellUv);
     vec2 local = fract(cellUv) - 0.5;
     float seed = hash21(cell);
     vec2 jitter = fract(vec2(seed * 13.37, seed * 47.11)) - 0.5;
-    float distanceToStar = length(local - jitter * 0.36);
-    float radius = mix(0.030, 0.072, fract(seed * 91.7));
-    float core = 1.0 - smoothstep(radius * 0.35, radius, distanceToStar);
-    float present = step(0.972, seed);
-    float brightness = mix(0.34, 1.0, fract(seed * 37.3));
+    float distanceToStar = length(local - jitter * 0.34);
+    float radius = mix(0.045, 0.090, fract(seed * 91.7));
+    float core = 1.0 - smoothstep(radius * 0.20, radius * 1.55, distanceToStar);
+    float present = step(0.975, seed);
+    float brightness = mix(0.28, 0.88, fract(seed * 37.3));
     return core * present * brightness;
   }
 
@@ -75,9 +78,9 @@ const FRAGMENT_SHADER = `
     vec2 sampleUv = vUv * uSampleScale + uSampleOffset;
     vec2 visualUv = (vUv - 0.5) / max(uVisiblePlaneScale, vec2(0.0001)) + 0.5;
     float visualY = clamp(visualUv.y, 0.0, 1.0);
-    float heightBlend = smoothstep(0.08, 0.92, visualY);
+    float heightBlend = smoothstep(0.16, uHorizonReach, visualY);
     vec3 color = mix(uHorizonColor, uZenithColor, heightBlend);
-    float horizonGlow = pow(max(0.0, 1.0 - visualY), 1.55) * uGlowStrength;
+    float horizonGlow = pow(max(0.0, 1.0 - heightBlend), 1.15) * uGlowStrength;
     color += uGlowColor * horizonGlow;
     color += vec3(starField(sampleUv) * uStarStrength);
     gl_FragColor = vec4(color, 1.0);
@@ -105,6 +108,7 @@ function makeSkyMaterial(style) {
       uHorizonColor: { value: new THREE.Color(style.horizon) },
       uGlowColor: { value: new THREE.Color(style.glow) },
       uGlowStrength: { value: style.glowStrength },
+      uHorizonReach: { value: style.horizonReach },
       uStarStrength: { value: style.starStrength }
     },
     vertexShader: VERTEX_SHADER,
@@ -282,7 +286,9 @@ export function installSharedNightSky(world, { trackId = 'mountain' } = {}) {
       aspectPolicy: 'wide-phone-reference-normalized-with-roll-safe-diagonal-coverage',
       cameraCuts: 'direct-lock-with-no-easing',
       reducedMotion: 'same-direct-world-lock-with-no-deliberate-drag-or-parallax',
-      cityVariation: trackId === 'midnight-city' ? 'lighter-violet-horizon-gradient' : 'lighter-blue-horizon-gradient',
+      cityVariation: trackId === 'midnight-city' ? 'visible-violet-driving-sky-gradient' : 'visible-blue-driving-sky-gradient',
+      horizonReach: style.horizonReach,
+      starTreatment: 'larger-softer-sparser-static-stars',
       starStrength: style.starStrength,
       dynamicLightsAdded: 0,
       independentAnimationLoop: false,

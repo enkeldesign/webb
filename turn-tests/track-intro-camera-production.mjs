@@ -33,6 +33,10 @@ assert.match(sharedSkySource, /Math\.hypot\(visibleWidth, visibleHeight\) \* SKY
   'The world-locked celestial plane must cover the full viewport diagonal under camera roll');
 assert.match(sharedSkySource, /vec2 visualUv = \(vUv - 0\.5\) \/ max\(uVisiblePlaneScale, vec2\(0\.0001\)\) \+ 0\.5/,
   'Gradient art direction must be normalized to the visible sky rather than diluted across overscan');
+assert.match(sharedSkySource, /heightBlend = smoothstep\(0\.16, uHorizonReach, visualY\)/,
+  'The lighter horizon color must extend into the normal driving sky rather than stay below the visible horizon');
+assert.match(sharedSkySource, /starTreatment: 'larger-softer-sparser-static-stars'/,
+  'Procedural stars should favor stable soft footprints over tiny hard points');
 assert.match(sharedSkySource, /const heading = Math\.atan2\(forward\.x, forward\.z\)/);
 assert.match(sharedSkySource, /const yawU = -heading \/ TAU \* SKY_WORLD_CYCLES/,
   'The procedural sky must lock directly to heading without an easing state');

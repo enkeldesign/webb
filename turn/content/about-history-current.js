@@ -593,6 +593,21 @@ const STABLE_NIGHT_SKY_HISTORY = Object.freeze({
   ])
 });
 
+const NIGHT_SKY_FINISH_HISTORY = Object.freeze({
+  period: '20 September',
+  title: 'Night gradients move into the driving sky',
+  paragraphs: Object.freeze([
+    'TURN 1.21.13 lifts the shared night gradients into the part of the sky actually visible while racing. MOUNTAIN now grades clearly toward lighter blue above the terrain, and MIDNIGHT CITY carries a visible lighter-violet glow above the skyline instead of hiding most of it below the horizon.',
+    'The procedural stars are also made slightly larger, softer and sparser. They remain static in the same world-locked shader, but their less binary footprint reduces the subpixel flicker seen on physical devices without adding another render pass or animation loop.'
+  ]),
+  milestones: Object.freeze([
+    'Visible blue and violet gradients during normal driving',
+    'Larger, softer and sparser procedural stars',
+    'No extra draw call, light or animation loop',
+    'TURN 1.21.13 · 2026.09.20-r268'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -677,7 +692,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   LOW_GRAPHICS_LOT_OUTLINES_HISTORY,
   SETTINGS_FINAL_COPY_HISTORY,
   SHARED_NIGHT_SKY_HISTORY,
-  STABLE_NIGHT_SKY_HISTORY
+  STABLE_NIGHT_SKY_HISTORY,
+  NIGHT_SKY_FINISH_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -790,13 +806,14 @@ Object.freeze({
     Object.freeze(['1.21.9 r264', 'Keeps The Lot’s black car contours in LOW GRAPHICS while racing remains contour-free in both graphics modes.']),
     Object.freeze(['1.21.10 r265', 'Finalizes Settings copy and groups Player marker, Color cues and DRIFT / FLOW visibility controls into one Interface section.']),
     Object.freeze(['1.21.11 r266', 'Replaces MOUNTAIN’s raster star field with one shared procedural night sky, reused by MIDNIGHT CITY with a restrained purple horizon glow and the same canonical moon.']),
-    Object.freeze(['1.21.12 r267', 'Locks the procedural night sky and moon directly to the camera/world relationship, keeps the moon circular, and strengthens MOUNTAIN’s blue and MIDNIGHT CITY’s violet horizon gradients.'])
+    Object.freeze(['1.21.12 r267', 'Locks the procedural night sky and moon directly to the camera/world relationship, keeps the moon circular, and strengthens MOUNTAIN’s blue and MIDNIGHT CITY’s violet horizon gradients.']),
+    Object.freeze(['1.21.13 r268', 'Raises the night gradients into the normal driving view and softens the procedural star treatment to reduce subpixel flicker.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.12',
-  build: '2026.09.20-r267',
-  note: 'TURN 1.21.12 stabilizes the shared night sky and moon and strengthens both horizon gradients.'
+  version: '1.21.13',
+  build: '2026.09.20-r268',
+  note: 'TURN 1.21.13 raises both night gradients into the driving view and softens procedural star flicker.'
 });
