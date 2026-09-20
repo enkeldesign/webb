@@ -480,13 +480,15 @@ for (const browserType of [chromium, webkit]) {
   const skidReport = await livePage.evaluate(async () => {
     const THREE = await import('three');
     const { createCarVisual, disposeCarVisual } = await import('/turn/vehicle/car-models.js');
+    const { CAR_CATALOG } = await import('/turn/vehicle/catalog.js');
     const runtime = globalThis.__turnRuntime;
     const { scene, renderer, camera, playerCar: car, state, samples, carShadows: shadows } = runtime;
     const skids = globalThis.__turnSkidContinuity;
     if (!skids) throw new Error('The production skid renderer must be installed');
     const gl = renderer.getContext(), uploaded = new Float32Array(12), wheel = new THREE.Vector3();
     const sample = samples[160];
-    let gpuError = 0, wheelGap = 0, uploads = 0;
+    let gpuError = 0, wheelGap = 0, wheelShift = 0, uploads = 0;
+    let rearCentres = [];
     const previousAfterRender = skids.line.onAfterRender;
     skids.line.onAfterRender = () => {
       if (skids.line.geometry.drawRange.count < 4) return;
@@ -501,26 +503,44 @@ for (const browserType of [chromium, webkit]) {
       const cpu = skids.line.geometry.attributes.position.array;
       for (let i = 0; i < uploaded.length; i++) gpuError = Math.max(gpuError, Math.abs(uploaded[i] - cpu[i]));
       for (const offset of [0, 6]) {
-        let gap = Infinity;
-        for (const spinner of car.userData.wheelSpinners) {
-          if (spinner.userData.turnWheelRole !== 'back') continue;
-          wheel.setFromMatrixPosition(spinner.matrixWorld);
+        let gap = Infinity, originGap = Infinity;
+        for (const { node, centre, spinner } of rearCentres) {
+          wheel.copy(centre).applyMatrix4(node.matrixWorld);
           gap = Math.min(gap, Math.hypot(uploaded[offset] - wheel.x, uploaded[offset + 2] - wheel.z));
+          wheel.setFromMatrixPosition(spinner.matrixWorld);
+          originGap = Math.min(originGap, Math.hypot(uploaded[offset] - wheel.x, uploaded[offset + 2] - wheel.z));
         }
         wheelGap = Math.max(wheelGap, gap);
+        wheelShift = Math.max(wheelShift, originGap);
       }
       uploads++;
     };
     for (const child of car.children) child.visible = false;
     state.running = true; state.driftAmount = 0.8; state.speed = 70; state.nearestTrackIndex = 160;
     const results = [];
-    for (const [carId, offRoad] of [['sedan', false], ['monster-truck', false], ['monster-truck', true], ['tractor', false]]) {
+    for (const [carId, offRoad] of [...CAR_CATALOG.map(({ id }) => [id, false]), ['monster-truck', true]]) {
       const visual = await createCarVisual({ carId, color: '#d9ae38', targetLength: 5.5, outline: true });
       shadows.setCarSize(car, visual);
       car.add(visual);
       car.visible = true;
+      rearCentres = visual.userData.wheelSpinners.filter((spinner) => {
+        for (let parent = spinner.parent; parent && parent !== visual; parent = parent.parent) {
+          if (visual.userData.frontWheelPivots.includes(parent)) return false;
+        }
+        return true;
+      }).map((spinner) => {
+        if (carId === 'monster-truck' || carId === 'supercar') {
+          return { node: spinner, centre: new THREE.Vector3(), spinner };
+        }
+        // Independently measure the authored wheel mesh, not its mount or the
+        // renderer's cached offset. Contour children are deliberately excluded.
+        const node = spinner.children[0];
+        node.geometry.computeBoundingBox();
+        return { node, centre: node.geometry.boundingBox.getCenter(new THREE.Vector3()), spinner };
+      });
+      if (rearCentres.length !== 2) throw new Error(`${carId} must expose both rear tyres`);
       skids.clear();
-      gpuError = 0; wheelGap = 0; uploads = 0;
+      gpuError = 0; wheelGap = 0; wheelShift = 0; uploads = 0;
       for (let frame = 0; frame < 8; frame++) {
         car.position.copy(sample.point).addScaledVector(sample.normal, offRoad ? runtime.trackWidth * 0.68 : 3)
           .addScaledVector(sample.tangent, frame * 4);
@@ -535,7 +555,7 @@ for (const browserType of [chromium, webkit]) {
         shadows.beginFrame('countryside'); shadows.addCar(car, sample); shadows.endFrame();
         renderer.render(scene, camera);
       }
-      results.push({ carId, offRoad, gpuError, wheelGap, uploads, image: renderer.domElement.toDataURL() });
+      results.push({ carId, offRoad, gpuError, wheelGap, wheelShift, uploads, image: renderer.domElement.toDataURL() });
       disposeCarVisual(visual);
     }
     skids.line.onAfterRender = previousAfterRender;
@@ -550,7 +570,12 @@ for (const browserType of [chromium, webkit]) {
     delete result.image;
     assert.equal(result.uploads, 7, 'Every moving frame after the first produces a connected skid');
     assert.equal(result.gpuError, 0, 'The GPU uses the current frame wheel positions, without a one-frame delay');
-    assert.ok(result.wheelGap < 0.001, 'Rendered skid endpoints touch the actual rear wheels for each car size');
+    assert.ok(result.wheelGap < 0.001, `${result.carId}: rendered skids meet the rear tyre centres`);
+    if (['monster-truck', 'supercar', 'vintage-racer'].includes(result.carId)) {
+      assert.ok(result.wheelShift < 0.001, `${result.carId}: already centred tracks keep their spacing`);
+    } else {
+      assert.ok(result.wheelShift > 0.1, `${result.carId}: tracks move out from the inner wheel origins`);
+    }
   }
   await fs.writeFile(`${outputDir}/skids-${browserType.name()}.json`, JSON.stringify(skidReport, null, 2));
   console.log(JSON.stringify({ browser: browserType.name(), skids: skidReport }));

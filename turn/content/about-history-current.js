@@ -482,6 +482,18 @@ const WHEEL_CONTACT_HISTORY = Object.freeze({
   ])
 });
 
+const TYRE_CENTRE_HISTORY = Object.freeze({
+  period: '20 September',
+  title: 'Tire marks align with the wheel centres',
+  paragraphs: Object.freeze([
+    'TURN 1.21.5 moves skid marks from the inner wheel origins to the centres of the rear tires. Spacing follows each car’s wheel geometry, while Monster Truck and Supercar retain their existing alignment.'
+  ]),
+  milestones: Object.freeze([
+    'Model-specific skid spacing with stable wheel attachment while drifting',
+    'TURN 1.21.5 · 2026.09.20-r260'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -558,7 +570,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   PROJECTED_SHADOW_HISTORY,
   DIRECTIONAL_SHADOW_HISTORY,
   SOFT_SHADOW_HISTORY,
-  WHEEL_CONTACT_HISTORY
+  WHEEL_CONTACT_HISTORY,
+  TYRE_CENTRE_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -663,13 +676,14 @@ Object.freeze({
 Object.freeze({
   date: '20 September',
   entries: Object.freeze([
-    Object.freeze(['1.21.4 r259', 'Lightens the shadow beneath each car and attaches skid marks to its actual rear wheels without a frame of delay.'])
+    Object.freeze(['1.21.4 r259', 'Lightens the shadow beneath each car and attaches skid marks to its actual rear wheels without a frame of delay.']),
+    Object.freeze(['1.21.5 r260', 'Aligns skid marks with the centres of the rear tires, preserving Monster Truck and Supercar spacing.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.4',
-  build: '2026.09.20-r259',
-  note: 'TURN 1.21.4 lightens contact shadows and keeps skid marks attached to each car’s rear tires while drifting.'
+  version: '1.21.5',
+  build: '2026.09.20-r260',
+  note: 'TURN 1.21.5 aligns skid marks with the centres of the rear tires while keeping Monster Truck and Supercar spacing unchanged.'
 });
