@@ -213,8 +213,8 @@ assert.match(sharedNightSky, /single-pass-gradient-and-static-hash-stars/);
 assert.match(sharedNightSky, /oneBackgroundDraw: true/);
 assert.match(sharedNightSky, /horizon: 0x2f6598/);
 assert.match(sharedNightSky, /glow: 0x69a8d8/);
-assert.match(sharedNightSky, /horizonReach: 0\.46/,
-  'MOUNTAIN blue must extend above the projected world horizon during normal driving');
+assert.match(sharedNightSky, /horizonReach: 0\.23/,
+  'MOUNTAIN blue should stay as a low horizon band so most of the driving sky remains dark');
 assert.match(sharedNightSky, /starTreatment: 'larger-softer-sparser-static-stars'/);
 assert.match(sharedNightSky, /uWorldHorizonY/,
   'MOUNTAIN gradient must follow the projected world horizon when the race camera pitches down');

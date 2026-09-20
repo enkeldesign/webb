@@ -623,6 +623,20 @@ const WORLD_HORIZON_NIGHT_SKY_HISTORY = Object.freeze({
   ])
 });
 
+const LOWER_NIGHT_GRADIENT_HISTORY = Object.freeze({
+  period: '20 September',
+  title: 'Night color settles back onto the horizon',
+  paragraphs: Object.freeze([
+    'TURN 1.21.15 keeps the world-horizon anchoring from the previous release but halves the vertical reach of both night gradients. MOUNTAIN now keeps its lighter blue close to the horizon, while MIDNIGHT CITY keeps its violet glow low behind the skyline.',
+    'The goal is a darker night overall: the gradient remains clearly visible as atmosphere near the horizon, while most of the sky returns to the deep zenith colors. Moon, stars, camera lock and rendering cost are unchanged.'
+  ]),
+  milestones: Object.freeze([
+    'MOUNTAIN gradient reach: 0.23 above the projected horizon',
+    'MIDNIGHT CITY gradient reach: 0.26 above the projected horizon',
+    'TURN 1.21.15 · 2026.09.20-r270'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -709,7 +723,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   SHARED_NIGHT_SKY_HISTORY,
   STABLE_NIGHT_SKY_HISTORY,
   NIGHT_SKY_FINISH_HISTORY,
-  WORLD_HORIZON_NIGHT_SKY_HISTORY
+  WORLD_HORIZON_NIGHT_SKY_HISTORY,
+  LOWER_NIGHT_GRADIENT_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -824,13 +839,14 @@ Object.freeze({
     Object.freeze(['1.21.11 r266', 'Replaces MOUNTAIN’s raster star field with one shared procedural night sky, reused by MIDNIGHT CITY with a restrained purple horizon glow and the same canonical moon.']),
     Object.freeze(['1.21.12 r267', 'Locks the procedural night sky and moon directly to the camera/world relationship, keeps the moon circular, and strengthens MOUNTAIN’s blue and MIDNIGHT CITY’s violet horizon gradients.']),
     Object.freeze(['1.21.13 r268', 'Raises the night gradients into the normal driving view and softens the procedural star treatment to reduce subpixel flicker.']),
-    Object.freeze(['1.21.14 r269', 'Anchors MOUNTAIN’s blue and MIDNIGHT CITY’s violet gradients to the projected world horizon so pitched race cameras no longer hide them below terrain or skyline.'])
+    Object.freeze(['1.21.14 r269', 'Anchors MOUNTAIN’s blue and MIDNIGHT CITY’s violet gradients to the projected world horizon so pitched race cameras no longer hide them below terrain or skyline.']),
+    Object.freeze(['1.21.15 r270', 'Halves both world-horizon gradient reaches so the blue/violet atmosphere stays low and most of the night sky remains dark.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.14',
-  build: '2026.09.20-r269',
-  note: 'TURN 1.21.14 anchors both night gradients to the projected world horizon for pitched race cameras.'
+  version: '1.21.15',
+  build: '2026.09.20-r270',
+  note: 'TURN 1.21.15 lowers both world-horizon gradients so most of the night sky stays dark.'
 });

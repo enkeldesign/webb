@@ -21,7 +21,7 @@ const SKY_STYLES = Object.freeze({
     horizon: 0x2f6598,
     glow: 0x69a8d8,
     glowStrength: 0.14,
-    horizonReach: 0.46,
+    horizonReach: 0.23,
     starStrength: 0.88
   }),
   'midnight-city': Object.freeze({
@@ -29,7 +29,7 @@ const SKY_STYLES = Object.freeze({
     horizon: 0x4a2866,
     glow: 0xb65dcc,
     glowStrength: 0.17,
-    horizonReach: 0.52,
+    horizonReach: 0.26,
     starStrength: 0.48
   })
 });
