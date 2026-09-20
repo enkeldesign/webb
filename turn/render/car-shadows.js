@@ -186,10 +186,10 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
           || Math.min(a.x, b.x, c.x, nextRightX) > center.x + reach
           || Math.max(a.z, b.z, c.z, nextRightZ) < center.z - reach
           || Math.min(a.z, b.z, c.z, nextRightZ) > center.z + reach) continue;
-        triangle(layer === 0 ? 0.58 : 0.18, halfWidth, halfLength, rootWidth);
+        triangle(layer === 0 ? 0.44 : 0.18, halfWidth, halfLength, rootWidth);
         a.copy(c);
         edge(c, next, -1);
-        triangle(layer === 0 ? 0.58 : 0.18, halfWidth, halfLength, rootWidth);
+        triangle(layer === 0 ? 0.44 : 0.18, halfWidth, halfLength, rootWidth);
       }
     }
   }

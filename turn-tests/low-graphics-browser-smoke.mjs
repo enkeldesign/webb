@@ -477,6 +477,83 @@ for (const browserType of [chromium, webkit]) {
   }
   await fs.writeFile(`${outputDir}/shadows-${browserType.name()}-production.json`, JSON.stringify(liveReport, null, 2));
   console.log(JSON.stringify({ browser: browserType.name(), production: liveReport }));
+  const skidReport = await livePage.evaluate(async () => {
+    const THREE = await import('three');
+    const { createCarVisual, disposeCarVisual } = await import('/turn/vehicle/car-models.js');
+    const runtime = globalThis.__turnRuntime;
+    const { scene, renderer, camera, playerCar: car, state, samples, carShadows: shadows } = runtime;
+    const skids = globalThis.__turnSkidContinuity;
+    if (!skids) throw new Error('The production skid renderer must be installed');
+    const gl = renderer.getContext(), uploaded = new Float32Array(12), wheel = new THREE.Vector3();
+    const sample = samples[160];
+    let gpuError = 0, wheelGap = 0, uploads = 0;
+    const previousAfterRender = skids.line.onAfterRender;
+    skids.line.onAfterRender = () => {
+      if (skids.line.geometry.drawRange.count < 4) return;
+      // Read the buffer actually consumed by this draw, not just its CPU array.
+      const program = gl.getParameter(gl.CURRENT_PROGRAM);
+      const location = gl.getAttribLocation(program, 'position');
+      const buffer = gl.getVertexAttrib(location, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING);
+      const previousBuffer = gl.getParameter(gl.ARRAY_BUFFER_BINDING);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.getBufferSubData(gl.ARRAY_BUFFER, 0, uploaded);
+      gl.bindBuffer(gl.ARRAY_BUFFER, previousBuffer);
+      const cpu = skids.line.geometry.attributes.position.array;
+      for (let i = 0; i < uploaded.length; i++) gpuError = Math.max(gpuError, Math.abs(uploaded[i] - cpu[i]));
+      for (const offset of [0, 6]) {
+        let gap = Infinity;
+        for (const spinner of car.userData.wheelSpinners) {
+          if (spinner.userData.turnWheelRole !== 'back') continue;
+          wheel.setFromMatrixPosition(spinner.matrixWorld);
+          gap = Math.min(gap, Math.hypot(uploaded[offset] - wheel.x, uploaded[offset + 2] - wheel.z));
+        }
+        wheelGap = Math.max(wheelGap, gap);
+      }
+      uploads++;
+    };
+    for (const child of car.children) child.visible = false;
+    state.running = true; state.driftAmount = 0.8; state.speed = 70; state.nearestTrackIndex = 160;
+    const results = [];
+    for (const [carId, offRoad] of [['sedan', false], ['monster-truck', false], ['monster-truck', true], ['tractor', false]]) {
+      const visual = await createCarVisual({ carId, color: '#d9ae38', targetLength: 5.5, outline: true });
+      shadows.setCarSize(car, visual);
+      car.add(visual);
+      car.visible = true;
+      skids.clear();
+      gpuError = 0; wheelGap = 0; uploads = 0;
+      for (let frame = 0; frame < 8; frame++) {
+        car.position.copy(sample.point).addScaledVector(sample.normal, offRoad ? runtime.trackWidth * 0.68 : 3)
+          .addScaledVector(sample.tangent, frame * 4);
+        car.position.y = sample.point.y + 0.18;
+        state.position.copy(car.position);
+        state.heading = Math.atan2(sample.tangent.x, sample.tangent.z) + 0.4;
+        car.rotation.set(0, state.heading + Math.PI, 0.04);
+        runtime.animateWheels(car, 0.5, 70, 1 / 20);
+        camera.position.copy(car.position).addScaledVector(sample.tangent, -14);
+        camera.position.y += 8;
+        camera.lookAt(car.position.x + sample.tangent.x * 5, car.position.y, car.position.z + sample.tangent.z * 5);
+        shadows.beginFrame('countryside'); shadows.addCar(car, sample); shadows.endFrame();
+        renderer.render(scene, camera);
+      }
+      results.push({ carId, offRoad, gpuError, wheelGap, uploads, image: renderer.domElement.toDataURL() });
+      disposeCarVisual(visual);
+    }
+    skids.line.onAfterRender = previousAfterRender;
+    state.running = false;
+    renderer.render(scene, camera);
+    if (skids.line.geometry.drawRange.count !== 0) throw new Error('Returning Home must clear skid geometry');
+    return results;
+  });
+  for (const result of skidReport) {
+    await fs.writeFile(`${outputDir}/skids-${browserType.name()}-${result.carId}-${result.offRoad ? 'grass' : 'road'}.png`,
+      Buffer.from(result.image.split(',')[1], 'base64'));
+    delete result.image;
+    assert.equal(result.uploads, 7, 'Every moving frame after the first produces a connected skid');
+    assert.equal(result.gpuError, 0, 'The GPU uses the current frame wheel positions, without a one-frame delay');
+    assert.ok(result.wheelGap < 0.001, 'Rendered skid endpoints touch the actual rear wheels for each car size');
+  }
+  await fs.writeFile(`${outputDir}/skids-${browserType.name()}.json`, JSON.stringify(skidReport, null, 2));
+  console.log(JSON.stringify({ browser: browserType.name(), skids: skidReport }));
   await liveContext.close();
   await browser.close();
 }

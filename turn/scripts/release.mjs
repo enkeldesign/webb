@@ -524,6 +524,10 @@ export function renderReleaseIndex(source, release) {
     // revision such as "-icon-20260730" after it.
     .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
     .replace(
+      /(src="\.\/render\/skid-continuity-r198\.js\?revision=r198-skid-continuity)(?:&build=\d{8}-r\d+)?"/,
+      `$1&build=${release.cacheKey}"`
+    )
+    .replace(
       /(src="\.\/tracks\/cliffside-inner-buildings-r202\.js\?revision=r202-kenney-suburban-village)(?:&build=\d{8}-r\d+)?"/,
       `$1&build=${release.cacheKey}"`
     )
@@ -575,6 +579,10 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
       `TURN LAB · production TURN ${release.version} r${revision}`
     )
     .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
+    .replace(
+      /(src="\.\/render\/skid-continuity-r198\.js\?revision=r198-skid-continuity)(?:&build=\d{8}-r\d+)?"/,
+      `$1&build=${release.cacheKey}"`
+    )
     .replace(
       /(src="\.\/tracks\/cliffside-inner-buildings-r202\.js\?revision=r202-kenney-suburban-village)(?:&build=\d{8}-r\d+)?"/,
       `$1&build=${release.cacheKey}"`

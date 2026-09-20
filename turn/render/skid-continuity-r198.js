@@ -14,7 +14,7 @@ let installed = false;
 
 export function installSkidContinuity(runtime = globalThis.__turnRuntime) {
   if (installed) return globalThis.__turnSkidContinuity || null;
-  if (!runtime?.world || !runtime?.state || !runtime?.getForward || !runtime?.getRight) return null;
+  if (!runtime?.world || !runtime?.scene || !runtime?.state || !runtime?.playerCar) return null;
 
   const legacySkidLine = findLegacySkidLine(runtime.world);
   if (!legacySkidLine) {
@@ -28,7 +28,7 @@ export function installSkidContinuity(runtime = globalThis.__turnRuntime) {
 
   const skidGeometry = new THREE.BufferGeometry();
   const skidPositions = new Float32Array(SKID_POSITION_CAPACITY * SKID_COMPONENT_COUNT);
-  skidGeometry.setAttribute('position', new THREE.BufferAttribute(skidPositions, SKID_COMPONENT_COUNT));
+  skidGeometry.setAttribute('position', new THREE.BufferAttribute(skidPositions, SKID_COMPONENT_COUNT).setUsage(THREE.DynamicDrawUsage));
   skidGeometry.setDrawRange(0, 0);
 
   const skidLine = new THREE.LineSegments(skidGeometry, legacySkidLine.material.clone());
@@ -47,10 +47,59 @@ export function installSkidContinuity(runtime = globalThis.__turnRuntime) {
   let lastPositionY = 0;
   let lastPositionZ = 0;
 
-  const skidLateral = new THREE.Vector3();
-  const skidRearCenter = new THREE.Vector3();
   const skidLeftWheel = new THREE.Vector3();
   const skidRightWheel = new THREE.Vector3();
+  const wheelLocal = new THREE.Vector3();
+  const surfaceUp = new THREE.Vector3();
+  const inverseCar = new THREE.Matrix4();
+  let cachedWheels = null, cachedSteering = null;
+  let rearLeft = null, rearRight = null;
+
+  function wheelContacts() {
+    const car = runtime.playerCar;
+    const wheels = car.userData.wheelSpinners;
+    const steering = car.userData.frontWheelPivots;
+    if (wheels !== cachedWheels || steering !== cachedSteering) {
+      cachedWheels = wheels;
+      cachedSteering = steering;
+      rearLeft = rearRight = null;
+      clearSkids();
+      // Resolve only when the installed visual changes. Mounts include the
+      // model's authored axle positions, orientation and normalized scale.
+      inverseCar.copy(car.matrixWorld).invert();
+      let leftZ = -Infinity, rightZ = -Infinity;
+      for (const wheel of wheels || []) {
+        let front = false;
+        for (let parent = wheel.parent; parent && parent !== car; parent = parent.parent) {
+          if (steering?.includes(parent)) { front = true; break; }
+        }
+        if (front) continue; // Also handles models with reversed front/back labels.
+        wheelLocal.setFromMatrixPosition(wheel.matrixWorld).applyMatrix4(inverseCar);
+        if (wheelLocal.x < 0 && wheelLocal.z > leftZ) { rearLeft = wheel; leftZ = wheelLocal.z; }
+        if (wheelLocal.x > 0 && wheelLocal.z > rightZ) { rearRight = wheel; rightZ = wheelLocal.z; }
+      }
+    }
+    if (!rearLeft || !rearRight) return false;
+    skidLeftWheel.setFromMatrixPosition(rearLeft.matrixWorld);
+    skidRightWheel.setFromMatrixPosition(rearRight.matrixWorld);
+    const { state, samples } = runtime;
+    const sample = samples?.[state.nearestTrackIndex];
+    surfaceUp.set(0, 1, 0);
+    if (sample?.tangent && sample?.normal) {
+      surfaceUp.crossVectors(sample.tangent, sample.normal).normalize();
+      if (surfaceUp.y < 0) surfaceUp.negate();
+    }
+    // Project wheel centres onto the existing vehicle contact plane. Body roll
+    // and spinning tires must not lift old marks away from the road.
+    placeOnSurface(skidLeftWheel, state.position);
+    placeOnSurface(skidRightWheel, state.position);
+    return true;
+  }
+
+  function placeOnSurface(point, contact) {
+    point.y = contact.y + (0.01 - surfaceUp.x * (point.x - contact.x)
+      - surfaceUp.z * (point.z - contact.z)) / Math.max(0.1, surfaceUp.y);
+  }
 
   function clearSkids() {
     skidHistoryStart = 0;
@@ -129,14 +178,7 @@ export function installSkidContinuity(runtime = globalThis.__turnRuntime) {
 
     clearIfCarJumped();
 
-    if (state.driftAmount > 0.34 && state.speed > 21) {
-      skidLateral.copy(runtime.getRight());
-      skidRearCenter.copy(state.position).addScaledVector(runtime.getForward(), -2.0);
-      skidLeftWheel.copy(skidRearCenter).addScaledVector(skidLateral, -1.25);
-      skidRightWheel.copy(skidRearCenter).addScaledVector(skidLateral, 1.25);
-      skidLeftWheel.y = state.position.y + 0.05;
-      skidRightWheel.y = state.position.y + 0.05;
-
+    if (state.driftAmount > 0.34 && state.speed > 21 && wheelContacts()) {
       const connectToPrevious = skidStrokeActive
         && latestSkidDistanceSquared(0, skidLeftWheel) <= SKID_MAX_CONTINUOUS_GAP_SQUARED
         && latestSkidDistanceSquared(1, skidRightWheel) <= SKID_MAX_CONTINUOUS_GAP_SQUARED;
@@ -162,7 +204,14 @@ export function installSkidContinuity(runtime = globalThis.__turnRuntime) {
     skidGeometry.setDrawRange(0, cursor);
   }
 
-  skidLine.onBeforeRender = updateSkids;
+  // Scene callbacks run after world matrices are current, but before Three
+  // uploads geometry. A line's onBeforeRender is too late: at speed its GPU
+  // buffer would still contain the previous frame's wheel positions.
+  const previousBeforeRender = runtime.scene.onBeforeRender;
+  runtime.scene.onBeforeRender = function skidFrame(renderer, scene, camera, target) {
+    previousBeforeRender?.call(this, renderer, scene, camera, target);
+    updateSkids();
+  };
   globalThis.addEventListener('turn:track-changed', clearSkids);
   globalThis.addEventListener('turn:ui-state-change', (event) => {
     if (event.detail?.reason === 'race-reset' || event.detail?.running === false) clearSkids();
