@@ -21,7 +21,7 @@ const {
   WATER_LIGHT,
   GUARDRAIL,
   EDGE_WHITE_WIDTH,
-  EDGE_BLACK_WIDTH,
+  ROAD_SHOULDER_CLEARANCE,
   LAKE,
   WATERFALL,
   HOLIDAY_ROOT,
@@ -29,16 +29,8 @@ const {
   NATURE_ROOT
 } = MOUNTAIN_R3;
 
-function prepareAsset(root) {
-  root.traverse((node) => {
-    if (!node?.isMesh) return;
-    node.userData.turnOutlined = true;
-  });
-  return root;
-}
-
 function clonePrepared(root) {
-  return prepareAsset(root.clone(true));
+  return root.clone(true);
 }
 
 function groundingDiagnostics(world) {
@@ -89,7 +81,7 @@ function makeSafeGuardrails(world, samples, trackWidth, terrainHeightAt) {
     if (progress < 0.355 || progress > 0.91) continue;
     const sample = samples[index];
     const valleySide = -mountainFacingSign(sample);
-    const offset = valleySide * (trackWidth / 2 + EDGE_WHITE_WIDTH + EDGE_BLACK_WIDTH + 2.45);
+    const offset = valleySide * (trackWidth / 2 + EDGE_WHITE_WIDTH + ROAD_SHOULDER_CLEARANCE + 2.45);
     const point = offsetPoint(sample, offset);
     if (nearestNonLocalTrackDistanceXZ(point, samples, index, 36) < trackWidth + 6) continue;
     point.y = terrainHeightAt(point.x, point.z) + 0.76;
@@ -178,7 +170,6 @@ function makeSnowForest(world, samples, trackWidth, terrainHeightAt) {
   [trunks, crowns, lowers, snowCaps].forEach((mesh) => {
     mesh.count = placements.length;
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.userData.turnOutlined = true;
     world.add(mesh);
   });
   crowns.name = 'Mountain terrain-grounded spruce crowns r3';
@@ -391,8 +382,8 @@ async function loadNatureCliffAccents(world) {
     loader.loadAsync(`${NATURE_ROOT}/cliff-waterfall-top-rock.glb`),
     loader.loadAsync(`${NATURE_ROOT}/cliff-waterfall-rock.glb`)
   ]);
-  const topTemplate = prepareAsset(top.scene);
-  const fallTemplate = prepareAsset(fall.scene);
+  const topTemplate = top.scene;
+  const fallTemplate = fall.scene;
   recolorNatureCliff(topTemplate);
   recolorNatureCliff(fallTemplate);
   const sites = [
@@ -485,18 +476,18 @@ async function loadVillageAndRoadsideAssets(
     loader.loadAsync(`${FANTASY_ROOT}/fence.glb`)
   ]);
   const templates = {
-    bench: prepareAsset(bench.scene), lantern: prepareAsset(lantern.scene),
-    sled: prepareAsset(sled.scene), snowPile: prepareAsset(snowPile.scene), snowFlat: prepareAsset(snowFlat.scene),
-    snowTree: prepareAsset(snowTree.scene), stallGreen: prepareAsset(stallGreen.scene), stallRed: prepareAsset(stallRed.scene),
-    cart: prepareAsset(cart.scene), fountain: prepareAsset(fountain.scene), fence: prepareAsset(fence.scene)
+    bench: bench.scene, lantern: lantern.scene,
+    sled: sled.scene, snowPile: snowPile.scene, snowFlat: snowFlat.scene,
+    snowTree: snowTree.scene, stallGreen: stallGreen.scene, stallRed: stallRed.scene,
+    cart: cart.scene, fountain: fountain.scene, fence: fence.scene
   };
   if (retiredCabinSources) {
     const [wall, doorway, windowLarge, roof] = retiredCabinSources;
     Object.assign(templates, {
-      wall: prepareAsset(wall.scene),
-      doorway: prepareAsset(doorway.scene),
-      window: prepareAsset(windowLarge.scene),
-      roof: prepareAsset(roof.scene)
+      wall: wall.scene,
+      doorway: doorway.scene,
+      window: windowLarge.scene,
+      roof: roof.scene
     });
   }
   world.userData.turnMountainRetiredR3CabinsSkipped = retiredCabinSources === null;

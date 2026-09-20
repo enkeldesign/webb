@@ -91,43 +91,26 @@ assert.doesNotMatch(worldSource, /if \(graphicsProfile\.lowGraphics\)/,
   'LOW GRAPHICS must not bypass the full Countryside cosmetic graph.');
 assert.match(worldSource, /world-beauty\.js/);
 assert.match(worldSource, /world-art-pass\.js/);
-assert.match(worldSource, /countryside-scenery-r177\.js/);
 assert.match(worldSource, /countryside-bella-r166\.js/);
 assert.match(worldSource, /track-identity\.js/);
 assert.match(worldSource, /section-intensity\.js/);
 
 
-const producerContracts = [
-  [mainSource, 'main outlinedMesh'],
-  [carModelsSource, 'car outlines'],
-  [landmarksSource, 'landmark outlines'],
-  [countrysideSource, 'Countryside authored outlines'],
-  [bellaSource, 'Bella primitive outlines'],
-  [airportWorldSource, 'Airport primitive outlines'],
-  [airportAircraftSource, 'Airport aircraft outlines'],
-  [airportEmergencySource, 'Airport emergency outlines'],
-  [cliffsideSource, 'Cliffside outlines'],
-  [startAreaSource, 'start-area contours'],
-  [worldAssetsSource, 'Countryside start flags']
-];
-for (const [source, label] of producerContracts) {
-  assert.match(source, /graphicsProfile\.outlines/,
-    `${label} must check the shared graphics profile before constructing contour meshes.`);
+assert.match(carModelsSource, /graphicsProfile\.outlines/,
+  'Preview car contours retain the existing graphics-profile policy');
+for (const source of [mainSource, landmarksSource, countrysideSource, bellaSource,
+  airportWorldSource, airportAircraftSource, airportEmergencySource, cliffsideSource,
+  startAreaSource, worldAssetsSource, artPassSource, worldSource]) {
+  assert.doesNotMatch(source, /graphicsProfile\.outlines|THREE\.BackSide/,
+    'Racing producers must not construct contour shells in either graphics mode');
 }
-assert.match(artPassSource, /if \(!graphicsProfile\.outlines\) return;/,
-  'The art pass contour helpers must return before contour construction in LOW GRAPHICS.');
-assert.match(artPassSource, /const OUTLINE_MATERIAL = graphicsProfile\.outlines/,
-  'The art pass must not allocate its outline material in LOW GRAPHICS.');
-assert.match(artPassSource, /bold surroundings art pass loaded without contour construction/,
-  'The full art pass remains installed while late contour sweeps are skipped.');
+assert.doesNotMatch(artPassSource, /applyWorldContours|contourObject|addRoadOuterContour|OUTLINE_MATERIAL/,
+  'Race-only contour materials, builders and delayed sweeps are removed');
 assert.doesNotMatch(runtimeSource, /turnOutline|TURN_INK|BackSide/,
-  'The shared runtime must not be responsible for post-hoc contour suppression.');
+  'The shared runtime must not hide or strip already constructed contours');
+assert.match(mainSource, /targetLength: 5\.5,\s*outline: false/,
+  'Player and rivals explicitly request race visuals without contours');
 
-
-assert.match(worldAssetsSource, /const blackOutlineMaterial = graphicsProfile\.outlines/,
-  'COUNTRYSIDE must not allocate the flag outline material in LOW GRAPHICS.');
-assert.match(worldAssetsSource, /function addOutline\(root, scale = 1\.025\) \{\n  if \(!graphicsProfile\.outlines\) return;/,
-  'COUNTRYSIDE flag outlines must return before mesh allocation.');
 assert.match(midnightBaseSource, /if \(graphicsProfile\.pointLights\) \{[\s\S]*new THREE\.PointLight\(WARM_LIGHT/,
   'MIDNIGHT CITY must not construct sparse real street lights in LOW GRAPHICS.');
 assert.match(midnightR2Source, /function strengthenStreetLights\(world\) \{\n  if \(!graphicsProfile\.pointLights\) return 0;/,
@@ -155,43 +138,6 @@ assert.deepEqual(aligned, { active: 0, disabled: streetLights.length },
   'Completed MIDNIGHT CITY street-light alignment must report zero active lights in LOW GRAPHICS.');
 assert.ok(streetLights.every((light) => light.visible === false && light.intensity === 0),
   'Completed MIDNIGHT CITY setup must leave every real street light disabled.');
-
-let flagOutlineAllocations = 0;
-class FlagOutlineMesh {
-  constructor(geometry, material) {
-    flagOutlineAllocations += 1;
-    this.geometry = geometry;
-    this.material = material;
-    this.scale = { setScalar() {} };
-  }
-}
-const addFlagOutlineLow = compileFunction(worldAssetsSource, 'addOutline', {
-  graphicsProfile: lowGraphicsProfile,
-  THREE: { Mesh: FlagOutlineMesh },
-  blackOutlineMaterial: {}
-});
-const flagMesh = { isMesh: true, geometry: {}, add() { throw new Error('LOW GRAPHICS must not attach a flag outline.'); } };
-addFlagOutlineLow({ traverse(callback) { callback(flagMesh); } });
-assert.equal(flagOutlineAllocations, 0,
-  'LOW GRAPHICS must not allocate a COUNTRYSIDE flag outline mesh.');
-
-let normalOutlineAllocations = 0;
-class NormalFlagOutlineMesh {
-  constructor(geometry, material) {
-    normalOutlineAllocations += 1;
-    this.geometry = geometry;
-    this.material = material;
-    this.scale = { setScalar() {} };
-  }
-}
-const addFlagOutlineNormal = compileFunction(worldAssetsSource, 'addOutline', {
-  graphicsProfile: { outlines: true },
-  THREE: { Mesh: NormalFlagOutlineMesh },
-  blackOutlineMaterial: {}
-});
-addFlagOutlineNormal({ traverse(callback) { callback({ isMesh: true, geometry: {}, add() {} }); } });
-assert.equal(normalOutlineAllocations, 1,
-  'The flag-outline regression harness must exercise the normal allocation path.');
 
 function compileFunction(source, name, bindings) {
   const functionSource = extractFunction(source, name);

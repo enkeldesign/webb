@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { graphicsProfile } from '/turn/graphics-profile.js';
 import {
   createCarVisual,
   preloadCarModels
@@ -469,7 +468,7 @@ async function makeResponder({ carId, color, secondaryColor, name, position, yaw
     color,
     secondaryColor,
     targetLength: 8.4,
-    outline: true
+    outline: false
   });
   visual.name = name;
   visual.position.copy(position);
@@ -575,11 +574,9 @@ function makeMedicalSign() {
   sign.name = 'Airport terminal medical H';
   sign.userData.turnAirportMedical = true;
 
-  const panel = outlinedPrimitive(
+  const panel = primitiveGroup(
     new THREE.BoxGeometry(10.4, 6.4, 0.65),
-    new THREE.MeshStandardMaterial({ color: 0xfff8e8, roughness: 0.86 }),
-    1.045
-  );
+    new THREE.MeshStandardMaterial({ color: 0xfff8e8, roughness: 0.86 }));
   sign.add(panel);
 
   const red = new THREE.MeshBasicMaterial({ color: 0xd92d20, toneMapped: false });
@@ -619,11 +616,9 @@ function makeCrashScene() {
     [1, 0.55, 13, 4.8, 2.4, 0.72]
   ];
   for (const [x, y, z, width, depth, rotation] of debris) {
-    const chunk = outlinedPrimitive(
+    const chunk = primitiveGroup(
       new THREE.BoxGeometry(width, 1.0, depth),
-      Math.abs(rotation) > 0.5 ? concrete : dark,
-      1.04
-    );
+      Math.abs(rotation) > 0.5 ? concrete : dark);
     chunk.position.set(x, y, z);
     chunk.rotation.set(0.16, rotation, 0.18);
     root.add(chunk);
@@ -769,22 +764,9 @@ function updateResponderLights(rig) {
   }
 }
 
-function outlinedPrimitive(geometry, fillMaterial, scale = 1.04) {
-  if (!graphicsProfile.outlines) {
-    const root = new THREE.Group();
-    const fill = new THREE.Mesh(geometry, fillMaterial);
-    fill.userData.turnOutlined = true;
-    root.add(fill);
-    return root;
-  }
+function primitiveGroup(geometry, material) {
   const group = new THREE.Group();
-  const outline = new THREE.Mesh(
-    geometry,
-    new THREE.MeshBasicMaterial({ color: 0x08090a, side: THREE.BackSide, toneMapped: false })
-  );
-  outline.scale.setScalar(scale);
-  const fill = new THREE.Mesh(geometry, fillMaterial);
-  group.add(outline, fill);
+  group.add(new THREE.Mesh(geometry, material));
   return group;
 }
 

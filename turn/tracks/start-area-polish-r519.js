@@ -1,8 +1,6 @@
 import * as THREE from 'three';
-import { graphicsProfile } from '/turn/graphics-profile.js';
 
 const REVISION = 'r519-midnight-full-width-accents';
-const INK = 0x08090a;
 const TURN_YELLOW = 0xffbd12;
 const FLAG_RECHECK_DELAYS_MS = Object.freeze([0, 220, 700, 1600, 3200]);
 const scheduledFlagCleanup = new WeakMap();
@@ -22,21 +20,11 @@ function flatYellowMaterial() {
   });
 }
 
-function inkOutlineMaterial() {
-  return new THREE.MeshBasicMaterial({
-    color: INK,
-    side: THREE.BackSide,
-    toneMapped: false
-  });
-}
 
 function materialEntries(material) {
   return Array.isArray(material) ? material : [material];
 }
 
-function isBackFaceMaterial(material) {
-  return materialEntries(material).some((entry) => entry?.side === THREE.BackSide);
-}
 
 function replaceSurfaceWithSignatureYellow(mesh) {
   if (!mesh?.isMesh) return false;
@@ -62,30 +50,17 @@ function directBoxSurface(root, predicate) {
   for (const child of root?.children || []) {
     if (child?.isMesh) {
       const parameters = boxParameters(child);
-      if (parameters && predicate(parameters, child) && !isBackFaceMaterial(child.material)) return child;
+      if (parameters && predicate(parameters, child)) return child;
       continue;
     }
     for (const mesh of child?.children || []) {
       const parameters = boxParameters(mesh);
-      if (parameters && predicate(parameters, mesh) && !isBackFaceMaterial(mesh.material)) return mesh;
+      if (parameters && predicate(parameters, mesh)) return mesh;
     }
   }
   return null;
 }
 
-function addInkContour(mesh, scale = 1.05) {
-  if (!graphicsProfile.outlines) return false;
-  if (!mesh?.isMesh || mesh.userData.turnStartBannerContour) return false;
-  if (mesh.children.some((child) => child.userData?.turnStartBannerContour)) return true;
-
-  const outline = new THREE.Mesh(mesh.geometry, inkOutlineMaterial());
-  outline.name = `${mesh.name || 'Start banner'} black contour`;
-  outline.scale.setScalar(scale);
-  outline.userData.turnStartBannerContour = true;
-  mesh.add(outline);
-  mesh.userData.turnStartBannerContour = true;
-  return true;
-}
 
 function polishCliffside(world, trackWidth) {
   const arch = world?.getObjectByName?.('Cliffside Start Arch');
@@ -116,7 +91,6 @@ function polishHarbor(world, trackWidth) {
   if (!beam) return false;
 
   replaceSurfaceWithSignatureYellow(beam);
-  addInkContour(beam, 1.06);
   beam.name = 'Harbor signature yellow start banner';
   gate.userData.turnStartAreaPolish = REVISION;
   return true;

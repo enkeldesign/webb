@@ -334,7 +334,8 @@ function synchronizeLowGraphicsProducerTargets(importMap, release) {
     '/turn/tracks/airport-world-r53.js?build=20260814-r57',
     '/turn/tracks/cliffside-world.js?base=20260725-r72',
     '/turn/tracks/countryside-world-r531.js?revision=r532-countryside-nature-polish',
-    '/turn/tracks/start-area-polish-r519.js?revision=r519-midnight-full-width-accents'
+    '/turn/tracks/start-area-polish-r519.js?revision=r519-midnight-full-width-accents',
+    '/turn/tracks/airport-start-banner-r520.js?revision=r520-signature-yellow'
   ];
   const changedPaths = new Set(legacySpecifiers.map((specifier) =>
     new URL(specifier, 'https://enkel.design').pathname

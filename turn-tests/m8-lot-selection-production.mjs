@@ -121,13 +121,11 @@ assert.match(showroom, /requestIdleCallback/,
   'Thumbnail generation should use idle time when the browser exposes it');
 assert.match(showroom, /renderer\?\.forceContextLoss\?\.\(\)/,
   'The temporary thumbnail WebGL context must be explicitly released');
-assert.match(
-  showroom,
-  /thumbnailRenderer\.stop\(\);[\s\S]*viewer\.stop\(\);[\s\S]*overlay\.remove\(\);[\s\S]*resolve\([\s\S]*deferLotRendererCleanup/,
-  'Closing The Lot must detach and resolve before expensive GPU disposal'
-);
-assert.match(showroom, /requestIdleCallback\(cleanup, \{ timeout: 800 \}\)/,
-  'WebGL cleanup should move behind the visible transition frame when idle scheduling is available');
+assert.match(showroom,
+  /thumbnailRenderer\.stop\(\);[\s\S]*viewer\.stop\(\);[\s\S]*overlay\.remove\(\);[\s\S]*thumbnailRenderer\.cancel\(\);[\s\S]*viewer\.dispose\(\);[\s\S]*resolve\(/,
+  'The Lot must detach and release both GPU contexts before handing control to racing');
+assert.doesNotMatch(showroom, /deferLotRendererCleanup/,
+  'Lot renderer resources must not outlive the transition into racing');
 assert.match(showroom, /className = 'lot-car-option-thumbnail'/,
   'Each visible vehicle card must receive a canvas for its real 3D model thumbnail');
 assert.doesNotMatch(showroom, /makeLotGround|makeParkingPad|const positions = LOT_CARS/,

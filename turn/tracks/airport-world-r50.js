@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { graphicsProfile } from '/turn/graphics-profile.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r19';
 
@@ -34,10 +33,6 @@ const SERVICE_VEHICLE_SLOTS = Object.freeze([
 
 const loader = new GLTFLoader();
 const summerModelCache = new Map();
-const blackOutlineMaterial = new THREE.MeshBasicMaterial({
-  color: INK,
-  side: THREE.BackSide
-});
 
 export function installAirportWorld({ scene, samples, trackWidth = 27 }) {
   const world = new THREE.Group();
@@ -72,19 +67,9 @@ export function installAirportWorld({ scene, samples, trackWidth = 27 }) {
   return world;
 }
 
-function outlinedMesh(geometry, meshMaterial, scale = 1.035) {
-  if (!graphicsProfile.outlines) {
-    const group = new THREE.Group();
-    const mesh = new THREE.Mesh(geometry, meshMaterial);
-    group.add(mesh);
-    return group;
-  }
+function meshGroup(geometry, material) {
   const group = new THREE.Group();
-  const outline = new THREE.Mesh(geometry, blackOutlineMaterial);
-  outline.scale.setScalar(scale);
-
-  const mesh = new THREE.Mesh(geometry, meshMaterial);
-  group.add(outline, mesh);
+  group.add(new THREE.Mesh(geometry, material));
   return group;
 }
 
@@ -127,11 +112,9 @@ function makeGround(world) {
 }
 
 function makeRunwaySystem(world) {
-  const runway = outlinedMesh(
+  const runway = meshGroup(
     new THREE.BoxGeometry(540, 0.12, 62),
-    material(RUNWAY, 0.98),
-    1.004
-  );
+    material(RUNWAY, 0.98));
   runway.position.set(20, 0.015, -221);
   world.add(runway);
 
@@ -174,11 +157,9 @@ function makeRunwaySystem(world) {
   world.add(edgeLights);
 
   for (const x of [-132, 18, 170]) {
-    const taxiway = outlinedMesh(
+    const taxiway = meshGroup(
       new THREE.BoxGeometry(34, 0.08, 82),
-      material(0x4f555c, 0.96),
-      1.006
-    );
+      material(0x4f555c, 0.96));
     taxiway.position.set(x, 0.025, -169);
     world.add(taxiway);
 
@@ -333,24 +314,20 @@ function makeStartFinishDistrict(world, samples, trackWidth) {
 
   const postGeometry = new THREE.BoxGeometry(1.7, 9.2, 1.7);
   for (const side of [-1, 1]) {
-    const post = outlinedMesh(postGeometry, material(0x30363d, 0.82), 1.06);
+    const post = meshGroup(postGeometry, material(0x30363d, 0.82));
     post.position.set(side * (trackWidth / 2 + 2.1), 4.6, 0);
     gate.add(post);
   }
 
-  const beam = outlinedMesh(
+  const beam = meshGroup(
     new THREE.BoxGeometry(trackWidth + 7, 2.4, 2.1),
-    material(YELLOW, 0.7),
-    1.04
-  );
+    material(YELLOW, 0.7));
   beam.position.y = 9.2;
   gate.add(beam);
 
-  const signPanel = outlinedMesh(
+  const signPanel = meshGroup(
     new THREE.BoxGeometry(17.5, 3.1, 0.62),
-    material(CREAM, 0.7),
-    1.05
-  );
+    material(CREAM, 0.7));
   signPanel.position.set(0, 9.2, -1.28);
   gate.add(signPanel);
 
@@ -394,19 +371,15 @@ function makeStartFinishDistrict(world, samples, trackWidth) {
   }
 
   const timingHut = new THREE.Group();
-  const hut = outlinedMesh(
+  const hut = meshGroup(
     new THREE.BoxGeometry(10, 5.5, 7.5),
-    material(CREAM, 0.85),
-    1.045
-  );
+    material(CREAM, 0.85));
   hut.position.y = 2.75;
   timingHut.add(hut);
 
-  const hutGlass = outlinedMesh(
+  const hutGlass = meshGroup(
     new THREE.BoxGeometry(8.4, 2.1, 0.45),
-    material(WINDOW, 0.35, 0.08),
-    1.04
-  );
+    material(WINDOW, 0.35, 0.08));
   hutGlass.position.set(0, 3.2, -3.92);
   timingHut.add(hutGlass);
 
@@ -417,21 +390,17 @@ function makeTerminalCampus(world, samples) {
   const terminal = new THREE.Group();
   terminal.name = 'TURN International Terminal';
 
-  const terminalBody = outlinedMesh(
+  const terminalBody = meshGroup(
     new THREE.BoxGeometry(124, 16, 24),
-    material(0xf2ead5, 0.78),
-    1.018
-  );
+    material(0xf2ead5, 0.78));
   terminalBody.position.y = 8;
   terminal.add(terminalBody);
 
   const glass = material(WINDOW, 0.3, 0.08);
   for (let x = -50; x <= 50; x += 12.5) {
-    const southWindow = outlinedMesh(
+    const southWindow = meshGroup(
       new THREE.BoxGeometry(9.2, 5.4, 0.5),
-      glass,
-      1.025
-    );
+      glass);
     southWindow.position.set(x, 8.7, -12.25);
     terminal.add(southWindow);
 
@@ -440,27 +409,21 @@ function makeTerminalCampus(world, samples) {
     terminal.add(northWindow);
   }
 
-  const roof = outlinedMesh(
+  const roof = meshGroup(
     new THREE.BoxGeometry(132, 2, 30),
-    material(0x39434d, 0.78),
-    1.014
-  );
+    material(0x39434d, 0.78));
   roof.position.y = 17;
   terminal.add(roof);
 
-  const departureHall = outlinedMesh(
+  const departureHall = meshGroup(
     new THREE.BoxGeometry(58, 8.5, 17),
-    material(0xfff3c4, 0.75),
-    1.022
-  );
+    material(0xfff3c4, 0.75));
   departureHall.position.set(-8, 4.25, -18);
   terminal.add(departureHall);
 
-  const hallGlass = outlinedMesh(
+  const hallGlass = meshGroup(
     new THREE.BoxGeometry(48, 4.3, 0.5),
-    glass,
-    1.02
-  );
+    glass);
   hallGlass.position.set(-8, 4.8, -26.65);
   terminal.add(hallGlass);
 
@@ -483,27 +446,21 @@ function makeTerminalCampus(world, samples) {
   const tower = new THREE.Group();
   tower.name = 'Airport Control Tower';
 
-  const shaft = outlinedMesh(
+  const shaft = meshGroup(
     new THREE.CylinderGeometry(5.2, 7.4, 31, 10),
-    material(0xe8e1d2, 0.82),
-    1.03
-  );
+    material(0xe8e1d2, 0.82));
   shaft.position.y = 15.5;
   tower.add(shaft);
 
-  const cabin = outlinedMesh(
+  const cabin = meshGroup(
     new THREE.CylinderGeometry(10.4, 8.2, 7.3, 10),
-    material(WINDOW, 0.3, 0.12),
-    1.035
-  );
+    material(WINDOW, 0.3, 0.12));
   cabin.position.y = 33;
   tower.add(cabin);
 
-  const cap = outlinedMesh(
+  const cap = meshGroup(
     new THREE.CylinderGeometry(11.7, 11.7, 1.5, 10),
-    material(0x34383d, 0.78),
-    1.03
-  );
+    material(0x34383d, 0.78));
   cap.position.y = 37.2;
   tower.add(cap);
 
@@ -534,19 +491,15 @@ function makeTerminalCampus(world, samples) {
 
   for (const x of [-108, -52, 4, 60, 116]) {
     const bridge = new THREE.Group();
-    const tunnel = outlinedMesh(
+    const tunnel = meshGroup(
       new THREE.BoxGeometry(14, 3.8, 4.4),
-      material(0xcad1d5, 0.74),
-      1.03
-    );
+      material(0xcad1d5, 0.74));
     tunnel.position.y = 6.2;
     bridge.add(tunnel);
 
-    const support = outlinedMesh(
+    const support = meshGroup(
       new THREE.BoxGeometry(1.2, 5.5, 1.2),
-      material(0x4b5560, 0.86),
-      1.05
-    );
+      material(0x4b5560, 0.86));
     support.position.set(5, 2.75, 0);
     bridge.add(support);
 
@@ -559,19 +512,15 @@ function makeHangar(world, samples, { position, size, accent }) {
   const [width, height, depth] = size;
   const hangar = new THREE.Group();
 
-  const body = outlinedMesh(
+  const body = meshGroup(
     new THREE.BoxGeometry(width, height, depth),
-    material(0x59636b, 0.9),
-    1.022
-  );
+    material(0x59636b, 0.9));
   body.position.y = height / 2;
   hangar.add(body);
 
-  const door = outlinedMesh(
+  const door = meshGroup(
     new THREE.BoxGeometry(width * 0.72, height * 0.68, 0.72),
-    material(0x23282d, 0.95),
-    1.024
-  );
+    material(0x23282d, 0.95));
   door.position.set(0, height * 0.35, -depth / 2 - 0.4);
   hangar.add(door);
 
@@ -638,55 +587,43 @@ function makeJet(bodyColor, tailColor) {
   const tailMaterial = material(tailColor, 0.58);
   const darkMaterial = material(0x34383d, 0.85);
 
-  const fuselage = outlinedMesh(
+  const fuselage = meshGroup(
     new THREE.CylinderGeometry(2.2, 1.9, 29, 12),
-    bodyMaterial,
-    1.038
-  );
+    bodyMaterial);
   fuselage.rotation.x = Math.PI / 2;
   fuselage.position.y = 4.2;
   jet.add(fuselage);
 
-  const nose = outlinedMesh(
+  const nose = meshGroup(
     new THREE.ConeGeometry(2.2, 5.8, 12),
-    bodyMaterial,
-    1.038
-  );
+    bodyMaterial);
   nose.rotation.x = -Math.PI / 2;
   nose.position.set(0, 4.2, -17.3);
   jet.add(nose);
 
-  const wing = outlinedMesh(
+  const wing = meshGroup(
     new THREE.BoxGeometry(31, 0.5, 6.2),
-    bodyMaterial,
-    1.03
-  );
+    bodyMaterial);
   wing.position.set(0, 4, -1.8);
   jet.add(wing);
 
-  const tailWing = outlinedMesh(
+  const tailWing = meshGroup(
     new THREE.BoxGeometry(12, 0.42, 3.4),
-    tailMaterial,
-    1.035
-  );
+    tailMaterial);
   tailWing.position.set(0, 4.7, 11.4);
   jet.add(tailWing);
 
-  const fin = outlinedMesh(
+  const fin = meshGroup(
     new THREE.BoxGeometry(0.8, 7.2, 4.8),
-    tailMaterial,
-    1.045
-  );
+    tailMaterial);
   fin.position.set(0, 7.7, 12);
   fin.rotation.x = -0.18;
   jet.add(fin);
 
   for (const x of [-6.3, 6.3]) {
-    const engine = outlinedMesh(
+    const engine = meshGroup(
       new THREE.CylinderGeometry(1.35, 1.35, 4.8, 10),
-      darkMaterial,
-      1.04
-    );
+      darkMaterial);
     engine.rotation.x = Math.PI / 2;
     engine.position.set(x, 2.8, -2);
     jet.add(engine);
@@ -731,20 +668,16 @@ function makeBaggageTrain() {
   const train = new THREE.Group();
   train.name = 'Airport Baggage Train';
 
-  const tug = outlinedMesh(
+  const tug = meshGroup(
     new THREE.BoxGeometry(4.4, 2.5, 6),
-    material(YELLOW, 0.8),
-    1.04
-  );
+    material(YELLOW, 0.8));
   tug.position.set(0, 1.5, 0);
   train.add(tug);
 
   for (let index = 0; index < 2; index += 1) {
-    const cart = outlinedMesh(
+    const cart = meshGroup(
       new THREE.BoxGeometry(4.6, 2.2, 5.2),
-      material(index ? 0x69737d : 0x7f8992, 0.9),
-      1.035
-    );
+      material(index ? 0x69737d : 0x7f8992, 0.9));
     cart.position.set(0, 1.4, 7 + index * 6.6);
     train.add(cart);
   }
@@ -757,11 +690,9 @@ function makeFuelFarm(world, samples) {
   fuelFarm.name = 'Airport Fuel Farm';
 
   for (const x of [-13, 0, 13]) {
-    const tank = outlinedMesh(
+    const tank = meshGroup(
       new THREE.CylinderGeometry(5.2, 5.2, 15, 12),
-      material(0xe8edf1, 0.72, 0.08),
-      1.028
-    );
+      material(0xe8edf1, 0.72, 0.08));
     tank.rotation.z = Math.PI / 2;
     tank.position.set(x, 5.6, 0);
     fuelFarm.add(tank);
@@ -791,19 +722,15 @@ function makePerimeterDetails(world, samples, trackWidth) {
     const side = cursor % 2 ? 1 : -1;
     const sign = new THREE.Group();
 
-    const panel = outlinedMesh(
+    const panel = meshGroup(
       new THREE.BoxGeometry(9, 4.8, 0.55),
-      material(signPalette[cursor % signPalette.length], 0.78),
-      1.045
-    );
+      material(signPalette[cursor % signPalette.length], 0.78));
     panel.position.y = 5.2;
     sign.add(panel);
 
-    const post = outlinedMesh(
+    const post = meshGroup(
       new THREE.BoxGeometry(0.7, 5.2, 0.7),
-      material(0x34383d, 0.85),
-      1.06
-    );
+      material(0x34383d, 0.85));
     post.position.y = 2.6;
     sign.add(post);
 
@@ -818,7 +745,7 @@ function makePerimeterDetails(world, samples, trackWidth) {
 
   for (const sampleIndex of [130, 145, 160, 430, 445, 460]) {
     const sample = samples[sampleIndex];
-    const barrier = outlinedMesh(barrierGeometry, barrierMaterial, 1.035);
+    const barrier = meshGroup(barrierGeometry, barrierMaterial);
     barrier.position.copy(sample.point)
       .addScaledVector(sample.normal, trackWidth / 2 + 6)
       .setY(0.45);
@@ -854,7 +781,7 @@ async function installServiceVehicles(world, samples) {
       carId: slot.carId,
       color: slot.color,
       targetLength: slot.targetLength,
-      outline: true
+      outline: false
     });
 
     visual.rotation.y = slot.rotation;
@@ -904,8 +831,7 @@ async function installSummerIndustrialDistrict(world, samples) {
     try {
       const source = await loadSummerModel(record.key);
       const model = prepareStaticAsset(source, {
-        targetSize: record.targetSize,
-        outline: true
+        targetSize: record.targetSize
       });
 
       const placed = placeScenerySafely(world, model, samples, {
@@ -923,8 +849,7 @@ async function installSummerIndustrialDistrict(world, samples) {
   try {
     const tankSource = await loadSummerModel('tank');
     const tankModel = prepareStaticAsset(tankSource, {
-      targetSize: 12,
-      outline: true
+      targetSize: 12
     });
     placeScenerySafely(world, tankModel, samples, {
       position: [82, 0, 50],
@@ -939,19 +864,15 @@ async function installSummerIndustrialDistrict(world, samples) {
 function makeMaintenanceFallback(width, height, depth, accent) {
   const building = new THREE.Group();
 
-  const body = outlinedMesh(
+  const body = meshGroup(
     new THREE.BoxGeometry(width, height, depth),
-    material(0x6d7680, 0.9),
-    1.025
-  );
+    material(0x6d7680, 0.9));
   body.position.y = height / 2;
   building.add(body);
 
-  const door = outlinedMesh(
+  const door = meshGroup(
     new THREE.BoxGeometry(width * 0.55, height * 0.58, 0.55),
-    material(0x252a2f, 0.94),
-    1.04
-  );
+    material(0x252a2f, 0.94));
   door.position.set(0, height * 0.3, -depth / 2 - 0.32);
   building.add(door);
 
@@ -975,14 +896,14 @@ function loadSummerModel(key) {
 
 function prepareStaticAsset(source, {
   targetSize = 24,
-  outline = false
+
 } = {}) {
   const model = source.clone(true);
-  const meshes = [];
+
 
   model.traverse((node) => {
     if (!node.isMesh || !node.material) return;
-    meshes.push(node);
+
     const materials = Array.isArray(node.material) ? node.material : [node.material];
     const clones = materials.map((entry) => {
       const clone = entry.clone();
@@ -994,24 +915,7 @@ function prepareStaticAsset(source, {
 
   normalizeModelToGround(model, targetSize);
 
-  if (outline) {
-    for (const mesh of meshes) {
-      const outlineMeshNode = new THREE.Mesh(
-        mesh.geometry,
-        new THREE.MeshBasicMaterial({
-          color: INK,
-          side: THREE.BackSide,
-          depthTest: true,
-          depthWrite: false,
-          polygonOffset: true,
-          polygonOffsetFactor: 1,
-          polygonOffsetUnits: 1
-        })
-      );
-      outlineMeshNode.scale.setScalar(1.018);
-      mesh.add(outlineMeshNode);
-    }
-  }
+
 
   return model;
 }

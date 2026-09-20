@@ -1,10 +1,8 @@
 import * as THREE from 'three';
-import { graphicsProfile } from '/turn/graphics-profile.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260811-r164';
 
 const REVISION = 'r532-countryside-nature-polish';
-const INK = 0x08090a;
 const LAKE_LEVEL = 0.051;
 const BELLA_SAMPLE_INDEX = 500;
 const BELLA_SIDE = -1;
@@ -57,7 +55,6 @@ const VILLAGE_HOUSES = Object.freeze([
 
 const loader = new GLTFLoader();
 const sourceCache = new Map();
-const inkMaterial = new THREE.MeshBasicMaterial({ color: INK, side: THREE.BackSide });
 
 function loadSource(key) {
   if (!sourceCache.has(key)) {
@@ -167,35 +164,19 @@ function cloneAndTuneMaterials(node, semantic) {
   node.material = Array.isArray(node.material) ? materials : materials[0];
 }
 
-function addInkOutline(root, scale = 1.022) {
-  if (!graphicsProfile.outlines) return;
-  const surfaces = [];
-  root.traverse((node) => {
-    if (node?.isMesh && !node.userData?.turnOutline) surfaces.push(node);
-  });
-
-  for (const surface of surfaces) {
-    const outline = new THREE.Mesh(surface.geometry, inkMaterial);
-    outline.name = `${surface.name || 'Countryside surface'} outline`;
-    outline.scale.setScalar(scale);
-    outline.userData.turnOutline = true;
-    outline.userData.turnOutlined = true;
-    surface.add(outline);
-  }
-}
 
 function prepareModel(source, {
   targetHeight = null,
   targetSpan = null,
   semantic = null,
-  outline = false,
-  outlineScale = 1.022,
+
+
 } = {}) {
   const model = source.clone(true);
   model.traverse((node) => {
     if (!node?.isMesh) return;
     cloneAndTuneMaterials(node, semantic);
-    node.userData.turnOutlined = true;
+
     node.userData.turnPaletteLocked = true;
     node.userData.turnCountrysideAsset = REVISION;
   });
@@ -213,7 +194,6 @@ function prepareModel(source, {
   bounds = new THREE.Box3().setFromObject(model, true);
   const centre = bounds.getCenter(new THREE.Vector3());
   model.position.set(-centre.x, -bounds.min.y, -centre.z);
-  if (outline) addInkOutline(model, outlineScale);
   return model;
 }
 
@@ -259,8 +239,8 @@ function installRacePaddock(root, sources, samples, trackWidth) {
 
   placePrepared(root, officeSource, {
     targetHeight: 9.2,
-    outline: true,
-    outlineScale: 1.018
+
+
   }, {
     name: 'Countryside Paddock Race Office',
     position: pointInFrame(frame, 34, 9, 0.04),
@@ -312,8 +292,8 @@ function installVillage(root, sources, samples, trackWidth, protectedPoint) {
     const faceLaneAdjustment = spec.row === 'near' ? Math.PI : 0;
     placePrepared(village, source, {
       targetHeight: spec.height,
-      outline: true,
-      outlineScale: 1.018
+
+
     }, {
       name: `Birchfield red house ${index + 1}`,
       position,
@@ -539,8 +519,8 @@ function installForestEdge(root, sources, samples, trackWidth, protectedPoint) {
       placePrepared(forest, logStack, {
         targetSpan: 6.2,
         semantic: 'wood',
-        outline: true,
-        outlineScale: 1.025
+
+
       }, {
         name: 'Managed forest log stack',
         position,
@@ -722,8 +702,8 @@ function installLakeLife(root, sources, samples) {
   if (rowBoat) {
     placePrepared(lake, rowBoat, {
       targetSpan: 5.6,
-      outline: true,
-      outlineScale: 1.024,
+
+
     }, {
       name: 'Countryside moored rowboat',
       position: islandCentre.clone().add(new THREE.Vector3(-23, LAKE_LEVEL + 0.02, 4.5)),
@@ -777,7 +757,8 @@ async function installParkedCars(root, samples, trackWidth) {
       carId: spec.carId,
       color: spec.color,
       targetLength: spec.targetLength,
-      outline: true
+      outline: false,
+
     });
     car.name = `Countryside parked ${spec.carId} ${index + 1}`;
     car.position.copy(spec.position);

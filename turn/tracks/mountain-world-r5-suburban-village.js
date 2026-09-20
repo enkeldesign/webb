@@ -106,16 +106,8 @@ function createLoader(paletteUrl) {
   return new GLTFLoader(manager);
 }
 
-function prepareSource(root) {
-  root.traverse((node) => {
-    if (!node?.isMesh) return;
-    node.userData.turnOutlined = true;
-  });
-  return root;
-}
-
 function preparedBuilding(source, targetHeight) {
-  const building = prepareSource(source.clone(true));
+  const building = source.clone(true);
   building.position.set(0, 0, 0);
   building.rotation.set(0, 0, 0);
   building.scale.set(1, 1, 1);
@@ -199,7 +191,7 @@ async function loadSources() {
   const loader = createLoader(paletteUrl);
   const pairs = await Promise.all(HOUSE_TYPES.map(async (type) => {
     const gltf = await loader.loadAsync(`${ASSET_BASE}building-type-${type}.glb`);
-    return [type, prepareSource(gltf.scene)];
+    return [type, gltf.scene];
   }));
   return { sourceByType: new Map(pairs), paletteUrl };
 }

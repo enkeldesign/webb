@@ -168,7 +168,6 @@ function makeAssetInstances(source, count, name) {
   if (!source || count <= 0) return null;
   const mesh = new THREE.InstancedMesh(source.geometry, source.material, count);
   mesh.name = name;
-  mesh.userData.turnOutlined = true;
   return mesh;
 }
 
@@ -586,7 +585,6 @@ function installTunnelPortalArches(world, portals) {
     })
   );
   mesh.name = 'Mountain tunnel batched mountain-aligned granite arches LAB';
-  mesh.userData.turnOutlined = true;
   world.add(mesh);
   return {
     arches: portals.length,
@@ -1077,7 +1075,6 @@ function installInstancedObject(world, source, placements, name) {
       instances.setMatrixAt(index, composed);
     });
     instances.instanceMatrix.needsUpdate = true;
-    instances.userData.turnOutlined = true;
     instances.computeBoundingSphere();
     world.add(instances);
   });
@@ -1240,7 +1237,6 @@ function installForestReturn(world, samples, trackWidth, terrainHeightAt) {
 
   for (const mesh of [trunks, lowers, crowns, caps]) {
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.userData.turnOutlined = true;
     mesh.computeBoundingSphere();
     world.add(mesh);
   }

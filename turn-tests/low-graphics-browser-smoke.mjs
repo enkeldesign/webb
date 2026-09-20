@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import fs from 'node:fs/promises';
 import { chromium, webkit } from 'playwright';
-import { inspectRaceContours } from './race-contours-browser.mjs';
 
 const TARGET = process.env.TURN_LOW_GRAPHICS_URL || 'http://127.0.0.1:8000/turn/';
 
@@ -161,7 +160,7 @@ for (const browserType of [chromium, webkit]) {
         const cars = [];
         for (let i = 0; i < 5; i++) {
           const car = new THREE.Group();
-          const visual = await createCarVisual({ carId: 'sedan', color: i ? '#38d9ff' : '#ffd43b', ghost: i > 0, targetLength: 5.5 });
+          const visual = await createCarVisual({ carId: 'sedan', color: i ? '#38d9ff' : '#ffd43b', ghost: i > 0, targetLength: 5.5, outline: false });
           shadows.setCarSize(car, visual); // Match production: measure before parenting/posing.
           const size = new THREE.Box3().setFromObject(visual).getSize(new THREE.Vector3());
           car.add(visual);
@@ -521,7 +520,7 @@ for (const browserType of [chromium, webkit]) {
     state.running = true; state.driftAmount = 0.8; state.speed = 70; state.nearestTrackIndex = 160;
     const results = [];
     for (const [carId, offRoad] of [...CAR_CATALOG.map(({ id }) => [id, false]), ['monster-truck', true]]) {
-      const visual = await createCarVisual({ carId, color: '#d9ae38', targetLength: 5.5, outline: true });
+      const visual = await createCarVisual({ carId, color: '#d9ae38', targetLength: 5.5, outline: false });
       shadows.setCarSize(car, visual);
       car.add(visual);
       car.visible = true;
@@ -583,4 +582,131 @@ for (const browserType of [chromium, webkit]) {
   console.log(JSON.stringify({ browser: browserType.name(), skids: skidReport }));
   await liveContext.close();
   await browser.close();
+}
+
+async function inspectRaceContours(page, outputDir, browser, expectClean = true) {
+  const reports = await page.evaluate(async () => {
+    const THREE = await import('three');
+    const { activateTrack } = await import('/turn/tracks/track-manager.js');
+    const runtime = globalThis.__turnRuntime;
+    const { renderer, camera, scene, playerCar: car, state, carShadows } = runtime;
+    const results = [];
+    function isContour(node) {
+      if (!node.isMesh) return false;
+      const materials = Array.isArray(node.material) ? node.material : [node.material];
+      return node.userData.turnOutline || node.userData.turnContextualRoadContour
+        || /outer road contour/i.test(node.name)
+        || materials.some((m) => m?.side === THREE.BackSide);
+    }
+    for (const trackId of ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain']) {
+      await activateTrack(trackId, runtime);
+      await new Promise((resolve) => globalThis.setTimeout(resolve, 4000));
+      state.running = false;
+      const shells = [];
+      scene.traverse((node) => { if (isContour(node)) shells.push(node); });
+      const frames = [];
+      for (const fraction of [0, 0.25, 0.5, 0.75]) {
+        const sample = runtime.samples[Math.floor(runtime.samples.length * fraction)];
+        car.position.copy(sample.point); car.position.y += 0.18;
+        state.position.copy(car.position);
+        car.rotation.set(0, Math.atan2(sample.tangent.x, sample.tangent.z) + Math.PI, 0);
+        camera.position.copy(car.position).addScaledVector(sample.tangent, -18); camera.position.y += 9;
+        camera.lookAt(car.position.x + sample.tangent.x * 8, car.position.y + 1, car.position.z + sample.tangent.z * 8);
+        carShadows.beginFrame(trackId); carShadows.addCar(car, sample); carShadows.endFrame();
+        renderer.render(scene, camera);
+        const withContours = { ...renderer.info.render };
+        const visible = shells.map((node) => node.visible);
+        shells.forEach((node) => { node.visible = false; });
+        renderer.render(scene, camera);
+        const withoutContours = { ...renderer.info.render };
+        shells.forEach((node, i) => { node.visible = visible[i]; });
+        frames.push({ fraction, withContours, withoutContours });
+      }
+      renderer.render(scene, camera);
+      results.push({ trackId, contourMeshes: shells.length,
+        names: shells.slice(0, 10).map((node) => node.name || node.parent?.name || node.type),
+        frames, image: renderer.domElement.toDataURL() });
+    }
+    await activateTrack('countryside', runtime);
+    return results;
+  });
+  for (const report of reports) {
+    await fs.writeFile(`${outputDir}/contours-${browser}-${report.trackId}.png`, Buffer.from(report.image.split(',')[1], 'base64'));
+    delete report.image;
+    if (expectClean) assert.equal(report.contourMeshes, 0, `${report.trackId}: racing must not allocate contour shells`);
+  }
+  await fs.writeFile(`${outputDir}/contours-${browser}.json`, JSON.stringify(reports, null, 2));
+  console.log(JSON.stringify({ browser, contours: reports }));
+
+  await page.evaluate(async () => {
+    const THREE = await import('three');
+    const { showTheLot } = await import('/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims');
+    const contexts = [], scenes = new Map();
+    const originalContext = globalThis.HTMLCanvasElement.prototype.getContext;
+    const originalUpdate = THREE.Object3D.prototype.updateMatrixWorld;
+    globalThis.HTMLCanvasElement.prototype.getContext = function (...args) {
+      const gl = originalContext.apply(this, args);
+      if (gl && /webgl/.test(args[0]) && !contexts.some((entry) => entry.gl === gl)) {
+        const record = { gl, draws: 0 };
+        contexts.push(record);
+        for (const method of ['drawElements', 'drawArrays', 'drawElementsInstanced', 'drawArraysInstanced']) {
+          const original = gl[method];
+          if (original) gl[method] = function (...values) { record.draws++; return original.apply(this, values); };
+        }
+      }
+      return gl;
+    };
+    THREE.Object3D.prototype.updateMatrixWorld = function (...args) {
+      if (this.isScene && this !== globalThis.__turnRuntime.scene) {
+        const record = scenes.get(this) || { updates: 0, maxContours: 0 };
+        record.updates++;
+        let count = 0;
+        this.traverse((node) => { if (node.userData?.turnOutline) count++; });
+        record.maxContours = Math.max(record.maxContours, count);
+        scenes.set(this, record);
+      }
+      return originalUpdate.apply(this, args);
+    };
+    const snapshot = () => ({
+      contexts: contexts.length,
+      liveContexts: contexts.filter(({ gl }) => !gl.isContextLost()).length,
+      draws: contexts.reduce((sum, entry) => sum + entry.draws, 0),
+      updates: [...scenes.values()].reduce((sum, entry) => sum + entry.updates, 0),
+      contours: Math.max(0, ...[...scenes.values()].map((entry) => entry.maxContours))
+    });
+    const probe = globalThis.__contourLotProbe = { snapshot, resolved: false };
+    probe.restore = () => {
+      globalThis.HTMLCanvasElement.prototype.getContext = originalContext;
+      THREE.Object3D.prototype.updateMatrixWorld = originalUpdate;
+    };
+    showTheLot({ initialSelection: { carId: 'sedan', color: '#ffd43b' } }).then(() => {
+      probe.handoff = snapshot();
+      probe.resolved = true;
+      globalThis.__turnRuntime.state.running = true;
+    });
+  });
+  await page.waitForFunction(() => globalThis.__contourLotProbe.snapshot().contours > 0
+    && document.querySelector('.lot-loading')?.classList.contains('is-done'), null, { timeout: 90000 });
+  await page.locator('.lot-view-host canvas').screenshot({ path: `${outputDir}/contours-${browser}-lot.png` });
+  await page.locator('.lot-race').click();
+  await page.waitForFunction(() => globalThis.__contourLotProbe.resolved);
+  const lot = await page.evaluate(async () => {
+    const probe = globalThis.__contourLotProbe;
+    for (let frame = 0; frame < 4; frame++) {
+      await new Promise(globalThis.requestAnimationFrame);
+      const { renderer, scene, camera } = globalThis.__turnRuntime;
+      renderer.render(scene, camera);
+    }
+    await new Promise((resolve) => globalThis.setTimeout(resolve, 150));
+    const result = { handoff: probe.handoff, duringRace: probe.snapshot() };
+    probe.restore();
+    delete globalThis.__contourLotProbe;
+    return result;
+  });
+  await fs.writeFile(`${outputDir}/contours-${browser}-lot.json`, JSON.stringify(lot, null, 2));
+  assert.ok(lot.handoff.contours > 0, 'The Lot keeps its existing contour treatment');
+  assert.equal(lot.handoff.liveContexts, 0, 'All Lot GPU contexts are released before racing receives the selection');
+  assert.equal(lot.duringRace.liveContexts, 0, 'The Lot retains no live GPU context during racing');
+  assert.equal(lot.duringRace.draws, lot.handoff.draws, 'The Lot performs no GPU draws during racing');
+  assert.equal(lot.duringRace.updates, lot.handoff.updates, 'The Lot performs no scene updates during racing');
 }

@@ -176,7 +176,7 @@ async function makeParkedCars(world, placements) {
       color: placement.color,
       ghost: false,
       targetLength: 5.0,
-      outline: true
+      outline: false
     });
     car.position.copy(placement.point);
     car.position.y = placement.groundY + 0.08;

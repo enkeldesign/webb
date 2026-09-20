@@ -215,14 +215,10 @@ assert.match(app, /installM8HomeFixedLayout\(\)/);
 assert.ok(app.indexOf('installTurnPlatform(webPlatform)') < app.indexOf("withBuild('./main.js')"));
 assert.ok(app.indexOf("withBuild('./main.js')") < app.indexOf('installM8HomeNavigation()'));
 
-assert.match(worldArtPass, /const TURN_ROAD = 0x44494f/,
-  'Countryside world art must share the TURN road color token for its curb contour');
-assert.match(worldArtPass, /function addRoadOuterContour[\s\S]*color: TURN_ROAD/,
-  'Countryside curb contour must be created in road color instead of black');
-assert.doesNotMatch(worldArtPass, /function addRoadOuterContour[\s\S]{0,180}color: INK/,
-  'Countryside curb contour must never regress to the generic ink outline color');
-assert.match(renderWorld, /world-art-pass\.js\?revision=r514-road-contour/,
-  'The fixed Countryside art pass needs its own URL revision so installed PWAs do not reuse the old black contour module');
+assert.doesNotMatch(worldArtPass, /addRoadOuterContour|applyWorldContours|OUTLINE_MATERIAL/,
+  'Racing must not construct automatic scenery or road contours');
+assert.doesNotMatch(renderWorld, /countryside-scenery-r177/,
+  'Racing must not load obsolete contour recolouring passes');
 
 for (const anchor of [
   "from '/turn/race/game-state.js'",

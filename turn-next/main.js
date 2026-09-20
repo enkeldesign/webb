@@ -3,7 +3,6 @@
 
 import * as THREE from 'three';
 import { createCarShadows } from '/turn/render/car-shadows.js';
-import { graphicsProfile } from '/turn/graphics-profile.js';
 import { installKenneyWorld } from '/turn/world-assets.js';
 import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19&revision=r270-camera-hotpath';
 import { updateHudState } from '/turn/ui/hud.js?build=20260720-r19';
@@ -281,20 +280,10 @@ installPerformanceMonitor({
   getTrackStats: () => trackSpatialIndex.getStats()
 });
 
-const blackMaterial = new THREE.MeshBasicMaterial({ color: 0x08090a, side: THREE.BackSide });
 
-function outlinedMesh(geometry, material, scale = 1.055) {
-  if (!graphicsProfile.outlines) {
-    const group = new THREE.Group();
-    const mesh = new THREE.Mesh(geometry, material);
-    group.add(mesh);
-    return group;
-  }
+function meshGroup(geometry, material) {
   const group = new THREE.Group();
-  const outline = new THREE.Mesh(geometry, blackMaterial);
-  outline.scale.setScalar(scale);
-  const mesh = new THREE.Mesh(geometry, material);
-  group.add(outline, mesh);
+  group.add(new THREE.Mesh(geometry, material));
   return group;
 }
 
@@ -443,15 +432,13 @@ function makeStartArch() {
   const beamGeo = new THREE.BoxGeometry(TRACK_WIDTH + 5, 2.2, 1.6);
   const pink = new THREE.MeshStandardMaterial({ color: 0xff4fa3, roughness: 0.7 });
   for (const side of [-1, 1]) {
-    const post = outlinedMesh(postGeo, pink, 1.08);
+    const post = meshGroup(postGeo, pink);
     post.position.set(side * (TRACK_WIDTH / 2 + 1.2), 4.5, 0);
     arch.add(post);
   }
-  const beam = outlinedMesh(
+  const beam = meshGroup(
     beamGeo,
-    new THREE.MeshStandardMaterial({ color: 0xffd43b, roughness: 0.7 }),
-    1.05
-  );
+    new THREE.MeshStandardMaterial({ color: 0xffd43b, roughness: 0.7 }));
   beam.position.y = 9;
   arch.add(beam);
   arch.position.copy(start.point);
@@ -465,11 +452,9 @@ function makeBillboards() {
   for (let i = 0; i < 18; i += 1) {
     const sample = samples[(44 + i * 43) % TRACK_SAMPLES];
     const side = i % 2 ? 1 : -1;
-    const sign = outlinedMesh(
+    const sign = meshGroup(
       geometry,
-      new THREE.MeshStandardMaterial({ color: palette[i % palette.length], roughness: 0.75 }),
-      1.045
-    );
+      new THREE.MeshStandardMaterial({ color: palette[i % palette.length], roughness: 0.75 }));
     sign.position.copy(sample.point).addScaledVector(sample.normal, side * (TRACK_WIDTH / 2 + 9));
     sign.position.y = 4.2;
     sign.rotation.y = Math.atan2(sample.tangent.x, sample.tangent.z) + (side > 0 ? 0 : Math.PI);
@@ -483,21 +468,21 @@ function makeCar(color = 0xffd43b, opacity = 1) {
   const glassMat = new THREE.MeshStandardMaterial({ color: 0x38d9ff, roughness: 0.2, metalness: 0.15, transparent: opacity < 1, opacity: Math.min(opacity, 0.82) });
   const wheelMat = new THREE.MeshStandardMaterial({ color: 0x16181a, roughness: 0.95, transparent: opacity < 1, opacity });
 
-  const body = outlinedMesh(new THREE.BoxGeometry(3.3, 1.05, 6.2), bodyMat, 1.055);
+  const body = meshGroup(new THREE.BoxGeometry(3.3, 1.05, 6.2), bodyMat);
   body.position.y = 1.15;
   car.add(body);
 
-  const nose = outlinedMesh(new THREE.BoxGeometry(3.0, 0.65, 1.9), bodyMat, 1.06);
+  const nose = meshGroup(new THREE.BoxGeometry(3.0, 0.65, 1.9), bodyMat);
   nose.position.set(0, 1.15, -3.55);
   nose.rotation.x = -0.1;
   car.add(nose);
 
-  const cabin = outlinedMesh(new THREE.BoxGeometry(2.45, 1.25, 2.8), glassMat, 1.06);
+  const cabin = meshGroup(new THREE.BoxGeometry(2.45, 1.25, 2.8), glassMat);
   cabin.position.set(0, 2.1, -0.15);
   cabin.scale.x = 0.92;
   car.add(cabin);
 
-  const spoiler = outlinedMesh(new THREE.BoxGeometry(3.6, 0.22, 0.7), bodyMat, 1.1);
+  const spoiler = meshGroup(new THREE.BoxGeometry(3.6, 0.22, 0.7), bodyMat);
   spoiler.position.set(0, 2.05, 2.85);
   car.add(spoiler);
 
@@ -515,7 +500,7 @@ function makeCar(color = 0xffd43b, opacity = 1) {
     const steerPivot = new THREE.Group();
     steerPivot.position.set(wheelPosition.x, 0.82, wheelPosition.z);
     const spinPivot = new THREE.Group();
-    const wheel = outlinedMesh(wheelGeo, wheelMat, 1.09);
+    const wheel = meshGroup(wheelGeo, wheelMat);
     wheel.rotation.z = Math.PI / 2;
     spinPivot.add(wheel);
     steerPivot.add(spinPivot);
@@ -568,7 +553,7 @@ async function installCarVisual(root, { carId, color, secondaryColor, ghost = fa
       secondaryColor,
       ghost,
       targetLength: 5.5,
-      outline: true
+      outline: false
     });
     if (root.userData.turnVisualGeneration !== generation) {
       disposeCarVisual(visual);

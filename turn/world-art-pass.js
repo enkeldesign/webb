@@ -1,15 +1,6 @@
 import * as THREE from 'three';
-import { graphicsProfile } from '/turn/graphics-profile.js';
 
 const TAU = Math.PI * 2;
-const INK = 0x08090a;
-const TURN_ROAD = 0x44494f;
-const OUTLINE_MATERIAL = graphicsProfile.outlines
-  ? new THREE.MeshBasicMaterial({
-  color: INK,
-  side: THREE.BackSide
-})
-  : null;
 
 function seeded01(seed) {
   const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
@@ -26,67 +17,6 @@ function materialList(material) {
   return Array.isArray(material) ? material : [material];
 }
 
-function isOutlineMaterial(material) {
-  return materialList(material).some((entry) => {
-    if (!entry || entry.side !== THREE.BackSide || !entry.color) return false;
-    return entry.color.getHex() === INK;
-  });
-}
-
-function hasExistingOutline(mesh) {
-  return mesh.children.some((child) => child.isMesh && isOutlineMaterial(child.material));
-}
-
-function geometryIsTooFlat(mesh) {
-  const geometry = mesh.geometry;
-  if (!geometry?.attributes?.position) return true;
-  if (!geometry.boundingBox) geometry.computeBoundingBox();
-  const size = geometry.boundingBox.getSize(new THREE.Vector3());
-  const dimensions = [Math.abs(size.x), Math.abs(size.y), Math.abs(size.z)].sort((a, b) => a - b);
-  return dimensions[0] < 0.08 || dimensions[2] < 0.35;
-}
-
-function addContour(mesh, scale = 1.055) {
-  if (!graphicsProfile.outlines) return;
-  if (!mesh?.isMesh || mesh.isInstancedMesh || mesh.userData.turnOutline || mesh.userData.turnOutlined) return;
-  if (isOutlineMaterial(mesh.material) || hasExistingOutline(mesh) || geometryIsTooFlat(mesh)) {
-    mesh.userData.turnOutlined = true;
-    return;
-  }
-
-  const outline = new THREE.Mesh(mesh.geometry, OUTLINE_MATERIAL);
-  outline.name = 'TURN outline';
-  outline.scale.setScalar(scale);
-  outline.userData.turnOutline = true;
-  outline.frustumCulled = mesh.frustumCulled;
-  mesh.add(outline);
-  mesh.userData.turnOutlined = true;
-}
-
-function contourObject(root, scale = 1.055) {
-  if (!graphicsProfile.outlines) return;
-  const meshes = [];
-  root.traverse((node) => {
-    if (node.isMesh && !node.userData.turnOutline) meshes.push(node);
-  });
-  for (const mesh of meshes) addContour(mesh, scale);
-}
-
-function applyWorldContours(world) {
-  if (!graphicsProfile.outlines) return;
-  const meshes = [];
-  world.traverse((node) => {
-    if (node.isMesh && !node.userData.turnOutline) meshes.push(node);
-  });
-
-  for (const mesh of meshes) {
-    const materials = materialList(mesh.material);
-    const mostlyTransparent = materials.length > 0 && materials.every((material) =>
-      material?.transparent && (material.opacity ?? 1) < 0.45
-    );
-    if (!mostlyTransparent) addContour(mesh, 1.055);
-  }
-}
 
 function makeGraphicGrassTexture() {
   const canvas = document.createElement('canvas');
@@ -282,13 +212,9 @@ function makeWaterTexture() {
 function addLake(world, samples) {
   const center = getTrackCenter(samples);
   const shoreOuter = trackInsetContour(samples, center, 72, 7);
-  const blackOuter = offsetContour(shoreOuter, center, 2.7);
   const shoreInner = offsetContour(shoreOuter, center, -8.5);
   const waterOuter = offsetContour(shoreInner, center, -2.1);
 
-  const blackMaterial = graphicsProfile.outlines
-    ? new THREE.MeshBasicMaterial({ color: INK, side: THREE.DoubleSide })
-    : null;
   const sandMaterial = new THREE.MeshStandardMaterial({ color: 0xf2cf83, roughness: 1, metalness: 0, side: THREE.DoubleSide });
   const waterMaterial = new THREE.MeshStandardMaterial({
     map: makeWaterTexture(),
@@ -298,9 +224,7 @@ function addLake(world, samples) {
     side: THREE.DoubleSide
   });
 
-  if (graphicsProfile.outlines) world.add(makeRibbon(blackOuter, shoreOuter, 0.038, blackMaterial));
-  world.add(makeRibbon(shoreOuter, shoreInner, 0.042, sandMaterial));
-  if (graphicsProfile.outlines) world.add(makeRibbon(shoreInner, waterOuter, 0.047, blackMaterial));
+  world.add(makeRibbon(offsetContour(shoreOuter, center, 2.7), waterOuter, 0.042, sandMaterial));
   world.add(makeShape(waterOuter, waterMaterial, 0.051));
 
   const rockMaterial = new THREE.MeshStandardMaterial({ color: 0x697481, roughness: 0.96, flatShading: true });
@@ -311,7 +235,7 @@ function addLake(world, samples) {
     rock.position.y = 0.75 + seeded01(43000 + i) * 0.7;
     rock.scale.y = 0.55 + seeded01(44000 + i) * 0.45;
     rock.rotation.set(seeded01(45000 + i), seeded01(46000 + i) * TAU, seeded01(47000 + i));
-    contourObject(rock, 1.09);
+
     world.add(rock);
   }
 
@@ -330,12 +254,8 @@ function addLakeIsland(world, center) {
     );
   });
 
-  const black = graphicsProfile.outlines
-    ? makeShape(ellipse(20, 13), new THREE.MeshBasicMaterial({ color: INK, side: THREE.DoubleSide }), 0.058)
-    : null;
-  const sand = makeShape(ellipse(17.8, 10.8), new THREE.MeshStandardMaterial({ color: 0xf2cf83, roughness: 1 }), 0.064);
+  const sand = makeShape(ellipse(20, 13), new THREE.MeshStandardMaterial({ color: 0xf2cf83, roughness: 1 }), 0.064);
   const grass = makeShape(ellipse(13.8, 7.8), new THREE.MeshStandardMaterial({ color: 0x78c976, roughness: 1 }), 0.071);
-  if (black) world.add(black);
   world.add(sand, grass);
 
   const rockPalette = [0x596573, 0x74808a, 0x8a949c];
@@ -351,24 +271,11 @@ function addLakeIsland(world, center) {
     );
     rock.scale.y = 0.65 + seeded01(51000 + i) * 0.65;
     rock.rotation.y = seeded01(52000 + i) * TAU;
-    contourObject(rock, 1.09);
+
     world.add(rock);
   }
 }
 
-function addRoadOuterContour(world, samples, trackWidth) {
-  if (!graphicsProfile.outlines) return;
-  const material = new THREE.MeshBasicMaterial({ color: TURN_ROAD, side: THREE.DoubleSide });
-  for (const side of [-1, 1]) {
-    const inner = [];
-    const outer = [];
-    for (const sample of samples) {
-      inner.push(sample.point.clone().addScaledVector(sample.normal, side * (trackWidth / 2 + 1.72)));
-      outer.push(sample.point.clone().addScaledVector(sample.normal, side * (trackWidth / 2 + 2.75)));
-    }
-    world.add(makeRibbon(outer, inner, 0.158, material));
-  }
-}
 
 function addDistantMountains(world, samples) {
   const center = getTrackCenter(samples);
@@ -401,7 +308,7 @@ function addDistantMountains(world, samples) {
         center.z + Math.sin(angle) * distance
       );
       mountain.rotation.y = -angle + seeded01(57000 + i) * 0.7;
-      contourObject(mountain, back ? 1.032 : 1.045);
+
       world.add(mountain);
 
       if (!back && i % 3 === 0) {
@@ -416,7 +323,7 @@ function addDistantMountains(world, samples) {
           Math.sin(angle + 1.2) * width * 0.45
         ));
         shoulder.rotation.y = mountain.rotation.y + 0.45;
-        contourObject(shoulder, 1.045);
+
         world.add(shoulder);
       }
     }
@@ -436,33 +343,14 @@ function tuneAtmosphere(scene) {
   }
 }
 
-export async function installArtPass({ world, scene, samples, trackWidth }) {
+export async function installArtPass({ world, scene, samples }) {
   const grassTexture = makeGraphicGrassTexture();
-
   tuneAtmosphere(scene);
   restyleGround(world, grassTexture);
   addLake(world, samples);
-  addRoadOuterContour(world, samples, trackWidth);
   addDistantMountains(world, samples);
-
-  if (!graphicsProfile.outlines) {
-    console.info('TURN: bold surroundings art pass loaded without contour construction.');
-    return;
-  }
-
-  applyWorldContours(world);
-
-  // Other scenery modules load models asynchronously. Revisit the world a few times so
-  // late Kenney assets receive the same thick contour language without blocking the game.
-  window.setTimeout(() => {
-    restyleGround(world, grassTexture);
-    applyWorldContours(world);
-  }, 700);
-  window.setTimeout(() => {
-    restyleGround(world, grassTexture);
-    applyWorldContours(world);
-  }, 1800);
-  window.setTimeout(() => applyWorldContours(world), 3600);
-
-  console.info('TURN: bold surroundings art pass loaded.');
+  // Ground assets can arrive after the initial scenery pass.
+  window.setTimeout(() => restyleGround(world, grassTexture), 700);
+  window.setTimeout(() => restyleGround(world, grassTexture), 1800);
+  console.info('TURN: surroundings art pass loaded.');
 }

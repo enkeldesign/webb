@@ -4,8 +4,7 @@ import { createTrackSpatialIndex, findNearestTrackBruteForce } from '../../turn/
 import { AIRPORT_HAIRPIN_RUNOFF_ZONES, isForgivingTrackSurface } from '../../turn/tracks/airport-runoff.js';
 import {
   applyContextualRoadEdges,
-  ROAD_EDGE_COLORS,
-  ROAD_EDGE_CONTOURS
+  ROAD_EDGE_COLORS
 } from '../../turn/tracks/contextual-road-edges.js';
 import {
   TRACK_DEFINITIONS,
@@ -58,12 +57,6 @@ assert.deepEqual(
   { countryside: '#ffffff', airport: '#ffbd12', cliffside: '#ffffff', harbor: '#ffbd12' },
   'Airport and Harbor must use TURN profile yellow while road-like tracks keep one solid contextual edge color'
 );
-assert.deepEqual(Object.keys(ROAD_EDGE_CONTOURS), ['airport', 'cliffside', 'harbor']);
-for (const [trackId, contour] of Object.entries(ROAD_EDGE_CONTOURS)) {
-  assert.ok(contour.edgeWidth > 1.5, `${trackId} contour must begin outside its colored road edge`);
-  assert.ok(contour.contourWidth >= 0.5 && contour.contourWidth <= 0.8, `${trackId} black contour must stay visually subordinate`);
-}
-
 const contextualEdgeCases = [
   ['countryside', [0xe63946, 0xfff8e8]], ['airport', [0xff5f67, 0xfff8e8]],
   ['cliffside', [0xff5f67, 0xfff8e8]], ['harbor', [0xf5c542, 0x08090a]]
@@ -86,9 +79,6 @@ for (const [trackId, sourcePalette] of contextualEdgeCases) {
 }
 assert.equal(ROAD_EDGE_COLORS['midnight-city'], undefined);
 assert.equal(ROAD_EDGE_COLORS.mountain, undefined);
-assert.equal(ROAD_EDGE_CONTOURS.countryside, undefined);
-assert.equal(ROAD_EDGE_CONTOURS['midnight-city'], undefined);
-assert.equal(ROAD_EDGE_CONTOURS.mountain, undefined);
 
 const midnightLength = closedPolylineLength(MIDNIGHT_CITY_CONTROL_POINTS);
 const harborLength = closedPolylineLength(HARBOR_CONTROL_POINTS);
@@ -219,7 +209,7 @@ assert.match(mountainTerrain, /Mountain continuous terrain body r3/);
 assert.match(mountainTerrain, /Mountain opaque roadbed side wall r3/);
 assert.match(mountainTerrain, /Mountain closed roadbed underside r3/);
 assert.match(mountainTerrain, /Mountain solid white road edge r3/);
-assert.match(mountainTerrain, /Mountain black outer road contour r3/);
+assert.doesNotMatch(mountainTerrain, /black outer road contour/);
 assert.match(mountainTerrain, /Mountain integrated snowy peak backdrop r3/);
 assert.match(mountainScenery, /Mountain Kenney Holiday cabin prefab r3/);
 assert.match(mountainScenery, /Mountain river channel bed r3/);

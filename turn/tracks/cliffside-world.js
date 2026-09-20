@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { graphicsProfile } from '/turn/graphics-profile.js';
 import { trackPitch } from './elevation.js';
 
 const INK = 0x08090a;
@@ -466,13 +465,13 @@ function makeStartArch(world, samples, trackWidth) {
   const arch = new THREE.Group();
   arch.name = 'Cliffside Start Arch';
   for (const side of [-1, 1]) {
-    const post = outlinedBox(1.4, 10, 1.4, material(CREAM, 0.82));
+    const post = boxGroup(1.4, 10, 1.4, material(CREAM, 0.82));
     post.position.copy(start.point).addScaledVector(start.normal, side * (trackWidth / 2 - 2.2));
     post.position.y = start.point.y + 5;
     post.rotation.y = yaw;
     arch.add(post);
   }
-  const banner = outlinedBox(trackWidth - 2, 2.7, 1.7, material(0xff6b6b, 0.82));
+  const banner = boxGroup(trackWidth - 2, 2.7, 1.7, material(0xff6b6b, 0.82));
   banner.position.copy(start.point);
   banner.position.y = start.point.y + 10;
   banner.rotation.y = yaw;
@@ -497,20 +496,9 @@ function makeDistantIslands(world) {
   }
 }
 
-function outlinedBox(width, height, depth, meshMaterial) {
-  if (!graphicsProfile.outlines) {
-    const group = new THREE.Group();
-    const geometry = new THREE.BoxGeometry(width, height, depth);
-    const mesh = new THREE.Mesh(geometry, meshMaterial);
-    group.add(mesh);
-    return group;
-  }
+function boxGroup(width, height, depth, material) {
   const group = new THREE.Group();
-  const geometry = new THREE.BoxGeometry(width, height, depth);
-  const outline = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: INK, side: THREE.BackSide }));
-  outline.scale.setScalar(1.035);
-  const mesh = new THREE.Mesh(geometry, meshMaterial);
-  group.add(outline, mesh);
+  group.add(new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material));
   return group;
 }
 

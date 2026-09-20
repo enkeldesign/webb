@@ -17,16 +17,8 @@ const {
   FANTASY_ROOT
 } = MOUNTAIN_R3;
 
-function prepareAsset(root) {
-  root.traverse((node) => {
-    if (!node?.isMesh) return;
-    node.userData.turnOutlined = true;
-  });
-  return root;
-}
-
 function clonePrepared(root) {
-  return prepareAsset(root.clone(true));
+  return root.clone(true);
 }
 
 function removeNamed(world, predicate) {
@@ -118,7 +110,6 @@ function makeGable(z, color = 0x8a5c3f) {
   ], 3));
   geometry.computeVertexNormals();
   const gable = new THREE.Mesh(geometry, material(color, 1, 0, { side: THREE.DoubleSide }));
-  gable.userData.turnOutlined = true;
   gable.name = 'Mountain closed Holiday cabin gable r4';
   return gable;
 }
@@ -359,22 +350,22 @@ async function loadVillageTemplates({ skipRetiredHolidayCabins = false } = {}) {
     loader.loadAsync(`${FANTASY_ROOT}/fence.glb`)
   ]);
   const templates = {
-    bench: prepareAsset(bench.scene),
-    lantern: prepareAsset(lantern.scene),
-    sled: prepareAsset(sled.scene),
-    snowTree: prepareAsset(snowTree.scene),
-    stallGreen: prepareAsset(stallGreen.scene),
-    stallRed: prepareAsset(stallRed.scene),
-    cart: prepareAsset(cart.scene),
-    fence: prepareAsset(fence.scene)
+    bench: bench.scene,
+    lantern: lantern.scene,
+    sled: sled.scene,
+    snowTree: snowTree.scene,
+    stallGreen: stallGreen.scene,
+    stallRed: stallRed.scene,
+    cart: cart.scene,
+    fence: fence.scene
   };
   if (retiredCabinSources) {
     const [wall, doorway, windowLarge, roof] = retiredCabinSources;
     Object.assign(templates, {
-      wall: prepareAsset(wall.scene),
-      doorway: prepareAsset(doorway.scene),
-      window: prepareAsset(windowLarge.scene),
-      roof: prepareAsset(roof.scene)
+      wall: wall.scene,
+      doorway: doorway.scene,
+      window: windowLarge.scene,
+      roof: roof.scene
     });
   }
   return templates;

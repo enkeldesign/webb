@@ -13,7 +13,6 @@ import {
 // The promoted long MOUNTAIN then adds only its tested bridge/lower-valley extension.
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 import './contextual-road-edges.js?revision=r518-signature-yellow';
-import './road-contour-color-r512.js?revision=r513-countryside';
 import './start-area-polish-r519.js?revision=r519-midnight-full-width-accents';
 import './airport-start-banner-r520.js?revision=r520-signature-yellow';
 import './procedural-surface-polish-r522.js?revision=r524-procedural-surfaces-contrast-r171';
@@ -40,13 +39,13 @@ const WORLD_INSTALLER_LOADERS = Object.freeze({
   },
   async 'midnight-city'({ scene, samples, trackWidth, runtime }) {
     const { installMidnightCityWorld } = await import(
-      './midnight-city-world-r11.js?build=20260920-r260'
+      './midnight-city-world-r11.js?build=20260920-r261'
     );
     return installMidnightCityWorld({ scene, samples, trackWidth, runtime });
   },
   async mountain({ scene, samples, trackWidth, runtime }) {
     const { installMountainWorld } = await import(
-      './mountain-world-long.js?build=20260920-r260'
+      './mountain-world-long.js?build=20260920-r261'
     );
     return installMountainWorld({ scene, samples, trackWidth, runtime });
   }

@@ -18,7 +18,7 @@ export const MOUNTAIN_R3 = Object.freeze({
   ROAD_HEIGHT: 0.14,
   ROADBED_DEPTH: 0.58,
   EDGE_WHITE_WIDTH: 0.82,
-  EDGE_BLACK_WIDTH: 0.48,
+  ROAD_SHOULDER_CLEARANCE: 0.48,
   TERRAIN_ROAD_GAP: 0.36,
   MOUNTAIN_CORE: Object.freeze({ x: -18, z: 112 }),
   LAKE: Object.freeze({ x: 250, z: -205, rx: 96, rz: 58, level: -0.72 }),
@@ -42,7 +42,7 @@ export const MOUNTAIN_RIVER_CONTROL_POINTS = Object.freeze([
 const {
   INK, CREAM, ASPHALT_DARK, ASPHALT_LIGHT, GRANITE_DARK, GRANITE_LIGHT,
   SNOW, SNOW_SHADOW, ROAD_HEIGHT, ROADBED_DEPTH, EDGE_WHITE_WIDTH,
-  EDGE_BLACK_WIDTH, TERRAIN_ROAD_GAP, MOUNTAIN_CORE, LAKE
+  ROAD_SHOULDER_CLEARANCE, TERRAIN_ROAD_GAP, MOUNTAIN_CORE, LAKE
 } = MOUNTAIN_R3;
 
 export function material(color, roughness = 0.96, metalness = 0, options = {}) {
@@ -168,7 +168,7 @@ function lakeBasinTarget(x, z) {
 
 export function createMountainTerrainSampler(samples, trackWidth, riverSamples = createMountainRiverSamples()) {
   const routeSamples = samples.filter((_, index) => index % 3 === 0);
-  const roadShoulder = trackWidth / 2 + EDGE_WHITE_WIDTH + EDGE_BLACK_WIDTH + 2.2;
+  const roadShoulder = trackWidth / 2 + EDGE_WHITE_WIDTH + ROAD_SHOULDER_CLEARANCE + 2.2;
 
   function terrainHeightAt(x, z) {
     const route = nearestInfo(x, z, routeSamples);
@@ -414,7 +414,6 @@ function makeRoadMarkings(world, samples, trackWidth) {
   const half = trackWidth / 2;
   for (const side of [-1, 1]) {
     makeSolidBand(world, samples, side * (half - 0.08), side * (half + EDGE_WHITE_WIDTH), CREAM, 'Mountain solid white road edge r3');
-    makeSolidBand(world, samples, side * (half + EDGE_WHITE_WIDTH), side * (half + EDGE_WHITE_WIDTH + EDGE_BLACK_WIDTH), INK, 'Mountain black outer road contour r3');
   }
 
   const step = 11;

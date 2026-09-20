@@ -169,37 +169,12 @@ assert.match(screenReaderCoordinator, /speak\(`\$\{instructions\} Go!`, \{[\s\S]
   'DBE instructions and the single GO cue must be one ordered assertive utterance');
 
 // Repeated vegetation is a poor place to spend a second draw call per source mesh.
-// Buildings/start landmarks may keep intentional contours; tree belts opt out before
-// the broad compatibility art pass can add enlarged back-face shells.
-assert.match(worldAssets, /suppressAutoOutline = false/);
-assert.match(
-  worldAssets,
-  /if \(suppressAutoOutline\) node\.userData\.turnOutlined = true/,
-  'Shared model preparation must expose a marker understood by the world contour pass'
-);
-assert.match(
-  worldAssets,
-  /function placeTreeBelt[\s\S]*suppressAutoOutline: true/,
-  'The repeated Countryside tree belt must not receive duplicate contour meshes'
-);
-assert.match(
-  worldAssets,
-  /function placeStartArea[\s\S]*outline: true/,
-  'Intentional start-area silhouettes should remain available rather than globally removing TURN outlines'
-);
-assert.match(worldRender, /function suppressTreeClusterContours\(/);
-assert.match(worldRender, /if \(isContourShell\(node\)\)/);
-assert.match(worldRender, /for \(const shell of contourShells\) shell\.parent\?\.remove\(shell\)/);
-assert.match(
-  worldRender,
-  /node\.userData\.turnOutlined = true/,
-  'Late tree clusters must remain opted out after any already-created contour shell is stripped'
-);
-assert.match(
-  worldRender,
-  /suppressTreeClusterContours\(child\)/,
-  'Late forest clusters must be de-contoured as part of their one-time grounding pass'
-);
+// Racing never allocates contour shells, including late-loaded vegetation.
+assert.doesNotMatch(worldAssets, /addOutline|blackOutlineMaterial|suppressAutoOutline/);
+assert.doesNotMatch(worldRender, /suppressTreeClusterContours|isContourShell|turnOutlined/);
+assert.match(worldAssets, /paletteLocked: true/, 'Tree belts keep their authored palettes');
+assert.match(worldRender, /child\.position\.y -= size\.y \* TREE_CLUSTER_SINK_RATIO/,
+  'Late tree clusters still receive the existing grounding adjustment');
 
 // Harbor used to keep one MeshStandardMaterial shell plus a separate wireframe mesh for
 // every container. Grouping identical geometry by paint colour retains the yard while

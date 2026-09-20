@@ -4,16 +4,8 @@ import { MOUNTAIN_R3, material, safeTracksidePosition } from './mountain-world-r
 
 const { GRANITE_DARK, HOLIDAY_ROOT } = MOUNTAIN_R3;
 
-function prepareAsset(root) {
-  root.traverse((node) => {
-    if (!node?.isMesh) return;
-    node.userData.turnOutlined = true;
-  });
-  return root;
-}
-
 function nativeGroundedClone(template) {
-  const clone = prepareAsset(template.clone(true));
+  const clone = template.clone(true);
   clone.position.set(0, 0, 0);
   clone.rotation.set(0, 0, 0);
   clone.scale.set(1, 1, 1);
@@ -63,7 +55,6 @@ function makeGable(z, color = 0x8a5c3f) {
   ], 3));
   geometry.computeVertexNormals();
   const mesh = new THREE.Mesh(geometry, material(color, 1, 0, { side: THREE.DoubleSide }));
-  mesh.userData.turnOutlined = true;
   mesh.name = 'Mountain closed Holiday cabin gable native-pivot r4';
   return mesh;
 }
@@ -151,10 +142,10 @@ async function loadTemplates() {
     loader.loadAsync(`${HOLIDAY_ROOT}/cabin-roof-safe.glb`)
   ]);
   return {
-    wall: prepareAsset(wall.scene),
-    doorway: prepareAsset(doorway.scene),
-    window: prepareAsset(windowLarge.scene),
-    roof: prepareAsset(roof.scene)
+    wall: wall.scene,
+    doorway: doorway.scene,
+    window: windowLarge.scene,
+    roof: roof.scene
   };
 }
 
