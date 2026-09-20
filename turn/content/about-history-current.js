@@ -578,6 +578,21 @@ const SHARED_NIGHT_SKY_HISTORY = Object.freeze({
   ])
 });
 
+const STABLE_NIGHT_SKY_HISTORY = Object.freeze({
+  period: '20 September',
+  title: 'The night sky holds still and the horizon opens up',
+  paragraphs: Object.freeze([
+    'TURN 1.21.12 removes the deliberate yaw easing and small camera-position/pitch drift from the shared celestial layer. The procedural stars now lock directly to heading, and the moon is rendered as its own camera-facing world billboard so it stays circular instead of inheriting the sky plane’s non-uniform scale.',
+    'MOUNTAIN now grades more clearly toward lighter blue at the horizon, while MIDNIGHT CITY grades toward lighter violet. The change keeps the same procedural shader, canonical moon image, roll-safe coverage and gameplay lighting.'
+  ]),
+  milestones: Object.freeze([
+    'Direct-lock procedural sky with no deliberate celestial wobble',
+    'World-root billboard moon with stable circular presentation',
+    'Clearer blue and violet horizon gradients',
+    'TURN 1.21.12 · 2026.09.20-r267'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -661,7 +676,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   MOUNTAIN_ROAD_EDGE_RESTORE_HISTORY,
   LOW_GRAPHICS_LOT_OUTLINES_HISTORY,
   SETTINGS_FINAL_COPY_HISTORY,
-  SHARED_NIGHT_SKY_HISTORY
+  SHARED_NIGHT_SKY_HISTORY,
+  STABLE_NIGHT_SKY_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -773,13 +789,14 @@ Object.freeze({
     Object.freeze(['1.21.8 r263', 'Restores MOUNTAIN’s asphalt-coloured strip outside the white road-edge markings without reintroducing racing contour shells.']),
     Object.freeze(['1.21.9 r264', 'Keeps The Lot’s black car contours in LOW GRAPHICS while racing remains contour-free in both graphics modes.']),
     Object.freeze(['1.21.10 r265', 'Finalizes Settings copy and groups Player marker, Color cues and DRIFT / FLOW visibility controls into one Interface section.']),
-    Object.freeze(['1.21.11 r266', 'Replaces MOUNTAIN’s raster star field with one shared procedural night sky, reused by MIDNIGHT CITY with a restrained purple horizon glow and the same canonical moon.'])
+    Object.freeze(['1.21.11 r266', 'Replaces MOUNTAIN’s raster star field with one shared procedural night sky, reused by MIDNIGHT CITY with a restrained purple horizon glow and the same canonical moon.']),
+    Object.freeze(['1.21.12 r267', 'Locks the procedural night sky and moon directly to the camera/world relationship, keeps the moon circular, and strengthens MOUNTAIN’s blue and MIDNIGHT CITY’s violet horizon gradients.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.11',
-  build: '2026.09.20-r266',
-  note: 'TURN 1.21.11 gives MOUNTAIN and MIDNIGHT CITY one shared procedural night sky and canonical moon.'
+  version: '1.21.12',
+  build: '2026.09.20-r267',
+  note: 'TURN 1.21.12 stabilizes the shared night sky and moon and strengthens both horizon gradients.'
 });
