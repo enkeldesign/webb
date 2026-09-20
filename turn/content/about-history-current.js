@@ -665,6 +665,21 @@ const MIDNIGHT_GROUND_CONTRAST_HISTORY = Object.freeze({
   ])
 });
 
+const MIDNIGHT_SINGLE_GROUND_HISTORY = Object.freeze({
+  period: '21 September',
+  title: 'MIDNIGHT CITY keeps one canonical ground layer',
+  paragraphs: Object.freeze([
+    'TURN 1.21.18 removes the old translucent downtown ground-glow disc that sat only 0.03 units above the main MIDNIGHT CITY ground plane. That overlay used a different color and could produce visible triangular/radial depth interference in wide camera views.',
+    'The race road remains #20242d and the surrounding off-road base remains #080d16. Parks and other intentional local surfaces stay distinct; only the redundant city-wide non-road overlay is removed.'
+  ]),
+  milestones: Object.freeze([
+    'Single city-wide off-road ground plane: #080d16',
+    'Race road unchanged: #20242d',
+    'One fewer transparent ground mesh',
+    'TURN 1.21.18 · 2026.09.21-r273'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -754,7 +769,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   WORLD_HORIZON_NIGHT_SKY_HISTORY,
   LOWER_NIGHT_GRADIENT_HISTORY,
   MATCHED_NIGHT_GRADIENT_HISTORY,
-  MIDNIGHT_GROUND_CONTRAST_HISTORY
+  MIDNIGHT_GROUND_CONTRAST_HISTORY,
+  MIDNIGHT_SINGLE_GROUND_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -877,13 +893,14 @@ Object.freeze({
   date: '21 September',
   entries: Object.freeze([
     Object.freeze(['1.21.16 r271', 'Matches MIDNIGHT CITY’s violet world-horizon gradient reach to MOUNTAIN at 0.23 after final physical production tuning.']),
-    Object.freeze(['1.21.17 r272', 'Darkens MIDNIGHT CITY’s surrounding base ground while keeping the race asphalt unchanged, making the street read more clearly at night.'])
+    Object.freeze(['1.21.17 r272', 'Darkens MIDNIGHT CITY’s surrounding base ground while keeping the race asphalt unchanged, making the street read more clearly at night.']),
+    Object.freeze(['1.21.18 r273', 'Removes the redundant translucent downtown ground overlay so MIDNIGHT CITY uses one uniform city-wide off-road ground surface and avoids depth interference.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.17',
-  build: '2026.09.21-r272',
-  note: 'TURN 1.21.17 darkens MIDNIGHT CITY’s off-road base ground so the street reads more clearly.'
+  version: '1.21.18',
+  build: '2026.09.21-r273',
+  note: 'TURN 1.21.18 removes MIDNIGHT CITY’s redundant ground overlay so off-road ground is uniform and stable.'
 });
