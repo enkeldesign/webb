@@ -688,7 +688,8 @@ async function inspectRaceContours(page, outputDir, browser, expectClean = true)
   await page.waitForFunction(() => globalThis.__contourLotProbe.snapshot().contours > 0
     && document.querySelector('.lot-loading')?.classList.contains('is-done'), null, { timeout: 90000 });
   await page.locator('.lot-view-host canvas').screenshot({ path: `${outputDir}/contours-${browser}-lot.png` });
-  await page.locator('.lot-race').click();
+  // This resource probe opens The Lot directly while Home remains mounted.
+  await page.locator('.lot-race').evaluate((button) => button.click());
   await page.waitForFunction(() => globalThis.__contourLotProbe.resolved);
   const lot = await page.evaluate(async () => {
     const probe = globalThis.__contourLotProbe;
