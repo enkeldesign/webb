@@ -21,7 +21,7 @@ const entry = await read('turn/index.html');
 const lowGraphics = process.argv.includes('--low-graphics');
 const graphicsProfile = Object.freeze({
   lowGraphics,
-  outlines: !lowGraphics,
+  outlines: true,
   pointLights: !lowGraphics
 });
 assert.ok(entry.includes(`three@0.${THREE.REVISION}.0/build/three.module.js`),
@@ -252,12 +252,12 @@ for (const carId of ['sedan', 'classic', 'supercar', 'police', 'ambulance', 'fir
   const first = await models.createCarVisual({ carId, color: '#123456', secondaryColor: '#abcdef' });
   const second = await models.createCarVisual({ carId, color: '#654321', secondaryColor: '#fedcba' });
   const resources = visualResources.get(first);
-  if (lowGraphics) {
-    first.traverse((node) => {
-      assert.equal(Boolean(node.userData?.turnOutline), false,
-        'LOW GRAPHICS car factories must not construct turnOutline meshes');
-    });
-  }
+  let outlineCount = 0;
+  first.traverse((node) => {
+    if (node.userData?.turnOutline) outlineCount += 1;
+  });
+  assert.ok(outlineCount > 0,
+    `${carId}: explicit preview contours remain authored in ${lowGraphics ? 'LOW' : 'default'} graphics`);
   assert.ok(resources.size >= 5, `${carId} owns its prepared materials`);
   if (carId === 'classic') {
     const sign = first.getObjectByName('kenney-taxi-roof-sign-learner-livery');

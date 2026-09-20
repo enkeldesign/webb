@@ -68,6 +68,8 @@ assert.match(profileSource, /turn-low-graphics-v1/);
 assert.match(profileSource, /dprCap: lowGraphics \? 1 : Infinity/);
 assert.match(profileSource, /antialias: true/);
 assert.doesNotMatch(profileSource, /shadows:/);
+assert.match(profileSource, /outlines: true/,
+  'LOW GRAPHICS must preserve explicitly authored preview contours such as The Lot.');
 assert.match(profileSource, /pointLights: !lowGraphics/);
 assert.match(profileSource, /optionalScenery: true/);
 
@@ -99,7 +101,7 @@ assert.match(worldSource, /section-intensity\.js/);
 
 
 assert.match(carModelsSource, /graphicsProfile\.outlines/,
-  'Preview car contours retain the existing graphics-profile policy');
+  'Explicit preview car contours use the shared context policy in both graphics modes');
 for (const source of [mainSource, landmarksSource, countrysideSource, bellaSource,
   airportWorldSource, airportAircraftSource, airportEmergencySource, cliffsideSource,
   startAreaSource, worldAssetsSource, artPassSource, contextualEdgesSource, worldSource]) {
