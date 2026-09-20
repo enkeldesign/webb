@@ -82,19 +82,6 @@ function makeGround(world) {
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.2;
   world.add(ground);
-
-  const downtownGlow = new THREE.Mesh(
-    new THREE.CircleGeometry(520, 64),
-    new THREE.MeshBasicMaterial({
-      color: 0x16213d,
-      transparent: true,
-      opacity: 0.42,
-      depthWrite: false
-    })
-  );
-  downtownGlow.rotation.x = -Math.PI / 2;
-  downtownGlow.position.set(20, -0.17, 35);
-  world.add(downtownGlow);
 }
 
 function makeRaceRoad(world, samples, trackWidth) {
