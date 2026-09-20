@@ -8,6 +8,7 @@ const [
   showcaseSource,
   signParkSource,
   easterEggSource,
+  baseWorldSource,
   sharedNightSkySource,
   registrySource,
   releaseSource
@@ -18,6 +19,7 @@ const [
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r6.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r11.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/midnight-city-world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/shared-night-sky.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
@@ -88,6 +90,10 @@ assert.match(easterEggSource, /installNightPlayerSpotlight\(options\.runtime\?\.
 assert.match(easterEggSource, /installSharedNightSky\(world, \{ trackId: 'midnight-city' \}\)/);
 assert.match(easterEggSource, /world\.ready = Promise\.resolve\(inheritedReady\)/);
 assert.match(easterEggSource, /nightSkyVariation: 'restrained-purple-horizon-glow'/);
+assert.match(baseWorldSource, /const ROAD = 0x20242d;/,
+  'MIDNIGHT CITY race asphalt must keep its established color');
+assert.match(baseWorldSource, /const GROUND = 0x080d16;/,
+  'MIDNIGHT CITY off-road base ground must remain distinctly darker than the race asphalt');
 assert.match(sharedNightSkySource, /mountain-moon\.png/);
 assert.match(sharedNightSkySource, /'midnight-city': Object\.freeze/);
 assert.match(sharedNightSkySource, /horizon: 0x4a2866/);

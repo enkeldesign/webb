@@ -13,7 +13,7 @@ const WINDOW_GOLD = 0xffc857;
 const BUILDING_DARK = 0x171a25;
 const BUILDING_BLUE = 0x20283a;
 const BUILDING_PURPLE = 0x2b2138;
-const GROUND = 0x0e1420;
+const GROUND = 0x080d16;
 const TRACK_Y = 0.16;
 
 const CITY_BLOCKS = Object.freeze([

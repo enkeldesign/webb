@@ -651,6 +651,20 @@ const MATCHED_NIGHT_GRADIENT_HISTORY = Object.freeze({
   ])
 });
 
+const MIDNIGHT_GROUND_CONTRAST_HISTORY = Object.freeze({
+  period: '21 September',
+  title: 'MIDNIGHT CITY separates road from ground',
+  paragraphs: Object.freeze([
+    'TURN 1.21.17 keeps the established MIDNIGHT CITY asphalt color but darkens the large surrounding base ground plane from #0e1420 to #080d16. The road, road edges, sidewalks, parks and lighting are unchanged.',
+    'Because this is only a material color adjustment on existing geometry, it adds no draw calls, lights, textures or per-frame work.'
+  ]),
+  milestones: Object.freeze([
+    'Race road unchanged: #20242d',
+    'Off-road base ground: #080d16',
+    'TURN 1.21.17 · 2026.09.21-r272'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -739,7 +753,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   NIGHT_SKY_FINISH_HISTORY,
   WORLD_HORIZON_NIGHT_SKY_HISTORY,
   LOWER_NIGHT_GRADIENT_HISTORY,
-  MATCHED_NIGHT_GRADIENT_HISTORY
+  MATCHED_NIGHT_GRADIENT_HISTORY,
+  MIDNIGHT_GROUND_CONTRAST_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -861,13 +876,14 @@ Object.freeze({
 Object.freeze({
   date: '21 September',
   entries: Object.freeze([
-    Object.freeze(['1.21.16 r271', 'Matches MIDNIGHT CITY’s violet world-horizon gradient reach to MOUNTAIN at 0.23 after final physical production tuning.'])
+    Object.freeze(['1.21.16 r271', 'Matches MIDNIGHT CITY’s violet world-horizon gradient reach to MOUNTAIN at 0.23 after final physical production tuning.']),
+    Object.freeze(['1.21.17 r272', 'Darkens MIDNIGHT CITY’s surrounding base ground while keeping the race asphalt unchanged, making the street read more clearly at night.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.16',
-  build: '2026.09.21-r271',
-  note: 'TURN 1.21.16 matches MIDNIGHT CITY’s low world-horizon gradient reach to MOUNTAIN at 0.23.'
+  version: '1.21.17',
+  build: '2026.09.21-r272',
+  note: 'TURN 1.21.17 darkens MIDNIGHT CITY’s off-road base ground so the street reads more clearly.'
 });
