@@ -508,6 +508,20 @@ const RACE_CONTOUR_HISTORY = Object.freeze({
   ])
 });
 
+const ROAD_EDGE_AND_CLIFFSIDE_RESTORE_HISTORY = Object.freeze({
+  period: '20 September',
+  title: 'Track edges and CLIFFSIDE ground return',
+  paragraphs: Object.freeze([
+    'TURN 1.21.7 restores the narrow asphalt-coloured strip outside the painted track edges on Countryside, Airport, Cliffside and Harbor. It is ordinary road-edge geometry, not a contour shell, so the racing contour removal remains in place.',
+    'CLIFFSIDE now loads its r76 scenery wrapper directly from the track registry, restoring the filled inner highlands and grounded forest without changing collision, road geometry, records or vehicle behaviour.'
+  ]),
+  milestones: Object.freeze([
+    'Asphalt-coloured outer road trim restored on four tracks',
+    'CLIFFSIDE inner highlands restored through the intended r76 scenery wrapper',
+    'TURN 1.21.7 · 2026.09.20-r262'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -586,7 +600,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   SOFT_SHADOW_HISTORY,
   WHEEL_CONTACT_HISTORY,
   TYRE_CENTRE_HISTORY,
-  RACE_CONTOUR_HISTORY
+  RACE_CONTOUR_HISTORY,
+  ROAD_EDGE_AND_CLIFFSIDE_RESTORE_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -693,13 +708,14 @@ Object.freeze({
   entries: Object.freeze([
     Object.freeze(['1.21.4 r259', 'Lightens the shadow beneath each car and attaches skid marks to its actual rear wheels without a frame of delay.']),
     Object.freeze(['1.21.5 r260', 'Aligns skid marks with the centres of the rear tires, preserving Monster Truck and Supercar spacing.']),
-    Object.freeze(['1.21.6 r261', 'Removes race contours and their extra drawing work, keeps The Lot’s outlined previews, and releases Lot renderers before racing resumes.'])
+    Object.freeze(['1.21.6 r261', 'Removes race contours and their extra drawing work, keeps The Lot’s outlined previews, and releases Lot renderers before racing resumes.']),
+    Object.freeze(['1.21.7 r262', 'Restores the asphalt-coloured strip outside track markings and CLIFFSIDE’s filled inner highlands while keeping racing contour shells removed.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.6',
-  build: '2026.09.20-r261',
-  note: 'TURN 1.21.6 removes racing contours while preserving The Lot’s previews and releasing their renderers before racing.'
+  version: '1.21.7',
+  build: '2026.09.20-r262',
+  note: 'TURN 1.21.7 restores asphalt road-edge trim and CLIFFSIDE’s filled inner highlands without restoring racing contour shells.'
 });

@@ -30,7 +30,7 @@ const WORLD_INSTALLER_LOADERS = Object.freeze({
     return installAirportWorld({ scene, samples, trackWidth, runtime });
   },
   async cliffside({ scene, samples, trackWidth }) {
-    const { installCliffsideWorld } = await import('./cliffside-world.js');
+    const { installCliffsideWorld } = await import('./cliffside-world-r76.js');
     return installCliffsideWorld({ scene, samples, trackWidth });
   },
   async harbor({ scene, samples, trackWidth }) {
@@ -39,13 +39,13 @@ const WORLD_INSTALLER_LOADERS = Object.freeze({
   },
   async 'midnight-city'({ scene, samples, trackWidth, runtime }) {
     const { installMidnightCityWorld } = await import(
-      './midnight-city-world-r11.js?build=20260920-r261'
+      './midnight-city-world-r11.js?build=20260920-r262'
     );
     return installMidnightCityWorld({ scene, samples, trackWidth, runtime });
   },
   async mountain({ scene, samples, trackWidth, runtime }) {
     const { installMountainWorld } = await import(
-      './mountain-world-long.js?build=20260920-r261'
+      './mountain-world-long.js?build=20260920-r262'
     );
     return installMountainWorld({ scene, samples, trackWidth, runtime });
   }

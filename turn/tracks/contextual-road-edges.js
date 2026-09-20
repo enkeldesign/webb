@@ -1,4 +1,5 @@
 const COLOR_EPSILON = 1e-4;
+const TURN_ROAD = 0x44494f;
 const TURN_SIGNATURE_YELLOW = 0xffbd12;
 const DISPLAY_MATCHED_EDGE_TRACKS = new Set(['airport', 'harbor']);
 
@@ -9,6 +10,12 @@ export const ROAD_EDGE_COLORS = Object.freeze({
   harbor: '#ffbd12'
 });
 
+// These are narrow asphalt-coloured road-edge strips, not contour shells.
+export const ROAD_EDGE_TRIMS = Object.freeze({
+  airport: Object.freeze({ edgeWidth: 1.75, trimWidth: 0.62 }),
+  cliffside: Object.freeze({ edgeWidth: 1.65, trimWidth: 0.62 }),
+  harbor: Object.freeze({ edgeWidth: 1.8, trimWidth: 0.62 })
+});
 
 const EDGE_STYLES = Object.freeze({
   countryside: Object.freeze({
@@ -30,8 +37,12 @@ const EDGE_STYLES = Object.freeze({
 });
 
 const styledWorlds = new WeakMap();
+const trimmedWorlds = new WeakSet();
 
-export function applyContextualRoadEdges(world, trackId) {
+export function applyContextualRoadEdges(world, trackId, {
+  samples,
+  trackWidth = 27
+} = {}) {
   const style = EDGE_STYLES[trackId];
   if (!world?.traverse || !style) return 0;
 
@@ -57,6 +68,24 @@ export function applyContextualRoadEdges(world, trackId) {
     });
 
     styledWorlds.set(world, trackId);
+  } else {
+    world.traverse((node) => {
+      if (node?.userData?.turnContextualRoadEdge === trackId) matchingEdges.push(node);
+    });
+  }
+
+  const trim = ROAD_EDGE_TRIMS[trackId];
+  if (
+    trim
+    && !trimmedWorlds.has(world)
+    && matchingEdges.length
+    && Array.isArray(samples)
+    && samples.length > 2
+  ) {
+    for (const edge of matchingEdges) {
+      installOuterAsphaltTrimFromEdge(edge, samples, Number(trackWidth) || 27, trackId, trim);
+    }
+    trimmedWorlds.add(world);
   }
 
   // The Home header is a flat CSS #ffbd12. Airport and Harbor used the same
@@ -72,6 +101,83 @@ export function applyContextualRoadEdges(world, trackId) {
   return changed;
 }
 
+
+function installOuterAsphaltTrimFromEdge(edge, samples, trackWidth, trackId, trim) {
+  if (!edge?.clone || !edge.geometry?.clone) return false;
+  const sourcePositions = edge.geometry.getAttribute?.('position');
+  const sourceColors = edge.geometry.getAttribute?.('color');
+  if (!sourcePositions || !sourceColors || sourcePositions.count < 6) return false;
+
+  const mesh = edge.clone(false);
+  mesh.geometry = edge.geometry.clone();
+  mesh.material = cloneRoadTrimMaterial(edge.material);
+  mesh.name = `TURN ${trackId} outer asphalt trim`;
+  mesh.userData = { ...(edge.userData || {}) };
+  delete mesh.userData.turnContextualRoadEdge;
+  mesh.userData.turnRoadEdgeTrim = trackId;
+
+  const positions = mesh.geometry.getAttribute('position');
+  const colors = mesh.geometry.getAttribute('color');
+  const firstSample = samples[0];
+  const firstX = sourcePositions.getX(0) - Number(firstSample?.point?.x || 0);
+  const firstZ = sourcePositions.getZ(0) - Number(firstSample?.point?.z || 0);
+  const sideDot = firstX * Number(firstSample?.normal?.x || 0)
+    + firstZ * Number(firstSample?.normal?.z || 0);
+  const side = sideDot >= 0 ? 1 : -1;
+  const halfTrack = trackWidth / 2;
+  const innerDistance = halfTrack + trim.edgeWidth - 0.04;
+  const outerDistance = halfTrack + trim.edgeWidth + trim.trimWidth;
+  const segmentCount = Math.min(samples.length, Math.floor(positions.count / 6));
+
+  for (let segment = 0; segment < segmentCount; segment += 1) {
+    const current = samples[segment];
+    const next = samples[(segment + 1) % samples.length];
+    const base = segment * 6;
+    setTrimVertex(positions, sourcePositions, base, current, side, innerDistance);
+    setTrimVertex(positions, sourcePositions, base + 1, current, side, outerDistance);
+    setTrimVertex(positions, sourcePositions, base + 2, next, side, innerDistance);
+    setTrimVertex(positions, sourcePositions, base + 3, current, side, outerDistance);
+    setTrimVertex(positions, sourcePositions, base + 4, next, side, outerDistance);
+    setTrimVertex(positions, sourcePositions, base + 5, next, side, innerDistance);
+  }
+  positions.needsUpdate = true;
+
+  const road = hexToLinearRgb(TURN_ROAD);
+  for (let index = 0; index < colors.count; index += 1) {
+    colors.setXYZ(index, road.r, road.g, road.b);
+  }
+  colors.needsUpdate = true;
+  mesh.geometry.computeVertexNormals?.();
+
+  const parent = edge.parent;
+  parent?.add?.(mesh);
+  return Boolean(parent);
+}
+
+function setTrimVertex(attribute, sourceAttribute, index, sample, side, distance) {
+  if (!sample?.point || !sample?.normal || index >= attribute.count) return;
+  const x = Number(sample.point.x) + Number(sample.normal.x) * side * distance;
+  const z = Number(sample.point.z) + Number(sample.normal.z) * side * distance;
+  const y = sourceAttribute.getY(index) - 0.008;
+  attribute.setXYZ(index, x, y, z);
+}
+
+function cloneRoadTrimMaterial(material) {
+  const cloned = Array.isArray(material)
+    ? material.map((entry) => entry?.clone?.() || entry)
+    : material?.clone?.() || material;
+  const materials = Array.isArray(cloned) ? cloned : [cloned];
+  for (const entry of materials) {
+    if (!entry) continue;
+    entry.color?.setHex?.(0xffffff);
+    entry.emissive?.setHex?.(0x000000);
+    if ('emissiveIntensity' in entry) entry.emissiveIntensity = 1;
+    if ('vertexColors' in entry) entry.vertexColors = true;
+    if ('toneMapped' in entry) entry.toneMapped = true;
+    entry.needsUpdate = true;
+  }
+  return cloned;
+}
 
 function lockMaterialToDisplayColor(material, hex) {
   const materials = Array.isArray(material) ? material : [material];
@@ -129,14 +235,20 @@ function srgbToLinear(channel) {
 }
 
 function styleInitialCountryside(runtime) {
-  applyContextualRoadEdges(runtime?.world, 'countryside');
+  applyContextualRoadEdges(runtime?.world, 'countryside', {
+    samples: runtime?.samples,
+    trackWidth: runtime?.trackWidth
+  });
 }
 
 function styleActiveTrack(event) {
   const trackId = event?.detail?.trackId;
   const runtime = globalThis.__turnRuntime;
   const world = runtime?.activeWorld || (trackId === 'countryside' ? runtime?.world : null);
-  applyContextualRoadEdges(world, trackId);
+  applyContextualRoadEdges(world, trackId, {
+    samples: runtime?.samples,
+    trackWidth: runtime?.trackWidth
+  });
 }
 
 function bootstrap() {
