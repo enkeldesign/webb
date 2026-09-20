@@ -680,6 +680,22 @@ const MIDNIGHT_SINGLE_GROUND_HISTORY = Object.freeze({
   ])
 });
 
+const MIDNIGHT_LOW_CITY_HISTORY = Object.freeze({
+  period: '21 September',
+  title: 'MIDNIGHT CITY grows a low-rise street layer',
+  paragraphs: Object.freeze([
+    'TURN 1.21.19 fills selected empty trackside areas with a new low-city layer: short dark buildings aligned to the road, bright shopfront strips, thin neon rooflines and rooftop service units. Placement is derived from the race geometry and rejected when it would crowd the road, overlap a park or collide visually with the existing district towers.',
+    'The procedural infill is three instanced draw calls and adds no real lights. Up to three small pinned Kenney City Builder models — two low buildings and a garage — can load as extra foreground landmarks using the same CC0 pack already used by TURN Commons.'
+  ]),
+  milestones: Object.freeze([
+    'Track-aware low-rise urban infill',
+    'Shopfront and roofline neon without dynamic lights',
+    'Three instanced procedural draw calls',
+    'Up to three pinned Kenney low-city landmarks',
+    'TURN 1.21.19 · 2026.09.21-r274'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -770,7 +786,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   LOWER_NIGHT_GRADIENT_HISTORY,
   MATCHED_NIGHT_GRADIENT_HISTORY,
   MIDNIGHT_GROUND_CONTRAST_HISTORY,
-  MIDNIGHT_SINGLE_GROUND_HISTORY
+  MIDNIGHT_SINGLE_GROUND_HISTORY,
+  MIDNIGHT_LOW_CITY_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -894,13 +911,14 @@ Object.freeze({
   entries: Object.freeze([
     Object.freeze(['1.21.16 r271', 'Matches MIDNIGHT CITY’s violet world-horizon gradient reach to MOUNTAIN at 0.23 after final physical production tuning.']),
     Object.freeze(['1.21.17 r272', 'Darkens MIDNIGHT CITY’s surrounding base ground while keeping the race asphalt unchanged, making the street read more clearly at night.']),
-    Object.freeze(['1.21.18 r273', 'Removes the redundant translucent downtown ground overlay so MIDNIGHT CITY uses one uniform city-wide off-road ground surface and avoids depth interference.'])
+    Object.freeze(['1.21.18 r273', 'Removes the redundant translucent downtown ground overlay so MIDNIGHT CITY uses one uniform city-wide off-road ground surface and avoids depth interference.']),
+    Object.freeze(['1.21.19 r274', 'Adds track-aware low-rise urban infill, neon shopfronts and a few pinned Kenney foreground landmarks to fill MIDNIGHT CITY’s large empty areas without adding real lights.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.18',
-  build: '2026.09.21-r273',
-  note: 'TURN 1.21.18 removes MIDNIGHT CITY’s redundant ground overlay so off-road ground is uniform and stable.'
+  version: '1.21.19',
+  build: '2026.09.21-r274',
+  note: 'TURN 1.21.19 fills MIDNIGHT CITY’s empty trackside areas with a performance-conscious low-rise urban layer.'
 });
