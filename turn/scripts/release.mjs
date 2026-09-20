@@ -257,6 +257,18 @@ function synchronizeKeyboardDrivingTargets(importMap, release) {
   }
 }
 
+function synchronizeSettingsUiTargets(importMap, release) {
+  const imports = importMap.imports ||= {};
+  const modules = {
+    '/turn/ui/drift-camera-setting.js': ['', '?revision=r214-shared-speed-fov'],
+    '/turn/ui/player-marker-r427.js': ['', '?revision=r427']
+  };
+  for (const [pathname, suffixes] of Object.entries(modules)) {
+    const target = `${pathname}?build=${release.cacheKey}`;
+    for (const suffix of suffixes) imports[`${pathname}${suffix}`] = target;
+  }
+}
+
 function synchronizeDriveByEarTrainingTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   const releaseBoundPaths = [
@@ -454,6 +466,7 @@ function renderSharedResourceImports(source, release) {
     synchronizeAchievementProgressionTargets(importMap, release);
     synchronizePlatformContextTarget(importMap, release);
     synchronizeKeyboardDrivingTargets(importMap, release);
+    synchronizeSettingsUiTargets(importMap, release);
     synchronizeDriveByEarTrainingTargets(importMap, release);
     synchronizePerkFeedbackTargets(importMap, release);
     synchronizeGraphicsRuntimeTarget(importMap, release);
@@ -490,6 +503,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeAchievementProgressionTargets(importMap, release);
   synchronizePlatformContextTarget(importMap, release);
   synchronizeKeyboardDrivingTargets(importMap, release);
+  synchronizeSettingsUiTargets(importMap, release);
   synchronizeDriveByEarTrainingTargets(importMap, release);
   synchronizePerkFeedbackTargets(importMap, release);
   synchronizeGraphicsRuntimeTarget(importMap, release);
