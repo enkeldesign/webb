@@ -18,6 +18,7 @@ export const MOUNTAIN_R3 = Object.freeze({
   ROAD_HEIGHT: 0.14,
   ROADBED_DEPTH: 0.58,
   EDGE_WHITE_WIDTH: 0.82,
+  ROAD_EDGE_TRIM_WIDTH: 0.48,
   ROAD_SHOULDER_CLEARANCE: 0.48,
   TERRAIN_ROAD_GAP: 0.36,
   MOUNTAIN_CORE: Object.freeze({ x: -18, z: 112 }),
@@ -42,7 +43,7 @@ export const MOUNTAIN_RIVER_CONTROL_POINTS = Object.freeze([
 const {
   INK, CREAM, ASPHALT_DARK, ASPHALT_LIGHT, GRANITE_DARK, GRANITE_LIGHT,
   SNOW, SNOW_SHADOW, ROAD_HEIGHT, ROADBED_DEPTH, EDGE_WHITE_WIDTH,
-  ROAD_SHOULDER_CLEARANCE, TERRAIN_ROAD_GAP, MOUNTAIN_CORE, LAKE
+  ROAD_EDGE_TRIM_WIDTH, ROAD_SHOULDER_CLEARANCE, TERRAIN_ROAD_GAP, MOUNTAIN_CORE, LAKE
 } = MOUNTAIN_R3;
 
 export function material(color, roughness = 0.96, metalness = 0, options = {}) {
@@ -408,12 +409,22 @@ function makeSolidBand(world, samples, offsetA, offsetB, color, name) {
   const mesh = new THREE.Mesh(geometry, material(color, 0.9, 0, { side: THREE.DoubleSide }));
   mesh.name = name;
   world.add(mesh);
+  return mesh;
 }
 
 function makeRoadMarkings(world, samples, trackWidth) {
   const half = trackWidth / 2;
   for (const side of [-1, 1]) {
     makeSolidBand(world, samples, side * (half - 0.08), side * (half + EDGE_WHITE_WIDTH), CREAM, 'Mountain solid white road edge r3');
+    const trim = makeSolidBand(
+      world,
+      samples,
+      side * (half + EDGE_WHITE_WIDTH),
+      side * (half + EDGE_WHITE_WIDTH + ROAD_EDGE_TRIM_WIDTH),
+      ASPHALT_DARK,
+      'Mountain asphalt outer road trim r3'
+    );
+    trim.userData.turnRoadEdgeTrim = 'mountain';
   }
 
   const step = 11;
