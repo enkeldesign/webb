@@ -23,7 +23,6 @@
     import { installArtPass } from '/turn/world-art-pass.js?revision=r514-road-contour';
     import { installTrackIdentity } from '/turn/track-identity.js?revision=r532-countryside-nature-polish';
     import { installSectionIntensity } from '/turn/section-intensity.js?revision=r532-countryside-nature-polish';
-    import { installCountrysideSceneryCleanup } from '/turn/tracks/countryside-scenery-r177.js?revision=r532-countryside-nature-polish';
     import { installCountrysideBella } from '/turn/tracks/countryside-bella-r166.js?revision=r176-road-derived-zone';
     import { installCountrysideWindmill } from '/turn/tracks/kenney-track-landmarks-r517.js?revision=r532-countryside-nature-polish';
 
@@ -294,11 +293,9 @@
       // the byte-protected base module, while remaining scoped to Countryside scenery.
       void bella;
       await observedInstall('windmill', installCountrysideWindmill(runtime));
-      await installCountrysideSceneryCleanup({ world, samples, trackWidth: TRACK_WIDTH });
 
       // Let the same delayed contour and intensity sweeps used in production complete.
       await new Promise((resolve) => window.setTimeout(resolve, 4900));
-      await installCountrysideSceneryCleanup({ world, samples, trackWidth: TRACK_WIDTH });
       world.updateMatrixWorld(true);
       markProgress('production sweeps complete');
     } catch (error) {
