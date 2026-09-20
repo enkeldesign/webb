@@ -550,6 +550,20 @@ const LOW_GRAPHICS_LOT_OUTLINES_HISTORY = Object.freeze({
   ])
 });
 
+const SETTINGS_FINAL_COPY_HISTORY = Object.freeze({
+  period: '20 September',
+  title: 'Settings reflect the finished TURN',
+  paragraphs: Object.freeze([
+    'TURN 1.21.10 updates Settings to describe the game as it now ships. Drift Camera is no longer labelled experimental, and LOW GRAPHICS copy now reflects its final behaviour: lower resolution and simpler lighting without implying that authored Lot outlines disappear.',
+    'Player marker, Color cues and live DRIFT / FLOW display controls now share one Interface card. The controls keep their existing preferences and behaviour; this is an information-architecture and copy cleanup rather than a gameplay change.'
+  ]),
+  milestones: Object.freeze([
+    'Final Camera and LOW GRAPHICS copy',
+    'Player marker, Color cues and scoring visibility grouped under Interface',
+    'TURN 1.21.10 · 2026.09.20-r265'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -631,7 +645,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   RACE_CONTOUR_HISTORY,
   ROAD_EDGE_AND_CLIFFSIDE_RESTORE_HISTORY,
   MOUNTAIN_ROAD_EDGE_RESTORE_HISTORY,
-  LOW_GRAPHICS_LOT_OUTLINES_HISTORY
+  LOW_GRAPHICS_LOT_OUTLINES_HISTORY,
+  SETTINGS_FINAL_COPY_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -741,13 +756,14 @@ Object.freeze({
     Object.freeze(['1.21.6 r261', 'Removes race contours and their extra drawing work, keeps The Lot’s outlined previews, and releases Lot renderers before racing resumes.']),
     Object.freeze(['1.21.7 r262', 'Restores the asphalt-coloured strip outside track markings and CLIFFSIDE’s filled inner highlands while keeping racing contour shells removed.']),
     Object.freeze(['1.21.8 r263', 'Restores MOUNTAIN’s asphalt-coloured strip outside the white road-edge markings without reintroducing racing contour shells.']),
-    Object.freeze(['1.21.9 r264', 'Keeps The Lot’s black car contours in LOW GRAPHICS while racing remains contour-free in both graphics modes.'])
+    Object.freeze(['1.21.9 r264', 'Keeps The Lot’s black car contours in LOW GRAPHICS while racing remains contour-free in both graphics modes.']),
+    Object.freeze(['1.21.10 r265', 'Finalizes Settings copy and groups Player marker, Color cues and DRIFT / FLOW visibility controls into one Interface section.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.9',
-  build: '2026.09.20-r264',
-  note: 'TURN 1.21.9 keeps The Lot’s authored car outlines in LOW GRAPHICS while racing stays contour-free.'
+  version: '1.21.10',
+  build: '2026.09.20-r265',
+  note: 'TURN 1.21.10 finalizes Settings copy and consolidates interface visibility controls.'
 });

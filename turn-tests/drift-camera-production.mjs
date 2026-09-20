@@ -300,7 +300,9 @@ assert.match(settingSource, /getItem\(DRIFT_CAMERA_STORAGE_KEY\) === 'on'/,
   'Missing storage must continue to mean classic drift direction');
 assert.match(settingSource, /SPEED_RESPONSIVE_CAMERA_DEFAULT = false/);
 assert.match(settingSource, /<strong>Zoom<\/strong>/);
-assert.match(settingSource, /Off uses the classic pull-back; both modes widen the view with speed\./);
+assert.match(settingSource, /Follow the car’s actual direction of travel through slides\./);
+assert.doesNotMatch(settingSource, /Experimental|experimental/);
+assert.match(settingSource, /Off keeps the classic pull-back while still widening the view with speed\./);
 assert.match(settingSource, /globalThis\.__turnDriftCameraEnabled = next/,
   'The Drift Camera toggle must update camera behavior live without a reload');
 assert.match(settingSource, /globalThis\.__turnSpeedResponsiveCameraEnabled = next/,

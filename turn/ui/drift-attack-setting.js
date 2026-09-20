@@ -29,17 +29,23 @@ export function installDriftAttackSetting(
 
   let section = list.querySelector('[data-turn-scoring-settings]');
   if (!section) {
-    section = document.createElement('section');
-    section.className = 'm8-setting-card';
+    section = document.createElement('fieldset');
+    section.className = 'm8-interface-group m8-scoring-settings';
     section.dataset.turnScoringSettings = '';
-    section.setAttribute('aria-labelledby', 'm8ScoringTitle');
     section.innerHTML = `
-      <h3 id="m8ScoringTitle">Scoring</h3>
+      <legend>Scoring</legend>
       ${scoringToggleMarkup('drift')}
       ${scoringToggleMarkup('flow')}`;
+    const interfaceSlot = list.querySelector('[data-turn-scoring-slot]');
     const records = list.querySelector('.m8-record-setting');
-    if (records) records.before(section);
-    else list.appendChild(section);
+    if (interfaceSlot) interfaceSlot.append(section);
+    else if (records) {
+      section.classList.add('m8-setting-card');
+      records.before(section);
+    } else {
+      section.classList.add('m8-setting-card');
+      list.appendChild(section);
+    }
   } else {
     // Keep the installer forward-compatible with a cached settings dialog
     // created by an older TURN module before both scoring rows existed.

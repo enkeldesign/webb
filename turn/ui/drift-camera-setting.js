@@ -91,14 +91,14 @@ function attachSettingsControl() {
         <input id="m8DriftCameraEnabled" type="checkbox">
         <span>
           <strong>Drift camera</strong>
-          <small>Follows the car’s actual direction of travel during slides. Experimental; the classic camera remains the default.</small>
+          <small>Follow the car’s actual direction of travel through slides.</small>
         </span>
       </label>
       <label class="m8-toggle-row">
         <input id="m8SpeedResponsiveCameraEnabled" type="checkbox">
         <span>
           <strong>Zoom</strong>
-          <small>Keeps the car close as speed builds. Off uses the classic pull-back; both modes widen the view with speed.</small>
+          <small>Keep the car closer as speed builds. Off keeps the classic pull-back while still widening the view with speed.</small>
         </span>
       </label>`;
     const steering = list.querySelector('.m8-steering-setting');

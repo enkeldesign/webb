@@ -22,12 +22,10 @@ function installColorCueSetting() {
   const list = dialog?.querySelector('.m8-settings-list');
   if (!dialog || !list || dialog.querySelector('[data-turn-color-cues-setting]')) return;
 
-  const section = document.createElement('section');
-  section.className = 'm8-setting-card m8-color-cues-setting';
+  const section = document.createElement('div');
+  section.className = 'm8-interface-group m8-color-cues-setting';
   section.dataset.turnColorCuesSetting = '';
-  section.setAttribute('aria-labelledby', 'm8ColorCuesTitle');
   section.innerHTML = `
-    <h3 id="m8ColorCuesTitle">Color</h3>
     <label class="m8-toggle-row">
       <input id="m8ColorCuesEnabled" type="checkbox">
       <span>
@@ -36,11 +34,20 @@ function installColorCueSetting() {
       </span>
     </label>`;
 
+  const interfaceSlot = list.querySelector('[data-turn-color-cues-slot]');
   const visualSettings = list.querySelector('.m8-visual-settings');
   const records = list.querySelector('.m8-record-setting');
-  if (visualSettings) visualSettings.append(section);
-  else if (records) list.insertBefore(section, records);
-  else list.append(section);
+  if (interfaceSlot) interfaceSlot.append(section);
+  else if (visualSettings) {
+    section.classList.add('m8-setting-card');
+    visualSettings.append(section);
+  } else if (records) {
+    section.classList.add('m8-setting-card');
+    list.insertBefore(section, records);
+  } else {
+    section.classList.add('m8-setting-card');
+    list.append(section);
+  }
 
   const toggle = section.querySelector('#m8ColorCuesEnabled');
   const sync = () => {
