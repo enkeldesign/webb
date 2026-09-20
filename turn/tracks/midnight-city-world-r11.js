@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
-import { installMidnightCityWorld as installMidnightCityWorldR7 } from './midnight-city-world-r7.js?build=20260920-r265';
+import { installMidnightCityWorld as installMidnightCityWorldR7 } from './midnight-city-world-r7.js?build=20260920-r266';
 import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js?revision=r175-reconcile';
+import { installSharedNightSky } from '/turn/tracks/shared-night-sky.js';
 
 const LILYA_TEXTURE_URL = new URL('../LILYA.PNG', import.meta.url).href;
 
@@ -23,6 +24,11 @@ const TRACK_SURFACE_NAME = /^Midnight City (race road|road edge|sidewalk)/;
 
 export function installMidnightCityWorld(options) {
   const world = installMidnightCityWorldR7(options);
+  const inheritedReady = world.ready;
+  const nightSky = installSharedNightSky(world, { trackId: 'midnight-city' });
+  world.ready = Promise.resolve(inheritedReady)
+    .then(() => nightSky?.ready)
+    .then(() => world);
   const surfaceNormals = repairTrackSurfaceWinding(world);
   const portrait = installHiddenLilyaPortrait(world);
   const lazyLoadArmed = armWrongWayTextureLoad(world, portrait, options);
@@ -47,6 +53,9 @@ export function installMidnightCityWorld(options) {
       ? 'shared-warm-shadowless-spotlight-identical-to-mountain'
       : 'unavailable-without-player-car',
     sharedNightSpotlight: Boolean(playerSpotlight),
+    sharedProceduralNightSky: Boolean(nightSky?.sky),
+    sharedSouthernMoon: 'canonical-mountain-moon-image',
+    nightSkyVariation: 'restrained-purple-horizon-glow',
     headlightRoadReflectance: 'original-midnight-city-road-material-with-upward-facing-surface-normals',
     repairedDownwardSurfaceMeshes: surfaceNormals.repaired,
     inspectedTrackSurfaceMeshes: surfaceNormals.inspected,

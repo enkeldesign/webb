@@ -38,6 +38,7 @@ const [
   terrain,
   scenery,
   night,
+  sharedNightSky,
   trophyGate
 ] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/definitions.js', import.meta.url), 'utf8'),
@@ -54,6 +55,7 @@ const [
   fs.readFile(new URL('../turn/tracks/mountain-world-r3-terrain.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r3-scenery.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r6-night.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/shared-night-sky.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/progression/m8-trophy-gate.js', import.meta.url), 'utf8')
 ]);
 
@@ -202,8 +204,14 @@ assert.match(scenery, /Mountain Kenney Holiday cabin prefab r3/);
 assert.match(scenery, /skipRetiredHolidayCabins[\s\S]*Promise\.resolve\(null\)/,
   'Production must avoid downloading the retired r3 cabin GLBs, not merely hide them later');
 assert.match(scenery, /Mountain terrain-bounded waterfall lake r3/);
-assert.match(night, /mountain-night-sky\.jpg/);
-assert.match(night, /mountain-moon\.png/);
+assert.doesNotMatch(night, /mountain-night-sky\.jpg/);
+assert.match(night, /installSharedNightSky\(world, \{ trackId: 'mountain' \}\)/);
+assert.match(sharedNightSky, /mountain-moon\.png/);
+assert.doesNotMatch(sharedNightSky, /mountain-night-sky\.jpg/);
+assert.match(sharedNightSky, /new THREE\.ShaderMaterial/);
+assert.match(sharedNightSky, /single-pass-gradient-and-static-hash-stars/);
+assert.match(sharedNightSky, /oneBackgroundDraw: true/);
+assert.doesNotMatch(sharedNightSky, /requestAnimationFrame|setAnimationLoop|setInterval/);
 
 const reward = rewardForTrack('mountain');
 assert.equal(reward?.id, 'mountain');

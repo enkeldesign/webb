@@ -8,6 +8,7 @@ const [
   showcaseSource,
   signParkSource,
   easterEggSource,
+  sharedNightSkySource,
   registrySource,
   releaseSource
 ] = await Promise.all([
@@ -17,6 +18,7 @@ const [
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r6.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r11.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/shared-night-sky.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
 ]);
@@ -83,6 +85,21 @@ assert.match(easterEggSource, /geometry\.computeVertexNormals\(\)/,
 assert.match(easterEggSource, /repairedDownwardSurfaceMeshes: surfaceNormals\.repaired/,
   'Runtime diagnostics must expose how many inherited surface meshes needed repair');
 assert.match(easterEggSource, /installNightPlayerSpotlight\(options\.runtime\?\.playerCar, options\.runtime\)/);
+assert.match(easterEggSource, /installSharedNightSky\(world, \{ trackId: 'midnight-city' \}\)/);
+assert.match(easterEggSource, /world\.ready = Promise\.resolve\(inheritedReady\)/);
+assert.match(easterEggSource, /nightSkyVariation: 'restrained-purple-horizon-glow'/);
+assert.match(sharedNightSkySource, /mountain-moon\.png/);
+assert.match(sharedNightSkySource, /'midnight-city': Object\.freeze/);
+assert.match(sharedNightSkySource, /horizon: 0x160d35/);
+assert.match(sharedNightSkySource, /glow: 0x9b3ab9/);
+assert.match(sharedNightSkySource, /glowStrength: 0\.18/);
+assert.match(sharedNightSkySource, /starStrength: 0\.52/);
+assert.match(sharedNightSkySource, /uVisiblePlaneScale/,
+  'The purple horizon treatment must be mapped to the visible sky, not the full overscan plane');
+assert.match(sharedNightSkySource, /Math\.hypot\(visibleWidth, visibleHeight\) \* SKY_ROLL_OVERSCAN/,
+  'MIDNIGHT CITY must share the roll-safe no-seam sky coverage');
+assert.doesNotMatch(sharedNightSkySource, /mountain-night-sky\.jpg/);
+assert.doesNotMatch(sharedNightSkySource, /PointLight|DirectionalLight|HemisphereLight/);
 assert.match(easterEggSource, /sharedNightSpotlight: Boolean\(playerSpotlight\)/);
 assert.match(easterEggSource, /headlightRoadReflectance: 'original-midnight-city-road-material-with-upward-facing-surface-normals'/,
   'MIDNIGHT CITY should keep its road material but expose an upward normal to the shared physical spotlight');

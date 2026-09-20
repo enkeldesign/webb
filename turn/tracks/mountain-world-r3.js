@@ -7,7 +7,6 @@ import { installMountainR4WaterfallNotch } from './mountain-world-r4-waterfall-n
 import { installMountainR4DriverFacingWaterfall } from './mountain-world-r4-waterfall-face.js';
 import { installMountainR5SuburbanVillage } from './mountain-world-r5-suburban-village.js';
 import { installMountainR6Night } from './mountain-world-r6-night.js';
-import { installMountainR7SkyFix } from './mountain-world-r7-sky.js?revision=r177-ipad-aspect-normalization';
 import { installMountainSpotlightHeadlight } from './mountain-player-headlight-r8.js?revision=r175-reconcile';
 
 const MOUNTAIN_VILLAGE_BENCHES = new Set([
@@ -216,14 +215,13 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
       return installMountainR6Night(world, samples, trackWidth, terrainContext);
     })
     .then(() => {
-      installMountainR7SkyFix(world);
       addStaticMoonlitHillFill(world);
       return world;
     });
   world.userData.turnMountainTerrainHeightAt = terrainContext.terrainHeightAt;
   world.userData.turnMountainArtDirection = Object.freeze({
     version: 'r3',
-    visualPolish: 'r177-ipad-aspect-normalized-r7-horizon-sky-plus-r6-night-plus-r5-suburban-village-plus-r4-waterfall-landmarks',
+    visualPolish: 'r266-shared-procedural-night-sky-plus-r6-night-plus-r5-suburban-village-plus-r4-waterfall-landmarks',
     ground: 'continuous-snow-and-granite-terrain-body',
     roadEdge: 'solid-white',
     roadbed: 'opaque-and-terrain-supported',
@@ -233,11 +231,11 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     assetVillage: 'Kenney-City-Kit-Suburban-complete-buildings-A-G-M-N-U',
     villagePalette: 'dark-brown-walls-and-snow-white-roofs',
     villageSquare: 'winter-market-no-fountain',
-    nightSky: 'local-star-field-skydome-with-separate-moon-sprite',
-    skyBehavior: 'flat-star-backdrop-with-world-up-roll-lock-and-world-yaw-uv-lock-with-gentle-drag',
-    reducedMotionSky: 'solid-deep-blue-track-background-with-moon-retained-and-parallax-suppressed',
-    celestialLayer: 'r7-reparents-the-r6-moon-onto-the-star-plane-at-the-same-depth',
-    moon: 'same-depth-star-plane-child-sharing-yaw-pitch-roll-and-parallax',
+    nightSky: 'shared-procedural-gradient-and-star-shader-with-canonical-moon-image',
+    skyBehavior: 'shared-world-up-celestial-plane-with-world-yaw-lock-and-gentle-drag',
+    reducedMotionSky: 'shared-sky-retained-with-drag-and-parallax-suppressed',
+    celestialLayer: 'shared-procedural-sky-and-canonical-moon-on-one-world-locked-plane',
+    moon: 'canonical-mountain-image-on-shared-southern-celestial-anchor',
     moonlight: 'cool-hemisphere-and-directional-track-atmosphere-plus-static-blue-hill-fill',
     playerVisibilityLight: playerHeadlightRig
       ? 'shared-warm-shadowless-spotlight-identical-to-midnight-city'

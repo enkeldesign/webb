@@ -48,7 +48,7 @@ assert.equal(metrics.assetsReady, true, 'MOUNTAIN Kenney/Nature assets must fini
 assert.deepEqual(metrics.assetErrors, [], 'MOUNTAIN r3 asset loaders must not hide failed GLBs/textures');
 assert.deepEqual(metrics.r4AssetErrors, [], 'MOUNTAIN r4 village polish assets must load without hidden failures');
 assert.deepEqual(metrics.r5AssetErrors, [], 'MOUNTAIN r5 Suburban houses and recolored palette must load without hidden failures');
-assert.deepEqual(metrics.r6AssetErrors, [], 'MOUNTAIN r6 star field and moon assets must load without hidden failures');
+assert.deepEqual(metrics.r6AssetErrors, [], 'MOUNTAIN shared moon asset must load without hidden failures');
 assert.ok(metrics.terrainBodies >= 1, 'MOUNTAIN needs a continuous terrain body beneath the road');
 assert.ok(metrics.roadbedWalls >= 2, 'Both road edges need opaque roadbed side walls');
 assert.ok(metrics.deepFoundations >= 2, 'Both road edges need deep retaining foundations for close stacked hairpins');
@@ -89,10 +89,10 @@ assert.ok(metrics.distantLayeredRidges >= 8,
 assert.ok(metrics.decorativeVillageAssets >= 8,
   'Village approaches need benches, carts, fences, sleds and authored Holiday trees');
 
-assert.equal(metrics.r6StarSky, true, 'MOUNTAIN night treatment must install the generated star field');
-assert.equal(metrics.r6Moon, true, 'MOUNTAIN night treatment must install the separate generated moon');
-assert.equal(metrics.starSkydomes, 1, 'MOUNTAIN should render exactly one camera-centred star skydome');
-assert.equal(metrics.moonSprites, 1, 'MOUNTAIN should render exactly one distant moon sprite');
+assert.equal(metrics.r6StarSky, true, 'MOUNTAIN night treatment must install the shared procedural star field');
+assert.equal(metrics.r6Moon, true, 'MOUNTAIN night treatment must install the canonical moon image');
+assert.equal(metrics.starSkydomes, 1, 'MOUNTAIN should render exactly one shared procedural sky plane');
+assert.equal(metrics.moonSprites, 1, 'MOUNTAIN should render exactly one distant moon image');
 assert.equal(metrics.r6StreetLightPoolCount, metrics.litStreetlights,
   'Every MOUNTAIN streetlight should receive a Midnight City-style warm ground pool');
 assert.equal(metrics.r6StreetLightPointLightCount, metrics.litStreetlights,
