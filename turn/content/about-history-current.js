@@ -637,6 +637,20 @@ const LOWER_NIGHT_GRADIENT_HISTORY = Object.freeze({
   ])
 });
 
+const MATCHED_NIGHT_GRADIENT_HISTORY = Object.freeze({
+  period: '21 September',
+  title: 'Both night gradients settle at the same height',
+  paragraphs: Object.freeze([
+    'TURN 1.21.16 makes the final MIDNIGHT CITY art-direction adjustment after physical production testing: its violet world-horizon gradient now uses the same 0.23 reach as MOUNTAIN.',
+    'Only the CITY gradient reach changes. The projected world-horizon anchor, deep zenith colors, moon, stars, camera lock and rendering architecture remain unchanged.'
+  ]),
+  milestones: Object.freeze([
+    'MOUNTAIN gradient reach: 0.23 above the projected horizon',
+    'MIDNIGHT CITY gradient reach: 0.23 above the projected horizon',
+    'TURN 1.21.16 · 2026.09.21-r271'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -724,7 +738,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   STABLE_NIGHT_SKY_HISTORY,
   NIGHT_SKY_FINISH_HISTORY,
   WORLD_HORIZON_NIGHT_SKY_HISTORY,
-  LOWER_NIGHT_GRADIENT_HISTORY
+  LOWER_NIGHT_GRADIENT_HISTORY,
+  MATCHED_NIGHT_GRADIENT_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -842,11 +857,17 @@ Object.freeze({
     Object.freeze(['1.21.14 r269', 'Anchors MOUNTAIN’s blue and MIDNIGHT CITY’s violet gradients to the projected world horizon so pitched race cameras no longer hide them below terrain or skyline.']),
     Object.freeze(['1.21.15 r270', 'Halves both world-horizon gradient reaches so the blue/violet atmosphere stays low and most of the night sky remains dark.'])
   ])
-})
+}),
+Object.freeze({
+  date: '21 September',
+  entries: Object.freeze([
+    Object.freeze(['1.21.16 r271', 'Matches MIDNIGHT CITY’s violet world-horizon gradient reach to MOUNTAIN at 0.23 after final physical production tuning.'])
+  ])
+
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.15',
-  build: '2026.09.20-r270',
-  note: 'TURN 1.21.15 lowers both world-horizon gradients so most of the night sky stays dark.'
+  version: '1.21.16',
+  build: '2026.09.21-r271',
+  note: 'TURN 1.21.16 matches MIDNIGHT CITY’s low world-horizon gradient reach to MOUNTAIN at 0.23.'
 });
