@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 const TAU = Math.PI * 2;
+const TURN_ROAD = 0x44494f;
 
 function seeded01(seed) {
   const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
@@ -277,6 +278,22 @@ function addLakeIsland(world, center) {
 }
 
 
+function addRoadOuterAsphaltTrim(world, samples, trackWidth = 27) {
+  const material = new THREE.MeshBasicMaterial({ color: TURN_ROAD, side: THREE.DoubleSide });
+  for (const side of [-1, 1]) {
+    const inner = [];
+    const outer = [];
+    for (const sample of samples) {
+      inner.push(sample.point.clone().addScaledVector(sample.normal, side * (trackWidth / 2 + 1.72)));
+      outer.push(sample.point.clone().addScaledVector(sample.normal, side * (trackWidth / 2 + 2.75)));
+    }
+    const trim = makeRibbon(outer, inner, 0.158, material);
+    trim.name = 'TURN Countryside outer asphalt trim';
+    trim.userData.turnRoadEdgeTrim = 'countryside';
+    world.add(trim);
+  }
+}
+
 function addDistantMountains(world, samples) {
   const center = getTrackCenter(samples);
   let maxRadius = 0;
@@ -343,11 +360,12 @@ function tuneAtmosphere(scene) {
   }
 }
 
-export async function installArtPass({ world, scene, samples }) {
+export async function installArtPass({ world, scene, samples, trackWidth }) {
   const grassTexture = makeGraphicGrassTexture();
   tuneAtmosphere(scene);
   restyleGround(world, grassTexture);
   addLake(world, samples);
+  addRoadOuterAsphaltTrim(world, samples, trackWidth);
   addDistantMountains(world, samples);
   // Ground assets can arrive after the initial scenery pass.
   window.setTimeout(() => restyleGround(world, grassTexture), 700);

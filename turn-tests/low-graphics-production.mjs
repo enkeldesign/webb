@@ -9,6 +9,7 @@ const [
   settingSource,
   worldSource,
   artPassSource,
+  contextualEdgesSource,
   carModelsSource,
   mainSource,
   landmarksSource,
@@ -31,6 +32,7 @@ const [
   fs.readFile(new URL('../turn/ui/low-graphics-setting.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/render/world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/world-art-pass.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/contextual-road-edges.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/kenney-track-landmarks-r517.js', import.meta.url), 'utf8'),
@@ -100,12 +102,22 @@ assert.match(carModelsSource, /graphicsProfile\.outlines/,
   'Preview car contours retain the existing graphics-profile policy');
 for (const source of [mainSource, landmarksSource, countrysideSource, bellaSource,
   airportWorldSource, airportAircraftSource, airportEmergencySource, cliffsideSource,
-  startAreaSource, worldAssetsSource, artPassSource, worldSource]) {
+  startAreaSource, worldAssetsSource, artPassSource, contextualEdgesSource, worldSource]) {
   assert.doesNotMatch(source, /graphicsProfile\.outlines|THREE\.BackSide/,
     'Racing producers must not construct contour shells in either graphics mode');
 }
 assert.doesNotMatch(artPassSource, /applyWorldContours|contourObject|addRoadOuterContour|OUTLINE_MATERIAL/,
   'Race-only contour materials, builders and delayed sweeps are removed');
+assert.match(artPassSource, /function addRoadOuterAsphaltTrim\(/,
+  'Countryside keeps its asphalt-coloured strip outside the painted road edge');
+assert.match(artPassSource, /turnRoadEdgeTrim = 'countryside'/,
+  'Countryside road-edge trim is explicitly classified as track geometry');
+assert.match(contextualEdgesSource, /export const ROAD_EDGE_TRIMS = Object\.freeze/,
+  'Airport, Cliffside and Harbor retain their asphalt-coloured outer road trim');
+assert.match(contextualEdgesSource, /turnRoadEdgeTrim: trackId/,
+  'Contextual road-edge trim is explicitly classified as track geometry');
+assert.doesNotMatch(contextualEdgesSource, /turnContextualRoadContour|outer road contour/i,
+  'Restored asphalt trim must not revive the removed contour-shell identity');
 assert.doesNotMatch(runtimeSource, /turnOutline|TURN_INK|BackSide/,
   'The shared runtime must not hide or strip already constructed contours');
 assert.match(mainSource, /targetLength: 5\.5,\s*outline: false/,
