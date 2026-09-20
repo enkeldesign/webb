@@ -96,8 +96,8 @@ assert.match(sharedNightSkySource, /glowStrength: 0\.17/);
 assert.match(sharedNightSkySource, /starStrength: 0\.48/);
 assert.match(sharedNightSkySource, /uVisiblePlaneScale/,
   'The purple horizon treatment must be mapped to the visible sky, not the full overscan plane');
-assert.match(sharedNightSkySource, /horizonReach: 0\.26/,
-  'MIDNIGHT CITY violet should stay as a low horizon band so most of the driving sky remains dark');
+assert.match(sharedNightSkySource, /horizonReach: 0\.23/,
+  'MIDNIGHT CITY violet should match MOUNTAIN at 0.23 so both night gradients share the same low reach');
 assert.match(sharedNightSkySource, /uHorizonReach/,
   'The visible driving-sky gradient needs an explicit vertical reach above the real horizon');
 assert.match(sharedNightSkySource, /uWorldHorizonY/,

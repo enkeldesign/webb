@@ -29,7 +29,7 @@ const SKY_STYLES = Object.freeze({
     horizon: 0x4a2866,
     glow: 0xb65dcc,
     glowStrength: 0.17,
-    horizonReach: 0.26,
+    horizonReach: 0.23,
     starStrength: 0.48
   })
 });
