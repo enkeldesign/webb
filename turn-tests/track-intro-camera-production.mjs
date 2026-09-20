@@ -40,7 +40,7 @@ assert.doesNotMatch(sharedSkySource, /sky\.quaternion\.copy\(camera\.quaternion\
 assert.match(sharedSkySource, /const LEGACY_MOON_DISTANCE = 810/);
 assert.match(sharedSkySource, /const MOON_SKY_ANCHOR_U = 0\.580888/);
 assert.match(sharedSkySource, /const MOON_SKY_ANCHOR_V = 0\.783222/);
-assert.match(sharedSkySource, /sky\.add\(moon\)/,
+assert.match(sharedSkySource, /sky\.add\(runtime\.moon\)/,
   'The canonical moon image must share the same celestial transform as the procedural sky');
 assert.match(sharedSkySource, /const localU = \(anchorU - motion\.offsetU\) \/ motion\.repeatU/);
 assert.match(sharedSkySource, /const localV = \(MOON_SKY_ANCHOR_V - motion\.offsetV\) \/ motion\.repeatV/);
