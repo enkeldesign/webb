@@ -186,7 +186,8 @@ function updateMoon(moon, sky, camera, motion, localPosition) {
   localPosition.set(localU - 0.5, localV - 0.5, 0);
   sky.localToWorld(localPosition);
   moon.position.copy(localPosition);
-  moon.quaternion.copy(camera.quaternion);
+  moon.up.set(0, 1, 0);
+  moon.lookAt(camera.position);
 
   const apparentSize = LEGACY_MOON_SIZE * SKY_DISTANCE / LEGACY_MOON_DISTANCE;
   moon.scale.setScalar(apparentSize);

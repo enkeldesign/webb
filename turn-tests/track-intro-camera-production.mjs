@@ -45,8 +45,9 @@ assert.match(sharedSkySource, /const MOON_SKY_ANCHOR_U = 0\.580888/);
 assert.match(sharedSkySource, /const MOON_SKY_ANCHOR_V = 0\.783222/);
 assert.match(sharedSkySource, /world\.add\(runtime\.moon\)/,
   'The canonical moon must be a world-root billboard rather than inherit the non-uniform sky-plane scale');
-assert.match(sharedSkySource, /moon\.quaternion\.copy\(camera\.quaternion\)/,
-  'The moon image must stay camera-facing and circular while its world position follows the celestial anchor');
+assert.match(sharedSkySource, /moon\.up\.set\(0, 1, 0\)/);
+assert.match(sharedSkySource, /moon\.lookAt\(camera\.position\)/,
+  'The moon image must stay camera-facing and circular while retaining world-up orientation through camera roll');
 assert.match(sharedSkySource, /moon\.scale\.setScalar\(apparentSize\)/);
 assert.match(sharedSkySource, /const localU = \(anchorU - motion\.offsetU\) \/ motion\.repeatU/);
 assert.match(sharedSkySource, /const localV = \(MOON_SKY_ANCHOR_V - motion\.offsetV\) \/ motion\.repeatV/);
