@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import fs from 'node:fs/promises';
 import { chromium, webkit } from 'playwright';
+import { inspectRaceContours } from './race-contours-browser.mjs';
 
 const TARGET = process.env.TURN_LOW_GRAPHICS_URL || 'http://127.0.0.1:8000/turn/';
 
@@ -477,6 +478,7 @@ for (const browserType of [chromium, webkit]) {
   }
   await fs.writeFile(`${outputDir}/shadows-${browserType.name()}-production.json`, JSON.stringify(liveReport, null, 2));
   console.log(JSON.stringify({ browser: browserType.name(), production: liveReport }));
+  await inspectRaceContours(livePage, outputDir, browserType.name());
   const skidReport = await livePage.evaluate(async () => {
     const THREE = await import('three');
     const { createCarVisual, disposeCarVisual } = await import('/turn/vehicle/car-models.js');
