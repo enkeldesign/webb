@@ -109,13 +109,28 @@ function renderFrame() {
   assert.equal(skids.line.geometry.attributes.position.array, buffer, 'Motion must reuse the fixed GPU buffer');
 }
 
-for (const [width, axle, scale, reversed] of [[2.5, 3.2, 0.8, false], [4, 2.6, 1.2, true], [2, 4.5, 1.1, false]]) {
+for (const [carId, width, axle, scale, reversed, centreOffset] of [
+  ['sedan', 2.5, 3.2, 0.8, false, 0.15],
+  ['tractor', 4, 2.6, 1.2, true, 0.2],
+  ['vintage-racer', 2, 4.5, 1.1, true, 0],
+  ['monster-truck', 4, 3.2, 1.2, false, 0.15],
+  ['supercar', 3, 4.5, 1.1, false, 0.15]
+]) {
   car.clear();
   const model = new THREE.Group(), rearWheels = [];
+  model.userData.turnCarId = carId;
   model.scale.setScalar(scale);
   car.add(model);
   for (const side of [-1, 1]) for (const front of [true, false]) {
-    const wheel = new THREE.Group();
+    const geometry = new THREE.CylinderGeometry(0.6, 0.6, 0.3, 12)
+      .rotateZ(Math.PI / 2).translate(side * centreOffset, 0, 0);
+    const wheel = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial());
+    // An asymmetric contour must not influence the tyre attachment point.
+    const outline = new THREE.Mesh(geometry, wheel.material);
+    outline.userData.turnOutline = true;
+    outline.scale.setScalar(1.2);
+    outline.position.x = side * 0.4;
+    wheel.add(outline);
     const role = front !== reversed ? 'front' : 'back';
     wheel.name = `wheel-${role}-${side < 0 ? 'left' : 'right'}`;
     wheel.position.set(side * width / 2, 0.6, (front ? -1 : 1) * axle / 2);
@@ -128,14 +143,17 @@ for (const [width, axle, scale, reversed] of [[2.5, 3.2, 0.8, false], [4, 2.6, 1
     state.position.set(frame * 0.4, 0, frame * 4);
     state.position.y = state.position.z * 0.35 + state.position.x * 0.2 + 0.18;
     car.rotation.set(0.2, Math.PI + frame * 0.03, 0.08);
+    for (const spinner of car.userData.wheelSpinners) spinner.rotation.x = frame * 1.3;
     renderFrame();
     if (frame === 0) continue;
     assert.ok(skids.line.geometry.drawRange.count >= 4 && skids.line.geometry.drawRange.count <= 120);
     for (let wheel = 0; wheel < 2; wheel++) {
-      center.setFromMatrixPosition(rearWheels[wheel].matrixWorld);
+      const preserved = carId === 'monster-truck' || carId === 'supercar';
+      center.set(preserved ? 0 : (wheel ? 1 : -1) * centreOffset, 0, 0)
+        .applyMatrix4(rearWheels[wheel].matrixWorld);
       const offset = wheel * 6;
       assert.ok(Math.abs(buffer[offset] - center.x) < 0.0001 && Math.abs(buffer[offset + 2] - center.z) < 0.0001,
-        'This frame must start each skid at the actual rear wheel, including model size, drift heading and body roll');
+        'Skids must follow wheel centres through scaling, spinning, drift and roll; Monster Truck and Supercar keep their origins');
       const clearance = (buffer[offset + 1] - buffer[offset + 2] * 0.35 - buffer[offset] * 0.2 - 0.18) / Math.hypot(1, 0.35, 0.2);
       assert.ok(Math.abs(clearance - 0.01) < 0.0001, 'Wheel marks follow slope and banking at a tiny surface offset');
     }

@@ -52,8 +52,35 @@ export function installSkidContinuity(runtime = globalThis.__turnRuntime) {
   const wheelLocal = new THREE.Vector3();
   const surfaceUp = new THREE.Vector3();
   const inverseCar = new THREE.Matrix4();
+  const leftCentre = new THREE.Vector3(), rightCentre = new THREE.Vector3();
+  const wheelBounds = new THREE.Box3(), meshBounds = new THREE.Box3();
+  const inverseWheel = new THREE.Matrix4(), meshToWheel = new THREE.Matrix4();
   let cachedWheels = null, cachedSteering = null;
   let rearLeft = null, rearRight = null;
+
+  function cacheWheelCentre(wheel, centre) {
+    centre.set(0, 0, 0);
+    if (!wheel) return;
+    for (let parent = wheel; parent; parent = parent.parent) {
+      const id = parent.userData.turnCarId;
+      if (id === 'monster-truck' || id === 'supercar') return;
+    }
+    // Some authored wheel origins sit on the inner edge. Measure the actual
+    // wheel once, excluding the outline shell, and keep only its axle offset
+    // so wheel rotation cannot make the attachment point orbit the axle.
+    inverseWheel.copy(wheel.matrixWorld).invert();
+    wheelBounds.makeEmpty();
+    wheel.traverse((node) => {
+      const geometry = node.geometry;
+      if (!geometry?.attributes.position?.count || node.userData.turnOutline) return;
+      if (!geometry.boundingBox) geometry.computeBoundingBox();
+      meshToWheel.multiplyMatrices(inverseWheel, node.matrixWorld);
+      wheelBounds.union(meshBounds.copy(geometry.boundingBox).applyMatrix4(meshToWheel));
+    });
+    if (wheelBounds.isEmpty()) return;
+    const axis = wheel.userData.turnWheelSpinAxis || 'y';
+    centre[axis] = (wheelBounds.min[axis] + wheelBounds.max[axis]) * 0.5;
+  }
 
   function wheelContacts() {
     const car = runtime.playerCar;
@@ -78,10 +105,12 @@ export function installSkidContinuity(runtime = globalThis.__turnRuntime) {
         if (wheelLocal.x < 0 && wheelLocal.z > leftZ) { rearLeft = wheel; leftZ = wheelLocal.z; }
         if (wheelLocal.x > 0 && wheelLocal.z > rightZ) { rearRight = wheel; rightZ = wheelLocal.z; }
       }
+      cacheWheelCentre(rearLeft, leftCentre);
+      cacheWheelCentre(rearRight, rightCentre);
     }
     if (!rearLeft || !rearRight) return false;
-    skidLeftWheel.setFromMatrixPosition(rearLeft.matrixWorld);
-    skidRightWheel.setFromMatrixPosition(rearRight.matrixWorld);
+    skidLeftWheel.copy(leftCentre).applyMatrix4(rearLeft.matrixWorld);
+    skidRightWheel.copy(rightCentre).applyMatrix4(rearRight.matrixWorld);
     const { state, samples } = runtime;
     const sample = samples?.[state.nearestTrackIndex];
     surfaceUp.set(0, 1, 0);
