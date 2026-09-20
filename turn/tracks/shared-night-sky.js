@@ -21,7 +21,7 @@ const SKY_STYLES = Object.freeze({
     horizon: 0x2f6598,
     glow: 0x69a8d8,
     glowStrength: 0.14,
-    horizonReach: 0.72,
+    horizonReach: 0.46,
     starStrength: 0.88
   }),
   'midnight-city': Object.freeze({
@@ -29,7 +29,7 @@ const SKY_STYLES = Object.freeze({
     horizon: 0x4a2866,
     glow: 0xb65dcc,
     glowStrength: 0.17,
-    horizonReach: 0.80,
+    horizonReach: 0.52,
     starStrength: 0.48
   })
 });
@@ -52,6 +52,7 @@ const FRAGMENT_SHADER = `
   uniform vec3 uGlowColor;
   uniform float uGlowStrength;
   uniform float uHorizonReach;
+  uniform float uWorldHorizonY;
   uniform float uStarStrength;
 
   float hash21(vec2 point) {
@@ -78,7 +79,8 @@ const FRAGMENT_SHADER = `
     vec2 sampleUv = vUv * uSampleScale + uSampleOffset;
     vec2 visualUv = (vUv - 0.5) / max(uVisiblePlaneScale, vec2(0.0001)) + 0.5;
     float visualY = clamp(visualUv.y, 0.0, 1.0);
-    float heightBlend = smoothstep(0.16, uHorizonReach, visualY);
+    float horizonDelta = visualY - uWorldHorizonY;
+    float heightBlend = smoothstep(-0.03, uHorizonReach, horizonDelta);
     vec3 color = mix(uHorizonColor, uZenithColor, heightBlend);
     float horizonGlow = pow(max(0.0, 1.0 - heightBlend), 1.15) * uGlowStrength;
     color += uGlowColor * horizonGlow;
@@ -109,6 +111,7 @@ function makeSkyMaterial(style) {
       uGlowColor: { value: new THREE.Color(style.glow) },
       uGlowStrength: { value: style.glowStrength },
       uHorizonReach: { value: style.horizonReach },
+      uWorldHorizonY: { value: 0.5 },
       uStarStrength: { value: style.starStrength }
     },
     vertexShader: VERTEX_SHADER,
@@ -222,9 +225,17 @@ function attachWorldLock(sky, getMoon) {
     motion.heading = heading;
 
     const verticalFov = THREE.MathUtils.degToRad(camera.fov);
-    const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
+    const verticalTan = Math.tan(verticalFov / 2);
+    const horizontalFov = 2 * Math.atan(verticalTan * camera.aspect);
+    const horizontalForward = Math.max(1e-6, Math.hypot(forward.x, forward.z));
+    const pitchTan = forward.y / horizontalForward;
+    const worldHorizonY = THREE.MathUtils.clamp(
+      0.5 - pitchTan / (2 * verticalTan),
+      -0.25,
+      1.25
+    );
     const visibleU = Math.max(0.01, horizontalFov / TAU * SKY_WORLD_CYCLES);
-    const visibleHeight = 2 * SKY_DISTANCE * Math.tan(verticalFov / 2);
+    const visibleHeight = 2 * SKY_DISTANCE * verticalTan;
     const visibleWidth = visibleHeight * camera.aspect;
     const coverHeight = Math.hypot(visibleWidth, visibleHeight) * SKY_ROLL_OVERSCAN;
     const visiblePlaneX = Math.max(1e-6, Math.min(1, visibleWidth / (coverHeight * SKY_PLANE_ASPECT)));
@@ -244,6 +255,7 @@ function attachWorldLock(sky, getMoon) {
     sky.material.uniforms.uSampleScale.value.set(repeatU, repeatV);
     sky.material.uniforms.uSampleOffset.value.set(motion.offsetU, motion.offsetV);
     sky.material.uniforms.uVisiblePlaneScale.value.set(visiblePlaneX, visiblePlaneY);
+    sky.material.uniforms.uWorldHorizonY.value = worldHorizonY;
     sky.scale.set(coverHeight * SKY_PLANE_ASPECT, coverHeight, 1);
     sky.updateMatrixWorld(true);
     updateMoon(getMoon(), sky, camera, motion, moonWorldPosition);
@@ -286,7 +298,8 @@ export function installSharedNightSky(world, { trackId = 'mountain' } = {}) {
       aspectPolicy: 'wide-phone-reference-normalized-with-roll-safe-diagonal-coverage',
       cameraCuts: 'direct-lock-with-no-easing',
       reducedMotion: 'same-direct-world-lock-with-no-deliberate-drag-or-parallax',
-      cityVariation: trackId === 'midnight-city' ? 'visible-violet-driving-sky-gradient' : 'visible-blue-driving-sky-gradient',
+      cityVariation: trackId === 'midnight-city' ? 'world-horizon-violet-gradient' : 'world-horizon-blue-gradient',
+      gradientAnchor: 'projected-world-horizon-from-camera-pitch',
       horizonReach: style.horizonReach,
       starTreatment: 'larger-softer-sparser-static-stars',
       starStrength: style.starStrength,

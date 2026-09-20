@@ -96,10 +96,15 @@ assert.match(sharedNightSkySource, /glowStrength: 0\.17/);
 assert.match(sharedNightSkySource, /starStrength: 0\.48/);
 assert.match(sharedNightSkySource, /uVisiblePlaneScale/,
   'The purple horizon treatment must be mapped to the visible sky, not the full overscan plane');
-assert.match(sharedNightSkySource, /horizonReach: 0\.80/,
+assert.match(sharedNightSkySource, /horizonReach: 0\.52/,
   'MIDNIGHT CITY violet must extend high enough to remain visible above the normal skyline');
 assert.match(sharedNightSkySource, /uHorizonReach/,
-  'The visible driving-sky gradient needs an explicit vertical reach rather than living at the hidden geometric horizon');
+  'The visible driving-sky gradient needs an explicit vertical reach above the real horizon');
+assert.match(sharedNightSkySource, /uWorldHorizonY/,
+  'MIDNIGHT CITY gradient must be anchored to the projected world horizon instead of the bottom of the viewport');
+assert.match(sharedNightSkySource, /const pitchTan = forward\.y \/ horizontalForward/);
+assert.match(sharedNightSkySource, /0\.5 - pitchTan \/ \(2 \* verticalTan\)/);
+assert.match(sharedNightSkySource, /uWorldHorizonY\.value = worldHorizonY/);
 assert.match(sharedNightSkySource, /vec2\(72\.0, 36\.0\)/);
 assert.match(sharedNightSkySource, /smoothstep\(radius \* 0\.20, radius \* 1\.55, distanceToStar\)/,
   'Stars must use a larger soft footprint to reduce subpixel flicker in motion');
@@ -107,7 +112,7 @@ assert.match(sharedNightSkySource, /Math\.hypot\(visibleWidth, visibleHeight\) \
   'MIDNIGHT CITY must share the roll-safe no-seam sky coverage');
 assert.doesNotMatch(sharedNightSkySource, /mountain-night-sky\.jpg/);
 assert.doesNotMatch(sharedNightSkySource, /PointLight|DirectionalLight|HemisphereLight/);
-assert.match(sharedNightSkySource, /visible-violet-driving-sky-gradient/);
+assert.match(sharedNightSkySource, /world-horizon-violet-gradient/);
 assert.doesNotMatch(sharedNightSkySource, /visualHeading|SKY_YAW_CATCHUP|SKY_POSITION_PARALLAX|SKY_PITCH_PARALLAX/);
 assert.match(easterEggSource, /sharedNightSpotlight: Boolean\(playerSpotlight\)/);
 assert.match(easterEggSource, /headlightRoadReflectance: 'original-midnight-city-road-material-with-upward-facing-surface-normals'/,

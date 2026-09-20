@@ -213,9 +213,12 @@ assert.match(sharedNightSky, /single-pass-gradient-and-static-hash-stars/);
 assert.match(sharedNightSky, /oneBackgroundDraw: true/);
 assert.match(sharedNightSky, /horizon: 0x2f6598/);
 assert.match(sharedNightSky, /glow: 0x69a8d8/);
-assert.match(sharedNightSky, /horizonReach: 0\.72/,
-  'MOUNTAIN blue must rise into the normal driving view instead of sitting below the terrain horizon');
+assert.match(sharedNightSky, /horizonReach: 0\.46/,
+  'MOUNTAIN blue must extend above the projected world horizon during normal driving');
 assert.match(sharedNightSky, /starTreatment: 'larger-softer-sparser-static-stars'/);
+assert.match(sharedNightSky, /uWorldHorizonY/,
+  'MOUNTAIN gradient must follow the projected world horizon when the race camera pitches down');
+assert.match(sharedNightSky, /gradientAnchor: 'projected-world-horizon-from-camera-pitch'/);
 assert.doesNotMatch(sharedNightSky, /requestAnimationFrame|setAnimationLoop|setInterval/);
 
 const reward = rewardForTrack('mountain');
