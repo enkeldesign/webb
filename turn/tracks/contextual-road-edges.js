@@ -112,7 +112,9 @@ function installOuterAsphaltTrimFromEdge(edge, samples, trackWidth, trackId, tri
   mesh.geometry = edge.geometry.clone();
   mesh.material = cloneRoadTrimMaterial(edge.material);
   mesh.name = `TURN ${trackId} outer asphalt trim`;
-  mesh.userData = { ...(edge.userData || {}), turnRoadEdgeTrim: trackId };
+  mesh.userData = { ...(edge.userData || {}) };
+  delete mesh.userData.turnContextualRoadEdge;
+  mesh.userData.turnRoadEdgeTrim = trackId;
 
   const positions = mesh.geometry.getAttribute('position');
   const colors = mesh.geometry.getAttribute('color');

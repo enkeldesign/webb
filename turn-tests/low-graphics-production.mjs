@@ -114,8 +114,10 @@ assert.match(artPassSource, /turnRoadEdgeTrim = 'countryside'/,
   'Countryside road-edge trim is explicitly classified as track geometry');
 assert.match(contextualEdgesSource, /export const ROAD_EDGE_TRIMS = Object\.freeze/,
   'Airport, Cliffside and Harbor retain their asphalt-coloured outer road trim');
-assert.match(contextualEdgesSource, /turnRoadEdgeTrim: trackId/,
+assert.match(contextualEdgesSource, /mesh\.userData\.turnRoadEdgeTrim = trackId/,
   'Contextual road-edge trim is explicitly classified as track geometry');
+assert.match(contextualEdgesSource, /delete mesh\.userData\.turnContextualRoadEdge/,
+  'Road-edge trims must not be reclassified and recoloured as painted edges on later track visits');
 assert.doesNotMatch(contextualEdgesSource, /turnContextualRoadContour|outer road contour/i,
   'Restored asphalt trim must not revive the removed contour-shell identity');
 assert.doesNotMatch(runtimeSource, /turnOutline|TURN_INK|BackSide/,
