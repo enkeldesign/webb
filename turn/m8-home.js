@@ -422,19 +422,28 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
 
         <section class="m8-setting-card" aria-labelledby="m8AudioTitle">
           <h3 id="m8AudioTitle">Audio</h3>
-          <label class="m8-toggle-row"><input id="m8AudioEnabled" type="checkbox"><span><strong>Sound</strong><small>Turn every TURN sound on or off.</small></span></label>
+          <label class="m8-toggle-row"><input id="m8AudioEnabled" type="checkbox"><span><strong>Sound</strong><small>Turn all game audio on or off.</small></span></label>
           <label class="m8-toggle-row"><input id="m8DbeEnabled" type="checkbox"><span><strong>Drive By Ear™</strong><small>Spatial steering guidance, pace notes, recovery cues and rival warnings.</small></span></label>
-          <label class="m8-balance-row" for="m8AudioBalance"><strong>Sound balance</strong><small>Choose between car and world sounds or Drive By Ear guidance.</small></label>
+          <label class="m8-balance-row" for="m8AudioBalance"><strong>Sound balance</strong><small>Balance car and world sounds against Drive By Ear guidance.</small></label>
           <input id="m8AudioBalance" type="range" min="0" max="100" step="1" value="50" aria-describedby="m8AudioBalanceValue">
           <div class="m8-balance-labels" aria-hidden="true"><span>Other sounds</span><span>Drive By Ear</span></div>
           <output id="m8AudioBalanceValue" for="m8AudioBalance">Balanced</output>
         </section>
 
-        <div class="m8-visual-settings"></div>
+        <div class="m8-visual-settings">
+          <section class="m8-setting-card m8-interface-settings" data-turn-interface-settings aria-labelledby="m8InterfaceTitle">
+            <h3 id="m8InterfaceTitle">Interface</h3>
+            <div class="m8-interface-settings-content">
+              <div class="m8-interface-slot" data-turn-player-marker-slot></div>
+              <div class="m8-interface-slot" data-turn-color-cues-slot></div>
+              <div class="m8-interface-slot" data-turn-scoring-slot></div>
+            </div>
+          </section>
+        </div>
 
         <section class="m8-setting-card m8-record-setting" aria-labelledby="m8RecordsTitle">
           <h3 id="m8RecordsTitle">Personal rivals</h3>
-          <p>Remove the recorded laps for the currently selected track.</p>
+          <p>Remove recorded rival laps for the selected track.</p>
           <button class="m8-reset-rivals" type="button">RESET RIVALS</button>
           <div class="m8-reset-confirm" hidden>
             <p>Reset rivals on <strong class="m8-reset-track"></strong>?</p>

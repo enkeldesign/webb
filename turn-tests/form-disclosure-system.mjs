@@ -11,7 +11,10 @@ const [
   settingsHome,
   settingsLayout,
   playerMarker,
-  colorAccessibility
+  colorAccessibility,
+  scoringSetting,
+  driftCameraSetting,
+  lowGraphicsSetting
 ] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-tokens.css', import.meta.url), 'utf8'),
@@ -22,7 +25,10 @@ const [
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/player-marker-r427.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/accessibility/color-accessibility-r163.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/accessibility/color-accessibility-r163.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/drift-attack-setting.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/drift-camera-setting.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/low-graphics-setting.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(app, /settings-components-r141\.css\?revision=r220-overcharge-disclosure/);
@@ -120,30 +126,41 @@ assert.match(design, /<code>details<\/code>[\s\S]*<code>summary<\/code>/,
 
 assert.match(
   settingsHome,
-  /id="m8AudioTitle"[\s\S]*<div class="m8-visual-settings"><\/div>[\s\S]*m8-record-setting/,
-  'Settings must reserve the second-column space beside Audio for visual preferences'
+  /id="m8AudioTitle"[\s\S]*class="m8-setting-card m8-interface-settings"[\s\S]*id="m8InterfaceTitle">Interface<\/h3>[\s\S]*data-turn-player-marker-slot[\s\S]*data-turn-color-cues-slot[\s\S]*data-turn-scoring-slot[\s\S]*m8-record-setting/,
+  'Settings must provide one Interface card for visibility and presentation controls'
 );
 assert.match(
   settingsLayout,
-  /\.m8-visual-settings \{[\s\S]*display: grid;[\s\S]*grid-template-rows: minmax\(0, 1fr\) auto;[\s\S]*gap: 16px;/,
-  'Player marker and Color must share a stacked visual-settings column'
+  /\.m8-visual-settings \{[\s\S]*display: grid;[\s\S]*gap: 16px;/,
+  'Interface and Graphics cards must share the visual-settings column'
 );
+assert.match(settingsLayout, /\.m8-interface-settings-content \{[\s\S]*display: grid;[\s\S]*gap: 14px;/);
 assert.match(
   settingsLayout,
   /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*\.m8-visual-settings \{[\s\S]*display: contents;/,
   'The visual-settings wrapper must preserve the one-column portrait flow'
 );
-assert.match(playerMarker, /visualSettings\.prepend\(fieldset\)/,
-  'Player marker must be the first card in the visual-settings column');
+assert.match(playerMarker, /interfaceSlot\.append\(fieldset\)/,
+  'Player marker must live in the Interface card');
+assert.doesNotMatch(playerMarker, /fieldset\.className = 'm8-setting-card m8-player-marker-setting'/);
 assert.match(
   playerMarker,
   /\.m8-visual-settings \.turn-player-marker-options \{[\s\S]*grid-template-columns: 1fr;/,
   'Player marker choices must remain readable in the half-width visual-settings column'
 );
-assert.match(colorAccessibility, /<h3 id="m8ColorCuesTitle">Color<\/h3>/,
-  'Color cues must use the concise Color section heading');
-assert.doesNotMatch(colorAccessibility, /m8ColorCuesTitle">Accessibility/);
-assert.match(colorAccessibility, /visualSettings\.append\(section\)/,
-  'Color must be the final card in the visual-settings column');
+assert.match(colorAccessibility, /data-turn-color-cues-slot/);
+assert.match(colorAccessibility, /<strong>Color cues<\/strong>/);
+assert.doesNotMatch(colorAccessibility, /<h3 id="m8ColorCuesTitle">/);
+assert.match(scoringSetting, /data-turn-scoring-slot/);
+assert.match(scoringSetting, /<legend>Scoring<\/legend>/);
+assert.match(scoringSetting, /Show DRIFT scoring/);
+assert.match(scoringSetting, /Show FLOW scoring/);
+assert.doesNotMatch(driftCameraSetting, /Experimental|experimental/);
+assert.match(driftCameraSetting, /Follow the car’s actual direction of travel through slides\./);
+assert.match(lowGraphicsSetting, /Uses lower resolution and simpler lighting\. Restart TURN to apply changes\./);
+assert.doesNotMatch(lowGraphicsSetting, /no contours/i);
+assert.match(settingsHome, /Turn all game audio on or off\./);
+assert.match(settingsHome, /Balance car and world sounds against Drive By Ear guidance\./);
+assert.match(settingsHome, /Remove recorded rival laps for the selected track\./);
 
 console.log('TURN native form controls, selection policy, headings and disclosure system passed.');

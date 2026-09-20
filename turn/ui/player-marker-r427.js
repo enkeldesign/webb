@@ -182,7 +182,7 @@ function installStyles() {
     }
 
     .m8-player-marker-setting {
-      grid-column: 1 / -1;
+      min-width: 0;
     }
 
     .turn-player-marker-options {
@@ -245,7 +245,7 @@ function installSettings(modeApi) {
   if (dialog.querySelector('.m8-player-marker-setting')) return true;
 
   const fieldset = document.createElement('fieldset');
-  fieldset.className = 'm8-setting-card m8-player-marker-setting';
+  fieldset.className = 'm8-interface-group m8-player-marker-setting';
   fieldset.innerHTML = `
     <legend>Player marker</legend>
     <div class="turn-player-marker-options">
@@ -263,11 +263,20 @@ function installSettings(modeApi) {
       </label>
     </div>`;
 
+  const interfaceSlot = dialog.querySelector('[data-turn-player-marker-slot]');
   const visualSettings = dialog.querySelector('.m8-visual-settings');
   const records = dialog.querySelector('.m8-record-setting');
-  if (visualSettings) visualSettings.prepend(fieldset);
-  else if (records) records.insertAdjacentElement('beforebegin', fieldset);
-  else dialog.querySelector('.m8-settings-list')?.appendChild(fieldset);
+  if (interfaceSlot) interfaceSlot.append(fieldset);
+  else if (visualSettings) {
+    fieldset.classList.add('m8-setting-card');
+    visualSettings.prepend(fieldset);
+  } else if (records) {
+    fieldset.classList.add('m8-setting-card');
+    records.insertAdjacentElement('beforebegin', fieldset);
+  } else {
+    fieldset.classList.add('m8-setting-card');
+    dialog.querySelector('.m8-settings-list')?.appendChild(fieldset);
+  }
 
   const radios = [...fieldset.querySelectorAll('input[type="radio"]')];
   const status = dialog.querySelector('.m8-settings-status');

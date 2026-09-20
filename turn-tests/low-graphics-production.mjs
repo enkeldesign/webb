@@ -86,7 +86,9 @@ assert.match(runtimeSource, /this\.intensity = 0/);
 
 assert.match(settingSource, /<strong>LOW GRAPHICS<\/strong>/);
 assert.match(settingSource, /Better performance on older devices/);
-assert.match(settingSource, /Restart TURN to apply changes/);
+assert.match(settingSource, /Uses lower resolution and simpler lighting\. Restart TURN to apply changes\./);
+assert.doesNotMatch(settingSource, /no contours/i,
+  'LOW GRAPHICS copy must not claim that The Lot loses its authored outlines.');
 assert.doesNotMatch(settingSource, /Antialiasing and all track scenery stay unchanged/,
   'LOW GRAPHICS settings copy should avoid implementation-detail reassurance.');
 assert.match(settingSource, /aria-describedby="m8LowGraphicsDescription m8LowGraphicsRestartNote"/);
