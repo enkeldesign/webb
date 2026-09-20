@@ -53,10 +53,11 @@ assert.ok(ipad9.visibleSampleU > 0.88 && ipad9.visibleSampleU < 0.90,
 assert.ok(Math.abs(phone.visibleSampleV - ipad9.visibleSampleV) < 1e-12,
   `Phone/iPad vertical star scale diverged: ${phone.visibleSampleV} vs ${ipad9.visibleSampleV}`);
 
-assert.ok(Math.abs(phone.repeatU - phone.visibleU) < 1e-12,
-  'Reference phone horizontal sampling must remain visually unchanged');
-assert.ok(Math.abs(phone.repeatV - 1) < 1e-12,
-  'Reference phone vertical sampling must remain visually unchanged');
+const referenceCoverage = planeCoverage(1536 / 709, 2, 1.05);
+assert.ok(Math.abs(phone.visibleSampleU - phone.visibleU * referenceCoverage.x) < 1e-12,
+  'Reference phone horizontal star density must remain visually unchanged');
+assert.ok(Math.abs(phone.visibleSampleV - referenceCoverage.y) < 1e-12,
+  'Reference phone vertical star density must remain visually unchanged');
 
 console.log('TURN shared procedural night sky preserves the approved phone composition and normalized 4:3 sampling.');
 
