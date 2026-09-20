@@ -9,7 +9,8 @@ const SKY_POSITION_PARALLAX = 0.00004;
 const SKY_PITCH_PARALLAX = 0.025;
 const SKY_CAMERA_CUT_DISTANCE = 48;
 const SKY_CAMERA_CUT_HEADING = Math.PI / 8;
-const SKY_OVERSCAN = 1.05;
+const SKY_REFERENCE_OVERSCAN = 1.05;
+const SKY_ROLL_OVERSCAN = 1.06;
 const SKY_REFERENCE_ASPECT = 1536 / 709;
 const LEGACY_MOON_DISTANCE = 810;
 const LEGACY_MOON_SIZE = 174;
@@ -22,18 +23,18 @@ let moonTexturePromise = null;
 
 const SKY_STYLES = Object.freeze({
   mountain: Object.freeze({
-    zenith: 0x020817,
-    horizon: 0x081a38,
-    glow: 0x18365a,
-    glowStrength: 0.08,
+    zenith: 0x010614,
+    horizon: 0x0b1f42,
+    glow: 0x255180,
+    glowStrength: 0.10,
     starStrength: 0.92
   }),
   'midnight-city': Object.freeze({
-    zenith: 0x020817,
-    horizon: 0x0b102b,
-    glow: 0x8b2aa8,
-    glowStrength: 0.12,
-    starStrength: 0.58
+    zenith: 0x020617,
+    horizon: 0x160d35,
+    glow: 0x9b3ab9,
+    glowStrength: 0.18,
+    starStrength: 0.52
   })
 });
 
@@ -49,6 +50,7 @@ const FRAGMENT_SHADER = `
   varying vec2 vUv;
   uniform vec2 uSampleScale;
   uniform vec2 uSampleOffset;
+  uniform vec2 uVisiblePlaneScale;
   uniform vec3 uZenithColor;
   uniform vec3 uHorizonColor;
   uniform vec3 uGlowColor;
@@ -77,9 +79,11 @@ const FRAGMENT_SHADER = `
 
   void main() {
     vec2 sampleUv = vUv * uSampleScale + uSampleOffset;
-    float heightBlend = smoothstep(0.04, 0.96, vUv.y);
+    vec2 visualUv = (vUv - 0.5) / max(uVisiblePlaneScale, vec2(0.0001)) + 0.5;
+    float visualY = clamp(visualUv.y, 0.0, 1.0);
+    float heightBlend = smoothstep(0.08, 0.92, visualY);
     vec3 color = mix(uHorizonColor, uZenithColor, heightBlend);
-    float horizonGlow = pow(max(0.0, 1.0 - vUv.y), 3.2) * uGlowStrength;
+    float horizonGlow = pow(max(0.0, 1.0 - visualY), 2.4) * uGlowStrength;
     color += uGlowColor * horizonGlow;
     color += vec3(starField(sampleUv) * uStarStrength);
     gl_FragColor = vec4(color, 1.0);
@@ -95,7 +99,7 @@ function shortestAngle(from, to) {
 
 function planeCoverageForAspect(aspect) {
   const safeAspect = Math.max(0.1, Number(aspect) || SKY_REFERENCE_ASPECT);
-  const coverHeightInVisibleHeights = Math.max(1, safeAspect / SKY_PLANE_ASPECT) * SKY_OVERSCAN;
+  const coverHeightInVisibleHeights = Math.max(1, safeAspect / SKY_PLANE_ASPECT) * SKY_REFERENCE_OVERSCAN;
   return Object.freeze({
     x: Math.min(1, safeAspect / (coverHeightInVisibleHeights * SKY_PLANE_ASPECT)),
     y: Math.min(1, 1 / coverHeightInVisibleHeights)
@@ -109,6 +113,7 @@ function makeSkyMaterial(style) {
     uniforms: {
       uSampleScale: { value: new THREE.Vector2(1, 1) },
       uSampleOffset: { value: new THREE.Vector2(0, 0) },
+      uVisiblePlaneScale: { value: new THREE.Vector2(1, 1) },
       uZenithColor: { value: new THREE.Color(style.zenith) },
       uHorizonColor: { value: new THREE.Color(style.horizon) },
       uGlowColor: { value: new THREE.Color(style.glow) },
@@ -257,7 +262,7 @@ function attachWorldLock(sky, getMoon) {
     const visibleU = Math.max(0.01, horizontalFov / TAU * SKY_WORLD_CYCLES);
     const visibleHeight = 2 * SKY_DISTANCE * Math.tan(verticalFov / 2);
     const visibleWidth = visibleHeight * camera.aspect;
-    const coverHeight = Math.max(visibleHeight, visibleWidth / SKY_PLANE_ASPECT) * SKY_OVERSCAN;
+    const coverHeight = Math.hypot(visibleWidth, visibleHeight) * SKY_ROLL_OVERSCAN;
     const visiblePlaneX = Math.max(1e-6, Math.min(1, visibleWidth / (coverHeight * SKY_PLANE_ASPECT)));
     const visiblePlaneY = Math.max(1e-6, Math.min(1, visibleHeight / coverHeight));
     const repeatU = visibleU * REFERENCE_SKY_COVERAGE.x / visiblePlaneX;
@@ -276,6 +281,7 @@ function attachWorldLock(sky, getMoon) {
 
     sky.material.uniforms.uSampleScale.value.set(repeatU, repeatV);
     sky.material.uniforms.uSampleOffset.value.set(motion.offsetU, motion.offsetV);
+    sky.material.uniforms.uVisiblePlaneScale.value.set(visiblePlaneX, visiblePlaneY);
     sky.scale.set(coverHeight * SKY_PLANE_ASPECT, coverHeight, 1);
     sky.updateMatrixWorld(true);
     updateMoon(getMoon(), sky, motion);
@@ -315,7 +321,7 @@ export function installSharedNightSky(world, { trackId = 'mountain' } = {}) {
       moonDistance: SKY_DISTANCE,
       moonApparentSize: LEGACY_MOON_SIZE,
       worldUpHorizon: true,
-      aspectPolicy: 'wide-phone-reference-normalized-across-plane-overcoverage',
+      aspectPolicy: 'wide-phone-reference-normalized-with-roll-safe-diagonal-coverage',
       cameraCuts: 'snap-large-camera-jumps',
       reducedMotion: 'no-deliberate-yaw-drag-position-parallax-or-pitch-drift',
       cityVariation: trackId === 'midnight-city' ? 'restrained-purple-horizon-glow' : 'deep-blue',

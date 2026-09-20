@@ -90,8 +90,14 @@ assert.match(easterEggSource, /world\.ready = Promise\.resolve\(inheritedReady\)
 assert.match(easterEggSource, /nightSkyVariation: 'restrained-purple-horizon-glow'/);
 assert.match(sharedNightSkySource, /mountain-moon\.png/);
 assert.match(sharedNightSkySource, /'midnight-city': Object\.freeze/);
-assert.match(sharedNightSkySource, /glow: 0x8b2aa8/);
-assert.match(sharedNightSkySource, /starStrength: 0\.58/);
+assert.match(sharedNightSkySource, /horizon: 0x160d35/);
+assert.match(sharedNightSkySource, /glow: 0x9b3ab9/);
+assert.match(sharedNightSkySource, /glowStrength: 0\.18/);
+assert.match(sharedNightSkySource, /starStrength: 0\.52/);
+assert.match(sharedNightSkySource, /uVisiblePlaneScale/,
+  'The purple horizon treatment must be mapped to the visible sky, not the full overscan plane');
+assert.match(sharedNightSkySource, /Math\.hypot\(visibleWidth, visibleHeight\) \* SKY_ROLL_OVERSCAN/,
+  'MIDNIGHT CITY must share the roll-safe no-seam sky coverage');
 assert.doesNotMatch(sharedNightSkySource, /mountain-night-sky\.jpg/);
 assert.doesNotMatch(sharedNightSkySource, /PointLight|DirectionalLight|HemisphereLight/);
 assert.match(easterEggSource, /sharedNightSpotlight: Boolean\(playerSpotlight\)/);

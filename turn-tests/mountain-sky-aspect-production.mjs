@@ -11,6 +11,12 @@ assert.match(skySource, /const SKY_REFERENCE_ASPECT = 1536 \/ 709/,
   'The approved wide-phone MOUNTAIN sky composition must remain the visual reference');
 assert.match(skySource, /const SKY_PLANE_ASPECT = 2/,
   'The shared celestial plane must retain the established overscan proportions');
+assert.match(skySource, /const SKY_ROLL_OVERSCAN = 1\.06/,
+  'The celestial plane must include a small safety margin around the rolled viewport diagonal');
+assert.match(skySource, /Math\.hypot\(visibleWidth, visibleHeight\) \* SKY_ROLL_OVERSCAN/,
+  'Sky coverage must use the viewport diagonal so camera roll cannot expose the scene background');
+assert.match(skySource, /uVisiblePlaneScale/,
+  'The shader must normalize its gradient to the visible portion of the oversized plane');
 assert.match(skySource, /const visiblePlaneX = Math\.max\(1e-6, Math\.min\(1, visibleWidth \/ \(coverHeight \* SKY_PLANE_ASPECT\)\)\)/,
   'Procedural sampling must know how much of the overscanned plane is visible horizontally');
 assert.match(skySource, /const visiblePlaneY = Math\.max\(1e-6, Math\.min\(1, visibleHeight \/ coverHeight\)\)/,
@@ -62,7 +68,7 @@ function skySampling({ fov, aspect }) {
   const verticalFov = fov * Math.PI / 180;
   const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
   const visibleU = horizontalFov / (Math.PI * 2) * skyWorldCycles;
-  const coverage = planeCoverage(aspect, skyPlaneAspect, overscan);
+  const coverage = rollSafeCoverage(aspect, skyPlaneAspect, 1.06);
   const referenceCoverage = planeCoverage(referenceAspect, skyPlaneAspect, overscan);
   const repeatU = visibleU * referenceCoverage.x / coverage.x;
   const repeatV = referenceCoverage.y / coverage.y;
@@ -73,6 +79,14 @@ function skySampling({ fov, aspect }) {
     repeatV,
     visibleSampleU: repeatU * coverage.x,
     visibleSampleV: repeatV * coverage.y
+  };
+}
+
+function rollSafeCoverage(aspect, skyPlaneAspect, overscan) {
+  const coverHeightInVisibleHeights = Math.hypot(aspect, 1) * overscan;
+  return {
+    x: Math.min(1, aspect / (coverHeightInVisibleHeights * skyPlaneAspect)),
+    y: Math.min(1, 1 / coverHeightInVisibleHeights)
   };
 }
 

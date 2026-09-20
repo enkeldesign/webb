@@ -31,6 +31,10 @@ assert.match(sharedSkySource, /const SKY_YAW_CATCHUP = 0\.14/,
   'Normal driving should retain the established gentle sky drag');
 assert.match(sharedSkySource, /const SKY_REFERENCE_ASPECT = 1536 \/ 709/,
   'The approved wide-phone composition remains the angular-scale reference');
+assert.match(sharedSkySource, /Math\.hypot\(visibleWidth, visibleHeight\) \* SKY_ROLL_OVERSCAN/,
+  'The world-locked celestial plane must cover the full viewport diagonal under camera roll');
+assert.match(sharedSkySource, /vec2 visualUv = \(vUv - 0\.5\) \/ max\(uVisiblePlaneScale, vec2\(0\.0001\)\) \+ 0\.5/,
+  'Gradient art direction must be normalized to the visible sky rather than diluted across overscan');
 assert.match(sharedSkySource, /const heading = Math\.atan2\(forward\.x, forward\.z\)/);
 assert.match(sharedSkySource, /const yawU = -motion\.visualHeading \/ TAU \* SKY_WORLD_CYCLES/);
 assert.match(sharedSkySource, /sky\.up\.set\(0, 1, 0\)/,
@@ -150,7 +154,8 @@ function projectSkyAnchorToScreen({ anchorU, anchorV, position, target, fov, asp
   const skyDistance = 840;
   const skyPlaneAspect = 2;
   const horizontalTiles = 4;
-  const overscan = 1.05;
+  const referenceOverscan = 1.05;
+  const rollOverscan = 1.06;
   const referenceAspect = 1536 / 709;
   const forward = normalize(subtract(target, position));
   const heading = Math.atan2(forward[0], forward[2]);
@@ -160,10 +165,10 @@ function projectSkyAnchorToScreen({ anchorU, anchorV, position, target, fov, asp
 
   const visibleHeight = 2 * skyDistance * Math.tan(verticalFov / 2);
   const visibleWidth = visibleHeight * aspect;
-  const coverHeight = Math.max(visibleHeight, visibleWidth / skyPlaneAspect) * overscan;
+  const coverHeight = Math.hypot(visibleWidth, visibleHeight) * rollOverscan;
   const visiblePlaneX = Math.min(1, visibleWidth / (coverHeight * skyPlaneAspect));
   const visiblePlaneY = Math.min(1, visibleHeight / coverHeight);
-  const referenceCoverage = planeCoverage(referenceAspect, skyPlaneAspect, overscan);
+  const referenceCoverage = planeCoverage(referenceAspect, skyPlaneAspect, referenceOverscan);
   const repeatU = visibleU * referenceCoverage.x / visiblePlaneX;
   const repeatV = referenceCoverage.y / visiblePlaneY;
   const baseU = 0.5 - repeatU * 0.5;
