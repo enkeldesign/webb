@@ -27,8 +27,6 @@ assert.match(sharedSkySource, /float starField\(vec2 sampleUv\)/);
 assert.doesNotMatch(sharedSkySource, /mountain-night-sky\.jpg/);
 assert.match(sharedSkySource, /const SKY_WORLD_CYCLES = 4/,
   'The procedural sample space should retain the established four-cycle world yaw mapping');
-assert.match(sharedSkySource, /const SKY_YAW_CATCHUP = 0\.14/,
-  'Normal driving should retain the established gentle sky drag');
 assert.match(sharedSkySource, /const SKY_REFERENCE_ASPECT = 1536 \/ 709/,
   'The approved wide-phone composition remains the angular-scale reference');
 assert.match(sharedSkySource, /Math\.hypot\(visibleWidth, visibleHeight\) \* SKY_ROLL_OVERSCAN/,
@@ -36,7 +34,8 @@ assert.match(sharedSkySource, /Math\.hypot\(visibleWidth, visibleHeight\) \* SKY
 assert.match(sharedSkySource, /vec2 visualUv = \(vUv - 0\.5\) \/ max\(uVisiblePlaneScale, vec2\(0\.0001\)\) \+ 0\.5/,
   'Gradient art direction must be normalized to the visible sky rather than diluted across overscan');
 assert.match(sharedSkySource, /const heading = Math\.atan2\(forward\.x, forward\.z\)/);
-assert.match(sharedSkySource, /const yawU = -motion\.visualHeading \/ TAU \* SKY_WORLD_CYCLES/);
+assert.match(sharedSkySource, /const yawU = -heading \/ TAU \* SKY_WORLD_CYCLES/,
+  'The procedural sky must lock directly to heading without an easing state');
 assert.match(sharedSkySource, /sky\.up\.set\(0, 1, 0\)/,
   'The celestial plane must stay world-up so camera roll does not screen-lock the sky');
 assert.match(sharedSkySource, /sky\.lookAt\(camera\.position\)/);
@@ -44,15 +43,18 @@ assert.doesNotMatch(sharedSkySource, /sky\.quaternion\.copy\(camera\.quaternion\
 assert.match(sharedSkySource, /const LEGACY_MOON_DISTANCE = 810/);
 assert.match(sharedSkySource, /const MOON_SKY_ANCHOR_U = 0\.580888/);
 assert.match(sharedSkySource, /const MOON_SKY_ANCHOR_V = 0\.783222/);
-assert.match(sharedSkySource, /sky\.add\(runtime\.moon\)/,
-  'The canonical moon image must share the same celestial transform as the procedural sky');
+assert.match(sharedSkySource, /world\.add\(runtime\.moon\)/,
+  'The canonical moon must be a world-root billboard rather than inherit the non-uniform sky-plane scale');
+assert.match(sharedSkySource, /moon\.quaternion\.copy\(camera\.quaternion\)/,
+  'The moon image must stay camera-facing and circular while its world position follows the celestial anchor');
+assert.match(sharedSkySource, /moon\.scale\.setScalar\(apparentSize\)/);
 assert.match(sharedSkySource, /const localU = \(anchorU - motion\.offsetU\) \/ motion\.repeatU/);
 assert.match(sharedSkySource, /const localV = \(MOON_SKY_ANCHOR_V - motion\.offsetV\) \/ motion\.repeatV/);
 assert.match(sharedSkySource, /moon\.position\.set\(localU - 0\.5, localV - 0\.5, 0\)/);
 assert.match(sharedSkySource, /LEGACY_MOON_SIZE \* SKY_DISTANCE \/ LEGACY_MOON_DISTANCE/);
-assert.match(sharedSkySource, /motion\.reducedMotion \? 0 : \(camera\.position\.x - camera\.position\.z\) \* SKY_POSITION_PARALLAX/);
-assert.match(sharedSkySource, /motion\.reducedMotion \? 0 : forward\.y \* SKY_PITCH_PARALLAX/);
-assert.match(sharedSkySource, /cameraCut[\s\S]*motion\.visualHeading = heading/);
+assert.doesNotMatch(sharedSkySource, /SKY_YAW_CATCHUP|SKY_POSITION_PARALLAX|SKY_PITCH_PARALLAX|visualHeading/,
+  'The final celestial layer must not deliberately lag or drift during normal driving');
+assert.match(sharedSkySource, /direct-world-lock-no-drag-or-parallax/);
 assert.doesNotMatch(sharedSkySource, /requestAnimationFrame|setAnimationLoop|setInterval/);
 
 const introMoon = projectSkyAnchorToScreen({
@@ -174,9 +176,8 @@ function projectSkyAnchorToScreen({ anchorU, anchorV, position, target, fov, asp
   const baseU = 0.5 - repeatU * 0.5;
   const baseV = 0.5 - repeatV * 0.5;
   const yawU = -heading / (Math.PI * 2) * horizontalTiles;
-  const positionU = (position[0] - position[2]) * 0.00004;
-  const offsetU = baseU + yawU + positionU;
-  const offsetV = baseV + forward[1] * 0.025;
+  const offsetU = baseU + yawU;
+  const offsetV = baseV;
   const centreSampleU = offsetU + repeatU * 0.5;
   const equivalentAnchorU = anchorU
     + Math.round((centreSampleU - anchorU) / horizontalTiles) * horizontalTiles;

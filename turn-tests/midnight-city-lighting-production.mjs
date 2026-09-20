@@ -90,9 +90,9 @@ assert.match(easterEggSource, /world\.ready = Promise\.resolve\(inheritedReady\)
 assert.match(easterEggSource, /nightSkyVariation: 'restrained-purple-horizon-glow'/);
 assert.match(sharedNightSkySource, /mountain-moon\.png/);
 assert.match(sharedNightSkySource, /'midnight-city': Object\.freeze/);
-assert.match(sharedNightSkySource, /horizon: 0x160d35/);
-assert.match(sharedNightSkySource, /glow: 0x9b3ab9/);
-assert.match(sharedNightSkySource, /glowStrength: 0\.18/);
+assert.match(sharedNightSkySource, /horizon: 0x35164f/);
+assert.match(sharedNightSkySource, /glow: 0x9d4bb8/);
+assert.match(sharedNightSkySource, /glowStrength: 0\.14/);
 assert.match(sharedNightSkySource, /starStrength: 0\.52/);
 assert.match(sharedNightSkySource, /uVisiblePlaneScale/,
   'The purple horizon treatment must be mapped to the visible sky, not the full overscan plane');
@@ -100,6 +100,8 @@ assert.match(sharedNightSkySource, /Math\.hypot\(visibleWidth, visibleHeight\) \
   'MIDNIGHT CITY must share the roll-safe no-seam sky coverage');
 assert.doesNotMatch(sharedNightSkySource, /mountain-night-sky\.jpg/);
 assert.doesNotMatch(sharedNightSkySource, /PointLight|DirectionalLight|HemisphereLight/);
+assert.match(sharedNightSkySource, /lighter-violet-horizon-gradient/);
+assert.doesNotMatch(sharedNightSkySource, /visualHeading|SKY_YAW_CATCHUP|SKY_POSITION_PARALLAX|SKY_PITCH_PARALLAX/);
 assert.match(easterEggSource, /sharedNightSpotlight: Boolean\(playerSpotlight\)/);
 assert.match(easterEggSource, /headlightRoadReflectance: 'original-midnight-city-road-material-with-upward-facing-surface-normals'/,
   'MIDNIGHT CITY should keep its road material but expose an upward normal to the shared physical spotlight');

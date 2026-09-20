@@ -31,6 +31,10 @@ assert.match(skySource, /const localU = \(anchorU - motion\.offsetU\) \/ motion\
   'The moon must invert the same aspect-corrected horizontal sample transform');
 assert.match(skySource, /const localV = \(MOON_SKY_ANCHOR_V - motion\.offsetV\) \/ motion\.repeatV/,
   'The moon must invert the same aspect-corrected vertical sample transform');
+assert.match(skySource, /const yawU = -heading \/ TAU \* SKY_WORLD_CYCLES/,
+  'Heading changes must update the celestial sample directly without easing');
+assert.doesNotMatch(skySource, /visualHeading|SKY_YAW_CATCHUP|SKY_POSITION_PARALLAX|SKY_PITCH_PARALLAX/,
+  'The shared night sky must not wobble through deliberate heading or position lag');
 assert.match(skySource, /existing\?\.sky\?\.parent === world/,
   'A retained track world must not accumulate duplicate sky or moon nodes');
 assert.doesNotMatch(skySource, /mountain-night-sky\.jpg/,
