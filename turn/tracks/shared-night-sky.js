@@ -4,36 +4,30 @@ const MOON_TEXTURE_URL = new URL('../assets/mountain/mountain-moon.png', import.
 const SKY_DISTANCE = 840;
 const SKY_PLANE_ASPECT = 2;
 const SKY_WORLD_CYCLES = 4;
-const SKY_YAW_CATCHUP = 0.14;
-const SKY_POSITION_PARALLAX = 0.00004;
-const SKY_PITCH_PARALLAX = 0.025;
-const SKY_CAMERA_CUT_DISTANCE = 48;
-const SKY_CAMERA_CUT_HEADING = Math.PI / 8;
 const SKY_REFERENCE_OVERSCAN = 1.05;
 const SKY_ROLL_OVERSCAN = 1.06;
 const SKY_REFERENCE_ASPECT = 1536 / 709;
 const LEGACY_MOON_DISTANCE = 810;
 const LEGACY_MOON_SIZE = 174;
-const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const TAU = Math.PI * 2;
-const MOON_SKY_ANCHOR_U = 0.580888;
-const MOON_SKY_ANCHOR_V = 0.783222;
+const MOON_SKY_ANCHOR_U = 0.555288;
+const MOON_SKY_ANCHOR_V = 0.781349;
 const MOON_WORLD_U_PERIOD = SKY_WORLD_CYCLES;
 let moonTexturePromise = null;
 
 const SKY_STYLES = Object.freeze({
   mountain: Object.freeze({
     zenith: 0x010614,
-    horizon: 0x0b1f42,
-    glow: 0x255180,
-    glowStrength: 0.10,
+    horizon: 0x1e4a78,
+    glow: 0x4c88bd,
+    glowStrength: 0.12,
     starStrength: 0.92
   }),
   'midnight-city': Object.freeze({
-    zenith: 0x020617,
-    horizon: 0x160d35,
-    glow: 0x9b3ab9,
-    glowStrength: 0.18,
+    zenith: 0x030619,
+    horizon: 0x35164f,
+    glow: 0x9d4bb8,
+    glowStrength: 0.14,
     starStrength: 0.52
   })
 });
@@ -83,19 +77,12 @@ const FRAGMENT_SHADER = `
     float visualY = clamp(visualUv.y, 0.0, 1.0);
     float heightBlend = smoothstep(0.08, 0.92, visualY);
     vec3 color = mix(uHorizonColor, uZenithColor, heightBlend);
-    float horizonGlow = pow(max(0.0, 1.0 - visualY), 2.4) * uGlowStrength;
+    float horizonGlow = pow(max(0.0, 1.0 - visualY), 1.55) * uGlowStrength;
     color += uGlowColor * horizonGlow;
     color += vec3(starField(sampleUv) * uStarStrength);
     gl_FragColor = vec4(color, 1.0);
   }
 `;
-
-function shortestAngle(from, to) {
-  let delta = to - from;
-  while (delta > Math.PI) delta -= TAU;
-  while (delta < -Math.PI) delta += TAU;
-  return delta;
-}
 
 function planeCoverageForAspect(aspect) {
   const safeAspect = Math.max(0.1, Number(aspect) || SKY_REFERENCE_ASPECT);
@@ -183,7 +170,7 @@ function makeMoon(texture, trackId) {
   return moon;
 }
 
-function updateMoon(moon, sky, motion) {
+function updateMoon(moon, sky, camera, motion, localPosition) {
   if (!moon
     || !Number.isFinite(motion.repeatU)
     || !Number.isFinite(motion.repeatV)
@@ -195,45 +182,31 @@ function updateMoon(moon, sky, motion) {
     + Math.round((centreSampleU - MOON_SKY_ANCHOR_U) / MOON_WORLD_U_PERIOD) * MOON_WORLD_U_PERIOD;
   const localU = (anchorU - motion.offsetU) / motion.repeatU;
   const localV = (MOON_SKY_ANCHOR_V - motion.offsetV) / motion.repeatV;
-  moon.position.set(localU - 0.5, localV - 0.5, 0);
+
+  localPosition.set(localU - 0.5, localV - 0.5, 0);
+  sky.localToWorld(localPosition);
+  moon.position.copy(localPosition);
+  moon.up.set(0, 1, 0);
+  moon.lookAt(camera.position);
 
   const apparentSize = LEGACY_MOON_SIZE * SKY_DISTANCE / LEGACY_MOON_DISTANCE;
-  moon.scale.set(
-    apparentSize / Math.max(Math.abs(sky.scale.x), 1e-6),
-    apparentSize / Math.max(Math.abs(sky.scale.y), 1e-6),
-    1
-  );
+  moon.scale.setScalar(apparentSize);
   moon.updateMatrixWorld(true);
 }
 
 function attachWorldLock(sky, getMoon) {
   const forward = new THREE.Vector3();
-  const previousCameraPosition = new THREE.Vector3();
-  let hasPreviousCameraPose = false;
+  const moonWorldPosition = new THREE.Vector3();
   const motion = {
     heading: null,
-    visualHeading: null,
-    positionU: 0,
-    pitchV: 0,
     repeatU: null,
     repeatV: null,
     offsetU: null,
     offsetV: null,
-    coverHeight: null,
-    cameraCutCount: 0,
-    reducedMotion: false
+    coverHeight: null
   };
 
-  const reducedMotionMedia = globalThis.matchMedia?.(REDUCED_MOTION_QUERY) || null;
-  const applyReducedMotionPreference = () => {
-    motion.reducedMotion = reducedMotionMedia?.matches === true;
-    sky.userData.turnReducedMotionNightSky = motion.reducedMotion
-      ? 'world-locked-without-drag-or-parallax'
-      : 'world-locked-with-gentle-drag';
-  };
-  applyReducedMotionPreference();
-  reducedMotionMedia?.addEventListener?.('change', applyReducedMotionPreference);
-  if (!reducedMotionMedia?.addEventListener) reducedMotionMedia?.addListener?.(applyReducedMotionPreference);
+  sky.userData.turnReducedMotionNightSky = 'direct-world-lock-no-drag-or-parallax';
 
   sky.onBeforeRender = (_renderer, _scene, camera) => {
     camera.getWorldDirection(forward);
@@ -242,20 +215,7 @@ function attachWorldLock(sky, getMoon) {
     sky.lookAt(camera.position);
 
     const heading = Math.atan2(forward.x, forward.z);
-    const headingJump = motion.heading === null ? 0 : Math.abs(shortestAngle(motion.heading, heading));
-    const positionJump = hasPreviousCameraPose ? previousCameraPosition.distanceTo(camera.position) : 0;
-    const cameraCut = hasPreviousCameraPose
-      && (headingJump >= SKY_CAMERA_CUT_HEADING || positionJump >= SKY_CAMERA_CUT_DISTANCE);
-
-    if (motion.visualHeading === null || cameraCut || motion.reducedMotion) {
-      motion.visualHeading = heading;
-      if (cameraCut) motion.cameraCutCount += 1;
-    } else {
-      motion.visualHeading += shortestAngle(motion.visualHeading, heading) * SKY_YAW_CATCHUP;
-    }
     motion.heading = heading;
-    previousCameraPosition.copy(camera.position);
-    hasPreviousCameraPose = true;
 
     const verticalFov = THREE.MathUtils.degToRad(camera.fov);
     const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
@@ -269,14 +229,12 @@ function attachWorldLock(sky, getMoon) {
     const repeatV = REFERENCE_SKY_COVERAGE.y / visiblePlaneY;
     const baseU = 0.5 - repeatU * 0.5;
     const baseV = 0.5 - repeatV * 0.5;
-    const yawU = -motion.visualHeading / TAU * SKY_WORLD_CYCLES;
+    const yawU = -heading / TAU * SKY_WORLD_CYCLES;
 
-    motion.positionU = motion.reducedMotion ? 0 : (camera.position.x - camera.position.z) * SKY_POSITION_PARALLAX;
-    motion.pitchV = motion.reducedMotion ? 0 : forward.y * SKY_PITCH_PARALLAX;
     motion.repeatU = repeatU;
     motion.repeatV = repeatV;
-    motion.offsetU = baseU + yawU + motion.positionU;
-    motion.offsetV = baseV + motion.pitchV;
+    motion.offsetU = baseU + yawU;
+    motion.offsetV = baseV;
     motion.coverHeight = coverHeight;
 
     sky.material.uniforms.uSampleScale.value.set(repeatU, repeatV);
@@ -284,7 +242,7 @@ function attachWorldLock(sky, getMoon) {
     sky.material.uniforms.uVisiblePlaneScale.value.set(visiblePlaneX, visiblePlaneY);
     sky.scale.set(coverHeight * SKY_PLANE_ASPECT, coverHeight, 1);
     sky.updateMatrixWorld(true);
-    updateMoon(getMoon(), sky, motion);
+    updateMoon(getMoon(), sky, camera, motion, moonWorldPosition);
   };
 
   return motion;
@@ -322,9 +280,9 @@ export function installSharedNightSky(world, { trackId = 'mountain' } = {}) {
       moonApparentSize: LEGACY_MOON_SIZE,
       worldUpHorizon: true,
       aspectPolicy: 'wide-phone-reference-normalized-with-roll-safe-diagonal-coverage',
-      cameraCuts: 'snap-large-camera-jumps',
-      reducedMotion: 'no-deliberate-yaw-drag-position-parallax-or-pitch-drift',
-      cityVariation: trackId === 'midnight-city' ? 'restrained-purple-horizon-glow' : 'deep-blue',
+      cameraCuts: 'direct-lock-with-no-easing',
+      reducedMotion: 'same-direct-world-lock-with-no-deliberate-drag-or-parallax',
+      cityVariation: trackId === 'midnight-city' ? 'lighter-violet-horizon-gradient' : 'lighter-blue-horizon-gradient',
       starStrength: style.starStrength,
       dynamicLightsAdded: 0,
       independentAnimationLoop: false,
@@ -338,7 +296,7 @@ export function installSharedNightSky(world, { trackId = 'mountain' } = {}) {
     .then((moonTexture) => {
       if (sky.parent !== world) return runtime;
       runtime.moon = makeMoon(moonTexture, trackId);
-      sky.add(runtime.moon);
+      world.add(runtime.moon);
       publishContract();
       return runtime;
     })
