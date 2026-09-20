@@ -536,6 +536,20 @@ const MOUNTAIN_ROAD_EDGE_RESTORE_HISTORY = Object.freeze({
   ])
 });
 
+const LOW_GRAPHICS_LOT_OUTLINES_HISTORY = Object.freeze({
+  period: '20 September',
+  title: 'LOW GRAPHICS keeps The Lot’s outlines',
+  paragraphs: Object.freeze([
+    'TURN 1.21.9 keeps the deliberate black car contours in The Lot when LOW GRAPHICS is enabled. LOW remains a performance mode rather than a different art direction.',
+    'Racing stays contour-free in both graphics modes because race car visuals explicitly opt out of outline geometry; LOW still keeps its DPR 1.0 cap and reduced real point-light illumination.'
+  ]),
+  milestones: Object.freeze([
+    'The Lot car outlines preserved in LOW GRAPHICS',
+    'Racing remains contour-free in both modes',
+    'TURN 1.21.9 · 2026.09.20-r264'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -616,7 +630,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   TYRE_CENTRE_HISTORY,
   RACE_CONTOUR_HISTORY,
   ROAD_EDGE_AND_CLIFFSIDE_RESTORE_HISTORY,
-  MOUNTAIN_ROAD_EDGE_RESTORE_HISTORY
+  MOUNTAIN_ROAD_EDGE_RESTORE_HISTORY,
+  LOW_GRAPHICS_LOT_OUTLINES_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -725,13 +740,14 @@ Object.freeze({
     Object.freeze(['1.21.5 r260', 'Aligns skid marks with the centres of the rear tires, preserving Monster Truck and Supercar spacing.']),
     Object.freeze(['1.21.6 r261', 'Removes race contours and their extra drawing work, keeps The Lot’s outlined previews, and releases Lot renderers before racing resumes.']),
     Object.freeze(['1.21.7 r262', 'Restores the asphalt-coloured strip outside track markings and CLIFFSIDE’s filled inner highlands while keeping racing contour shells removed.']),
-    Object.freeze(['1.21.8 r263', 'Restores MOUNTAIN’s asphalt-coloured strip outside the white road-edge markings without reintroducing racing contour shells.'])
+    Object.freeze(['1.21.8 r263', 'Restores MOUNTAIN’s asphalt-coloured strip outside the white road-edge markings without reintroducing racing contour shells.']),
+    Object.freeze(['1.21.9 r264', 'Keeps The Lot’s black car contours in LOW GRAPHICS while racing remains contour-free in both graphics modes.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.8',
-  build: '2026.09.20-r263',
-  note: 'TURN 1.21.8 restores MOUNTAIN’s asphalt road-edge trim without restoring racing contour shells.'
+  version: '1.21.9',
+  build: '2026.09.20-r264',
+  note: 'TURN 1.21.9 keeps The Lot’s authored car outlines in LOW GRAPHICS while racing stays contour-free.'
 });

@@ -24,7 +24,9 @@ export const graphicsProfile = Object.freeze({
   lowGraphics,
   dprCap: lowGraphics ? 1 : Infinity,
   antialias: true,
-  outlines: !lowGraphics,
+  // Contours are an authored context choice, not a LOW-vs-default quality knob.
+  // Racing explicitly requests contour-free visuals; The Lot keeps its outlines.
+  outlines: true,
   pointLights: !lowGraphics,
   optionalScenery: true
 });
