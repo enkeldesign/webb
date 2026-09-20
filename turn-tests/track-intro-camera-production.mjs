@@ -41,8 +41,8 @@ assert.match(sharedSkySource, /sky\.up\.set\(0, 1, 0\)/,
 assert.match(sharedSkySource, /sky\.lookAt\(camera\.position\)/);
 assert.doesNotMatch(sharedSkySource, /sky\.quaternion\.copy\(camera\.quaternion\)/);
 assert.match(sharedSkySource, /const LEGACY_MOON_DISTANCE = 810/);
-assert.match(sharedSkySource, /const MOON_SKY_ANCHOR_U = 0\.580888/);
-assert.match(sharedSkySource, /const MOON_SKY_ANCHOR_V = 0\.783222/);
+assert.match(sharedSkySource, /const MOON_SKY_ANCHOR_U = 0\.555288/);
+assert.match(sharedSkySource, /const MOON_SKY_ANCHOR_V = 0\.781349/);
 assert.match(sharedSkySource, /world\.add\(runtime\.moon\)/,
   'The canonical moon must be a world-root billboard rather than inherit the non-uniform sky-plane scale');
 assert.match(sharedSkySource, /moon\.up\.set\(0, 1, 0\)/);
@@ -51,7 +51,9 @@ assert.match(sharedSkySource, /moon\.lookAt\(camera\.position\)/,
 assert.match(sharedSkySource, /moon\.scale\.setScalar\(apparentSize\)/);
 assert.match(sharedSkySource, /const localU = \(anchorU - motion\.offsetU\) \/ motion\.repeatU/);
 assert.match(sharedSkySource, /const localV = \(MOON_SKY_ANCHOR_V - motion\.offsetV\) \/ motion\.repeatV/);
-assert.match(sharedSkySource, /moon\.position\.set\(localU - 0\.5, localV - 0\.5, 0\)/);
+assert.match(sharedSkySource, /localPosition\.set\(localU - 0\.5, localV - 0\.5, 0\)/);
+assert.match(sharedSkySource, /sky\.localToWorld\(localPosition\)/);
+assert.match(sharedSkySource, /moon\.position\.copy\(localPosition\)/);
 assert.match(sharedSkySource, /LEGACY_MOON_SIZE \* SKY_DISTANCE \/ LEGACY_MOON_DISTANCE/);
 assert.doesNotMatch(sharedSkySource, /SKY_YAW_CATCHUP|SKY_POSITION_PARALLAX|SKY_PITCH_PARALLAX|visualHeading/,
   'The final celestial layer must not deliberately lag or drift during normal driving');
@@ -59,8 +61,8 @@ assert.match(sharedSkySource, /direct-world-lock-no-drag-or-parallax/);
 assert.doesNotMatch(sharedSkySource, /requestAnimationFrame|setAnimationLoop|setInterval/);
 
 const introMoon = projectSkyAnchorToScreen({
-  anchorU: 0.580888,
-  anchorV: 0.783222,
+  anchorU: 0.555288,
+  anchorV: 0.781349,
   position: [300, 70, -340],
   target: [0, 110, 100],
   fov: 48,
