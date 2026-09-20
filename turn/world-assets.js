@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { installCountrysideWorld } from './tracks/countryside-world-r531.js?revision=r532-countryside-nature-polish';
-import { graphicsProfile } from '/turn/graphics-profile.js';
 
 const CITY_BUILDER_COMMIT = '4535092b740b378b700efd9df9e27a631815b84a';
 const PLATFORMER_COMMIT = '3fa8a04b1c01ab23db43123d4ce814a34c3fc7f0';
@@ -18,12 +17,6 @@ const ASSETS = {
 
 const loader = new GLTFLoader();
 const modelCache = new Map();
-const blackOutlineMaterial = graphicsProfile.outlines
-  ? new THREE.MeshBasicMaterial({
-      color: 0x08090a,
-      side: THREE.BackSide
-    })
-  : null;
 
 function isYourTurnRecipient() {
   return globalThis.document?.documentElement?.dataset?.turnDeployment === 'yourturn';
@@ -68,28 +61,14 @@ async function loadModel(key) {
   return modelCache.get(key);
 }
 
-function addOutline(root, scale = 1.025) {
-  if (!graphicsProfile.outlines) return;
-
-  const meshes = [];
-  root.traverse((node) => {
-    if (node.isMesh) meshes.push(node);
-  });
-
-  for (const mesh of meshes) {
-    const outline = new THREE.Mesh(mesh.geometry, blackOutlineMaterial);
-    outline.scale.setScalar(scale);
-    mesh.add(outline);
-  }
-}
 
 function prepareModel(source, {
   targetHeight = null,
   targetSize = null,
-  outline = false,
+
   tint = null,
   tintAmount = 0.75,
-  suppressAutoOutline = false
+  paletteLocked = false
 } = {}) {
   const model = source.clone(true);
   const tintColor = tint == null ? null : new THREE.Color(tint);
@@ -108,11 +87,8 @@ function prepareModel(source, {
       node.material = Array.isArray(node.material) ? tintedMaterials : tintedMaterials[0];
     }
 
-    // world-art-pass.js uses this marker to avoid adding a second enlarged
-    // back-face mesh. Repeated vegetation keeps its native silhouette instead
-    // of doubling its draw calls for the entire race.
-    if (suppressAutoOutline) node.userData.turnOutlined = true;
-    if (suppressAutoOutline) node.userData.turnPaletteLocked = true;
+    // Keep repeated vegetation on its supplied palette.
+    if (paletteLocked) node.userData.turnPaletteLocked = true;
   });
 
   model.updateMatrixWorld(true);
@@ -131,7 +107,6 @@ function prepareModel(source, {
   model.position.y -= bounds.min.y;
   model.position.z -= center.z;
 
-  if (outline) addOutline(model);
   return model;
 }
 
@@ -155,23 +130,23 @@ function placeAlongTrack({
   distance,
   targetHeight,
   targetSize,
-  outline = false,
+
   faceTrack = false,
   rotationOffset = 0,
   stretch = null,
   tint = null,
   tintAmount = 0.75,
   groundSink = 0,
-  suppressAutoOutline = false
+  paletteLocked = false
 }) {
   const { sample, position } = trackPosition(samples, index, side, trackWidth, distance);
   const model = prepareModel(source, {
     targetHeight,
     targetSize,
-    outline,
+
     tint,
     tintAmount,
-    suppressAutoOutline
+    paletteLocked
   });
   model.position.add(position);
   model.position.y -= groundSink;
@@ -211,7 +186,7 @@ function placeTreeBelt({ world, samples, trackWidth, trees, tallTrees }) {
       targetHeight,
       groundSink: targetHeight * 0.07,
       rotationOffset: random * Math.PI * 2,
-      suppressAutoOutline: true
+      paletteLocked: true
     });
   }
 }
@@ -229,7 +204,7 @@ function placeStartArea({ world, samples, trackWidth, flag }) {
       side,
       distance: 3.2,
       targetHeight: 10.5,
-      outline: true,
+
       faceTrack: true,
       rotationOffset: side > 0 ? 0.15 : -0.15
     });

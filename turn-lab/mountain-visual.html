@@ -128,7 +128,7 @@
       if (Number.isFinite(renderedY)) maximumRenderedRoadSupportGap = Math.max(maximumRenderedRoadSupportGap, roadY - renderedY);
 
       for (const side of [-1,1]) {
-        const edge = offsetPoint(sample, side * (trackWidth/2 + MOUNTAIN_R3.EDGE_WHITE_WIDTH + MOUNTAIN_R3.EDGE_BLACK_WIDTH));
+        const edge = offsetPoint(sample, side * (trackWidth/2 + MOUNTAIN_R3.EDGE_WHITE_WIDTH + MOUNTAIN_R3.ROAD_SHOULDER_CLEARANCE));
         const edgeY = sample.point.y + MOUNTAIN_R3.ROAD_HEIGHT;
         maximumEdgeSupportGap = Math.max(maximumEdgeSupportGap, edgeY - sampler.terrainHeightAt(edge.x, edge.z));
         const renderedEdgeY = renderedTerrainY(edge.x, edge.z, edgeY);

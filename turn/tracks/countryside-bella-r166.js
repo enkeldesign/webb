@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { graphicsProfile } from '/turn/graphics-profile.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r166-bella-records';
 
@@ -54,22 +53,9 @@ function flatColorMaterial(color) {
   return new THREE.MeshBasicMaterial({ color, toneMapped: false });
 }
 
-function outlinedPrimitive(geometry, fillMaterial, outlineScale = 1.065) {
-  if (!graphicsProfile.outlines) {
-    const root = new THREE.Group();
-    const fill = new THREE.Mesh(geometry, fillMaterial);
-    fill.userData.turnOutlined = true;
-    root.add(fill);
-    return root;
-  }
+function primitiveGroup(geometry, material) {
   const group = new THREE.Group();
-  const outline = new THREE.Mesh(
-    geometry,
-    new THREE.MeshBasicMaterial({ color: 0x08090a, side: THREE.BackSide, toneMapped: false })
-  );
-  outline.scale.setScalar(outlineScale);
-  const fill = new THREE.Mesh(geometry, fillMaterial);
-  group.add(outline, fill);
+  group.add(new THREE.Mesh(geometry, material));
   return group;
 }
 
@@ -212,35 +198,35 @@ function createFallbackCat() {
   const dark = flatColorMaterial(BELLA_PALETTE.sealBrown);
   const paws = flatColorMaterial(BELLA_PALETTE.paws);
 
-  const body = outlinedPrimitive(new THREE.BoxGeometry(2.55, 2.25, 3.05), cream);
+  const body = primitiveGroup(new THREE.BoxGeometry(2.55, 2.25, 3.05), cream);
   body.position.y = 2.05;
   holder.add(body);
 
-  const head = outlinedPrimitive(new THREE.BoxGeometry(2.2, 1.95, 1.9), cream);
+  const head = primitiveGroup(new THREE.BoxGeometry(2.2, 1.95, 1.9), cream);
   head.position.set(0, 3.65, -1.15);
   holder.add(head);
 
-  const face = outlinedPrimitive(new THREE.BoxGeometry(1.42, 1.38, 0.24), dark, 1.035);
+  const face = primitiveGroup(new THREE.BoxGeometry(1.42, 1.38, 0.24), dark);
   face.position.set(0, 3.62, -2.17);
   holder.add(face);
 
   for (const x of [-0.58, 0.58]) {
-    const ear = outlinedPrimitive(new THREE.ConeGeometry(0.44, 1.02, 4), dark, 1.045);
+    const ear = primitiveGroup(new THREE.ConeGeometry(0.44, 1.02, 4), dark);
     ear.position.set(x, 4.9, -1.18);
     ear.rotation.y = Math.PI / 4;
     holder.add(ear);
   }
 
   for (const [x, z] of [[-0.83, -0.72], [0.83, -0.72], [-0.83, 0.72], [0.83, 0.72]]) {
-    const leg = outlinedPrimitive(new THREE.BoxGeometry(0.62, 1.35, 0.62), dark, 1.04);
+    const leg = primitiveGroup(new THREE.BoxGeometry(0.62, 1.35, 0.62), dark);
     leg.position.set(x, 0.92, z);
     holder.add(leg);
-    const paw = outlinedPrimitive(new THREE.BoxGeometry(0.72, 0.38, 0.82), paws, 1.04);
+    const paw = primitiveGroup(new THREE.BoxGeometry(0.72, 0.38, 0.82), paws);
     paw.position.set(x, 0.28, z - 0.08);
     holder.add(paw);
   }
 
-  const tail = outlinedPrimitive(new THREE.BoxGeometry(0.56, 0.56, 2.75), dark, 1.045);
+  const tail = primitiveGroup(new THREE.BoxGeometry(0.56, 0.56, 2.75), dark);
   tail.position.set(-1.18, 1.48, 1.58);
   tail.rotation.set(0.34, -0.36, -0.18);
   holder.add(tail);
@@ -260,17 +246,17 @@ function createRescueTree() {
   const leafMid = flatColorMaterial(BELLA_PALETTE.leafMid);
   const leafLight = flatColorMaterial(BELLA_PALETTE.leafLight);
 
-  const trunk = outlinedPrimitive(new THREE.CylinderGeometry(0.82, 1.15, 10.4, 7), bark, 1.035);
+  const trunk = primitiveGroup(new THREE.CylinderGeometry(0.82, 1.15, 10.4, 7), bark);
   trunk.position.set(-1.9, 5.2, -0.9);
   trunk.rotation.z = -0.05;
   tree.add(trunk);
 
-  const branch = outlinedPrimitive(new THREE.CylinderGeometry(0.48, 0.7, 6.4, 7), bark, 1.035);
+  const branch = primitiveGroup(new THREE.CylinderGeometry(0.48, 0.7, 6.4, 7), bark);
   branch.position.set(0.45, 7.65, -0.22);
   branch.rotation.z = Math.PI / 2 - 0.12;
   tree.add(branch);
 
-  const rearBranch = outlinedPrimitive(new THREE.CylinderGeometry(0.38, 0.58, 4.2, 7), bark, 1.035);
+  const rearBranch = primitiveGroup(new THREE.CylinderGeometry(0.38, 0.58, 4.2, 7), bark);
   rearBranch.position.set(-2.95, 8.35, -1.05);
   rearBranch.rotation.z = -0.62;
   tree.add(rearBranch);
@@ -285,7 +271,7 @@ function createRescueTree() {
     [3.15, 9.35, 1.2, 1.45, leafLight]
   ];
   for (const [x, y, z, scale, fill] of leafClusters) {
-    const crown = outlinedPrimitive(leafGeometry, fill, 1.035);
+    const crown = primitiveGroup(leafGeometry, fill);
     crown.position.set(x, y, z);
     crown.scale.set(scale, scale * 0.9, scale);
     tree.add(crown);

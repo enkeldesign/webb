@@ -97,12 +97,6 @@ function makeDownhillSlalomWarningSign() {
   exclamationDot.name = 'Mountain warning sign exclamation dot';
   root.add(exclamationDot);
 
-  root.traverse((object) => {
-    if (!object?.isMesh) return;
-    // This prop carries its own graphic border. Do not let a later art pass
-    // add a second TURN contour around it.
-    object.userData.turnOutlined = true;
-  });
   return root;
 }
 
@@ -231,7 +225,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     version: 'r3',
     visualPolish: 'r177-ipad-aspect-normalized-r7-horizon-sky-plus-r6-night-plus-r5-suburban-village-plus-r4-waterfall-landmarks',
     ground: 'continuous-snow-and-granite-terrain-body',
-    roadEdge: 'white-with-black-outer-contour',
+    roadEdge: 'solid-white',
     roadbed: 'opaque-and-terrain-supported',
     retainingFoundation: '4.6m-granite-skirt',
     routeClearanceProtected: true,

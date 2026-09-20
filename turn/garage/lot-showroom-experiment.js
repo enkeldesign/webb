@@ -484,17 +484,15 @@ export function showTheLot({ initialSelection } = {}) {
       window.removeEventListener('turn:paint-controls-unlocked', handlePaintUnlocked);
       resizeObserver.disconnect();
 
-      // Stop both render loops immediately, detach the UI, and resolve the
-      // selection before the synchronous WebGL context teardown runs.
+      // Stop and release both preview contexts before resolving the selection,
+      // so racing never inherits Lot animation work or GPU resources.
       thumbnailRenderer.stop();
       viewer.stop();
       overlay.remove();
       document.body.classList.remove('turn-lot-open');
+      thumbnailRenderer.cancel();
+      viewer.dispose();
       resolve(result ? normalizeVehicleSelection(result) : null);
-      deferLotRendererCleanup(() => {
-        thumbnailRenderer.cancel();
-        viewer.dispose();
-      });
     }
 
     updateSelectionUi({ reveal: false });
@@ -511,17 +509,6 @@ export function showTheLot({ initialSelection } = {}) {
   });
 }
 
-function deferLotRendererCleanup(cleanup) {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      if (typeof globalThis.requestIdleCallback === 'function') {
-        globalThis.requestIdleCallback(cleanup, { timeout: 800 });
-        return;
-      }
-      globalThis.setTimeout(cleanup, 120);
-    });
-  });
-}
 
 function createViewer(host) {
   const scene = new THREE.Scene();

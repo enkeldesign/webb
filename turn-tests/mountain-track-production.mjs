@@ -193,8 +193,8 @@ assert.match(baseWorld, /side: 'north-outside'/,
   'The warning sign must remain on the old tree sightline side of the road');
 assert.match(baseWorld, /collidable: false/,
   'The warning landmark must remain visual only and must not become collision bait');
-assert.match(baseWorld, /object\.userData\.turnOutlined = true/,
-  'The authored sign border must not receive a second automatic TURN contour');
+assert.doesNotMatch(baseWorld, /turnOutlined/,
+  'The authored sign needs no automatic contour suppression machinery');
 assert.match(terrain, /Mountain continuous terrain body r3/);
 assert.match(terrain, /Mountain opaque roadbed side wall r3/);
 assert.match(terrain, /Mountain closed roadbed underside r3/);

@@ -8,7 +8,6 @@ const [
   beauty,
   identity,
   intensity,
-  cleanup,
   landmark,
   worldRender,
   app,
@@ -27,7 +26,6 @@ const [
   readText('../turn/world-beauty.js'),
   readText('../turn/track-identity.js'),
   readText('../turn/section-intensity.js'),
-  readText('../turn/tracks/countryside-scenery-r177.js'),
   readText('../turn/tracks/kenney-track-landmarks-r517.js'),
   readText('../turn/render/world.js'),
   readText('../turn/app.js'),
@@ -107,13 +105,8 @@ assert.match(intensity, /colouredVerges: 0/);
 assert.match(intensity, /repeaterPosts: 0/);
 assert.match(intensity, /sceneryMaterialTints: 0/);
 
-assert.doesNotMatch(cleanup, /VEHICLE_SLOTS|createCarVisual|relocateLakeBuildings|expectedTownPlacements/,
-  'The legacy random roadside traffic and lake-building relocation hack must be gone');
-assert.match(cleanup, /scatteredRoadsideVehicles: 0/);
-assert.match(cleanup, /lakeRelocationHacks: 0/);
-
 assert.match(landmark, /paletteLocked: true/);
-assert.match(landmark, /outline: false/,
+assert.doesNotMatch(landmark, /BackSide|addInkOutline/,
   'Thin windmill sail panels must not be obscured by a back-face contour shell');
 assert.match(landmark, /turnBladePalette = 'authored warm wood and pale sail cloth'/);
 assert.match(landmark, /node\.userData\.turnPaletteLocked = true/);
@@ -122,15 +115,15 @@ assert.match(landmark, /node\.userData\.turnZoneStyled = true/);
 assert.match(worldRender, /world-beauty\.js\?revision=r532-countryside-nature-polish/);
 assert.match(worldRender, /track-identity\.js\?revision=r532-countryside-nature-polish/);
 assert.match(worldRender, /section-intensity\.js\?revision=r532-countryside-nature-polish/);
-assert.match(worldRender, /countryside-scenery-r177\.js\?revision=r532-countryside-nature-polish/);
+assert.doesNotMatch(worldRender, /countryside-scenery-r177\.js/, 'Obsolete contour recolouring is no longer loaded');
 assert.match(app, /render\/world\.js\?revision=r532-countryside-nature-polish/);
 assert.match(index, new RegExp(`world-assets\\.js\\?build=${release.cacheKey}&revision=r532-countryside-nature-polish`));
 assert.match(index, /kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish/);
 assert.match(index, /app\.js\?build=[^"']*-r532-countryside-nature/);
 assert.match(labIndex, new RegExp(`world-assets\\.js\\?build=${release.cacheKey}&revision=r532-countryside-nature-polish`));
 
-assert.equal(sha256(bella), 'b09d2bdcb419fd920769855d201f0a7da7e2f2390b28168cc32ba6433f474f5f',
-  'BELLA and her rescue tree must stay at the reviewed baseline after retiring shadow flags');
+assert.equal(sha256(bella), 'cb5ec217470485f36336e8089d1924ea93ab10356345160b42abbc6dc9f8875a',
+  'BELLA and her rescue tree must stay at the reviewed baseline after retiring shadow flags and contour shells');
 assert.equal(sha256(bellaRescue), '8cf0a88055a01e3baec7aab44924c059ade29515971d9c7918d75a8781018b10',
   'BELLA rescue adapter must remain at the reviewed lifecycle-gated baseline');
 

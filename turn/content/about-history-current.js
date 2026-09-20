@@ -494,6 +494,20 @@ const TYRE_CENTRE_HISTORY = Object.freeze({
   ])
 });
 
+const RACE_CONTOUR_HISTORY = Object.freeze({
+  period: '20 September',
+  title: 'Cleaner racing scenery, with contours kept in The Lot',
+  paragraphs: Object.freeze([
+    'TURN 1.21.6 removes contour shells from racing cars and scenery. The race image uses the models, lighting and projected shadows consistently, while The Lot keeps its existing outlined car previews.',
+    'The Lot releases its preview renderers before returning control to racing. Removing race contours also removes their extra drawing work and the delayed scenery passes that used to add them.'
+  ]),
+  milestones: Object.freeze([
+    'Consistent racing scenery without contour shells',
+    'The Lot keeps its contours and releases its GPU contexts before racing',
+    'TURN 1.21.6 · 2026.09.20-r261'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -571,7 +585,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   DIRECTIONAL_SHADOW_HISTORY,
   SOFT_SHADOW_HISTORY,
   WHEEL_CONTACT_HISTORY,
-  TYRE_CENTRE_HISTORY
+  TYRE_CENTRE_HISTORY,
+  RACE_CONTOUR_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -677,13 +692,14 @@ Object.freeze({
   date: '20 September',
   entries: Object.freeze([
     Object.freeze(['1.21.4 r259', 'Lightens the shadow beneath each car and attaches skid marks to its actual rear wheels without a frame of delay.']),
-    Object.freeze(['1.21.5 r260', 'Aligns skid marks with the centres of the rear tires, preserving Monster Truck and Supercar spacing.'])
+    Object.freeze(['1.21.5 r260', 'Aligns skid marks with the centres of the rear tires, preserving Monster Truck and Supercar spacing.']),
+    Object.freeze(['1.21.6 r261', 'Removes race contours and their extra drawing work, keeps The Lot’s outlined previews, and releases Lot renderers before racing resumes.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.5',
-  build: '2026.09.20-r260',
-  note: 'TURN 1.21.5 aligns skid marks with the centres of the rear tires while keeping Monster Truck and Supercar spacing unchanged.'
+  version: '1.21.6',
+  build: '2026.09.20-r261',
+  note: 'TURN 1.21.6 removes racing contours while preserving The Lot’s previews and releasing their renderers before racing.'
 });

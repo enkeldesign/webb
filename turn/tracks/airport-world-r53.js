@@ -1,9 +1,7 @@
 import * as THREE from 'three';
-import { graphicsProfile } from '/turn/graphics-profile.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { installAirportWorld as installAirportWorldR52 } from './airport-world-r52.js?build=20260722-r52';
 
-const INK = 0x08090a;
 const AMVLAB_COMMIT = '91d835e8e851b2317fe79af291c9fed6153fd525';
 const AMVLAB_BASE = `https://raw.githubusercontent.com/amvlab/aircraft-models/${AMVLAB_COMMIT}/models/`;
 
@@ -127,7 +125,7 @@ async function buildAircraft(slot) {
   const aircraft = prepareAircraftAsset(source, {
     targetLength: slot.targetLength,
     lengthToSpanRatio: definition.lengthToSpanRatio,
-    outline: true,
+
     airborne: Boolean(slot.airborne)
   });
   aircraft.name = slot.name;
@@ -144,15 +142,15 @@ function loadAircraftModel(key, url) {
 function prepareAircraftAsset(source, {
   targetLength,
   lengthToSpanRatio,
-  outline = true,
+
   airborne = false
 }) {
   const model = source.clone(true);
-  const meshes = [];
+
 
   model.traverse((node) => {
     if (!node.isMesh || !node.material) return;
-    meshes.push(node);
+
     const materials = Array.isArray(node.material) ? node.material : [node.material];
     const clones = materials.map((entry) => {
       const clone = entry.clone();
@@ -167,25 +165,7 @@ function prepareAircraftAsset(source, {
 
   alignAndScaleAircraft(model, targetLength, lengthToSpanRatio, airborne);
 
-  if (outline && graphicsProfile.outlines) {
-    for (const mesh of meshes) {
-      const outlineNode = new THREE.Mesh(
-        mesh.geometry,
-        new THREE.MeshBasicMaterial({
-          color: INK,
-          side: THREE.BackSide,
-          depthTest: true,
-          depthWrite: false,
-          polygonOffset: true,
-          polygonOffsetFactor: 1,
-          polygonOffsetUnits: 1,
-          fog: !airborne
-        })
-      );
-      outlineNode.scale.setScalar(airborne ? 1.012 : 1.018);
-      mesh.add(outlineNode);
-    }
-  }
+
 
   return model;
 }

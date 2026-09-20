@@ -7,9 +7,6 @@ function materialEntries(material) {
   return Array.isArray(material) ? material : [material];
 }
 
-function isOutlineMaterial(material) {
-  return materialEntries(material).some((entry) => entry?.side === THREE.BackSide);
-}
 
 function boxParameters(mesh) {
   const parameters = mesh?.geometry?.parameters;
@@ -24,7 +21,7 @@ function boxParameters(mesh) {
 function findStartBannerSurface(gate, trackWidth) {
   let match = null;
   gate?.traverse?.((node) => {
-    if (match || !node?.isMesh || isOutlineMaterial(node.material)) return;
+    if (match || !node?.isMesh) return;
     const box = boxParameters(node);
     if (!box) return;
     if (

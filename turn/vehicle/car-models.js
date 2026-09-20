@@ -251,10 +251,9 @@ export async function createCarVisual({
 function reusableCompetitorGhostKey({ car, color, secondaryColor, ghost, targetLength, outline }) {
   if (
     ghost !== true
-    || outline !== true
     || Math.abs(Number(targetLength) - COMPETITOR_GHOST_TARGET_LENGTH) > 0.000001
   ) return '';
-  return `${car.id}|${color}|${secondaryColor}|${COMPETITOR_GHOST_TARGET_LENGTH}`;
+  return `${car.id}|${color}|${secondaryColor}|${COMPETITOR_GHOST_TARGET_LENGTH}|${outline ? 1 : 0}`;
 }
 
 function rememberCompetitorGhostTemplate(key, visual) {

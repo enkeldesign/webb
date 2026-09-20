@@ -2,7 +2,6 @@ import * as THREE from 'three';
 
 const buildId = new URL(import.meta.url).searchParams.get('build');
 const TREE_CLUSTER_SINK_RATIO = 0.07;
-const TURN_INK = 0x08090a;
 
 // Historical regression marker: the r524 directional wrapper delegates to the verified
 // on-demand Bella rescue/audio lifecycle underneath it.
@@ -30,12 +29,11 @@ async function waitForHomeBeforeCosmetics() {
 }
 
 async function loadWorldModules() {
-  const [beauty, art, identity, intensity, scenery, bella, bellaFinal, bellaRescue] = await Promise.all([
+  const [beauty, art, identity, intensity, bella, bellaFinal, bellaRescue] = await Promise.all([
     import(moduleUrl('../world-beauty.js?revision=r532-countryside-nature-polish')),
     import(moduleUrl('../world-art-pass.js?revision=r514-road-contour')),
     import(moduleUrl('../track-identity.js?revision=r532-countryside-nature-polish')),
     import(moduleUrl('../section-intensity.js?revision=r532-countryside-nature-polish')),
-    import(moduleUrl('../tracks/countryside-scenery-r177.js?revision=r532-countryside-nature-polish')),
     import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r168-bella-markings-eyes-foliage-r169-facing-palette-r170-eye-placement-r171-cute-eyes-r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
     import(moduleUrl('../tracks/countryside-bella-final-r172.js?revision=r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
     import(moduleUrl('../tracks/countryside-bella-rescue-r524.js?revision=r524-camera-relative-meow'))
@@ -46,7 +44,6 @@ async function loadWorldModules() {
     installArtPass: art.installArtPass,
     installTrackIdentity: identity.installTrackIdentity,
     installSectionIntensity: intensity.installSectionIntensity,
-    installCountrysideSceneryCleanup: scenery.installCountrysideSceneryCleanup,
     installCountrysideBella: bella.installCountrysideBella,
     applyBellaFinalVisuals: bellaFinal.applyBellaFinalVisuals,
     installBellaRescueBehavior: bellaRescue.installBellaRescueBehavior
@@ -64,32 +61,6 @@ function waitForRuntime() {
   }, { once: true });
 }
 
-function isContourShell(node) {
-  if (!node?.isMesh || !node.material) return false;
-  if (node.userData?.turnOutline) return true;
-  const materials = Array.isArray(node.material) ? node.material : [node.material];
-  return materials.some((material) => (
-    material?.side === THREE.BackSide
-    && material?.color?.getHex?.() === TURN_INK
-  ));
-}
-
-function suppressTreeClusterContours(root) {
-  const contourShells = [];
-  root.traverse((node) => {
-    if (!node?.isMesh) return;
-    if (isContourShell(node)) {
-      contourShells.push(node);
-      return;
-    }
-    // world-art-pass.js checks this marker before creating an enlarged
-    // back-face contour shell. Leave it set even after stripping an already
-    // created shell so the later compatibility sweeps cannot recreate it.
-    node.userData.turnOutlined = true;
-  });
-
-  for (const shell of contourShells) shell.parent?.remove(shell);
-}
 
 function groundLateTreeClusters(world, baselineChildren) {
   const bounds = new THREE.Box3();
@@ -113,12 +84,11 @@ function groundLateTreeClusters(world, baselineChildren) {
       && size.z >= 5;
 
     if (!treeCluster) continue;
-    suppressTreeClusterContours(child);
     child.position.y -= size.y * TREE_CLUSTER_SINK_RATIO;
     groundedCount += 1;
   }
 
-  if (groundedCount) console.info(`TURN: grounded ${groundedCount} late tree clusters without contour shells.`);
+  if (groundedCount) console.info(`TURN: grounded ${groundedCount} late tree clusters.`);
 }
 
 async function install(runtime) {
@@ -152,7 +122,6 @@ async function install(runtime) {
       installArtPass,
       installTrackIdentity,
       installSectionIntensity,
-      installCountrysideSceneryCleanup,
       installCountrysideBella,
       applyBellaFinalVisuals,
       installBellaRescueBehavior
@@ -167,7 +136,7 @@ async function install(runtime) {
     }
 
     // Preserve the verified installation order from the generated legacy source.
-    const artPassPromise = installArtPass({ world, scene, samples: worldSamples, trackWidth })
+    void installArtPass({ world, scene, samples: worldSamples, trackWidth })
       .catch((error) => {
         console.warn('TURN: bold surroundings art pass failed, keeping base world.', error);
       });
@@ -190,15 +159,7 @@ async function install(runtime) {
         console.warn('TURN: world beauty pass failed, keeping base world.', error);
       });
 
-    artPassPromise
-      .then(() => installCountrysideSceneryCleanup({
-        world,
-        samples: worldSamples,
-        trackWidth
-      }))
-      .catch((error) => {
-        console.warn('TURN: Countryside lake/traffic cleanup failed, keeping base scenery.', error);
-      });
+
   } catch (error) {
     console.warn('TURN: standalone world bootstrap failed, keeping base world.', error);
   }

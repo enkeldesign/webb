@@ -1,9 +1,7 @@
 import * as THREE from 'three';
-import { graphicsProfile } from '/turn/graphics-profile.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const REVISION = 'r532-countryside-nature-polish';
-const INK = 0x08090a;
 const SEA_LEVEL = -16.5;
 const WINDMILL_TRACK_FRACTION = 0.52;
 const WINDMILL_TRACKSIDE_DISTANCE = 55;
@@ -25,10 +23,6 @@ const ASSET_URLS = Object.freeze({
 
 const loader = new GLTFLoader();
 const sourceCache = new Map();
-const inkMaterial = new THREE.MeshBasicMaterial({
-  color: INK,
-  side: THREE.BackSide
-});
 
 function currentTrackId(runtime) {
   return globalThis.__turnGetTrackId?.() || runtime?.trackId || '';
@@ -47,35 +41,18 @@ function loadSource(key) {
   return sourceCache.get(key);
 }
 
-function addInkOutline(root, scale = 1.02) {
-  if (!graphicsProfile.outlines) return;
-  const surfaces = [];
-  root.traverse((node) => {
-    if (node?.isMesh) surfaces.push(node);
-  });
-
-  for (const surface of surfaces) {
-    surface.userData.turnOutlined = true;
-    const outline = new THREE.Mesh(surface.geometry, inkMaterial);
-    outline.name = `${surface.name || 'Landmark surface'} outline`;
-    outline.scale.setScalar(scale);
-    outline.userData.turnOutline = true;
-    outline.userData.turnOutlined = true;
-    surface.add(outline);
-  }
-}
 
 function prepareModel(source, {
   targetSpan,
   horizontalSpan = false,
-  outlineScale = 1.02,
-  outline = true,
+
+
   paletteLocked = false
 }) {
   const model = source.clone(true);
   model.traverse((node) => {
     if (!node?.isMesh) return;
-    node.userData.turnOutlined = true;
+
     if (paletteLocked) {
       node.userData.turnPaletteLocked = true;
       node.userData.turnZoneStyled = true;
@@ -96,27 +73,13 @@ function prepareModel(source, {
   model.position.x -= centre.x;
   model.position.y -= bounds.min.y;
   model.position.z -= centre.z;
-  if (outline) addInkOutline(model, outlineScale);
   return model;
 }
 
-function outlinedPrimitive(geometry, surfaceMaterial, outlineScale = 1.035) {
-  if (!graphicsProfile.outlines) {
-    const root = new THREE.Group();
-    const surface = new THREE.Mesh(geometry, surfaceMaterial);
-    surface.userData.turnOutlined = true;
-    root.add(surface);
-    return root;
-  }
-  const root = new THREE.Group();
-  const outline = new THREE.Mesh(geometry, inkMaterial);
-  const surface = new THREE.Mesh(geometry, surfaceMaterial);
-  outline.scale.setScalar(outlineScale);
-  outline.userData.turnOutline = true;
-  outline.userData.turnOutlined = true;
-  surface.userData.turnOutlined = true;
-  root.add(outline, surface);
-  return root;
+function primitiveGroup(geometry, material) {
+  const group = new THREE.Group();
+  group.add(new THREE.Mesh(geometry, material));
+  return group;
 }
 
 function trackCentre(samples) {
@@ -149,31 +112,29 @@ function createCountrysideWindmill(source, samples, trackWidth) {
   landmark.userData.turnSceneryOnly = true;
   landmark.userData.gameplayGeometryUnchanged = true;
 
-  const tower = outlinedPrimitive(
+  const tower = primitiveGroup(
     new THREE.CylinderGeometry(4.15, 6.3, 17, 10),
     new THREE.MeshStandardMaterial({ color: 0xf2dfbd, roughness: 0.96, metalness: 0 })
   );
   tower.name = 'Countryside Windmill Tower';
   tower.position.y = 8.5;
 
-  const roof = outlinedPrimitive(
+  const roof = primitiveGroup(
     new THREE.ConeGeometry(5.15, 4.6, 10),
     new THREE.MeshStandardMaterial({ color: 0xa85b3f, roughness: 0.94, metalness: 0 })
   );
   roof.name = 'Countryside Windmill Roof';
   roof.position.y = 19.3;
 
-  const door = outlinedPrimitive(
+  const door = primitiveGroup(
     new THREE.BoxGeometry(2.35, 4.7, 0.55),
-    new THREE.MeshStandardMaterial({ color: 0x6f4932, roughness: 1, metalness: 0 }),
-    1.055
-  );
+    new THREE.MeshStandardMaterial({ color: 0x6f4932, roughness: 1, metalness: 0 }));
   door.name = 'Countryside Windmill Door';
   door.position.set(0, 2.45, 6.02);
 
   const rotor = prepareModel(source, {
     targetSpan: 18.6,
-    outline: false,
+
     paletteLocked: true
   });
   rotor.name = 'Kenney Fantasy Town Windmill Rotor';
@@ -204,7 +165,7 @@ function createCliffsideOceanLiner(source, samples, trackWidth) {
   const liner = prepareModel(source, {
     targetSpan: OCEAN_LINER_TARGET_LENGTH,
     horizontalSpan: true,
-    outlineScale: 1.012
+
   });
 
   liner.name = 'Cliffside Kenney Ocean Liner';
