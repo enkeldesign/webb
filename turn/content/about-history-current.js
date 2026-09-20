@@ -863,7 +863,7 @@ Object.freeze({
   entries: Object.freeze([
     Object.freeze(['1.21.16 r271', 'Matches MIDNIGHT CITY’s violet world-horizon gradient reach to MOUNTAIN at 0.23 after final physical production tuning.'])
   ])
-
+})
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
