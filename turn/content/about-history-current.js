@@ -522,6 +522,20 @@ const ROAD_EDGE_AND_CLIFFSIDE_RESTORE_HISTORY = Object.freeze({
   ])
 });
 
+const MOUNTAIN_ROAD_EDGE_RESTORE_HISTORY = Object.freeze({
+  period: '20 September',
+  title: 'MOUNTAIN gets its road-edge trim back',
+  paragraphs: Object.freeze([
+    'TURN 1.21.8 restores the narrow asphalt-coloured strip immediately outside MOUNTAIN’s white road-edge markings. The strip is ordinary road geometry, not a contour shell, so the cleaner contour-free racing treatment remains unchanged.',
+    'The restored trim follows the full long-course road and keeps MOUNTAIN’s collision, terrain, handling and records unchanged.'
+  ]),
+  milestones: Object.freeze([
+    'Asphalt-coloured outer road trim restored on MOUNTAIN',
+    'No racing contour shells reintroduced',
+    'TURN 1.21.8 · 2026.09.20-r263'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -601,7 +615,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   WHEEL_CONTACT_HISTORY,
   TYRE_CENTRE_HISTORY,
   RACE_CONTOUR_HISTORY,
-  ROAD_EDGE_AND_CLIFFSIDE_RESTORE_HISTORY
+  ROAD_EDGE_AND_CLIFFSIDE_RESTORE_HISTORY,
+  MOUNTAIN_ROAD_EDGE_RESTORE_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -709,13 +724,14 @@ Object.freeze({
     Object.freeze(['1.21.4 r259', 'Lightens the shadow beneath each car and attaches skid marks to its actual rear wheels without a frame of delay.']),
     Object.freeze(['1.21.5 r260', 'Aligns skid marks with the centres of the rear tires, preserving Monster Truck and Supercar spacing.']),
     Object.freeze(['1.21.6 r261', 'Removes race contours and their extra drawing work, keeps The Lot’s outlined previews, and releases Lot renderers before racing resumes.']),
-    Object.freeze(['1.21.7 r262', 'Restores the asphalt-coloured strip outside track markings and CLIFFSIDE’s filled inner highlands while keeping racing contour shells removed.'])
+    Object.freeze(['1.21.7 r262', 'Restores the asphalt-coloured strip outside track markings and CLIFFSIDE’s filled inner highlands while keeping racing contour shells removed.']),
+    Object.freeze(['1.21.8 r263', 'Restores MOUNTAIN’s asphalt-coloured strip outside the white road-edge markings without reintroducing racing contour shells.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.7',
-  build: '2026.09.20-r262',
-  note: 'TURN 1.21.7 restores asphalt road-edge trim and CLIFFSIDE’s filled inner highlands without restoring racing contour shells.'
+  version: '1.21.8',
+  build: '2026.09.20-r263',
+  note: 'TURN 1.21.8 restores MOUNTAIN’s asphalt road-edge trim without restoring racing contour shells.'
 });
