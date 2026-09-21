@@ -156,6 +156,7 @@ const [
   definitions,
   definitionsBase,
   catalog,
+  airportWorld,
   registry,
   manager,
   cityWorld,
@@ -170,6 +171,7 @@ const [
   fs.readFile(new URL('../../turn/tracks/definitions.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/definitions-base.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/catalog.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/airport-world-r50.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
@@ -189,6 +191,17 @@ assert.match(definitions, /sampleCount: 2160/);
 assert.doesNotMatch(definitionsBase, /id: 'track-6-tba'/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
 assert.match(catalog, /MOUNTAIN_CONTROL_POINTS\.map/);
+assert.match(airportWorld, /AIRPORT_HAIRPIN_REFERENCE = Object\.freeze\(\{ x: 0, z: 22 \}\)/);
+assert.match(airportWorld, /appendRaceRoadIndicesWithoutHairpinOverlap/);
+assert.match(airportWorld, /THREE\.ShapeUtils\.triangulateShape\(contour, \[\]\)/);
+assert.match(airportWorld, /preservedRoadVertices: true/);
+assert.match(airportWorld, /preservedOuterBoundary: true/);
+assert.match(airportWorld, /hairpinRoadShapeChanged: false/);
+assert.match(airportWorld, /hairpinRoadCollisionChanged: false/);
+assert.match(airportWorld, /const innerOffset = side \* \(trackWidth \/ 2 - 0\.05\)/,
+  'Airport hairpin fix must leave the authored curb offsets unchanged');
+assert.doesNotMatch(airportWorld, /AIRPORT_HAIRPIN_REFERENCE[\s\S]*?controlPoints/,
+  'Airport hairpin seam fix must not rewrite the control-point route');
 assert.match(registry, new RegExp(`mountain-world-long\\.js\\?build=${release.cacheKey}`));
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'mountain'/);
