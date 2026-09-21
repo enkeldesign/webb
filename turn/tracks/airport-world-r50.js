@@ -215,7 +215,9 @@ function appendRaceRoadIndicesWithoutHairpinOverlap({ roadIndices, roadPositions
   // Keep every existing road vertex and the complete outer boundary. Under the
   // raised inner curb, skip only the tiny folded loop and triangulate the same
   // local road footprint as one simple polygon. Centerline, width, curbs and
-  // collision remain untouched.
+  // collision remain untouched. ShapeUtils can emit the patch with the opposite
+  // winding from the surrounding strip, so normalize every patch triangle to an
+  // upward-facing winding; otherwise computeVertexNormals creates dark join lines.
   const contourVertexIndices = [];
   for (let index = start; index <= end; index += 1) {
     contourVertexIndices.push(index * 2);
@@ -233,7 +235,9 @@ function appendRaceRoadIndicesWithoutHairpinOverlap({ roadIndices, roadPositions
   });
   const faces = THREE.ShapeUtils.triangulateShape(contour, []);
   for (const [a, b, c] of faces) {
-    roadIndices.push(
+    appendUpwardRoadTriangle(
+      roadIndices,
+      roadPositions,
       contourVertexIndices[a],
       contourVertexIndices[b],
       contourVertexIndices[c]
@@ -247,8 +251,23 @@ function appendRaceRoadIndicesWithoutHairpinOverlap({ roadIndices, roadPositions
     end,
     skippedInnerSamples: foldHalfSpan * 2 - 1,
     preservedRoadVertices: true,
-    preservedOuterBoundary: true
+    preservedOuterBoundary: true,
+    consistentUpwardWinding: true
   });
+}
+
+function appendUpwardRoadTriangle(roadIndices, roadPositions, a, b, c) {
+  const aOffset = a * 3;
+  const bOffset = b * 3;
+  const cOffset = c * 3;
+  const abX = roadPositions[bOffset] - roadPositions[aOffset];
+  const abZ = roadPositions[bOffset + 2] - roadPositions[aOffset + 2];
+  const acX = roadPositions[cOffset] - roadPositions[aOffset];
+  const acZ = roadPositions[cOffset + 2] - roadPositions[aOffset + 2];
+  const normalY = abZ * acX - abX * acZ;
+
+  if (normalY >= 0) roadIndices.push(a, b, c);
+  else roadIndices.push(a, c, b);
 }
 
 function appendStandardRoadIndices(roadIndices, start, end) {
