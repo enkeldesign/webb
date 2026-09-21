@@ -609,6 +609,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
       const grandfathered = unlocked && grandfatheredIds.has(reward.id);
       const isNext = reward.id === nextReward?.id;
       const stateLabel = grandfathered ? 'Kept' : unlocked ? 'Earned' : isNext ? 'Next' : 'Locked';
+      const markerStateLabel = grandfathered ? 'Kept' : unlocked ? 'Earned' : isNext ? '→ Next' : 'Locked';
       const step = index + 1;
       const visualPosition = TROPHY_ROAD_VISUAL_LAYOUTS.map(({ name, rewardSlots }) => {
         const slot = rewardSlots[index];
@@ -628,7 +629,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
           aria-controls="turnTrophyRoadDetailDialog"
           aria-expanded="${selected && detailIsOpen()}"
           aria-label="${reward.shortTitle}. ${reward.threshold} trophies. ${stateLabel}."
-        ><span class="turn-trophy-road-marker-state">${unlocked ? '✓ ' : ''}${stateLabel}</span><span class="turn-trophy-road-marker-icon" aria-hidden="true">${TROPHY_ROAD_REWARD_ICONS[reward.icon]}</span><b>${reward.threshold}</b><small>${reward.shortTitle}</small>${unlocked ? '' : `<i class="turn-trophy-road-marker-lock" aria-hidden="true">${LOCK_ICON}</i>`}</button></li>`;
+        ><span class="turn-trophy-road-marker-state ${unlocked && !grandfathered ? 'is-badge-only' : ''}" aria-hidden="true">${markerStateLabel}</span><span class="turn-trophy-road-marker-icon" aria-hidden="true">${TROPHY_ROAD_REWARD_ICONS[reward.icon]}</span><b>${reward.threshold}</b><small>${reward.shortTitle}</small>${unlocked ? '<i class="turn-trophy-road-marker-earned" aria-hidden="true">✓</i>' : `<i class="turn-trophy-road-marker-lock" aria-hidden="true">${LOCK_ICON}</i>`}</button></li>`;
     }).join('');
 
     const reward = getTrophyRoadReward(selectedRewardId) || TROPHY_ROAD_REWARDS[0];

@@ -988,13 +988,14 @@ Object.freeze({
     Object.freeze(['1.21.23 r278', 'Rebalances THE LOT for tablet landscape with a taller header and car carousel, a shorter 3D/attribute region, and no extra Lot-owned cyan gutter below the showroom.']),
     Object.freeze(['1.21.24 r279', 'Keeps the r278 tablet proportions only on viewports at least 600px tall, restoring the compact Lot header and carousel on iPhone landscape.']),
     Object.freeze(['1.21.25 r280', 'Adds more horizontal space between BACK and THE LOT on every responsive Lot header size.']),
-    Object.freeze(['1.21.26 r281', 'Adds compact blue race-status cues when SUV reaches or loses FULL TANK, Truck reaches BOOST TANK 5/5, and Sports Car reaches DRIFT 5/5.'])
+    Object.freeze(['1.21.26 r281', 'Adds compact blue race-status cues when SUV reaches or loses FULL TANK, Truck reaches BOOST TANK 5/5, and Sports Car reaches DRIFT 5/5.']),
+    Object.freeze(['1.21.27 r282', 'Makes Trophy Road ownership unmistakable with large green check badges on earned rewards, matching yellow lock badges on locked rewards and an explicit → NEXT label for the upcoming reward.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.26',
-  build: '2026.09.21-r281',
-  note: 'TURN 1.21.26 adds compact race-status cues for FULL TANK, BOOST TANK 5/5 and DRIFT 5/5, with FULL TANK LOST when the SUV clean-driving bonus is broken.'
+  version: '1.21.27',
+  build: '2026.09.21-r282',
+  note: 'TURN 1.21.27 makes earned Trophy Road rewards immediately recognizable with prominent green check badges while locked rewards keep matching yellow lock badges.'
 });
