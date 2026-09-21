@@ -12,6 +12,57 @@
   --turn-reward-scoring-unlocked: var(--turn-pink-200, #ff8caf);
 }
 
+/* State must be readable without comparing the locked/unlocked colour shades.
+   Earned rewards get the same corner-badge weight as locks; NEXT stays textual. */
+.turn-trophy-road-marker-state.is-badge-only {
+  visibility: hidden;
+}
+
+.turn-trophy-road-marker-earned,
+.turn-trophy-road-marker-lock {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: grid;
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  padding: 4px;
+  place-items: center;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: 50%;
+  box-shadow: 2px 2px 0 var(--turn-ink, #08090a);
+  color: var(--turn-ink, #08090a);
+  pointer-events: none;
+}
+
+.turn-trophy-road-marker-earned {
+  background: var(--turn-green-200, #d9f5c2);
+  font-size: 1.05rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.turn-trophy-road-marker-lock {
+  background: var(--turn-action-warning, #ffd43b);
+}
+
+@media (max-height: 430px) and (orientation: landscape) {
+  .turn-trophy-road-marker-earned,
+  .turn-trophy-road-marker-lock {
+    top: -7px;
+    right: -7px;
+    width: 24px;
+    height: 24px;
+    padding: 3px;
+    border-width: 2px;
+  }
+
+  .turn-trophy-road-marker-earned {
+    font-size: .88rem;
+  }
+}
+
 /* The 2300 reward uses Erik's supplied Supercar silhouette rather than the
    temporary generic car drawing shipped with the first implementation. */
 .turn-trophy-road-marker[data-trophy-reward="supercar"] .turn-trophy-road-marker-icon {
