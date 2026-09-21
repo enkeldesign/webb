@@ -14,6 +14,10 @@ const ASPHALT_LIGHT = 0x4a4f55;
 const CONCRETE = 0xd9d7c8;
 const APRON = 0x89929b;
 const WINDOW = 0x67d6f4;
+const AIRPORT_HAIRPIN_REFERENCE = Object.freeze({ x: 0, z: 22 });
+const AIRPORT_REFERENCE_SAMPLE_COUNT = 720;
+const AIRPORT_HAIRPIN_PATCH_HALF_SPAN = 9;
+const AIRPORT_HAIRPIN_FOLD_HALF_SPAN = 5;
 
 const SUMMER_INDUSTRIAL_COMMIT = '0831a1937a59562b6165ccfab30f64f35c957b6f';
 const SUMMER_INDUSTRIAL_BASE = `https://raw.githubusercontent.com/immaculate-lift-studio/CityCrafter3D/${SUMMER_INDUSTRIAL_COMMIT}/addons/citycrafter/assets/example_assets/kenney_city-kit-industrial_1.0/Models/GLB%20format/`;
@@ -41,7 +45,7 @@ export function installAirportWorld({ scene, samples, trackWidth = 27 }) {
 
   makeGround(world);
   makeRunwaySystem(world);
-  makeRaceRoad(world, samples, trackWidth);
+  const roadTopology = makeRaceRoad(world, samples, trackWidth);
   makeStartFinishDistrict(world, samples, trackWidth);
   makeTerminalCampus(world, samples);
   makeAircraftApron(world, samples);
@@ -61,7 +65,10 @@ export function installAirportWorld({ scene, samples, trackWidth = 27 }) {
     version: 'r50',
     curatedStartVista: true,
     summerIndustrialAssets: true,
-    proceduralFallbacks: true
+    proceduralFallbacks: true,
+    hairpinRoadTopology: roadTopology.hairpinTopology,
+    hairpinRoadShapeChanged: false,
+    hairpinRoadCollisionChanged: false
   });
 
   return world;
@@ -172,6 +179,104 @@ function makeRunwaySystem(world) {
   }
 }
 
+function appendRaceRoadIndicesWithoutHairpinOverlap({ roadIndices, roadPositions, samples }) {
+  const count = samples.length;
+  const centerIndex = closestSampleIndex(samples, AIRPORT_HAIRPIN_REFERENCE.x, AIRPORT_HAIRPIN_REFERENCE.z);
+  const patchHalfSpan = Math.max(
+    4,
+    Math.round(AIRPORT_HAIRPIN_PATCH_HALF_SPAN * count / AIRPORT_REFERENCE_SAMPLE_COUNT)
+  );
+  const foldHalfSpan = Math.max(
+    2,
+    Math.round(AIRPORT_HAIRPIN_FOLD_HALF_SPAN * count / AIRPORT_REFERENCE_SAMPLE_COUNT)
+  );
+  const start = centerIndex - patchHalfSpan;
+  const end = centerIndex + patchHalfSpan;
+
+  if (
+    count < 24
+    || start < 1
+    || end >= count - 1
+    || foldHalfSpan >= patchHalfSpan
+  ) {
+    appendStandardRoadIndices(roadIndices, 0, count);
+    return 'standard-strip-fallback';
+  }
+
+  appendStandardRoadIndices(roadIndices, 0, start);
+  appendStandardRoadIndices(roadIndices, end, count);
+
+  // The Airport centre hairpin is tighter than half the road width. The inner
+  // (-normal/right) offset therefore doubles back on itself for a handful of
+  // samples even though the centreline and visible curbs are correct. The old
+  // strip triangulation drew those coplanar folds on top of one another, which
+  // produced three camera-dependent z-fighting seams.
+  //
+  // Keep every existing road vertex and the complete outer boundary. Under the
+  // raised inner curb, skip only the tiny folded loop and triangulate the same
+  // local road footprint as one simple polygon. Centerline, width, curbs and
+  // collision remain untouched.
+  const contourVertexIndices = [];
+  for (let index = start; index <= end; index += 1) {
+    contourVertexIndices.push(index * 2);
+  }
+  for (let index = end; index >= centerIndex + foldHalfSpan; index -= 1) {
+    contourVertexIndices.push(index * 2 + 1);
+  }
+  for (let index = centerIndex - foldHalfSpan; index >= start; index -= 1) {
+    contourVertexIndices.push(index * 2 + 1);
+  }
+
+  const contour = contourVertexIndices.map((vertexIndex) => {
+    const offset = vertexIndex * 3;
+    return new THREE.Vector2(roadPositions[offset], roadPositions[offset + 2]);
+  });
+  const faces = THREE.ShapeUtils.triangulateShape(contour, []);
+  for (const [a, b, c] of faces) {
+    roadIndices.push(
+      contourVertexIndices[a],
+      contourVertexIndices[b],
+      contourVertexIndices[c]
+    );
+  }
+
+  return Object.freeze({
+    mode: 'single-polygon-inner-fold',
+    centerIndex,
+    start,
+    end,
+    skippedInnerSamples: foldHalfSpan * 2 - 1,
+    preservedRoadVertices: true,
+    preservedOuterBoundary: true
+  });
+}
+
+function appendStandardRoadIndices(roadIndices, start, end) {
+  for (let index = start; index < end; index += 1) {
+    const a = index * 2;
+    const b = a + 1;
+    const c = a + 2;
+    const d = a + 3;
+    roadIndices.push(a, c, b, b, c, d);
+  }
+}
+
+function closestSampleIndex(samples, x, z) {
+  let bestIndex = 0;
+  let bestDistanceSquared = Infinity;
+  for (let index = 0; index < samples.length; index += 1) {
+    const point = samples[index].point;
+    const dx = point.x - x;
+    const dz = point.z - z;
+    const distanceSquared = dx * dx + dz * dz;
+    if (distanceSquared < bestDistanceSquared) {
+      bestDistanceSquared = distanceSquared;
+      bestIndex = index;
+    }
+  }
+  return bestIndex;
+}
+
 function makeRaceRoad(world, samples, trackWidth) {
   const count = samples.length;
   const roadPositions = [];
@@ -195,13 +300,11 @@ function makeRaceRoad(world, samples, trackWidth) {
     roadColors.push(color.r, color.g, color.b, color.r, color.g, color.b);
   }
 
-  for (let index = 0; index < count; index += 1) {
-    const a = index * 2;
-    const b = a + 1;
-    const c = a + 2;
-    const d = a + 3;
-    roadIndices.push(a, c, b, b, c, d);
-  }
+  const hairpinTopology = appendRaceRoadIndicesWithoutHairpinOverlap({
+    roadIndices,
+    roadPositions,
+    samples
+  });
 
   const roadGeometry = new THREE.BufferGeometry();
   roadGeometry.setAttribute('position', new THREE.Float32BufferAttribute(roadPositions, 3));
@@ -218,6 +321,8 @@ function makeRaceRoad(world, samples, trackWidth) {
       side: THREE.DoubleSide
     })
   );
+  road.name = 'TURN Airport race road';
+  road.userData.turnAirportHairpinTopology = hairpinTopology;
   world.add(road);
 
   const curbWidth = 1.75;
@@ -283,6 +388,8 @@ function makeRaceRoad(world, samples, trackWidth) {
   centreLine.count = cursor;
   centreLine.instanceMatrix.needsUpdate = true;
   world.add(centreLine);
+
+  return Object.freeze({ hairpinTopology });
 }
 
 function makeStartFinishDistrict(world, samples, trackWidth) {
