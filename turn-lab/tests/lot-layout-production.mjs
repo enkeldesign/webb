@@ -318,10 +318,10 @@ const [showroomLayoutCss, showroomCleanupCss, lotWrapper] = await Promise.all([
   fs.readFile(new URL('../../turn/garage/lot-showroom-cleanup-r201.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8')
 ]);
-assert.match(showroomLayoutCss, /--lot-header-height: 104px;/,
-  'Tablet-height Lot layouts must give the title band more vertical room');
-assert.match(showroomLayoutCss, /--lot-picker-height: 150px;/,
-  'Tablet-height Lot layouts must give the car carousel more vertical room');
+assert.match(showroomLayoutCss, /\.lot-showroom \{[\s\S]*--lot-header-height: 76px;[\s\S]*--lot-picker-height: 122px;/,
+  'Phone landscape must retain the compact pre-#957 Lot proportions');
+assert.match(showroomLayoutCss, /@media \(min-height: 600px\) \{[\s\S]*--lot-header-height: 104px;[\s\S]*--lot-picker-height: 150px;/,
+  'Tablet-height Lot layouts must opt into the roomier #957 header and carousel');
 assert.match(showroomCleanupCss, /--lot-content-bottom: 0px;/,
   'The Lot must not reserve an extra cyan gutter below the usable showroom viewport');
 assert.match(lotWrapper, /url\.searchParams\.set\('build', buildKey\)/,
