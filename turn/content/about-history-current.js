@@ -712,6 +712,21 @@ const MIDNIGHT_PURPLE_LOW_CITY_HISTORY = Object.freeze({
   ])
 });
 
+const AIRPORT_HAIRPIN_SEAM_HISTORY = Object.freeze({
+  period: '21 September',
+  title: 'AIRPORT hairpin loses its flickering road seams',
+  paragraphs: Object.freeze([
+    'TURN 1.21.21 fixes a long-standing AIRPORT rendering artifact at the tight centre hairpin. The centreline itself was valid, but the road’s inner offset is tighter than half the road width and briefly folds back across itself, causing several coplanar road triangles to overlap and flicker as the camera moves.',
+    'The fix is topology-only: TURN keeps the same control points, sampled centreline, road width, curb positions and collision. Only the overlapping local triangle strip beneath the inner curb is replaced by one clean triangulation using the existing road vertices and outer boundary.'
+  ]),
+  milestones: Object.freeze([
+    'AIRPORT control points and hairpin shape unchanged',
+    'Road width, curbs and collision unchanged',
+    'Overlapping inner hairpin triangles removed',
+    'TURN 1.21.21 · 2026.09.21-r276'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -804,7 +819,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   MIDNIGHT_GROUND_CONTRAST_HISTORY,
   MIDNIGHT_SINGLE_GROUND_HISTORY,
   MIDNIGHT_LOW_CITY_HISTORY,
-  MIDNIGHT_PURPLE_LOW_CITY_HISTORY
+  MIDNIGHT_PURPLE_LOW_CITY_HISTORY,
+  AIRPORT_HAIRPIN_SEAM_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -930,13 +946,14 @@ Object.freeze({
     Object.freeze(['1.21.17 r272', 'Darkens MIDNIGHT CITY’s surrounding base ground while keeping the race asphalt unchanged, making the street read more clearly at night.']),
     Object.freeze(['1.21.18 r273', 'Removes the redundant translucent downtown ground overlay so MIDNIGHT CITY uses one uniform city-wide off-road ground surface and avoids depth interference.']),
     Object.freeze(['1.21.19 r274', 'Adds track-aware low-rise urban infill, neon shopfronts and a few pinned Kenney foreground landmarks to fill MIDNIGHT CITY’s large empty areas without adding real lights.']),
-    Object.freeze(['1.21.20 r275', 'Removes the oversized Kenney garage, reduces the remaining asset landmarks and adds more purple-weighted procedural low-rises around the course.'])
+    Object.freeze(['1.21.20 r275', 'Removes the oversized Kenney garage, reduces the remaining asset landmarks and adds more purple-weighted procedural low-rises around the course.']),
+    Object.freeze(['1.21.21 r276', 'Removes AIRPORT’s flickering centre-hairpin seams by replacing only the self-overlapping local road triangles while preserving the route, width, curbs and collision.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.20',
-  build: '2026.09.21-r275',
-  note: 'TURN 1.21.20 removes MIDNIGHT CITY’s oversized garage landmark and favors denser purple low-rise infill.'
+  version: '1.21.21',
+  build: '2026.09.21-r276',
+  note: 'TURN 1.21.21 removes AIRPORT’s flickering centre-hairpin road seams without changing the hairpin shape.'
 });
