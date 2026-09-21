@@ -14,8 +14,9 @@
 
 /* State must be readable without comparing the locked/unlocked colour shades.
    The silhouettes deliberately differ: an earned reward gets a large inset
-   check disc inside the card, while a locked reward keeps the smaller lock
-   badge perched on the outside corner. NEXT stays textual. */
+   transparent check ring inside the card, letting the reward colour show
+   through, while a locked reward keeps the smaller lock badge perched on the
+   outside corner. NEXT stays textual. */
 .turn-trophy-road-marker-state.is-badge-only {
   visibility: hidden;
 }
@@ -32,7 +33,7 @@
   place-items: center;
   border: 3px solid var(--turn-ink, #08090a);
   border-radius: 50%;
-  background: var(--turn-green-200, #d9f5c2);
+  background: transparent;
   box-shadow: 2px 2px 0 var(--turn-ink, #08090a);
   color: var(--turn-ink, #08090a);
   font-size: 1.65rem;
