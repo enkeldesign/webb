@@ -196,6 +196,9 @@ assert.match(airportWorld, /appendRaceRoadIndicesWithoutHairpinOverlap/);
 assert.match(airportWorld, /THREE\.ShapeUtils\.triangulateShape\(contour, \[\]\)/);
 assert.match(airportWorld, /preservedRoadVertices: true/);
 assert.match(airportWorld, /preservedOuterBoundary: true/);
+assert.match(airportWorld, /consistentUpwardWinding: true/);
+assert.match(airportWorld, /function appendUpwardRoadTriangle/);
+assert.match(airportWorld, /const normalY = abZ \* acX - abX \* acZ/);
 assert.match(airportWorld, /hairpinRoadShapeChanged: false/);
 assert.match(airportWorld, /hairpinRoadCollisionChanged: false/);
 assert.match(airportWorld, /const innerOffset = side \* \(trackWidth \/ 2 - 0\.05\)/,
