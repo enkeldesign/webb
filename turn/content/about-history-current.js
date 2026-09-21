@@ -727,6 +727,21 @@ const AIRPORT_HAIRPIN_SEAM_HISTORY = Object.freeze({
   ])
 });
 
+const AIRPORT_HAIRPIN_SEAM_SHADING_HISTORY = Object.freeze({
+  period: '21 September',
+  title: 'AIRPORT hairpin repair blends back into the road',
+  paragraphs: Object.freeze([
+    'TURN 1.21.22 removes the two stable dark join lines left by the r276 hairpin topology repair. The repaired polygon is unchanged; only its triangle winding is normalized so its computed normals face the same direction as the surrounding asphalt.',
+    'That makes both patch boundaries shade with the road instead of as dark seams, while preserving the r276 fix for the original flicker and leaving route shape, width, curbs, collision and road vertices untouched.'
+  ]),
+  milestones: Object.freeze([
+    'r276 anti-flicker topology retained',
+    'Hairpin patch triangle winding normalized upward',
+    'Two dark patch-boundary seams removed',
+    'TURN 1.21.22 · 2026.09.21-r277'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -820,7 +835,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   MIDNIGHT_SINGLE_GROUND_HISTORY,
   MIDNIGHT_LOW_CITY_HISTORY,
   MIDNIGHT_PURPLE_LOW_CITY_HISTORY,
-  AIRPORT_HAIRPIN_SEAM_HISTORY
+  AIRPORT_HAIRPIN_SEAM_HISTORY,
+  AIRPORT_HAIRPIN_SEAM_SHADING_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -947,13 +963,14 @@ Object.freeze({
     Object.freeze(['1.21.18 r273', 'Removes the redundant translucent downtown ground overlay so MIDNIGHT CITY uses one uniform city-wide off-road ground surface and avoids depth interference.']),
     Object.freeze(['1.21.19 r274', 'Adds track-aware low-rise urban infill, neon shopfronts and a few pinned Kenney foreground landmarks to fill MIDNIGHT CITY’s large empty areas without adding real lights.']),
     Object.freeze(['1.21.20 r275', 'Removes the oversized Kenney garage, reduces the remaining asset landmarks and adds more purple-weighted procedural low-rises around the course.']),
-    Object.freeze(['1.21.21 r276', 'Removes AIRPORT’s flickering centre-hairpin seams by replacing only the self-overlapping local road triangles while preserving the route, width, curbs and collision.'])
+    Object.freeze(['1.21.21 r276', 'Removes AIRPORT’s flickering centre-hairpin seams by replacing only the self-overlapping local road triangles while preserving the route, width, curbs and collision.']),
+    Object.freeze(['1.21.22 r277', 'Blends the AIRPORT hairpin repair into the surrounding asphalt by matching the repaired triangles’ winding and normals to the road, removing the two remaining dark join lines.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.21',
-  build: '2026.09.21-r276',
-  note: 'TURN 1.21.21 removes AIRPORT’s flickering centre-hairpin road seams without changing the hairpin shape.'
+  version: '1.21.22',
+  build: '2026.09.21-r277',
+  note: 'TURN 1.21.22 removes the two remaining dark AIRPORT hairpin patch seams while preserving the anti-flicker topology.'
 });
