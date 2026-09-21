@@ -91,13 +91,17 @@ assert.match(easterEggSource, /installSharedNightSky\(world, \{ trackId: 'midnig
 assert.match(easterEggSource, /world\.ready = Promise\.resolve\(inheritedReady\)/);
 assert.match(easterEggSource, /nightSkyVariation: 'restrained-purple-horizon-glow'/);
 assert.match(easterEggSource, /installLowCityInfill\(world, options\.samples \|\| \[\], options\.trackWidth \|\| 27\)/);
-assert.match(easterEggSource, /lowCityTechnique: 'three-instanced-draw-call-low-rise-infill-plus-three-pinned-Kenney-landmarks'/);
+assert.match(easterEggSource, /lowCityTechnique: 'three-instanced-draw-call-purple-weighted-low-rise-infill-plus-two-small-pinned-Kenney-landmarks'/);
 assert.match(easterEggSource, /Midnight City low-city building bodies/);
 assert.match(easterEggSource, /Midnight City low-city shopfront and roofline glow/);
 assert.match(easterEggSource, /Midnight City low-city rooftop units/);
 assert.match(easterEggSource, /building-small-a\.glb/);
 assert.match(easterEggSource, /building-small-c\.glb/);
-assert.match(easterEggSource, /building-garage\.glb/);
+assert.match(easterEggSource, /LOW_CITY_BODY_COLORS = Object\.freeze\(\[0x2b2138, 0x241a32, 0x2b2138, 0x20283a\]\)/);
+assert.match(easterEggSource, /lowCityPurpleBodyShare: 'three of four palette entries are purple-family'/);
+assert.match(easterEggSource, /for \(const placementIndex of \[5, 21\]\)/);
+assert.doesNotMatch(easterEggSource, /building-garage\.glb/,
+  'The Kenney garage was too visually dominant and must not return to MIDNIGHT CITY');
 assert.match(easterEggSource, /lowCityAddsDynamicLights: false/);
 assert.match(easterEggSource, /isLowCityPlacementClear/);
 assert.doesNotMatch(easterEggSource, /function installLowCityInfill[\s\S]*?new THREE\.(?:PointLight|SpotLight|DirectionalLight|HemisphereLight)/,
