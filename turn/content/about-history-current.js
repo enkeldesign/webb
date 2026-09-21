@@ -990,13 +990,14 @@ Object.freeze({
     Object.freeze(['1.21.25 r280', 'Adds more horizontal space between BACK and THE LOT on every responsive Lot header size.']),
     Object.freeze(['1.21.26 r281', 'Adds compact blue race-status cues when SUV reaches or loses FULL TANK, Truck reaches BOOST TANK 5/5, and Sports Car reaches DRIFT 5/5.']),
     Object.freeze(['1.21.27 r282', 'Makes Trophy Road ownership unmistakable with large green check badges on earned rewards, matching yellow lock badges on locked rewards and an explicit → NEXT label for the upcoming reward.']),
-    Object.freeze(['1.21.28 r283', 'Moves the earned Trophy Road check fully inside its reward card and makes it substantially larger, while locked rewards keep the smaller outside-corner lock silhouette.'])
+    Object.freeze(['1.21.28 r283', 'Moves the earned Trophy Road check fully inside its reward card and makes it substantially larger, while locked rewards keep the smaller outside-corner lock silhouette.']),
+    Object.freeze(['1.21.29 r284', 'Makes the earned Trophy Road check ring transparent so each reward category colour continues through the badge while preserving the large inset silhouette.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.28',
-  build: '2026.09.21-r283',
-  note: 'TURN 1.21.28 makes earned Trophy Road rewards visually distinct with a much larger inset check disc while locked rewards retain the smaller outside-corner lock badge.'
+  version: '1.21.29',
+  build: '2026.09.21-r284',
+  note: 'TURN 1.21.29 lets each earned Trophy Road reward colour show through its large inset check ring while keeping the earned/locked silhouette distinction.'
 });
