@@ -208,8 +208,8 @@ assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*top:\s*6
   'Earned rewards must use a much larger check disc fully inset inside the card frame');
 assert.match(semanticStyles, /\.turn-trophy-road-marker-lock \{[\s\S]*top:\s*-10px;[\s\S]*right:\s*-10px;[\s\S]*width:\s*30px;[\s\S]*height:\s*30px;/,
   'Locked rewards must keep the smaller outside-corner lock silhouette');
-assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*background:\s*var\(--turn-green-200/,
-  'The earned check disc must keep the light success treatment from the mockup');
+assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*background:\s*transparent/,
+  'The earned check ring must let each reward category colour show through');
 assert.match(semanticStyles, /\.turn-trophy-road-marker-state\.is-badge-only \{[\s\S]*visibility:\s*hidden/,
   'Ordinary earned cards must not duplicate the check badge with an EARNED text label');
 
