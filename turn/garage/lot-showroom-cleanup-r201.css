@@ -253,7 +253,7 @@
    The screen-reader pass already places CHOOSE CAR before the showroom content
    in DOM order; align the visual layout with that structure as well. */
 .lot-showroom {
-  --lot-content-bottom: max(14px, env(safe-area-inset-bottom));
+  --lot-content-bottom: 0px;
 }
 
 .lot-showroom::before {
