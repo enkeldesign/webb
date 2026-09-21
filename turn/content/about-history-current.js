@@ -987,13 +987,14 @@ Object.freeze({
     Object.freeze(['1.21.22 r277', 'Blends the AIRPORT hairpin repair into the surrounding asphalt by matching the repaired triangles’ winding and normals to the road, removing the two remaining dark join lines.']),
     Object.freeze(['1.21.23 r278', 'Rebalances THE LOT for tablet landscape with a taller header and car carousel, a shorter 3D/attribute region, and no extra Lot-owned cyan gutter below the showroom.']),
     Object.freeze(['1.21.24 r279', 'Keeps the r278 tablet proportions only on viewports at least 600px tall, restoring the compact Lot header and carousel on iPhone landscape.']),
-    Object.freeze(['1.21.25 r280', 'Adds more horizontal space between BACK and THE LOT on every responsive Lot header size.'])
+    Object.freeze(['1.21.25 r280', 'Adds more horizontal space between BACK and THE LOT on every responsive Lot header size.']),
+    Object.freeze(['1.21.26 r281', 'Adds compact blue race-status cues when SUV reaches or loses FULL TANK, Truck reaches BOOST TANK 5/5, and Sports Car reaches DRIFT 5/5.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.25',
-  build: '2026.09.21-r280',
-  note: 'TURN 1.21.25 gives BACK and THE LOT a clearer horizontal separation at every responsive header size.'
+  version: '1.21.26',
+  build: '2026.09.21-r281',
+  note: 'TURN 1.21.26 adds compact race-status cues for FULL TANK, BOOST TANK 5/5 and DRIFT 5/5, with FULL TANK LOST when the SUV clean-driving bonus is broken.'
 });
