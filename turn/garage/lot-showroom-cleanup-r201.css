@@ -249,9 +249,9 @@
   white-space: nowrap !important;
 }
 
-/* Keep horizontal car browsing away from the OS home/app-switch gesture zone.
-   The screen-reader pass already places CHOOSE CAR before the showroom content
-   in DOM order; align the visual layout with that structure as well. */
+/* CHOOSE CAR now lives above the showroom, so the main Lot content no longer
+   needs a second bottom safety gutter. Use every pixel in WebKit's usable layer;
+   iPadOS may still own a separate strip outside that layer. */
 .lot-showroom {
   --lot-content-bottom: 0px;
 }
