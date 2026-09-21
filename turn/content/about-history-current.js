@@ -696,6 +696,22 @@ const MIDNIGHT_LOW_CITY_HISTORY = Object.freeze({
   ])
 });
 
+const MIDNIGHT_PURPLE_LOW_CITY_HISTORY = Object.freeze({
+  period: '21 September',
+  title: 'MIDNIGHT CITY leans into purple low-rises',
+  paragraphs: Object.freeze([
+    'TURN 1.21.20 removes the visually dominant Kenney garage from the low-city layer, keeps only two smaller pinned Kenney building landmarks at reduced scale, and increases the density of procedural low-rise candidates.',
+    'Three of the four low-rise body palette entries are now purple-family colors, so the foreground city reads more like a coherent extension of MIDNIGHT CITY’s neon art direction while keeping the same three instanced procedural draw calls and no new real lights.'
+  ]),
+  milestones: Object.freeze([
+    'Kenney garage removed',
+    'Two smaller Kenney low-city landmarks maximum',
+    'Purple-family low-rise palette weighted 3 of 4',
+    'Denser procedural candidate coverage with unchanged draw-call count',
+    'TURN 1.21.20 · 2026.09.21-r275'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -787,7 +803,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   MATCHED_NIGHT_GRADIENT_HISTORY,
   MIDNIGHT_GROUND_CONTRAST_HISTORY,
   MIDNIGHT_SINGLE_GROUND_HISTORY,
-  MIDNIGHT_LOW_CITY_HISTORY
+  MIDNIGHT_LOW_CITY_HISTORY,
+  MIDNIGHT_PURPLE_LOW_CITY_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -912,13 +929,14 @@ Object.freeze({
     Object.freeze(['1.21.16 r271', 'Matches MIDNIGHT CITY’s violet world-horizon gradient reach to MOUNTAIN at 0.23 after final physical production tuning.']),
     Object.freeze(['1.21.17 r272', 'Darkens MIDNIGHT CITY’s surrounding base ground while keeping the race asphalt unchanged, making the street read more clearly at night.']),
     Object.freeze(['1.21.18 r273', 'Removes the redundant translucent downtown ground overlay so MIDNIGHT CITY uses one uniform city-wide off-road ground surface and avoids depth interference.']),
-    Object.freeze(['1.21.19 r274', 'Adds track-aware low-rise urban infill, neon shopfronts and a few pinned Kenney foreground landmarks to fill MIDNIGHT CITY’s large empty areas without adding real lights.'])
+    Object.freeze(['1.21.19 r274', 'Adds track-aware low-rise urban infill, neon shopfronts and a few pinned Kenney foreground landmarks to fill MIDNIGHT CITY’s large empty areas without adding real lights.']),
+    Object.freeze(['1.21.20 r275', 'Removes the oversized Kenney garage, reduces the remaining asset landmarks and adds more purple-weighted procedural low-rises around the course.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.19',
-  build: '2026.09.21-r274',
-  note: 'TURN 1.21.19 fills MIDNIGHT CITY’s empty trackside areas with a performance-conscious low-rise urban layer.'
+  version: '1.21.20',
+  build: '2026.09.21-r275',
+  note: 'TURN 1.21.20 removes MIDNIGHT CITY’s oversized garage landmark and favors denser purple low-rise infill.'
 });

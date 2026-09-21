@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
-import { installMidnightCityWorld as installMidnightCityWorldR7 } from './midnight-city-world-r7.js?build=20260921-r274';
+import { installMidnightCityWorld as installMidnightCityWorldR7 } from './midnight-city-world-r7.js?build=20260921-r275';
 import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js?revision=r175-reconcile';
 import { installSharedNightSky } from '/turn/tracks/shared-night-sky.js';
 
 const LILYA_TEXTURE_URL = new URL('../LILYA.PNG', import.meta.url).href;
 const TRACK_Y = 0.16;
-const LOW_CITY_BODY_COLORS = Object.freeze([0x111722, 0x171b29, 0x1b2030]);
+const LOW_CITY_BODY_COLORS = Object.freeze([0x2b2138, 0x241a32, 0x2b2138, 0x20283a]);
 const LOW_CITY_GLOW_COLORS = Object.freeze([0x5de4ff, 0xff4fa3, 0xffdc68, 0x9d7cff]);
 const LOW_CITY_PARKS = Object.freeze([
   Object.freeze({ x: 80, z: 75, radius: 78 }),
@@ -15,29 +15,44 @@ const LOW_CITY_PARKS = Object.freeze([
   Object.freeze({ x: 570, z: 145, radius: 60 })
 ]);
 const LOW_CITY_CANDIDATES = Object.freeze([
+  Object.freeze({ ratio: 0.020, side: -1 }),
   Object.freeze({ ratio: 0.035, side: 1 }),
+  Object.freeze({ ratio: 0.065, side: 1 }),
   Object.freeze({ ratio: 0.090, side: -1 }),
+  Object.freeze({ ratio: 0.120, side: -1 }),
   Object.freeze({ ratio: 0.145, side: 1 }),
+  Object.freeze({ ratio: 0.175, side: 1 }),
   Object.freeze({ ratio: 0.205, side: -1 }),
+  Object.freeze({ ratio: 0.240, side: 1 }),
   Object.freeze({ ratio: 0.270, side: -1 }),
+  Object.freeze({ ratio: 0.305, side: -1 }),
   Object.freeze({ ratio: 0.335, side: 1 }),
+  Object.freeze({ ratio: 0.370, side: 1 }),
   Object.freeze({ ratio: 0.405, side: -1 }),
+  Object.freeze({ ratio: 0.440, side: -1 }),
   Object.freeze({ ratio: 0.470, side: 1 }),
+  Object.freeze({ ratio: 0.505, side: -1 }),
   Object.freeze({ ratio: 0.535, side: 1 }),
+  Object.freeze({ ratio: 0.570, side: 1 }),
   Object.freeze({ ratio: 0.600, side: -1 }),
+  Object.freeze({ ratio: 0.635, side: -1 }),
   Object.freeze({ ratio: 0.665, side: 1 }),
+  Object.freeze({ ratio: 0.700, side: 1 }),
   Object.freeze({ ratio: 0.730, side: -1 }),
+  Object.freeze({ ratio: 0.765, side: 1 }),
   Object.freeze({ ratio: 0.795, side: -1 }),
+  Object.freeze({ ratio: 0.825, side: -1 }),
   Object.freeze({ ratio: 0.855, side: 1 }),
+  Object.freeze({ ratio: 0.885, side: 1 }),
   Object.freeze({ ratio: 0.915, side: -1 }),
+  Object.freeze({ ratio: 0.940, side: -1 }),
   Object.freeze({ ratio: 0.965, side: 1 })
 ]);
 const CITY_BUILDER_COMMIT = '4535092b740b378b700efd9df9e27a631815b84a';
 const CITY_MODEL_BASE = `https://cdn.jsdelivr.net/gh/KenneyNL/Starter-Kit-City-Builder@${CITY_BUILDER_COMMIT}/models/`;
 const LOW_CITY_ASSET_NAMES = Object.freeze([
   'building-small-a.glb',
-  'building-small-c.glb',
-  'building-garage.glb'
+  'building-small-c.glb'
 ]);
 const lowCityLoader = new GLTFLoader();
 const lowCitySources = new Map();
@@ -101,8 +116,9 @@ export function installMidnightCityWorld(options) {
     lowCityBuildingCount: lowCity.buildings,
     lowCityGlowStripCount: lowCity.glowStrips,
     lowCityAssetRequests,
-    lowCityTechnique: 'three-instanced-draw-call-low-rise-infill-plus-three-pinned-Kenney-landmarks',
+    lowCityTechnique: 'three-instanced-draw-call-purple-weighted-low-rise-infill-plus-two-small-pinned-Kenney-landmarks',
     lowCityTrackSafetyMargin: 'placement rejected against the full sampled race corridor, parks and existing district buildings',
+    lowCityPurpleBodyShare: 'three of four palette entries are purple-family',
     lowCityAddsDynamicLights: false,
     hiddenLilyaAddsDynamicLights: false,
     noIndependentAnimationLoop: true
@@ -240,21 +256,21 @@ function installLowCityInfill(world, samples, trackWidth) {
   world.add(vents);
 
   const assetAnchors = [];
-  for (const placementIndex of [2, 7, 12]) {
+  for (const placementIndex of [5, 21]) {
     const building = placements[placementIndex];
     if (!building) continue;
     const direction = placementIndex % 2 === 0 ? 1 : -1;
     const spacing = building.width * 0.62 + 18;
     const anchorX = building.x + building.tangentX * spacing * direction;
     const anchorZ = building.z + building.tangentZ * spacing * direction;
-    const assetRadius = 13;
+    const assetRadius = 11;
     if (!isLowCityPlacementClear(anchorX, anchorZ, assetRadius, samples, trackWidth, occupied, placements)) continue;
     assetAnchors.push(Object.freeze({
       x: anchorX,
       z: anchorZ,
       rotation: building.rotation,
-      targetSize: 20 + assetAnchors.length * 3,
-      name: LOW_CITY_ASSET_NAMES[assetAnchors.length % LOW_CITY_ASSET_NAMES.length]
+      targetSize: 17 + assetAnchors.length * 2,
+      name: LOW_CITY_ASSET_NAMES[assetAnchors.length]
     }));
   }
 
