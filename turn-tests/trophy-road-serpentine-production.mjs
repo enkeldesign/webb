@@ -156,6 +156,12 @@ assert.match(viewSource, /The road runs from START through every reward in progr
   'Assistive technology must receive the actual path without decorative focus stops');
 assert.match(viewSource, /aria-label="\$\{reward\.shortTitle\}\. \$\{reward\.threshold\} trophies\. \$\{stateLabel\}\."/,
   'Existing reward names and textual earned/current/locked state must remain intact');
+assert.match(viewSource, /markerStateLabel = grandfathered \? 'Kept' : unlocked \? 'Earned' : isNext \? '→ Next' : 'Locked'/,
+  'The visual state row must keep LOCKED/KEPT and make the next reward explicitly directional');
+assert.match(viewSource, /turn-trophy-road-marker-earned[^>]*aria-hidden="true">✓<\/i>/,
+  'Every earned reward must receive a large visual check badge');
+assert.match(viewSource, /unlocked \? '<i class="turn-trophy-road-marker-earned"[\s\S]*: `<i class="turn-trophy-road-marker-lock"/,
+  'Earned and locked rewards must use mutually exclusive corner badges');
 assert.match(viewSource, /aria-pressed="\$\{selected\}"/,
   'Current detail selection must remain programmatically exposed');
 assert.match(viewSource, /openTrophyRoadDetail\(\)/,
@@ -198,5 +204,11 @@ assert.match(semanticStyles, /\.turn-trophy-road-detail[\s\S]*data-trophy-reward
   'The modal paper must derive its category/state colour directly from its rendered reward data');
 assert.doesNotMatch(semanticStyles, /:has\([^)]*is-selected/,
   'Reward-modal colour must not require relational marker matching');
+assert.match(semanticStyles, /\.turn-trophy-road-marker-earned,[\s\S]*\.turn-trophy-road-marker-lock[\s\S]*border-radius:\s*50%/,
+  'Earned and locked rewards must use the same prominent circular corner-badge language');
+assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*background:\s*var\(--turn-green-200/,
+  'The earned check badge must use the light success treatment from the mockup');
+assert.match(semanticStyles, /\.turn-trophy-road-marker-state\.is-badge-only \{[\s\S]*visibility:\s*hidden/,
+  'Ordinary earned cards must not duplicate the check badge with an EARNED text label');
 
 console.log('TURN Trophy Road responsive serpentine layout, accessibility and immutable progression regression passed.');
