@@ -322,6 +322,10 @@ assert.match(showroomLayoutCss, /\.lot-showroom \{[\s\S]*--lot-header-height: 76
   'Phone landscape must retain the compact pre-#957 Lot proportions');
 assert.match(showroomLayoutCss, /@media \(min-height: 600px\) \{[\s\S]*--lot-header-height: 104px;[\s\S]*--lot-picker-height: 150px;/,
   'Tablet-height Lot layouts must opt into the roomier #957 header and carousel');
+assert.match(showroomLayoutCss, /left: max\(104px, calc\(env\(safe-area-inset-left\) \+ 90px\)\);/,
+  'Normal and tablet Lot headers must keep a clear gap after the Back button');
+assert.match(showroomLayoutCss, /@media \(max-height: 520px\)[\s\S]*left: max\(90px, calc\(env\(safe-area-inset-left\) \+ 81px\)\);/,
+  'Short phone landscape must keep the same deliberate Back-to-heading separation');
 assert.match(showroomCleanupCss, /--lot-content-bottom: 0px;/,
   'The Lot must not reserve an extra cyan gutter below the usable showroom viewport');
 assert.match(lotWrapper, /url\.searchParams\.set\('build', buildKey\)/,

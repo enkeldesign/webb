@@ -35,7 +35,7 @@
   z-index: 8;
   top: max(10px, env(safe-area-inset-top));
   right: max(16px, env(safe-area-inset-right));
-  left: max(88px, calc(env(safe-area-inset-left) + 82px));
+  left: max(104px, calc(env(safe-area-inset-left) + 90px));
   display: flex;
   height: 56px;
   align-items: center;
@@ -718,7 +718,7 @@
 
   .lot-showroom .lot-heading {
     top: max(6px, env(safe-area-inset-top));
-    left: max(76px, calc(env(safe-area-inset-left) + 72px));
+    left: max(90px, calc(env(safe-area-inset-left) + 81px));
     height: 46px;
   }
 
