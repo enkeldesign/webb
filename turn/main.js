@@ -38,6 +38,8 @@ import {
   resetVehiclePerkRuntimeState,
   resolveGraduatedStageFeedback
 } from '/turn/vehicle/perk-runtime.js?revision=r233-graduated';
+import { resolveVehiclePerkStatusFeedback } from '/turn/vehicle/perk-presentation.js';
+import { showCompactRacePill } from '/turn/achievements/support-challenge-feedback.js';
 import { createScoreFeedback } from '/turn/scoring/score-feedback.js';
 import {
   DRIFT_ATTACK_FEATURE_ID,
@@ -985,6 +987,7 @@ function beginTimedLap(now) {
 
 function updatePhysics(dt, now) {
   const previousVehiclePerkStage = state.vehiclePerkStage;
+  const previousVehiclePerkProgress = state.vehiclePerkProgress;
   const nearestAfter = updateVehiclePhysicsState({
     state,
     dt,
@@ -1002,6 +1005,14 @@ function updatePhysics(dt, now) {
     driftLock: globalThis.__turnDriftLockAmount || 0,
     vehicleTuning: state.vehicleTuning
   });
+  const perkStatusFeedback = resolveVehiclePerkStatusFeedback({
+    vehicleId: state.vehicleId,
+    perkUnlocked: state.vehiclePerkUnlocked,
+    previousProgress: previousVehiclePerkProgress,
+    nextProgress: state.vehiclePerkProgress
+  });
+  if (perkStatusFeedback) showCompactRacePill(perkStatusFeedback, { tone: 'blue' });
+
   const graduatedFeedback = resolveGraduatedStageFeedback(
     previousVehiclePerkStage,
     state.vehiclePerkStage

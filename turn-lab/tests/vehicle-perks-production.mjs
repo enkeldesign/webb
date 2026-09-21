@@ -5,6 +5,7 @@ import {
   CAR_CATALOG,
   deriveVehicleTuning
 } from '../../turn/vehicle/catalog.js';
+import { resolveVehiclePerkStatusFeedback } from '../../turn/vehicle/perk-presentation.js';
 import { getVehicleSpeedLimit } from '../../turn/vehicle/physics.js';
 import {
   CARRY_ON_LOCK_DRAG_ADD,
@@ -284,6 +285,34 @@ const fromDriftFour = resolveVehiclePerkTuning({ state: shiftingDemon, tuning: d
 assert.equal(shiftingDemon.vehiclePerkProgress, demonProgress);
 assert.ok(fromDriftFour > fromDriftOne && fromDriftFour < 0.92,
   'DRIFT DEMON must immediately recompose from the active STANDARD/SHIFT base');
+
+assert.equal(resolveVehiclePerkStatusFeedback({
+  vehicleId: suv.id, perkUnlocked: true, previousProgress: 0.99, nextProgress: 1
+}), 'FULL TANK');
+assert.equal(resolveVehiclePerkStatusFeedback({
+  vehicleId: suv.id, perkUnlocked: true, previousProgress: 1, nextProgress: 0
+}), 'FULL TANK LOST');
+assert.equal(resolveVehiclePerkStatusFeedback({
+  vehicleId: truck.id, perkUnlocked: true, previousProgress: 0.99, nextProgress: 1
+}), 'BOOST TANK 5/5');
+assert.equal(resolveVehiclePerkStatusFeedback({
+  vehicleId: truck.id, perkUnlocked: true, previousProgress: 1, nextProgress: 0
+}), null, 'Truck must not announce LOST when temporary OVERCHARGE capacity returns to baseline');
+assert.equal(resolveVehiclePerkStatusFeedback({
+  vehicleId: sportsCar.id, perkUnlocked: true, previousProgress: 0.99, nextProgress: 1
+}), 'DRIFT 5/5');
+assert.equal(resolveVehiclePerkStatusFeedback({
+  vehicleId: sportsCar.id, perkUnlocked: true, previousProgress: 1, nextProgress: 0.5
+}), null, 'Sports Car DRIFT decay must not announce LOST');
+assert.equal(resolveVehiclePerkStatusFeedback({
+  vehicleId: suv.id, perkUnlocked: false, previousProgress: 0.99, nextProgress: 1
+}), null);
+assert.equal(resolveVehiclePerkStatusFeedback({
+  vehicleId: suv.id, perkUnlocked: true, previousProgress: 1, nextProgress: 1
+}), null, 'Status feedback must fire only on threshold crossings');
+assert.match(mainSource,
+  /resolveVehiclePerkStatusFeedback\([\s\S]*previousVehiclePerkProgress[\s\S]*state\.vehiclePerkProgress[\s\S]*showCompactRacePill\(perkStatusFeedback, \{ tone: 'blue' \}\)/,
+  'Dynamic perk milestones must use the shared compact blue race cue lane');
 
 // GRADUATED builds one readable stage at a time from the current base and earns
 // genuinely endgame conditional ceilings without mutating Learner Car’s 18 points.
