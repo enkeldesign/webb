@@ -56,7 +56,10 @@ function prepareStylesheet(id, relativeUrl) {
     const link = existing || document.createElement('link');
     link.id = id;
     link.rel = 'stylesheet';
-    link.href = new URL(relativeUrl, import.meta.url).href;
+    const url = new URL(relativeUrl, import.meta.url);
+    const buildKey = globalThis.__TURN_BUILD__?.cacheKey;
+    if (buildKey) url.searchParams.set('build', buildKey);
+    link.href = url.href;
     link.addEventListener('load', resolve, { once: true });
     link.addEventListener('error', () => {
       link.remove();
