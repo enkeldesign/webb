@@ -1,13 +1,22 @@
 /* Production showroom layout for THE LOT. Loaded lazily with the Lot module. */
 
 .lot-showroom {
-  --lot-header-height: 104px;
-  --lot-picker-height: 150px;
+  --lot-header-height: 76px;
+  --lot-picker-height: 122px;
   --lot-panel-gap: 12px;
   --lot-info-width: clamp(286px, 33vw, 410px);
   background:
     radial-gradient(circle at 38% 38%, rgb(255 255 255 / .5), transparent 32%),
     linear-gradient(180deg, #8ed8ff 0 58%, #61717c 58% 100%);
+}
+
+/* #957's roomier proportions are for tablet-height landscape viewports.
+   Phone landscape keeps the established compact geometry. */
+@media (min-height: 600px) {
+  .lot-showroom {
+    --lot-header-height: 104px;
+    --lot-picker-height: 150px;
+  }
 }
 
 .lot-showroom::before {
