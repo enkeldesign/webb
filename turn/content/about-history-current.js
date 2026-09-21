@@ -747,6 +747,7 @@ const LOT_TABLET_LAYOUT_HISTORY = Object.freeze({
   title: 'The Lot gives tablets more room to browse',
   paragraphs: Object.freeze([
     'TURN 1.21.23 build r278 gives THE LOT a taller title band and car carousel when there is tablet-height vertical room, letting the 3D preview and attribute panel become shorter instead of compressing navigation. TURN 1.21.24 build r279 scopes those larger proportions to viewports at least 600px tall so iPhone landscape keeps the established compact header and carousel.',
+    'TURN 1.21.25 build r280 adds deliberate horizontal breathing room between BACK and THE LOT on both compact phone and larger tablet headers, without changing the responsive height split.',
     'The showroom content still reaches the bottom of TURN’s usable web layer instead of reserving an extra cyan gutter. iPadOS may draw its own system-owned strip outside that usable web layer, so TURN keeps interactive content inside the viewport WebKit actually exposes.'
   ]),
   milestones: Object.freeze([
@@ -755,7 +756,8 @@ const LOT_TABLET_LAYOUT_HISTORY = Object.freeze({
     'No extra Lot-owned bottom gutter',
     'Phone landscape keeps 76px / 122px header and carousel',
     'Tablet-height viewports use 104px / 150px from 600px upward',
-    'TURN 1.21.24 · 2026.09.21-r279'
+    'BACK and THE LOT keep a clear horizontal gap at every header size',
+    'TURN 1.21.25 · 2026.09.21-r280'
   ])
 });
 
@@ -984,13 +986,14 @@ Object.freeze({
     Object.freeze(['1.21.21 r276', 'Removes AIRPORT’s flickering centre-hairpin seams by replacing only the self-overlapping local road triangles while preserving the route, width, curbs and collision.']),
     Object.freeze(['1.21.22 r277', 'Blends the AIRPORT hairpin repair into the surrounding asphalt by matching the repaired triangles’ winding and normals to the road, removing the two remaining dark join lines.']),
     Object.freeze(['1.21.23 r278', 'Rebalances THE LOT for tablet landscape with a taller header and car carousel, a shorter 3D/attribute region, and no extra Lot-owned cyan gutter below the showroom.']),
-    Object.freeze(['1.21.24 r279', 'Keeps the r278 tablet proportions only on viewports at least 600px tall, restoring the compact Lot header and carousel on iPhone landscape.'])
+    Object.freeze(['1.21.24 r279', 'Keeps the r278 tablet proportions only on viewports at least 600px tall, restoring the compact Lot header and carousel on iPhone landscape.']),
+    Object.freeze(['1.21.25 r280', 'Adds more horizontal space between BACK and THE LOT on every responsive Lot header size.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.24',
-  build: '2026.09.21-r279',
-  note: 'TURN 1.21.24 keeps THE LOT’s roomier proportions on tablets while restoring the compact iPhone landscape layout.'
+  version: '1.21.25',
+  build: '2026.09.21-r280',
+  note: 'TURN 1.21.25 gives BACK and THE LOT a clearer horizontal separation at every responsive header size.'
 });
