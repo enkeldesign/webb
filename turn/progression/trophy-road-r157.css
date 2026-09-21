@@ -13,12 +13,34 @@
 }
 
 /* State must be readable without comparing the locked/unlocked colour shades.
-   Earned rewards get the same corner-badge weight as locks; NEXT stays textual. */
+   The silhouettes deliberately differ: an earned reward gets a large inset
+   check disc inside the card, while a locked reward keeps the smaller lock
+   badge perched on the outside corner. NEXT stays textual. */
 .turn-trophy-road-marker-state.is-badge-only {
   visibility: hidden;
 }
 
-.turn-trophy-road-marker-earned,
+.turn-trophy-road-marker-earned {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  box-sizing: border-box;
+  width: 46px;
+  height: 46px;
+  padding: 5px;
+  place-items: center;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: 50%;
+  background: var(--turn-green-200, #d9f5c2);
+  box-shadow: 2px 2px 0 var(--turn-ink, #08090a);
+  color: var(--turn-ink, #08090a);
+  font-size: 1.65rem;
+  font-weight: 950;
+  line-height: 1;
+  pointer-events: none;
+}
+
 .turn-trophy-road-marker-lock {
   position: absolute;
   top: -10px;
@@ -31,24 +53,23 @@
   place-items: center;
   border: 3px solid var(--turn-ink, #08090a);
   border-radius: 50%;
+  background: var(--turn-action-warning, #ffd43b);
   box-shadow: 2px 2px 0 var(--turn-ink, #08090a);
   color: var(--turn-ink, #08090a);
   pointer-events: none;
 }
 
-.turn-trophy-road-marker-earned {
-  background: var(--turn-green-200, #d9f5c2);
-  font-size: 1.05rem;
-  font-weight: 950;
-  line-height: 1;
-}
-
-.turn-trophy-road-marker-lock {
-  background: var(--turn-action-warning, #ffd43b);
-}
-
 @media (max-height: 430px) and (orientation: landscape) {
-  .turn-trophy-road-marker-earned,
+  .turn-trophy-road-marker-earned {
+    top: 4px;
+    right: 4px;
+    width: 36px;
+    height: 36px;
+    padding: 4px;
+    border-width: 2px;
+    font-size: 1.3rem;
+  }
+
   .turn-trophy-road-marker-lock {
     top: -7px;
     right: -7px;
@@ -56,10 +77,6 @@
     height: 24px;
     padding: 3px;
     border-width: 2px;
-  }
-
-  .turn-trophy-road-marker-earned {
-    font-size: .88rem;
   }
 }
 

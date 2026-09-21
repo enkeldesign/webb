@@ -204,10 +204,12 @@ assert.match(semanticStyles, /\.turn-trophy-road-detail[\s\S]*data-trophy-reward
   'The modal paper must derive its category/state colour directly from its rendered reward data');
 assert.doesNotMatch(semanticStyles, /:has\([^)]*is-selected/,
   'Reward-modal colour must not require relational marker matching');
-assert.match(semanticStyles, /\.turn-trophy-road-marker-earned,[\s\S]*\.turn-trophy-road-marker-lock[\s\S]*border-radius:\s*50%/,
-  'Earned and locked rewards must use the same prominent circular corner-badge language');
+assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*top:\s*6px;[\s\S]*right:\s*6px;[\s\S]*width:\s*46px;[\s\S]*height:\s*46px;/,
+  'Earned rewards must use a much larger check disc fully inset inside the card frame');
+assert.match(semanticStyles, /\.turn-trophy-road-marker-lock \{[\s\S]*top:\s*-10px;[\s\S]*right:\s*-10px;[\s\S]*width:\s*30px;[\s\S]*height:\s*30px;/,
+  'Locked rewards must keep the smaller outside-corner lock silhouette');
 assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*background:\s*var\(--turn-green-200/,
-  'The earned check badge must use the light success treatment from the mockup');
+  'The earned check disc must keep the light success treatment from the mockup');
 assert.match(semanticStyles, /\.turn-trophy-road-marker-state\.is-badge-only \{[\s\S]*visibility:\s*hidden/,
   'Ordinary earned cards must not duplicate the check badge with an EARNED text label');
 
