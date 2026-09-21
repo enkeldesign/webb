@@ -9,6 +9,25 @@ export const FUTURE_RACER_CAR_PERK_DESCRIPTION =
 export const SUPERCAR_FLOW_SHIFT_PERK_DESCRIPTION =
   'At FLOW ×3 or higher, SHIFT adds its three attribute points without reductions. SHIFT again moves the boost to the other three attributes.';
 
+export function resolveVehiclePerkStatusFeedback({
+  vehicleId = '',
+  perkUnlocked = false,
+  previousProgress = 0,
+  nextProgress = 0
+} = {}) {
+  if (perkUnlocked !== true) return null;
+
+  const previousFull = Number(previousProgress) >= 1;
+  const nextFull = Number(nextProgress) >= 1;
+  if (!previousFull && nextFull) {
+    if (vehicleId === 'suv') return 'FULL TANK';
+    if (vehicleId === 'truck') return 'BOOST TANK 5/5';
+    if (vehicleId === 'sedan-sports') return 'DRIFT 5/5';
+  }
+  if (vehicleId === 'suv' && previousFull && !nextFull) return 'FULL TANK LOST';
+  return null;
+}
+
 export function vehiclePerkPresentation(vehicleId, perk) {
   if (!perk) return null;
   if (vehicleId === 'race-future') {
