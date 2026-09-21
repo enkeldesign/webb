@@ -313,4 +313,18 @@ assert.match(legend, /role', 'dialog'/);
 assert.match(legend, /name\.textContent = entry\.label/);
 assert.match(legend, /description\.textContent = entry\.description/);
 
+const [showroomLayoutCss, showroomCleanupCss, lotWrapper] = await Promise.all([
+  fs.readFile(new URL('../../turn/garage/lot-showroom-experiment.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-showroom-cleanup-r201.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8')
+]);
+assert.match(showroomLayoutCss, /--lot-header-height: 104px;/,
+  'Tablet-height Lot layouts must give the title band more vertical room');
+assert.match(showroomLayoutCss, /--lot-picker-height: 150px;/,
+  'Tablet-height Lot layouts must give the car carousel more vertical room');
+assert.match(showroomCleanupCss, /--lot-content-bottom: 0px;/,
+  'The Lot must not reserve an extra cyan gutter below the usable showroom viewport');
+assert.match(lotWrapper, /url\.searchParams\.set\('build', buildKey\)/,
+  'Lazy Lot styles must follow the current TURN build instead of needing new manual revision identifiers');
+
 console.log(`TURN ${release.id} redesigned full-colour Lot, stable 5x3 order, canonical attributes, selection marker, progression locks, polished beginner guide and accessibility contract passed.`);

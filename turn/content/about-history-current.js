@@ -742,6 +742,21 @@ const AIRPORT_HAIRPIN_SEAM_SHADING_HISTORY = Object.freeze({
   ])
 });
 
+const LOT_TABLET_LAYOUT_HISTORY = Object.freeze({
+  period: '21 September',
+  title: 'The Lot gives tablets more room to browse',
+  paragraphs: Object.freeze([
+    'TURN 1.21.23 build r278 gives THE LOT a taller title band and car carousel on normal and tall landscape screens, letting the 3D preview and attribute panel become shorter instead of compressing navigation.',
+    'The showroom content now reaches the bottom of TURN’s usable web layer instead of reserving an extra cyan gutter. iPadOS may still draw its own system-owned strip outside that usable web layer, so TURN keeps interactive content inside the viewport WebKit actually exposes.'
+  ]),
+  milestones: Object.freeze([
+    'Taller Lot header and car carousel',
+    'Shorter 3D and attribute region on tablet landscape',
+    'No extra Lot-owned bottom gutter',
+    'TURN 1.21.23 · 2026.09.21-r278'
+  ])
+});
+
 const KEYBOARD_OWNERSHIP_HISTORY = Object.freeze({
   period: '18 September',
   title: 'Keyboard driving stays on the race surface',
@@ -836,7 +851,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   MIDNIGHT_LOW_CITY_HISTORY,
   MIDNIGHT_PURPLE_LOW_CITY_HISTORY,
   AIRPORT_HAIRPIN_SEAM_HISTORY,
-  AIRPORT_HAIRPIN_SEAM_SHADING_HISTORY
+  AIRPORT_HAIRPIN_SEAM_SHADING_HISTORY,
+  LOT_TABLET_LAYOUT_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -964,13 +980,14 @@ Object.freeze({
     Object.freeze(['1.21.19 r274', 'Adds track-aware low-rise urban infill, neon shopfronts and a few pinned Kenney foreground landmarks to fill MIDNIGHT CITY’s large empty areas without adding real lights.']),
     Object.freeze(['1.21.20 r275', 'Removes the oversized Kenney garage, reduces the remaining asset landmarks and adds more purple-weighted procedural low-rises around the course.']),
     Object.freeze(['1.21.21 r276', 'Removes AIRPORT’s flickering centre-hairpin seams by replacing only the self-overlapping local road triangles while preserving the route, width, curbs and collision.']),
-    Object.freeze(['1.21.22 r277', 'Blends the AIRPORT hairpin repair into the surrounding asphalt by matching the repaired triangles’ winding and normals to the road, removing the two remaining dark join lines.'])
+    Object.freeze(['1.21.22 r277', 'Blends the AIRPORT hairpin repair into the surrounding asphalt by matching the repaired triangles’ winding and normals to the road, removing the two remaining dark join lines.']),
+    Object.freeze(['1.21.23 r278', 'Rebalances THE LOT for tablet landscape with a taller header and car carousel, a shorter 3D/attribute region, and no extra Lot-owned cyan gutter below the showroom.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.22',
-  build: '2026.09.21-r277',
-  note: 'TURN 1.21.22 removes the two remaining dark AIRPORT hairpin patch seams while preserving the anti-flicker topology.'
+  version: '1.21.23',
+  build: '2026.09.21-r278',
+  note: 'TURN 1.21.23 gives THE LOT more tablet breathing room and removes its extra bottom gutter.'
 });

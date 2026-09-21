@@ -1,8 +1,8 @@
 /* Production showroom layout for THE LOT. Loaded lazily with the Lot module. */
 
 .lot-showroom {
-  --lot-header-height: 76px;
-  --lot-picker-height: 122px;
+  --lot-header-height: 104px;
+  --lot-picker-height: 150px;
   --lot-panel-gap: 12px;
   --lot-info-width: clamp(286px, 33vw, 410px);
   background:
