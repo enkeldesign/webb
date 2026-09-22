@@ -82,10 +82,15 @@ try {
       retroUrbanSceneObjects: runtime.activeWorld.children.filter(
         (object) => object.name?.startsWith('Dead Canyon Retro Urban')
       ).length,
-      hasEasternEscarpment: Boolean(
-        runtime.activeWorld.getObjectByName('Dead Canyon eastern Grand Canyon escarpment')
-      ),
+      cliffSlabCount: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon eastern cliff slab ')
+      ).length,
+      cliffSummitCount: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon integrated cliff summit ')
+      ).length,
       hasNeedleBases: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon needle bases')),
+      fogNear: runtime.activeWorld.parent?.fog?.near ?? null,
+      fogFar: runtime.activeWorld.parent?.fog?.far ?? null,
       labResources: resources.filter((pathname) => pathname.startsWith('/turn-lab/'))
     };
   });
@@ -103,13 +108,17 @@ await fs.writeFile(
 assert.deepEqual(browserErrors, [], `TURN LAB DEAD CANYON produced browser errors:\n${browserErrors.join('\n')}`);
 assert.equal(metrics.trackId, 'mountain');
 assert.equal(metrics.sampleCount, 2160);
-assert.ok(metrics.trackLength > 3050 && metrics.trackLength < 3350,
-  `Expected sampled DEAD CANYON length around 3.2 km, got ${metrics.trackLength}`);
-assert.equal(metrics.deadCanyon.version, 'dead-canyon-r1');
+assert.ok(metrics.trackLength > 3250 && metrics.trackLength < 3500,
+  `Expected sampled DEAD CANYON length around 3.35 km, got ${metrics.trackLength}`);
+assert.equal(metrics.deadCanyon.version, 'dead-canyon-r2');
 assert.equal(metrics.deadCanyon.proceduralWorld, true);
 assert.equal(metrics.deadCanyon.easternEscarpmentHeight, 210);
-assert.equal(metrics.deadCanyon.easternEscarpmentSegments, 31);
-assert.equal(metrics.deadCanyon.needleCount, 11);
+assert.equal(metrics.deadCanyon.cliffSlabs, 4);
+assert.equal(metrics.deadCanyon.cliffSummitBlocks, 6);
+assert.equal(metrics.deadCanyon.cliffDepth, 3600);
+assert.equal(metrics.deadCanyon.fogFadeNear, 420);
+assert.equal(metrics.deadCanyon.fogFadeFar, 1350);
+assert.equal(metrics.deadCanyon.needleCount, 0);
 assert.equal(metrics.deadCanyon.geologyArchetypes, 4);
 assert.equal(metrics.deadCanyon.solarPanels, 24);
 assert.equal(metrics.deadCanyon.retroUrbanAssetsReady, true);
@@ -120,8 +129,11 @@ assert.equal(metrics.deadCanyon.dynamicLights, 0);
 assert.equal(metrics.deadCanyon.shadowCasters, 0);
 assert.ok(metrics.retroUrbanSceneObjects >= 36,
   `Expected loaded Retro Urban scene objects, got ${metrics.retroUrbanSceneObjects}`);
-assert.equal(metrics.hasEasternEscarpment, true);
-assert.equal(metrics.hasNeedleBases, true);
+assert.equal(metrics.cliffSlabCount, 4);
+assert.equal(metrics.cliffSummitCount, 6);
+assert.equal(metrics.hasNeedleBases, false);
+assert.equal(metrics.fogNear, 420);
+assert.equal(metrics.fogFar, 1350);
 
 for (const resource of [
   '/turn-lab/tracks/definitions.js',
@@ -134,6 +146,7 @@ for (const resource of [
 console.log('TURN LAB DEAD CANYON browser/runtime smoke passed:', JSON.stringify({
   trackLength: metrics.trackLength,
   sampleCount: metrics.sampleCount,
-  needles: metrics.deadCanyon.needleCount,
+  cliffSlabs: metrics.deadCanyon.cliffSlabs,
+  fogFar: metrics.fogFar,
   retroUrbanInstances: metrics.deadCanyon.retroUrbanInstances
 }));
