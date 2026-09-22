@@ -148,7 +148,7 @@ assert.doesNotMatch(labBootstrap, /seed|COPY_ONCE|turn-personal-rivals/,
   'The isolated LAB must not seed or modify production TURN save data');
 assert.match(labBootstrap, /__turnLaunchReady/,
   'LAB must preserve the production startup gate contract');
-assert.match(labBootstrap, /dataset\\.turnLab = 'badlands'/,
+assert.ok(labBootstrap.includes("dataset.turnLab = 'badlands'"),
   'The LAB shell must identify the active BADLANDS experiment');
 assert.doesNotMatch(labBootstrap, /viewport-repair-r7\.js/,
   'The retired viewport repair watchdog must not run automatically in the revived LAB shell');
