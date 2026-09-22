@@ -4,7 +4,7 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 
 const baseUrl = process.env.TURN_VISUAL_BASE_URL || 'http://127.0.0.1:8000';
-const outputDir = process.env.TURN_VISUAL_OUTPUT || 'badlands-visual-artifact';
+const outputDir = process.env.TURN_VISUAL_OUTPUT || 'dead-canyon-visual-artifact';
 await fs.mkdir(outputDir, { recursive: true });
 
 const browser = await chromium.launch({
@@ -22,7 +22,7 @@ page.on('console', (message) => {
 
 let metrics;
 try {
-  const response = await page.goto(`${baseUrl}/turn-lab/?visual-smoke=badlands`, {
+  const response = await page.goto(`${baseUrl}/turn-lab/?visual-smoke=dead-canyon`, {
     waitUntil: 'domcontentloaded',
     timeout: 90_000
   });
@@ -47,14 +47,14 @@ try {
   );
 
   const homeCard = page.locator('.m8-home .track-card[data-track-id="mountain"]');
-  assert.match(await homeCard.textContent(), /Badlands/i);
+  assert.match(await homeCard.textContent(), /Dead Canyon/i);
   assert.equal(await homeCard.getAttribute('data-trophy-locked'), 'false');
-  assert.equal(await page.locator('html').getAttribute('data-turn-lab'), 'badlands');
+  assert.equal(await page.locator('html').getAttribute('data-turn-lab'), 'dead-canyon');
   assert.equal(await page.locator('html').getAttribute('data-turn-lab-experiment-access'), 'unlocked');
-  await page.screenshot({ path: path.join(outputDir, 'badlands-home.png'), fullPage: true });
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-home.png'), fullPage: true });
 
   await page.evaluate(() => {
-    globalThis.__badlandsChoice = globalThis.__turnChooseTrack();
+    globalThis.__deadCanyonChoice = globalThis.__turnChooseTrack();
     return true;
   });
   await page.locator('.track-select.is-visible .track-card[data-track-id="mountain"]').click();
@@ -62,7 +62,7 @@ try {
 
   await page.waitForFunction(
     () => globalThis.__turnRuntime?.trackId === 'mountain'
-      && globalThis.__turnRuntime?.activeWorld?.userData?.turnBadlands,
+      && globalThis.__turnRuntime?.activeWorld?.userData?.turnDeadCanyon,
     null,
     { timeout: 90_000 }
   );
@@ -73,18 +73,24 @@ try {
     const resources = performance.getEntriesByType('resource').map((entry) => new URL(entry.name).pathname);
     return {
       trackId: runtime.trackId,
-      trackName: runtime.trackDefinition?.name || runtime.definition?.name || null,
       sampleCount: runtime.samples.length,
       trackLength: runtime.samples.reduce((total, sample, index) => {
         if (index === 0) return total;
         return total + sample.point.distanceTo(runtime.samples[index - 1].point);
       }, runtime.samples.at(-1).point.distanceTo(runtime.samples[0].point)),
-      badlands: runtime.activeWorld.userData.turnBadlands,
+      deadCanyon: runtime.activeWorld.userData.turnDeadCanyon,
+      retroUrbanSceneObjects: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon Retro Urban')
+      ).length,
+      hasEasternEscarpment: Boolean(
+        runtime.activeWorld.getObjectByName('Dead Canyon eastern Grand Canyon escarpment')
+      ),
+      hasNeedleBases: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon needle bases')),
       labResources: resources.filter((pathname) => pathname.startsWith('/turn-lab/'))
     };
   });
 
-  await page.screenshot({ path: path.join(outputDir, 'badlands-active.png'), fullPage: true });
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-active.png'), fullPage: true });
 } finally {
   await browser.close();
 }
@@ -94,16 +100,29 @@ await fs.writeFile(
   `${JSON.stringify({ metrics, browserErrors }, null, 2)}\n`
 );
 
-assert.deepEqual(browserErrors, [], `TURN LAB BADLANDS produced browser errors:\n${browserErrors.join('\n')}`);
+assert.deepEqual(browserErrors, [], `TURN LAB DEAD CANYON produced browser errors:\n${browserErrors.join('\n')}`);
 assert.equal(metrics.trackId, 'mountain');
-assert.equal(metrics.sampleCount, 1440);
-assert.ok(metrics.trackLength > 1450 && metrics.trackLength < 1750);
-assert.equal(metrics.badlands.version, 'badlands-r1');
-assert.equal(metrics.badlands.proceduralWorld, true);
-assert.equal(metrics.badlands.solarPanels, 30);
-assert.equal(metrics.badlands.telemetryMasts, 4);
-assert.equal(metrics.badlands.dynamicLights, 0);
-assert.equal(metrics.badlands.shadowCasters, 0);
+assert.equal(metrics.sampleCount, 2160);
+assert.ok(metrics.trackLength > 3050 && metrics.trackLength < 3350,
+  `Expected sampled DEAD CANYON length around 3.2 km, got ${metrics.trackLength}`);
+assert.equal(metrics.deadCanyon.version, 'dead-canyon-r1');
+assert.equal(metrics.deadCanyon.proceduralWorld, true);
+assert.equal(metrics.deadCanyon.easternEscarpmentHeight, 210);
+assert.equal(metrics.deadCanyon.easternEscarpmentSegments, 31);
+assert.equal(metrics.deadCanyon.needleCount, 11);
+assert.equal(metrics.deadCanyon.geologyArchetypes, 4);
+assert.equal(metrics.deadCanyon.solarPanels, 24);
+assert.equal(metrics.deadCanyon.retroUrbanAssetsReady, true);
+assert.equal(metrics.deadCanyon.retroUrbanLoaded, 5);
+assert.ok(metrics.deadCanyon.retroUrbanInstances >= 30);
+assert.deepEqual(metrics.deadCanyon.retroUrbanErrors, []);
+assert.equal(metrics.deadCanyon.dynamicLights, 0);
+assert.equal(metrics.deadCanyon.shadowCasters, 0);
+assert.ok(metrics.retroUrbanSceneObjects >= 36,
+  `Expected loaded Retro Urban scene objects, got ${metrics.retroUrbanSceneObjects}`);
+assert.equal(metrics.hasEasternEscarpment, true);
+assert.equal(metrics.hasNeedleBases, true);
+
 for (const resource of [
   '/turn-lab/tracks/definitions.js',
   '/turn-lab/tracks/mountain-layout.js',
@@ -112,8 +131,9 @@ for (const resource of [
   assert.ok(metrics.labResources.includes(resource), `Scoped runtime did not load ${resource}`);
 }
 
-console.log('TURN LAB BADLANDS browser/runtime smoke passed:', JSON.stringify({
+console.log('TURN LAB DEAD CANYON browser/runtime smoke passed:', JSON.stringify({
   trackLength: metrics.trackLength,
   sampleCount: metrics.sampleCount,
-  world: metrics.badlands.version
+  needles: metrics.deadCanyon.needleCount,
+  retroUrbanInstances: metrics.deadCanyon.retroUrbanInstances
 }));

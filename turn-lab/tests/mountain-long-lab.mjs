@@ -1,14 +1,22 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
-  MOUNTAIN_CONTROL_POINTS as BADLANDS_CONTROL_POINTS,
-  BADLANDS_LAYOUT_RULES
+  MOUNTAIN_CONTROL_POINTS as DEAD_CANYON_CONTROL_POINTS,
+  DEAD_CANYON_LAYOUT_RULES
 } from '../tracks/mountain-layout.js';
 import {
   MOUNTAIN_CONTROL_POINTS as PRODUCTION_MOUNTAIN_CONTROL_POINTS
 } from '../../turn/tracks/mountain-layout.js';
 
 const REPO_ROOT = new URL('../../', import.meta.url);
+const RETRO_ASSETS = Object.freeze([
+  'wall-a-garage.obj',
+  'wall-broken-type-a.obj',
+  'scaffolding-structure.obj',
+  'truck-green-cargo.obj',
+  'detail-barrier-strong-damaged.obj'
+]);
+
 const [
   labIndex,
   productionIndex,
@@ -17,16 +25,20 @@ const [
   labRegistry,
   labWorld,
   labPaceNotes,
-  labManifest
+  labManifest,
+  retroLicense,
+  ...retroAssetSources
 ] = await Promise.all([
   readText('turn-lab/index.html'),
   readText('turn/index.html'),
   readText('turn-lab/lab-bootstrap.js'),
   readText('turn-lab/tracks/definitions.js'),
   readText('turn-lab/tracks/registry.js'),
-  readText('turn-lab/tracks/badlands-world.js'),
+  readText('turn-lab/tracks/dead-canyon-world.js'),
   readText('turn-lab/tracks/pace-notes.js'),
-  readText('turn-lab/site.webmanifest')
+  readText('turn-lab/site.webmanifest'),
+  readText('turn-lab/assets/kenney/retro-urban/LICENSE.txt'),
+  ...RETRO_ASSETS.map((name) => readText(`turn-lab/assets/kenney/retro-urban/${name}`))
 ]);
 
 const labImportMaps = parseImportMaps(labIndex);
@@ -51,48 +63,66 @@ assert.equal(
 assert.equal(
   Object.keys(labScope).some((specifier) => specifier.includes('world-collision')),
   false,
-  'BADLANDS must use production world collision without the retired bridge-guide LAB adapter'
+  'DEAD CANYON must use production world collision without a LAB-specific collision adapter'
 );
 
-assert.equal(BADLANDS_CONTROL_POINTS.length, 44);
+assert.equal(DEAD_CANYON_CONTROL_POINTS.length, 72);
 assert.notDeepEqual(
-  BADLANDS_CONTROL_POINTS,
+  DEAD_CANYON_CONTROL_POINTS,
   PRODUCTION_MOUNTAIN_CONTROL_POINTS,
-  'BADLANDS must remain isolated from production MOUNTAIN geometry'
+  'DEAD CANYON must remain isolated from production MOUNTAIN geometry'
 );
-assert.equal(findProperIntersections(BADLANDS_CONTROL_POINTS).length, 0);
-const routeLength = closedLength(BADLANDS_CONTROL_POINTS);
-assert.ok(routeLength > 1500 && routeLength < 1700, `Expected a ~1.6 km course, got ${routeLength.toFixed(1)} m`);
-assert.equal(BADLANDS_LAYOUT_RULES.sampleCount, 1440);
-assert.equal(BADLANDS_LAYOUT_RULES.routeNarrative.length, 7);
+assert.equal(findProperIntersections(DEAD_CANYON_CONTROL_POINTS).length, 0);
+const routeLength = closedLength(DEAD_CANYON_CONTROL_POINTS);
+assert.ok(routeLength > 3100 && routeLength < 3300,
+  `Expected a ~3.2 km course, got ${routeLength.toFixed(1)} m`);
+assert.equal(DEAD_CANYON_LAYOUT_RULES.sampleCount, 2160);
+assert.equal(DEAD_CANYON_LAYOUT_RULES.easternEscarpment, true);
+assert.equal(DEAD_CANYON_LAYOUT_RULES.routeNarrative.length, 10);
 
-assert.match(labDefinitions, /name: 'Badlands'/);
+assert.match(labDefinitions, /name: 'Dead Canyon'/);
 assert.match(labDefinitions, /difficulty: 'ADVANCED'/);
-assert.match(labDefinitions, /storageRevision: 'badlands-lab-r1'/);
-assert.match(labDefinitions, /sampleCount: 1440/);
+assert.match(labDefinitions, /storageRevision: 'dead-canyon-lab-r1'/);
+assert.match(labDefinitions, /sampleCount: 2160/);
+assert.match(labDefinitions, /fogFar: 1750/);
 assert.doesNotMatch(labDefinitions, /bridgeGuide/);
 
-assert.match(labRegistry, /installBadlandsWorld/);
-assert.match(labRegistry, /\/turn-lab\/tracks\/badlands-world\.js/);
+assert.match(labRegistry, /installDeadCanyonWorld/);
+assert.match(labRegistry, /\/turn-lab\/tracks\/dead-canyon-world\.js/);
 assert.match(labRegistry, /entry\.id !== 'mountain'/);
 
-assert.match(labWorld, /world\.userData\.turnBadlands/);
-assert.match(labWorld, /landmark: 'needle-rock'/);
-assert.match(labWorld, /solarPanels: 30/);
-assert.match(labWorld, /telemetryMasts: 4/);
+assert.match(labWorld, /world\.userData\.turnDeadCanyon/);
+assert.match(labWorld, /easternEscarpmentHeight: 210/);
+assert.match(labWorld, /easternEscarpmentSegments: 31/);
+assert.match(labWorld, /needleCount: 11/);
+assert.match(labWorld, /geologyArchetypes: 4/);
+assert.match(labWorld, /solarPanels: 24/);
+assert.match(labWorld, /OBJLoader/);
+assert.match(labWorld, /Kenney Retro Urban/);
 assert.match(labWorld, /dynamicLights: 0/);
 assert.match(labWorld, /shadowCasters: 0/);
 assert.match(labWorld, /InstancedMesh/);
 assert.doesNotMatch(labWorld, /GLTFLoader/);
 
-assert.equal((labPaceNotes.match(/note\('badlands-/g) || []).length, 8);
-assert.match(labBootstrap, /dataset\.turnLab = 'badlands'/);
-assert.match(labBootstrap, /dataset\.turnLabExperimentAccess/);
-assert.match(labIndex, /TURN LAB · BADLANDS/);
-assert.match(labIndex, /Test BADLANDS, a new desert-dusk track/);
-assert.match(labManifest, /BADLANDS track experiment/);
+assert.match(retroLicense, /Creative Commons Zero \(CC0\)/);
+assert.match(retroLicense, /Kenney/);
+for (let index = 0; index < RETRO_ASSETS.length; index += 1) {
+  assert.match(retroAssetSources[index], /Kenney Retro Urban Kit 2\.0 CC0/,
+    `${RETRO_ASSETS[index]} must retain source attribution/license provenance`);
+  assert.match(retroAssetSources[index], /^o /m,
+    `${RETRO_ASSETS[index]} must remain valid geometry-only OBJ source`);
+  assert.match(retroAssetSources[index], /^f /m,
+    `${RETRO_ASSETS[index]} must contain faces`);
+}
 
-console.log(`TURN LAB BADLANDS contract passed: ${routeLength.toFixed(1)} m, 44 control points, 1440 samples.`);
+assert.equal((labPaceNotes.match(/note\('dead-canyon-/g) || []).length, 13);
+assert.match(labBootstrap, /dataset\.turnLab = 'dead-canyon'/);
+assert.match(labBootstrap, /dataset\.turnLabExperimentAccess/);
+assert.match(labIndex, /TURN LAB · DEAD CANYON/);
+assert.match(labIndex, /Test DEAD CANYON, a long canyon-and-ruins track/);
+assert.match(labManifest, /DEAD CANYON track experiment/);
+
+console.log(`TURN LAB DEAD CANYON contract passed: ${routeLength.toFixed(1)} m, 72 control points, 2160 samples, 5 Retro Urban assets.`);
 
 async function readText(path) {
   return fs.readFile(new URL(path, REPO_ROOT), 'utf8');

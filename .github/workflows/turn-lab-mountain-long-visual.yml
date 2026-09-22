@@ -1,4 +1,4 @@
-name: TURN LAB BADLANDS visual smoke
+name: TURN LAB DEAD CANYON visual smoke
 
 on:
   pull_request:
@@ -7,12 +7,13 @@ on:
     paths:
       - 'turn-lab/tracks/**'
       - 'turn-lab/race/**'
+      - 'turn-lab/assets/kenney/retro-urban/**'
       - 'turn-lab/mountain-long-visual.html'
       - 'turn-lab/tests/mountain-long-*.mjs'
       - '.github/workflows/turn-lab-mountain-long-visual.yml'
   push:
     branches:
-      - turn-lab-mountain-long-r1
+      - turn-lab/dead-canyon-r1
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -34,7 +35,7 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Validate BADLANDS topology and performance contract
+      - name: Validate DEAD CANYON topology and performance contract
         run: node turn-lab/tests/mountain-long-lab.mjs
 
       - name: Install Playwright Chromium
@@ -52,14 +53,14 @@ jobs:
           cat /tmp/turn-lab-mountain-http.log
           exit 1
 
-      - name: Render and validate BADLANDS runtime
+      - name: Render and validate DEAD CANYON runtime
         run: node turn-lab/tests/mountain-long-visual-smoke.mjs
 
-      - name: Upload BADLANDS inspection frames
+      - name: Upload DEAD CANYON inspection frames
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: turn-lab-badlands-visual
-          path: badlands-visual-artifact
+          name: turn-lab-dead-canyon-visual
+          path: dead-canyon-visual-artifact
           if-no-files-found: warn
           retention-days: 7
