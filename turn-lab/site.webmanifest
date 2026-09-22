@@ -2,7 +2,7 @@
   "id": "/turn-lab/",
   "name": "TURN LAB",
   "short_name": "TURN LAB",
-  "description": "An isolated long-course MOUNTAIN experiment running on the current TURN engine.",
+  "description": "An isolated BADLANDS track experiment running on the current TURN engine.",
   "start_url": "/turn-lab/",
   "scope": "/turn-lab/",
   "display": "standalone",
