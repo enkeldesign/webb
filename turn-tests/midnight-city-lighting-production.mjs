@@ -117,7 +117,7 @@ assert.match(sharedNightSkySource, /'midnight-city': Object\.freeze/);
 assert.match(sharedNightSkySource, /horizon: 0x4a2866/);
 assert.match(sharedNightSkySource, /glow: 0xb65dcc/);
 assert.match(sharedNightSkySource, /glowStrength: 0\.17/);
-assert.match(sharedNightSkySource, /starStrength: 0\.48/);
+assert.match(sharedNightSkySource, /starStrength: 0\.56/);
 assert.match(sharedNightSkySource, /uVisiblePlaneScale/,
   'The purple horizon treatment must be mapped to the visible sky, not the full overscan plane');
 assert.match(sharedNightSkySource, /horizonReach: 0\.23/,
