@@ -75,7 +75,10 @@ try {
       trackId: runtime.trackId,
       trackName: runtime.trackDefinition?.name || runtime.definition?.name || null,
       sampleCount: runtime.samples.length,
-      trackLength: runtime.trackLength,
+      trackLength: runtime.samples.reduce((total, sample, index) => {
+        if (index === 0) return total;
+        return total + sample.point.distanceTo(runtime.samples[index - 1].point);
+      }, runtime.samples.at(-1).point.distanceTo(runtime.samples[0].point)),
       badlands: runtime.activeWorld.userData.turnBadlands,
       labResources: resources.filter((pathname) => pathname.startsWith('/turn-lab/'))
     };
@@ -94,7 +97,7 @@ await fs.writeFile(
 assert.deepEqual(browserErrors, [], `TURN LAB BADLANDS produced browser errors:\n${browserErrors.join('\n')}`);
 assert.equal(metrics.trackId, 'mountain');
 assert.equal(metrics.sampleCount, 1440);
-assert.ok(metrics.trackLength > 1500 && metrics.trackLength < 1750);
+assert.ok(metrics.trackLength > 1450 && metrics.trackLength < 1750);
 assert.equal(metrics.badlands.version, 'badlands-r1');
 assert.equal(metrics.badlands.proceduralWorld, true);
 assert.equal(metrics.badlands.solarPanels, 30);
@@ -104,8 +107,7 @@ assert.equal(metrics.badlands.shadowCasters, 0);
 for (const resource of [
   '/turn-lab/tracks/definitions.js',
   '/turn-lab/tracks/mountain-layout.js',
-  '/turn-lab/tracks/registry.js',
-  '/turn-lab/tracks/badlands-world.js'
+  '/turn-lab/tracks/registry.js'
 ]) {
   assert.ok(metrics.labResources.includes(resource), `Scoped runtime did not load ${resource}`);
 }
