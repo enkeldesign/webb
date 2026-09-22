@@ -1,4 +1,4 @@
-name: TURN LAB MOUNTAIN long-course visual smoke
+name: TURN LAB BADLANDS visual smoke
 
 on:
   pull_request:
@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Validate long-course topology and performance contract
+      - name: Validate BADLANDS topology and performance contract
         run: node turn-lab/tests/mountain-long-lab.mjs
 
       - name: Install Playwright Chromium
@@ -46,20 +46,20 @@ jobs:
         run: |
           python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/turn-lab-mountain-http.log 2>&1 &
           for attempt in {1..20}; do
-            curl --fail --silent http://127.0.0.1:8000/turn-lab/mountain-long-visual.html >/dev/null && exit 0
+            curl --fail --silent http://127.0.0.1:8000/turn-lab/ >/dev/null && exit 0
             sleep 0.5
           done
           cat /tmp/turn-lab-mountain-http.log
           exit 1
 
-      - name: Render and validate long MOUNTAIN views and runtime
+      - name: Render and validate BADLANDS runtime
         run: node turn-lab/tests/mountain-long-visual-smoke.mjs
 
-      - name: Upload long MOUNTAIN inspection frames
+      - name: Upload BADLANDS inspection frames
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: turn-lab-mountain-long-visual
-          path: mountain-long-visual-artifact
+          name: turn-lab-badlands-visual
+          path: badlands-visual-artifact
           if-no-files-found: warn
           retention-days: 7

@@ -139,7 +139,7 @@ jobs:
       - name: Run Mountain production regression
         run: node turn-tests/mountain-track-production.mjs
 
-      - name: Run TURN LAB MOUNTAIN long-course regression
+      - name: Run TURN LAB BADLANDS regression
         run: node turn-lab/tests/mountain-long-lab.mjs
 
       - name: Run track record 3D model regression

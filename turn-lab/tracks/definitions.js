@@ -1,66 +1,43 @@
-// TURN LAB definition overlay. All tracks inherit the current production contract;
-// only MOUNTAIN gets the long-course identity and its no-drop collision profile.
-import * as production from '/turn/tracks/definitions.js?lab-base=mountain-long-r1';
+// TURN LAB definition overlay. All production tracks are inherited unchanged;
+// only the MOUNTAIN slot becomes BADLANDS inside the isolated LAB deployment.
+import * as production from '/turn/tracks/definitions.js?lab-base=badlands-r1';
 
 export const DEFAULT_TRACK_ID = production.DEFAULT_TRACK_ID;
 export const TRACK_SAMPLE_COUNT = production.TRACK_SAMPLE_COUNT;
 export const TRACK_SELECTION_KEY = production.TRACK_SELECTION_KEY;
 
-const bridgeGuide = Object.freeze({
-  // Match DBE 101: assistance begins at the visible rail, applies ordinary
-  // off-road drag and removes only route-normal outward motion. A route-normal
-  // fallback at the rail centre keeps the car on the deck without an end face.
-  baselineLimitDistance: 18.2 - 2.6,
-  baselineAssistStartDistance: 15.0,
-  assistStartDistance: 27 / 2 + 0.35,
-  safetyAssistStartDistance: 14.45,
-  hardLimitDistance: 27 / 2 + 0.42,
-  railDamping: 6,
-  railAcceleration: 9,
-  safetyDamping: 12,
-  safetyAcceleration: 24,
-  penetrationAcceleration: 3.5,
-  maximumPenetrationAcceleration: 28,
-  minimumInwardSpeed: 2.4,
-  offRoadDrag: 0.34,
-  sampleCount: 2160,
-  // The start/finish smoothing shortens the full closed route slightly. These
-  // are the re-sampled indices of the same physical instanced rail endpoints.
-  positiveNormalRange: Object.freeze({
-    startIndex: 1005,
-    endIndex: 1095,
-    featherSamples: 4
-  }),
-  negativeNormalRange: Object.freeze({
-    startIndex: 994,
-    endIndex: 1095,
-    featherSamples: 4
-  })
-});
-
 export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map((track) => {
   if (track.id !== 'mountain') return track;
   return Object.freeze({
     ...track,
-    description: 'Summit climb. Waterfall descent. Lake bridge. Valley lights.',
-    storageRevision: 'mountain-lab-long-r2',
-    sampleCount: 2160,
-    // TURN's sampled envelope remains the general no-drop/anti-shortcut guard.
-    // The bridge adds one O(1), route-normal slippery guide aligned with the
-    // visible rail and selected by this bridge's unique sampled route segment.
-    freeRoamDistance: 18.2,
+    name: 'Badlands',
+    difficulty: 'ADVANCED',
+    eyebrow: 'LAB TRACK',
+    description: 'Desert dusk. Canyon rhythm. Solar-basin speed.',
+    accent: '#ff7a3d',
+    accentSoft: '#ffd0ad',
+    storageRevision: 'badlands-lab-r1',
+    sampleCount: 1440,
+    freeRoamDistance: 23.5,
     collisionProfile: Object.freeze({
-      ...track.collisionProfile,
-      freeRoamDistance: 18.2,
-      shoulderStartDistance: 15.0,
-      shoulderDrag: 1.78,
-      boundaryBounce: 0.025,
-      boundaryTangentRetention: 0.96,
-      boundaryMinimumRecoverySpeed: 5.5,
-      bridgeGuide,
-      colliders: Object.freeze([
-        ...(track.collisionProfile.colliders || [])
-      ])
+      freeRoamDistance: 23.5,
+      shoulderStartDistance: 15.2,
+      shoulderDrag: 1.55,
+      boundaryBounce: 0.035,
+      boundaryTangentRetention: 0.95,
+      boundaryMinimumRecoverySpeed: 6,
+      colliders: Object.freeze([])
+    }),
+    sky: 0x542841,
+    fog: 0xb56355,
+    fogNear: 360,
+    fogFar: 1050,
+    lighting: Object.freeze({
+      hemisphereSky: 0xffb27a,
+      hemisphereGround: 0x3a1f2b,
+      hemisphereIntensity: 0.72,
+      directionalColor: 0xffd1a3,
+      directionalIntensity: 0.82
     })
   });
 }));
