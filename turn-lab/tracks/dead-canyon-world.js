@@ -48,20 +48,23 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27 } = {})
   makeCenterDashes(world, samples);
   makeStartLine(world, samples, trackWidth);
   makeEasternEscarpment(world);
-  makeNeedleCountry(world);
   makeRockFormations(world);
   makeSolarField(world);
   makeTracksideRocks(world, samples, trackWidth);
   makeSun(world);
 
   const metrics = {
-    version: 'dead-canyon-r1',
+    version: 'dead-canyon-r2',
     proceduralWorld: true,
     routeSamples: samples.length,
-    theme: 'grand-canyon-retro-urban-dusk',
+    theme: 'stylised-canyon-retro-urban-dusk',
     easternEscarpmentHeight: 210,
-    easternEscarpmentSegments: 31,
-    needleCount: 11,
+    cliffSlabs: 4,
+    cliffSummitBlocks: 6,
+    cliffDepth: 3600,
+    fogFadeNear: 420,
+    fogFadeFar: 1350,
+    needleCount: 0,
     geologyArchetypes: 4,
     solarPanels: 24,
     retroUrbanAssetsReady: false,
@@ -244,136 +247,52 @@ function makeStartLine(world, samples, trackWidth) {
 }
 
 function makeEasternEscarpment(world) {
-  const zSegments = 30;
-  const zMin = -590;
-  const zMax = 590;
-  const levels = [
-    { y: 0, x: 700, color: ROCK_DARK },
-    { y: 58, x: 712, color: 0x724038 },
-    { y: 108, x: 742, color: ROCK },
-    { y: 157, x: 785, color: 0xa95f48 },
-    { y: 210, x: 835, color: ROCK_LIGHT }
+  // Intentionally graphic rather than geological: four enormous, fogged slabs
+  // make one stepped silhouette. Their 3.6 km depth pushes both physical ends
+  // well beyond DEAD CANYON's full fog distance so the wall dissolves into haze
+  // instead of visibly popping in or out as the camera moves.
+  const slabs = [
+    { x: 690, height: 62, width: 72, color: ROCK_DARK },
+    { x: 752, height: 108, width: 78, color: 0x724038 },
+    { x: 824, height: 158, width: 86, color: ROCK },
+    { x: 905, height: 210, width: 96, color: ROCK_LIGHT }
   ];
-  const positions = [];
-  const colors = [];
-  const indices = [];
 
-  for (let zi = 0; zi <= zSegments; zi += 1) {
-    const t = zi / zSegments;
-    const z = THREE.MathUtils.lerp(zMin, zMax, t);
-    const ripple = Math.sin(zi * 1.71) * 13 + Math.sin(zi * 0.47 + 1.3) * 8;
-    for (let level = 0; level < levels.length; level += 1) {
-      const spec = levels[level];
-      const x = spec.x + ripple + Math.sin(zi * 0.83 + level * 1.7) * (7 + level * 2);
-      const y = spec.y + Math.sin(zi * 0.64 + level) * (level === 0 ? 0 : 4);
-      positions.push(x, y, z);
-      const color = new THREE.Color(spec.color);
-      colors.push(color.r, color.g, color.b);
-    }
-  }
-
-  const rowWidth = levels.length;
-  for (let zi = 0; zi < zSegments; zi += 1) {
-    const row = zi * rowWidth;
-    const next = (zi + 1) * rowWidth;
-    for (let level = 0; level < rowWidth - 1; level += 1) {
-      const a = row + level;
-      const b = a + 1;
-      const c = next + level;
-      const d = c + 1;
-      indices.push(a, c, b, b, c, d);
-    }
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  const cliff = new THREE.Mesh(
-    geometry,
-    new THREE.MeshStandardMaterial({
-      vertexColors: true,
-      roughness: 1,
-      metalness: 0,
-      flatShading: true,
-      side: THREE.DoubleSide
-    })
-  );
-  cliff.name = 'Dead Canyon eastern Grand Canyon escarpment';
-  cliff.receiveShadow = false;
-  world.add(cliff);
-
-  const plateau = new THREE.Mesh(
-    new THREE.BoxGeometry(620, 12, 1250),
-    material(0xb3684e)
-  );
-  plateau.position.set(1125, 211, 0);
-  plateau.name = 'Dead Canyon eastern plateau';
-  world.add(plateau);
-
-  const strata = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({ color: 0xe09a6d, transparent: true, opacity: 0.34 }),
-    18
-  );
-  const dummy = new THREE.Object3D();
-  for (let i = 0; i < 18; i += 1) {
-    const z = -555 + i * 65;
-    dummy.position.set(717 + Math.sin(i * 0.9) * 11, 72 + (i % 3) * 31, z);
-    dummy.scale.set(2.2, 1.4, 44 + (i % 4) * 6);
-    dummy.rotation.set(0, 0, 0);
-    dummy.updateMatrix();
-    strata.setMatrixAt(i, dummy.matrix);
-  }
-  strata.instanceMatrix.needsUpdate = true;
-  strata.name = 'Dead Canyon exposed cliff strata';
-  world.add(strata);
-}
-
-function makeNeedleCountry(world) {
-  const sites = [
-    [666, -420, 82, 17, -0.05],
-    [688, -340, 126, 24, 0.035],
-    [660, -245, 96, 19, -0.04],
-    [696, -145, 151, 27, 0.025],
-    [674, -42, 112, 21, -0.03],
-    [704, 62, 166, 29, 0.02],
-    [671, 160, 118, 22, -0.025],
-    [699, 252, 143, 25, 0.035],
-    [662, 338, 88, 18, -0.04],
-    [706, 418, 131, 23, 0.02],
-    [681, 500, 104, 19, -0.03]
-  ];
-  const lower = new THREE.InstancedMesh(
-    new THREE.CylinderGeometry(0.58, 1, 1, 6, 1, false),
-    material(ROCK, 1, true),
-    sites.length
-  );
-  const upper = new THREE.InstancedMesh(
-    new THREE.CylinderGeometry(0.18, 0.62, 1, 5, 1, false),
-    material(ROCK_LIGHT, 1, true),
-    sites.length
-  );
-  const dummy = new THREE.Object3D();
-  sites.forEach(([x, z, height, radius, lean], index) => {
-    dummy.position.set(x, height * 0.31, z);
-    dummy.scale.set(radius, height * 0.62, radius);
-    dummy.rotation.set(0, index * 0.41, lean);
-    dummy.updateMatrix();
-    lower.setMatrixAt(index, dummy.matrix);
-
-    dummy.position.set(x + lean * height * 0.55, height * 0.77, z);
-    dummy.scale.set(radius * 0.7, height * 0.46, radius * 0.7);
-    dummy.rotation.set(0, index * 0.53, lean * 1.4);
-    dummy.updateMatrix();
-    upper.setMatrixAt(index, dummy.matrix);
+  slabs.forEach((spec, index) => {
+    const slab = new THREE.Mesh(
+      new THREE.BoxGeometry(spec.width, spec.height, 3600),
+      material(spec.color, 1, true)
+    );
+    slab.position.set(spec.x, spec.height / 2, 0);
+    slab.name = `Dead Canyon eastern cliff slab ${index + 1}`;
+    slab.receiveShadow = false;
+    slab.castShadow = false;
+    world.add(slab);
   });
-  lower.instanceMatrix.needsUpdate = true;
-  upper.instanceMatrix.needsUpdate = true;
-  lower.name = 'Dead Canyon needle bases';
-  upper.name = 'Dead Canyon needle crowns';
-  world.add(lower, upper);
+
+  // Broad cuboid summit shapes are part of the wall silhouette itself. They are
+  // deliberately chunky: no freestanding needles, cones or fine rock detail.
+  const summitSpecs = [
+    { x: 727, z: -560, w: 92, h: 54, d: 220, color: 0x724038 },
+    { x: 803, z: -250, w: 108, h: 72, d: 260, color: ROCK },
+    { x: 876, z: 80, w: 124, h: 86, d: 300, color: ROCK_LIGHT },
+    { x: 798, z: 430, w: 98, h: 58, d: 230, color: ROCK },
+    { x: 872, z: 720, w: 118, h: 76, d: 280, color: ROCK_LIGHT },
+    { x: 746, z: 980, w: 88, h: 48, d: 210, color: 0x724038 }
+  ];
+
+  summitSpecs.forEach((spec, index) => {
+    const baseHeight = spec.x > 850 ? 210 : spec.x > 780 ? 158 : 108;
+    const summit = new THREE.Mesh(
+      new THREE.BoxGeometry(spec.w, spec.h, spec.d),
+      material(spec.color, 1, true)
+    );
+    summit.position.set(spec.x, baseHeight + spec.h / 2 - 3, spec.z);
+    summit.name = `Dead Canyon integrated cliff summit ${index + 1}`;
+    summit.castShadow = false;
+    summit.receiveShadow = false;
+    world.add(summit);
+  });
 }
 
 function makeRockFormations(world) {
