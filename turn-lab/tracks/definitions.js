@@ -1,6 +1,6 @@
 // TURN LAB definition overlay. All production tracks are inherited unchanged;
 // only the internal MOUNTAIN slot becomes DEAD CANYON inside /turn-lab/.
-import * as production from '/turn/tracks/definitions.js?lab-base=dead-canyon-r1';
+import * as production from '/turn/tracks/definitions.js?lab-base=dead-canyon-r2';
 
 export const DEFAULT_TRACK_ID = production.DEFAULT_TRACK_ID;
 export const TRACK_SAMPLE_COUNT = production.TRACK_SAMPLE_COUNT;
@@ -13,10 +13,10 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
     name: 'Dead Canyon',
     difficulty: 'ADVANCED',
     eyebrow: 'LAB TRACK',
-    description: 'Canyon wall. Needle country. Abandoned outposts. Long desert speed.',
+    description: 'Monumental slabs. One hairpin. One chicane. Long desert speed.',
     accent: '#ff7a3d',
     accentSoft: '#ffd0ad',
-    storageRevision: 'dead-canyon-lab-r1',
+    storageRevision: 'dead-canyon-lab-r2',
     sampleCount: 2160,
     freeRoamDistance: 23.5,
     collisionProfile: Object.freeze({
@@ -30,8 +30,8 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
     }),
     sky: 0x4d263c,
     fog: 0x9b5349,
-    fogNear: 520,
-    fogFar: 1750,
+    fogNear: 420,
+    fogFar: 1350,
     lighting: Object.freeze({
       hemisphereSky: 0xffb27a,
       hemisphereGround: 0x321a25,
