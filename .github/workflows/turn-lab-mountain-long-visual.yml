@@ -7,12 +7,13 @@ on:
     paths:
       - 'turn-lab/tracks/**'
       - 'turn-lab/race/**'
+      - 'turn-lab/assets/kenney/retro-urban/**'
       - 'turn-lab/mountain-long-visual.html'
       - 'turn-lab/tests/mountain-long-*.mjs'
       - '.github/workflows/turn-lab-mountain-long-visual.yml'
   push:
     branches:
-      - turn-lab-mountain-long-r1
+      - turn-lab/dead-canyon-r1
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
