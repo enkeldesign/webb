@@ -4,268 +4,114 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 
 const baseUrl = process.env.TURN_VISUAL_BASE_URL || 'http://127.0.0.1:8000';
-const outputDir = process.env.TURN_VISUAL_OUTPUT || 'mountain-long-visual-artifact';
-const views = [
-  'aerial',
-  'summit',
-  'bridge',
-  'bridge-release',
-  'lower-village',
-  'lower-tunnel',
-  'lower-tunnel-entry-drive',
-  'lower-tunnel-entry-profile',
-  'lower-tunnel-interior',
-  'lower-tunnel-exit-drive',
-  'lower-tunnel-exit-exterior',
-  'lower-tunnel-exit-profile',
-  'forest',
-  'final-climb'
-];
+const outputDir = process.env.TURN_VISUAL_OUTPUT || 'badlands-visual-artifact';
 await fs.mkdir(outputDir, { recursive: true });
 
 const browser = await chromium.launch({
   headless: true,
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist']
 });
-let context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
-const visualPage = await context.newPage();
+const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+const page = await context.newPage();
 const browserErrors = [];
 
-function collectErrors(page, label) {
-  page.on('pageerror', (error) => browserErrors.push(`${label} pageerror: ${error.message}`));
-  page.on('console', (message) => {
-    const text = message.text();
-    if (message.type() === 'error' || /failed to load|mountain .* failed/i.test(text)) {
-      browserErrors.push(`${label} console ${message.type()}: ${text}`);
-    }
-  });
-}
+page.on('pageerror', (error) => browserErrors.push(`pageerror: ${error.message}`));
+page.on('console', (message) => {
+  if (message.type() === 'error') browserErrors.push(`console error: ${message.text()}`);
+});
 
-collectErrors(visualPage, 'visual');
 let metrics;
-let runtimeMetrics;
 try {
-  const response = await visualPage.goto(`${baseUrl}/turn-lab/mountain-long-visual.html`, {
-    waitUntil: 'networkidle',
-    timeout: 90_000
-  });
-  assert.equal(response?.ok(), true, 'Long-course visual page must load successfully');
-  await visualPage.waitForFunction(() => globalThis.__mountainLongVisualReady === true, null, { timeout: 90_000 });
-  metrics = await visualPage.evaluate(() => globalThis.__mountainLongVisualMetrics);
-  for (const view of views) {
-    await visualPage.evaluate((name) => globalThis.__mountainLongSetView(name), view);
-    await visualPage.waitForTimeout(120);
-    await visualPage.screenshot({ path: path.join(outputDir, `${view}.png`), fullPage: true });
-  }
-
-  await visualPage.close();
-  await context.close();
-
-  // The real TURN LAB shell proves that the two import maps compose and that
-  // production registry imports resolve to the MOUNTAIN-only LAB overlays.
-  // Use a fresh browser context and turn audio/DBE off in this geometry smoke.
-  // Current production's optional audio capture can otherwise select a music
-  // AudioContext in headless Chromium; audio has its own production regressions
-  // and is intentionally outside this MOUNTAIN rendering check.
-  context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
-  const runtimePage = await context.newPage();
-  collectErrors(runtimePage, 'runtime');
-  const runtimeResponse = await runtimePage.goto(`${baseUrl}/turn-lab/?visual-smoke=mountain-long`, {
+  const response = await page.goto(`${baseUrl}/turn-lab/?visual-smoke=badlands`, {
     waitUntil: 'domcontentloaded',
     timeout: 90_000
   });
-  assert.equal(runtimeResponse?.ok(), true, 'TURN LAB runtime shell must load successfully');
-  await runtimePage.evaluate(() => {
+  assert.equal(response?.ok(), true, 'TURN LAB must load successfully');
+
+  await page.evaluate(() => {
     localStorage.setItem('turn-audio-enabled-v1', 'off');
     localStorage.setItem('turn-drive-by-ear-v1', 'off');
   });
-  await runtimePage.getByRole('button', { name: 'Play in browser anyway' }).click();
-  await runtimePage.waitForFunction(
+
+  await page.getByRole('button', { name: 'Play in browser anyway' }).click();
+  await page.waitForFunction(
     () => Boolean(globalThis.__turnRuntime && globalThis.__turnChooseTrack),
     null,
     { timeout: 90_000 }
   );
-  await runtimePage.waitForFunction(
+  await page.waitForFunction(
     () => document.querySelector('.m8-home .track-card[data-track-id="mountain"]')
       ?.dataset?.trophyLocked === 'false',
     null,
     { timeout: 90_000 }
   );
-  const mountainHomeCard = runtimePage.locator('.m8-home .track-card[data-track-id="mountain"]');
-  assert.equal(await mountainHomeCard.getAttribute('data-trophy-locked'), 'false',
-    'The isolated TURN LAB profile must expose its MOUNTAIN experiment without production trophies');
-  assert.notEqual(await mountainHomeCard.getAttribute('aria-disabled'), 'true');
-  assert.equal(await runtimePage.locator('html').getAttribute('data-turn-lab-mountain-access'), 'unlocked');
-  await runtimePage.screenshot({ path: path.join(outputDir, 'runtime-shell.png'), fullPage: true });
-  await runtimePage.evaluate(() => {
-    globalThis.__mountainLongChoice = globalThis.__turnChooseTrack();
+
+  const homeCard = page.locator('.m8-home .track-card[data-track-id="mountain"]');
+  assert.match(await homeCard.textContent(), /Badlands/i);
+  assert.equal(await homeCard.getAttribute('data-trophy-locked'), 'false');
+  assert.equal(await page.locator('html').getAttribute('data-turn-lab'), 'badlands');
+  assert.equal(await page.locator('html').getAttribute('data-turn-lab-experiment-access'), 'unlocked');
+  await page.screenshot({ path: path.join(outputDir, 'badlands-home.png'), fullPage: true });
+
+  await page.evaluate(() => {
+    globalThis.__badlandsChoice = globalThis.__turnChooseTrack();
     return true;
   });
-  await runtimePage.locator('.track-select.is-visible .track-card[data-track-id="mountain"]').click();
-  await runtimePage.locator('.track-select-continue').click();
-  await runtimePage.waitForFunction(
+  await page.locator('.track-select.is-visible .track-card[data-track-id="mountain"]').click();
+  await page.locator('.track-select-continue').click();
+
+  await page.waitForFunction(
     () => globalThis.__turnRuntime?.trackId === 'mountain'
-      && globalThis.__turnRuntime?.activeWorld?.userData?.turnMountainLongExtension,
+      && globalThis.__turnRuntime?.activeWorld?.userData?.turnBadlands,
     null,
     { timeout: 90_000 }
   );
-  runtimeMetrics = await runtimePage.evaluate(async () => {
+
+  metrics = await page.evaluate(async () => {
     const runtime = globalThis.__turnRuntime;
-    await runtime.activeWorld.ready;
+    await Promise.resolve(runtime.activeWorld?.ready);
     const resources = performance.getEntriesByType('resource').map((entry) => new URL(entry.name).pathname);
-    const bounds = runtime.samples.reduce((result, sample) => ({
-      minX: Math.min(result.minX, sample.point.x),
-      maxX: Math.max(result.maxX, sample.point.x),
-      minZ: Math.min(result.minZ, sample.point.z),
-      maxZ: Math.max(result.maxZ, sample.point.z)
-    }), { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity });
-    const labSampling = runtime.activeWorld.userData.turnMountainLabSampling;
-    const productionSampling = runtime.activeWorld.userData.turnMountainSampling;
-    const sampling = labSampling || (productionSampling ? {
-      runtimeSamples: productionSampling.runtimeSamples,
-      productionWorldSamples: productionSampling.baseWorldSamples
-    } : null);
     return {
       trackId: runtime.trackId,
+      trackName: runtime.trackDefinition?.name || runtime.definition?.name || null,
       sampleCount: runtime.samples.length,
-      bounds,
-      sampling,
-      extension: runtime.activeWorld.userData.turnMountainLongExtension,
+      trackLength: runtime.trackLength,
+      badlands: runtime.activeWorld.userData.turnBadlands,
       labResources: resources.filter((pathname) => pathname.startsWith('/turn-lab/'))
     };
   });
+
+  await page.screenshot({ path: path.join(outputDir, 'badlands-active.png'), fullPage: true });
 } finally {
   await browser.close();
 }
 
 await fs.writeFile(
   path.join(outputDir, 'metrics.json'),
-  `${JSON.stringify({ metrics, runtimeMetrics, browserErrors }, null, 2)}\n`
+  `${JSON.stringify({ metrics, browserErrors }, null, 2)}\n`
 );
 
-assert.deepEqual(browserErrors, [], `Browser-rendered long MOUNTAIN produced errors:\n${browserErrors.join('\n')}`);
-assert.equal(metrics.assetsReady, true);
-assert.deepEqual(metrics.productionAssetErrors, []);
-assert.deepEqual(metrics.r4AssetErrors, []);
-assert.deepEqual(metrics.r5AssetErrors, []);
-assert.deepEqual(metrics.r6AssetErrors, []);
-assert.deepEqual(metrics.bridgeAssetErrors, [], 'All three supplied bridge-kit assets must load');
-assert.equal(metrics.routeSamples, 2160);
-assert.ok(metrics.routeLength > 3750 && metrics.routeLength < 3950);
-assert.equal(metrics.runtimeSamples, 2160);
-assert.equal(metrics.productionWorldSamples, 1080);
-assert.equal(metrics.bridgeDeckModules, 6);
-assert.equal(metrics.bridgeRailModules, 11);
-assert.equal(metrics.bridgePillars, 6);
-assert.equal(metrics.bridgeAbutments, 4);
-assert.equal(metrics.bridgeEntryRailLength, 20.5);
-assert.equal(metrics.bridgeOpenLeftEntry, true);
-assert.equal(metrics.tunnels, 1);
-assert.equal(metrics.tunnelPortals, 2);
-assert.equal(metrics.removedMountainMeshes, 1);
-assert.ok(metrics.tunnelSceneryTreesRemoved >= 1 && metrics.tunnelSceneryTreesRemoved <= 12,
-  `Expected only tunnel-intruding spruce instances to be compacted, got ${metrics.tunnelSceneryTreesRemoved}`);
-assert.equal(metrics.eastPeakMeshes, 0, 'The retired post-bridge tunnel mountain must be absent');
-assert.equal(metrics.carvedMountainMeshes, 1);
-assert.equal(metrics.carvedTunnelPeaks, 1);
-assert.equal(metrics.relocatedTunnelMountainMeshes, 1);
-assert.ok(metrics.tunnelMountainRelocationDistance > 70 && metrics.tunnelMountainRelocationDistance < 71,
-  `The LAB tunnel peak relocation drifted: ${metrics.tunnelMountainRelocationDistance}`);
-assert.ok(metrics.carvedMountainTriangles > 0 && metrics.carvedMountainTriangles <= 1800,
-  `The one-time camera-safe tunnel cut removed an unexpected triangle count: ${metrics.carvedMountainTriangles}`);
-assert.ok(
-  metrics.carvedMountainRenderedTriangles >= 19000
-    && metrics.carvedMountainRenderedTriangles <= 21000,
-  `The retained tunnel peak exceeded its static triangle budget: ${metrics.carvedMountainRenderedTriangles}`
-);
-assert.ok(metrics.tunnelLiningTriangles >= 120 && metrics.tunnelLiningTriangles <= 360,
-  `Tunnel lining should stay a modest batched mesh, got ${metrics.tunnelLiningTriangles} triangles`);
-assert.equal(metrics.tunnelPortalArches, 2);
-assert.equal(metrics.tunnelPortalRetainingReturns, 0,
-  'Radial surface-aligned portals must not need asymmetric retaining tongues');
-assert.equal(metrics.tunnelPortalTriangles, 224,
-  'Both slope-conforming collars must remain in one compact batched mesh');
-assert.ok(metrics.tunnelPortalMaximumYawError < 0.75,
-  `Portal plane is not perpendicular to the mountain radius: ${metrics.tunnelPortalMaximumYawError}°`);
-assert.ok(metrics.tunnelPortalSlopeDegrees > 45 && metrics.tunnelPortalSlopeDegrees < 47,
-  `Portal pitch does not match the mountainside: ${metrics.tunnelPortalSlopeDegrees}°`);
-assert.ok(metrics.tunnelPortalFrontLean > 25 && metrics.tunnelPortalFrontLean < 27,
-  `Portal face does not lean into the cone from foot to crown: ${metrics.tunnelPortalFrontLean} m`);
-assert.equal(metrics.tunnelPortalSurfaceAligned, true);
-assert.equal(metrics.tunnelPortalBackInset, 1.6);
-assert.equal(metrics.tunnelPortalSurfaceOffset, 0.65);
-assert.equal(metrics.tunnelPortalRocks, 8);
-assert.equal(metrics.tunnelPortalRockColor, 0x7d878d);
-assert.equal(metrics.tunnelPortalRockEmissive, 0x30383d);
-assert.equal(metrics.tunnelPortalRockEmissiveIntensity, 0.42);
-assert.equal(metrics.tunnelPortalRocksReceiveShadow, false);
-assert.ok(metrics.tunnelReflectors >= 12 && metrics.tunnelReflectors <= 24);
-assert.equal(metrics.tunnelPortalRadius, 99);
-assert.equal(metrics.tunnelPortalApertureMargin, 3);
-assert.equal(metrics.tunnelPortalApertureHeightMargin, 3);
-assert.equal(metrics.tunnelPortalCarveProfile, 'arched');
-assert.equal(metrics.tunnelCarveHalfWidth, 34);
-assert.equal(metrics.tunnelCarveClearHeight, 23);
-assert.equal(metrics.lowerTerrainVertices, 2755);
-assert.equal(metrics.lowerTerrainTriangles, 5264);
-assert.equal(metrics.lowerVillageHouses, 8);
-assert.ok(metrics.maximumHouseGroundDelta <= 0.06);
-assert.equal(metrics.cheapStreetlights, 8);
-assert.ok(metrics.forestTrees >= 20, `Expected a substantial occluding forest, got ${metrics.forestTrees}`);
-assert.equal(metrics.viewScreens, 3);
-assert.ok(metrics.addedDrawCalls > 0 && metrics.addedDrawCalls <= 24,
-  `The extension exceeded its draw-call budget: ${metrics.addedDrawCalls}`);
-assert.equal(metrics.dynamicPointLightsAdded, 0);
-assert.equal(metrics.addedShadowCasters, 0);
-assert.equal(metrics.extensionLights, 0);
-assert.equal(metrics.extensionShadowCasters, 0);
-assert.ok(metrics.instancedMeshes >= 10);
-assert.equal(metrics.roadSurfaces, 1);
-assert.equal(metrics.roadbedWalls, 2);
-assert.equal(metrics.roadbedUndersides, 1);
-assert.equal(metrics.deepFoundations, 2);
-
-assert.equal(runtimeMetrics.trackId, 'mountain');
-assert.equal(runtimeMetrics.sampleCount, 2160, 'The minimap/physics runtime must receive the long route sample count');
-assert.ok(runtimeMetrics.sampling, 'The runtime world must expose either LAB or promoted-production sampling diagnostics');
-assert.equal(runtimeMetrics.sampling.runtimeSamples, 2160);
-assert.equal(runtimeMetrics.sampling.productionWorldSamples, 1080);
-assert.equal(runtimeMetrics.extension.bridgeDeckModules, 6);
-assert.equal(runtimeMetrics.extension.bridgeEntryRailLength, 20.5);
-assert.equal(runtimeMetrics.extension.bridgeOpenLeftEntry, true);
-assert.equal(runtimeMetrics.extension.tunnels, 1);
-assert.equal(runtimeMetrics.extension.removedMountainMeshes, 1);
-assert.equal(runtimeMetrics.extension.tunnelSceneryTreesRemoved, metrics.tunnelSceneryTreesRemoved);
-assert.equal(runtimeMetrics.extension.carvedMountainMeshes, 1);
-assert.equal(runtimeMetrics.extension.relocatedTunnelMountainMeshes, 1);
-assert.equal(
-  runtimeMetrics.extension.tunnelMountainRelocationDistance,
-  metrics.tunnelMountainRelocationDistance
-);
-assert.equal(runtimeMetrics.extension.carvedMountainTriangles, metrics.carvedMountainTriangles);
-assert.equal(
-  runtimeMetrics.extension.carvedMountainRenderedTriangles,
-  metrics.carvedMountainRenderedTriangles
-);
-assert.equal(runtimeMetrics.extension.tunnelPortalSurfaceAligned, true);
-assert.equal(
-  runtimeMetrics.extension.tunnelPortalMaximumYawError,
-  metrics.tunnelPortalMaximumYawError
-);
-assert.ok(runtimeMetrics.bounds.minZ < -370 && runtimeMetrics.bounds.maxZ > 190);
-// Pace notes are imported only when countdown/race guidance starts; their LAB
-// mapping and long-route semantics are covered by the static contract above.
+assert.deepEqual(browserErrors, [], `TURN LAB BADLANDS produced browser errors:\n${browserErrors.join('\n')}`);
+assert.equal(metrics.trackId, 'mountain');
+assert.equal(metrics.sampleCount, 1440);
+assert.ok(metrics.trackLength > 1500 && metrics.trackLength < 1750);
+assert.equal(metrics.badlands.version, 'badlands-r1');
+assert.equal(metrics.badlands.proceduralWorld, true);
+assert.equal(metrics.badlands.solarPanels, 30);
+assert.equal(metrics.badlands.telemetryMasts, 4);
+assert.equal(metrics.badlands.dynamicLights, 0);
+assert.equal(metrics.badlands.shadowCasters, 0);
 for (const resource of [
   '/turn-lab/tracks/definitions.js',
   '/turn-lab/tracks/mountain-layout.js',
-  '/turn-lab/race/mountain-lap-system.js'
+  '/turn-lab/tracks/registry.js',
+  '/turn-lab/tracks/badlands-world.js'
 ]) {
-  assert.ok(runtimeMetrics.labResources.includes(resource), `Scoped runtime did not load ${resource}`);
+  assert.ok(metrics.labResources.includes(resource), `Scoped runtime did not load ${resource}`);
 }
 
-console.log('TURN LAB MOUNTAIN long-course browser visual/runtime smoke passed:', JSON.stringify({
-  routeLength: metrics.routeLength,
-  addedDrawCalls: metrics.addedDrawCalls,
-  forestTrees: metrics.forestTrees,
-  sampleCount: runtimeMetrics.sampleCount
+console.log('TURN LAB BADLANDS browser/runtime smoke passed:', JSON.stringify({
+  trackLength: metrics.trackLength,
+  sampleCount: metrics.sampleCount,
+  world: metrics.badlands.version
 }));
