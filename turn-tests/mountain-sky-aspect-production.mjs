@@ -13,6 +13,10 @@ assert.match(skySource, /const SKY_PLANE_ASPECT = 2/,
   'The shared celestial plane must retain the established overscan proportions');
 assert.match(skySource, /const SKY_ROLL_OVERSCAN = 1\.06/,
   'The celestial plane must include a small safety margin around the rolled viewport diagonal');
+assert.match(skySource, /mountain:[\s\S]*starStrength:\s*1\.00/,
+  'MOUNTAIN stars must retain the brighter r285 treatment');
+assert.match(skySource, /'midnight-city':[\s\S]*starStrength:\s*0\.56/,
+  'MIDNIGHT CITY stars must retain the brighter but restrained r285 treatment');
 assert.match(skySource, /Math\.hypot\(visibleWidth, visibleHeight\) \* SKY_ROLL_OVERSCAN/,
   'Sky coverage must use the viewport diagonal so camera roll cannot expose the scene background');
 assert.match(skySource, /uVisiblePlaneScale/,
