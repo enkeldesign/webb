@@ -128,7 +128,7 @@ assert.ok(
   'LAB must declare its narrow MOUNTAIN module scope after the production import graph and before runtime starts'
 );
 assert.doesNotMatch(labIndex, /roadtrip-world|portrait-play|portrait-centered-pad|build-a-car/i,
-  'The MOUNTAIN-only LAB shell must not activate retired experiments');
+  'The active LAB shell must not activate retired experiments');
 assert.doesNotMatch(labIndex, /\/turn-lab\/viewport-diagnostics\.js/,
   'Retired viewport recording must not run automatically in the revived general-purpose LAB shell');
 
@@ -148,8 +148,8 @@ assert.doesNotMatch(labBootstrap, /seed|COPY_ONCE|turn-personal-rivals/,
   'The isolated LAB must not seed or modify production TURN save data');
 assert.match(labBootstrap, /__turnLaunchReady/,
   'LAB must preserve the production startup gate contract');
-assert.match(labBootstrap, /dataset\.turnLab = 'mountain-long-course'/,
-  'The LAB shell must identify the active long-course MOUNTAIN experiment');
+assert.match(labBootstrap, /dataset\\.turnLab = 'badlands'/,
+  'The LAB shell must identify the active BADLANDS experiment');
 assert.doesNotMatch(labBootstrap, /viewport-repair-r7\.js/,
   'The retired viewport repair watchdog must not run automatically in the revived LAB shell');
 
