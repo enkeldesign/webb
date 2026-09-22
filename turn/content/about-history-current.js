@@ -993,11 +993,17 @@ Object.freeze({
     Object.freeze(['1.21.28 r283', 'Moves the earned Trophy Road check fully inside its reward card and makes it substantially larger, while locked rewards keep the smaller outside-corner lock silhouette.']),
     Object.freeze(['1.21.29 r284', 'Makes the earned Trophy Road check ring transparent so each reward category colour continues through the badge while preserving the large inset silhouette.'])
   ])
+}),
+Object.freeze({
+  date: '22 September',
+  entries: Object.freeze([
+    Object.freeze(['1.21.30 r285', 'Makes the procedural stars a little more visible on MOUNTAIN and MIDNIGHT CITY by increasing brightness without changing star size, density or sky motion.'])
+  ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.29',
-  build: '2026.09.21-r284',
-  note: 'TURN 1.21.29 lets each earned Trophy Road reward colour show through its large inset check ring while keeping the earned/locked silhouette distinction.'
+  version: '1.21.30',
+  build: '2026.09.22-r285',
+  note: 'TURN 1.21.30 makes the shared procedural night-sky stars slightly more visible while preserving their size, density and stable world-locked treatment.'
 });
