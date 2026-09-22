@@ -79,8 +79,14 @@ try {
         return total + sample.point.distanceTo(runtime.samples[index - 1].point);
       }, runtime.samples.at(-1).point.distanceTo(runtime.samples[0].point)),
       deadCanyon: runtime.activeWorld.userData.turnDeadCanyon,
-      labResources: resources.filter((pathname) => pathname.startsWith('/turn-lab/')),
-      retroObjResources: resources.filter((pathname) => pathname.includes('/turn-lab/assets/kenney/retro-urban/') && pathname.endsWith('.obj'))
+      retroUrbanSceneObjects: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon Retro Urban')
+      ).length,
+      hasEasternEscarpment: Boolean(
+        runtime.activeWorld.getObjectByName('Dead Canyon eastern Grand Canyon escarpment')
+      ),
+      hasNeedleBases: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon needle bases')),
+      labResources: resources.filter((pathname) => pathname.startsWith('/turn-lab/'))
     };
   });
 
@@ -112,13 +118,15 @@ assert.ok(metrics.deadCanyon.retroUrbanInstances >= 30);
 assert.deepEqual(metrics.deadCanyon.retroUrbanErrors, []);
 assert.equal(metrics.deadCanyon.dynamicLights, 0);
 assert.equal(metrics.deadCanyon.shadowCasters, 0);
-assert.equal(metrics.retroObjResources.length, 5);
+assert.ok(metrics.retroUrbanSceneObjects >= 36,
+  `Expected loaded Retro Urban scene objects, got ${metrics.retroUrbanSceneObjects}`);
+assert.equal(metrics.hasEasternEscarpment, true);
+assert.equal(metrics.hasNeedleBases, true);
 
 for (const resource of [
   '/turn-lab/tracks/definitions.js',
   '/turn-lab/tracks/mountain-layout.js',
-  '/turn-lab/tracks/registry.js',
-  '/turn-lab/tracks/dead-canyon-world.js'
+  '/turn-lab/tracks/registry.js'
 ]) {
   assert.ok(metrics.labResources.includes(resource), `Scoped runtime did not load ${resource}`);
 }
