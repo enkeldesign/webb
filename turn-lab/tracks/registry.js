@@ -1,6 +1,6 @@
 // TURN LAB registry overlay. Production owns every track runtime except the
 // internal MOUNTAIN slot, which LAB repurposes as DEAD CANYON.
-import * as production from '/turn/tracks/registry.js?lab-base=dead-canyon-r3';
+import * as production from '/turn/tracks/registry.js?lab-base=dead-canyon-r4';
 
 export const TRACK_RUNTIME_REGISTRY = Object.freeze(production.TRACK_RUNTIME_REGISTRY.map((entry) => {
   if (entry.id !== 'mountain') return entry;
