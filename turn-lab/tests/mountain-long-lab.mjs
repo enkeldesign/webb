@@ -14,7 +14,6 @@ const RETRO_ASSETS = Object.freeze([
   'wall-broken-type-a.obj',
   'scaffolding-structure.obj',
   'truck-green-cargo.obj',
-  'detail-barrier-strong-damaged.obj',
   'tree-park-large.obj',
   'roof-metal-poles.obj',
   'roof-metal-type-a.obj'
@@ -29,6 +28,7 @@ const [
   labWorld,
   labPaceNotes,
   labIntroCamera,
+  productionPacePriority,
   labManifest,
   retroLicense,
   ...retroAssetSources
@@ -41,6 +41,7 @@ const [
   readText('turn-lab/tracks/dead-canyon-world.js'),
   readText('turn-lab/tracks/pace-notes.js'),
   readText('turn-lab/render/track-intro-camera.js'),
+  readText('turn/audio/pace-note-priority.js'),
   readText('turn-lab/site.webmanifest'),
   readText('turn-lab/assets/kenney/retro-urban/LICENSE.txt'),
   ...RETRO_ASSETS.map((name) => readText(`turn-lab/assets/kenney/retro-urban/${name}`))
@@ -110,6 +111,9 @@ assert.match(labRegistry, /\/turn-lab\/tracks\/dead-canyon-world\.js/);
 assert.match(labRegistry, /entry\.id !== 'mountain'/);
 
 assert.match(labWorld, /world\.userData\.turnDeadCanyon/);
+assert.match(labWorld, /version: 'dead-canyon-polish'/);
+assert.doesNotMatch(labWorld, /makeDarkTunnel|dying tunnel bulb|tunnelMountainCladding/,
+  'The #972/#973 tunnel experiment must stay rolled back');
 assert.match(labWorld, /easternEscarpmentHeight: 220/);
 assert.match(labWorld, /cliffBands: 4/);
 assert.match(labWorld, /cliffSegmentsPerBand: 16/);
@@ -127,6 +131,14 @@ assert.match(labWorld, /makeTerrainSkirts/);
 assert.match(labWorld, /makeCanyonOverhangs/);
 assert.match(labWorld, /makeDeadCanyonLandmark/);
 assert.match(labWorld, /landmark: 'DEAD CANYON CROWN'/);
+assert.match(labWorld, /yellowStepBarrierCount: 0/);
+assert.match(labWorld, /embeddedWallRocks: true/);
+assert.match(labWorld, /shedRoofSeated: true/);
+assert.match(labWorld, /\[744, 48, -430/);
+assert.match(labWorld, /\[746, 86, -185/);
+assert.match(labWorld, /\[748, 62, 55/);
+assert.match(labWorld, /\[750, 121, 55/);
+assert.match(labWorld, /Math\.max\(1\.5, sy \* 0\.28\)/);
 assert.match(labWorld, /tableMesaCount: 1/);
 assert.match(labWorld, /yellowTreeCount: 6/);
 assert.match(labWorld, /openShedCount: 1/);
@@ -141,6 +153,10 @@ assert.match(labWorld, /SRGBColorSpace/);
 assert.match(labWorld, /alphaTest: 0\.12/);
 assert.match(labWorld, /roof-metal-poles\.obj/);
 assert.match(labWorld, /roof-metal-type-a\.obj/);
+assert.doesNotMatch(labWorld, /detail-barrier-strong-damaged\.obj|templates\.barrier|BARRIER_YELLOW/,
+  'The yellow step-like Retro Urban barriers must be removed everywhere');
+assert.match(labWorld, /new THREE\.Box3\(\)\.setFromObject\(poles\)/);
+assert.match(labWorld, /supportTop - roofBounds\.min\.y - 0\.10/);
 assert.match(labWorld, /placeVisibleRetroLandmarks/);
 assert.match(labWorld, /placeRustTruck/);
 assert.match(labWorld, /placeOpenShed/);
@@ -172,21 +188,43 @@ assert.equal((labPaceNotes.match(/note\('dead-canyon-/g) || []).length, 12);
 assert.match(labPaceNotes, /dead-canyon-chicane/);
 assert.doesNotMatch(labPaceNotes, /dead-canyon-hairpin/);
 assert.match(labPaceNotes, /dead-canyon-north-sweep/);
+assert.match(labPaceNotes, /dead-canyon-chicane'[\s\S]*direction: RIGHT[\s\S]*direction: LEFT[\s\S]*direction: RIGHT/);
+for (const [id, direction] of [
+  ['dead-canyon-2', 'RIGHT'],
+  ['dead-canyon-3', 'RIGHT'],
+  ['dead-canyon-north-sweep', 'RIGHT'],
+  ['dead-canyon-5', 'LEFT'],
+  ['dead-canyon-6', 'RIGHT'],
+  ['dead-canyon-7', 'RIGHT'],
+  ['dead-canyon-8', 'RIGHT'],
+  ['dead-canyon-9', 'LEFT'],
+  ['dead-canyon-10', 'RIGHT'],
+  ['dead-canyon-11', 'RIGHT'],
+  ['dead-canyon-12', 'LEFT']
+]) {
+  assert.match(
+    labPaceNotes,
+    new RegExp(`note\\('${id}'[\\s\\S]*?direction: ${direction}`),
+    `${id} must call the bend in the driver's ${direction.toLowerCase()} ear`
+  );
+}
+assert.match(productionPacePriority, /const pan = direction < 0 \? -0\.96 : 0\.96/);
+assert.match(productionPacePriority, /panner\.pan\.setValueAtTime\(pan, startAt\)/);
 assert.match(labBootstrap, /dataset\.turnLab = 'dead-canyon'/);
 assert.match(labBootstrap, /dataset\.turnLabExperimentAccess/);
 assert.match(labIndex, /TURN LAB · DEAD CANYON/);
 assert.match(labIndex, /Test DEAD CANYON, a long canyon-and-ruins track/);
 assert.match(labManifest, /DEAD CANYON track experiment/);
-assert.match(labIntroCamera, /position: Object\.freeze\(\[80, 165, -590\]\)/);
-assert.match(labIntroCamera, /target: Object\.freeze\(\[465, 35, -80\]\)/);
-assert.match(labIntroCamera, /fov: 60/);
-assert.match(labIntroCamera, /dead-canyon-track-intro-r5/);
+assert.match(labIntroCamera, /position: Object\.freeze\(\[10, 205, -770\]\)/);
+assert.match(labIntroCamera, /target: Object\.freeze\(\[430, 48, -10\]\)/);
+assert.match(labIntroCamera, /fov: 66/);
+assert.match(labIntroCamera, /dead-canyon-track-intro-wide/);
 
 const maxRouteX = Math.max(...DEAD_CANYON_CONTROL_POINTS.map(([x]) => x));
 assert.ok(715 - maxRouteX > 70,
   `Nearest cliff front must stay well clear of the eastern route; clearance was ${(715 - maxRouteX).toFixed(1)} m`);
 
-console.log(`TURN LAB DEAD CANYON r5 contract passed: ${routeLength.toFixed(1)} m, integrated canyon strata, one table mesa, visible Retro Urban scenery and wider intro camera.`);
+console.log(`TURN LAB DEAD CANYON polish contract passed: ${routeLength.toFixed(1)} m, tunnel rolled back, rocks inset, yellow steps removed, shed seated, DBE ears audited and intro widened.`);
 
 async function readText(path) {
   return fs.readFile(new URL(path, REPO_ROOT), 'utf8');
