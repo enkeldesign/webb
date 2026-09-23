@@ -84,6 +84,11 @@ try {
     position: globalThis.__turnRuntime.camera.position.toArray(),
     fov: globalThis.__turnRuntime.camera.fov
   }));
+  await page.evaluate(() => {
+    document.querySelector('.m8-home')?.style.setProperty('display', 'none', 'important');
+    document.querySelector('.track-select')?.style.setProperty('display', 'none', 'important');
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-intro.png'), fullPage: true });
   await page.evaluate(() => globalThis.__deadCanyonVisualIntro);
 
