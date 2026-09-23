@@ -112,6 +112,16 @@ assert.match(labRegistry, /\/turn-lab\/tracks\/dead-canyon-world\.js/);
 assert.match(labRegistry, /entry\.id !== 'mountain'/);
 
 assert.match(labWorld, /world\.userData\.turnDeadCanyon/);
+assert.match(labWorld, /version: 'dead-canyon-r6'/);
+assert.match(labWorld, /darkTunnel: true/);
+assert.match(labWorld, /tunnelSequence: 'RIGHT > LEFT > OUT'/);
+assert.match(labWorld, /makeDarkTunnel/);
+assert.match(labWorld, /installTunnelDarkness/);
+assert.match(labWorld, /new THREE\.PointLight\(0xff9d45/);
+assert.match(labWorld, /TUNNEL_START = 0\.685/);
+assert.match(labWorld, /TUNNEL_CORE_START = 0\.715/);
+assert.match(labWorld, /TUNNEL_CORE_END = 0\.755/);
+assert.match(labWorld, /TUNNEL_END = 0\.790/);
 assert.match(labWorld, /easternEscarpmentHeight: 220/);
 assert.match(labWorld, /cliffBands: 4/);
 assert.match(labWorld, /cliffSegmentsPerBand: 16/);
@@ -154,7 +164,7 @@ assert.match(labWorld, /geologyArchetypes: 4/);
 assert.match(labWorld, /solarPanels: 24/);
 assert.match(labWorld, /OBJLoader/);
 assert.match(labWorld, /Kenney Retro Urban/);
-assert.match(labWorld, /dynamicLights: 0/);
+assert.match(labWorld, /dynamicLights: 1/);
 assert.match(labWorld, /shadowCasters: 0/);
 assert.match(labWorld, /InstancedMesh/);
 assert.doesNotMatch(labWorld, /GLTFLoader/);
@@ -174,6 +184,7 @@ assert.equal((labPaceNotes.match(/note\('dead-canyon-/g) || []).length, 12);
 assert.match(labPaceNotes, /dead-canyon-chicane/);
 assert.doesNotMatch(labPaceNotes, /dead-canyon-hairpin/);
 assert.match(labPaceNotes, /dead-canyon-north-sweep/);
+assert.match(labPaceNotes, /dead-canyon-black-tunnel/);
 assert.match(labBootstrap, /dataset\.turnLab = 'dead-canyon'/);
 assert.match(labBootstrap, /dataset\.turnLabExperimentAccess/);
 assert.match(labIndex, /TURN LAB · DEAD CANYON/);
@@ -188,7 +199,7 @@ const maxRouteX = Math.max(...DEAD_CANYON_CONTROL_POINTS.map(([x]) => x));
 assert.ok(715 - maxRouteX > 70,
   `Nearest cliff front must stay well clear of the eastern route; clearance was ${(715 - maxRouteX).toFixed(1)} m`);
 
-console.log(`TURN LAB DEAD CANYON r5 contract passed: ${routeLength.toFixed(1)} m, integrated canyon strata, one table mesa, visible Retro Urban scenery and wider intro camera.`);
+console.log(`TURN LAB DEAD CANYON r6 contract passed: ${routeLength.toFixed(1)} m, tunnel set piece, maintenance bulb and LAB isolation.`);
 
 async function readText(path) {
   return fs.readFile(new URL(path, REPO_ROOT), 'utf8');
