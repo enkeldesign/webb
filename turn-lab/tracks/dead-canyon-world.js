@@ -706,7 +706,20 @@ async function installRetroUrbanSites(world, samples, trackWidth) {
     source.traverse((object) => {
       if (!object.isMesh) return;
       object.geometry.computeVertexNormals();
-      object.material = material(spec.color, key === 'truck' ? 0.72 : 0.94, true);
+
+      if (key === 'parkTree') {
+        const sourceMaterials = Array.isArray(object.material) ? object.material : [object.material];
+        const mapped = sourceMaterials.map((sourceMaterial) => {
+          const name = String(sourceMaterial?.name || '').toLowerCase();
+          if (name.includes('tree')) return material(0xd99a3b, 1, true);
+          if (name.includes('dirt')) return material(0x6b4435, 1, true);
+          return material(CONCRETE, 1, true);
+        });
+        object.material = Array.isArray(object.material) ? mapped : mapped[0];
+      } else {
+        object.material = material(spec.color, key === 'truck' ? 0.72 : 0.94, true);
+      }
+
       object.castShadow = false;
       object.receiveShadow = false;
     });
