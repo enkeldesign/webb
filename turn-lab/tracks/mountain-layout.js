@@ -89,6 +89,8 @@ export const DEAD_CANYON_LAYOUT_RULES = Object.freeze({
   chicane: true,
   darkTunnel: true,
   tunnelSequence: Object.freeze(['RIGHT', 'LEFT', 'OUT']),
+  darkTunnel: true,
+  tunnelSequence: Object.freeze(['RIGHT', 'LEFT', 'OUT']),
   routeNarrative: Object.freeze([
     'dead-canyon-outpost',
     'south-chicane',
@@ -98,6 +100,7 @@ export const DEAD_CANYON_LAYOUT_RULES = Object.freeze({
     'retro-urban-scrapyard',
     'north-basin',
     'west-wash',
+    'black-tunnel',
     'black-tunnel',
     'ghost-service-stop',
     'south-flat-return'
