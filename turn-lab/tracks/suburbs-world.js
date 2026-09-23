@@ -336,7 +336,7 @@ function makeParkPlayground(world) {
 }
 
 async function installNeighbourhoodAssets(world, samples, trackWidth) {
-  const result = { houseCount: 0, drivewayCount: 0, fenceCount: 0, treeCount: 0, planterCount: 0, errors: [] };
+  const result = { houseCount: 0, drivewayCount: 0, fenceCount: 0, treeCount: 0, planterCount: 0, parkPathCount: 0, errors: [] };
 
   const settled = await Promise.allSettled(HOUSE_SITES.map(async (spec, index) => {
     const frame = frameAtProgress(samples, spec.progress, trackWidth);
