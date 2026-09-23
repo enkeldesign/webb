@@ -149,6 +149,40 @@ try {
   });
 
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-active.png'), fullPage: true });
+
+  await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    const target = runtime.activeWorld.getObjectByName('Dead Canyon Retro Urban open-shed-poles');
+    if (!target) return;
+    for (const selector of [
+      '.race-hud', '.drive-pad', '.drive-pad-shell', '.minimap-shell',
+      '.restart-lap-button', '.lap-result-toast', '.peripheral-hud'
+    ]) {
+      document.querySelectorAll(selector).forEach((node) => node.style.setProperty('display', 'none', 'important'));
+    }
+    runtime.camera.position.set(target.position.x - 82, target.position.y + 42, target.position.z - 92);
+    runtime.camera.up.set(0, 1, 0);
+    runtime.camera.lookAt(target.position.x, target.position.y + 7, target.position.z);
+    runtime.camera.fov = 52;
+    runtime.camera.updateProjectionMatrix();
+    runtime.camera.updateMatrixWorld(true);
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-retro-grove.png'), fullPage: true });
+
+  await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    const target = runtime.activeWorld.getObjectByName('Dead Canyon Retro Urban stone-ruin-2');
+    if (!target) return;
+    runtime.camera.position.set(target.position.x - 72, target.position.y + 34, target.position.z - 78);
+    runtime.camera.up.set(0, 1, 0);
+    runtime.camera.lookAt(target.position.x, target.position.y + 5, target.position.z);
+    runtime.camera.fov = 50;
+    runtime.camera.updateProjectionMatrix();
+    runtime.camera.updateMatrixWorld(true);
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-ruins.png'), fullPage: true });
 } finally {
   await browser.close();
 }
