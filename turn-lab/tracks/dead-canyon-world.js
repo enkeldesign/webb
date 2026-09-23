@@ -22,6 +22,12 @@ const BARRIER_YELLOW = 0xe2b64c;
 const SUN = 0xffb25f;
 const ROAD_HEIGHT = 0.16;
 const RETRO_ROOT = '/turn-lab/assets/kenney/retro-urban/';
+const TUNNEL_START = 0.685;
+const TUNNEL_CORE_START = 0.715;
+const TUNNEL_CORE_END = 0.755;
+const TUNNEL_END = 0.790;
+const TUNNEL_NORMAL_HEMI = 1.05;
+const TUNNEL_NORMAL_SUN = 1.18;
 
 const RETRO_ASSETS = Object.freeze({
   garage: Object.freeze({ file: 'wall-a-garage.obj', height: 10, color: CONCRETE }),
@@ -51,6 +57,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
   makeRoadEdgeLines(world, samples, trackWidth);
   makeCenterDashes(world, samples);
   makeStartLine(world, samples, trackWidth);
+  const tunnel = makeDarkTunnel(world, samples, trackWidth);
   makeEasternEscarpment(world);
   makeDistantCanyonSilhouettes(world);
   makeCanyonEdgeBarriers(world, samples, trackWidth);
@@ -63,7 +70,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
   makeSun(world);
 
   const metrics = {
-    version: 'dead-canyon-r5',
+    version: 'dead-canyon-r6',
     proceduralWorld: true,
     routeSamples: samples.length,
     theme: 'golden-hour-canyon-road',
@@ -88,6 +95,15 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
     openShedCount: 1,
     rustTruckCount: 1,
     ruinClusterCount: 1,
+    darkTunnel: true,
+    tunnelStart: TUNNEL_START,
+    tunnelCoreStart: TUNNEL_CORE_START,
+    tunnelCoreEnd: TUNNEL_CORE_END,
+    tunnelEnd: TUNNEL_END,
+    tunnelSequence: 'RIGHT > LEFT > OUT',
+    tunnelModuleCount: tunnel.moduleCount,
+    dyingBulb: true,
+    dyingBulbMaxHz: 0.35,
     needleCount: 0,
     geologyArchetypes: 4,
     solarPanels: 24,
@@ -95,10 +111,11 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
     retroUrbanLoaded: 0,
     retroUrbanInstances: 0,
     retroUrbanErrors: [],
-    dynamicLights: 0,
+    dynamicLights: 1,
     shadowCasters: 0
   };
   world.userData.turnDeadCanyon = metrics;
+  installTunnelDarkness({ world, runtime, tunnel, metrics });
 
   metrics.canyonBarrierCount = world.getObjectByName('Dead Canyon canyon-edge barriers')?.count || 0;
 
@@ -311,6 +328,215 @@ function makeStartLine(world, samples, trackWidth) {
   beam.rotation.y = Math.atan2(sample.tangent.x, sample.tangent.z);
   arch.add(beam);
   world.add(arch);
+}
+
+function makeDarkTunnel(world, samples, trackWidth) {
+  const startIndex = Math.floor(TUNNEL_START * (samples.length - 1));
+  const endIndex = Math.ceil(TUNNEL_END * (samples.length - 1));
+  const coreIndex = Math.round(((TUNNEL_CORE_START + TUNNEL_CORE_END) / 2) * (samples.length - 1));
+  const moduleIndices = [];
+  for (let index = startIndex; index <= endIndex; index += 8) moduleIndices.push(index);
+  if (moduleIndices.at(-1) !== endIndex) moduleIndices.push(endIndex);
+
+  const tunnel = new THREE.Group();
+  tunnel.name = 'Dead Canyon black tunnel';
+
+  const wallMaterial = material(0x100d0c, 1, true);
+  const ceilingMaterial = material(0x0a0909, 1, true);
+  const wallGeometry = new THREE.BoxGeometry(2.8, 12.5, 16);
+  const ceilingGeometry = new THREE.BoxGeometry(44, 2.6, 16);
+  const leftWall = new THREE.InstancedMesh(wallGeometry, wallMaterial, moduleIndices.length);
+  const rightWall = new THREE.InstancedMesh(wallGeometry, wallMaterial, moduleIndices.length);
+  const ceiling = new THREE.InstancedMesh(ceilingGeometry, ceilingMaterial, moduleIndices.length);
+  const dummy = new THREE.Object3D();
+  const halfInterior = 21.3;
+
+  moduleIndices.forEach((sampleIndex, instance) => {
+    const sample = samples[sampleIndex];
+    const yaw = Math.atan2(sample.tangent.x, sample.tangent.z);
+
+    dummy.position.copy(sample.point).addScaledVector(sample.normal, -halfInterior);
+    dummy.position.y += 6.1;
+    dummy.rotation.set(0, yaw, 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    leftWall.setMatrixAt(instance, dummy.matrix);
+
+    dummy.position.copy(sample.point).addScaledVector(sample.normal, halfInterior);
+    dummy.position.y += 6.1;
+    dummy.updateMatrix();
+    rightWall.setMatrixAt(instance, dummy.matrix);
+
+    dummy.position.copy(sample.point);
+    dummy.position.y += 12.1;
+    dummy.updateMatrix();
+    ceiling.setMatrixAt(instance, dummy.matrix);
+  });
+  leftWall.instanceMatrix.needsUpdate = true;
+  rightWall.instanceMatrix.needsUpdate = true;
+  ceiling.instanceMatrix.needsUpdate = true;
+  leftWall.name = 'Dead Canyon tunnel left wall';
+  rightWall.name = 'Dead Canyon tunnel right wall';
+  ceiling.name = 'Dead Canyon tunnel ceiling';
+  leftWall.castShadow = rightWall.castShadow = ceiling.castShadow = false;
+  leftWall.receiveShadow = rightWall.receiveShadow = ceiling.receiveShadow = false;
+  tunnel.add(leftWall, rightWall, ceiling);
+
+  const tunnelSamples = samples.slice(startIndex, endIndex + 1);
+  const darkRoad = makeOpenRibbon(
+    tunnelSamples,
+    -(trackWidth / 2 + 0.5),
+    trackWidth / 2 + 0.5,
+    ROAD_HEIGHT + 0.085
+  );
+  darkRoad.material = new THREE.MeshStandardMaterial({
+    color: 0x050505,
+    roughness: 1,
+    metalness: 0,
+    side: THREE.DoubleSide
+  });
+  darkRoad.name = 'Dead Canyon tunnel unlit asphalt';
+  tunnel.add(darkRoad);
+
+  makeTunnelPortal(tunnel, samples[startIndex], trackWidth, 'entrance');
+  makeTunnelPortal(tunnel, samples[endIndex], trackWidth, 'exit');
+
+  const bulbSample = samples[coreIndex];
+  const fixture = new THREE.Group();
+  fixture.name = 'Dead Canyon dying maintenance bulb fixture';
+  const stem = new THREE.Mesh(
+    new THREE.BoxGeometry(0.28, 2.0, 0.28),
+    material(0x393331, 1, true)
+  );
+  stem.position.copy(bulbSample.point);
+  stem.position.y += 10.7;
+  fixture.add(stem);
+
+  const bulbMaterial = new THREE.MeshBasicMaterial({ color: 0xffb15a, fog: false });
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.46, 10, 7), bulbMaterial);
+  bulb.position.copy(bulbSample.point);
+  bulb.position.y += 9.55;
+  bulb.name = 'Dead Canyon dying maintenance bulb';
+  fixture.add(bulb);
+
+  const bulbLight = new THREE.PointLight(0xff9d45, 0, 30, 2);
+  bulbLight.position.copy(bulb.position);
+  bulbLight.castShadow = false;
+  bulbLight.name = 'Dead Canyon dying bulb light';
+  fixture.add(bulbLight);
+
+  tunnel.add(fixture);
+  world.add(tunnel);
+
+  return Object.freeze({
+    group: tunnel,
+    bulb,
+    bulbLight,
+    bulbMaterial,
+    moduleCount: moduleIndices.length,
+    startIndex,
+    coreIndex,
+    endIndex
+  });
+}
+
+function makeTunnelPortal(tunnel, sample, trackWidth, id) {
+  const group = new THREE.Group();
+  group.name = 'Dead Canyon tunnel ' + id + ' rock portal';
+  const yaw = Math.atan2(sample.tangent.x, sample.tangent.z);
+
+  for (const side of [-1, 1]) {
+    const rock = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(1, 0),
+      material(ROCK_DEEP, 1, true)
+    );
+    rock.position.copy(sample.point)
+      .addScaledVector(sample.normal, side * (trackWidth / 2 + 9));
+    rock.position.y += 5.7;
+    rock.scale.set(8.5, 7.5, 11);
+    rock.rotation.set(0.12 * side, yaw + side * 0.08, 0.18 * side);
+    group.add(rock);
+  }
+
+  const crown = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(1, 0),
+    material(ROCK_DARK, 1, true)
+  );
+  crown.position.copy(sample.point);
+  crown.position.y += 13.1;
+  crown.scale.set(trackWidth / 2 + 9, 4.2, 10.5);
+  crown.rotation.set(0, yaw, 0.05);
+  group.add(crown);
+  tunnel.add(group);
+}
+
+function installTunnelDarkness({ world, runtime, tunnel, metrics }) {
+  if (!runtime?.scene || !runtime?.state || !runtime?.hemi || !runtime?.sun) return;
+
+  const previousBeforeRender = runtime.scene.onBeforeRender;
+  runtime.scene.onBeforeRender = function deadCanyonTunnelFrame(renderer, scene, camera, target) {
+    previousBeforeRender?.call(this, renderer, scene, camera, target);
+    if (runtime.activeWorld !== world || world.visible === false) {
+      tunnel.bulbLight.intensity = 0;
+      return;
+    }
+
+    const progress = Number(runtime.state.progress) || 0;
+    const darkness = runtime.state.running ? tunnelDarknessAt(progress) : 0;
+    runtime.hemi.intensity = THREE.MathUtils.lerp(TUNNEL_NORMAL_HEMI, 0.008, darkness);
+    runtime.sun.intensity = THREE.MathUtils.lerp(TUNNEL_NORMAL_SUN, 0.004, darkness);
+
+    const nowSeconds = performance.now() * 0.001;
+    const slowPulse = 0.5 + 0.5 * Math.sin(nowSeconds * 1.05);
+    const dyingPulse = 0.5 + 0.5 * Math.sin(nowSeconds * 0.47 + 1.6);
+    const bulbStrength = darkness > 0.62
+      ? darkness * (0.45 + 4.8 * slowPulse * slowPulse * (0.28 + 0.72 * dyingPulse))
+      : 0;
+    tunnel.bulbLight.intensity = bulbStrength;
+    const glow = THREE.MathUtils.clamp(0.42 + bulbStrength / 7, 0.42, 1);
+    tunnel.bulbMaterial.color.setRGB(1, 0.42 + glow * 0.25, 0.16 + glow * 0.12);
+
+    metrics.tunnelDarknessCurrent = darkness;
+    metrics.bulbIntensityCurrent = bulbStrength;
+  };
+}
+
+function tunnelDarknessAt(progress) {
+  if (progress <= TUNNEL_START || progress >= TUNNEL_END) return 0;
+  if (progress >= TUNNEL_CORE_START && progress <= TUNNEL_CORE_END) return 1;
+  if (progress < TUNNEL_CORE_START) {
+    return smoothstep((progress - TUNNEL_START) / (TUNNEL_CORE_START - TUNNEL_START));
+  }
+  return smoothstep((TUNNEL_END - progress) / (TUNNEL_END - TUNNEL_CORE_END));
+}
+
+function smoothstep(value) {
+  const t = THREE.MathUtils.clamp(value, 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+function makeOpenRibbon(samples, leftOffset, rightOffset, lift = 0) {
+  const positions = [];
+  const indices = [];
+  for (const sample of samples) {
+    const left = sample.point.clone().addScaledVector(sample.normal, leftOffset);
+    const right = sample.point.clone().addScaledVector(sample.normal, rightOffset);
+    left.y = sample.point.y + lift;
+    right.y = sample.point.y + lift;
+    positions.push(left.x, left.y, left.z, right.x, right.y, right.z);
+  }
+  for (let index = 0; index < samples.length - 1; index += 1) {
+    const a = index * 2;
+    const b = a + 1;
+    const c = a + 2;
+    const d = a + 3;
+    indices.push(a, c, b, b, c, d);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return new THREE.Mesh(geometry, material(0xffffff));
 }
 
 function makeEasternEscarpment(world) {
