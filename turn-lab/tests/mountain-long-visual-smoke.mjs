@@ -109,11 +109,15 @@ try {
         return total + sample.point.distanceTo(runtime.samples[index - 1].point);
       }, runtime.samples.at(-1).point.distanceTo(runtime.samples[0].point)),
       suburbs: world.userData.turnSuburbs,
-      houses: children.filter((object) => object.name?.startsWith('Suburbs Kenney house ')).length,
+      houses: children.filter((object) =>
+        object.name?.startsWith('Suburbs Kenney house ')
+        || object.name?.startsWith('Suburbs Kenney back-row house ')
+      ).length,
       driveways: children.filter((object) => object.name?.startsWith('Suburbs Kenney driveway ')).length,
       fences: children.filter((object) => object.name?.startsWith('Suburbs Kenney garden fence ')).length,
       trees: children.filter((object) => object.name?.includes('Suburbs Kenney') && object.name?.includes('tree ')).length,
       planters: children.filter((object) => object.name?.startsWith('Suburbs Kenney flower planter ')).length,
+      parkPaths: children.filter((object) => object.name?.startsWith('Suburbs Kenney park path ')).length,
       parkedCars: children.filter((object) => object.name?.startsWith('Suburbs parked ')).length,
       hasLake: Boolean(world.getObjectByName('Suburbs summer lake')),
       hasDock: Boolean(world.getObjectByName('Suburbs wooden dock')),
@@ -168,11 +172,13 @@ assert.equal(metrics.suburbs.version, 'suburbs-summer');
 assert.equal(metrics.suburbs.easyTrack, true);
 assert.equal(metrics.suburbs.flatCourse, true);
 assert.equal(metrics.suburbs.kenneyKit, 'City Kit Suburban 2.0');
-assert.ok(metrics.houses >= 14, 'Expected a dense neighbourhood, got ' + metrics.houses + ' houses');
+assert.ok(metrics.houses >= 22, 'Expected a dense two-row neighbourhood, got ' + metrics.houses + ' houses');
 assert.ok(metrics.driveways >= 14, 'Expected driveways for most houses, got ' + metrics.driveways);
 assert.ok(metrics.fences >= 16, 'Expected several fenced gardens, got ' + metrics.fences);
 assert.ok(metrics.trees >= 20, 'Expected a leafy summer neighbourhood, got ' + metrics.trees + ' trees');
 assert.equal(metrics.planters, 6);
+assert.equal(metrics.parkPaths, 6);
+assert.equal(metrics.suburbs.parkPathCount, 6);
 assert.ok(metrics.parkedCars >= 7, 'Expected colourful parked cars, got ' + metrics.parkedCars);
 assert.equal(metrics.hasLake, true);
 assert.equal(metrics.hasDock, true);
@@ -191,6 +197,7 @@ console.log('TURN LAB SUBURBS browser/runtime smoke passed:', JSON.stringify({
   trees: metrics.trees,
   parkedCars: metrics.parkedCars,
   planters: metrics.planters,
+  parkPaths: metrics.parkPaths,
   lake: metrics.hasLake,
   dock: metrics.hasDock,
   boat: metrics.hasBoat
