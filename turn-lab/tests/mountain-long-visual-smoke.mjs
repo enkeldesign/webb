@@ -196,8 +196,8 @@ await fs.writeFile(
 );
 
 assert.deepEqual(browserErrors, [], `TURN LAB DEAD CANYON produced browser errors:\n${browserErrors.join('\n')}`);
-assert.deepEqual(introCamera.position.map((value) => Math.round(value)), [20, 205, -720]);
-assert.equal(introCamera.fov, 62);
+assert.deepEqual(introCamera.position.map((value) => Math.round(value)), [65, 175, -650]);
+assert.equal(introCamera.fov, 60);
 assert.equal(metrics.trackId, 'mountain');
 assert.equal(metrics.sampleCount, 2160);
 assert.ok(metrics.trackLength > 3150 && metrics.trackLength < 3350,
