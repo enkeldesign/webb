@@ -1,4 +1,4 @@
-name: TURN LAB DEAD CANYON visual smoke
+name: TURN LAB SUBURBS visual smoke
 
 on:
   pull_request:
@@ -7,13 +7,12 @@ on:
     paths:
       - 'turn-lab/tracks/**'
       - 'turn-lab/race/**'
-      - 'turn-lab/assets/kenney/retro-urban/**'
       - 'turn-lab/mountain-long-visual.html'
       - 'turn-lab/tests/mountain-long-*.mjs'
       - '.github/workflows/turn-lab-mountain-long-visual.yml'
   push:
     branches:
-      - turn-lab/dead-canyon-r1
+      - turn-lab/suburbs-summer
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -35,7 +34,7 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Validate DEAD CANYON topology and performance contract
+      - name: Validate SUBURBS topology and performance contract
         run: node turn-lab/tests/mountain-long-lab.mjs
 
       - name: Install Playwright Chromium
@@ -53,14 +52,14 @@ jobs:
           cat /tmp/turn-lab-mountain-http.log
           exit 1
 
-      - name: Render and validate DEAD CANYON runtime
+      - name: Render and validate SUBURBS runtime
         run: node turn-lab/tests/mountain-long-visual-smoke.mjs
 
-      - name: Upload DEAD CANYON inspection frames
+      - name: Upload SUBURBS inspection frames
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: turn-lab-dead-canyon-visual
-          path: dead-canyon-visual-artifact
+          name: turn-lab-suburbs-visual
+          path: suburbs-visual-artifact
           if-no-files-found: warn
           retention-days: 7
