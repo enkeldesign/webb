@@ -27,7 +27,7 @@ Production MOUNTAIN's intro camera intentionally looks upward to frame its moon.
 
 ## Retro Urban Kit
 
-DEAD CANYON uses a CC0 subset of Kenney's Retro Urban Kit 2.0. r5 adds the actual park-tree geometry in golden yellow plus the kit's open metal roof/poles as a wall-less shed. Existing kit geometry supplies a rust-rematerialed abandoned truck, broken-wall ruins and roadside barriers. TURN still supplies lightweight materials; no dynamic scenery lights or shadow casters are added.
+DEAD CANYON uses a CC0 subset of Kenney's Retro Urban Kit 2.0. r5 adds the actual park-tree geometry **with its original autumn `treeA.png` foliage texture** plus the kit's open metal roof/poles as a wall-less shed. Existing kit geometry supplies a rust-rematerialed abandoned truck, broken-wall ruins and roadside barriers. TURN supplies lightweight materials to the non-foliage surfaces; no dynamic scenery lights or shadow casters are added.
 
 See `turn-lab/assets/kenney/retro-urban/LICENSE.txt`.
 
