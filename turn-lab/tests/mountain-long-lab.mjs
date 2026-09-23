@@ -135,6 +135,10 @@ assert.match(labWorld, /ruinClusterCount: 1/);
 assert.doesNotMatch(labWorld, /new THREE\.BoxGeometry\(5, 170, 210\)/,
   'The artificial dark backing block behind DEAD CANYON CROWN must stay removed');
 assert.match(labWorld, /tree-park-large\.obj/);
+assert.match(labWorld, /treeA\.png/);
+assert.match(labWorld, /TextureLoader/);
+assert.match(labWorld, /SRGBColorSpace/);
+assert.match(labWorld, /alphaTest: 0\.12/);
 assert.match(labWorld, /roof-metal-poles\.obj/);
 assert.match(labWorld, /roof-metal-type-a\.obj/);
 assert.match(labWorld, /placeVisibleRetroLandmarks/);
