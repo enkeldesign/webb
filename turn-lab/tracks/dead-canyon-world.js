@@ -709,8 +709,8 @@ async function installRetroUrbanSites(world, samples, trackWidth) {
     });
   if (treeTexture) {
     treeTexture.colorSpace = THREE.SRGBColorSpace;
-    treeTexture.wrapS = THREE.ClampToEdgeWrapping;
-    treeTexture.wrapT = THREE.ClampToEdgeWrapping;
+    treeTexture.wrapS = THREE.RepeatWrapping;
+    treeTexture.wrapT = THREE.RepeatWrapping;
   }
 
   const entries = await Promise.all(Object.entries(RETRO_ASSETS).map(async ([key, spec]) => {
