@@ -7,9 +7,9 @@ const INTRO_CAMERA_PRESETS = Object.freeze({
   mountain: Object.freeze({
     // DEAD CANYON: look along the southern/eastern road toward the canyon wall
     // instead of inheriting MOUNTAIN's sky-heavy moon composition.
-    position: Object.freeze([80, 165, -590]),
-    target: Object.freeze([465, 35, -80]),
-    fov: 60
+    position: Object.freeze([10, 205, -770]),
+    target: Object.freeze([430, 48, -10]),
+    fov: 66
   })
 });
 
@@ -58,7 +58,7 @@ export function installTrackIntroCamera({ environment = globalThis } = {}) {
   };
 
   runtime.trackIntroCamera = Object.freeze({
-    route: 'dead-canyon-track-intro-r5',
+    route: 'dead-canyon-track-intro-wide',
     presets: Object.freeze(Object.keys(INTRO_CAMERA_PRESETS))
   });
   return true;
