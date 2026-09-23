@@ -175,7 +175,7 @@ assert.match(labIndex, /Test DEAD CANYON, a long canyon-and-ruins track/);
 assert.match(labManifest, /DEAD CANYON track experiment/);
 assert.match(labIntroCamera, /position: Object\.freeze\(\[20, 205, -720\]\)/);
 assert.match(labIntroCamera, /target: Object\.freeze\(\[515, 100, -30\]\)/);
-assert.match(labIntroCamera, /fov: 62/);
+assert.match(labIntroCamera, /fov: 60/);
 assert.match(labIntroCamera, /dead-canyon-track-intro-r5/);
 
 const maxRouteX = Math.max(...DEAD_CANYON_CONTROL_POINTS.map(([x]) => x));
