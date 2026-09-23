@@ -5,13 +5,13 @@ const ROAD = 0x343238;
 const ROAD_EDGE = 0xffd7a0;
 const ROAD_LINE = 0xffb04a;
 const SHOULDER = 0xa95f42;
-const SAND = 0xb76f4f;
-const SAND_LIGHT = 0xd58a61;
-const SAND_DARK = 0x713b36;
-const ROCK = 0x8f4c3f;
-const ROCK_LIGHT = 0xc87554;
-const ROCK_DARK = 0x56313a;
-const ROCK_DEEP = 0x3c2530;
+const SAND = 0xc46f4e;
+const SAND_LIGHT = 0xe29a68;
+const SAND_DARK = 0x7a4038;
+const ROCK = 0xa95640;
+const ROCK_LIGHT = 0xd17854;
+const ROCK_DARK = 0x65362f;
+const ROCK_DEEP = 0x472a28;
 const SOLAR = 0x26334d;
 const SOLAR_FRAME = 0xd7b27b;
 const STEEL = 0x615d62;
@@ -31,7 +31,7 @@ const RETRO_ASSETS = Object.freeze({
   barrier: Object.freeze({ file: 'detail-barrier-strong-damaged.obj', height: 2.4, color: BARRIER_YELLOW })
 });
 
-export function installDeadCanyonWorld({ scene, samples, trackWidth = 27 } = {}) {
+export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtime } = {}) {
   if (!scene || !Array.isArray(samples) || samples.length < 16) {
     throw new Error('TURN LAB: Dead Canyon requires a scene and sampled route.');
   }
@@ -48,22 +48,31 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27 } = {})
   makeCenterDashes(world, samples);
   makeStartLine(world, samples, trackWidth);
   makeEasternEscarpment(world);
+  makeDistantCanyonSilhouettes(world);
+  makeCanyonEdgeBarriers(world, samples, trackWidth);
+  makeHairpinLandmark(world);
   makeRockFormations(world);
   makeSolarField(world);
   makeTracksideRocks(world, samples, trackWidth);
   makeSun(world);
 
   const metrics = {
-    version: 'dead-canyon-r2',
+    version: 'dead-canyon-r3',
     proceduralWorld: true,
     routeSamples: samples.length,
-    theme: 'stylised-canyon-retro-urban-dusk',
-    easternEscarpmentHeight: 210,
-    cliffSlabs: 4,
-    cliffSummitBlocks: 6,
-    cliffDepth: 3600,
-    fogFadeNear: 420,
-    fogFadeFar: 1350,
+    theme: 'golden-hour-canyon-road',
+    easternEscarpmentHeight: 220,
+    cliffBands: 4,
+    cliffSegmentsPerBand: 16,
+    cliffFrontX: 715,
+    cliffDepth: 2800,
+    fogFadeNear: 260,
+    fogFadeFar: 760,
+    cameraFar: runtime?.camera?.far ?? null,
+    fogSafetyMargin: Number.isFinite(runtime?.camera?.far) ? runtime.camera.far - 760 : null,
+    distantMesaCount: 12,
+    canyonBarrierCount: 0,
+    hairpinLandmark: true,
     needleCount: 0,
     geologyArchetypes: 4,
     solarPanels: 24,
@@ -75,6 +84,8 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27 } = {})
     shadowCasters: 0
   };
   world.userData.turnDeadCanyon = metrics;
+
+  metrics.canyonBarrierCount = world.getObjectByName('Dead Canyon canyon-edge barriers')?.count || 0;
 
   world.ready = installRetroUrbanSites(world, samples, trackWidth)
     .then((retro) => {
@@ -247,52 +258,187 @@ function makeStartLine(world, samples, trackWidth) {
 }
 
 function makeEasternEscarpment(world) {
-  // Intentionally graphic rather than geological: four enormous, fogged slabs
-  // make one stepped silhouette. Their 3.6 km depth pushes both physical ends
-  // well beyond DEAD CANYON's full fog distance so the wall dissolves into haze
-  // instead of visibly popping in or out as the camera moves.
-  const slabs = [
-    { x: 690, height: 62, width: 72, color: ROCK_DARK },
-    { x: 752, height: 108, width: 78, color: 0x724038 },
-    { x: 824, height: 158, width: 86, color: ROCK },
-    { x: 905, height: 210, width: 96, color: ROCK_LIGHT }
+  // Four huge terraced bands, but each front is built from a handful of broad
+  // flat-shaded facets rather than one perfect cuboid. The nearest front stays
+  // ~80 m east of the route's furthest point so the chase camera cannot enter it.
+  const bands = [
+    { frontX: 715, backX: 785, baseY: 0, topY: 58, color: ROCK_DARK, phase: 0.3 },
+    { frontX: 775, backX: 850, baseY: 55, topY: 108, color: 0x7b4034, phase: 1.2 },
+    { frontX: 840, backX: 925, baseY: 104, topY: 164, color: ROCK, phase: 2.1 },
+    { frontX: 910, backX: 1010, baseY: 160, topY: 220, color: ROCK_LIGHT, phase: 2.8 }
   ];
 
-  slabs.forEach((spec, index) => {
-    const slab = new THREE.Mesh(
-      new THREE.BoxGeometry(spec.width, spec.height, 3600),
-      material(spec.color, 1, true)
-    );
-    slab.position.set(spec.x, spec.height / 2, 0);
-    slab.name = `Dead Canyon eastern cliff slab ${index + 1}`;
-    slab.receiveShadow = false;
-    slab.castShadow = false;
-    world.add(slab);
+  bands.forEach((spec, index) => {
+    const cliff = makeFacetedCliffBand(spec, 16, 2800);
+    cliff.name = `Dead Canyon eastern cliff band ${index + 1}`;
+    cliff.frustumCulled = false;
+    world.add(cliff);
   });
 
-  // Broad cuboid summit shapes are part of the wall silhouette itself. They are
-  // deliberately chunky: no freestanding needles, cones or fine rock detail.
-  const summitSpecs = [
-    { x: 727, z: -560, w: 92, h: 54, d: 220, color: 0x724038 },
-    { x: 803, z: -250, w: 108, h: 72, d: 260, color: ROCK },
-    { x: 876, z: 80, w: 124, h: 86, d: 300, color: ROCK_LIGHT },
-    { x: 798, z: 430, w: 98, h: 58, d: 230, color: ROCK },
-    { x: 872, z: 720, w: 118, h: 76, d: 280, color: ROCK_LIGHT },
-    { x: 746, z: 980, w: 88, h: 48, d: 210, color: 0x724038 }
+  // A few broad skyline blocks are set back on the upper terraces. They read as
+  // mesa tops in silhouette, but never become detached foreground needles.
+  const skyline = [
+    [840, -880, 100, 60, 190, 0x7b4034],
+    [925, -510, 132, 84, 250, ROCK],
+    [970, -70, 160, 104, 290, ROCK_LIGHT],
+    [895, 380, 118, 72, 230, ROCK],
+    [955, 760, 146, 92, 270, ROCK_LIGHT]
   ];
-
-  summitSpecs.forEach((spec, index) => {
-    const baseHeight = spec.x > 850 ? 210 : spec.x > 780 ? 158 : 108;
-    const summit = new THREE.Mesh(
-      new THREE.BoxGeometry(spec.w, spec.h, spec.d),
-      material(spec.color, 1, true)
+  skyline.forEach(([x, z, width, height, depth, color], index) => {
+    const block = new THREE.Mesh(
+      new THREE.CylinderGeometry(width * 0.46, width * 0.56, height, 6, 1, false),
+      material(color, 1, true)
     );
-    summit.position.set(spec.x, baseHeight + spec.h / 2 - 3, spec.z);
-    summit.name = `Dead Canyon integrated cliff summit ${index + 1}`;
-    summit.castShadow = false;
-    summit.receiveShadow = false;
-    world.add(summit);
+    block.position.set(x, 220 + height / 2 - 5, z);
+    block.rotation.y = 0.16 * index;
+    block.name = `Dead Canyon integrated skyline mesa ${index + 1}`;
+    block.castShadow = false;
+    block.receiveShadow = false;
+    block.frustumCulled = false;
+    world.add(block);
   });
+}
+
+function makeFacetedCliffBand(spec, segments, depth) {
+  const positions = [];
+  const indices = [];
+  const halfDepth = depth / 2;
+
+  for (let row = 0; row <= segments; row += 1) {
+    const t = row / segments;
+    const z = THREE.MathUtils.lerp(-halfDepth, halfDepth, t);
+    const frontJitter =
+      Math.sin(row * 1.37 + spec.phase) * 10
+      + Math.sin(row * 0.53 + spec.phase * 2.4) * 7;
+    const topJitter = Math.sin(row * 0.91 + spec.phase) * 4;
+    const frontX = spec.frontX + frontJitter;
+    const topY = spec.topY + topJitter;
+
+    positions.push(
+      frontX, spec.baseY, z,
+      frontX, topY, z,
+      spec.backX, topY + 2, z,
+      spec.backX, spec.baseY, z
+    );
+  }
+
+  for (let row = 0; row < segments; row += 1) {
+    const a = row * 4;
+    const b = (row + 1) * 4;
+    // Front cliff face.
+    indices.push(a, b, a + 1, a + 1, b, b + 1);
+    // Top terrace.
+    indices.push(a + 1, b + 1, a + 2, a + 2, b + 1, b + 2);
+    // Back wall keeps the silhouette closed.
+    indices.push(a + 2, b + 2, a + 3, a + 3, b + 2, b + 3);
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+
+  const mesh = new THREE.Mesh(geometry, material(spec.color, 1, true));
+  mesh.castShadow = false;
+  mesh.receiveShadow = false;
+  return mesh;
+}
+
+function makeDistantCanyonSilhouettes(world) {
+  const sites = [
+    [-690, -520, 120, 54], [-650, -180, 82, 48], [-710, 210, 136, 58],
+    [-620, 520, 96, 52], [-430, 690, 74, 46], [-120, 720, 102, 48],
+    [210, 705, 126, 54], [430, 650, 94, 48], [-370, -700, 88, 48],
+    [-70, -720, 118, 54], [260, -700, 78, 44], [500, -610, 106, 50]
+  ];
+  const mesas = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.68, 1, 1, 6, 1, false),
+    material(0xb96850, 1, true),
+    sites.length
+  );
+  const dummy = new THREE.Object3D();
+  sites.forEach(([x, z, height, radius], index) => {
+    dummy.position.set(x, height * 0.48, z);
+    dummy.scale.set(radius, height * 0.96, radius * (0.72 + (index % 3) * 0.09));
+    dummy.rotation.set(0, index * 0.47, 0);
+    dummy.updateMatrix();
+    mesas.setMatrixAt(index, dummy.matrix);
+  });
+  mesas.instanceMatrix.needsUpdate = true;
+  mesas.frustumCulled = false;
+  mesas.name = 'Dead Canyon distant haze mesas';
+  world.add(mesas);
+}
+
+function makeCanyonEdgeBarriers(world, samples, trackWidth) {
+  const start = Math.floor(samples.length * 0.13);
+  const end = Math.floor(samples.length * 0.33);
+  const step = 18;
+  const entries = [];
+  for (let index = start; index <= end; index += step) {
+    const sample = samples[index];
+    const westSide = sample.normal.x > 0 ? -1 : 1;
+    entries.push({ sample, side: westSide });
+  }
+
+  const barriers = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(4.6, 1.05, 0.7),
+    material(0xe7d6bf, 0.9, true),
+    entries.length
+  );
+  const dummy = new THREE.Object3D();
+  entries.forEach(({ sample, side }, instance) => {
+    dummy.position.copy(sample.point).addScaledVector(sample.normal, side * (trackWidth / 2 + 1.7));
+    dummy.position.y += 0.62;
+    dummy.rotation.set(0, Math.atan2(sample.tangent.x, sample.tangent.z), 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    barriers.setMatrixAt(instance, dummy.matrix);
+  });
+  barriers.instanceMatrix.needsUpdate = true;
+  barriers.name = 'Dead Canyon canyon-edge barriers';
+  world.add(barriers);
+}
+
+function makeHairpinLandmark(world) {
+  const island = new THREE.Group();
+  island.name = 'Dead Canyon hairpin landmark';
+
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(31, 39, 17, 7, 1, false),
+    material(ROCK_DARK, 1, true)
+  );
+  base.position.set(280, 8.6, 282);
+  island.add(base);
+
+  const crown = new THREE.Mesh(
+    new THREE.CylinderGeometry(20, 29, 10, 7, 1, false),
+    material(ROCK, 1, true)
+  );
+  crown.position.set(280, 21.8, 282);
+  crown.rotation.y = 0.2;
+  island.add(crown);
+
+  const signMaterial = new THREE.MeshBasicMaterial({ color: 0xf2c34f });
+  const stripeMaterial = new THREE.MeshBasicMaterial({ color: 0x2a2020 });
+  const xs = [235, 255, 278, 301, 323];
+  xs.forEach((x, index) => {
+    const sign = new THREE.Group();
+    sign.name = `Dead Canyon hairpin chevron ${index + 1}`;
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(10, 3.2, 0.5), signMaterial);
+    sign.add(panel);
+    for (const stripeX of [-2.4, 0, 2.4]) {
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.15, 2.3, 0.62), stripeMaterial);
+      stripe.position.x = stripeX;
+      stripe.rotation.z = -0.42;
+      sign.add(stripe);
+    }
+    sign.position.set(x, 20.3, 244 + Math.abs(index - 2) * 2.5);
+    sign.rotation.y = 0;
+    island.add(sign);
+  });
+
+  world.add(island);
 }
 
 function makeRockFormations(world) {
@@ -467,6 +613,9 @@ async function installRetroUrbanSites(world, samples, trackWidth) {
   const cliff = frameAt(samples, 0.225);
   instances += placeCliffMaintenance(world, templates, cliff, trackWidth);
 
+  const hairpinService = frameAt(samples, 0.405);
+  instances += placeHairpinService(world, templates, hairpinService, trackWidth);
+
   const scrapyard = frameAt(samples, 0.565);
   instances += placeOutpost(world, templates, scrapyard, trackWidth, 'scrapyard');
 
@@ -515,6 +664,27 @@ function placeCliffMaintenance(world, templates, frame, trackWidth) {
   count += placeTemplate(world, templates.truck, frame, -5, eastSide * (trackWidth / 2 + 17), 1.0, Math.PI / 2, 'cliff-truck');
   for (let i = 0; i < 5; i += 1) {
     count += placeTemplate(world, templates.barrier, frame, -20 + i * 9, eastSide * (trackWidth / 2 + 6.8), 0.9, 0, 'cliff-barrier-' + i);
+  }
+  return count;
+}
+
+function placeHairpinService(world, templates, frame, trackWidth) {
+  const outside = outwardSide(frame);
+  let count = 0;
+  count += placeTemplate(world, templates.scaffold, frame, -24, outside * (trackWidth / 2 + 28), 1.1, 0.1, 'hairpin-watchtower');
+  count += placeTemplate(world, templates.garage, frame, 8, outside * (trackWidth / 2 + 34), 1.15, -0.12, 'hairpin-service-bay');
+  count += placeTemplate(world, templates.truck, frame, 20, outside * (trackWidth / 2 + 20), 1.0, Math.PI / 2, 'hairpin-truck');
+  for (let i = 0; i < 4; i += 1) {
+    count += placeTemplate(
+      world,
+      templates.barrier,
+      frame,
+      -14 + i * 8,
+      outside * (trackWidth / 2 + 7),
+      0.95,
+      0,
+      'hairpin-retro-barrier-' + i
+    );
   }
   return count;
 }
