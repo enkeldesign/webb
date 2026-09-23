@@ -21,6 +21,7 @@ page.on('console', (message) => {
 });
 
 let metrics;
+let introCamera;
 try {
   const response = await page.goto(`${baseUrl}/turn-lab/?visual-smoke=dead-canyon`, {
     waitUntil: 'domcontentloaded',
@@ -59,6 +60,20 @@ try {
   });
   await page.locator('.track-select.is-visible .track-card[data-track-id="mountain"]').click();
   await page.locator('.track-select-continue').click();
+
+  await page.waitForFunction(
+    () => document.body.classList.contains('turn-track-intro'),
+    null,
+    { timeout: 15_000 }
+  );
+  await page.evaluate(() => new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
+  introCamera = await page.evaluate(() => ({
+    position: globalThis.__turnRuntime.camera.position.toArray(),
+    fov: globalThis.__turnRuntime.camera.fov
+  }));
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-intro.png'), fullPage: true });
 
   await page.waitForFunction(
     () => globalThis.__turnRuntime?.trackId === 'mountain'
@@ -115,10 +130,12 @@ try {
 
 await fs.writeFile(
   path.join(outputDir, 'metrics.json'),
-  `${JSON.stringify({ metrics, browserErrors }, null, 2)}\n`
+  `${JSON.stringify({ metrics, introCamera, browserErrors }, null, 2)}\n`
 );
 
 assert.deepEqual(browserErrors, [], `TURN LAB DEAD CANYON produced browser errors:\n${browserErrors.join('\n')}`);
+assert.deepEqual(introCamera.position.map((value) => Math.round(value)), [80, 165, -590]);
+assert.equal(introCamera.fov, 55);
 assert.equal(metrics.trackId, 'mountain');
 assert.equal(metrics.sampleCount, 2160);
 assert.ok(metrics.trackLength > 3150 && metrics.trackLength < 3350,
