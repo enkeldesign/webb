@@ -7,9 +7,9 @@ const INTRO_CAMERA_PRESETS = Object.freeze({
   mountain: Object.freeze({
     // DEAD CANYON: look along the southern/eastern road toward the canyon wall
     // instead of inheriting MOUNTAIN's sky-heavy moon composition.
-    position: Object.freeze([65, 175, -650]),
-    target: Object.freeze([510, 65, -20]),
-    fov: 60
+    position: Object.freeze([60, 165, -670]),
+    target: Object.freeze([465, 45, -80]),
+    fov: 58
   })
 });
 
