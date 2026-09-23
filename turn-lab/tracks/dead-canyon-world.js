@@ -448,74 +448,83 @@ function makeDarkTunnel(world, samples, trackWidth, runtime) {
 }
 
 function makeTunnelMountainCloak(group, samples, moduleIndices, trackWidth) {
-  // The first tunnel pass deliberately exposed its black engineering shell.
-  // Cover that shell with a continuous low-poly ridge so the road now reads as
-  // tunnelling through the DEAD CANYON geology instead of entering a building.
-  // Side rock stays beyond the free-roam boundary; the overhead ridge is high
-  // enough that it cannot become a visual/non-colliding obstacle for the car.
-  const geometry = new THREE.DodecahedronGeometry(1, 0);
-  const left = new THREE.InstancedMesh(
-    geometry,
-    material(ROCK_DARK, 1, true),
-    moduleIndices.length
-  );
-  const right = new THREE.InstancedMesh(
-    geometry,
-    material(ROCK, 1, true),
-    moduleIndices.length
-  );
-  const ridge = new THREE.InstancedMesh(
-    geometry,
-    material(ROCK_LIGHT, 1, true),
-    moduleIndices.length
-  );
-  left.name = 'Dead Canyon tunnel mountain left';
-  right.name = 'Dead Canyon tunnel mountain right';
-  ridge.name = 'Dead Canyon tunnel mountain ridge';
+  // Build one continuous low-poly ridge over the engineering shell. The r7
+  // boulder-chain prototype hid the black roof but read as a pile of rocks.
+  // This surface follows the tunnel curve as a single mountain: broad canyon
+  // shoulders on the outside, a high ridge over the road and no geometry in the
+  // driveable/free-roam envelope below the roof.
+  const positions = [];
+  const colors = [];
+  const indices = [];
+  const colorStops = [
+    new THREE.Color(ROCK_DARK),
+    new THREE.Color(0x7f4236),
+    new THREE.Color(ROCK),
+    new THREE.Color(ROCK_LIGHT),
+    new THREE.Color(ROCK),
+    new THREE.Color(ROCK_DARK)
+  ];
 
-  const dummy = new THREE.Object3D();
-  const lateral = trackWidth / 2 + 35;
-  moduleIndices.forEach((sampleIndex, moduleIndex) => {
+  moduleIndices.forEach((sampleIndex, row) => {
     const sample = samples[sampleIndex];
-    const nextIndex = moduleIndices[Math.min(moduleIndex + 1, moduleIndices.length - 1)];
-    const previousIndex = moduleIndices[Math.max(0, moduleIndex - 1)];
-    const span = moduleIndex < moduleIndices.length - 1
-      ? sample.point.distanceTo(samples[nextIndex].point)
-      : sample.point.distanceTo(samples[previousIndex].point);
-    const yaw = Math.atan2(sample.tangent.x, sample.tangent.z);
-    const undulation = Math.sin(moduleIndex * 0.72) * 2.4;
-    const lean = Math.sin(moduleIndex * 0.43) * 0.055;
-    const lengthScale = Math.max(11, span * 0.94);
+    const wave = Math.sin(row * 0.83) * 2.6 + Math.sin(row * 0.31 + 0.7) * 1.4;
+    const shoulder = trackWidth / 2 + 18 + Math.sin(row * 0.57) * 2.2;
+    const outer = trackWidth / 2 + 88 + Math.cos(row * 0.41) * 6.5;
+    const offsets = [-outer, -shoulder, -shoulder + 10, shoulder - 10, shoulder, outer];
+    const heights = [
+      1.8 + Math.max(0, wave * 0.15),
+      18 + wave * 0.35,
+      30 + wave * 0.55,
+      31 - wave * 0.35,
+      18.5 - wave * 0.25,
+      1.8 + Math.max(0, -wave * 0.12)
+    ];
 
-    dummy.position.copy(sample.point).addScaledVector(sample.normal, -lateral);
-    dummy.position.y += 10.5 + undulation * 0.45;
-    dummy.rotation.set(lean, yaw, -0.04 + lean);
-    dummy.scale.set(23.5 + (moduleIndex % 3) * 1.6, 17.5 + undulation * 0.22, lengthScale);
-    dummy.updateMatrix();
-    left.setMatrixAt(moduleIndex, dummy.matrix);
-
-    dummy.position.copy(sample.point).addScaledVector(sample.normal, lateral);
-    dummy.position.y += 11.5 - undulation * 0.3;
-    dummy.rotation.set(-lean, yaw, 0.045 - lean);
-    dummy.scale.set(23.5 + ((moduleIndex + 1) % 3) * 1.6, 18.5 - undulation * 0.18, lengthScale * 1.04);
-    dummy.updateMatrix();
-    right.setMatrixAt(moduleIndex, dummy.matrix);
-
-    dummy.position.copy(sample.point);
-    dummy.position.y += 29 + undulation * 0.55;
-    dummy.rotation.set(0.02 * Math.sin(moduleIndex), yaw, lean);
-    dummy.scale.set(trackWidth / 2 + 24 + (moduleIndex % 2) * 2.5, 14.5 + Math.abs(undulation) * 0.35, lengthScale * 1.08);
-    dummy.updateMatrix();
-    ridge.setMatrixAt(moduleIndex, dummy.matrix);
+    offsets.forEach((offset, column) => {
+      const point = sample.point.clone().addScaledVector(sample.normal, offset);
+      point.y = sample.point.y + heights[column];
+      positions.push(point.x, point.y, point.z);
+      const tint = colorStops[column].clone();
+      const shade = 0.92 + 0.08 * Math.sin(row * 0.91 + column * 0.67);
+      tint.multiplyScalar(shade);
+      colors.push(tint.r, tint.g, tint.b);
+    });
   });
 
-  for (const rock of [left, right, ridge]) {
-    rock.instanceMatrix.needsUpdate = true;
-    rock.castShadow = false;
-    rock.receiveShadow = false;
-    rock.frustumCulled = false;
-    group.add(rock);
+  const columns = 6;
+  for (let row = 0; row < moduleIndices.length - 1; row += 1) {
+    const current = row * columns;
+    const next = (row + 1) * columns;
+    for (let column = 0; column < columns - 1; column += 1) {
+      const a = current + column;
+      const b = a + 1;
+      const c = next + column;
+      const d = c + 1;
+      indices.push(a, c, b, b, c, d);
+    }
   }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+
+  const shell = new THREE.Mesh(
+    geometry,
+    new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 1,
+      metalness: 0,
+      flatShading: true,
+      side: THREE.DoubleSide
+    })
+  );
+  shell.name = 'Dead Canyon tunnel mountain shell';
+  shell.castShadow = false;
+  shell.receiveShadow = false;
+  shell.frustumCulled = false;
+  group.add(shell);
   return moduleIndices.length;
 }
 
