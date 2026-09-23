@@ -745,7 +745,7 @@ function placeOutpost(world, templates, frame, trackWidth, id) {
   count += placeTemplate(world, templates.garage, frame, 1, baseLateral + outside * 5, 1.18, -0.22, id + '-garage-b');
   count += placeTemplate(world, templates.brokenWall, frame, 18, baseLateral + outside * 4, 1.0, 0.28, id + '-broken-wall');
   count += placeTemplate(world, templates.scaffold, frame, 31, baseLateral + outside * 14, 0.78, 0.12, id + '-scaffold');
-  count += placeTemplate(world, templates.truck, frame, 9, outside * (trackWidth / 2 + 32), 1.05, Math.PI / 2, id + '-truck');
+  count += placeTemplate(world, templates.truck, frame, 9, outside * (trackWidth / 2 + 20), 1.05, Math.PI / 2, id + '-truck');
   for (let i = 0; i < 4; i += 1) {
     count += placeTemplate(
       world,
@@ -780,7 +780,7 @@ function placeCliffService(world, templates, frame, trackWidth) {
   let count = 0;
   count += placeTemplate(world, templates.scaffold, frame, -24, outside * (trackWidth / 2 + 40), 1.1, 0.1, 'cliff-service-watchtower');
   count += placeTemplate(world, templates.garage, frame, 8, outside * (trackWidth / 2 + 50), 1.15, -0.12, 'cliff-service-bay');
-  count += placeTemplate(world, templates.truck, frame, 20, outside * (trackWidth / 2 + 20), 1.0, Math.PI / 2, 'cliff-service-truck');
+  count += placeTemplate(world, templates.truck, frame, 20, outside * (trackWidth / 2 + 32), 1.0, Math.PI / 2, 'cliff-service-truck');
   for (let i = 0; i < 4; i += 1) {
     count += placeTemplate(
       world,
