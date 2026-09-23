@@ -354,7 +354,7 @@ function makeDarkTunnel(world, samples, trackWidth, runtime) {
   const ceilingGeometry = new THREE.BoxGeometry(1, 1, 1);
   const tunnelMaterial = material(0x231c1c, 1, true);
   const rockMaterial = material(ROCK_DEEP, 1, true);
-  const tunnelHalf = trackWidth / 2 + 4.8;
+  const tunnelHalf = trackWidth / 2 + 11.5;
   const wallThickness = 3.8;
   const wallHeight = TUNNEL.innerHeight + 3.2;
   const ceilingThickness = 4.4;
@@ -445,7 +445,7 @@ function makeTunnelPortal(group, sample, trackWidth, name, portalMaterial) {
   const portal = new THREE.Group();
   portal.name = 'Dead Canyon tunnel ' + name + ' portal';
   const yaw = Math.atan2(sample.tangent.x, sample.tangent.z);
-  const half = trackWidth / 2 + 6.5;
+  const half = trackWidth / 2 + 14;
 
   for (const side of [-1, 1]) {
     const pillar = new THREE.Mesh(
@@ -460,7 +460,7 @@ function makeTunnelPortal(group, sample, trackWidth, name, portalMaterial) {
   }
 
   const crown = new THREE.Mesh(
-    new THREE.BoxGeometry(trackWidth + 18, 5.8, 6.4),
+    new THREE.BoxGeometry(trackWidth + 32, 5.8, 6.4),
     portalMaterial
   );
   crown.position.copy(sample.point);
