@@ -24,7 +24,7 @@ The canyon itself is the signature landmark.
 - Tunnel daylight fades quickly after entry, reaches a genuinely dark core, then returns gradually near the exit. The route geometry and `dead-canyon-lab-r4` record namespace are unchanged.
 - Darkness affects only the 3D world lighting/self-lit road markings. **HUD, controls and minimap remain fully visible**.
 - One weak maintenance bulb hangs near the middle. r7 makes its bad-wiring flicker substantially more visible with irregular sub-3 Hz flutter and occasional deeper dips; it still uses emissive/basic geometry and a tiny floor glow rather than a dynamic light, so it communicates intentional abandonment without becoming the navigation solution.
-- The dark inner walls remain outside DEAD CANYON's free-roam boundary. A new low-poly rock cloak covers both flanks and roof, and both portals are built from faceted canyon rock rather than rectangular blocks.
+- The dark inner walls remain outside DEAD CANYON's free-roam boundary. A single continuous low-poly mountain surface now spans both canyon flanks and the ridge above the road, while both portals use faceted canyon rock rather than rectangular blocks.
 
 ## Intro composition
 
