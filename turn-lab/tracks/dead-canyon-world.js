@@ -76,7 +76,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
   makeSun(world);
 
   const metrics = {
-    version: 'dead-canyon-r6',
+    version: 'dead-canyon-r7',
     proceduralWorld: true,
     routeSamples: samples.length,
     theme: 'golden-hour-canyon-road',
@@ -110,7 +110,11 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
     tunnelEndProgress: TUNNEL.end,
     tunnelLengthMeters: tunnel.lengthMeters,
     tunnelModuleCount: tunnel.moduleCount,
+    tunnelMountainCladding: true,
+    tunnelMountainModuleCount: tunnel.mountainModuleCount,
+    tunnelPortalStyle: 'faceted-rock',
     tunnelDyingBulb: true,
+    tunnelFlicker: 'strong-irregular',
     tunnelDynamicLights: 0,
     tunnelGuiUnaffected: true,
     needleCount: 0,
@@ -402,6 +406,7 @@ function makeDarkTunnel(world, samples, trackWidth, runtime) {
   ceiling.receiveShadow = false;
   group.add(walls, ceiling);
 
+  const mountainModuleCount = makeTunnelMountainCloak(group, samples, moduleIndices, trackWidth);
   makeTunnelPortal(group, samples[startIndex], trackWidth, 'entrance', rockMaterial);
   makeTunnelPortal(group, samples[endIndex], trackWidth, 'exit', rockMaterial);
 
@@ -437,37 +442,130 @@ function makeDarkTunnel(world, samples, trackWidth, runtime) {
   return {
     lengthMeters: routeDistance(samples, startIndex, endIndex),
     moduleCount: moduleIndices.length,
+    mountainModuleCount,
     controller
   };
+}
+
+function makeTunnelMountainCloak(group, samples, moduleIndices, trackWidth) {
+  // Build one continuous low-poly ridge over the engineering shell. The r7
+  // boulder-chain prototype hid the black roof but read as a pile of rocks.
+  // This surface follows the tunnel curve as a single mountain: broad canyon
+  // shoulders on the outside, a high ridge over the road and no geometry in the
+  // driveable/free-roam envelope below the roof.
+  const positions = [];
+  const colors = [];
+  const indices = [];
+  const colorStops = [
+    new THREE.Color(ROCK_DARK),
+    new THREE.Color(0x7f4236),
+    new THREE.Color(ROCK),
+    new THREE.Color(ROCK_LIGHT),
+    new THREE.Color(ROCK),
+    new THREE.Color(ROCK_DARK)
+  ];
+
+  moduleIndices.forEach((sampleIndex, row) => {
+    const sample = samples[sampleIndex];
+    const wave = Math.sin(row * 0.83) * 2.6 + Math.sin(row * 0.31 + 0.7) * 1.4;
+    const shoulder = trackWidth / 2 + 18 + Math.sin(row * 0.57) * 2.2;
+    const outer = trackWidth / 2 + 88 + Math.cos(row * 0.41) * 6.5;
+    const offsets = [-outer, -shoulder, -shoulder + 10, shoulder - 10, shoulder, outer];
+    const heights = [
+      1.8 + Math.max(0, wave * 0.15),
+      18 + wave * 0.35,
+      30 + wave * 0.55,
+      31 - wave * 0.35,
+      18.5 - wave * 0.25,
+      1.8 + Math.max(0, -wave * 0.12)
+    ];
+
+    offsets.forEach((offset, column) => {
+      const point = sample.point.clone().addScaledVector(sample.normal, offset);
+      point.y = sample.point.y + heights[column];
+      positions.push(point.x, point.y, point.z);
+      const tint = colorStops[column].clone();
+      const shade = 0.92 + 0.08 * Math.sin(row * 0.91 + column * 0.67);
+      tint.multiplyScalar(shade);
+      colors.push(tint.r, tint.g, tint.b);
+    });
+  });
+
+  const columns = 6;
+  for (let row = 0; row < moduleIndices.length - 1; row += 1) {
+    const current = row * columns;
+    const next = (row + 1) * columns;
+    for (let column = 0; column < columns - 1; column += 1) {
+      const a = current + column;
+      const b = a + 1;
+      const c = next + column;
+      const d = c + 1;
+      indices.push(a, c, b, b, c, d);
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+
+  const shell = new THREE.Mesh(
+    geometry,
+    new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 1,
+      metalness: 0,
+      flatShading: true,
+      side: THREE.DoubleSide
+    })
+  );
+  shell.name = 'Dead Canyon tunnel mountain shell';
+  shell.castShadow = false;
+  shell.receiveShadow = false;
+  shell.frustumCulled = false;
+  group.add(shell);
+  return moduleIndices.length;
 }
 
 function makeTunnelPortal(group, sample, trackWidth, name, portalMaterial) {
   const portal = new THREE.Group();
   portal.name = 'Dead Canyon tunnel ' + name + ' portal';
   const yaw = Math.atan2(sample.tangent.x, sample.tangent.z);
-  const half = trackWidth / 2 + 14;
+  const geometry = new THREE.DodecahedronGeometry(1, 0);
+  const half = trackWidth / 2 + 35;
 
   for (const side of [-1, 1]) {
-    const pillar = new THREE.Mesh(
-      new THREE.BoxGeometry(5.8, TUNNEL.innerHeight + 5.4, 5.4),
-      portalMaterial
-    );
-    pillar.position.copy(sample.point).addScaledVector(sample.normal, side * half);
-    pillar.position.y += (TUNNEL.innerHeight + 5.4) / 2 - 0.2;
-    pillar.rotation.y = yaw;
-    pillar.name = 'Dead Canyon tunnel ' + name + ' rock pillar';
-    portal.add(pillar);
+    const lower = new THREE.Mesh(geometry, portalMaterial);
+    lower.position.copy(sample.point).addScaledVector(sample.normal, side * half);
+    lower.position.y += 10.5;
+    lower.rotation.set(side * 0.04, yaw, side * -0.08);
+    lower.scale.set(22.5, 18.5, 11.5);
+    lower.name = 'Dead Canyon tunnel ' + name + ' lower portal rock';
+    portal.add(lower);
+
+    const shoulder = new THREE.Mesh(geometry, material(side < 0 ? ROCK : ROCK_LIGHT, 1, true));
+    shoulder.position.copy(sample.point).addScaledVector(sample.normal, side * (trackWidth / 2 + 22));
+    shoulder.position.y += 20.5;
+    shoulder.rotation.set(side * -0.03, yaw, side * 0.06);
+    shoulder.scale.set(15.5, 10.5, 10);
+    shoulder.name = 'Dead Canyon tunnel ' + name + ' upper portal rock';
+    portal.add(shoulder);
   }
 
-  const crown = new THREE.Mesh(
-    new THREE.BoxGeometry(trackWidth + 32, 5.8, 6.4),
-    portalMaterial
-  );
+  const crown = new THREE.Mesh(geometry, material(ROCK_LIGHT, 1, true));
   crown.position.copy(sample.point);
-  crown.position.y += TUNNEL.innerHeight + 2.2;
-  crown.rotation.y = yaw;
+  crown.position.y += 27;
+  crown.rotation.set(0.03, yaw, -0.025);
+  crown.scale.set(trackWidth / 2 + 25, 12.5, 12);
   crown.name = 'Dead Canyon tunnel ' + name + ' rock crown';
   portal.add(crown);
+
+  portal.traverse((node) => {
+    if (!node.isMesh) return;
+    node.castShadow = false;
+    node.receiveShadow = false;
+  });
   group.add(portal);
 }
 
@@ -570,9 +668,18 @@ function installTunnelDarknessController({ world, runtime, samples, bulbMaterial
     }
 
     const seconds = now * 0.001;
-    const slow = 0.5 + 0.5 * Math.sin(seconds * 2.17 + Math.sin(seconds * 0.61) * 1.7);
-    const dyingDip = Math.pow(0.5 + 0.5 * Math.sin(seconds * 0.37 + 2.2), 12);
-    const flicker = THREE.MathUtils.clamp(0.20 + slow * 0.32 - dyingDip * 0.16, 0.055, 0.52);
+    // More legible "bad wiring" than r6, but intentionally kept below a
+    // strobe-like cadence: two irregular sub-3 Hz components plus occasional
+    // deeper dropouts. The bulb is tiny and never lights enough road to steer by.
+    const flutter = 0.5 + 0.5 * Math.sin(seconds * 9.1 + Math.sin(seconds * 1.13) * 2.1);
+    const buzz = 0.5 + 0.5 * Math.sin(seconds * 12.7 + Math.sin(seconds * 2.03) * 1.4);
+    const dropoutWave = 0.5 + 0.5 * Math.sin(seconds * 3.05 + Math.sin(seconds * 0.47) * 1.8);
+    const dropout = Math.pow(THREE.MathUtils.clamp((dropoutWave - 0.72) / 0.28, 0, 1), 5);
+    const flicker = THREE.MathUtils.clamp(
+      0.055 + flutter * 0.31 + buzz * 0.18 - dropout * 0.24,
+      0.018,
+      0.58
+    );
     state.flicker = flicker;
 
     const bulbPresence = tunnelBulbPresence(progress) * Math.max(0.15, darkness);

@@ -111,7 +111,7 @@ assert.match(labRegistry, /\/turn-lab\/tracks\/dead-canyon-world\.js/);
 assert.match(labRegistry, /entry\.id !== 'mountain'/);
 
 assert.match(labWorld, /world\.userData\.turnDeadCanyon/);
-assert.match(labWorld, /version: 'dead-canyon-r6'/);
+assert.match(labWorld, /version: 'dead-canyon-r7'/);
 assert.match(labWorld, /const TUNNEL = Object\.freeze/);
 assert.match(labWorld, /route: 'RIGHT > LEFT > OUT'/);
 assert.match(labWorld, /start: 0\.018/);
@@ -126,6 +126,13 @@ assert.match(labWorld, /tunnelGuiUnaffected: true/);
 assert.match(labWorld, /tunnelDynamicLights: 0/);
 assert.match(labWorld, /Dead Canyon tunnel walls/);
 assert.match(labWorld, /Dead Canyon tunnel ceiling/);
+assert.match(labWorld, /makeTunnelMountainCloak/);
+assert.match(labWorld, /Dead Canyon tunnel mountain shell/);
+assert.match(labWorld, /const columns = 6/);
+assert.match(labWorld, /vertexColors: true/);
+assert.match(labWorld, /tunnelMountainCladding: true/);
+assert.match(labWorld, /tunnelPortalStyle: 'faceted-rock'/);
+assert.match(labWorld, /tunnelFlicker: 'strong-irregular'/);
 assert.match(labWorld, /makeTunnelPortal\(group, samples\[startIndex\], trackWidth, 'entrance'/);
 assert.match(labWorld, /makeTunnelPortal\(group, samples\[endIndex\], trackWidth, 'exit'/);
 assert.match(labWorld, /'Dead Canyon tunnel ' \+ name \+ ' portal'/);
@@ -176,7 +183,7 @@ assert.match(labWorld, /OBJLoader/);
 assert.match(labWorld, /Kenney Retro Urban/);
 assert.match(labWorld, /dynamicLights: 0/);
 assert.match(labWorld, /const tunnelHalf = trackWidth \/ 2 \+ 11\.5/);
-assert.match(labWorld, /const half = trackWidth \/ 2 \+ 14/);
+assert.match(labWorld, /const half = trackWidth \/ 2 \+ 35/);
 assert.match(labWorld, /const outpost = frameAt\(samples, 0\.145\)/);
 assert.match(labWorld, /shadowCasters: 0/);
 assert.match(labWorld, /InstancedMesh/);
@@ -211,7 +218,7 @@ const maxRouteX = Math.max(...DEAD_CANYON_CONTROL_POINTS.map(([x]) => x));
 assert.ok(715 - maxRouteX > 70,
   `Nearest cliff front must stay well clear of the eastern route; clearance was ${(715 - maxRouteX).toFixed(1)} m`);
 
-console.log(`TURN LAB DEAD CANYON r6 contract passed: ${routeLength.toFixed(1)} m, route unchanged, dark RIGHT > LEFT > OUT tunnel, GUI-safe darkness and one dying bulb.`);
+console.log(`TURN LAB DEAD CANYON r7 contract passed: ${routeLength.toFixed(1)} m, route unchanged, dark tunnel buried in faceted canyon geology with stronger dying-bulb flicker.`);
 
 async function readText(path) {
   return fs.readFile(new URL(path, REPO_ROOT), 'utf8');
