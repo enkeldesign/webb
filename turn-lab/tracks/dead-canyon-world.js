@@ -701,6 +701,18 @@ function makeSun(world) {
 
 async function installRetroUrbanSites(world, samples, trackWidth) {
   const loader = new OBJLoader();
+  const treeTexture = await new THREE.TextureLoader()
+    .loadAsync(RETRO_ROOT + 'treeA.png')
+    .catch((error) => {
+      console.warn('TURN LAB: Retro Urban tree texture failed; using flat autumn foliage.', error);
+      return null;
+    });
+  if (treeTexture) {
+    treeTexture.colorSpace = THREE.SRGBColorSpace;
+    treeTexture.wrapS = THREE.ClampToEdgeWrapping;
+    treeTexture.wrapT = THREE.ClampToEdgeWrapping;
+  }
+
   const entries = await Promise.all(Object.entries(RETRO_ASSETS).map(async ([key, spec]) => {
     const source = await loader.loadAsync(RETRO_ROOT + spec.file);
     source.traverse((object) => {
@@ -711,7 +723,17 @@ async function installRetroUrbanSites(world, samples, trackWidth) {
         const sourceMaterials = Array.isArray(object.material) ? object.material : [object.material];
         const mapped = sourceMaterials.map((sourceMaterial) => {
           const name = String(sourceMaterial?.name || '').toLowerCase();
-          if (name.includes('tree')) return material(0xd99a3b, 1, true);
+          if (name.includes('tree')) {
+            if (!treeTexture) return material(0xd99a3b, 1, true);
+            return new THREE.MeshStandardMaterial({
+              map: treeTexture,
+              transparent: true,
+              alphaTest: 0.12,
+              roughness: 1,
+              metalness: 0,
+              side: THREE.DoubleSide
+            });
+          }
           if (name.includes('dirt')) return material(0x6b4435, 1, true);
           return material(CONCRETE, 1, true);
         });
@@ -751,7 +773,8 @@ async function installRetroUrbanSites(world, samples, trackWidth) {
     retroUrbanLoaded: entries.length,
     retroUrbanInstances: instances,
     retroUrbanErrors: [],
-    retroUrbanAssetNames: Object.freeze(Object.keys(templates))
+    retroUrbanAssetNames: Object.freeze(Object.keys(templates)),
+    treeTextureLoaded: Boolean(treeTexture)
   };
 }
 
