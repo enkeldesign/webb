@@ -11,7 +11,6 @@ const GRASS = 0x67c95f;
 const GRASS_LIGHT = 0x82da6f;
 const GRASS_DARK = 0x4eab50;
 const WATER = 0x41b8e7;
-const WATER_LIGHT = 0x86ddf4;
 const WOOD = 0xb57845;
 const WOOD_DARK = 0x765039;
 const START_TEAL = 0x13a7a0;
@@ -46,6 +45,17 @@ const HOUSE_SITES = Object.freeze([
   Object.freeze({ progress: 0.805, type: 'g', palette: 'default', height: 10.6, along: 8, yaw: -0.04 }),
   Object.freeze({ progress: 0.875, type: 'n', palette: 'c', height: 11.0, along: -9, yaw: 0.05 }),
   Object.freeze({ progress: 0.930, type: 't', palette: 'b', height: 10.4, along: 8, yaw: -0.06 })
+]);
+
+const BACK_ROW_SITES = Object.freeze([
+  Object.freeze({ progress: 0.050, type: 'e', palette: 'b', height: 10.2, along: -17, yaw: 0.08 }),
+  Object.freeze({ progress: 0.145, type: 'i', palette: 'c', height: 10.8, along: 17, yaw: -0.07 }),
+  Object.freeze({ progress: 0.335, type: 'k', palette: 'default', height: 11.1, along: -18, yaw: 0.06 }),
+  Object.freeze({ progress: 0.430, type: 'p', palette: 'a', height: 10.4, along: 18, yaw: -0.05 }),
+  Object.freeze({ progress: 0.585, type: 'r', palette: 'c', height: 10.9, along: -17, yaw: 0.07 }),
+  Object.freeze({ progress: 0.690, type: 'a', palette: 'a', height: 9.8, along: 18, yaw: -0.08 }),
+  Object.freeze({ progress: 0.825, type: 'm', palette: 'b', height: 10.3, along: -17, yaw: 0.05 }),
+  Object.freeze({ progress: 0.955, type: 'u', palette: 'c', height: 10.8, along: 17, yaw: -0.06 })
 ]);
 
 const PARKED_CARS = Object.freeze([
@@ -90,6 +100,7 @@ export function installSuburbsWorld({ scene, samples, trackWidth = 27, runtime }
     fenceCount: 0,
     treeCount: 0,
     planterCount: 0,
+    parkPathCount: 0,
     parkedCars: 0,
     lakeCount: 1,
     dockCount: 1,
@@ -255,8 +266,7 @@ function makeLakeAndDock(world) {
       color: WATER,
       roughness: 0.32,
       metalness: 0,
-      transparent: true,
-      opacity: 0.94
+      flatShading: true
     })
   );
   water.rotation.x = -Math.PI / 2;
@@ -264,16 +274,6 @@ function makeLakeAndDock(world) {
   water.position.set(92, LAKE_LEVEL, 18);
   water.name = 'Suburbs summer lake';
   world.add(water);
-
-  const glint = new THREE.Mesh(
-    new THREE.CircleGeometry(41, 32),
-    new THREE.MeshBasicMaterial({ color: WATER_LIGHT, transparent: true, opacity: 0.18 })
-  );
-  glint.rotation.x = -Math.PI / 2;
-  glint.scale.set(1.35, 0.86, 1);
-  glint.position.set(84, LAKE_LEVEL + 0.015, 12);
-  glint.name = 'Suburbs lake light';
-  world.add(glint);
 
   const dock = new THREE.Group();
   dock.name = 'Suburbs wooden dock';
@@ -381,6 +381,27 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     }
   }
 
+  const backRowSettled = await Promise.allSettled(BACK_ROW_SITES.map(async (spec, index) => {
+    const frame = frameAtProgress(samples, spec.progress, trackWidth);
+    const source = await loadKitSource('building-type-' + spec.type + '.glb', spec.palette);
+    const house = prepareModel(source, { targetHeight: spec.height });
+    placePrepared(world, house, {
+      name: 'Suburbs Kenney back-row house ' + (index + 1),
+      position: pointInFrame(frame, 57, spec.along, 0.03),
+      rotation: frame.yaw + Math.PI + spec.yaw,
+      metadata: {
+        turnSuburbsAsset: 'building-type-' + spec.type,
+        palette: spec.palette,
+        turnSuburbsRow: 'back'
+      }
+    });
+    return 1;
+  }));
+  for (const entry of backRowSettled) {
+    if (entry.status === 'fulfilled') result.houseCount += entry.value;
+    else result.errors.push(String(entry.reason?.message || entry.reason));
+  }
+
   const fenceSettled = await Promise.allSettled([0.08, 0.35, 0.58, 0.76, 0.91].map(async (progress, clusterIndex) => {
     const frame = frameAtProgress(samples, progress, trackWidth);
     const source = await loadKitSource('fence-low.glb', 'default');
@@ -404,12 +425,14 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
 
   const parkAssets = await Promise.allSettled([
     installParkTrees(world),
-    installParkPlanters(world)
+    installParkPlanters(world),
+    installParkPaths(world)
   ]);
   for (const entry of parkAssets) {
     if (entry.status === 'fulfilled') {
       result.treeCount += entry.value.trees || 0;
       result.planterCount += entry.value.planters || 0;
+      result.parkPathCount += entry.value.paths || 0;
     } else {
       result.errors.push(String(entry.reason?.message || entry.reason));
     }
@@ -436,7 +459,7 @@ async function installParkTrees(world) {
       metadata: { turnSuburbsAsset: index % 3 === 0 ? 'tree-large' : 'tree-small' }
     });
   });
-  return { trees: sites.length, planters: 0 };
+  return { trees: sites.length, planters: 0, paths: 0 };
 }
 
 async function installParkPlanters(world) {
@@ -454,7 +477,32 @@ async function installParkPlanters(world) {
       metadata: { turnSuburbsAsset: 'planter' }
     });
   });
-  return { trees: 0, planters: sites.length };
+  return { trees: 0, planters: sites.length, paths: 0 };
+}
+
+async function installParkPaths(world) {
+  const [longPathSource, messyPathSource] = await Promise.all([
+    loadKitSource('path-long.glb', 'default'),
+    loadKitSource('path-stones-messy.glb', 'default')
+  ]);
+  const sites = [
+    { source: longPathSource, x: -112, z: 31, span: 15, yaw: 1.52, asset: 'path-long' },
+    { source: longPathSource, x: -30, z: 34, span: 15, yaw: 1.61, asset: 'path-long' },
+    { source: messyPathSource, x: -98, z: 64, span: 8, yaw: 0.20, asset: 'path-stones-messy' },
+    { source: messyPathSource, x: -61, z: 80, span: 8, yaw: -0.35, asset: 'path-stones-messy' },
+    { source: messyPathSource, x: -32, z: 3, span: 8, yaw: 0.48, asset: 'path-stones-messy' },
+    { source: messyPathSource, x: -111, z: -3, span: 8, yaw: -0.22, asset: 'path-stones-messy' }
+  ];
+  sites.forEach((spec, index) => {
+    const path = prepareModel(spec.source, { targetSpan: spec.span });
+    placePrepared(world, path, {
+      name: 'Suburbs Kenney park path ' + (index + 1),
+      position: new THREE.Vector3(spec.x, 0.035, spec.z),
+      rotation: spec.yaw,
+      metadata: { turnSuburbsAsset: spec.asset }
+    });
+  });
+  return { trees: 0, planters: 0, paths: sites.length };
 }
 
 async function installParkedCars(world, samples, trackWidth) {
