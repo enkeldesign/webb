@@ -6,39 +6,45 @@
 
 TURN LAB repurposes only the production MOUNTAIN slot as **DEAD CANYON**. The internal id stays `mountain`, allowing the production race, rival, garage, minimap, scoring and accessibility contracts to remain the runtime source of truth.
 
-The route remains the r2 course: roughly 3.35 km, 79 authored control points and 2,160 runtime samples, with one AIRPORT-derived northern hairpin and an early three-move chicane. Because the route geometry did not change in r3, the existing `dead-canyon-lab-r2` record namespace is intentionally retained.
+DEAD CANYON r4 is about 3.23 km with 73 authored control points and 2,160 runtime samples. The AIRPORT-derived hairpin has been removed; the early chicane remains the deliberate technical interruption in an otherwise fast canyon lap. Because the route changed, records/rivals now use `dead-canyon-lab-r4`.
 
-## r3 visual direction
+## r4 art direction
 
-The goal is a stylised golden-hour canyon road rather than four perfect slabs.
+The canyon itself is the signature landmark.
 
-- The eastern wall is still four large terraces, but each front is now made from 16 broad flat-shaded facets.
-- The nearest cliff face has been moved east so the chase camera cannot enter it on the outer part of the route.
-- Five integrated skyline mesas sit behind the terraces; there are still no freestanding needles.
-- Twelve simple distant mesas provide silhouettes through the atmospheric haze.
-- The eastern cliff run gets concrete canyon-edge barriers.
-- The hairpin is now a visual landmark with a low-poly rock island, chevrons and an abandoned Retro Urban service/watchtower scene.
-- Retro Urban remains geometry-only CC0 Kenney content with TURN materials, no dynamic lights and no scenery shadow casters.
+- The east wall remains four broad faceted terraces in warm golden-hour haze.
+- A large **DEAD CANYON CROWN** section is embedded into the wall: a deep recessed face with three stacked polygonal shelves, visible from the eastern approach.
+- Four additional overhanging poly-rocks are inserted into the canyon side as secondary details.
+- Raised terrain now has vertical skirts down to the desert floor, closing the visible holes that could appear underneath high ridges.
+- The yellow/black chevrons are retained as graphic track detail but are positioned beyond the road edge.
+- Retro Urban service dressing around the former hairpin area has been moved farther away from the racing line.
+- Only one freestanding tall sentinel rock remains. The other former upright buttes are now low, fallen formations.
+- The existing camera-safe haze remains 260–760 m against TURN's 900 m race-camera far plane.
 
-## Fog / pop-in contract
+## Intro composition
 
-The race camera in current TURN has a 900 m far plane. DEAD CANYON r2 used fog that became fully opaque at 1,350 m, so the video could show road and scenery hitting the camera clip plane while they were still visibly rendered.
+Production MOUNTAIN's intro camera intentionally looks upward to frame its moon. DEAD CANYON now overrides that camera only inside LAB. Its establishing shot sits high to the south-west and looks diagonally along the southern/eastern road toward the canyon wall, showing substantially more track and using the canyon scenery as the background.
 
-r3 instead uses a shared warm sky/fog colour, starts haze at 260 m and reaches full opacity at 760 m. That leaves about 140 m between complete visual disappearance and the camera far plane. Large cliff meshes also disable frustum culling. The intended result is that distant geometry dissolves into dusty atmosphere rather than visibly loading/unloading or being chopped off.
+## Retro Urban Kit
+
+DEAD CANYON uses a small CC0 subset of Kenney's Retro Urban Kit 2.0. Only geometry is retained from the selected models and TURN supplies lightweight materials. No dynamic scenery lights or shadow casters are added.
+
+See `turn-lab/assets/kenney/retro-urban/LICENSE.txt`.
 
 ## Try it
 
-Open `https://enkel.design/turn-lab/`, choose **DEAD CANYON**, and test especially:
+Open `https://enkel.design/turn-lab/`, choose **DEAD CANYON**, and check especially:
 
-1. the long views down the road at speed;
-2. the eastern cliff run where the old wall could swallow the camera;
-3. the AIRPORT-style hairpin and its new landmark/service area;
-4. whether distant road, mesas and cliff forms disappear gradually into haze;
-5. iPad performance.
+1. the formerly problematic northern hairpin area, which should now be a clean flowing sweep;
+2. yellow/black roadside details staying clear of the driveable road;
+3. the closed terrain/ridge edges with no daylight underneath;
+4. the embedded overhangs and the DEAD CANYON CROWN landmark;
+5. the new loading/intro angle and how much track/scenery it reveals;
+6. whether one standing sentinel rock feels special rather than repetitive.
 
 ## Safety
 
 - No production `turn/` files are changed.
 - The first LAB import map remains identical to current production TURN.
-- Only the second LAB-scoped map replaces the internal MOUNTAIN slot.
+- LAB overrides only the internal MOUNTAIN track modules plus its intro camera.
 - Production physics, handling, Drive By Ear, vehicles, UI and scoring remain unchanged.

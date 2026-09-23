@@ -21,6 +21,7 @@ page.on('console', (message) => {
 });
 
 let metrics;
+let introCamera;
 try {
   const response = await page.goto(`${baseUrl}/turn-lab/?visual-smoke=dead-canyon`, {
     waitUntil: 'domcontentloaded',
@@ -67,6 +68,30 @@ try {
     { timeout: 90_000 }
   );
 
+  await page.evaluate(async () => {
+    const { showTrackIntro } = await import('/turn/ui/track-intro.js?build=20260922-r285');
+    globalThis.__deadCanyonVisualIntro = showTrackIntro('mountain');
+  });
+  await page.waitForFunction(
+    () => document.body.classList.contains('turn-track-intro'),
+    null,
+    { timeout: 15_000 }
+  );
+  await page.evaluate(() => new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
+  introCamera = await page.evaluate(() => ({
+    position: globalThis.__turnRuntime.camera.position.toArray(),
+    fov: globalThis.__turnRuntime.camera.fov
+  }));
+  await page.evaluate(() => {
+    document.querySelector('.m8-home')?.style.setProperty('display', 'none', 'important');
+    document.querySelector('.track-select')?.style.setProperty('display', 'none', 'important');
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-intro.png'), fullPage: true });
+  await page.evaluate(() => globalThis.__deadCanyonVisualIntro);
+
   metrics = await page.evaluate(async () => {
     const runtime = globalThis.__turnRuntime;
     await Promise.resolve(runtime.activeWorld?.ready);
@@ -91,6 +116,13 @@ try {
       hasDistantMesas: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon distant haze mesas')),
       canyonBarrierCount: runtime.activeWorld.getObjectByName('Dead Canyon canyon-edge barriers')?.count ?? 0,
       hasHairpinLandmark: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon hairpin landmark')),
+      hasCanyonCrown: Boolean(runtime.activeWorld.getObjectByName('DEAD CANYON CROWN landmark')),
+      terrainSkirtCount: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon terrain skirt ')
+      ).length,
+      hasRoadsideChevrons: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon roadside chevrons')),
+      hasStandingRock: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon sentinel standing rock')),
+      hasFallenRocks: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon fallen rock formations')),
       hasNeedleBases: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon needle bases')),
       cameraFar: runtime.camera?.far ?? null,
       backgroundColor: runtime.scene?.background?.getHex?.() ?? null,
@@ -108,15 +140,17 @@ try {
 
 await fs.writeFile(
   path.join(outputDir, 'metrics.json'),
-  `${JSON.stringify({ metrics, browserErrors }, null, 2)}\n`
+  `${JSON.stringify({ metrics, introCamera, browserErrors }, null, 2)}\n`
 );
 
 assert.deepEqual(browserErrors, [], `TURN LAB DEAD CANYON produced browser errors:\n${browserErrors.join('\n')}`);
+assert.deepEqual(introCamera.position.map((value) => Math.round(value)), [80, 165, -590]);
+assert.equal(introCamera.fov, 55);
 assert.equal(metrics.trackId, 'mountain');
 assert.equal(metrics.sampleCount, 2160);
-assert.ok(metrics.trackLength > 3250 && metrics.trackLength < 3500,
-  `Expected sampled DEAD CANYON length around 3.35 km, got ${metrics.trackLength}`);
-assert.equal(metrics.deadCanyon.version, 'dead-canyon-r3');
+assert.ok(metrics.trackLength > 3150 && metrics.trackLength < 3350,
+  `Expected sampled DEAD CANYON length around 3.23 km, got ${metrics.trackLength}`);
+assert.equal(metrics.deadCanyon.version, 'dead-canyon-r4');
 assert.equal(metrics.deadCanyon.proceduralWorld, true);
 assert.equal(metrics.deadCanyon.easternEscarpmentHeight, 220);
 assert.equal(metrics.deadCanyon.cliffBands, 4);
@@ -126,7 +160,11 @@ assert.equal(metrics.deadCanyon.cliffDepth, 2800);
 assert.equal(metrics.deadCanyon.fogFadeNear, 260);
 assert.equal(metrics.deadCanyon.fogFadeFar, 760);
 assert.equal(metrics.deadCanyon.distantMesaCount, 12);
-assert.equal(metrics.deadCanyon.hairpinLandmark, true);
+assert.equal(metrics.deadCanyon.hairpinLandmark, false);
+assert.equal(metrics.deadCanyon.roadsideChevronCount, 5);
+assert.equal(metrics.deadCanyon.canyonOverhangCount, 4);
+assert.equal(metrics.deadCanyon.landmark, 'DEAD CANYON CROWN');
+assert.equal(metrics.deadCanyon.standingRockCount, 1);
 assert.equal(metrics.deadCanyon.needleCount, 0);
 assert.equal(metrics.deadCanyon.geologyArchetypes, 4);
 assert.equal(metrics.deadCanyon.solarPanels, 24);
@@ -142,7 +180,12 @@ assert.equal(metrics.cliffBandCount, 4);
 assert.equal(metrics.skylineMesaCount, 5);
 assert.equal(metrics.hasDistantMesas, true);
 assert.ok(metrics.canyonBarrierCount >= 20);
-assert.equal(metrics.hasHairpinLandmark, true);
+assert.equal(metrics.hasHairpinLandmark, false);
+assert.equal(metrics.hasCanyonCrown, true);
+assert.equal(metrics.terrainSkirtCount, 2);
+assert.equal(metrics.hasRoadsideChevrons, true);
+assert.equal(metrics.hasStandingRock, true);
+assert.equal(metrics.hasFallenRocks, true);
 assert.equal(metrics.hasNeedleBases, false);
 assert.equal(metrics.cameraFar, 900);
 assert.equal(metrics.backgroundColor, metrics.fogColor,
@@ -155,7 +198,8 @@ assert.ok(metrics.fogFar <= metrics.cameraFar - 100,
 for (const resource of [
   '/turn-lab/tracks/definitions.js',
   '/turn-lab/tracks/mountain-layout.js',
-  '/turn-lab/tracks/registry.js'
+  '/turn-lab/tracks/registry.js',
+  '/turn-lab/render/track-intro-camera.js'
 ]) {
   assert.ok(metrics.labResources.includes(resource), `Scoped runtime did not load ${resource}`);
 }
@@ -167,5 +211,7 @@ console.log('TURN LAB DEAD CANYON browser/runtime smoke passed:', JSON.stringify
   fogFar: metrics.fogFar,
   cameraFar: metrics.cameraFar,
   barriers: metrics.canyonBarrierCount,
+  landmark: metrics.deadCanyon.landmark,
+  terrainSkirts: metrics.terrainSkirtCount,
   retroUrbanInstances: metrics.deadCanyon.retroUrbanInstances
 }));

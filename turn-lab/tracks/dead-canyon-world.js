@@ -42,6 +42,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
 
   makeDesertFloor(world);
   makeTerrainRibbon(world, samples, trackWidth);
+  makeTerrainSkirts(world, samples, trackWidth);
   makeRoad(world, samples, trackWidth);
   makeShoulders(world, samples, trackWidth);
   makeRoadEdgeLines(world, samples, trackWidth);
@@ -50,14 +51,16 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
   makeEasternEscarpment(world);
   makeDistantCanyonSilhouettes(world);
   makeCanyonEdgeBarriers(world, samples, trackWidth);
-  makeHairpinLandmark(world);
+  makeRoadsideChevrons(world, samples, trackWidth);
+  makeCanyonOverhangs(world);
+  makeDeadCanyonLandmark(world);
   makeRockFormations(world);
   makeSolarField(world);
   makeTracksideRocks(world, samples, trackWidth);
   makeSun(world);
 
   const metrics = {
-    version: 'dead-canyon-r3',
+    version: 'dead-canyon-r4',
     proceduralWorld: true,
     routeSamples: samples.length,
     theme: 'golden-hour-canyon-road',
@@ -72,7 +75,11 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
     fogSafetyMargin: Number.isFinite(runtime?.camera?.far) ? runtime.camera.far - 760 : null,
     distantMesaCount: 12,
     canyonBarrierCount: 0,
-    hairpinLandmark: true,
+    hairpinLandmark: false,
+    roadsideChevronCount: 5,
+    canyonOverhangCount: 4,
+    landmark: 'DEAD CANYON CROWN',
+    standingRockCount: 1,
     needleCount: 0,
     geologyArchetypes: 4,
     solarPanels: 24,
@@ -170,6 +177,47 @@ function makeTerrainRibbon(world, samples, trackWidth) {
   terrain.receiveShadow = false;
   terrain.name = 'Dead Canyon route terrain';
   world.add(terrain);
+}
+
+function makeTerrainSkirts(world, samples, trackWidth) {
+  // Close the outer edge of the raised route terrain down to the desert floor.
+  // Without this skirt the high side can reveal daylight underneath the ridge.
+  const half = trackWidth / 2;
+  const sides = [
+    { offset: -(half + 95), phaseColumn: 0, name: 'left' },
+    { offset: half + 95, phaseColumn: 3, name: 'right' }
+  ];
+
+  for (const side of sides) {
+    const positions = [];
+    const indices = [];
+    for (let index = 0; index <= samples.length; index += 1) {
+      const sample = samples[index % samples.length];
+      const top = sample.point.clone().addScaledVector(sample.normal, side.offset);
+      top.y = Math.max(
+        0,
+        sample.point.y - 7.5 + Math.sin(index * 0.017 + side.phaseColumn) * 1.8
+      );
+      positions.push(top.x, top.y, top.z, top.x, -0.18, top.z);
+    }
+    for (let index = 0; index < samples.length; index += 1) {
+      const a = index * 2;
+      const b = a + 1;
+      const c = a + 2;
+      const d = a + 3;
+      indices.push(a, c, b, b, c, d);
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    const skirt = new THREE.Mesh(geometry, material(SAND_DARK, 1, true));
+    skirt.name = `Dead Canyon terrain skirt ${side.name}`;
+    skirt.castShadow = false;
+    skirt.receiveShadow = false;
+    world.add(skirt);
+  }
 }
 
 function makeRoad(world, samples, trackWidth) {
@@ -400,45 +448,92 @@ function makeCanyonEdgeBarriers(world, samples, trackWidth) {
   world.add(barriers);
 }
 
-function makeHairpinLandmark(world) {
-  const island = new THREE.Group();
-  island.name = 'Dead Canyon hairpin landmark';
-
-  const base = new THREE.Mesh(
-    new THREE.CylinderGeometry(31, 39, 17, 7, 1, false),
-    material(ROCK_DARK, 1, true)
-  );
-  base.position.set(280, 8.6, 282);
-  island.add(base);
-
-  const crown = new THREE.Mesh(
-    new THREE.CylinderGeometry(20, 29, 10, 7, 1, false),
-    material(ROCK, 1, true)
-  );
-  crown.position.set(280, 21.8, 282);
-  crown.rotation.y = 0.2;
-  island.add(crown);
-
-  const signMaterial = new THREE.MeshBasicMaterial({ color: 0xf2c34f });
+function makeRoadsideChevrons(world, samples, trackWidth) {
+  // Keep the graphic yellow/black detail, but explicitly outside the driveable road.
+  const frame = frameAt(samples, 0.245);
+  const side = outwardSide(frame);
+  const panelMaterial = new THREE.MeshBasicMaterial({ color: 0xf2c34f });
   const stripeMaterial = new THREE.MeshBasicMaterial({ color: 0x2a2020 });
-  const xs = [235, 255, 278, 301, 323];
-  xs.forEach((x, index) => {
+  const group = new THREE.Group();
+  group.name = 'Dead Canyon roadside chevrons';
+
+  [-18, -9, 0, 9, 18].forEach((along, index) => {
     const sign = new THREE.Group();
-    sign.name = `Dead Canyon hairpin chevron ${index + 1}`;
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(10, 3.2, 0.5), signMaterial);
+    sign.name = `Dead Canyon roadside chevron ${index + 1}`;
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(8.5, 3.0, 0.5), panelMaterial);
     sign.add(panel);
-    for (const stripeX of [-2.4, 0, 2.4]) {
-      const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.15, 2.3, 0.62), stripeMaterial);
+    for (const stripeX of [-2.2, 0, 2.2]) {
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.1, 0.62), stripeMaterial);
       stripe.position.x = stripeX;
       stripe.rotation.z = -0.42;
       sign.add(stripe);
     }
-    sign.position.set(x, 20.3, 244 + Math.abs(index - 2) * 2.5);
-    sign.rotation.y = 0;
-    island.add(sign);
+    sign.position.copy(frame.point)
+      .addScaledVector(frame.tangent, along)
+      .addScaledVector(frame.normal, side * (trackWidth / 2 + 9.5));
+    sign.position.y += 2.1;
+    sign.rotation.y = Math.atan2(frame.tangent.x, frame.tangent.z);
+    group.add(sign);
   });
 
-  world.add(island);
+  world.add(group);
+}
+
+function makeCanyonOverhangs(world) {
+  const specs = [
+    [703, 42, -430, 31, 16, 48, -0.12, 0.18],
+    [706, 76, -185, 36, 20, 58, 0.08, -0.14],
+    [704, 94, 330, 34, 18, 52, -0.06, 0.2],
+    [708, 126, 575, 39, 22, 62, 0.1, -0.12]
+  ];
+  specs.forEach(([x, y, z, sx, sy, sz, rz, ry], index) => {
+    const rock = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(1, 0),
+      material(index % 2 ? ROCK : ROCK_DARK, 1, true)
+    );
+    rock.position.set(x, y, z);
+    rock.scale.set(sx, sy, sz);
+    rock.rotation.set(0, ry, rz);
+    rock.name = `Dead Canyon embedded overhang ${index + 1}`;
+    rock.castShadow = false;
+    rock.receiveShadow = false;
+    world.add(rock);
+  });
+}
+
+function makeDeadCanyonLandmark(world) {
+  // The canyon itself is the signature landmark: one monumental recessed crown
+  // with stacked overhangs, visible from the long eastern approach.
+  const crown = new THREE.Group();
+  crown.name = 'DEAD CANYON CROWN landmark';
+
+  const recess = new THREE.Mesh(
+    new THREE.BoxGeometry(5, 170, 210),
+    material(ROCK_DEEP, 1, true)
+  );
+  recess.position.set(711, 86, 55);
+  crown.add(recess);
+
+  const shelves = [
+    [704, 58, 55, 42, 18, 82, ROCK_DARK],
+    [710, 112, 55, 48, 20, 92, ROCK],
+    [719, 166, 55, 56, 22, 104, ROCK_LIGHT]
+  ];
+  shelves.forEach(([x, y, z, sx, sy, sz, color], index) => {
+    const shelf = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(1, 0),
+      material(color, 1, true)
+    );
+    shelf.position.set(x, y, z);
+    shelf.scale.set(sx, sy, sz);
+    shelf.rotation.set(0, 0.08 * (index - 1), -0.04 * index);
+    shelf.name = `DEAD CANYON CROWN shelf ${index + 1}`;
+    shelf.castShadow = false;
+    shelf.receiveShadow = false;
+    crown.add(shelf);
+  });
+
+  world.add(crown);
 }
 
 function makeRockFormations(world) {
@@ -474,25 +569,37 @@ function makeRockFormations(world) {
   tableCap.name = 'Dead Canyon table mesa caps';
   world.add(tableBase, tableCap);
 
-  const buttes = [
-    [-625, 330, 88, 34], [-650, 20, 118, 31], [-605, -270, 72, 38],
-    [420, -505, 91, 33], [250, 520, 103, 28]
+  const sentinel = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(1, 0),
+    material(ROCK_DARK, 1, true)
+  );
+  sentinel.position.set(-650, 58, 20);
+  sentinel.scale.set(31, 65, 28);
+  sentinel.rotation.set(-0.04, 0.55, 0.05);
+  sentinel.name = 'Dead Canyon sentinel standing rock';
+  world.add(sentinel);
+
+  const fallenSites = [
+    [-625, 330, 34, 14, 43, 0.35],
+    [-605, -270, 40, 15, 48, -0.28],
+    [420, -505, 36, 13, 41, 0.42],
+    [250, 520, 38, 14, 45, -0.36]
   ];
-  const butte = new THREE.InstancedMesh(
+  const fallen = new THREE.InstancedMesh(
     new THREE.DodecahedronGeometry(1, 0),
     material(ROCK_DARK, 1, true),
-    buttes.length
+    fallenSites.length
   );
-  buttes.forEach(([x, z, height, radius], index) => {
-    dummy.position.set(x, height * 0.45, z);
-    dummy.scale.set(radius, height * 0.55, radius * (0.72 + (index % 3) * 0.12));
-    dummy.rotation.set(index * 0.07, index * 0.68, index * -0.04);
+  fallenSites.forEach(([x, z, sx, sy, sz, tilt], index) => {
+    dummy.position.set(x, sy * 0.72, z);
+    dummy.scale.set(sx, sy, sz);
+    dummy.rotation.set(tilt, index * 0.72, Math.PI / 2.7 + index * 0.08);
     dummy.updateMatrix();
-    butte.setMatrixAt(index, dummy.matrix);
+    fallen.setMatrixAt(index, dummy.matrix);
   });
-  butte.instanceMatrix.needsUpdate = true;
-  butte.name = 'Dead Canyon eroded buttes';
-  world.add(butte);
+  fallen.instanceMatrix.needsUpdate = true;
+  fallen.name = 'Dead Canyon fallen rock formations';
+  world.add(fallen);
 
   const domes = [
     [-360, 500, 42, 58], [-515, -440, 35, 64], [160, -520, 38, 55]
@@ -613,8 +720,8 @@ async function installRetroUrbanSites(world, samples, trackWidth) {
   const cliff = frameAt(samples, 0.225);
   instances += placeCliffMaintenance(world, templates, cliff, trackWidth);
 
-  const hairpinService = frameAt(samples, 0.405);
-  instances += placeHairpinService(world, templates, hairpinService, trackWidth);
+  const cliffService = frameAt(samples, 0.405);
+  instances += placeCliffService(world, templates, cliffService, trackWidth);
 
   const scrapyard = frameAt(samples, 0.565);
   instances += placeOutpost(world, templates, scrapyard, trackWidth, 'scrapyard');
@@ -668,22 +775,22 @@ function placeCliffMaintenance(world, templates, frame, trackWidth) {
   return count;
 }
 
-function placeHairpinService(world, templates, frame, trackWidth) {
+function placeCliffService(world, templates, frame, trackWidth) {
   const outside = outwardSide(frame);
   let count = 0;
-  count += placeTemplate(world, templates.scaffold, frame, -24, outside * (trackWidth / 2 + 28), 1.1, 0.1, 'hairpin-watchtower');
-  count += placeTemplate(world, templates.garage, frame, 8, outside * (trackWidth / 2 + 34), 1.15, -0.12, 'hairpin-service-bay');
-  count += placeTemplate(world, templates.truck, frame, 20, outside * (trackWidth / 2 + 20), 1.0, Math.PI / 2, 'hairpin-truck');
+  count += placeTemplate(world, templates.scaffold, frame, -24, outside * (trackWidth / 2 + 40), 1.1, 0.1, 'cliff-service-watchtower');
+  count += placeTemplate(world, templates.garage, frame, 8, outside * (trackWidth / 2 + 50), 1.15, -0.12, 'cliff-service-bay');
+  count += placeTemplate(world, templates.truck, frame, 20, outside * (trackWidth / 2 + 32), 1.0, Math.PI / 2, 'cliff-service-truck');
   for (let i = 0; i < 4; i += 1) {
     count += placeTemplate(
       world,
       templates.barrier,
       frame,
       -14 + i * 8,
-      outside * (trackWidth / 2 + 7),
+      outside * (trackWidth / 2 + 16),
       0.95,
       0,
-      'hairpin-retro-barrier-' + i
+      'cliff-service-barrier-' + i
     );
   }
   return count;
