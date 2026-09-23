@@ -18,7 +18,6 @@ const STEEL = 0x615d62;
 const RUST = 0x7e493f;
 const CONCRETE = 0xbba990;
 const RETRO_GREEN = 0x4f8d7d;
-const BARRIER_YELLOW = 0xe2b64c;
 const SUN = 0xffb25f;
 const ROAD_HEIGHT = 0.16;
 const RETRO_ROOT = '/turn-lab/assets/kenney/retro-urban/';
@@ -28,7 +27,6 @@ const RETRO_ASSETS = Object.freeze({
   brokenWall: Object.freeze({ file: 'wall-broken-type-a.obj', height: 8, color: 0x9e8e7d }),
   scaffold: Object.freeze({ file: 'scaffolding-structure.obj', height: 20, color: RUST }),
   truck: Object.freeze({ file: 'truck-green-cargo.obj', height: 4.8, color: RETRO_GREEN }),
-  barrier: Object.freeze({ file: 'detail-barrier-strong-damaged.obj', height: 2.4, color: BARRIER_YELLOW }),
   parkTree: Object.freeze({ file: 'tree-park-large.obj', height: 14, color: 0xd99a3b }),
   shedPoles: Object.freeze({ file: 'roof-metal-poles.obj', height: 7.2, color: 0x6e625b }),
   shedRoof: Object.freeze({ file: 'roof-metal-type-a.obj', height: 3.8, color: 0x8d5943 })
@@ -63,7 +61,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
   makeSun(world);
 
   const metrics = {
-    version: 'dead-canyon-r5',
+    version: 'dead-canyon-polish',
     proceduralWorld: true,
     routeSamples: samples.length,
     theme: 'golden-hour-canyon-road',
@@ -88,6 +86,9 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
     openShedCount: 1,
     rustTruckCount: 1,
     ruinClusterCount: 1,
+    yellowStepBarrierCount: 0,
+    embeddedWallRocks: true,
+    shedRoofSeated: true,
     needleCount: 0,
     geologyArchetypes: 4,
     solarPanels: 24,
@@ -491,10 +492,10 @@ function makeCanyonOverhangs(world) {
   // Broad strata shapes: larger in wall-width/height, deliberately shallow in X.
   // Their centres sit inside the cliff face so no rock can read as floating.
   const specs = [
-    [722, 48, -430, 15, 27, 84, -0.08, 0.10],
-    [723, 86, -185, 16, 33, 98, 0.05, -0.08],
-    [722, 111, 330, 15, 31, 92, -0.04, 0.10],
-    [724, 143, 575, 16, 35, 104, 0.06, -0.06]
+    [744, 48, -430, 15, 27, 84, -0.08, 0.10],
+    [746, 86, -185, 16, 33, 98, 0.05, -0.08],
+    [745, 111, 330, 15, 31, 92, -0.04, 0.10],
+    [747, 143, 575, 16, 35, 104, 0.06, -0.06]
   ];
   specs.forEach(([x, y, z, sx, sy, sz, rz, ry], index) => {
     const rock = new THREE.Mesh(
@@ -518,9 +519,9 @@ function makeDeadCanyonLandmark(world) {
   crown.name = 'DEAD CANYON CROWN landmark';
 
   const shelves = [
-    [723, 62, 55, 17, 34, 132, ROCK_DARK],
-    [724, 121, 55, 18, 40, 148, ROCK],
-    [725, 181, 55, 19, 44, 164, ROCK_LIGHT]
+    [748, 62, 55, 17, 34, 132, ROCK_DARK],
+    [750, 121, 55, 18, 40, 148, ROCK],
+    [752, 181, 55, 19, 44, 164, ROCK_LIGHT]
   ];
   shelves.forEach(([x, y, z, sx, sy, sz, color], index) => {
     const shelf = new THREE.Mesh(
@@ -594,7 +595,7 @@ function makeRockFormations(world) {
     fallenSites.length
   );
   fallenSites.forEach(([x, z, sx, sy, sz, tilt], index) => {
-    dummy.position.set(x, sy * 0.72, z);
+    dummy.position.set(x, Math.max(1.5, sy * 0.28), z);
     dummy.scale.set(sx, sy, sz);
     dummy.rotation.set(tilt, index * 0.72, Math.PI / 2.7 + index * 0.08);
     dummy.updateMatrix();
@@ -830,7 +831,16 @@ function placeOpenShed(world, templates, frame, trackWidth) {
     world, templates.shedRoof, frame, -5, lateral, 1.12, 0.08, 'open-shed-roof'
   );
   if (roof) {
-    roof.position.y += 6.7;
+    // Seat the roof from the actual transformed bounds instead of a guessed
+    // vertical offset so it visibly rests on the Kenney pole frame.
+    poles?.updateMatrixWorld(true);
+    roof.updateMatrixWorld(true);
+    const poleBounds = poles ? new THREE.Box3().setFromObject(poles) : null;
+    const roofBounds = new THREE.Box3().setFromObject(roof);
+    const supportTop = poleBounds?.max?.y;
+    if (Number.isFinite(supportTop) && Number.isFinite(roofBounds.min.y)) {
+      roof.position.y += supportTop - roofBounds.min.y - 0.10;
+    }
     count += 1;
   }
   return count;
@@ -879,18 +889,6 @@ function placeRuinCluster(world, templates, frame, trackWidth) {
     );
   });
 
-  for (let index = 0; index < 6; index += 1) {
-    count += placeTemplate(
-      world,
-      templates.barrier,
-      frame,
-      -22 + index * 9,
-      side * (trackWidth / 2 + 10.5),
-      0.95,
-      index % 2 ? 0.04 : -0.04,
-      'ruin-road-barrier-' + (index + 1)
-    );
-  }
   return count;
 }
 
@@ -922,18 +920,6 @@ function placeOutpost(world, templates, frame, trackWidth, id) {
   count += placeTemplate(world, templates.brokenWall, frame, 18, baseLateral + outside * 4, 1.0, 0.28, id + '-broken-wall');
   count += placeTemplate(world, templates.scaffold, frame, 31, baseLateral + outside * 14, 0.78, 0.12, id + '-scaffold');
   count += placeTemplate(world, templates.truck, frame, 9, outside * (trackWidth / 2 + 20), 1.05, Math.PI / 2, id + '-truck');
-  for (let i = 0; i < 4; i += 1) {
-    count += placeTemplate(
-      world,
-      templates.barrier,
-      frame,
-      -10 + i * 7,
-      outside * (trackWidth / 2 + 7.5),
-      0.92,
-      i % 2 ? 0.08 : -0.08,
-      id + '-barrier-' + i
-    );
-  }
   makeOutpostCanopy(world, frame, outside, trackWidth, id);
   return count;
 }
@@ -945,9 +931,6 @@ function placeCliffMaintenance(world, templates, frame, trackWidth) {
   count += placeTemplate(world, templates.scaffold, frame, 3, eastSide * (trackWidth / 2 + 34), 0.9, -0.18, 'cliff-scaffold-b');
   count += placeTemplate(world, templates.brokenWall, frame, 26, eastSide * (trackWidth / 2 + 24), 1.25, 0.16, 'cliff-ruin');
   count += placeTemplate(world, templates.truck, frame, -5, eastSide * (trackWidth / 2 + 17), 1.0, Math.PI / 2, 'cliff-truck');
-  for (let i = 0; i < 5; i += 1) {
-    count += placeTemplate(world, templates.barrier, frame, -20 + i * 9, eastSide * (trackWidth / 2 + 6.8), 0.9, 0, 'cliff-barrier-' + i);
-  }
   return count;
 }
 
@@ -957,18 +940,6 @@ function placeCliffService(world, templates, frame, trackWidth) {
   count += placeTemplate(world, templates.scaffold, frame, -24, outside * (trackWidth / 2 + 40), 1.1, 0.1, 'cliff-service-watchtower');
   count += placeTemplate(world, templates.garage, frame, 8, outside * (trackWidth / 2 + 50), 1.15, -0.12, 'cliff-service-bay');
   count += placeTemplate(world, templates.truck, frame, 20, outside * (trackWidth / 2 + 32), 1.0, Math.PI / 2, 'cliff-service-truck');
-  for (let i = 0; i < 4; i += 1) {
-    count += placeTemplate(
-      world,
-      templates.barrier,
-      frame,
-      -14 + i * 8,
-      outside * (trackWidth / 2 + 16),
-      0.95,
-      0,
-      'cliff-service-barrier-' + i
-    );
-  }
   return count;
 }
 
