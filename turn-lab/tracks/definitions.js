@@ -1,6 +1,6 @@
 // TURN LAB definition overlay. All production tracks are inherited unchanged;
 // only the internal MOUNTAIN slot becomes DEAD CANYON inside /turn-lab/.
-import * as production from '/turn/tracks/definitions.js?lab-base=dead-canyon-r2';
+import * as production from '/turn/tracks/definitions.js?lab-base=dead-canyon-r3';
 
 export const DEFAULT_TRACK_ID = production.DEFAULT_TRACK_ID;
 export const TRACK_SAMPLE_COUNT = production.TRACK_SAMPLE_COUNT;
@@ -13,7 +13,7 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
     name: 'Dead Canyon',
     difficulty: 'ADVANCED',
     eyebrow: 'LAB TRACK',
-    description: 'Monumental slabs. One hairpin. One chicane. Long desert speed.',
+    description: 'Canyon road. Dust haze. One hairpin. One chicane. Long desert speed.',
     accent: '#ff7a3d',
     accentSoft: '#ffd0ad',
     storageRevision: 'dead-canyon-lab-r2',
@@ -28,16 +28,16 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
       boundaryMinimumRecoverySpeed: 6,
       colliders: Object.freeze([])
     }),
-    sky: 0x4d263c,
-    fog: 0x9b5349,
-    fogNear: 420,
-    fogFar: 1350,
+    sky: 0xe4ad8b,
+    fog: 0xe4ad8b,
+    fogNear: 260,
+    fogFar: 760,
     lighting: Object.freeze({
-      hemisphereSky: 0xffb27a,
-      hemisphereGround: 0x321a25,
-      hemisphereIntensity: 0.72,
-      directionalColor: 0xffd1a3,
-      directionalIntensity: 0.82
+      hemisphereSky: 0xffd7b4,
+      hemisphereGround: 0x6b3b32,
+      hemisphereIntensity: 1.05,
+      directionalColor: 0xffcf8d,
+      directionalIntensity: 1.18
     })
   });
 }));
