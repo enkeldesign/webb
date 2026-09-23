@@ -148,6 +148,9 @@ try {
       hasDarkTunnel: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon dark tunnel')),
       tunnelWallInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel walls')?.count ?? 0,
       tunnelCeilingInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel ceiling')?.count ?? 0,
+      tunnelMountainLeftInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel mountain left')?.count ?? 0,
+      tunnelMountainRightInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel mountain right')?.count ?? 0,
+      tunnelMountainRidgeInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel mountain ridge')?.count ?? 0,
       hasTunnelEntrance: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon tunnel entrance portal')),
       hasTunnelExit: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon tunnel exit portal')),
       hasDyingBulb: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon dying tunnel bulb')),
@@ -223,6 +226,10 @@ try {
       roadEdgeOpacity: roadEdge?.material?.opacity ?? null,
       bulbOpacity: bulb?.material?.opacity ?? null,
       poolOpacity: pool?.material?.opacity ?? null,
+      flickerSamples: [0, 180, 360, 540, 720, 900, 1080, 1260].map((now) => {
+        controller.applyProgress(tunnel.tunnelBulbProgress, now);
+        return controller.state.flicker;
+      }),
       darknessSamples: {
         outsideBefore: controller.darknessAt(tunnel.tunnelStartProgress - 0.001),
         entrance: controller.darknessAt((tunnel.tunnelStartProgress + tunnel.tunnelDarkStartProgress) / 2),
@@ -290,7 +297,7 @@ assert.equal(metrics.trackId, 'mountain');
 assert.equal(metrics.sampleCount, 2160);
 assert.ok(metrics.trackLength > 3150 && metrics.trackLength < 3350,
   `Expected sampled DEAD CANYON length around 3.23 km, got ${metrics.trackLength}`);
-assert.equal(metrics.deadCanyon.version, 'dead-canyon-r6');
+assert.equal(metrics.deadCanyon.version, 'dead-canyon-r7');
 assert.equal(metrics.deadCanyon.proceduralWorld, true);
 assert.equal(metrics.deadCanyon.easternEscarpmentHeight, 220);
 assert.equal(metrics.deadCanyon.cliffBands, 4);
@@ -319,7 +326,11 @@ assert.equal(metrics.deadCanyon.tunnelDarkEndProgress, 0.098);
 assert.equal(metrics.deadCanyon.tunnelEndProgress, 0.122);
 assert.ok(metrics.deadCanyon.tunnelLengthMeters > 250 && metrics.deadCanyon.tunnelLengthMeters < 380);
 assert.ok(metrics.deadCanyon.tunnelModuleCount >= 20);
+assert.equal(metrics.deadCanyon.tunnelMountainCladding, true);
+assert.equal(metrics.deadCanyon.tunnelMountainModuleCount, metrics.deadCanyon.tunnelModuleCount);
+assert.equal(metrics.deadCanyon.tunnelPortalStyle, 'faceted-rock');
 assert.equal(metrics.deadCanyon.tunnelDyingBulb, true);
+assert.equal(metrics.deadCanyon.tunnelFlicker, 'strong-irregular');
 assert.equal(metrics.deadCanyon.tunnelDynamicLights, 0);
 assert.equal(metrics.deadCanyon.tunnelGuiUnaffected, true);
 assert.equal(metrics.deadCanyon.needleCount, 0);
@@ -354,6 +365,9 @@ assert.equal(metrics.hasNeedleBases, false);
 assert.equal(metrics.hasDarkTunnel, true);
 assert.ok(metrics.tunnelWallInstances >= 40);
 assert.ok(metrics.tunnelCeilingInstances >= 20);
+assert.equal(metrics.tunnelMountainLeftInstances, metrics.deadCanyon.tunnelModuleCount);
+assert.equal(metrics.tunnelMountainRightInstances, metrics.deadCanyon.tunnelModuleCount);
+assert.equal(metrics.tunnelMountainRidgeInstances, metrics.deadCanyon.tunnelModuleCount);
 assert.equal(metrics.hasTunnelEntrance, true);
 assert.equal(metrics.hasTunnelExit, true);
 assert.equal(metrics.hasDyingBulb, true);
@@ -376,6 +390,10 @@ assert.ok(tunnelInspection.bulbOpacity > 0.01 && tunnelInspection.bulbOpacity < 
   'The dying bulb should remain visible but dim');
 assert.ok(tunnelInspection.poolOpacity > 0 && tunnelInspection.poolOpacity < 0.02,
   'The bulb pool must be a tiny intentionality cue, not a navigation light');
+assert.ok(Math.max(...tunnelInspection.flickerSamples) - Math.min(...tunnelInspection.flickerSamples) > 0.22,
+  'The dying bulb must have visibly stronger irregular flicker than the r6 pass');
+assert.ok(Math.min(...tunnelInspection.flickerSamples) < 0.16);
+assert.ok(Math.max(...tunnelInspection.flickerSamples) > 0.34);
 assert.equal(tunnelInspection.before.hudDisplay, tunnelInspection.after.hudDisplay);
 assert.equal(tunnelInspection.before.mapDisplay, tunnelInspection.after.mapDisplay);
 assert.equal(tunnelInspection.before.mapOpacity, tunnelInspection.after.mapOpacity);
