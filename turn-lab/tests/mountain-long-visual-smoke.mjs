@@ -91,6 +91,13 @@ try {
       hasDistantMesas: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon distant haze mesas')),
       canyonBarrierCount: runtime.activeWorld.getObjectByName('Dead Canyon canyon-edge barriers')?.count ?? 0,
       hasHairpinLandmark: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon hairpin landmark')),
+      hasCanyonCrown: Boolean(runtime.activeWorld.getObjectByName('DEAD CANYON CROWN landmark')),
+      terrainSkirtCount: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon terrain skirt ')
+      ).length,
+      hasRoadsideChevrons: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon roadside chevrons')),
+      hasStandingRock: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon sentinel standing rock')),
+      hasFallenRocks: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon fallen rock formations')),
       hasNeedleBases: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon needle bases')),
       cameraFar: runtime.camera?.far ?? null,
       backgroundColor: runtime.scene?.background?.getHex?.() ?? null,
@@ -114,9 +121,9 @@ await fs.writeFile(
 assert.deepEqual(browserErrors, [], `TURN LAB DEAD CANYON produced browser errors:\n${browserErrors.join('\n')}`);
 assert.equal(metrics.trackId, 'mountain');
 assert.equal(metrics.sampleCount, 2160);
-assert.ok(metrics.trackLength > 3250 && metrics.trackLength < 3500,
-  `Expected sampled DEAD CANYON length around 3.35 km, got ${metrics.trackLength}`);
-assert.equal(metrics.deadCanyon.version, 'dead-canyon-r3');
+assert.ok(metrics.trackLength > 3150 && metrics.trackLength < 3350,
+  `Expected sampled DEAD CANYON length around 3.23 km, got ${metrics.trackLength}`);
+assert.equal(metrics.deadCanyon.version, 'dead-canyon-r4');
 assert.equal(metrics.deadCanyon.proceduralWorld, true);
 assert.equal(metrics.deadCanyon.easternEscarpmentHeight, 220);
 assert.equal(metrics.deadCanyon.cliffBands, 4);
@@ -126,7 +133,11 @@ assert.equal(metrics.deadCanyon.cliffDepth, 2800);
 assert.equal(metrics.deadCanyon.fogFadeNear, 260);
 assert.equal(metrics.deadCanyon.fogFadeFar, 760);
 assert.equal(metrics.deadCanyon.distantMesaCount, 12);
-assert.equal(metrics.deadCanyon.hairpinLandmark, true);
+assert.equal(metrics.deadCanyon.hairpinLandmark, false);
+assert.equal(metrics.deadCanyon.roadsideChevronCount, 5);
+assert.equal(metrics.deadCanyon.canyonOverhangCount, 4);
+assert.equal(metrics.deadCanyon.landmark, 'DEAD CANYON CROWN');
+assert.equal(metrics.deadCanyon.standingRockCount, 1);
 assert.equal(metrics.deadCanyon.needleCount, 0);
 assert.equal(metrics.deadCanyon.geologyArchetypes, 4);
 assert.equal(metrics.deadCanyon.solarPanels, 24);
@@ -142,7 +153,12 @@ assert.equal(metrics.cliffBandCount, 4);
 assert.equal(metrics.skylineMesaCount, 5);
 assert.equal(metrics.hasDistantMesas, true);
 assert.ok(metrics.canyonBarrierCount >= 20);
-assert.equal(metrics.hasHairpinLandmark, true);
+assert.equal(metrics.hasHairpinLandmark, false);
+assert.equal(metrics.hasCanyonCrown, true);
+assert.equal(metrics.terrainSkirtCount, 2);
+assert.equal(metrics.hasRoadsideChevrons, true);
+assert.equal(metrics.hasStandingRock, true);
+assert.equal(metrics.hasFallenRocks, true);
 assert.equal(metrics.hasNeedleBases, false);
 assert.equal(metrics.cameraFar, 900);
 assert.equal(metrics.backgroundColor, metrics.fogColor,
@@ -155,7 +171,8 @@ assert.ok(metrics.fogFar <= metrics.cameraFar - 100,
 for (const resource of [
   '/turn-lab/tracks/definitions.js',
   '/turn-lab/tracks/mountain-layout.js',
-  '/turn-lab/tracks/registry.js'
+  '/turn-lab/tracks/registry.js',
+  '/turn-lab/render/track-intro-camera.js'
 ]) {
   assert.ok(metrics.labResources.includes(resource), `Scoped runtime did not load ${resource}`);
 }
@@ -167,5 +184,7 @@ console.log('TURN LAB DEAD CANYON browser/runtime smoke passed:', JSON.stringify
   fogFar: metrics.fogFar,
   cameraFar: metrics.cameraFar,
   barriers: metrics.canyonBarrierCount,
+  landmark: metrics.deadCanyon.landmark,
+  terrainSkirts: metrics.terrainSkirtCount,
   retroUrbanInstances: metrics.deadCanyon.retroUrbanInstances
 }));
