@@ -227,6 +227,7 @@ assert.equal(metrics.deadCanyon.geologyArchetypes, 4);
 assert.equal(metrics.deadCanyon.solarPanels, 24);
 assert.equal(metrics.deadCanyon.retroUrbanAssetsReady, true);
 assert.equal(metrics.deadCanyon.retroUrbanLoaded, 8);
+assert.equal(metrics.deadCanyon.treeTextureLoaded, true);
 assert.ok(metrics.deadCanyon.retroUrbanInstances >= 61);
 assert.deepEqual(metrics.deadCanyon.retroUrbanErrors, []);
 assert.equal(metrics.deadCanyon.dynamicLights, 0);
