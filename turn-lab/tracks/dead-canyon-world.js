@@ -28,7 +28,10 @@ const RETRO_ASSETS = Object.freeze({
   brokenWall: Object.freeze({ file: 'wall-broken-type-a.obj', height: 8, color: 0x9e8e7d }),
   scaffold: Object.freeze({ file: 'scaffolding-structure.obj', height: 20, color: RUST }),
   truck: Object.freeze({ file: 'truck-green-cargo.obj', height: 4.8, color: RETRO_GREEN }),
-  barrier: Object.freeze({ file: 'detail-barrier-strong-damaged.obj', height: 2.4, color: BARRIER_YELLOW })
+  barrier: Object.freeze({ file: 'detail-barrier-strong-damaged.obj', height: 2.4, color: BARRIER_YELLOW }),
+  parkTree: Object.freeze({ file: 'tree-park-large.obj', height: 14, color: 0xd99a3b }),
+  shedPoles: Object.freeze({ file: 'roof-metal-poles.obj', height: 7.2, color: 0x6e625b }),
+  shedRoof: Object.freeze({ file: 'roof-metal-type-a.obj', height: 3.8, color: 0x8d5943 })
 });
 
 export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtime } = {}) {
@@ -60,7 +63,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
   makeSun(world);
 
   const metrics = {
-    version: 'dead-canyon-r4',
+    version: 'dead-canyon-r5',
     proceduralWorld: true,
     routeSamples: samples.length,
     theme: 'golden-hour-canyon-road',
@@ -80,6 +83,11 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
     canyonOverhangCount: 4,
     landmark: 'DEAD CANYON CROWN',
     standingRockCount: 1,
+    tableMesaCount: 1,
+    yellowTreeCount: 6,
+    openShedCount: 1,
+    rustTruckCount: 1,
+    ruinClusterCount: 1,
     needleCount: 0,
     geologyArchetypes: 4,
     solarPanels: 24,
@@ -480,11 +488,13 @@ function makeRoadsideChevrons(world, samples, trackWidth) {
 }
 
 function makeCanyonOverhangs(world) {
+  // Broad strata shapes: larger in wall-width/height, deliberately shallow in X.
+  // Their centres sit inside the cliff face so no rock can read as floating.
   const specs = [
-    [703, 42, -430, 31, 16, 48, -0.12, 0.18],
-    [706, 76, -185, 36, 20, 58, 0.08, -0.14],
-    [704, 94, 330, 34, 18, 52, -0.06, 0.2],
-    [708, 126, 575, 39, 22, 62, 0.1, -0.12]
+    [722, 48, -430, 15, 27, 84, -0.08, 0.10],
+    [723, 86, -185, 16, 33, 98, 0.05, -0.08],
+    [722, 111, 330, 15, 31, 92, -0.04, 0.10],
+    [724, 143, 575, 16, 35, 104, 0.06, -0.06]
   ];
   specs.forEach(([x, y, z, sx, sy, sz, rz, ry], index) => {
     const rock = new THREE.Mesh(
@@ -502,22 +512,15 @@ function makeCanyonOverhangs(world) {
 }
 
 function makeDeadCanyonLandmark(world) {
-  // The canyon itself is the signature landmark: one monumental recessed crown
-  // with stacked overhangs, visible from the long eastern approach.
+  // The landmark is geology, not a backing block: three huge shallow strata
+  // shelves embedded directly into the canyon wall.
   const crown = new THREE.Group();
   crown.name = 'DEAD CANYON CROWN landmark';
 
-  const recess = new THREE.Mesh(
-    new THREE.BoxGeometry(5, 170, 210),
-    material(ROCK_DEEP, 1, true)
-  );
-  recess.position.set(711, 86, 55);
-  crown.add(recess);
-
   const shelves = [
-    [704, 58, 55, 42, 18, 82, ROCK_DARK],
-    [710, 112, 55, 48, 20, 92, ROCK],
-    [719, 166, 55, 56, 22, 104, ROCK_LIGHT]
+    [723, 62, 55, 17, 34, 132, ROCK_DARK],
+    [724, 121, 55, 18, 40, 148, ROCK],
+    [725, 181, 55, 19, 44, 164, ROCK_LIGHT]
   ];
   shelves.forEach(([x, y, z, sx, sy, sz, color], index) => {
     const shelf = new THREE.Mesh(
@@ -526,7 +529,7 @@ function makeDeadCanyonLandmark(world) {
     );
     shelf.position.set(x, y, z);
     shelf.scale.set(sx, sy, sz);
-    shelf.rotation.set(0, 0.08 * (index - 1), -0.04 * index);
+    shelf.rotation.set(0, 0.035 * (index - 1), -0.025 * index);
     shelf.name = `DEAD CANYON CROWN shelf ${index + 1}`;
     shelf.castShadow = false;
     shelf.receiveShadow = false;
@@ -537,9 +540,9 @@ function makeDeadCanyonLandmark(world) {
 }
 
 function makeRockFormations(world) {
+  // One table mesa is enough to make this geological form memorable.
   const tables = [
-    [-430, -470, 68, 42, 0.15], [-250, 485, 82, 50, -0.22],
-    [78, 505, 75, 44, 0.08], [355, 470, 61, 39, 0.31]
+    [-250, 485, 82, 50, -0.22]
   ];
   const tableBase = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(0.82, 1, 1, 8, 1, false),
@@ -698,12 +701,47 @@ function makeSun(world) {
 
 async function installRetroUrbanSites(world, samples, trackWidth) {
   const loader = new OBJLoader();
+  const treeTexture = await new THREE.TextureLoader()
+    .loadAsync(RETRO_ROOT + 'treeA.png')
+    .catch((error) => {
+      console.warn('TURN LAB: Retro Urban tree texture failed; using flat autumn foliage.', error);
+      return null;
+    });
+  if (treeTexture) {
+    treeTexture.colorSpace = THREE.SRGBColorSpace;
+    treeTexture.wrapS = THREE.RepeatWrapping;
+    treeTexture.wrapT = THREE.RepeatWrapping;
+  }
+
   const entries = await Promise.all(Object.entries(RETRO_ASSETS).map(async ([key, spec]) => {
     const source = await loader.loadAsync(RETRO_ROOT + spec.file);
     source.traverse((object) => {
       if (!object.isMesh) return;
       object.geometry.computeVertexNormals();
-      object.material = material(spec.color, key === 'truck' ? 0.72 : 0.94, true);
+
+      if (key === 'parkTree') {
+        const sourceMaterials = Array.isArray(object.material) ? object.material : [object.material];
+        const mapped = sourceMaterials.map((sourceMaterial) => {
+          const name = String(sourceMaterial?.name || '').toLowerCase();
+          if (name.includes('tree')) {
+            if (!treeTexture) return material(0xd99a3b, 1, true);
+            return new THREE.MeshStandardMaterial({
+              map: treeTexture,
+              transparent: true,
+              alphaTest: 0.12,
+              roughness: 1,
+              metalness: 0,
+              side: THREE.DoubleSide
+            });
+          }
+          if (name.includes('dirt')) return material(0x6b4435, 1, true);
+          return material(CONCRETE, 1, true);
+        });
+        object.material = Array.isArray(object.material) ? mapped : mapped[0];
+      } else {
+        object.material = material(spec.color, key === 'truck' ? 0.72 : 0.94, true);
+      }
+
       object.castShadow = false;
       object.receiveShadow = false;
     });
@@ -729,12 +767,150 @@ async function installRetroUrbanSites(world, samples, trackWidth) {
   const ghostStop = frameAt(samples, 0.825);
   instances += placeOutpost(world, templates, ghostStop, trackWidth, 'ghost-stop');
 
+  instances += placeVisibleRetroLandmarks(world, templates, samples, trackWidth);
+
   return {
     retroUrbanLoaded: entries.length,
     retroUrbanInstances: instances,
     retroUrbanErrors: [],
-    retroUrbanAssetNames: Object.freeze(Object.keys(templates))
+    retroUrbanAssetNames: Object.freeze(Object.keys(templates)),
+    treeTextureLoaded: Boolean(treeTexture)
   };
+}
+
+function placeVisibleRetroLandmarks(world, templates, samples, trackWidth) {
+  let count = 0;
+
+  const treePlacements = [
+    [0.115, -18, 31, 0.92],
+    [0.115, 2, 36, 1.08],
+    [0.115, 22, 32, 0.98],
+    [0.685, -16, 31, 1.05],
+    [0.685, 7, 37, 0.94],
+    [0.685, 28, 33, 1.12]
+  ];
+  treePlacements.forEach(([progress, along, lateralDistance, scale], index) => {
+    const frame = frameAt(samples, progress);
+    const side = outwardSide(frame);
+    count += placeTemplate(
+      world,
+      templates.parkTree,
+      frame,
+      along,
+      side * (trackWidth / 2 + lateralDistance),
+      scale,
+      index * 0.27,
+      'yellow-tree-' + (index + 1)
+    );
+  });
+
+  const shedFrame = frameAt(samples, 0.705);
+  count += placeOpenShed(world, templates, shedFrame, trackWidth);
+
+  const truckFrame = frameAt(samples, 0.735);
+  count += placeRustTruck(world, templates, truckFrame, trackWidth);
+
+  const ruinsFrame = frameAt(samples, 0.535);
+  count += placeRuinCluster(world, templates, ruinsFrame, trackWidth);
+
+  return count;
+}
+
+function placeOpenShed(world, templates, frame, trackWidth) {
+  const side = outwardSide(frame);
+  const lateral = side * (trackWidth / 2 + 36);
+  let count = 0;
+
+  const poles = cloneTemplateAt(
+    world, templates.shedPoles, frame, -5, lateral, 1.12, 0.08, 'open-shed-poles'
+  );
+  if (poles) count += 1;
+
+  const roof = cloneTemplateAt(
+    world, templates.shedRoof, frame, -5, lateral, 1.12, 0.08, 'open-shed-roof'
+  );
+  if (roof) {
+    roof.position.y += 6.7;
+    count += 1;
+  }
+  return count;
+}
+
+function placeRustTruck(world, templates, frame, trackWidth) {
+  const side = outwardSide(frame);
+  const object = cloneTemplateAt(
+    world,
+    templates.truck,
+    frame,
+    10,
+    side * (trackWidth / 2 + 29),
+    1.15,
+    Math.PI / 2 + 0.14,
+    'rust-truck'
+  );
+  if (!object) return 0;
+  object.traverse((node) => {
+    if (!node.isMesh) return;
+    node.material = material(0x7d4939, 0.98, true);
+  });
+  return 1;
+}
+
+function placeRuinCluster(world, templates, frame, trackWidth) {
+  const side = outwardSide(frame);
+  let count = 0;
+  const ruinLateral = side * (trackWidth / 2 + 31);
+
+  const ruins = [
+    [-20, 0, -0.25, 0.92],
+    [1, 6, 0.22, 1.12],
+    [21, -2, -0.08, 0.82]
+  ];
+  ruins.forEach(([along, lateralNudge, yaw, scale], index) => {
+    count += placeTemplate(
+      world,
+      templates.brokenWall,
+      frame,
+      along,
+      ruinLateral + side * lateralNudge,
+      scale,
+      yaw,
+      'stone-ruin-' + (index + 1)
+    );
+  });
+
+  for (let index = 0; index < 6; index += 1) {
+    count += placeTemplate(
+      world,
+      templates.barrier,
+      frame,
+      -22 + index * 9,
+      side * (trackWidth / 2 + 10.5),
+      0.95,
+      index % 2 ? 0.04 : -0.04,
+      'ruin-road-barrier-' + (index + 1)
+    );
+  }
+  return count;
+}
+
+function cloneTemplateAt(world, template, frame, along, lateral, scale, yawOffset, name) {
+  if (!template) return null;
+  const object = template.clone(true);
+  object.name = 'Dead Canyon Retro Urban ' + name;
+  object.position.copy(frame.point)
+    .addScaledVector(frame.tangent, along)
+    .addScaledVector(frame.normal, lateral);
+  object.position.y = Math.max(0.25, frame.point.y - 0.25);
+  object.rotation.y = Math.atan2(frame.tangent.x, frame.tangent.z) + yawOffset;
+  object.scale.multiplyScalar(scale);
+  object.traverse((node) => {
+    if (!node.isMesh) return;
+    node.castShadow = false;
+    node.receiveShadow = false;
+  });
+  world.add(object);
+  return object;
 }
 
 function placeOutpost(world, templates, frame, trackWidth, id) {

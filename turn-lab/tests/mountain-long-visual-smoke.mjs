@@ -68,6 +68,10 @@ try {
     { timeout: 90_000 }
   );
 
+  // Match the wide-phone aspect of the real DEAD CANYON feedback frames when
+  // judging the establishing composition; the default 16:10 CI viewport makes
+  // the same perspective look artificially ground-heavy.
+  await page.setViewportSize({ width: 1800, height: 900 });
   await page.evaluate(async () => {
     const { showTrackIntro } = await import('/turn/ui/track-intro.js?build=20260922-r285');
     globalThis.__deadCanyonVisualIntro = showTrackIntro('mountain');
@@ -91,6 +95,7 @@ try {
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-intro.png'), fullPage: true });
   await page.evaluate(() => globalThis.__deadCanyonVisualIntro);
+  await page.setViewportSize({ width: 1440, height: 900 });
 
   metrics = await page.evaluate(async () => {
     const runtime = globalThis.__turnRuntime;
@@ -120,6 +125,21 @@ try {
       terrainSkirtCount: runtime.activeWorld.children.filter(
         (object) => object.name?.startsWith('Dead Canyon terrain skirt ')
       ).length,
+      tableMesaInstances: runtime.activeWorld.getObjectByName('Dead Canyon table mesas')?.count ?? 0,
+      embeddedOverhangCount: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon embedded overhang ')
+      ).length,
+      yellowTreeObjects: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon Retro Urban yellow-tree-')
+      ).length,
+      openShedParts: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon Retro Urban open-shed-')
+      ).length,
+      hasRustTruck: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon Retro Urban rust-truck')),
+      ruinObjects: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon Retro Urban stone-ruin-')
+          || object.name?.startsWith('Dead Canyon Retro Urban ruin-road-barrier-')
+      ).length,
       hasRoadsideChevrons: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon roadside chevrons')),
       hasStandingRock: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon sentinel standing rock')),
       hasFallenRocks: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon fallen rock formations')),
@@ -134,6 +154,43 @@ try {
   });
 
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-active.png'), fullPage: true });
+
+  await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    runtime.renderer?.setAnimationLoop?.(null);
+    const target = runtime.activeWorld.getObjectByName('Dead Canyon Retro Urban open-shed-poles');
+    if (!target) return;
+    for (const selector of [
+      '.race-hud', '.drive-pad', '.drive-pad-shell', '.minimap-shell',
+      '.restart-lap-button', '.lap-result-toast', '.peripheral-hud'
+    ]) {
+      document.querySelectorAll(selector).forEach((node) => node.style.setProperty('display', 'none', 'important'));
+    }
+    runtime.camera.position.set(target.position.x - 82, target.position.y + 42, target.position.z - 92);
+    runtime.camera.up.set(0, 1, 0);
+    runtime.camera.lookAt(target.position.x, target.position.y + 7, target.position.z);
+    runtime.camera.fov = 52;
+    runtime.camera.updateProjectionMatrix();
+    runtime.camera.updateMatrixWorld(true);
+    runtime.renderer?.render?.(runtime.scene, runtime.camera);
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-retro-grove.png'), fullPage: true });
+
+  await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    const target = runtime.activeWorld.getObjectByName('Dead Canyon Retro Urban stone-ruin-2');
+    if (!target) return;
+    runtime.camera.position.set(target.position.x - 72, target.position.y + 34, target.position.z - 78);
+    runtime.camera.up.set(0, 1, 0);
+    runtime.camera.lookAt(target.position.x, target.position.y + 5, target.position.z);
+    runtime.camera.fov = 50;
+    runtime.camera.updateProjectionMatrix();
+    runtime.camera.updateMatrixWorld(true);
+    runtime.renderer?.render?.(runtime.scene, runtime.camera);
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-ruins.png'), fullPage: true });
 } finally {
   await browser.close();
 }
@@ -145,12 +202,12 @@ await fs.writeFile(
 
 assert.deepEqual(browserErrors, [], `TURN LAB DEAD CANYON produced browser errors:\n${browserErrors.join('\n')}`);
 assert.deepEqual(introCamera.position.map((value) => Math.round(value)), [80, 165, -590]);
-assert.equal(introCamera.fov, 55);
+assert.equal(introCamera.fov, 60);
 assert.equal(metrics.trackId, 'mountain');
 assert.equal(metrics.sampleCount, 2160);
 assert.ok(metrics.trackLength > 3150 && metrics.trackLength < 3350,
   `Expected sampled DEAD CANYON length around 3.23 km, got ${metrics.trackLength}`);
-assert.equal(metrics.deadCanyon.version, 'dead-canyon-r4');
+assert.equal(metrics.deadCanyon.version, 'dead-canyon-r5');
 assert.equal(metrics.deadCanyon.proceduralWorld, true);
 assert.equal(metrics.deadCanyon.easternEscarpmentHeight, 220);
 assert.equal(metrics.deadCanyon.cliffBands, 4);
@@ -165,16 +222,22 @@ assert.equal(metrics.deadCanyon.roadsideChevronCount, 5);
 assert.equal(metrics.deadCanyon.canyonOverhangCount, 4);
 assert.equal(metrics.deadCanyon.landmark, 'DEAD CANYON CROWN');
 assert.equal(metrics.deadCanyon.standingRockCount, 1);
+assert.equal(metrics.deadCanyon.tableMesaCount, 1);
+assert.equal(metrics.deadCanyon.yellowTreeCount, 6);
+assert.equal(metrics.deadCanyon.openShedCount, 1);
+assert.equal(metrics.deadCanyon.rustTruckCount, 1);
+assert.equal(metrics.deadCanyon.ruinClusterCount, 1);
 assert.equal(metrics.deadCanyon.needleCount, 0);
 assert.equal(metrics.deadCanyon.geologyArchetypes, 4);
 assert.equal(metrics.deadCanyon.solarPanels, 24);
 assert.equal(metrics.deadCanyon.retroUrbanAssetsReady, true);
-assert.equal(metrics.deadCanyon.retroUrbanLoaded, 5);
-assert.ok(metrics.deadCanyon.retroUrbanInstances >= 43);
+assert.equal(metrics.deadCanyon.retroUrbanLoaded, 8);
+assert.equal(metrics.deadCanyon.treeTextureLoaded, true);
+assert.ok(metrics.deadCanyon.retroUrbanInstances >= 61);
 assert.deepEqual(metrics.deadCanyon.retroUrbanErrors, []);
 assert.equal(metrics.deadCanyon.dynamicLights, 0);
 assert.equal(metrics.deadCanyon.shadowCasters, 0);
-assert.ok(metrics.retroUrbanSceneObjects >= 43,
+assert.ok(metrics.retroUrbanSceneObjects >= 61,
   `Expected loaded Retro Urban scene objects, got ${metrics.retroUrbanSceneObjects}`);
 assert.equal(metrics.cliffBandCount, 4);
 assert.equal(metrics.skylineMesaCount, 5);
@@ -183,6 +246,12 @@ assert.ok(metrics.canyonBarrierCount >= 20);
 assert.equal(metrics.hasHairpinLandmark, false);
 assert.equal(metrics.hasCanyonCrown, true);
 assert.equal(metrics.terrainSkirtCount, 2);
+assert.equal(metrics.tableMesaInstances, 1);
+assert.equal(metrics.embeddedOverhangCount, 4);
+assert.equal(metrics.yellowTreeObjects, 6);
+assert.equal(metrics.openShedParts, 2);
+assert.equal(metrics.hasRustTruck, true);
+assert.equal(metrics.ruinObjects, 9);
 assert.equal(metrics.hasRoadsideChevrons, true);
 assert.equal(metrics.hasStandingRock, true);
 assert.equal(metrics.hasFallenRocks, true);
@@ -213,5 +282,9 @@ console.log('TURN LAB DEAD CANYON browser/runtime smoke passed:', JSON.stringify
   barriers: metrics.canyonBarrierCount,
   landmark: metrics.deadCanyon.landmark,
   terrainSkirts: metrics.terrainSkirtCount,
+  tableMesas: metrics.tableMesaInstances,
+  yellowTrees: metrics.yellowTreeObjects,
+  shedParts: metrics.openShedParts,
+  ruins: metrics.ruinObjects,
   retroUrbanInstances: metrics.deadCanyon.retroUrbanInstances
 }));

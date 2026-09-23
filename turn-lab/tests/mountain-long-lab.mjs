@@ -14,7 +14,10 @@ const RETRO_ASSETS = Object.freeze([
   'wall-broken-type-a.obj',
   'scaffolding-structure.obj',
   'truck-green-cargo.obj',
-  'detail-barrier-strong-damaged.obj'
+  'detail-barrier-strong-damaged.obj',
+  'tree-park-large.obj',
+  'roof-metal-poles.obj',
+  'roof-metal-type-a.obj'
 ]);
 
 const [
@@ -124,6 +127,24 @@ assert.match(labWorld, /makeTerrainSkirts/);
 assert.match(labWorld, /makeCanyonOverhangs/);
 assert.match(labWorld, /makeDeadCanyonLandmark/);
 assert.match(labWorld, /landmark: 'DEAD CANYON CROWN'/);
+assert.match(labWorld, /tableMesaCount: 1/);
+assert.match(labWorld, /yellowTreeCount: 6/);
+assert.match(labWorld, /openShedCount: 1/);
+assert.match(labWorld, /rustTruckCount: 1/);
+assert.match(labWorld, /ruinClusterCount: 1/);
+assert.doesNotMatch(labWorld, /new THREE\.BoxGeometry\(5, 170, 210\)/,
+  'The artificial dark backing block behind DEAD CANYON CROWN must stay removed');
+assert.match(labWorld, /tree-park-large\.obj/);
+assert.match(labWorld, /treeA\.png/);
+assert.match(labWorld, /TextureLoader/);
+assert.match(labWorld, /SRGBColorSpace/);
+assert.match(labWorld, /alphaTest: 0\.12/);
+assert.match(labWorld, /roof-metal-poles\.obj/);
+assert.match(labWorld, /roof-metal-type-a\.obj/);
+assert.match(labWorld, /placeVisibleRetroLandmarks/);
+assert.match(labWorld, /placeRustTruck/);
+assert.match(labWorld, /placeOpenShed/);
+assert.match(labWorld, /placeRuinCluster/);
 assert.match(labWorld, /standingRockCount: 1/);
 assert.match(labWorld, /needleCount: 0/);
 assert.doesNotMatch(labWorld, /makeNeedleCountry/);
@@ -157,15 +178,15 @@ assert.match(labIndex, /TURN LAB · DEAD CANYON/);
 assert.match(labIndex, /Test DEAD CANYON, a long canyon-and-ruins track/);
 assert.match(labManifest, /DEAD CANYON track experiment/);
 assert.match(labIntroCamera, /position: Object\.freeze\(\[80, 165, -590\]\)/);
-assert.match(labIntroCamera, /target: Object\.freeze\(\[465, 18, -80\]\)/);
-assert.match(labIntroCamera, /fov: 55/);
-assert.match(labIntroCamera, /dead-canyon-track-intro-r4/);
+assert.match(labIntroCamera, /target: Object\.freeze\(\[465, 35, -80\]\)/);
+assert.match(labIntroCamera, /fov: 60/);
+assert.match(labIntroCamera, /dead-canyon-track-intro-r5/);
 
 const maxRouteX = Math.max(...DEAD_CANYON_CONTROL_POINTS.map(([x]) => x));
 assert.ok(715 - maxRouteX > 70,
   `Nearest cliff front must stay well clear of the eastern route; clearance was ${(715 - maxRouteX).toFixed(1)} m`);
 
-console.log(`TURN LAB DEAD CANYON r4 contract passed: ${routeLength.toFixed(1)} m, no hairpin, canyon landmark, closed terrain skirts and LAB showcase camera.`);
+console.log(`TURN LAB DEAD CANYON r5 contract passed: ${routeLength.toFixed(1)} m, integrated canyon strata, one table mesa, visible Retro Urban scenery and wider intro camera.`);
 
 async function readText(path) {
   return fs.readFile(new URL(path, REPO_ROOT), 'utf8');
