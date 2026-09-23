@@ -68,6 +68,10 @@ try {
     { timeout: 90_000 }
   );
 
+  // Match the wide-phone aspect of the real DEAD CANYON feedback frames when
+  // judging the establishing composition; the default 16:10 CI viewport makes
+  // the same perspective look artificially ground-heavy.
+  await page.setViewportSize({ width: 1800, height: 900 });
   await page.evaluate(async () => {
     const { showTrackIntro } = await import('/turn/ui/track-intro.js?build=20260922-r285');
     globalThis.__deadCanyonVisualIntro = showTrackIntro('mountain');
@@ -91,6 +95,7 @@ try {
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)));
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-intro.png'), fullPage: true });
   await page.evaluate(() => globalThis.__deadCanyonVisualIntro);
+  await page.setViewportSize({ width: 1440, height: 900 });
 
   metrics = await page.evaluate(async () => {
     const runtime = globalThis.__turnRuntime;
