@@ -28,7 +28,10 @@ const RETRO_ASSETS = Object.freeze({
   brokenWall: Object.freeze({ file: 'wall-broken-type-a.obj', height: 8, color: 0x9e8e7d }),
   scaffold: Object.freeze({ file: 'scaffolding-structure.obj', height: 20, color: RUST }),
   truck: Object.freeze({ file: 'truck-green-cargo.obj', height: 4.8, color: RETRO_GREEN }),
-  barrier: Object.freeze({ file: 'detail-barrier-strong-damaged.obj', height: 2.4, color: BARRIER_YELLOW })
+  barrier: Object.freeze({ file: 'detail-barrier-strong-damaged.obj', height: 2.4, color: BARRIER_YELLOW }),
+  parkTree: Object.freeze({ file: 'tree-park-large.obj', height: 14, color: 0xd99a3b }),
+  shedPoles: Object.freeze({ file: 'roof-metal-poles.obj', height: 7.2, color: 0x6e625b }),
+  shedRoof: Object.freeze({ file: 'roof-metal-type-a.obj', height: 3.8, color: 0x8d5943 })
 });
 
 export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtime } = {}) {
@@ -60,7 +63,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
   makeSun(world);
 
   const metrics = {
-    version: 'dead-canyon-r4',
+    version: 'dead-canyon-r5',
     proceduralWorld: true,
     routeSamples: samples.length,
     theme: 'golden-hour-canyon-road',
@@ -80,6 +83,11 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
     canyonOverhangCount: 4,
     landmark: 'DEAD CANYON CROWN',
     standingRockCount: 1,
+    tableMesaCount: 1,
+    yellowTreeCount: 6,
+    openShedCount: 1,
+    rustTruckCount: 1,
+    ruinClusterCount: 1,
     needleCount: 0,
     geologyArchetypes: 4,
     solarPanels: 24,
@@ -480,11 +488,13 @@ function makeRoadsideChevrons(world, samples, trackWidth) {
 }
 
 function makeCanyonOverhangs(world) {
+  // Broad strata shapes: larger in wall-width/height, deliberately shallow in X.
+  // Their centres sit inside the cliff face so no rock can read as floating.
   const specs = [
-    [703, 42, -430, 31, 16, 48, -0.12, 0.18],
-    [706, 76, -185, 36, 20, 58, 0.08, -0.14],
-    [704, 94, 330, 34, 18, 52, -0.06, 0.2],
-    [708, 126, 575, 39, 22, 62, 0.1, -0.12]
+    [722, 48, -430, 15, 27, 84, -0.08, 0.10],
+    [723, 86, -185, 16, 33, 98, 0.05, -0.08],
+    [722, 111, 330, 15, 31, 92, -0.04, 0.10],
+    [724, 143, 575, 16, 35, 104, 0.06, -0.06]
   ];
   specs.forEach(([x, y, z, sx, sy, sz, rz, ry], index) => {
     const rock = new THREE.Mesh(
@@ -502,22 +512,15 @@ function makeCanyonOverhangs(world) {
 }
 
 function makeDeadCanyonLandmark(world) {
-  // The canyon itself is the signature landmark: one monumental recessed crown
-  // with stacked overhangs, visible from the long eastern approach.
+  // The landmark is geology, not a backing block: three huge shallow strata
+  // shelves embedded directly into the canyon wall.
   const crown = new THREE.Group();
   crown.name = 'DEAD CANYON CROWN landmark';
 
-  const recess = new THREE.Mesh(
-    new THREE.BoxGeometry(5, 170, 210),
-    material(ROCK_DEEP, 1, true)
-  );
-  recess.position.set(711, 86, 55);
-  crown.add(recess);
-
   const shelves = [
-    [704, 58, 55, 42, 18, 82, ROCK_DARK],
-    [710, 112, 55, 48, 20, 92, ROCK],
-    [719, 166, 55, 56, 22, 104, ROCK_LIGHT]
+    [723, 62, 55, 17, 34, 132, ROCK_DARK],
+    [724, 121, 55, 18, 40, 148, ROCK],
+    [725, 181, 55, 19, 44, 164, ROCK_LIGHT]
   ];
   shelves.forEach(([x, y, z, sx, sy, sz, color], index) => {
     const shelf = new THREE.Mesh(
@@ -526,7 +529,7 @@ function makeDeadCanyonLandmark(world) {
     );
     shelf.position.set(x, y, z);
     shelf.scale.set(sx, sy, sz);
-    shelf.rotation.set(0, 0.08 * (index - 1), -0.04 * index);
+    shelf.rotation.set(0, 0.035 * (index - 1), -0.025 * index);
     shelf.name = `DEAD CANYON CROWN shelf ${index + 1}`;
     shelf.castShadow = false;
     shelf.receiveShadow = false;
@@ -537,9 +540,9 @@ function makeDeadCanyonLandmark(world) {
 }
 
 function makeRockFormations(world) {
+  // One table mesa is enough to make this geological form memorable.
   const tables = [
-    [-430, -470, 68, 42, 0.15], [-250, 485, 82, 50, -0.22],
-    [78, 505, 75, 44, 0.08], [355, 470, 61, 39, 0.31]
+    [-250, 485, 82, 50, -0.22]
   ];
   const tableBase = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(0.82, 1, 1, 8, 1, false),
