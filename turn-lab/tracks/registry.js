@@ -1,14 +1,14 @@
 // TURN LAB registry overlay. Production owns every track runtime except the
-// internal MOUNTAIN slot, which LAB repurposes as DEAD CANYON.
-import * as production from '/turn/tracks/registry.js?lab-base=dead-canyon-r5';
+// internal MOUNTAIN slot, which LAB repurposes as SUBURBS.
+import * as production from '/turn/tracks/registry.js?lab-base=suburbs';
 
 export const TRACK_RUNTIME_REGISTRY = Object.freeze(production.TRACK_RUNTIME_REGISTRY.map((entry) => {
   if (entry.id !== 'mountain') return entry;
   return Object.freeze({
     ...entry,
     async installWorld({ scene, samples, trackWidth, runtime }) {
-      const { installDeadCanyonWorld } = await import('/turn-lab/tracks/dead-canyon-world.js');
-      return installDeadCanyonWorld({ scene, samples, trackWidth, runtime });
+      const { installSuburbsWorld } = await import('/turn-lab/tracks/suburbs-world.js');
+      return installSuburbsWorld({ scene, samples, trackWidth, runtime });
     }
   });
 }));
