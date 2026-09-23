@@ -83,13 +83,15 @@ assert.notDeepEqual(
 );
 assert.equal(findProperIntersections(DEAD_CANYON_CONTROL_POINTS).length, 0);
 const routeLength = closedLength(DEAD_CANYON_CONTROL_POINTS);
-assert.ok(routeLength > 3180 && routeLength < 3270,
-  `Expected a ~3.23 km course, got ${routeLength.toFixed(1)} m`);
+assert.ok(routeLength > 3200 && routeLength < 3400,
+  `Expected a ~3.3 km course, got ${routeLength.toFixed(1)} m`);
 assert.equal(DEAD_CANYON_LAYOUT_RULES.sampleCount, 2160);
 assert.equal(DEAD_CANYON_LAYOUT_RULES.easternEscarpment, true);
 assert.equal(DEAD_CANYON_LAYOUT_RULES.airportDerivedHairpin, false);
 assert.equal(DEAD_CANYON_LAYOUT_RULES.chicane, true);
-assert.equal(DEAD_CANYON_LAYOUT_RULES.routeNarrative.length, 10);
+assert.equal(DEAD_CANYON_LAYOUT_RULES.darkTunnel, true);
+assert.deepEqual(DEAD_CANYON_LAYOUT_RULES.tunnelSequence, ['RIGHT', 'LEFT', 'OUT']);
+assert.equal(DEAD_CANYON_LAYOUT_RULES.routeNarrative.length, 11);
 assert.equal(DEAD_CANYON_CONTROL_POINTS.some(([x, , z]) => x === 280.8 && z === 212.4), false,
   'The AIRPORT-derived hairpin apex must be removed');
 assert.ok(DEAD_CANYON_CONTROL_POINTS.some(([x, , z]) => x === 198 && z === -394),
@@ -97,7 +99,7 @@ assert.ok(DEAD_CANYON_CONTROL_POINTS.some(([x, , z]) => x === 198 && z === -394)
 
 assert.match(labDefinitions, /name: 'Dead Canyon'/);
 assert.match(labDefinitions, /difficulty: 'ADVANCED'/);
-assert.match(labDefinitions, /storageRevision: 'dead-canyon-lab-r4'/);
+assert.match(labDefinitions, /storageRevision: 'dead-canyon-lab-r6'/);
 assert.match(labDefinitions, /sampleCount: 2160/);
 assert.match(labDefinitions, /sky: 0xe4ad8b/);
 assert.match(labDefinitions, /fog: 0xe4ad8b/);
