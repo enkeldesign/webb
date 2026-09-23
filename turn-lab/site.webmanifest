@@ -2,14 +2,14 @@
   "id": "/turn-lab/",
   "name": "TURN LAB",
   "short_name": "TURN LAB",
-  "description": "An isolated DEAD CANYON track experiment running on the current TURN engine.",
+  "description": "An isolated SUBURBS summer track experiment running on the current TURN engine.",
   "start_url": "/turn-lab/",
   "scope": "/turn-lab/",
   "display": "standalone",
   "display_override": ["standalone"],
   "orientation": "landscape",
-  "background_color": "#08090a",
-  "theme_color": "#08090a",
+  "background_color": "#74ccf4",
+  "theme_color": "#74ccf4",
   "icons": [
     {
       "src": "/turn/TURNicon.PNG?icon=20260803-profile-512",
