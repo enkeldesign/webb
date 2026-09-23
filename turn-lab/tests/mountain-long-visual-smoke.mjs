@@ -62,6 +62,17 @@ try {
   await page.locator('.track-select-continue').click();
 
   await page.waitForFunction(
+    () => globalThis.__turnRuntime?.trackId === 'mountain'
+      && globalThis.__turnRuntime?.activeWorld?.userData?.turnDeadCanyon,
+    null,
+    { timeout: 90_000 }
+  );
+
+  await page.evaluate(async () => {
+    const { showTrackIntro } = await import('/turn/ui/track-intro.js?build=20260922-r285');
+    globalThis.__deadCanyonVisualIntro = showTrackIntro('mountain');
+  });
+  await page.waitForFunction(
     () => document.body.classList.contains('turn-track-intro'),
     null,
     { timeout: 15_000 }
@@ -74,13 +85,7 @@ try {
     fov: globalThis.__turnRuntime.camera.fov
   }));
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-intro.png'), fullPage: true });
-
-  await page.waitForFunction(
-    () => globalThis.__turnRuntime?.trackId === 'mountain'
-      && globalThis.__turnRuntime?.activeWorld?.userData?.turnDeadCanyon,
-    null,
-    { timeout: 90_000 }
-  );
+  await page.evaluate(() => globalThis.__deadCanyonVisualIntro);
 
   metrics = await page.evaluate(async () => {
     const runtime = globalThis.__turnRuntime;
