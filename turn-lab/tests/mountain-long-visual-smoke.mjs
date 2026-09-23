@@ -148,9 +148,9 @@ try {
       hasDarkTunnel: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon dark tunnel')),
       tunnelWallInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel walls')?.count ?? 0,
       tunnelCeilingInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel ceiling')?.count ?? 0,
-      tunnelMountainLeftInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel mountain left')?.count ?? 0,
-      tunnelMountainRightInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel mountain right')?.count ?? 0,
-      tunnelMountainRidgeInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel mountain ridge')?.count ?? 0,
+      hasTunnelMountainShell: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon tunnel mountain shell')),
+      tunnelMountainShellVertices: runtime.activeWorld.getObjectByName('Dead Canyon tunnel mountain shell')
+        ?.geometry?.attributes?.position?.count ?? 0,
       hasTunnelEntrance: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon tunnel entrance portal')),
       hasTunnelExit: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon tunnel exit portal')),
       hasDyingBulb: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon dying tunnel bulb')),
@@ -365,9 +365,8 @@ assert.equal(metrics.hasNeedleBases, false);
 assert.equal(metrics.hasDarkTunnel, true);
 assert.ok(metrics.tunnelWallInstances >= 40);
 assert.ok(metrics.tunnelCeilingInstances >= 20);
-assert.equal(metrics.tunnelMountainLeftInstances, metrics.deadCanyon.tunnelModuleCount);
-assert.equal(metrics.tunnelMountainRightInstances, metrics.deadCanyon.tunnelModuleCount);
-assert.equal(metrics.tunnelMountainRidgeInstances, metrics.deadCanyon.tunnelModuleCount);
+assert.equal(metrics.hasTunnelMountainShell, true);
+assert.equal(metrics.tunnelMountainShellVertices, metrics.deadCanyon.tunnelModuleCount * 6);
 assert.equal(metrics.hasTunnelEntrance, true);
 assert.equal(metrics.hasTunnelExit, true);
 assert.equal(metrics.hasDyingBulb, true);
