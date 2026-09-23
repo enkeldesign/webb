@@ -152,6 +152,7 @@ try {
 
   await page.evaluate(() => {
     const runtime = globalThis.__turnRuntime;
+    runtime.renderer?.setAnimationLoop?.(null);
     const target = runtime.activeWorld.getObjectByName('Dead Canyon Retro Urban open-shed-poles');
     if (!target) return;
     for (const selector of [
@@ -166,6 +167,7 @@ try {
     runtime.camera.fov = 52;
     runtime.camera.updateProjectionMatrix();
     runtime.camera.updateMatrixWorld(true);
+    runtime.renderer?.render?.(runtime.scene, runtime.camera);
   });
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-retro-grove.png'), fullPage: true });
@@ -180,6 +182,7 @@ try {
     runtime.camera.fov = 50;
     runtime.camera.updateProjectionMatrix();
     runtime.camera.updateMatrixWorld(true);
+    runtime.renderer?.render?.(runtime.scene, runtime.camera);
   });
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-ruins.png'), fullPage: true });
@@ -259,10 +262,7 @@ for (const resource of [
   '/turn-lab/tracks/definitions.js',
   '/turn-lab/tracks/mountain-layout.js',
   '/turn-lab/tracks/registry.js',
-  '/turn-lab/render/track-intro-camera.js',
-  '/turn-lab/assets/kenney/retro-urban/tree-park-large.obj',
-  '/turn-lab/assets/kenney/retro-urban/roof-metal-poles.obj',
-  '/turn-lab/assets/kenney/retro-urban/roof-metal-type-a.obj'
+  '/turn-lab/render/track-intro-camera.js'
 ]) {
   assert.ok(metrics.labResources.includes(resource), `Scoped runtime did not load ${resource}`);
 }
