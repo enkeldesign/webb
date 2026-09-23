@@ -1,7 +1,7 @@
 // TURN LAB DEAD CANYON experiment.
 // Production MOUNTAIN is reused only as the internal LAB slot so the mature race,
 // replay, scoring and accessibility contracts remain intact. The route itself is
-// independent of production and now contains one AIRPORT-derived hairpin plus a chicane.
+// independent of production and keeps one short technical chicane inside a fast canyon lap.
 export const MOUNTAIN_CONTROL_POINTS = Object.freeze([
   [-33.8, 9.7, -371.8],
   [17.2, 10.0, -379.4],
@@ -32,17 +32,11 @@ export const MOUNTAIN_CONTROL_POINTS = Object.freeze([
   [521.2, 19.4, 288.3],
   [465.3, 19.1, 307.2],
   [405.3, 18.8, 319.8],
-  [405.0, 18.8, 330.0],
-  [371.9, 18.5, 315.6],
-  [350.3, 18.2, 291.6],
-  [333.8, 18.0, 264.0],
-  [322.2, 17.7, 237.6],
-  [280.8, 17.4, 212.4],
-  [239.4, 17.1, 237.6],
-  [227.8, 16.8, 264.0],
-  [211.2, 16.6, 291.6],
-  [189.7, 16.3, 315.6],
-  [140.0, 16.0, 331.2],
+  [344.9, 18.4, 327.4],
+  [287.1, 17.9, 331.7],
+  [233.7, 17.4, 334.4],
+  [185.0, 16.7, 337.1],
+  [140.0, 16.0, 341.1],
   [97.2, 15.3, 346.8],
   [54.8, 14.5, 354.3],
   [11.3, 13.7, 363.0],
@@ -85,21 +79,20 @@ export const MOUNTAIN_CONTROL_POINTS = Object.freeze([
 ].map((point) => Object.freeze(point)));
 
 export const DEAD_CANYON_LAYOUT_RULES = Object.freeze({
-  identity: 'dead-canyon-r2',
-  targetLengthMeters: 3350,
+  identity: 'dead-canyon-r4',
+  targetLengthMeters: 3250,
   sampleCount: 2160,
   minimumElevation: 5,
   maximumElevation: 20,
   easternEscarpment: true,
-  airportDerivedHairpin: true,
+  airportDerivedHairpin: false,
   chicane: true,
   routeNarrative: Object.freeze([
     'dead-canyon-outpost',
     'south-chicane',
     'east-cliff-climb',
     'stylised-cliff-run',
-    'airport-hairpin',
-    'high-mesa-sweep',
+    'north-mesa-sweep',
     'retro-urban-scrapyard',
     'north-basin',
     'west-wash',
