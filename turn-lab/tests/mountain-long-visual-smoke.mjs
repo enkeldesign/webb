@@ -22,7 +22,6 @@ page.on('console', (message) => {
 
 let metrics;
 let introCamera;
-let tunnelInspection;
 try {
   const response = await page.goto(`${baseUrl}/turn-lab/?visual-smoke=dead-canyon`, {
     waitUntil: 'domcontentloaded',
@@ -130,6 +129,11 @@ try {
       embeddedOverhangCount: runtime.activeWorld.children.filter(
         (object) => object.name?.startsWith('Dead Canyon embedded overhang ')
       ).length,
+      embeddedOverhangMinX: Math.min(...runtime.activeWorld.children
+        .filter((object) => object.name?.startsWith('Dead Canyon embedded overhang '))
+        .map((object) => object.position.x)),
+      crownShelfMinX: Math.min(...(runtime.activeWorld.getObjectByName('DEAD CANYON CROWN landmark')
+        ?.children || []).map((object) => object.position.x)),
       yellowTreeObjects: runtime.activeWorld.children.filter(
         (object) => object.name?.startsWith('Dead Canyon Retro Urban yellow-tree-')
       ).length,
@@ -139,22 +143,16 @@ try {
       hasRustTruck: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon Retro Urban rust-truck')),
       ruinObjects: runtime.activeWorld.children.filter(
         (object) => object.name?.startsWith('Dead Canyon Retro Urban stone-ruin-')
-          || object.name?.startsWith('Dead Canyon Retro Urban ruin-road-barrier-')
       ).length,
+      yellowStepObjects: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon Retro Urban')
+          && object.name?.includes('barrier')
+      ).length,
+      hasDarkTunnel: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon dark tunnel')),
       hasRoadsideChevrons: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon roadside chevrons')),
       hasStandingRock: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon sentinel standing rock')),
       hasFallenRocks: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon fallen rock formations')),
       hasNeedleBases: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon needle bases')),
-      hasDarkTunnel: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon dark tunnel')),
-      tunnelWallInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel walls')?.count ?? 0,
-      tunnelCeilingInstances: runtime.activeWorld.getObjectByName('Dead Canyon tunnel ceiling')?.count ?? 0,
-      hasTunnelMountainShell: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon tunnel mountain shell')),
-      tunnelMountainShellVertices: runtime.activeWorld.getObjectByName('Dead Canyon tunnel mountain shell')
-        ?.geometry?.attributes?.position?.count ?? 0,
-      hasTunnelEntrance: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon tunnel entrance portal')),
-      hasTunnelExit: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon tunnel exit portal')),
-      hasDyingBulb: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon dying tunnel bulb')),
-      hasTunnelController: Boolean(runtime.activeWorld.userData.turnDeadCanyonTunnelController),
       cameraFar: runtime.camera?.far ?? null,
       backgroundColor: runtime.scene?.background?.getHex?.() ?? null,
       fogColor: runtime.scene?.fog?.color?.getHex?.() ?? null,
@@ -165,85 +163,6 @@ try {
   });
 
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-active.png'), fullPage: true });
-
-  tunnelInspection = await page.evaluate(async () => {
-    const runtime = globalThis.__turnRuntime;
-    const world = runtime.activeWorld;
-    const tunnel = world.userData.turnDeadCanyon;
-    const controller = world.userData.turnDeadCanyonTunnelController;
-    runtime.renderer?.setAnimationLoop?.(null);
-
-    const hud = document.querySelector('#hud');
-    const map = document.querySelector('#map');
-    hud.hidden = false;
-    hud.style.removeProperty('display');
-    map.style.removeProperty('display');
-    map.style.removeProperty('opacity');
-    const before = {
-      hudDisplay: getComputedStyle(hud).display,
-      mapDisplay: getComputedStyle(map).display,
-      mapOpacity: getComputedStyle(map).opacity
-    };
-
-    const sampleIndex = Math.round(tunnel.tunnelBulbProgress * (runtime.samples.length - 1));
-    runtime.state.running = true;
-    runtime.state.nearestTrackIndex = sampleIndex;
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
-    const sample = runtime.samples[sampleIndex];
-    runtime.camera.position.copy(sample.point).addScaledVector(sample.tangent, -24);
-    runtime.camera.position.y += 6.2;
-    const target = sample.point.clone().addScaledVector(sample.tangent, 20);
-    target.y += 2.4;
-    runtime.camera.up.set(0, 1, 0);
-    runtime.camera.lookAt(target);
-    runtime.camera.fov = 60;
-    runtime.camera.updateProjectionMatrix();
-    runtime.camera.updateMatrixWorld(true);
-    runtime.renderer?.render?.(runtime.scene, runtime.camera);
-
-    const sun = runtime.scene.children.find((node) => node.isDirectionalLight);
-    const hemi = runtime.scene.children.find((node) => node.isHemisphereLight);
-    const bulb = world.getObjectByName('Dead Canyon dying bulb glass');
-    const pool = world.getObjectByName('Dead Canyon dying bulb floor glow');
-    const roadEdge = world.getObjectByName('Dead Canyon pale road edge');
-    const after = {
-      hudDisplay: getComputedStyle(hud).display,
-      mapDisplay: getComputedStyle(map).display,
-      mapOpacity: getComputedStyle(map).opacity,
-      mapWidth: map.getBoundingClientRect().width,
-      mapHeight: map.getBoundingClientRect().height
-    };
-
-    return {
-      before,
-      after,
-      progress: controller.state.progress,
-      darkness: controller.state.darkness,
-      inTunnel: controller.state.inTunnel,
-      sunIntensity: sun?.intensity ?? null,
-      hemiIntensity: hemi?.intensity ?? null,
-      roadEdgeOpacity: roadEdge?.material?.opacity ?? null,
-      bulbOpacity: bulb?.material?.opacity ?? null,
-      poolOpacity: pool?.material?.opacity ?? null,
-      flickerSamples: [0, 180, 360, 540, 720, 900, 1080, 1260].map((now) => {
-        controller.applyProgress(tunnel.tunnelBulbProgress, now);
-        return controller.state.flicker;
-      }),
-      darknessSamples: {
-        outsideBefore: controller.darknessAt(tunnel.tunnelStartProgress - 0.001),
-        entrance: controller.darknessAt((tunnel.tunnelStartProgress + tunnel.tunnelDarkStartProgress) / 2),
-        core: controller.darknessAt(tunnel.tunnelBulbProgress),
-        exit: controller.darknessAt((tunnel.tunnelDarkEndProgress + tunnel.tunnelEndProgress) / 2),
-        outsideAfter: controller.darknessAt(tunnel.tunnelEndProgress + 0.001)
-      }
-    };
-  });
-  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-tunnel-core.png'), fullPage: true });
-  await page.evaluate(async () => {
-    globalThis.__turnRuntime.state.running = false;
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  });
 
   await page.evaluate(() => {
     const runtime = globalThis.__turnRuntime;
@@ -287,17 +206,18 @@ try {
 
 await fs.writeFile(
   path.join(outputDir, 'metrics.json'),
-  `${JSON.stringify({ metrics, introCamera, tunnelInspection, browserErrors }, null, 2)}\n`
+  `${JSON.stringify({ metrics, introCamera, browserErrors }, null, 2)}\n`
 );
 
 assert.deepEqual(browserErrors, [], `TURN LAB DEAD CANYON produced browser errors:\n${browserErrors.join('\n')}`);
-assert.deepEqual(introCamera.position.map((value) => Math.round(value)), [80, 165, -590]);
-assert.equal(introCamera.fov, 60);
+assert.deepEqual(introCamera.position.map((value) => Math.round(value)), [10, 205, -770]);
+assert.equal(introCamera.fov, 66);
 assert.equal(metrics.trackId, 'mountain');
 assert.equal(metrics.sampleCount, 2160);
 assert.ok(metrics.trackLength > 3150 && metrics.trackLength < 3350,
   `Expected sampled DEAD CANYON length around 3.23 km, got ${metrics.trackLength}`);
-assert.equal(metrics.deadCanyon.version, 'dead-canyon-r7');
+assert.equal(metrics.deadCanyon.version, 'dead-canyon-polish');
+assert.equal(metrics.hasDarkTunnel, false, 'The #972/#973 tunnel experiment must be absent');
 assert.equal(metrics.deadCanyon.proceduralWorld, true);
 assert.equal(metrics.deadCanyon.easternEscarpmentHeight, 220);
 assert.equal(metrics.deadCanyon.cliffBands, 4);
@@ -317,33 +237,20 @@ assert.equal(metrics.deadCanyon.yellowTreeCount, 6);
 assert.equal(metrics.deadCanyon.openShedCount, 1);
 assert.equal(metrics.deadCanyon.rustTruckCount, 1);
 assert.equal(metrics.deadCanyon.ruinClusterCount, 1);
-assert.equal(metrics.deadCanyon.tunnel, true);
-assert.equal(metrics.deadCanyon.tunnelRoute, 'RIGHT > LEFT > OUT');
-assert.equal(metrics.deadCanyon.tunnelStartProgress, 0.018);
-assert.equal(metrics.deadCanyon.tunnelDarkStartProgress, 0.04);
-assert.equal(metrics.deadCanyon.tunnelBulbProgress, 0.073);
-assert.equal(metrics.deadCanyon.tunnelDarkEndProgress, 0.098);
-assert.equal(metrics.deadCanyon.tunnelEndProgress, 0.122);
-assert.ok(metrics.deadCanyon.tunnelLengthMeters > 250 && metrics.deadCanyon.tunnelLengthMeters < 380);
-assert.ok(metrics.deadCanyon.tunnelModuleCount >= 20);
-assert.equal(metrics.deadCanyon.tunnelMountainCladding, true);
-assert.equal(metrics.deadCanyon.tunnelMountainModuleCount, metrics.deadCanyon.tunnelModuleCount);
-assert.equal(metrics.deadCanyon.tunnelPortalStyle, 'faceted-rock');
-assert.equal(metrics.deadCanyon.tunnelDyingBulb, true);
-assert.equal(metrics.deadCanyon.tunnelFlicker, 'strong-irregular');
-assert.equal(metrics.deadCanyon.tunnelDynamicLights, 0);
-assert.equal(metrics.deadCanyon.tunnelGuiUnaffected, true);
+assert.equal(metrics.deadCanyon.yellowStepBarrierCount, 0);
+assert.equal(metrics.deadCanyon.embeddedWallRocks, true);
+assert.equal(metrics.deadCanyon.shedRoofSeated, true);
 assert.equal(metrics.deadCanyon.needleCount, 0);
 assert.equal(metrics.deadCanyon.geologyArchetypes, 4);
 assert.equal(metrics.deadCanyon.solarPanels, 24);
 assert.equal(metrics.deadCanyon.retroUrbanAssetsReady, true);
-assert.equal(metrics.deadCanyon.retroUrbanLoaded, 8);
+assert.equal(metrics.deadCanyon.retroUrbanLoaded, 7);
 assert.equal(metrics.deadCanyon.treeTextureLoaded, true);
-assert.ok(metrics.deadCanyon.retroUrbanInstances >= 61);
+assert.equal(metrics.deadCanyon.retroUrbanInstances, 34);
 assert.deepEqual(metrics.deadCanyon.retroUrbanErrors, []);
 assert.equal(metrics.deadCanyon.dynamicLights, 0);
 assert.equal(metrics.deadCanyon.shadowCasters, 0);
-assert.ok(metrics.retroUrbanSceneObjects >= 61,
+assert.ok(metrics.retroUrbanSceneObjects >= 37,
   `Expected loaded Retro Urban scene objects, got ${metrics.retroUrbanSceneObjects}`);
 assert.equal(metrics.cliffBandCount, 4);
 assert.equal(metrics.skylineMesaCount, 5);
@@ -354,23 +261,19 @@ assert.equal(metrics.hasCanyonCrown, true);
 assert.equal(metrics.terrainSkirtCount, 2);
 assert.equal(metrics.tableMesaInstances, 1);
 assert.equal(metrics.embeddedOverhangCount, 4);
+assert.ok(metrics.embeddedOverhangMinX >= 744,
+  'Wall overhangs must be pushed into the east cliff face');
+assert.ok(metrics.crownShelfMinX >= 748,
+  'DEAD CANYON CROWN shelves must remain embedded in the wall');
 assert.equal(metrics.yellowTreeObjects, 6);
 assert.equal(metrics.openShedParts, 2);
 assert.equal(metrics.hasRustTruck, true);
-assert.equal(metrics.ruinObjects, 9);
+assert.equal(metrics.ruinObjects, 3);
+assert.equal(metrics.yellowStepObjects, 0);
 assert.equal(metrics.hasRoadsideChevrons, true);
 assert.equal(metrics.hasStandingRock, true);
 assert.equal(metrics.hasFallenRocks, true);
 assert.equal(metrics.hasNeedleBases, false);
-assert.equal(metrics.hasDarkTunnel, true);
-assert.ok(metrics.tunnelWallInstances >= 40);
-assert.ok(metrics.tunnelCeilingInstances >= 20);
-assert.equal(metrics.hasTunnelMountainShell, true);
-assert.equal(metrics.tunnelMountainShellVertices, metrics.deadCanyon.tunnelModuleCount * 6);
-assert.equal(metrics.hasTunnelEntrance, true);
-assert.equal(metrics.hasTunnelExit, true);
-assert.equal(metrics.hasDyingBulb, true);
-assert.equal(metrics.hasTunnelController, true);
 assert.equal(metrics.cameraFar, 900);
 assert.equal(metrics.backgroundColor, metrics.fogColor,
   'DEAD CANYON sky and terminal haze must share a colour so clipping has no visible seam');
@@ -378,31 +281,6 @@ assert.equal(metrics.fogNear, 260);
 assert.equal(metrics.fogFar, 760);
 assert.ok(metrics.fogFar <= metrics.cameraFar - 100,
   `Fog must reach full opacity before the ${metrics.cameraFar} m camera far plane`);
-
-assert.ok(tunnelInspection.darkness > 0.99, 'Tunnel core must reach effectively full darkness');
-assert.equal(tunnelInspection.inTunnel, true);
-assert.ok(tunnelInspection.sunIntensity < 0.01);
-assert.ok(tunnelInspection.hemiIntensity < 0.01);
-assert.ok(tunnelInspection.roadEdgeOpacity < 0.02,
-  'Self-lit road markings must dim with the 3D world in the tunnel core');
-assert.ok(tunnelInspection.bulbOpacity > 0.01 && tunnelInspection.bulbOpacity < 0.6,
-  'The dying bulb should remain visible but dim');
-assert.ok(tunnelInspection.poolOpacity > 0 && tunnelInspection.poolOpacity < 0.02,
-  'The bulb pool must be a tiny intentionality cue, not a navigation light');
-assert.ok(Math.max(...tunnelInspection.flickerSamples) - Math.min(...tunnelInspection.flickerSamples) > 0.22,
-  'The dying bulb must have visibly stronger irregular flicker than the r6 pass');
-assert.ok(Math.min(...tunnelInspection.flickerSamples) < 0.16);
-assert.ok(Math.max(...tunnelInspection.flickerSamples) > 0.34);
-assert.equal(tunnelInspection.before.hudDisplay, tunnelInspection.after.hudDisplay);
-assert.equal(tunnelInspection.before.mapDisplay, tunnelInspection.after.mapDisplay);
-assert.equal(tunnelInspection.before.mapOpacity, tunnelInspection.after.mapOpacity);
-assert.ok(tunnelInspection.after.mapWidth > 0 && tunnelInspection.after.mapHeight > 0,
-  'The minimap must remain visibly rendered while the 3D world is dark');
-assert.equal(tunnelInspection.darknessSamples.outsideBefore, 0);
-assert.ok(tunnelInspection.darknessSamples.entrance > 0 && tunnelInspection.darknessSamples.entrance < 1);
-assert.equal(tunnelInspection.darknessSamples.core, 1);
-assert.ok(tunnelInspection.darknessSamples.exit > 0 && tunnelInspection.darknessSamples.exit < 1);
-assert.equal(tunnelInspection.darknessSamples.outsideAfter, 0);
 
 for (const resource of [
   '/turn-lab/tracks/definitions.js',
@@ -426,9 +304,8 @@ console.log('TURN LAB DEAD CANYON browser/runtime smoke passed:', JSON.stringify
   yellowTrees: metrics.yellowTreeObjects,
   shedParts: metrics.openShedParts,
   ruins: metrics.ruinObjects,
-  tunnelLength: metrics.deadCanyon.tunnelLengthMeters,
-  tunnelModules: metrics.deadCanyon.tunnelModuleCount,
-  tunnelCoreDarkness: tunnelInspection.darkness,
-  tunnelMinimapVisible: tunnelInspection.after.mapWidth > 0,
+  yellowSteps: metrics.yellowStepObjects,
+  overhangMinX: metrics.embeddedOverhangMinX,
+  crownShelfMinX: metrics.crownShelfMinX,
   retroUrbanInstances: metrics.deadCanyon.retroUrbanInstances
 }));
