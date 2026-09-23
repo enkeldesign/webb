@@ -54,10 +54,10 @@ export const MOUNTAIN_CONTROL_POINTS = Object.freeze([
   [-473.5, 5.7, 257.3],
   [-504.1, 5.5, 229.7],
   [-530.0, 5.2, 199.7],
-  [-548.6, 5.1, 166.8],
-  [-557.9, 5.0, 130.5],
-  [-556.7, 5.0, 90.5],
-  [-545.3, 5.0, 46.8],
+  [-560.0, 5.1, 170.0],
+  [-582.0, 5.0, 132.0],
+  [-586.0, 5.0, 95.0],
+  [-570.0, 5.0, 55.0],
   [-525.4, 5.1, 0.0],
   [-499.8, 5.2, -48.8],
   [-472.2, 5.4, -97.9],
@@ -79,14 +79,16 @@ export const MOUNTAIN_CONTROL_POINTS = Object.freeze([
 ].map((point) => Object.freeze(point)));
 
 export const DEAD_CANYON_LAYOUT_RULES = Object.freeze({
-  identity: 'dead-canyon-r4',
-  targetLengthMeters: 3250,
+  identity: 'dead-canyon-r6',
+  targetLengthMeters: 3300,
   sampleCount: 2160,
   minimumElevation: 5,
   maximumElevation: 20,
   easternEscarpment: true,
   airportDerivedHairpin: false,
   chicane: true,
+  darkTunnel: true,
+  tunnelSequence: Object.freeze(['RIGHT', 'LEFT', 'OUT']),
   routeNarrative: Object.freeze([
     'dead-canyon-outpost',
     'south-chicane',
@@ -96,6 +98,7 @@ export const DEAD_CANYON_LAYOUT_RULES = Object.freeze({
     'retro-urban-scrapyard',
     'north-basin',
     'west-wash',
+    'black-tunnel',
     'ghost-service-stop',
     'south-flat-return'
   ])
