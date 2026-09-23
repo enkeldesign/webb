@@ -996,6 +996,8 @@ function makeTracksideRocks(world, samples, trackWidth) {
   const entries = [];
   const step = Math.max(28, Math.floor(samples.length / 82));
   for (let index = step; index < samples.length; index += step) {
+    const progress = index / Math.max(1, samples.length - 1);
+    if (progress > TUNNEL.start - 0.01 && progress < TUNNEL.end + 0.01) continue;
     const sample = samples[index];
     const side = index % (step * 2) === 0 ? -1 : 1;
     const offset = side * (trackWidth / 2 + 13 + 9 * (0.5 + 0.5 * Math.sin(index * 0.37)));
@@ -1087,7 +1089,7 @@ async function installRetroUrbanSites(world, samples, trackWidth) {
   const templates = Object.fromEntries(entries);
   let instances = 0;
 
-  const outpost = frameAt(samples, 0.025);
+  const outpost = frameAt(samples, 0.145);
   instances += placeOutpost(world, templates, outpost, trackWidth, 'start');
 
   const cliff = frameAt(samples, 0.225);
