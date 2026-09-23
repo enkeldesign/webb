@@ -82,13 +82,19 @@ try {
       retroUrbanSceneObjects: runtime.activeWorld.children.filter(
         (object) => object.name?.startsWith('Dead Canyon Retro Urban')
       ).length,
-      cliffSlabCount: runtime.activeWorld.children.filter(
-        (object) => object.name?.startsWith('Dead Canyon eastern cliff slab ')
+      cliffBandCount: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon eastern cliff band ')
       ).length,
-      cliffSummitCount: runtime.activeWorld.children.filter(
-        (object) => object.name?.startsWith('Dead Canyon integrated cliff summit ')
+      skylineMesaCount: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon integrated skyline mesa ')
       ).length,
+      hasDistantMesas: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon distant haze mesas')),
+      canyonBarrierCount: runtime.activeWorld.getObjectByName('Dead Canyon canyon-edge barriers')?.count ?? 0,
+      hasHairpinLandmark: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon hairpin landmark')),
       hasNeedleBases: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon needle bases')),
+      cameraFar: runtime.camera?.far ?? null,
+      backgroundColor: runtime.scene?.background?.getHex?.() ?? null,
+      fogColor: runtime.scene?.fog?.color?.getHex?.() ?? null,
       fogNear: runtime.activeWorld.parent?.fog?.near ?? null,
       fogFar: runtime.activeWorld.parent?.fog?.far ?? null,
       labResources: resources.filter((pathname) => pathname.startsWith('/turn-lab/'))
@@ -110,30 +116,41 @@ assert.equal(metrics.trackId, 'mountain');
 assert.equal(metrics.sampleCount, 2160);
 assert.ok(metrics.trackLength > 3250 && metrics.trackLength < 3500,
   `Expected sampled DEAD CANYON length around 3.35 km, got ${metrics.trackLength}`);
-assert.equal(metrics.deadCanyon.version, 'dead-canyon-r2');
+assert.equal(metrics.deadCanyon.version, 'dead-canyon-r3');
 assert.equal(metrics.deadCanyon.proceduralWorld, true);
-assert.equal(metrics.deadCanyon.easternEscarpmentHeight, 210);
-assert.equal(metrics.deadCanyon.cliffSlabs, 4);
-assert.equal(metrics.deadCanyon.cliffSummitBlocks, 6);
-assert.equal(metrics.deadCanyon.cliffDepth, 3600);
-assert.equal(metrics.deadCanyon.fogFadeNear, 420);
-assert.equal(metrics.deadCanyon.fogFadeFar, 1350);
+assert.equal(metrics.deadCanyon.easternEscarpmentHeight, 220);
+assert.equal(metrics.deadCanyon.cliffBands, 4);
+assert.equal(metrics.deadCanyon.cliffSegmentsPerBand, 16);
+assert.equal(metrics.deadCanyon.cliffFrontX, 715);
+assert.equal(metrics.deadCanyon.cliffDepth, 2800);
+assert.equal(metrics.deadCanyon.fogFadeNear, 260);
+assert.equal(metrics.deadCanyon.fogFadeFar, 760);
+assert.equal(metrics.deadCanyon.distantMesaCount, 12);
+assert.equal(metrics.deadCanyon.hairpinLandmark, true);
 assert.equal(metrics.deadCanyon.needleCount, 0);
 assert.equal(metrics.deadCanyon.geologyArchetypes, 4);
 assert.equal(metrics.deadCanyon.solarPanels, 24);
 assert.equal(metrics.deadCanyon.retroUrbanAssetsReady, true);
 assert.equal(metrics.deadCanyon.retroUrbanLoaded, 5);
-assert.ok(metrics.deadCanyon.retroUrbanInstances >= 30);
+assert.ok(metrics.deadCanyon.retroUrbanInstances >= 43);
 assert.deepEqual(metrics.deadCanyon.retroUrbanErrors, []);
 assert.equal(metrics.deadCanyon.dynamicLights, 0);
 assert.equal(metrics.deadCanyon.shadowCasters, 0);
-assert.ok(metrics.retroUrbanSceneObjects >= 36,
+assert.ok(metrics.retroUrbanSceneObjects >= 43,
   `Expected loaded Retro Urban scene objects, got ${metrics.retroUrbanSceneObjects}`);
-assert.equal(metrics.cliffSlabCount, 4);
-assert.equal(metrics.cliffSummitCount, 6);
+assert.equal(metrics.cliffBandCount, 4);
+assert.equal(metrics.skylineMesaCount, 5);
+assert.equal(metrics.hasDistantMesas, true);
+assert.ok(metrics.canyonBarrierCount >= 20);
+assert.equal(metrics.hasHairpinLandmark, true);
 assert.equal(metrics.hasNeedleBases, false);
-assert.equal(metrics.fogNear, 420);
-assert.equal(metrics.fogFar, 1350);
+assert.equal(metrics.cameraFar, 900);
+assert.equal(metrics.backgroundColor, metrics.fogColor,
+  'DEAD CANYON sky and terminal haze must share a colour so clipping has no visible seam');
+assert.equal(metrics.fogNear, 260);
+assert.equal(metrics.fogFar, 760);
+assert.ok(metrics.fogFar <= metrics.cameraFar - 100,
+  `Fog must reach full opacity before the ${metrics.cameraFar} m camera far plane`);
 
 for (const resource of [
   '/turn-lab/tracks/definitions.js',
@@ -146,7 +163,9 @@ for (const resource of [
 console.log('TURN LAB DEAD CANYON browser/runtime smoke passed:', JSON.stringify({
   trackLength: metrics.trackLength,
   sampleCount: metrics.sampleCount,
-  cliffSlabs: metrics.deadCanyon.cliffSlabs,
+  cliffBands: metrics.deadCanyon.cliffBands,
   fogFar: metrics.fogFar,
+  cameraFar: metrics.cameraFar,
+  barriers: metrics.canyonBarrierCount,
   retroUrbanInstances: metrics.deadCanyon.retroUrbanInstances
 }));

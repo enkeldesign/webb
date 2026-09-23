@@ -90,8 +90,10 @@ assert.match(labDefinitions, /name: 'Dead Canyon'/);
 assert.match(labDefinitions, /difficulty: 'ADVANCED'/);
 assert.match(labDefinitions, /storageRevision: 'dead-canyon-lab-r2'/);
 assert.match(labDefinitions, /sampleCount: 2160/);
-assert.match(labDefinitions, /fogNear: 420/);
-assert.match(labDefinitions, /fogFar: 1350/);
+assert.match(labDefinitions, /sky: 0xe4ad8b/);
+assert.match(labDefinitions, /fog: 0xe4ad8b/);
+assert.match(labDefinitions, /fogNear: 260/);
+assert.match(labDefinitions, /fogFar: 760/);
 assert.doesNotMatch(labDefinitions, /bridgeGuide/);
 
 assert.match(labRegistry, /installDeadCanyonWorld/);
@@ -99,11 +101,18 @@ assert.match(labRegistry, /\/turn-lab\/tracks\/dead-canyon-world\.js/);
 assert.match(labRegistry, /entry\.id !== 'mountain'/);
 
 assert.match(labWorld, /world\.userData\.turnDeadCanyon/);
-assert.match(labWorld, /easternEscarpmentHeight: 210/);
-assert.match(labWorld, /cliffSlabs: 4/);
-assert.match(labWorld, /cliffSummitBlocks: 6/);
-assert.match(labWorld, /cliffDepth: 3600/);
-assert.match(labWorld, /fogFadeFar: 1350/);
+assert.match(labWorld, /easternEscarpmentHeight: 220/);
+assert.match(labWorld, /cliffBands: 4/);
+assert.match(labWorld, /cliffSegmentsPerBand: 16/);
+assert.match(labWorld, /cliffFrontX: 715/);
+assert.match(labWorld, /cliffDepth: 2800/);
+assert.match(labWorld, /fogFadeNear: 260/);
+assert.match(labWorld, /fogFadeFar: 760/);
+assert.match(labWorld, /distantMesaCount: 12/);
+assert.match(labWorld, /hairpinLandmark: true/);
+assert.match(labWorld, /makeFacetedCliffBand/);
+assert.match(labWorld, /makeCanyonEdgeBarriers/);
+assert.match(labWorld, /makeHairpinLandmark/);
 assert.match(labWorld, /needleCount: 0/);
 assert.doesNotMatch(labWorld, /makeNeedleCountry/);
 assert.match(labWorld, /geologyArchetypes: 4/);
@@ -135,7 +144,11 @@ assert.match(labIndex, /TURN LAB · DEAD CANYON/);
 assert.match(labIndex, /Test DEAD CANYON, a long canyon-and-ruins track/);
 assert.match(labManifest, /DEAD CANYON track experiment/);
 
-console.log(`TURN LAB DEAD CANYON r2 contract passed: ${routeLength.toFixed(1)} m, 79 control points, 2160 samples, AIRPORT hairpin, chicane, 4 fogged cliff slabs.`);
+const maxRouteX = Math.max(...DEAD_CANYON_CONTROL_POINTS.map(([x]) => x));
+assert.ok(715 - maxRouteX > 70,
+  `Nearest cliff front must stay well clear of the eastern route; clearance was ${(715 - maxRouteX).toFixed(1)} m`);
+
+console.log(`TURN LAB DEAD CANYON r3 contract passed: ${routeLength.toFixed(1)} m, camera-safe 260–760 m haze, 4 faceted cliff bands, hairpin landmark.`);
 
 async function readText(path) {
   return fs.readFile(new URL(path, REPO_ROOT), 'utf8');
