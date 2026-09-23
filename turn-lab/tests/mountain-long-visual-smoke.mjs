@@ -129,6 +129,11 @@ try {
       embeddedOverhangCount: runtime.activeWorld.children.filter(
         (object) => object.name?.startsWith('Dead Canyon embedded overhang ')
       ).length,
+      embeddedOverhangMinX: Math.min(...runtime.activeWorld.children
+        .filter((object) => object.name?.startsWith('Dead Canyon embedded overhang '))
+        .map((object) => object.position.x)),
+      crownShelfMinX: Math.min(...(runtime.activeWorld.getObjectByName('DEAD CANYON CROWN landmark')
+        ?.children || []).map((object) => object.position.x)),
       yellowTreeObjects: runtime.activeWorld.children.filter(
         (object) => object.name?.startsWith('Dead Canyon Retro Urban yellow-tree-')
       ).length,
@@ -138,8 +143,12 @@ try {
       hasRustTruck: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon Retro Urban rust-truck')),
       ruinObjects: runtime.activeWorld.children.filter(
         (object) => object.name?.startsWith('Dead Canyon Retro Urban stone-ruin-')
-          || object.name?.startsWith('Dead Canyon Retro Urban ruin-road-barrier-')
       ).length,
+      yellowStepObjects: runtime.activeWorld.children.filter(
+        (object) => object.name?.startsWith('Dead Canyon Retro Urban')
+          && object.name?.includes('barrier')
+      ).length,
+      hasDarkTunnel: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon dark tunnel')),
       hasRoadsideChevrons: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon roadside chevrons')),
       hasStandingRock: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon sentinel standing rock')),
       hasFallenRocks: Boolean(runtime.activeWorld.getObjectByName('Dead Canyon fallen rock formations')),
@@ -201,13 +210,14 @@ await fs.writeFile(
 );
 
 assert.deepEqual(browserErrors, [], `TURN LAB DEAD CANYON produced browser errors:\n${browserErrors.join('\n')}`);
-assert.deepEqual(introCamera.position.map((value) => Math.round(value)), [80, 165, -590]);
-assert.equal(introCamera.fov, 60);
+assert.deepEqual(introCamera.position.map((value) => Math.round(value)), [10, 205, -770]);
+assert.equal(introCamera.fov, 66);
 assert.equal(metrics.trackId, 'mountain');
 assert.equal(metrics.sampleCount, 2160);
 assert.ok(metrics.trackLength > 3150 && metrics.trackLength < 3350,
   `Expected sampled DEAD CANYON length around 3.23 km, got ${metrics.trackLength}`);
-assert.equal(metrics.deadCanyon.version, 'dead-canyon-r5');
+assert.equal(metrics.deadCanyon.version, 'dead-canyon-polish');
+assert.equal(metrics.hasDarkTunnel, false, 'The #972/#973 tunnel experiment must be absent');
 assert.equal(metrics.deadCanyon.proceduralWorld, true);
 assert.equal(metrics.deadCanyon.easternEscarpmentHeight, 220);
 assert.equal(metrics.deadCanyon.cliffBands, 4);
@@ -227,17 +237,20 @@ assert.equal(metrics.deadCanyon.yellowTreeCount, 6);
 assert.equal(metrics.deadCanyon.openShedCount, 1);
 assert.equal(metrics.deadCanyon.rustTruckCount, 1);
 assert.equal(metrics.deadCanyon.ruinClusterCount, 1);
+assert.equal(metrics.deadCanyon.yellowStepBarrierCount, 0);
+assert.equal(metrics.deadCanyon.embeddedWallRocks, true);
+assert.equal(metrics.deadCanyon.shedRoofSeated, true);
 assert.equal(metrics.deadCanyon.needleCount, 0);
 assert.equal(metrics.deadCanyon.geologyArchetypes, 4);
 assert.equal(metrics.deadCanyon.solarPanels, 24);
 assert.equal(metrics.deadCanyon.retroUrbanAssetsReady, true);
-assert.equal(metrics.deadCanyon.retroUrbanLoaded, 8);
+assert.equal(metrics.deadCanyon.retroUrbanLoaded, 7);
 assert.equal(metrics.deadCanyon.treeTextureLoaded, true);
-assert.ok(metrics.deadCanyon.retroUrbanInstances >= 61);
+assert.equal(metrics.deadCanyon.retroUrbanInstances, 34);
 assert.deepEqual(metrics.deadCanyon.retroUrbanErrors, []);
 assert.equal(metrics.deadCanyon.dynamicLights, 0);
 assert.equal(metrics.deadCanyon.shadowCasters, 0);
-assert.ok(metrics.retroUrbanSceneObjects >= 61,
+assert.ok(metrics.retroUrbanSceneObjects >= 37,
   `Expected loaded Retro Urban scene objects, got ${metrics.retroUrbanSceneObjects}`);
 assert.equal(metrics.cliffBandCount, 4);
 assert.equal(metrics.skylineMesaCount, 5);
@@ -248,10 +261,15 @@ assert.equal(metrics.hasCanyonCrown, true);
 assert.equal(metrics.terrainSkirtCount, 2);
 assert.equal(metrics.tableMesaInstances, 1);
 assert.equal(metrics.embeddedOverhangCount, 4);
+assert.ok(metrics.embeddedOverhangMinX >= 744,
+  'Wall overhangs must be pushed into the east cliff face');
+assert.ok(metrics.crownShelfMinX >= 748,
+  'DEAD CANYON CROWN shelves must remain embedded in the wall');
 assert.equal(metrics.yellowTreeObjects, 6);
 assert.equal(metrics.openShedParts, 2);
 assert.equal(metrics.hasRustTruck, true);
-assert.equal(metrics.ruinObjects, 9);
+assert.equal(metrics.ruinObjects, 3);
+assert.equal(metrics.yellowStepObjects, 0);
 assert.equal(metrics.hasRoadsideChevrons, true);
 assert.equal(metrics.hasStandingRock, true);
 assert.equal(metrics.hasFallenRocks, true);
@@ -286,5 +304,8 @@ console.log('TURN LAB DEAD CANYON browser/runtime smoke passed:', JSON.stringify
   yellowTrees: metrics.yellowTreeObjects,
   shedParts: metrics.openShedParts,
   ruins: metrics.ruinObjects,
+  yellowSteps: metrics.yellowStepObjects,
+  overhangMinX: metrics.embeddedOverhangMinX,
+  crownShelfMinX: metrics.crownShelfMinX,
   retroUrbanInstances: metrics.deadCanyon.retroUrbanInstances
 }));
