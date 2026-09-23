@@ -173,8 +173,8 @@ assert.match(labBootstrap, /dataset\.turnLabExperimentAccess/);
 assert.match(labIndex, /TURN LAB · DEAD CANYON/);
 assert.match(labIndex, /Test DEAD CANYON, a long canyon-and-ruins track/);
 assert.match(labManifest, /DEAD CANYON track experiment/);
-assert.match(labIntroCamera, /position: Object\.freeze\(\[20, 205, -720\]\)/);
-assert.match(labIntroCamera, /target: Object\.freeze\(\[515, 100, -30\]\)/);
+assert.match(labIntroCamera, /position: Object\.freeze\(\[65, 175, -650\]\)/);
+assert.match(labIntroCamera, /target: Object\.freeze\(\[510, 65, -20\]\)/);
 assert.match(labIntroCamera, /fov: 60/);
 assert.match(labIntroCamera, /dead-canyon-track-intro-r5/);
 
