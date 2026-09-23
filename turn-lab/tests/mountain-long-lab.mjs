@@ -94,6 +94,10 @@ assert.match(world, /tree-small\.glb/);
 assert.match(world, /driveway-short\.glb/);
 assert.match(world, /fence-low\.glb/);
 assert.match(world, /planter\.glb/);
+assert.match(world, /path-long\.glb/);
+assert.match(world, /path-stones-messy\.glb/);
+assert.match(world, /BACK_ROW_SITES/);
+assert.doesNotMatch(world, /Suburbs lake light/);
 assert.doesNotMatch(world, /revision=/);
 
 assert.match(paceNotes, /SUBURBS_PACE_NOTES/);
