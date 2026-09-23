@@ -25,6 +25,7 @@ const [
   labRegistry,
   labWorld,
   labPaceNotes,
+  labIntroCamera,
   labManifest,
   retroLicense,
   ...retroAssetSources
@@ -36,6 +37,7 @@ const [
   readText('turn-lab/tracks/registry.js'),
   readText('turn-lab/tracks/dead-canyon-world.js'),
   readText('turn-lab/tracks/pace-notes.js'),
+  readText('turn-lab/render/track-intro-camera.js'),
   readText('turn-lab/site.webmanifest'),
   readText('turn-lab/assets/kenney/retro-urban/LICENSE.txt'),
   ...RETRO_ASSETS.map((name) => readText(`turn-lab/assets/kenney/retro-urban/${name}`))
@@ -61,12 +63,16 @@ assert.equal(
   '/turn-lab/race/mountain-lap-system.js'
 );
 assert.equal(
+  labScope['/turn/render/track-intro-camera.js?revision=r133-midnight-downtown&build=20260922-r285'],
+  '/turn-lab/render/track-intro-camera.js'
+);
+assert.equal(
   Object.keys(labScope).some((specifier) => specifier.includes('world-collision')),
   false,
   'DEAD CANYON must use production world collision without a LAB-specific collision adapter'
 );
 
-assert.equal(DEAD_CANYON_CONTROL_POINTS.length, 79);
+assert.equal(DEAD_CANYON_CONTROL_POINTS.length, 73);
 assert.notDeepEqual(
   DEAD_CANYON_CONTROL_POINTS,
   PRODUCTION_MOUNTAIN_CONTROL_POINTS,
@@ -74,21 +80,21 @@ assert.notDeepEqual(
 );
 assert.equal(findProperIntersections(DEAD_CANYON_CONTROL_POINTS).length, 0);
 const routeLength = closedLength(DEAD_CANYON_CONTROL_POINTS);
-assert.ok(routeLength > 3300 && routeLength < 3400,
-  `Expected a ~3.35 km course, got ${routeLength.toFixed(1)} m`);
+assert.ok(routeLength > 3180 && routeLength < 3270,
+  `Expected a ~3.23 km course, got ${routeLength.toFixed(1)} m`);
 assert.equal(DEAD_CANYON_LAYOUT_RULES.sampleCount, 2160);
 assert.equal(DEAD_CANYON_LAYOUT_RULES.easternEscarpment, true);
-assert.equal(DEAD_CANYON_LAYOUT_RULES.airportDerivedHairpin, true);
+assert.equal(DEAD_CANYON_LAYOUT_RULES.airportDerivedHairpin, false);
 assert.equal(DEAD_CANYON_LAYOUT_RULES.chicane, true);
-assert.equal(DEAD_CANYON_LAYOUT_RULES.routeNarrative.length, 11);
-assert.ok(DEAD_CANYON_CONTROL_POINTS.some(([x, , z]) => x === 280.8 && z === 212.4),
-  'The northern route must retain the AIRPORT-derived hairpin apex');
+assert.equal(DEAD_CANYON_LAYOUT_RULES.routeNarrative.length, 10);
+assert.equal(DEAD_CANYON_CONTROL_POINTS.some(([x, , z]) => x === 280.8 && z === 212.4), false,
+  'The AIRPORT-derived hairpin apex must be removed');
 assert.ok(DEAD_CANYON_CONTROL_POINTS.some(([x, , z]) => x === 198 && z === -394),
   'The southern route must retain the chicane direction change');
 
 assert.match(labDefinitions, /name: 'Dead Canyon'/);
 assert.match(labDefinitions, /difficulty: 'ADVANCED'/);
-assert.match(labDefinitions, /storageRevision: 'dead-canyon-lab-r2'/);
+assert.match(labDefinitions, /storageRevision: 'dead-canyon-lab-r4'/);
 assert.match(labDefinitions, /sampleCount: 2160/);
 assert.match(labDefinitions, /sky: 0xe4ad8b/);
 assert.match(labDefinitions, /fog: 0xe4ad8b/);
@@ -109,10 +115,16 @@ assert.match(labWorld, /cliffDepth: 2800/);
 assert.match(labWorld, /fogFadeNear: 260/);
 assert.match(labWorld, /fogFadeFar: 760/);
 assert.match(labWorld, /distantMesaCount: 12/);
-assert.match(labWorld, /hairpinLandmark: true/);
+assert.match(labWorld, /hairpinLandmark: false/);
 assert.match(labWorld, /makeFacetedCliffBand/);
 assert.match(labWorld, /makeCanyonEdgeBarriers/);
-assert.match(labWorld, /makeHairpinLandmark/);
+assert.doesNotMatch(labWorld, /makeHairpinLandmark/);
+assert.match(labWorld, /makeRoadsideChevrons/);
+assert.match(labWorld, /makeTerrainSkirts/);
+assert.match(labWorld, /makeCanyonOverhangs/);
+assert.match(labWorld, /makeDeadCanyonLandmark/);
+assert.match(labWorld, /landmark: 'DEAD CANYON CROWN'/);
+assert.match(labWorld, /standingRockCount: 1/);
 assert.match(labWorld, /needleCount: 0/);
 assert.doesNotMatch(labWorld, /makeNeedleCountry/);
 assert.match(labWorld, /geologyArchetypes: 4/);
@@ -137,18 +149,23 @@ for (let index = 0; index < RETRO_ASSETS.length; index += 1) {
 
 assert.equal((labPaceNotes.match(/note\('dead-canyon-/g) || []).length, 12);
 assert.match(labPaceNotes, /dead-canyon-chicane/);
-assert.match(labPaceNotes, /dead-canyon-hairpin/);
+assert.doesNotMatch(labPaceNotes, /dead-canyon-hairpin/);
+assert.match(labPaceNotes, /dead-canyon-north-sweep/);
 assert.match(labBootstrap, /dataset\.turnLab = 'dead-canyon'/);
 assert.match(labBootstrap, /dataset\.turnLabExperimentAccess/);
 assert.match(labIndex, /TURN LAB · DEAD CANYON/);
 assert.match(labIndex, /Test DEAD CANYON, a long canyon-and-ruins track/);
 assert.match(labManifest, /DEAD CANYON track experiment/);
+assert.match(labIntroCamera, /position: Object\.freeze\(\[80, 165, -590\]\)/);
+assert.match(labIntroCamera, /target: Object\.freeze\(\[465, 18, -80\]\)/);
+assert.match(labIntroCamera, /fov: 55/);
+assert.match(labIntroCamera, /dead-canyon-track-intro-r4/);
 
 const maxRouteX = Math.max(...DEAD_CANYON_CONTROL_POINTS.map(([x]) => x));
 assert.ok(715 - maxRouteX > 70,
   `Nearest cliff front must stay well clear of the eastern route; clearance was ${(715 - maxRouteX).toFixed(1)} m`);
 
-console.log(`TURN LAB DEAD CANYON r3 contract passed: ${routeLength.toFixed(1)} m, camera-safe 260–760 m haze, 4 faceted cliff bands, hairpin landmark.`);
+console.log(`TURN LAB DEAD CANYON r4 contract passed: ${routeLength.toFixed(1)} m, no hairpin, canyon landmark, closed terrain skirts and LAB showcase camera.`);
 
 async function readText(path) {
   return fs.readFile(new URL(path, REPO_ROOT), 'utf8');
