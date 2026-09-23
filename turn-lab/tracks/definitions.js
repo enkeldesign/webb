@@ -1,6 +1,6 @@
 // TURN LAB definition overlay. All production tracks are inherited unchanged;
 // only the internal MOUNTAIN slot becomes DEAD CANYON inside /turn-lab/.
-import * as production from '/turn/tracks/definitions.js?lab-base=dead-canyon-r6';
+import * as production from '/turn/tracks/definitions.js?lab-base=dead-canyon-r7';
 
 export const DEFAULT_TRACK_ID = production.DEFAULT_TRACK_ID;
 export const TRACK_SAMPLE_COUNT = production.TRACK_SAMPLE_COUNT;
