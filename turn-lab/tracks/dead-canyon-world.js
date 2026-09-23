@@ -70,7 +70,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
   makeSun(world);
 
   const metrics = {
-    version: 'dead-canyon-r6',
+    version: 'dead-canyon-r5',
     proceduralWorld: true,
     routeSamples: samples.length,
     theme: 'golden-hour-canyon-road',
@@ -111,7 +111,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
     retroUrbanLoaded: 0,
     retroUrbanInstances: 0,
     retroUrbanErrors: [],
-    dynamicLights: 1,
+    dynamicLights: 0,
     shadowCasters: 0
   };
   world.userData.turnDeadCanyon = metrics;
@@ -419,11 +419,18 @@ function makeDarkTunnel(world, samples, trackWidth) {
   bulb.name = 'Dead Canyon dying maintenance bulb';
   fixture.add(bulb);
 
-  const bulbLight = new THREE.PointLight(0xff9d45, 0, 30, 2);
-  bulbLight.position.copy(bulb.position);
-  bulbLight.castShadow = false;
-  bulbLight.name = 'Dead Canyon dying bulb light';
-  fixture.add(bulbLight);
+  const haloMaterial = new THREE.MeshBasicMaterial({
+    color: 0xff9d45,
+    transparent: true,
+    opacity: 0.08,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    fog: false
+  });
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(1.8, 10, 7), haloMaterial);
+  halo.position.copy(bulb.position);
+  halo.name = 'Dead Canyon maintenance bulb halo';
+  fixture.add(halo);
 
   tunnel.add(fixture);
   world.add(tunnel);
@@ -431,8 +438,9 @@ function makeDarkTunnel(world, samples, trackWidth) {
   return Object.freeze({
     group: tunnel,
     bulb,
-    bulbLight,
     bulbMaterial,
+    halo,
+    haloMaterial,
     moduleCount: moduleIndices.length,
     startIndex,
     coreIndex,
@@ -477,7 +485,7 @@ function installTunnelDarkness({ world, runtime, tunnel, metrics }) {
   runtime.scene.onBeforeRender = function deadCanyonTunnelFrame(renderer, scene, camera, target) {
     previousBeforeRender?.call(this, renderer, scene, camera, target);
     if (runtime.activeWorld !== world || world.visible === false) {
-      tunnel.bulbLight.intensity = 0;
+      tunnel.haloMaterial.opacity = 0;
       return;
     }
 
@@ -492,9 +500,11 @@ function installTunnelDarkness({ world, runtime, tunnel, metrics }) {
     const bulbStrength = darkness > 0.62
       ? darkness * (0.45 + 4.8 * slowPulse * slowPulse * (0.28 + 0.72 * dyingPulse))
       : 0;
-    tunnel.bulbLight.intensity = bulbStrength;
     const glow = THREE.MathUtils.clamp(0.42 + bulbStrength / 7, 0.42, 1);
     tunnel.bulbMaterial.color.setRGB(1, 0.42 + glow * 0.25, 0.16 + glow * 0.12);
+    tunnel.haloMaterial.opacity = darkness > 0.62
+      ? THREE.MathUtils.clamp(0.025 + bulbStrength * 0.022, 0.025, 0.14)
+      : 0;
 
     metrics.tunnelDarknessCurrent = darkness;
     metrics.bulbIntensityCurrent = bulbStrength;
