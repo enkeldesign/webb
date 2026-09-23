@@ -1,5 +1,5 @@
 // TURN LAB pace-note overlay for DEAD CANYON, which occupies the MOUNTAIN slot.
-import * as production from '../../turn/tracks/pace-notes.js?lab-base=dead-canyon-r4';
+import * as production from '../../turn/tracks/pace-notes.js?lab-base=dead-canyon-r6';
 
 export const PACE_NOTE_DIRECTION = production.PACE_NOTE_DIRECTION;
 export const PACE_NOTE_LENGTH = production.PACE_NOTE_LENGTH;
@@ -28,7 +28,10 @@ export const DEAD_CANYON_PACE_NOTES = Object.freeze([
   note('dead-canyon-5', 0.470, 0.525, [{ direction: RIGHT, severity: 2, length: MEDIUM }]),
   note('dead-canyon-6', 0.555, 0.615, [{ direction: LEFT, severity: 2, length: LONG }]),
   note('dead-canyon-7', 0.640, 0.695, [{ direction: LEFT, severity: 2, length: MEDIUM }]),
-  note('dead-canyon-8', 0.710, 0.765, [{ direction: LEFT, severity: 3, length: LONG }]),
+  note('dead-canyon-black-tunnel', 0.695, 0.790, [
+    { direction: RIGHT, severity: 2, length: LONG },
+    { direction: LEFT, severity: 2, length: LONG }
+  ]),
   note('dead-canyon-9', 0.785, 0.835, [{ direction: LEFT, severity: 2, length: SHORT }]),
   note('dead-canyon-10', 0.850, 0.890, [{ direction: RIGHT, severity: 2, length: MEDIUM }]),
   note('dead-canyon-11', 0.900, 0.940, [{ direction: LEFT, severity: 3, length: MEDIUM }]),
