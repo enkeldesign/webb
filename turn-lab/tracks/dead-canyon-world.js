@@ -732,12 +732,149 @@ async function installRetroUrbanSites(world, samples, trackWidth) {
   const ghostStop = frameAt(samples, 0.825);
   instances += placeOutpost(world, templates, ghostStop, trackWidth, 'ghost-stop');
 
+  instances += placeVisibleRetroLandmarks(world, templates, samples, trackWidth);
+
   return {
     retroUrbanLoaded: entries.length,
     retroUrbanInstances: instances,
     retroUrbanErrors: [],
     retroUrbanAssetNames: Object.freeze(Object.keys(templates))
   };
+}
+
+function placeVisibleRetroLandmarks(world, templates, samples, trackWidth) {
+  let count = 0;
+
+  const treePlacements = [
+    [0.115, -18, 31, 0.92],
+    [0.115, 2, 36, 1.08],
+    [0.115, 22, 32, 0.98],
+    [0.685, -16, 31, 1.05],
+    [0.685, 7, 37, 0.94],
+    [0.685, 28, 33, 1.12]
+  ];
+  treePlacements.forEach(([progress, along, lateralDistance, scale], index) => {
+    const frame = frameAt(samples, progress);
+    const side = outwardSide(frame);
+    count += placeTemplate(
+      world,
+      templates.parkTree,
+      frame,
+      along,
+      side * (trackWidth / 2 + lateralDistance),
+      scale,
+      index * 0.27,
+      'yellow-tree-' + (index + 1)
+    );
+  });
+
+  const shedFrame = frameAt(samples, 0.705);
+  count += placeOpenShed(world, templates, shedFrame, trackWidth);
+
+  const truckFrame = frameAt(samples, 0.735);
+  count += placeRustTruck(world, templates, truckFrame, trackWidth);
+
+  const ruinsFrame = frameAt(samples, 0.535);
+  count += placeRuinCluster(world, templates, ruinsFrame, trackWidth);
+
+  return count;
+}
+
+function placeOpenShed(world, templates, frame, trackWidth) {
+  const side = outwardSide(frame);
+  const lateral = side * (trackWidth / 2 + 36);
+  let count = 0;
+
+  const poles = cloneTemplateAt(
+    world, templates.shedPoles, frame, -5, lateral, 1.12, 0.08, 'open-shed-poles'
+  );
+  if (poles) count += 1;
+
+  const roof = cloneTemplateAt(
+    world, templates.shedRoof, frame, -5, lateral, 1.12, 0.08, 'open-shed-roof'
+  );
+  if (roof) {
+    roof.position.y += 6.7;
+    count += 1;
+  }
+  return count;
+}
+
+function placeRustTruck(world, templates, frame, trackWidth) {
+  const side = outwardSide(frame);
+  const object = cloneTemplateAt(
+    world,
+    templates.truck,
+    frame,
+    10,
+    side * (trackWidth / 2 + 29),
+    1.15,
+    Math.PI / 2 + 0.14,
+    'rust-truck'
+  );
+  if (!object) return 0;
+  object.traverse((node) => {
+    if (!node.isMesh) return;
+    node.material = material(0x7d4939, 0.98, true);
+  });
+  return 1;
+}
+
+function placeRuinCluster(world, templates, frame, trackWidth) {
+  const side = outwardSide(frame);
+  let count = 0;
+  const ruinLateral = side * (trackWidth / 2 + 31);
+
+  const ruins = [
+    [-20, 0, -0.25, 0.92],
+    [1, 6, 0.22, 1.12],
+    [21, -2, -0.08, 0.82]
+  ];
+  ruins.forEach(([along, lateralNudge, yaw, scale], index) => {
+    count += placeTemplate(
+      world,
+      templates.brokenWall,
+      frame,
+      along,
+      ruinLateral + side * lateralNudge,
+      scale,
+      yaw,
+      'stone-ruin-' + (index + 1)
+    );
+  });
+
+  for (let index = 0; index < 6; index += 1) {
+    count += placeTemplate(
+      world,
+      templates.barrier,
+      frame,
+      -22 + index * 9,
+      side * (trackWidth / 2 + 10.5),
+      0.95,
+      index % 2 ? 0.04 : -0.04,
+      'ruin-road-barrier-' + (index + 1)
+    );
+  }
+  return count;
+}
+
+function cloneTemplateAt(world, template, frame, along, lateral, scale, yawOffset, name) {
+  if (!template) return null;
+  const object = template.clone(true);
+  object.name = 'Dead Canyon Retro Urban ' + name;
+  object.position.copy(frame.point)
+    .addScaledVector(frame.tangent, along)
+    .addScaledVector(frame.normal, lateral);
+  object.position.y = Math.max(0.25, frame.point.y - 0.25);
+  object.rotation.y = Math.atan2(frame.tangent.x, frame.tangent.z) + yawOffset;
+  object.scale.multiplyScalar(scale);
+  object.traverse((node) => {
+    if (!node.isMesh) return;
+    node.castShadow = false;
+    node.receiveShadow = false;
+  });
+  world.add(object);
+  return object;
 }
 
 function placeOutpost(world, templates, frame, trackWidth, id) {
