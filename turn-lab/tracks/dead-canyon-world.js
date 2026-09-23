@@ -76,7 +76,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
   makeSun(world);
 
   const metrics = {
-    version: 'dead-canyon-r6',
+    version: 'dead-canyon-r7',
     proceduralWorld: true,
     routeSamples: samples.length,
     theme: 'golden-hour-canyon-road',
@@ -110,7 +110,11 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
     tunnelEndProgress: TUNNEL.end,
     tunnelLengthMeters: tunnel.lengthMeters,
     tunnelModuleCount: tunnel.moduleCount,
+    tunnelMountainCladding: true,
+    tunnelMountainModuleCount: tunnel.mountainModuleCount,
+    tunnelPortalStyle: 'faceted-rock',
     tunnelDyingBulb: true,
+    tunnelFlicker: 'strong-irregular',
     tunnelDynamicLights: 0,
     tunnelGuiUnaffected: true,
     needleCount: 0,
@@ -402,6 +406,7 @@ function makeDarkTunnel(world, samples, trackWidth, runtime) {
   ceiling.receiveShadow = false;
   group.add(walls, ceiling);
 
+  const mountainModuleCount = makeTunnelMountainCloak(group, samples, moduleIndices, trackWidth);
   makeTunnelPortal(group, samples[startIndex], trackWidth, 'entrance', rockMaterial);
   makeTunnelPortal(group, samples[endIndex], trackWidth, 'exit', rockMaterial);
 
@@ -437,37 +442,121 @@ function makeDarkTunnel(world, samples, trackWidth, runtime) {
   return {
     lengthMeters: routeDistance(samples, startIndex, endIndex),
     moduleCount: moduleIndices.length,
+    mountainModuleCount,
     controller
   };
+}
+
+function makeTunnelMountainCloak(group, samples, moduleIndices, trackWidth) {
+  // The first tunnel pass deliberately exposed its black engineering shell.
+  // Cover that shell with a continuous low-poly ridge so the road now reads as
+  // tunnelling through the DEAD CANYON geology instead of entering a building.
+  // Side rock stays beyond the free-roam boundary; the overhead ridge is high
+  // enough that it cannot become a visual/non-colliding obstacle for the car.
+  const geometry = new THREE.DodecahedronGeometry(1, 0);
+  const left = new THREE.InstancedMesh(
+    geometry,
+    material(ROCK_DARK, 1, true),
+    moduleIndices.length
+  );
+  const right = new THREE.InstancedMesh(
+    geometry,
+    material(ROCK, 1, true),
+    moduleIndices.length
+  );
+  const ridge = new THREE.InstancedMesh(
+    geometry,
+    material(ROCK_LIGHT, 1, true),
+    moduleIndices.length
+  );
+  left.name = 'Dead Canyon tunnel mountain left';
+  right.name = 'Dead Canyon tunnel mountain right';
+  ridge.name = 'Dead Canyon tunnel mountain ridge';
+
+  const dummy = new THREE.Object3D();
+  const lateral = trackWidth / 2 + 35;
+  moduleIndices.forEach((sampleIndex, moduleIndex) => {
+    const sample = samples[sampleIndex];
+    const nextIndex = moduleIndices[Math.min(moduleIndex + 1, moduleIndices.length - 1)];
+    const previousIndex = moduleIndices[Math.max(0, moduleIndex - 1)];
+    const span = moduleIndex < moduleIndices.length - 1
+      ? sample.point.distanceTo(samples[nextIndex].point)
+      : sample.point.distanceTo(samples[previousIndex].point);
+    const yaw = Math.atan2(sample.tangent.x, sample.tangent.z);
+    const undulation = Math.sin(moduleIndex * 0.72) * 2.4;
+    const lean = Math.sin(moduleIndex * 0.43) * 0.055;
+    const lengthScale = Math.max(11, span * 0.94);
+
+    dummy.position.copy(sample.point).addScaledVector(sample.normal, -lateral);
+    dummy.position.y += 10.5 + undulation * 0.45;
+    dummy.rotation.set(lean, yaw, -0.04 + lean);
+    dummy.scale.set(23.5 + (moduleIndex % 3) * 1.6, 17.5 + undulation * 0.22, lengthScale);
+    dummy.updateMatrix();
+    left.setMatrixAt(moduleIndex, dummy.matrix);
+
+    dummy.position.copy(sample.point).addScaledVector(sample.normal, lateral);
+    dummy.position.y += 11.5 - undulation * 0.3;
+    dummy.rotation.set(-lean, yaw, 0.045 - lean);
+    dummy.scale.set(23.5 + ((moduleIndex + 1) % 3) * 1.6, 18.5 - undulation * 0.18, lengthScale * 1.04);
+    dummy.updateMatrix();
+    right.setMatrixAt(moduleIndex, dummy.matrix);
+
+    dummy.position.copy(sample.point);
+    dummy.position.y += 29 + undulation * 0.55;
+    dummy.rotation.set(0.02 * Math.sin(moduleIndex), yaw, lean);
+    dummy.scale.set(trackWidth / 2 + 24 + (moduleIndex % 2) * 2.5, 14.5 + Math.abs(undulation) * 0.35, lengthScale * 1.08);
+    dummy.updateMatrix();
+    ridge.setMatrixAt(moduleIndex, dummy.matrix);
+  });
+
+  for (const rock of [left, right, ridge]) {
+    rock.instanceMatrix.needsUpdate = true;
+    rock.castShadow = false;
+    rock.receiveShadow = false;
+    rock.frustumCulled = false;
+    group.add(rock);
+  }
+  return moduleIndices.length;
 }
 
 function makeTunnelPortal(group, sample, trackWidth, name, portalMaterial) {
   const portal = new THREE.Group();
   portal.name = 'Dead Canyon tunnel ' + name + ' portal';
   const yaw = Math.atan2(sample.tangent.x, sample.tangent.z);
-  const half = trackWidth / 2 + 14;
+  const geometry = new THREE.DodecahedronGeometry(1, 0);
+  const half = trackWidth / 2 + 35;
 
   for (const side of [-1, 1]) {
-    const pillar = new THREE.Mesh(
-      new THREE.BoxGeometry(5.8, TUNNEL.innerHeight + 5.4, 5.4),
-      portalMaterial
-    );
-    pillar.position.copy(sample.point).addScaledVector(sample.normal, side * half);
-    pillar.position.y += (TUNNEL.innerHeight + 5.4) / 2 - 0.2;
-    pillar.rotation.y = yaw;
-    pillar.name = 'Dead Canyon tunnel ' + name + ' rock pillar';
-    portal.add(pillar);
+    const lower = new THREE.Mesh(geometry, portalMaterial);
+    lower.position.copy(sample.point).addScaledVector(sample.normal, side * half);
+    lower.position.y += 10.5;
+    lower.rotation.set(side * 0.04, yaw, side * -0.08);
+    lower.scale.set(22.5, 18.5, 11.5);
+    lower.name = 'Dead Canyon tunnel ' + name + ' lower portal rock';
+    portal.add(lower);
+
+    const shoulder = new THREE.Mesh(geometry, material(side < 0 ? ROCK : ROCK_LIGHT, 1, true));
+    shoulder.position.copy(sample.point).addScaledVector(sample.normal, side * (trackWidth / 2 + 22));
+    shoulder.position.y += 20.5;
+    shoulder.rotation.set(side * -0.03, yaw, side * 0.06);
+    shoulder.scale.set(15.5, 10.5, 10);
+    shoulder.name = 'Dead Canyon tunnel ' + name + ' upper portal rock';
+    portal.add(shoulder);
   }
 
-  const crown = new THREE.Mesh(
-    new THREE.BoxGeometry(trackWidth + 32, 5.8, 6.4),
-    portalMaterial
-  );
+  const crown = new THREE.Mesh(geometry, material(ROCK_LIGHT, 1, true));
   crown.position.copy(sample.point);
-  crown.position.y += TUNNEL.innerHeight + 2.2;
-  crown.rotation.y = yaw;
+  crown.position.y += 27;
+  crown.rotation.set(0.03, yaw, -0.025);
+  crown.scale.set(trackWidth / 2 + 25, 12.5, 12);
   crown.name = 'Dead Canyon tunnel ' + name + ' rock crown';
   portal.add(crown);
+
+  portal.traverse((node) => {
+    if (!node.isMesh) return;
+    node.castShadow = false;
+    node.receiveShadow = false;
+  });
   group.add(portal);
 }
 
@@ -570,9 +659,18 @@ function installTunnelDarknessController({ world, runtime, samples, bulbMaterial
     }
 
     const seconds = now * 0.001;
-    const slow = 0.5 + 0.5 * Math.sin(seconds * 2.17 + Math.sin(seconds * 0.61) * 1.7);
-    const dyingDip = Math.pow(0.5 + 0.5 * Math.sin(seconds * 0.37 + 2.2), 12);
-    const flicker = THREE.MathUtils.clamp(0.20 + slow * 0.32 - dyingDip * 0.16, 0.055, 0.52);
+    // More legible "bad wiring" than r6, but intentionally kept below a
+    // strobe-like cadence: two irregular sub-3 Hz components plus occasional
+    // deeper dropouts. The bulb is tiny and never lights enough road to steer by.
+    const flutter = 0.5 + 0.5 * Math.sin(seconds * 9.1 + Math.sin(seconds * 1.13) * 2.1);
+    const buzz = 0.5 + 0.5 * Math.sin(seconds * 12.7 + Math.sin(seconds * 2.03) * 1.4);
+    const dropoutWave = 0.5 + 0.5 * Math.sin(seconds * 3.05 + Math.sin(seconds * 0.47) * 1.8);
+    const dropout = Math.pow(THREE.MathUtils.clamp((dropoutWave - 0.72) / 0.28, 0, 1), 5);
+    const flicker = THREE.MathUtils.clamp(
+      0.055 + flutter * 0.31 + buzz * 0.18 - dropout * 0.24,
+      0.018,
+      0.58
+    );
     state.flicker = flicker;
 
     const bulbPresence = tunnelBulbPresence(progress) * Math.max(0.15, darkness);
