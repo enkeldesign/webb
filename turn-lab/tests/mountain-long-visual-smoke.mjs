@@ -22,6 +22,7 @@ page.on('console', (message) => {
 
 let metrics;
 let introCamera;
+let tunnelInspection;
 try {
   const response = await page.goto(`${baseUrl}/turn-lab/?visual-smoke=dead-canyon`, {
     waitUntil: 'domcontentloaded',
@@ -155,6 +156,51 @@ try {
 
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-active.png'), fullPage: true });
 
+  tunnelInspection = await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    runtime.renderer?.setAnimationLoop?.(null);
+    const map = document.querySelector('#map');
+    const before = map ? {
+      display: getComputedStyle(map).display,
+      visibility: getComputedStyle(map).visibility,
+      opacity: getComputedStyle(map).opacity
+    } : null;
+    const sample = runtime.samples[Math.round(0.720 * (runtime.samples.length - 1))];
+    const bulb = runtime.activeWorld.getObjectByName('Dead Canyon dying maintenance bulb');
+    runtime.state.running = true;
+    runtime.state.progress = 0.735;
+    runtime.state.position.copy(sample.point);
+    runtime.camera.position.copy(sample.point).addScaledVector(sample.tangent, -8);
+    runtime.camera.position.y += 4.8;
+    runtime.camera.up.set(0, 1, 0);
+    runtime.camera.lookAt(bulb.position.x, bulb.position.y - 1.1, bulb.position.z);
+    runtime.camera.fov = 68;
+    runtime.camera.updateProjectionMatrix();
+    runtime.camera.updateMatrixWorld(true);
+    runtime.renderer.render(runtime.scene, runtime.camera);
+    const after = map ? {
+      display: getComputedStyle(map).display,
+      visibility: getComputedStyle(map).visibility,
+      opacity: getComputedStyle(map).opacity
+    } : null;
+    const halo = runtime.activeWorld.getObjectByName('Dead Canyon maintenance bulb halo');
+    return {
+      hemiIntensity: runtime.hemi.intensity,
+      sunIntensity: runtime.sun.intensity,
+      haloOpacity: halo?.material?.opacity ?? 0,
+      before,
+      after
+    };
+  });
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-tunnel.png'), fullPage: true });
+
+  await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    runtime.state.running = false;
+    runtime.state.progress = 0;
+    runtime.renderer.render(runtime.scene, runtime.camera);
+  });
+
   await page.evaluate(() => {
     const runtime = globalThis.__turnRuntime;
     runtime.renderer?.setAnimationLoop?.(null);
@@ -197,7 +243,7 @@ try {
 
 await fs.writeFile(
   path.join(outputDir, 'metrics.json'),
-  `${JSON.stringify({ metrics, introCamera, browserErrors }, null, 2)}\n`
+  `${JSON.stringify({ metrics, introCamera, tunnelInspection, browserErrors }, null, 2)}\n`
 );
 
 assert.deepEqual(browserErrors, [], `TURN LAB DEAD CANYON produced browser errors:\n${browserErrors.join('\n')}`);
@@ -227,6 +273,9 @@ assert.equal(metrics.deadCanyon.yellowTreeCount, 6);
 assert.equal(metrics.deadCanyon.openShedCount, 1);
 assert.equal(metrics.deadCanyon.rustTruckCount, 1);
 assert.equal(metrics.deadCanyon.ruinClusterCount, 1);
+assert.equal(metrics.deadCanyon.darkTunnel, true);
+assert.equal(metrics.deadCanyon.tunnelSequence, 'RIGHT > LEFT > OUT');
+assert.ok(metrics.deadCanyon.tunnelModuleCount >= 20);
 assert.equal(metrics.deadCanyon.needleCount, 0);
 assert.equal(metrics.deadCanyon.geologyArchetypes, 4);
 assert.equal(metrics.deadCanyon.solarPanels, 24);
@@ -236,6 +285,10 @@ assert.equal(metrics.deadCanyon.treeTextureLoaded, true);
 assert.ok(metrics.deadCanyon.retroUrbanInstances >= 61);
 assert.deepEqual(metrics.deadCanyon.retroUrbanErrors, []);
 assert.equal(metrics.deadCanyon.dynamicLights, 0);
+assert.ok(tunnelInspection.hemiIntensity < 0.02);
+assert.ok(tunnelInspection.sunIntensity < 0.02);
+assert.ok(tunnelInspection.haloOpacity > 0);
+assert.deepEqual(tunnelInspection.after, tunnelInspection.before);
 assert.equal(metrics.deadCanyon.shadowCasters, 0);
 assert.ok(metrics.retroUrbanSceneObjects >= 61,
   `Expected loaded Retro Urban scene objects, got ${metrics.retroUrbanSceneObjects}`);
@@ -286,5 +339,7 @@ console.log('TURN LAB DEAD CANYON browser/runtime smoke passed:', JSON.stringify
   yellowTrees: metrics.yellowTreeObjects,
   shedParts: metrics.openShedParts,
   ruins: metrics.ruinObjects,
+  tunnelModules: metrics.deadCanyon.tunnelModuleCount,
+  haloOpacity: tunnelInspection.haloOpacity,
   retroUrbanInstances: metrics.deadCanyon.retroUrbanInstances
 }));
