@@ -8,11 +8,18 @@ TURN LAB repurposes only the production MOUNTAIN slot as **DEAD CANYON**. The in
 
 DEAD CANYON r4 is about 3.23 km with 73 authored control points and 2,160 runtime samples. The AIRPORT-derived hairpin has been removed; the early chicane remains the deliberate technical interruption in an otherwise fast canyon lap. Because the route changed, records/rivals now use `dead-canyon-lab-r4`.
 
-## r5 art direction
+## Post-#970 polish baseline
 
 The canyon itself is the signature landmark.
 
 - The east wall remains four broad faceted terraces in warm golden-hour haze.
+- The #972/#973 dark-tunnel experiment has been **fully rolled back**. This pass starts from the merged #970 state and keeps the original open canyon route.
+- The four embedded overhang rocks and the three DEAD CANYON CROWN shelves are pushed farther into the east wall so no large rock reads as detached/floating.
+- Large fallen formations are sunk deeper into the terrain.
+- The yellow Kenney damaged-barrier/"step" asset is no longer loaded or placed anywhere on DEAD CANYON. The pale procedural canyon-edge barriers remain.
+- The open shed roof is seated against the top of its pole frame from actual object bounds instead of a guessed Y offset.
+- DEAD CANYON DBE pace-note directions were re-audited against the route using production MOUNTAIN's verified coordinate-handness convention. LEFT stays in the left ear and RIGHT in the right ear.
+- The intro/loading camera is farther back and wider so substantially more track is visible while the east canyon wall stays in the background.
 - **DEAD CANYON CROWN** is now pure geology: three very broad, tall, shallow polygonal strata shelves embedded directly into the wall. The artificial dark backing block is removed.
 - Four additional embedded wall rocks use the same rule: wider and taller, but much shallower so they cannot read as floating boulders.
 - Raised terrain now has vertical skirts down to the desert floor, closing the visible holes that could appear underneath high ridges.
@@ -39,7 +46,7 @@ Open `https://enkel.design/turn-lab/`, choose **DEAD CANYON**, and check especia
 2. yellow/black roadside details staying clear of the driveable road;
 3. the closed terrain/ridge edges with no daylight underneath;
 4. the embedded overhangs and the DEAD CANYON CROWN landmark;
-5. the new loading/intro angle and how much track/scenery it reveals;
+5. the wider loading/intro angle: more of the route should fit in frame, with the canyon wall reading as distant/background scenery;
 6. whether one standing sentinel rock and one table mesa feel special rather than repetitive;
 7. the yellow-tree/open-shed/rust-truck cluster and the separate ruin/barrier cluster.
 
