@@ -8,7 +8,7 @@ TURN LAB repurposes only the production MOUNTAIN slot as **DEAD CANYON**. The in
 
 DEAD CANYON r4 is about 3.23 km with 73 authored control points and 2,160 runtime samples. The AIRPORT-derived hairpin has been removed; the early chicane remains the deliberate technical interruption in an otherwise fast canyon lap. Because the route changed, records/rivals now use `dead-canyon-lab-r4`.
 
-## r7 tunnel-in-the-mountain pass
+## r5 art direction
 
 The canyon itself is the signature landmark.
 
@@ -20,11 +20,6 @@ The canyon itself is the signature landmark.
 - Retro Urban service dressing around the former hairpin area has been moved farther away from the racing line.
 - Only one freestanding tall sentinel rock remains. The other former upright buttes are now low, fallen formations, and only one table/mushroom mesa remains.
 - The existing camera-safe haze remains 260–760 m against TURN's 900 m race-camera far plane.
-- The **dark tunnel** still covers the unchanged early chicane (**RIGHT → LEFT → OUT**), but its black engineering shell is now buried inside a continuous faceted canyon ridge. From outside it should read as road cut through rock, not a freestanding black structure.
-- Tunnel daylight fades quickly after entry, reaches a genuinely dark core, then returns gradually near the exit. The route geometry and `dead-canyon-lab-r4` record namespace are unchanged.
-- Darkness affects only the 3D world lighting/self-lit road markings. **HUD, controls and minimap remain fully visible**.
-- One weak maintenance bulb hangs near the middle. r7 makes its bad-wiring flicker substantially more visible with irregular sub-3 Hz flutter and occasional deeper dips; it still uses emissive/basic geometry and a tiny floor glow rather than a dynamic light, so it communicates intentional abandonment without becoming the navigation solution.
-- The dark inner walls remain outside DEAD CANYON's free-roam boundary. A single continuous low-poly mountain surface now spans both canyon flanks and the ridge above the road, while both portals use faceted canyon rock rather than rectangular blocks.
 
 ## Intro composition
 
@@ -46,10 +41,7 @@ Open `https://enkel.design/turn-lab/`, choose **DEAD CANYON**, and check especia
 4. the embedded overhangs and the DEAD CANYON CROWN landmark;
 5. the new loading/intro angle and how much track/scenery it reveals;
 6. whether one standing sentinel rock and one table mesa feel special rather than repetitive;
-7. the yellow-tree/open-shed/rust-truck cluster and the separate ruin/barrier cluster;
-8. the dark tunnel: daylight entry → dark RIGHT/LEFT core → daylight exit;
-9. whether DBE feels especially useful while the **still-visible minimap** provides a viable visual strategy without requiring hearing;
-10. the single dying bulb reading as intentional abandoned infrastructure rather than useful illumination.
+7. the yellow-tree/open-shed/rust-truck cluster and the separate ruin/barrier cluster.
 
 ## Safety
 
@@ -57,5 +49,3 @@ Open `https://enkel.design/turn-lab/`, choose **DEAD CANYON**, and check especia
 - The first LAB import map remains identical to current production TURN.
 - LAB overrides only the internal MOUNTAIN track modules plus its intro camera.
 - Production physics, handling, Drive By Ear, vehicles, UI and scoring remain unchanged.
-- The tunnel does not use BLANK SCREEN: the GUI remains present, and only the 3D scene is darkened.
-- No production MOUNTAIN files or production release metadata are changed.
