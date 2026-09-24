@@ -142,7 +142,7 @@ assert.match(selectorSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)\.j
 assert.doesNotMatch(selectorSource, /TRACK_SELECTION_CATALOG\.slice\(\s*0\s*,\s*\d+/,
   'Track chooser must not cap the number of catalog entries in JavaScript');
 
-assert.match(statsSource, /import \{ TRACK_DEFINITIONS \} from '\.\.\/tracks\/definitions\.js'/);
+assert.match(statsSource, /import \{ TRACK_DEFINITIONS \} from '\.\.\/tracks\/definitions\.js\?build=\d{8}-r\d+'/);
 assert.match(statsSource, /TRACK_DEFINITIONS\.map\(\(\{ id, name \}\)/,
   'Stats track names must follow canonical production definitions');
 assert.match(supportSource, /completeTrackOrder\(config\.trackOrder, TRACK_IDS\)/,
