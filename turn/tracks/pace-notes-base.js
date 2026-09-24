@@ -1,3 +1,5 @@
+import { assertTrackConfigCoverage } from './definitions.js';
+
 export const PACE_NOTE_DIRECTION = Object.freeze({
   LEFT: -1,
   RIGHT: 1
@@ -100,7 +102,7 @@ const MOUNTAIN_PACE_NOTES = Object.freeze([
   createPaceNote('mountain-8', 0.962, 0.995, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.SHORT }])
 ]);
 
-const PACE_NOTE_MAPS = Object.freeze({
+export const TRACK_PACE_NOTE_MAPS = Object.freeze({
   countryside: COUNTRYSIDE_PACE_NOTES,
   airport: AIRPORT_PACE_NOTES,
   cliffside: CLIFFSIDE_PACE_NOTES,
@@ -108,11 +110,12 @@ const PACE_NOTE_MAPS = Object.freeze({
   'midnight-city': MIDNIGHT_CITY_PACE_NOTES,
   mountain: MOUNTAIN_PACE_NOTES
 });
+assertTrackConfigCoverage(TRACK_PACE_NOTE_MAPS, 'track pace-note maps');
 
 const EMPTY_PACE_NOTES = Object.freeze([]);
 
 export function getTrackPaceNotes(trackId) {
-  return PACE_NOTE_MAPS[String(trackId || '').toLowerCase()] || EMPTY_PACE_NOTES;
+  return TRACK_PACE_NOTE_MAPS[String(trackId || '').toLowerCase()] || EMPTY_PACE_NOTES;
 }
 
 export function speedAdjustedPaceNoteTrigger(note, speed, maxSpeed = 88) {
