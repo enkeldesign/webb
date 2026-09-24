@@ -93,6 +93,10 @@ assert.match(definitions, /name: 'Dead Canyon'[\s\S]*difficulty: 'ADVANCED'/);
 assert.match(definitions, /name: 'Suburbs'[\s\S]*difficulty: 'MEDIUM'/);
 assert.match(definitions, /storageRevision: 'dead-canyon-lab-r4'/);
 assert.match(definitions, /storageRevision: 'suburbs-lab'/);
+assert.match(definitions, /export const TRACK_IDS = LAB_TRACK_METADATA\.ids/);
+assert.match(definitions, /export const TRACK_NAMES = LAB_TRACK_METADATA\.names/);
+assert.match(definitions, /export const assertTrackConfigCoverage = production\.assertTrackConfigCoverage/,
+  'TURN LAB definitions overlay must preserve the production track-config coverage API');
 
 assert.match(registry, /entry\.id === 'mountain'[\s\S]*installDeadCanyonWorld/);
 assert.match(registry, /entry\.id === 'cliffside'[\s\S]*installSuburbsWorld/);
