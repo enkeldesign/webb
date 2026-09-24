@@ -48,8 +48,8 @@ assert.equal(productionImports[audioPreferencesSpecifier], `/turn/audio/audio-pr
 assert.equal(labImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
 assert.equal(productionImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
 assert.equal(labImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
-assert.equal(productionImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r214-mountain-ccttbb');
-assert.equal(labImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r214-mountain-ccttbb');
+assert.equal(productionImports[songbookSpecifier], `/turn/audio/music/songbook.js?build=${release.cacheKey}`);
+assert.equal(labImports[songbookSpecifier], `/turn/audio/music/songbook.js?build=${release.cacheKey}`);
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/);
 assert.match(engine, /music\/songbook\.js\?revision=r197-audio-mix/);
 assert.equal(
