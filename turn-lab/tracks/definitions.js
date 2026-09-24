@@ -1,45 +1,84 @@
-// TURN LAB definition overlay. All production tracks are inherited unchanged;
-// only the internal MOUNTAIN slot becomes SUBURBS inside /turn-lab/.
-import * as production from '/turn/tracks/definitions.js?lab-base=suburbs';
+// TURN LAB definition overlay. Production tracks remain intact except two internal
+// slots used to expose both LAB courses at the same time:
+// MOUNTAIN -> DEAD CANYON, CLIFFSIDE -> SUBURBS.
+import * as production from '/turn/tracks/definitions.js?lab-base=dead-canyon-suburbs';
 
 export const DEFAULT_TRACK_ID = production.DEFAULT_TRACK_ID;
 export const TRACK_SAMPLE_COUNT = production.TRACK_SAMPLE_COUNT;
 export const TRACK_SELECTION_KEY = production.TRACK_SELECTION_KEY;
 
 export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map((track) => {
-  if (track.id !== 'mountain') return track;
-  return Object.freeze({
-    ...track,
-    name: 'Suburbs',
-    difficulty: 'EASY',
-    eyebrow: 'LAB TRACK',
-    description: 'Sunny streets. Wide corners. Park, lake and colourful homes.',
-    accent: '#25b97a',
-    accentSoft: '#d8ffd8',
-    storageRevision: 'suburbs-lab',
-    sampleCount: 1440,
-    freeRoamDistance: 21.5,
-    collisionProfile: Object.freeze({
+  if (track.id === 'mountain') {
+    return Object.freeze({
+      ...track,
+      name: 'Dead Canyon',
+      difficulty: 'ADVANCED',
+      eyebrow: 'LAB TRACK',
+      description: 'Canyon road. Dust haze. One chicane. Long desert speed.',
+      accent: '#ff7a3d',
+      accentSoft: '#ffd0ad',
+      storageRevision: 'dead-canyon-lab-r4',
+      sampleCount: 2160,
+      freeRoamDistance: 23.5,
+      collisionProfile: Object.freeze({
+        freeRoamDistance: 23.5,
+        shoulderStartDistance: 15.2,
+        shoulderDrag: 1.55,
+        boundaryBounce: 0.035,
+        boundaryTangentRetention: 0.95,
+        boundaryMinimumRecoverySpeed: 6,
+        colliders: Object.freeze([])
+      }),
+      sky: 0xe4ad8b,
+      fog: 0xe4ad8b,
+      fogNear: 260,
+      fogFar: 760,
+      lighting: Object.freeze({
+        hemisphereSky: 0xffd7b4,
+        hemisphereGround: 0x6b3b32,
+        hemisphereIntensity: 1.05,
+        directionalColor: 0xffcf8d,
+        directionalIntensity: 1.18
+      })
+    });
+  }
+
+  if (track.id === 'cliffside') {
+    return Object.freeze({
+      ...track,
+      name: 'Suburbs',
+      difficulty: 'MEDIUM',
+      eyebrow: 'LAB TRACK',
+      description: 'Summer island. Park sweepers. Cul-de-sac. Backyard rhythm.',
+      accent: '#25b97a',
+      accentSoft: '#d8ffd8',
+      storageRevision: 'suburbs-lab',
+      sampleCount: 1440,
       freeRoamDistance: 21.5,
-      shoulderStartDistance: 15.5,
-      shoulderDrag: 1.35,
-      boundaryBounce: 0.028,
-      boundaryTangentRetention: 0.965,
-      boundaryMinimumRecoverySpeed: 5,
-      colliders: Object.freeze([])
-    }),
-    sky: 0x74ccf4,
-    fog: 0x9edff4,
-    fogNear: 480,
-    fogFar: 880,
-    lighting: Object.freeze({
-      hemisphereSky: 0xcaf5ff,
-      hemisphereGround: 0x73b85f,
-      hemisphereIntensity: 1.2,
-      directionalColor: 0xffefc2,
-      directionalIntensity: 1.35
-    })
-  });
+      collisionProfile: Object.freeze({
+        freeRoamDistance: 21.5,
+        shoulderStartDistance: 15.5,
+        shoulderDrag: 1.35,
+        boundaryBounce: 0.028,
+        boundaryTangentRetention: 0.965,
+        boundaryMinimumRecoverySpeed: 5,
+        colliders: Object.freeze([])
+      }),
+      sky: 0x74ccf4,
+      fog: 0x9edff4,
+      fogNear: 480,
+      fogFar: 880,
+      lighting: Object.freeze({
+        hemisphereSky: 0xcaf5ff,
+        hemisphereGround: 0x73b85f,
+        hemisphereIntensity: 1.2,
+        directionalColor: 0xffefc2,
+        directionalIntensity: 1.35
+      })
+    });
+  }
+
+  return track;
 }));
 
 export const TRACK_PLACEHOLDERS = production.TRACK_PLACEHOLDERS;
