@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import { TRACK_IDS } from '../turn/tracks/definitions.js';
 
 const [index, labIndex, trackerIndex, releaseSource, homeLayout, engine, songbookSource, songToolsSource,
   toneRuntime, drumRuntime, leadVoicesSource, bassVoicesSource, arpVoicesSource,
@@ -80,10 +81,10 @@ for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'ha
     `${songFile} must use the current user-score cache revision`);
 }
 
-const expectedTrackIds = ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain'];
+const expectedTrackIds = TRACK_IDS;
 assert.equal(MENU_SONG.id, 'menu');
 assert.deepEqual(Object.keys(TRACK_SONGS), expectedTrackIds);
-assert.equal(SONGBOOK.length, 7, 'Songbook contains menu music plus six track songs');
+assert.equal(SONGBOOK.length, TRACK_IDS.length + 1, 'Songbook contains menu music plus one song per production track');
 assert.equal(TRACK_SONGS.airport.id, 'airport', 'Airport keeps the canonical track song id');
 assert.equal(TRACK_SONGS.airport.name, 'Paper Skies', 'Airport exposes the new Paper Skies title');
 assert.equal(TRACK_SONGS.airport.bpm, 144, 'Paper Skies keeps its authored tempo');
