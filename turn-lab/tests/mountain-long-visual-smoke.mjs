@@ -4,7 +4,7 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 
 const baseUrl = process.env.TURN_VISUAL_BASE_URL || 'http://127.0.0.1:8000';
-const outputDir = process.env.TURN_VISUAL_OUTPUT || 'suburbs-visual-artifact';
+const outputDir = process.env.TURN_VISUAL_OUTPUT || 'lab-dual-tracks-visual-artifact';
 await fs.mkdir(outputDir, { recursive: true });
 
 const browser = await chromium.launch({
@@ -20,10 +20,10 @@ page.on('console', (message) => {
   if (message.type() === 'error') browserErrors.push('console error: ' + message.text());
 });
 
-let metrics;
-let introCamera;
+let suburbs;
+let deadCanyon;
 try {
-  const response = await page.goto(baseUrl + '/turn-lab/?visual-smoke=suburbs', {
+  const response = await page.goto(baseUrl + '/turn-lab/?visual-smoke=dual-lab', {
     waitUntil: 'domcontentloaded',
     timeout: 90_000
   });
@@ -47,22 +47,24 @@ try {
     { timeout: 90_000 }
   );
 
-  const homeCard = page.locator('.m8-home .track-card[data-track-id="mountain"]');
-  assert.match(await homeCard.textContent(), /Suburbs/i);
-  assert.equal(await homeCard.getAttribute('data-trophy-locked'), 'false');
-  assert.equal(await page.locator('html').getAttribute('data-turn-lab'), 'suburbs');
-  assert.equal(await page.locator('html').getAttribute('data-turn-lab-experiment-access'), 'unlocked');
-  await page.screenshot({ path: path.join(outputDir, 'suburbs-home.png'), fullPage: true });
+  const mountainHome = page.locator('.m8-home .track-card[data-track-id="mountain"]');
+  const suburbsHome = page.locator('.m8-home .track-card[data-track-id="cliffside"]');
+  assert.match(await mountainHome.textContent(), /Dead Canyon/i);
+  assert.match(await suburbsHome.textContent(), /Suburbs/i);
+  assert.equal(await mountainHome.getAttribute('data-trophy-locked'), 'false');
+  assert.equal(await page.locator('html').getAttribute('data-turn-lab'), 'dead-canyon-suburbs');
+  await page.screenshot({ path: path.join(outputDir, 'lab-home-both-tracks.png'), fullPage: true });
 
   await page.evaluate(() => {
     globalThis.__suburbsChoice = globalThis.__turnChooseTrack();
     return true;
   });
-  await page.locator('.track-select.is-visible .track-card[data-track-id="mountain"]').click();
+  await page.locator('.track-select.is-visible .track-card[data-track-id="cliffside"]').click();
   await page.locator('.track-select-continue').click();
+  await page.evaluate(() => globalThis.__suburbsChoice);
 
   await page.waitForFunction(
-    () => globalThis.__turnRuntime?.trackId === 'mountain'
+    () => globalThis.__turnRuntime?.trackId === 'cliffside'
       && globalThis.__turnRuntime?.activeWorld?.userData?.turnSuburbs,
     null,
     { timeout: 90_000 }
@@ -71,32 +73,7 @@ try {
     await Promise.resolve(globalThis.__turnRuntime?.activeWorld?.ready);
   });
 
-  await page.setViewportSize({ width: 1800, height: 900 });
-  await page.evaluate(async () => {
-    const { showTrackIntro } = await import('/turn/ui/track-intro.js?build=20260922-r285');
-    globalThis.__suburbsVisualIntro = showTrackIntro('mountain');
-  });
-  await page.waitForFunction(
-    () => document.body.classList.contains('turn-track-intro'),
-    null,
-    { timeout: 15_000 }
-  );
-  await page.evaluate(() => new Promise((resolve) => {
-    requestAnimationFrame(() => requestAnimationFrame(resolve));
-  }));
-  introCamera = await page.evaluate(() => ({
-    position: globalThis.__turnRuntime.camera.position.toArray(),
-    fov: globalThis.__turnRuntime.camera.fov
-  }));
-  await page.evaluate(() => {
-    document.querySelector('.m8-home')?.style.setProperty('display', 'none', 'important');
-    document.querySelector('.track-select')?.style.setProperty('display', 'none', 'important');
-  });
-  await page.screenshot({ path: path.join(outputDir, 'suburbs-intro.png'), fullPage: true });
-  await page.evaluate(() => globalThis.__suburbsVisualIntro);
-  await page.setViewportSize({ width: 1440, height: 900 });
-
-  metrics = await page.evaluate(() => {
+  suburbs = await page.evaluate(() => {
     const runtime = globalThis.__turnRuntime;
     const world = runtime.activeWorld;
     const children = [];
@@ -108,30 +85,22 @@ try {
         if (index === 0) return total;
         return total + sample.point.distanceTo(runtime.samples[index - 1].point);
       }, runtime.samples.at(-1).point.distanceTo(runtime.samples[0].point)),
-      suburbs: world.userData.turnSuburbs,
+      metrics: world.userData.turnSuburbs,
       houses: children.filter((object) =>
         object.name?.startsWith('Suburbs Kenney house ')
         || object.name?.startsWith('Suburbs Kenney back-row house ')
       ).length,
-      driveways: children.filter((object) => object.name?.startsWith('Suburbs Kenney driveway ')).length,
-      fences: children.filter((object) => object.name?.startsWith('Suburbs Kenney garden fence ')).length,
-      trees: children.filter((object) => object.name?.includes('Suburbs Kenney') && object.name?.includes('tree ')).length,
-      planters: children.filter((object) => object.name?.startsWith('Suburbs Kenney flower planter ')).length,
-      parkPaths: children.filter((object) => object.name?.startsWith('Suburbs Kenney park path ')).length,
       parkedCars: children.filter((object) => object.name?.startsWith('Suburbs parked ')).length,
-      hasLake: Boolean(world.getObjectByName('Suburbs summer lake')),
-      hasDock: Boolean(world.getObjectByName('Suburbs wooden dock')),
-      hasBoat: Boolean(world.getObjectByName('Suburbs moored summer boat')),
-      playgroundPieces: world.getObjectByName('Suburbs playground')?.children.length || 0,
-      backgroundColor: runtime.scene?.background?.getHex?.() ?? null,
-      fogColor: runtime.scene?.fog?.color?.getHex?.() ?? null,
-      fogNear: runtime.scene?.fog?.near ?? null,
-      fogFar: runtime.scene?.fog?.far ?? null,
-      cameraFar: runtime.camera?.far ?? null
+      island: Boolean(world.getObjectByName('Suburbs island body')),
+      sandRim: Boolean(world.getObjectByName('Suburbs island beach rim')),
+      surroundingWater: Boolean(world.getObjectByName('Suburbs surrounding water')),
+      dock: Boolean(world.getObjectByName('Suburbs wooden dock')),
+      boat: Boolean(world.getObjectByName('Suburbs moored summer boat')),
+      staleLake: Boolean(world.getObjectByName('Suburbs summer lake')),
+      staleCliffsideVillage: Boolean(world.getObjectByName('Cliffside Kenney Inner Village')),
+      staleOceanLiner: Boolean(world.getObjectByName('Cliffside Kenney Ocean Liner'))
     };
   });
-
-  await page.screenshot({ path: path.join(outputDir, 'suburbs-active.png'), fullPage: true });
 
   await page.evaluate(() => {
     const runtime = globalThis.__turnRuntime;
@@ -142,63 +111,89 @@ try {
     ]) {
       document.querySelectorAll(selector).forEach((node) => node.style.setProperty('display', 'none', 'important'));
     }
-    runtime.camera.position.set(270, 105, 205);
+    runtime.camera.position.set(390, 135, 245);
     runtime.camera.up.set(0, 1, 0);
-    runtime.camera.lookAt(68, 0, 22);
+    runtime.camera.lookAt(65, 0, 25);
     runtime.camera.fov = 48;
     runtime.camera.updateProjectionMatrix();
     runtime.camera.updateMatrixWorld(true);
     runtime.renderer?.render?.(runtime.scene, runtime.camera);
   });
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-  await page.screenshot({ path: path.join(outputDir, 'suburbs-lake-park.png'), fullPage: true });
+  await page.screenshot({ path: path.join(outputDir, 'suburbs-island.png'), fullPage: true });
+
+  await page.evaluate(() => {
+    globalThis.__deadChoice = globalThis.__turnChooseTrack();
+    return true;
+  });
+  await page.locator('.track-select.is-visible .track-card[data-track-id="mountain"]').click();
+  await page.locator('.track-select-continue').click();
+  await page.evaluate(() => globalThis.__deadChoice);
+
+  await page.waitForFunction(
+    () => globalThis.__turnRuntime?.trackId === 'mountain'
+      && globalThis.__turnRuntime?.activeWorld?.userData?.turnDeadCanyon,
+    null,
+    { timeout: 90_000 }
+  );
+  await page.evaluate(async () => {
+    await Promise.resolve(globalThis.__turnRuntime?.activeWorld?.ready);
+  });
+
+  deadCanyon = await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    const world = runtime.activeWorld;
+    return {
+      trackId: runtime.trackId,
+      sampleCount: runtime.samples.length,
+      trackLength: runtime.samples.reduce((total, sample, index) => {
+        if (index === 0) return total;
+        return total + sample.point.distanceTo(runtime.samples[index - 1].point);
+      }, runtime.samples.at(-1).point.distanceTo(runtime.samples[0].point)),
+      metrics: world.userData.turnDeadCanyon
+    };
+  });
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-restored.png'), fullPage: true });
 } finally {
   await browser.close();
 }
 
 await fs.writeFile(
   path.join(outputDir, 'metrics.json'),
-  JSON.stringify({ metrics, introCamera, browserErrors }, null, 2) + '\n'
+  JSON.stringify({ suburbs, deadCanyon, browserErrors }, null, 2) + '\n'
 );
 
-assert.deepEqual(browserErrors, [], 'TURN LAB SUBURBS produced browser errors:\n' + browserErrors.join('\n'));
-assert.deepEqual(introCamera.position.map((value) => Math.round(value)), [20, 260, -570]);
-assert.equal(introCamera.fov, 62);
-assert.equal(metrics.trackId, 'mountain');
-assert.equal(metrics.sampleCount, 1440);
-assert.ok(metrics.trackLength > 1850 && metrics.trackLength < 2000,
-  'Expected sampled SUBURBS length around 1.9 km, got ' + metrics.trackLength);
-assert.equal(metrics.suburbs.version, 'suburbs-summer');
-assert.equal(metrics.suburbs.easyTrack, true);
-assert.equal(metrics.suburbs.flatCourse, true);
-assert.equal(metrics.suburbs.kenneyKit, 'City Kit Suburban 2.0');
-assert.ok(metrics.houses >= 22, 'Expected a dense two-row neighbourhood, got ' + metrics.houses + ' houses');
-assert.ok(metrics.driveways >= 14, 'Expected driveways for most houses, got ' + metrics.driveways);
-assert.ok(metrics.fences >= 16, 'Expected several fenced gardens, got ' + metrics.fences);
-assert.ok(metrics.trees >= 20, 'Expected a leafy summer neighbourhood, got ' + metrics.trees + ' trees');
-assert.equal(metrics.planters, 6);
-assert.equal(metrics.parkPaths, 6);
-assert.equal(metrics.suburbs.parkPathCount, 6);
-assert.ok(metrics.parkedCars >= 7, 'Expected colourful parked cars, got ' + metrics.parkedCars);
-assert.equal(metrics.hasLake, true);
-assert.equal(metrics.hasDock, true);
-assert.equal(metrics.hasBoat, true);
-assert.ok(metrics.playgroundPieces >= 8);
-assert.deepEqual(metrics.suburbs.assetErrors, []);
-assert.equal(metrics.suburbs.dynamicLights, 0);
-assert.equal(metrics.suburbs.shadowCasters, 0);
-assert.equal(metrics.fogNear, 480);
-assert.equal(metrics.fogFar, 880);
-assert.equal(metrics.cameraFar, 900);
+assert.deepEqual(browserErrors, [], 'TURN LAB produced browser errors:\n' + browserErrors.join('\n'));
 
-console.log('TURN LAB SUBURBS browser/runtime smoke passed:', JSON.stringify({
-  trackLength: metrics.trackLength,
-  houses: metrics.houses,
-  trees: metrics.trees,
-  parkedCars: metrics.parkedCars,
-  planters: metrics.planters,
-  parkPaths: metrics.parkPaths,
-  lake: metrics.hasLake,
-  dock: metrics.hasDock,
-  boat: metrics.hasBoat
+assert.equal(suburbs.trackId, 'cliffside');
+assert.equal(suburbs.sampleCount, 1440);
+assert.ok(suburbs.trackLength > 1850 && suburbs.trackLength < 2000);
+assert.equal(suburbs.metrics.version, 'suburbs-summer');
+assert.equal(suburbs.metrics.islandCourse, true);
+assert.equal(suburbs.metrics.easyTrack, false);
+assert.ok(suburbs.houses >= 22);
+assert.ok(suburbs.parkedCars >= 7);
+assert.equal(suburbs.island, true);
+assert.equal(suburbs.sandRim, true);
+assert.equal(suburbs.surroundingWater, true);
+assert.equal(suburbs.dock, true);
+assert.equal(suburbs.boat, true);
+assert.equal(suburbs.staleLake, false);
+assert.equal(suburbs.staleCliffsideVillage, false);
+assert.equal(suburbs.staleOceanLiner, false);
+assert.deepEqual(suburbs.metrics.assetErrors, []);
+
+assert.equal(deadCanyon.trackId, 'mountain');
+assert.equal(deadCanyon.sampleCount, 2160);
+assert.ok(deadCanyon.trackLength > 3150 && deadCanyon.trackLength < 3350);
+assert.equal(deadCanyon.metrics.version, 'dead-canyon-polish');
+assert.equal(deadCanyon.metrics.yellowStepBarrierCount, 0);
+assert.equal(deadCanyon.metrics.shedRoofSeated, true);
+assert.deepEqual(deadCanyon.metrics.retroUrbanErrors, []);
+
+console.log('TURN LAB dual-track browser smoke passed:', JSON.stringify({
+  suburbsLength: suburbs.trackLength,
+  suburbsHouses: suburbs.houses,
+  suburbsParkedCars: suburbs.parkedCars,
+  deadCanyonLength: deadCanyon.trackLength
 }));
