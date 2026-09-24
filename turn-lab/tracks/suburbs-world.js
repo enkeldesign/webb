@@ -64,14 +64,14 @@ const BACK_ROW_SITES = Object.freeze([
 ]);
 
 const PARKED_CARS = Object.freeze([
-  Object.freeze({ progress: 0.040, carId: 'sedan', color: '#ff5d73', along: 8, outward: 10.5, yaw: 0.05 }),
-  Object.freeze({ progress: 0.095, carId: 'suv', color: '#30c8d6', along: -6, outward: 10.0, yaw: -0.06 }),
-  Object.freeze({ progress: 0.335, carId: 'van', color: '#ffd43b', along: 7, outward: 10.5, yaw: 0.08 }),
-  Object.freeze({ progress: 0.430, carId: 'sedan', color: '#8d6df1', along: -7, outward: 10.0, yaw: -0.04 }),
-  Object.freeze({ progress: 0.575, carId: 'suv', color: '#6dd66f', along: 8, outward: 10.5, yaw: 0.06 }),
-  Object.freeze({ progress: 0.680, carId: 'sedan', color: '#ff8a3d', along: -7, outward: 10.0, yaw: -0.08 }),
-  Object.freeze({ progress: 0.790, carId: 'truck', color: '#4e82ff', along: 6, outward: 11.5, yaw: 0.04 }),
-  Object.freeze({ progress: 0.910, carId: 'sedan', color: '#f7f3e8', along: -8, outward: 10.5, yaw: -0.05 })
+  Object.freeze({ progress: 0.040, carId: 'sedan', color: '#ff5d73', along: 8, outward: 7.5, yaw: 0.05 }),
+  Object.freeze({ progress: 0.095, carId: 'suv', color: '#30c8d6', along: -6, outward: 7.0, yaw: -0.06 }),
+  Object.freeze({ progress: 0.335, carId: 'van', color: '#ffd43b', along: 7, outward: 7.5, yaw: 0.08 }),
+  Object.freeze({ progress: 0.430, carId: 'sedan', color: '#8d6df1', along: -7, outward: 7.0, yaw: -0.04 }),
+  Object.freeze({ progress: 0.575, carId: 'suv', color: '#6dd66f', along: 8, outward: 7.5, yaw: 0.06 }),
+  Object.freeze({ progress: 0.680, carId: 'sedan', color: '#ff8a3d', along: -7, outward: 7.0, yaw: -0.08 }),
+  Object.freeze({ progress: 0.790, carId: 'truck', color: '#4e82ff', along: 6, outward: 8.5, yaw: 0.04 }),
+  Object.freeze({ progress: 0.910, carId: 'sedan', color: '#f7f3e8', along: -8, outward: 7.5, yaw: -0.05 })
 ]);
 
 const sourceCache = new Map();
@@ -375,7 +375,7 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const house = prepareModel(source, { targetHeight: spec.height });
     placePrepared(world, house, {
       name: 'Suburbs Kenney house ' + (index + 1),
-      position: pointInFrame(frame, 18.5, spec.along, 0.03),
+      position: pointInFrame(frame, 13.5, spec.along, 0.03),
       rotation: frame.yaw + Math.PI + spec.yaw,
       metadata: { turnSuburbsAsset: 'building-type-' + spec.type, palette: spec.palette }
     });
@@ -394,7 +394,7 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const tree = prepareModel(treeSource, { targetHeight: index % 3 === 0 ? 11.5 : 8.2 });
     placePrepared(world, tree, {
       name: 'Suburbs Kenney garden tree ' + (index + 1),
-      position: pointInFrame(frame, 19.5, spec.along + (index % 2 ? 12 : -12), 0.03),
+      position: pointInFrame(frame, 15, spec.along + (index % 2 ? 12 : -12), 0.03),
       rotation: frame.yaw + index * 0.41,
       metadata: { turnSuburbsAsset: treeFile }
     });
@@ -418,7 +418,7 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const house = prepareModel(source, { targetHeight: spec.height });
     placePrepared(world, house, {
       name: 'Suburbs Kenney back-row house ' + (index + 1),
-      position: pointInFrame(frame, 30.5, spec.along, 0.03),
+      position: pointInFrame(frame, 24, spec.along, 0.03),
       rotation: frame.yaw + Math.PI + spec.yaw,
       metadata: {
         turnSuburbsAsset: 'building-type-' + spec.type,
@@ -441,7 +441,7 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
       const fence = prepareModel(source, { targetSpan: 9.5 });
       placePrepared(world, fence, {
         name: 'Suburbs Kenney garden fence ' + clusterIndex + '-' + along,
-        position: pointInFrame(frame, 27.5, along, 0.04),
+        position: pointInFrame(frame, 21, along, 0.04),
         rotation: frame.yaw + Math.PI / 2,
         metadata: { turnSuburbsAsset: 'fence-low' }
       });
