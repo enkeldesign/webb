@@ -5,10 +5,16 @@ const INTRO_CAMERA_PRESETS = Object.freeze({
     fov: 52
   }),
   mountain: Object.freeze({
-    // SUBURBS: broad postcard view across the summer neighbourhood, park and lake.
-    position: Object.freeze([20, 260, -570]),
-    target: Object.freeze([18, 0, 5]),
-    fov: 62
+    // DEAD CANYON: restored wide route-and-wall composition.
+    position: Object.freeze([10, 205, -770]),
+    target: Object.freeze([430, 48, -10]),
+    fov: 66
+  }),
+  cliffside: Object.freeze({
+    // SUBURBS: island postcard with the course, neighbourhood and surrounding water.
+    position: Object.freeze([15, 330, -610]),
+    target: Object.freeze([20, 0, -5]),
+    fov: 58
   })
 });
 
@@ -57,7 +63,7 @@ export function installTrackIntroCamera({ environment = globalThis } = {}) {
   };
 
   runtime.trackIntroCamera = Object.freeze({
-    route: 'suburbs-postcard',
+    route: 'lab-dual-track-postcards',
     presets: Object.freeze(Object.keys(INTRO_CAMERA_PRESETS))
   });
   return true;
