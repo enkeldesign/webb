@@ -1,3 +1,4 @@
+import { assertTrackConfigCoverage } from '../../tracks/definitions.js';
 import { MENU_SONG } from './menu-theme.js?revision=r197-audio-mix';
 import { COUNTRYSIDE_SONG } from './countryside.js?revision=r197-audio-mix';
 import { AIRPORT_SONG } from './airport.js?revision=r209-paper-skies';
@@ -16,6 +17,7 @@ export const TRACK_SONGS = Object.freeze({
   'midnight-city': MIDNIGHT_CITY_SONG,
   mountain: MOUNTAIN_SONG
 });
+assertTrackConfigCoverage(TRACK_SONGS, 'track music');
 
 export const SONGBOOK = Object.freeze([
   MENU_SONG,

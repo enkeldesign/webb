@@ -93,6 +93,10 @@ assert.match(definitions, /name: 'Dead Canyon'[\s\S]*difficulty: 'ADVANCED'/);
 assert.match(definitions, /name: 'Suburbs'[\s\S]*difficulty: 'MEDIUM'/);
 assert.match(definitions, /storageRevision: 'dead-canyon-lab-r4'/);
 assert.match(definitions, /storageRevision: 'suburbs-lab'/);
+assert.match(definitions, /export const TRACK_IDS = LAB_TRACK_METADATA\.ids/);
+assert.match(definitions, /export const TRACK_NAMES = LAB_TRACK_METADATA\.names/);
+assert.match(definitions, /export const assertTrackConfigCoverage = production\.assertTrackConfigCoverage/,
+  'TURN LAB definitions overlay must preserve the production track-config coverage API');
 
 assert.match(registry, /entry\.id === 'mountain'[\s\S]*installDeadCanyonWorld/);
 assert.match(registry, /entry\.id === 'cliffside'[\s\S]*installSuburbsWorld/);
@@ -128,7 +132,8 @@ assert.equal(labIndex.includes("purpose: 'dead-canyon-suburbs'"), true);
 assert.equal(labBootstrap.includes("dataset.turnLab = 'dead-canyon-suburbs'"), true);
 assert.match(labBootstrap, /MOUNTAIN_REWARD_ID = 'mountain'/);
 assert.match(manifest, /DEAD CANYON and SUBURBS/);
-assert.equal(release.id, '2026.09.22-r285');
+assert.equal(labIndex.includes(`production TURN ${release.id}`), true,
+  'TURN LAB release identity must follow the current production release metadata');
 
 assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/cliffside-inner-buildings-r202\.js/);
 assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/cliffside-house-inset-r203\.js/);

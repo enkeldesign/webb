@@ -1,3 +1,5 @@
+import { assertTrackConfigCoverage } from '../tracks/definitions.js';
+
 // Authored track pictograms shared by Achievements, Trophy Road and The Lot.
 // The SVG files stay as the canonical artwork; these mask instances let every
 // surface inherit its existing currentColor without duplicating path geometry.
@@ -10,6 +12,7 @@ export const TRACK_ICON_ASSETS = Object.freeze({
   'midnight-city': '/turn/assets/trophy-road/midnight-city.svg',
   mountain: '/turn/assets/trophy-road/mountain.svg'
 });
+assertTrackConfigCoverage(TRACK_ICON_ASSETS, 'track icon assets');
 
 function maskMarkup(asset) {
   return `<span aria-hidden="true" style="display:block;width:100%;height:100%;background:currentColor;-webkit-mask:url('${asset}') center / contain no-repeat;mask:url('${asset}') center / contain no-repeat"></span>`;

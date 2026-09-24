@@ -1004,6 +1004,6 @@ Object.freeze({
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.21.30',
-  build: '2026.09.22-r285',
+  build: '2026.09.24-r286',
   note: 'TURN 1.21.30 makes the shared procedural night-sky stars slightly more visible while preserving their size, density and stable world-locked treatment.'
 });

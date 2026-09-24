@@ -62,6 +62,65 @@ export const TRACK_DEFINITIONS = Object.freeze(base.TRACK_DEFINITIONS.map((track
 
 export const TRACK_PLACEHOLDERS = base.TRACK_PLACEHOLDERS;
 
+export function createTrackCatalogMetadata(definitions = TRACK_DEFINITIONS) {
+  const ids = [];
+  const names = {};
+  const seen = new Set();
+
+  for (const definition of definitions || []) {
+    const id = typeof definition?.id === 'string' ? definition.id.trim() : '';
+    const name = typeof definition?.name === 'string' ? definition.name.trim() : '';
+    if (!id) throw new Error('TURN: every production track needs a non-empty id.');
+    if (!name) throw new Error(`TURN: track ${id} needs a non-empty name.`);
+    if (seen.has(id)) throw new Error(`TURN: duplicate production track id ${id}.`);
+    seen.add(id);
+    ids.push(id);
+    names[id] = name;
+  }
+
+  return Object.freeze({
+    ids: Object.freeze(ids),
+    names: Object.freeze(names)
+  });
+}
+
+const TRACK_METADATA = createTrackCatalogMetadata(TRACK_DEFINITIONS);
+export const TRACK_IDS = TRACK_METADATA.ids;
+export const TRACK_NAMES = TRACK_METADATA.names;
+
+export function completeTrackOrder(preferredIds = [], trackIds = TRACK_IDS) {
+  const available = new Set(trackIds);
+  const ordered = [];
+  const seen = new Set();
+
+  for (const id of preferredIds || []) {
+    if (!available.has(id) || seen.has(id)) continue;
+    seen.add(id);
+    ordered.push(id);
+  }
+  for (const id of trackIds) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    ordered.push(id);
+  }
+  return Object.freeze(ordered);
+}
+
+export function missingTrackConfigIds(config, trackIds = TRACK_IDS) {
+  const source = config && typeof config === 'object' ? config : {};
+  return Object.freeze(trackIds.filter((trackId) =>
+    !Object.prototype.hasOwnProperty.call(source, trackId)
+  ));
+}
+
+export function assertTrackConfigCoverage(config, label = 'track configuration', trackIds = TRACK_IDS) {
+  const missing = missingTrackConfigIds(config, trackIds);
+  if (missing.length) {
+    throw new Error(`TURN: ${label} is missing: ${missing.join(', ')}.`);
+  }
+  return config;
+}
+
 export function getTrackDefinitionData(trackId = DEFAULT_TRACK_ID) {
   return TRACK_DEFINITIONS.find((track) => track.id === trackId) || TRACK_DEFINITIONS[0];
 }

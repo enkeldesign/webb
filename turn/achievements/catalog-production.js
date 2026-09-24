@@ -1,4 +1,5 @@
 import * as base from './catalog-base.js?revision=r241-trophy-balance';
+import { assertTrackConfigCoverage } from '../tracks/definitions.js';
 import {
   SCORING_MASTER_ACHIEVEMENT,
   TRACK_SCORING_ACHIEVEMENTS
@@ -158,7 +159,7 @@ export const ONBOARDING_ACHIEVEMENT_IDS = Object.freeze([
   HEAD_START_ACHIEVEMENT.id
 ]);
 
-const SAFETY_TARGET_LABELS = Object.freeze({
+export const SAFETY_TARGET_LABELS = Object.freeze({
   countryside: '15 seconds',
   airport: '20 seconds',
   cliffside: '20 seconds',
@@ -166,6 +167,7 @@ const SAFETY_TARGET_LABELS = Object.freeze({
   'midnight-city': '70 seconds',
   mountain: '70 seconds'
 });
+assertTrackConfigCoverage(SAFETY_TARGET_LABELS, 'achievement safety target labels');
 
 export const TRACK_WINNER_ACHIEVEMENTS = Object.freeze(
   base.TRACK_IDS.map((trackId) => Object.freeze({

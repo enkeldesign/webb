@@ -29,6 +29,8 @@ const companionPaths = Object.freeze([
   'turn/input/qe-drive-controls.js',
   'turn/design.html',
   'turn/design-dialogs.html',
+  'turn/stats/index.html',
+  'turn/stats/stats.js',
   'turn/tracks/registry.js',
   'turn/tracks/mountain-world-long.js',
   'turn/tracks/midnight-city-world-r2.js',
@@ -229,6 +231,30 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
     '/turn/achievements/home-reward-replay-r225.js': ['', '?revision=r244-reward-toast-guide']
   };
   for (const [pathname, suffixes] of Object.entries(releaseOwnedModules)) {
+    const target = `${pathname}?build=${release.cacheKey}`;
+    for (const suffix of suffixes) imports[`${pathname}${suffix}`] = target;
+    for (const [specifier, existing] of Object.entries(imports)) {
+      if (typeof existing !== 'string') continue;
+      if (new URL(existing, 'https://enkel.design/turn/').pathname === pathname) {
+        imports[specifier] = target;
+      }
+    }
+  }
+}
+
+function synchronizeTrackCatalogScalabilityTargets(importMap, release) {
+  const imports = importMap.imports ||= {};
+  const aliases = Object.freeze({
+    '/turn/tracks/definitions.js': ['', '?build=20260805-r160', '?build=20260806-r161', '?build=20260808-r162', '?lab-base=dead-canyon-suburbs'],
+    '/turn/achievements/catalog-base.js': ['', '?revision=r222-awd-label', '?revision=r241-trophy-balance'],
+    '/turn/achievements/scoring-achievements.js': ['', '?revision=r2-calibrated-targets', '?revision=r3-trophy-balance'],
+    '/turn/audio/music/songbook.js': ['', '?revision=r197-audio-mix', '?revision=r214-mountain-ccttbb'],
+    '/turn/accessibility/color-cues.js': ['', '?revision=r163'],
+    '/turn/ui/track-icons.js': ['', '?revision=r1-track-reward-icons'],
+    '/turn/tracks/pace-notes-base.js': ['']
+  });
+
+  for (const [pathname, suffixes] of Object.entries(aliases)) {
     const target = `${pathname}?build=${release.cacheKey}`;
     for (const suffix of suffixes) imports[`${pathname}${suffix}`] = target;
     for (const [specifier, existing] of Object.entries(imports)) {
@@ -470,6 +496,7 @@ function renderSharedResourceImports(source, release) {
     synchronizeScoreStoreTargets(importMap, release);
     synchronizeVisualResourceTargets(importMap, release);
     synchronizeAchievementProgressionTargets(importMap, release);
+    synchronizeTrackCatalogScalabilityTargets(importMap, release);
     synchronizePlatformContextTarget(importMap, release);
     synchronizeKeyboardDrivingTargets(importMap, release);
     synchronizeSettingsUiTargets(importMap, release);
@@ -508,6 +535,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeScoreStoreTargets(importMap, release);
   synchronizeVisualResourceTargets(importMap, release);
   synchronizeAchievementProgressionTargets(importMap, release);
+  synchronizeTrackCatalogScalabilityTargets(importMap, release);
   synchronizePlatformContextTarget(importMap, release);
   synchronizeKeyboardDrivingTargets(importMap, release);
   synchronizeSettingsUiTargets(importMap, release);
@@ -546,6 +574,10 @@ export function renderReleaseIndex(source, release) {
     // Update the canonical build prefix while preserving an explicit per-asset
     // revision such as "-icon-20260730" after it.
     .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
+    .replace(
+      /(src="\.\/achievements\/chromatic-camouflage-r183\.js\?revision=r184-idle-summary-check)(?:&build=\d{8}-r\d+)?"/,
+      `$1&build=${release.cacheKey}"`
+    )
     .replace(
       /(src="\.\/render\/skid-continuity-r198\.js\?revision=r198-skid-continuity)(?:&build=\d{8}-r\d+)?"/,
       `$1&build=${release.cacheKey}"`
@@ -603,6 +635,10 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
     )
     .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
     .replace(
+      /(src="\.\/achievements\/chromatic-camouflage-r183\.js\?revision=r184-idle-summary-check)(?:&build=\d{8}-r\d+)?"/,
+      `$1&build=${release.cacheKey}"`
+    )
+    .replace(
       /(src="\.\/render\/skid-continuity-r198\.js\?revision=r198-skid-continuity)(?:&build=\d{8}-r\d+)?"/,
       `$1&build=${release.cacheKey}"`
     )
@@ -635,6 +671,18 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
     || repositoryPath === 'turn/input/qe-drive-controls.js') {
     return source.replace(
       /(keyboard-drive-ownership\.js\?build=)\d{8}-r\d+/,
+      `$1${release.cacheKey}`
+    );
+  }
+  if (repositoryPath === 'turn/stats/index.html') {
+    return source.replace(
+      /(stats\.js\?build=)\d{8}-r\d+/,
+      `$1${release.cacheKey}`
+    );
+  }
+  if (repositoryPath === 'turn/stats/stats.js') {
+    return source.replace(
+      /(\.\.\/tracks\/definitions\.js\?build=)\d{8}-r\d+/,
       `$1${release.cacheKey}`
     );
   }

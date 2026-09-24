@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import { TRACK_IDS } from '../turn/tracks/definitions.js';
 
 const [index, labIndex, trackerIndex, releaseSource, homeLayout, engine, songbookSource, songToolsSource,
   toneRuntime, drumRuntime, leadVoicesSource, bassVoicesSource, arpVoicesSource,
@@ -47,8 +48,8 @@ assert.equal(productionImports[audioPreferencesSpecifier], `/turn/audio/audio-pr
 assert.equal(labImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
 assert.equal(productionImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
 assert.equal(labImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
-assert.equal(productionImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r214-mountain-ccttbb');
-assert.equal(labImports[songbookSpecifier], '/turn/audio/music/songbook.js?revision=r214-mountain-ccttbb');
+assert.equal(productionImports[songbookSpecifier], `/turn/audio/music/songbook.js?build=${release.cacheKey}`);
+assert.equal(labImports[songbookSpecifier], `/turn/audio/music/songbook.js?build=${release.cacheKey}`);
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/);
 assert.match(engine, /music\/songbook\.js\?revision=r197-audio-mix/);
 assert.equal(
@@ -80,10 +81,10 @@ for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'ha
     `${songFile} must use the current user-score cache revision`);
 }
 
-const expectedTrackIds = ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain'];
+const expectedTrackIds = TRACK_IDS;
 assert.equal(MENU_SONG.id, 'menu');
 assert.deepEqual(Object.keys(TRACK_SONGS), expectedTrackIds);
-assert.equal(SONGBOOK.length, 7, 'Songbook contains menu music plus six track songs');
+assert.equal(SONGBOOK.length, TRACK_IDS.length + 1, 'Songbook contains menu music plus one song per production track');
 assert.equal(TRACK_SONGS.airport.id, 'airport', 'Airport keeps the canonical track song id');
 assert.equal(TRACK_SONGS.airport.name, 'Paper Skies', 'Airport exposes the new Paper Skies title');
 assert.equal(TRACK_SONGS.airport.bpm, 144, 'Paper Skies keeps its authored tempo');

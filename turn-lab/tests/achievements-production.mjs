@@ -191,9 +191,9 @@ for (const trackId of TRACK_IDS) {
 }
 
 assert.equal(byId('drift-flow-master')?.trophies, 300);
-assert.equal(byId('drift-flow-master')?.progressMax, 12);
+assert.equal(byId('drift-flow-master')?.progressMax, TRACK_IDS.length * 2);
 assert.equal(byId('drift-flow-master')?.calibrationPending, false);
-assert.equal(byId('drift-flow-master')?.recommendation, 'Clear both scoring targets on all six tracks.');
+assert.equal(byId('drift-flow-master')?.recommendation, 'Clear both scoring targets on every track.');
 
 const scoringUnlockMemory = new Map([[ACHIEVEMENT_STORAGE_KEY, JSON.stringify({
     version: TROPHY_ROAD_STORAGE_VERSION,
@@ -250,10 +250,10 @@ assert.equal(
 assert.equal(byId('satans-sedan')?.lockedDescription, undefined,
   'Satan’s Sports Car may retain the generic hidden title-clue treatment');
 
-assert.equal(TIME_TRIALS.length, 6);
-assert.equal(TIME_TRIAL_ACHIEVEMENT_IDS.length, 6);
+assert.equal(TIME_TRIALS.length, TRACK_IDS.length);
+assert.equal(TIME_TRIAL_ACHIEVEMENT_IDS.length, TRACK_IDS.length);
 assert.equal(TIME_TRIAL_MASTER_ID, 'faster-than-the-dev');
-assert.equal(byId('faster-than-the-dev')?.progressMax, 6,
+assert.equal(byId('faster-than-the-dev')?.progressMax, TRACK_IDS.length,
   'FASTER THAN THE DEV must require all six developer targets');
 assert.equal(byId('faster-than-the-dev')?.trophies, 300,
   'FASTER THAN THE DEV must retain the August progression rebalance');
@@ -535,10 +535,16 @@ for (const entry of [productionEntry, labEntry]) {
   assert.equal(map.imports['/turn/achievements/view.js?revision=r166-bella-records'],
     `/turn/achievements/view.js?build=${release.cacheKey}`,
     'Production and Lab must route cached achievement views to the current release presenter');
-  assert.match(entry, /"\/turn\/achievements\/catalog-base\.js\?revision=r222-awd-label": "\/turn\/achievements\/catalog-base\.js\?revision=r241-trophy-balance"/,
-    'Installed builds must not retain the old LISTEN CLOSELY trophy value');
-  assert.match(entry, /"\/turn\/achievements\/scoring-achievements\.js\?revision=r2-calibrated-targets": "\/turn\/achievements\/scoring-achievements\.js\?revision=r3-trophy-balance"/,
-    'Installed builds must not retain the old DRIFT trophy value');
+  assert.equal(
+    map.imports['/turn/achievements/catalog-base.js?revision=r222-awd-label'],
+    `/turn/achievements/catalog-base.js?build=${release.cacheKey}`,
+    'Installed builds must route the legacy catalog-base identity to the current release build'
+  );
+  assert.equal(
+    map.imports['/turn/achievements/scoring-achievements.js?revision=r2-calibrated-targets'],
+    `/turn/achievements/scoring-achievements.js?build=${release.cacheKey}`,
+    'Installed builds must route the legacy scoring identity to the current release build'
+  );
 }
 
 assert.doesNotMatch(challengeSource, /setInterval|requestAnimationFrame/,

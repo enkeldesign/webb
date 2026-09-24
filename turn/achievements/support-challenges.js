@@ -3,12 +3,12 @@ import {
   HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT,
   LEARN_TO_PLAY_ACHIEVEMENT_ID
 } from './learning-progress.js?revision=r1-learning-achievements';
-import { TRACK_NAMES, VEHICLE_NAMES } from './catalog.js?revision=r241-learning-achievements';
+import { TRACK_IDS, TRACK_NAMES, VEHICLE_NAMES } from './catalog.js?revision=r241-learning-achievements';
 import {
   isTrackUnlocked,
   isVehicleUnlocked
 } from '../progression/trophy-road-perks-r164.js?revision=r243-mountain-1300';
-import { getTrackStorageRevision } from '../tracks/definitions.js';
+import { completeTrackOrder, getTrackStorageRevision } from '../tracks/definitions.js';
 
 export const SUPPORT_CHALLENGE_STORAGE_KEY = 'turn-support-challenges-v1';
 export const SUPPORT_CHALLENGE_CONFIG_CACHE_KEY = 'turn-support-challenge-config-cache-v1';
@@ -281,7 +281,7 @@ export function selectSupportChallenge({
   if (!config?.enabled || !achievements?.store) return null;
   if (achievements.store.trophyTotal() >= config.stopAtTrophies) return null;
   const blocked = new Set(stringArray(excluded));
-  const tracks = config.trackOrder.length ? config.trackOrder : Object.keys(TRACK_NAMES);
+  const tracks = completeTrackOrder(config.trackOrder, TRACK_IDS);
 
   for (const type of config.priority) {
     if (type === 'learning') {

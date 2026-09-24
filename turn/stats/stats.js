@@ -1,14 +1,11 @@
+import { TRACK_DEFINITIONS } from '../tracks/definitions.js?build=20260924-r286';
+
 const STATS_ENDPOINT = 'https://turn-challenges.erik-jansson-ux.workers.dev/v1/stats';
 const DEVELOPER_STORAGE_KEY = 'turn.telemetry.developer.v1';
 
-const TRACKS = Object.freeze([
-  ['countryside', 'Countryside'],
-  ['airport', 'Airport'],
-  ['cliffside', 'Cliffside'],
-  ['harbor', 'Harbor'],
-  ['midnight-city', 'Midnight City'],
-  ['mountain', 'Mountain']
-]);
+const TRACKS = Object.freeze(
+  TRACK_DEFINITIONS.map(({ id, name }) => Object.freeze([id, name]))
+);
 
 const CARS = Object.freeze([
   ['convertible', 'AWD'],

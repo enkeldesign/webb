@@ -1,17 +1,20 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [client, about, privacyCss, statsHtml, statsJs, productionIndex, workerConfig, workerRouter, workerTelemetry] = await Promise.all([
+const [client, about, privacyCss, statsHtml, statsJs, productionIndex, releaseSource, workerConfig, workerRouter, workerTelemetry] = await Promise.all([
   fs.readFile(new URL('../turn/telemetry/client.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/content/about-turn.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/about-privacy.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/stats/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/stats/stats.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../workers/turn-challenges/wrangler.jsonc', import.meta.url), 'utf8'),
   fs.readFile(new URL('../workers/turn-challenges/src/router.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../workers/turn-challenges/src/telemetry.js', import.meta.url), 'utf8')
 ]);
+
+const release = JSON.parse(releaseSource);
 
 assert.match(client, /turn-challenges\.erik-jansson-ux\.workers\.dev\/v1\/telemetry/);
 assert.match(client, /deployment === 'next'/,
@@ -60,8 +63,8 @@ assert.match(statsHtml, /data-audience="players" aria-pressed="true">PLAYERS/);
 assert.match(statsHtml, /data-audience="developer">DEVELOPER/);
 assert.match(statsHtml, /MARK AS DEVELOPER/);
 assert.match(statsHtml, /older activity cannot be separated/i);
-assert.match(statsHtml, /stats\.js\?revision=r4-score-calibration/,
-  'The private dashboard must bust the pre-calibration stats script cache');
+assert.ok(statsHtml.includes(`stats.js?build=${release.cacheKey}`),
+  'The private dashboard must load the current release-bound stats script');
 assert.doesNotMatch(productionIndex, /href=["'][^"']*\/turn\/stats|href=["'][^"']*stats\//i,
   'The private dashboard must not be linked into public TURN navigation');
 assert.match(statsJs, /location\.hash\.slice\(1\)/,
@@ -76,8 +79,10 @@ assert.match(statsJs, /audience/);
 assert.match(statsJs, /renderFavourite\('Track', tracks, races\)/);
 assert.match(statsJs, /renderFavourite\('Car', cars, races\)/);
 assert.match(statsJs, /renderScoreDistributions/);
-assert.match(statsJs, /\['mountain', 'Mountain'\]/,
-  'Calibration distributions must include every current TURN track');
+assert.match(statsJs, /TRACK_DEFINITIONS\.map\(\(\{ id, name \}\)/,
+  'The private dashboard must derive track labels from canonical production definitions');
+assert.ok(statsJs.includes(`../tracks/definitions.js?build=${release.cacheKey}`),
+  'The private dashboard must bind canonical track definitions to the current release build');
 assert.match(statsJs, /YOUR TURN play sessions/);
 assert.match(statsJs, /Motion-steered races/);
 assert.match(statsJs, /Drive By Ear races/);

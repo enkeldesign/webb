@@ -6,15 +6,12 @@ import {
   TIME_TRIAL_ACHIEVEMENT_IDS
 } from './time-trials.js?revision=r166-bella-records';
 import { SECRET_ACHIEVEMENTS } from './secret-catalog.js?revision=r181-hatchback-rally';
+import {
+  TRACK_IDS as PRODUCTION_TRACK_IDS,
+  TRACK_NAMES as PRODUCTION_TRACK_NAMES
+} from '../tracks/definitions.js';
 
-export const TRACK_IDS = Object.freeze([
-  'countryside',
-  'airport',
-  'cliffside',
-  'harbor',
-  'midnight-city',
-  'mountain'
-]);
+export const TRACK_IDS = PRODUCTION_TRACK_IDS;
 
 export const TRAINING_CAR_ID = 'classic';
 export const POLICE_CAR_ID = 'police';
@@ -38,14 +35,7 @@ export const CATEGORY_LABELS = Object.freeze({
   [CATEGORY.TIME_TRIALS]: 'Time trials'
 });
 
-export const TRACK_NAMES = Object.freeze({
-  countryside: 'Countryside',
-  airport: 'Airport',
-  cliffside: 'Cliffside',
-  harbor: 'Harbor',
-  'midnight-city': 'Midnight City',
-  mountain: 'Mountain'
-});
+export const TRACK_NAMES = PRODUCTION_TRACK_NAMES;
 
 export const VEHICLE_NAMES = Object.freeze({
   convertible: 'AWD',

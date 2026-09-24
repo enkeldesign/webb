@@ -1,3 +1,5 @@
+import { assertTrackConfigCoverage } from '../tracks/definitions.js';
+
 export const COLOR_CUES_STORAGE_KEY = 'turn-color-cues-v1';
 
 export const TRACK_COLOR_CUES = Object.freeze({
@@ -8,6 +10,7 @@ export const TRACK_COLOR_CUES = Object.freeze({
   'midnight-city': 'violet',
   mountain: 'blue'
 });
+assertTrackConfigCoverage(TRACK_COLOR_CUES, 'track color cues');
 
 function normalizeHex(value) {
   const clean = String(value || '').trim().toLowerCase();

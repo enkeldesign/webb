@@ -1,8 +1,10 @@
 import * as THREE from 'three';
+import { assertTrackConfigCoverage } from '../tracks/definitions.js';
 
 // Match the authored road decks, not the vehicle's suspension/body height.
-const ROAD_HEIGHT = Object.freeze({ countryside: 0.13, airport: 0.17, cliffside: 0.12,
+export const TRACK_SHADOW_ROAD_HEIGHT = Object.freeze({ countryside: 0.13, airport: 0.17, cliffside: 0.12,
   harbor: 0.18, 'midnight-city': 0.16, mountain: 0.14 });
+assertTrackConfigCoverage(TRACK_SHADOW_ROAD_HEIGHT, 'projected-shadow road heights');
 const SURFACE_LIFT = 0.018;
 const PATCH_REACH = 12;
 
@@ -75,7 +77,7 @@ export function createCarShadows({ scene, sun, samples, trackWidth, capacity = 5
     cursor = 0;
     carCount = 0;
     if (disposed || !samples.length) return;
-    const nextHeight = ROAD_HEIGHT[trackId] ?? (trackId ? 0.11 : 0.13); // DRIVE BY EAR practice decks
+    const nextHeight = TRACK_SHADOW_ROAD_HEIGHT[trackId] ?? (trackId ? 0.11 : 0.13); // DRIVE BY EAR practice decks
     if (firstSample === samples[0] && nextHeight === roadHeight) return;
     firstSample = samples[0];
     roadHeight = nextHeight;
