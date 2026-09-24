@@ -83,6 +83,15 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
 
 export const TRACK_PLACEHOLDERS = production.TRACK_PLACEHOLDERS;
 
+const LAB_TRACK_METADATA = production.createTrackCatalogMetadata(TRACK_DEFINITIONS);
+export const TRACK_IDS = LAB_TRACK_METADATA.ids;
+export const TRACK_NAMES = LAB_TRACK_METADATA.names;
+
+export const createTrackCatalogMetadata = production.createTrackCatalogMetadata;
+export const completeTrackOrder = production.completeTrackOrder;
+export const missingTrackConfigIds = production.missingTrackConfigIds;
+export const assertTrackConfigCoverage = production.assertTrackConfigCoverage;
+
 export function getTrackDefinitionData(trackId = DEFAULT_TRACK_ID) {
   return TRACK_DEFINITIONS.find((track) => track.id === trackId) || TRACK_DEFINITIONS[0];
 }
