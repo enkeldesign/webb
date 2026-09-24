@@ -128,7 +128,8 @@ assert.equal(labIndex.includes("purpose: 'dead-canyon-suburbs'"), true);
 assert.equal(labBootstrap.includes("dataset.turnLab = 'dead-canyon-suburbs'"), true);
 assert.match(labBootstrap, /MOUNTAIN_REWARD_ID = 'mountain'/);
 assert.match(manifest, /DEAD CANYON and SUBURBS/);
-assert.equal(release.id, '2026.09.22-r285');
+assert.equal(labIndex.includes(`production TURN ${release.id}`), true,
+  'TURN LAB release identity must follow the current production release metadata');
 
 assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/cliffside-inner-buildings-r202\.js/);
 assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/cliffside-house-inset-r203\.js/);
