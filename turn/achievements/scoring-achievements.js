@@ -70,7 +70,7 @@ export const SCORING_MASTER_ACHIEVEMENT = Object.freeze({
   trophies: 300,
   title: 'DRIFT & FLOW MASTER',
   description: 'Clear every track’s calibrated DRIFT and FLOW achievement.',
-  recommendation: 'Clear both scoring targets on all six tracks.',
+  recommendation: 'Clear both scoring targets on every track.',
   icon: 'trophy',
   progressMax: TRACK_SCORING_ACHIEVEMENT_IDS.length,
   calibrationPending: TRACK_SCORING_ACHIEVEMENTS.some((achievement) => achievement.calibrationPending)
