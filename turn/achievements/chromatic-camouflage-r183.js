@@ -1,5 +1,6 @@
 import { TRACK_IDS } from './catalog-chromatic-r183.js';
 import { getStoredBestLap } from '../race/rival-storage.js';
+import { assertTrackConfigCoverage } from '../tracks/definitions.js';
 
 export const CHROMATIC_CAMOUFLAGE_ID = 'chromatic-camouflage';
 
@@ -21,6 +22,7 @@ export const TRACK_COLOR_RULES = Object.freeze({
   'midnight-city': Object.freeze({ hueMin: 240, hueMax: 285, name: 'violet' }),
   mountain: Object.freeze({ hueMin: 206, hueMax: 230, name: 'blue' })
 });
+assertTrackConfigCoverage(TRACK_COLOR_RULES, 'Chromatic Camouflage track rules');
 
 function normalizeHex(color) {
   if (typeof color !== 'string') return null;
