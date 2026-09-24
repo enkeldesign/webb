@@ -136,6 +136,9 @@ jobs:
       - name: Run multi-track and Airport regression
         run: node turn-lab/tests/multi-track-production.mjs
 
+      - name: Run production track-catalog scalability regression
+        run: node turn-tests/track-catalog-scalability-production.mjs
+
       - name: Run Mountain production regression
         run: node turn-tests/mountain-track-production.mjs
 
