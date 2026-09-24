@@ -724,21 +724,6 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
     .replace(/(class="home-mini__build">)TURN \d+\.\d+\.\d+ · \d{4}\.\d{2}\.\d{2}-r\d+/, `$1TURN ${release.version} · ${release.id}`);
 }
 
-function normalizeReleaseComparison(source) {
-  return source.replace(
-    /<script type="importmap">\s*([\s\S]*?)\s*<\/script>/,
-    (_, jsonText) => {
-      const importMap = JSON.parse(jsonText);
-      if (importMap.imports) {
-        importMap.imports = Object.fromEntries(
-          Object.entries(importMap.imports).sort(([left], [right]) => left.localeCompare(right))
-        );
-      }
-      return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
-    }
-  );
-}
-
 export async function checkReleaseFiles({ write = false } = {}) {
   const [release, source, labSource, companions] = await Promise.all([
     loadReleaseDefinition(),
@@ -764,7 +749,7 @@ export async function checkReleaseFiles({ write = false } = {}) {
       await fs.writeFile(path.resolve(turnDir, '..', repositoryPath), rendered);
       changed = true;
     } else if (!write) {
-      assert.equal(normalizeReleaseComparison(current), normalizeReleaseComparison(rendered),
+      assert.equal(current, rendered,
         `${repositoryPath} is not synchronized with turn/release.json. Run: node turn/scripts/release.mjs --write`);
     }
   }
