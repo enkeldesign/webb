@@ -2,7 +2,7 @@
   "id": "/turn-lab/",
   "name": "TURN LAB",
   "short_name": "TURN LAB",
-  "description": "An isolated SUBURBS summer track experiment running on the current TURN engine.",
+  "description": "Isolated DEAD CANYON and SUBURBS track experiments running on the current TURN engine.",
   "start_url": "/turn-lab/",
   "scope": "/turn-lab/",
   "display": "standalone",

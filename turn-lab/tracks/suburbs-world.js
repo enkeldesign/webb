@@ -16,7 +16,12 @@ const WOOD_DARK = 0x765039;
 const START_TEAL = 0x13a7a0;
 const START_YELLOW = 0xffd43b;
 const ROAD_HEIGHT = 0.16;
-const LAKE_LEVEL = 0.065;
+const WATER_LEVEL = -0.72;
+const ISLAND_RADIUS = 330;
+const ISLAND_SCALE_X = 1.05;
+const ISLAND_SCALE_Z = 0.90;
+const ISLAND_CENTER_X = 20;
+const ISLAND_CENTER_Z = -8;
 
 const KIT_BASE = 'https://cdn.jsdelivr.net/gh/immaculate-lift-studio/CityCrafter3D@0831a1937a59562b6165ccfab30f64f35c957b6f/addons/citycrafter/assets/example_assets/kenney_city-kit-suburban_20/Models/';
 const GLB_ROOT = KIT_BASE + 'GLB%20format/';
@@ -59,14 +64,14 @@ const BACK_ROW_SITES = Object.freeze([
 ]);
 
 const PARKED_CARS = Object.freeze([
-  Object.freeze({ progress: 0.040, carId: 'sedan', color: '#ff5d73', along: 8, outward: 18, yaw: 0.05 }),
-  Object.freeze({ progress: 0.095, carId: 'suv', color: '#30c8d6', along: -6, outward: 17, yaw: -0.06 }),
-  Object.freeze({ progress: 0.335, carId: 'van', color: '#ffd43b', along: 7, outward: 18, yaw: 0.08 }),
-  Object.freeze({ progress: 0.430, carId: 'sedan', color: '#8d6df1', along: -7, outward: 17, yaw: -0.04 }),
-  Object.freeze({ progress: 0.575, carId: 'suv', color: '#6dd66f', along: 8, outward: 18, yaw: 0.06 }),
-  Object.freeze({ progress: 0.680, carId: 'sedan', color: '#ff8a3d', along: -7, outward: 17, yaw: -0.08 }),
-  Object.freeze({ progress: 0.790, carId: 'truck', color: '#4e82ff', along: 6, outward: 19, yaw: 0.04 }),
-  Object.freeze({ progress: 0.910, carId: 'sedan', color: '#f7f3e8', along: -8, outward: 18, yaw: -0.05 })
+  Object.freeze({ progress: 0.040, carId: 'sedan', color: '#ff5d73', along: 8, outward: 7.5, yaw: 0.05 }),
+  Object.freeze({ progress: 0.095, carId: 'suv', color: '#30c8d6', along: -6, outward: 7.0, yaw: -0.06 }),
+  Object.freeze({ progress: 0.335, carId: 'van', color: '#ffd43b', along: 7, outward: 7.5, yaw: 0.08 }),
+  Object.freeze({ progress: 0.430, carId: 'sedan', color: '#8d6df1', along: -7, outward: 7.0, yaw: -0.04 }),
+  Object.freeze({ progress: 0.575, carId: 'suv', color: '#6dd66f', along: 8, outward: 7.5, yaw: 0.06 }),
+  Object.freeze({ progress: 0.680, carId: 'sedan', color: '#ff8a3d', along: -7, outward: 7.0, yaw: -0.08 }),
+  Object.freeze({ progress: 0.790, carId: 'truck', color: '#4e82ff', along: 6, outward: 8.5, yaw: 0.04 }),
+  Object.freeze({ progress: 0.910, carId: 'sedan', color: '#f7f3e8', along: -8, outward: 7.5, yaw: -0.05 })
 ]);
 
 const sourceCache = new Map();
@@ -86,14 +91,15 @@ export function installSuburbsWorld({ scene, samples, trackWidth = 27, runtime }
   makeRoadEdgeLines(world, samples, trackWidth);
   makeCenterDashes(world, samples);
   makeStartArea(world, samples, trackWidth);
-  makeLakeAndDock(world);
+  makeCoastalDock(world);
   makeParkPlayground(world);
 
   const metrics = {
     version: 'suburbs-summer',
     routeSamples: samples.length,
-    theme: 'bright-summer-neighbourhood',
-    easyTrack: true,
+    theme: 'bright-summer-island-neighbourhood',
+    easyTrack: false,
+    islandCourse: true,
     flatCourse: true,
     houseCount: 0,
     drivewayCount: 0,
@@ -102,7 +108,8 @@ export function installSuburbsWorld({ scene, samples, trackWidth = 27, runtime }
     planterCount: 0,
     parkPathCount: 0,
     parkedCars: 0,
-    lakeCount: 1,
+    islandCount: 1,
+    surroundingWaterCount: 1,
     dockCount: 1,
     boatCount: 0,
     playgroundPieces: 0,
@@ -136,13 +143,47 @@ export function installSuburbsWorld({ scene, samples, trackWidth = 27, runtime }
 }
 
 function makeSummerGround(world) {
+  const water = new THREE.Mesh(
+    new THREE.PlaneGeometry(1800, 1450),
+    new THREE.MeshStandardMaterial({
+      color: WATER,
+      roughness: 0.36,
+      metalness: 0,
+      flatShading: true
+    })
+  );
+  water.rotation.x = -Math.PI / 2;
+  water.position.set(ISLAND_CENTER_X, WATER_LEVEL, ISLAND_CENTER_Z);
+  water.name = 'Suburbs surrounding water';
+  world.add(water);
+
+  const islandBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(ISLAND_RADIUS, ISLAND_RADIUS + 9, 1.45, 64),
+    standardMaterial(0xc49a68, 1)
+  );
+  islandBody.scale.set(ISLAND_SCALE_X, 1, ISLAND_SCALE_Z);
+  islandBody.position.set(ISLAND_CENTER_X, -0.69, ISLAND_CENTER_Z);
+  islandBody.name = 'Suburbs island body';
+  world.add(islandBody);
+
+  const beachRim = new THREE.Mesh(
+    new THREE.RingGeometry(318, ISLAND_RADIUS, 64),
+    standardMaterial(0xf2d29d, 1)
+  );
+  beachRim.rotation.x = -Math.PI / 2;
+  beachRim.scale.set(ISLAND_SCALE_X, ISLAND_SCALE_Z, 1);
+  beachRim.position.set(ISLAND_CENTER_X, 0.025, ISLAND_CENTER_Z);
+  beachRim.name = 'Suburbs island beach rim';
+  world.add(beachRim);
+
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(1800, 1400),
+    new THREE.CircleGeometry(319, 64),
     standardMaterial(GRASS, 1)
   );
   ground.rotation.x = -Math.PI / 2;
-  ground.position.set(20, -0.10, 0);
-  ground.name = 'Suburbs summer grass';
+  ground.scale.set(ISLAND_SCALE_X, ISLAND_SCALE_Z, 1);
+  ground.position.set(ISLAND_CENTER_X, 0.018, ISLAND_CENTER_Z);
+  ground.name = 'Suburbs island grass';
   world.add(ground);
 
   const parkLawn = new THREE.Mesh(
@@ -151,7 +192,7 @@ function makeSummerGround(world) {
   );
   parkLawn.rotation.x = -Math.PI / 2;
   parkLawn.scale.set(1.25, 0.85, 1);
-  parkLawn.position.set(-58, 0.012, 30);
+  parkLawn.position.set(-58, 0.045, 30);
   parkLawn.name = 'Suburbs park lawn';
   world.add(parkLawn);
 }
@@ -249,46 +290,36 @@ function makeStartArea(world, samples, trackWidth) {
   world.add(arch);
 }
 
-function makeLakeAndDock(world) {
-  const shoreline = new THREE.Mesh(
-    new THREE.RingGeometry(55, 69, 36),
+function makeCoastalDock(world) {
+  const beach = new THREE.Mesh(
+    new THREE.CircleGeometry(28, 28),
     standardMaterial(0xf2d29d, 1)
   );
-  shoreline.rotation.x = -Math.PI / 2;
-  shoreline.scale.set(1.35, 0.86, 1);
-  shoreline.position.set(92, 0.018, 18);
-  shoreline.name = 'Suburbs lake sandy edge';
-  world.add(shoreline);
-
-  const water = new THREE.Mesh(
-    new THREE.CircleGeometry(58, 40),
-    new THREE.MeshStandardMaterial({
-      color: WATER,
-      roughness: 0.32,
-      metalness: 0,
-      flatShading: true
-    })
-  );
-  water.rotation.x = -Math.PI / 2;
-  water.scale.set(1.35, 0.86, 1);
-  water.position.set(92, LAKE_LEVEL, 18);
-  water.name = 'Suburbs summer lake';
-  world.add(water);
+  beach.rotation.x = -Math.PI / 2;
+  beach.scale.set(1.25, 0.62, 1);
+  beach.position.set(326, 0.055, 82);
+  beach.name = 'Suburbs dock beach';
+  world.add(beach);
 
   const dock = new THREE.Group();
   dock.name = 'Suburbs wooden dock';
-  for (let index = 0; index < 7; index += 1) {
+  for (let index = 0; index < 12; index += 1) {
     const plank = new THREE.Mesh(
       new THREE.BoxGeometry(3.8, 0.28, 1.65),
       standardMaterial(index % 2 ? WOOD_DARK : WOOD, 1)
     );
-    plank.position.set(143 + index * 1.45, 0.34, 13);
+    plank.position.set(334 + index * 2.7, -0.05, 84);
     dock.add(plank);
   }
-  for (const z of [10.8, 15.2]) {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.45, 2.4, 0.45), standardMaterial(WOOD_DARK, 1));
-    post.position.set(152.6, 0.9, z);
-    dock.add(post);
+  for (const x of [337, 363]) {
+    for (const z of [81.7, 86.3]) {
+      const post = new THREE.Mesh(
+        new THREE.BoxGeometry(0.45, 2.5, 0.45),
+        standardMaterial(WOOD_DARK, 1)
+      );
+      post.position.set(x, 0.15, z);
+      dock.add(post);
+    }
   }
   world.add(dock);
 }
@@ -344,7 +375,7 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const house = prepareModel(source, { targetHeight: spec.height });
     placePrepared(world, house, {
       name: 'Suburbs Kenney house ' + (index + 1),
-      position: pointInFrame(frame, 30, spec.along, 0.03),
+      position: pointInFrame(frame, 13.5, spec.along, 0.03),
       rotation: frame.yaw + Math.PI + spec.yaw,
       metadata: { turnSuburbsAsset: 'building-type-' + spec.type, palette: spec.palette }
     });
@@ -353,7 +384,7 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const driveway = prepareModel(drivewaySource, { targetSpan: 12.5 });
     placePrepared(world, driveway, {
       name: 'Suburbs Kenney driveway ' + (index + 1),
-      position: pointInFrame(frame, 8.4, spec.along, 0.035),
+      position: pointInFrame(frame, 6.6, spec.along, 0.035),
       rotation: frame.yaw,
       metadata: { turnSuburbsAsset: 'driveway-short' }
     });
@@ -363,7 +394,7 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const tree = prepareModel(treeSource, { targetHeight: index % 3 === 0 ? 11.5 : 8.2 });
     placePrepared(world, tree, {
       name: 'Suburbs Kenney garden tree ' + (index + 1),
-      position: pointInFrame(frame, 27, spec.along + (index % 2 ? 15 : -15), 0.03),
+      position: pointInFrame(frame, 15, spec.along + (index % 2 ? 12 : -12), 0.03),
       rotation: frame.yaw + index * 0.41,
       metadata: { turnSuburbsAsset: treeFile }
     });
@@ -387,7 +418,7 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const house = prepareModel(source, { targetHeight: spec.height });
     placePrepared(world, house, {
       name: 'Suburbs Kenney back-row house ' + (index + 1),
-      position: pointInFrame(frame, 57, spec.along, 0.03),
+      position: pointInFrame(frame, 24, spec.along, 0.03),
       rotation: frame.yaw + Math.PI + spec.yaw,
       metadata: {
         turnSuburbsAsset: 'building-type-' + spec.type,
@@ -410,7 +441,7 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
       const fence = prepareModel(source, { targetSpan: 9.5 });
       placePrepared(world, fence, {
         name: 'Suburbs Kenney garden fence ' + clusterIndex + '-' + along,
-        position: pointInFrame(frame, 44, along, 0.04),
+        position: pointInFrame(frame, 21, along, 0.04),
         rotation: frame.yaw + Math.PI / 2,
         metadata: { turnSuburbsAsset: 'fence-low' }
       });
@@ -545,8 +576,8 @@ async function installBoat(world) {
     const boat = prepareModel(gltf.scene, { targetSpan: 5.8 });
     placePrepared(world, boat, {
       name: 'Suburbs moored summer boat',
-      position: new THREE.Vector3(137, LAKE_LEVEL + 0.10, 26),
-      rotation: -0.72,
+      position: new THREE.Vector3(370, WATER_LEVEL + 0.20, 94),
+      rotation: -0.18,
       metadata: { turnSuburbsAsset: 'Kenney Watercraft row boat' }
     });
     return { placed: 1, errors };

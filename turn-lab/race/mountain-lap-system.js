@@ -4,6 +4,9 @@ export const LAP_CHECKPOINTS = production.LAP_CHECKPOINTS;
 export const MOUNTAIN_LAB_CHECKPOINTS = Object.freeze(
   Array.from({ length: 24 }, (_, index) => (index + 1) / 25)
 );
+export const SUBURBS_LAB_CHECKPOINTS = Object.freeze(
+  Array.from({ length: 20 }, (_, index) => (index + 1) / 21)
+);
 
 export const beginTimedLapState = production.beginTimedLapState;
 export const completeLapState = production.completeLapState;
@@ -12,7 +15,11 @@ export const crossedForwardGate = production.crossedForwardGate;
 export function updateLapProgressState(options = {}) {
   const trackId = options.state?.trackId || globalThis.__turnGetTrackId?.();
   const checkpoints = options.checkpoints || (
-    trackId === 'mountain' ? MOUNTAIN_LAB_CHECKPOINTS : LAP_CHECKPOINTS
+    trackId === 'mountain'
+      ? MOUNTAIN_LAB_CHECKPOINTS
+      : trackId === 'cliffside'
+        ? SUBURBS_LAB_CHECKPOINTS
+        : LAP_CHECKPOINTS
   );
   return production.updateLapProgressState({ ...options, checkpoints });
 }

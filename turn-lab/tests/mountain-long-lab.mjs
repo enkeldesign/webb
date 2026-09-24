@@ -1,12 +1,19 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
-  MOUNTAIN_CONTROL_POINTS as SUBURBS_CONTROL_POINTS,
-  SUBURBS_LAYOUT_RULES
+  MOUNTAIN_CONTROL_POINTS as DEAD_CANYON_CONTROL_POINTS,
+  DEAD_CANYON_LAYOUT_RULES
 } from '../tracks/mountain-layout.js';
+import {
+  CLIFFSIDE_CONTROL_POINTS as SUBURBS_CONTROL_POINTS,
+  SUBURBS_LAYOUT_RULES
+} from '../tracks/cliffside-layout.js';
 import {
   MOUNTAIN_CONTROL_POINTS as PRODUCTION_MOUNTAIN_CONTROL_POINTS
 } from '../../turn/tracks/mountain-layout.js';
+import {
+  CLIFFSIDE_CONTROL_POINTS as PRODUCTION_CLIFFSIDE_CONTROL_POINTS
+} from '../../turn/tracks/cliffside-layout.js';
 
 const ROOT = new URL('../../', import.meta.url);
 
@@ -16,9 +23,11 @@ const [
   labBootstrap,
   definitions,
   registry,
-  world,
+  suburbsWorld,
+  deadWorld,
   paceNotes,
   introCamera,
+  lapSystem,
   manifest,
   release
 ] = await Promise.all([
@@ -28,8 +37,10 @@ const [
   readText('turn-lab/tracks/definitions.js'),
   readText('turn-lab/tracks/registry.js'),
   readText('turn-lab/tracks/suburbs-world.js'),
+  readText('turn-lab/tracks/dead-canyon-world.js'),
   readText('turn-lab/tracks/pace-notes.js'),
   readText('turn-lab/render/track-intro-camera.js'),
+  readText('turn-lab/race/mountain-lap-system.js'),
   readText('turn-lab/site.webmanifest'),
   readText('turn/release.json').then(JSON.parse)
 ]);
@@ -47,83 +58,87 @@ assert.deepEqual(
 const labScope = labImportMaps[1]?.scopes?.['/turn/'] || {};
 assert.equal(labScope['./tracks/definitions.js'], '/turn-lab/tracks/definitions.js');
 assert.equal(labScope['./tracks/mountain-layout.js'], '/turn-lab/tracks/mountain-layout.js');
+assert.equal(labScope['./tracks/cliffside-layout.js'], '/turn-lab/tracks/cliffside-layout.js');
 assert.equal(labScope['./tracks/pace-notes.js'], '/turn-lab/tracks/pace-notes.js');
 assert.equal(labScope['./tracks/registry.js'], '/turn-lab/tracks/registry.js');
 assert.equal(
   Object.keys(labScope).some((specifier) => specifier.includes('world-collision')),
   false,
-  'SUBURBS must keep production collision/runtime machinery'
+  'LAB must keep production collision/runtime machinery'
 );
+
+assert.equal(DEAD_CANYON_CONTROL_POINTS.length, 73);
+assert.notDeepEqual(DEAD_CANYON_CONTROL_POINTS, PRODUCTION_MOUNTAIN_CONTROL_POINTS);
+assert.equal(findProperIntersections(DEAD_CANYON_CONTROL_POINTS).length, 0);
+const deadLength = closedLength(DEAD_CANYON_CONTROL_POINTS);
+assert.ok(deadLength > 3150 && deadLength < 3350,
+  'Expected DEAD CANYON near 3.25 km, got ' + deadLength.toFixed(1));
+assert.equal(DEAD_CANYON_LAYOUT_RULES.sampleCount, 2160);
+assert.equal(DEAD_CANYON_LAYOUT_RULES.identity, 'dead-canyon-r4');
 
 assert.equal(SUBURBS_CONTROL_POINTS.length, 35);
-assert.notDeepEqual(
-  SUBURBS_CONTROL_POINTS,
-  PRODUCTION_MOUNTAIN_CONTROL_POINTS,
-  'SUBURBS geometry must remain isolated from production MOUNTAIN'
-);
+assert.notDeepEqual(SUBURBS_CONTROL_POINTS, PRODUCTION_CLIFFSIDE_CONTROL_POINTS);
 assert.equal(SUBURBS_CONTROL_POINTS.every(([, y]) => y === 0), true);
 assert.equal(findProperIntersections(SUBURBS_CONTROL_POINTS).length, 0);
-const routeLength = closedLength(SUBURBS_CONTROL_POINTS);
-assert.ok(routeLength > 1850 && routeLength < 1950,
-  'Expected the authored SUBURBS route near 1.9 km, got ' + routeLength.toFixed(1) + ' m');
+const suburbsLength = closedLength(SUBURBS_CONTROL_POINTS);
+assert.ok(suburbsLength > 1850 && suburbsLength < 1950,
+  'Expected preserved SUBURBS route near 1.9 km, got ' + suburbsLength.toFixed(1));
 assert.equal(SUBURBS_LAYOUT_RULES.sampleCount, 1440);
-assert.equal(SUBURBS_LAYOUT_RULES.flatCourse, true);
-assert.equal(SUBURBS_LAYOUT_RULES.unlockedInLab, true);
-assert.equal(SUBURBS_LAYOUT_RULES.easyTrack, true);
+assert.equal(SUBURBS_LAYOUT_RULES.islandCourse, true);
+assert.equal(SUBURBS_LAYOUT_RULES.easyTrack, false);
 
-assert.match(definitions, /name: 'Suburbs'/);
-assert.match(definitions, /difficulty: 'EASY'/);
+assert.match(definitions, /id === 'mountain'[\s\S]*name: 'Dead Canyon'/);
+assert.match(definitions, /id === 'cliffside'[\s\S]*name: 'Suburbs'/);
+assert.match(definitions, /name: 'Dead Canyon'[\s\S]*difficulty: 'ADVANCED'/);
+assert.match(definitions, /name: 'Suburbs'[\s\S]*difficulty: 'MEDIUM'/);
+assert.match(definitions, /storageRevision: 'dead-canyon-lab-r4'/);
 assert.match(definitions, /storageRevision: 'suburbs-lab'/);
-assert.match(definitions, /sampleCount: 1440/);
-assert.match(definitions, /fogNear: 480/);
-assert.match(definitions, /fogFar: 880/);
-assert.match(registry, /installSuburbsWorld/);
-assert.match(registry, /\/turn-lab\/tracks\/suburbs-world\.js/);
 
-assert.match(world, /City Kit Suburban 2\.0/);
-assert.match(world, /variation-a\.png/);
-assert.match(world, /variation-b\.png/);
-assert.match(world, /variation-c\.png/);
-assert.match(world, /Suburbs parked/);
-assert.match(world, /Suburbs wooden dock/);
-assert.match(world, /Suburbs moored summer boat/);
-assert.match(world, /Suburbs playground/);
-assert.match(world, /building-type-/);
-assert.match(world, /tree-large\.glb/);
-assert.match(world, /tree-small\.glb/);
-assert.match(world, /driveway-short\.glb/);
-assert.match(world, /fence-low\.glb/);
-assert.match(world, /planter\.glb/);
-assert.match(world, /path-long\.glb/);
-assert.match(world, /path-stones-messy\.glb/);
-assert.match(world, /BACK_ROW_SITES/);
-assert.doesNotMatch(world, /Suburbs lake light/);
-assert.doesNotMatch(world, /revision=/);
+assert.match(registry, /entry\.id === 'mountain'[\s\S]*installDeadCanyonWorld/);
+assert.match(registry, /entry\.id === 'cliffside'[\s\S]*installSuburbsWorld/);
 
+assert.match(suburbsWorld, /Suburbs surrounding water/);
+assert.match(suburbsWorld, /Suburbs island body/);
+assert.match(suburbsWorld, /Suburbs island beach rim/);
+assert.match(suburbsWorld, /Suburbs wooden dock/);
+assert.match(suburbsWorld, /Suburbs moored summer boat/);
+assert.equal(suburbsWorld.includes('pointInFrame(frame, 13.5'), true);
+assert.equal(suburbsWorld.includes('pointInFrame(frame, 24'), true);
+assert.equal(suburbsWorld.includes('outward: 7.5'), true);
+assert.doesNotMatch(suburbsWorld, /function makeLakeAndDock/);
+assert.doesNotMatch(suburbsWorld, /Suburbs summer lake/);
+assert.doesNotMatch(suburbsWorld, /revision=/);
+
+assert.match(deadWorld, /version: 'dead-canyon-polish'/);
+assert.match(deadWorld, /DEAD CANYON CROWN/);
+assert.match(deadWorld, /yellowStepBarrierCount: 0/);
+assert.match(deadWorld, /shedRoofSeated: true/);
+
+assert.match(paceNotes, /DEAD_CANYON_PACE_NOTES/);
 assert.match(paceNotes, /SUBURBS_PACE_NOTES/);
-assert.match(paceNotes, /suburbs-park-s[\s\S]*direction: LEFT/);
-assert.match(paceNotes, /suburbs-home-sweeper[\s\S]*direction: RIGHT/);
-assert.match(introCamera, /position: Object\.freeze\(\[20, 260, -570\]\)/);
-assert.match(introCamera, /route: 'suburbs-postcard'/);
+assert.match(paceNotes, /id === 'mountain'/);
+assert.match(paceNotes, /id === 'cliffside'/);
+assert.match(introCamera, /mountain:[\s\S]*\[10, 205, -770\]/);
+assert.match(introCamera, /cliffside:[\s\S]*\[15, 330, -610\]/);
+assert.match(lapSystem, /trackId === 'mountain'/);
+assert.match(lapSystem, /trackId === 'cliffside'/);
 
-assert.match(labIndex, /TURN LAB · SUBURBS/);
-assert.match(labIndex, /bright summer neighbourhood/);
-assert.equal(labIndex.includes("purpose: 'suburbs'"), true);
-assert.equal(labBootstrap.includes("dataset.turnLab = 'suburbs'"), true);
+assert.match(labIndex, /TURN LAB · DEAD CANYON \+ SUBURBS/);
+assert.equal(labIndex.includes("purpose: 'dead-canyon-suburbs'"), true);
+assert.equal(labBootstrap.includes("dataset.turnLab = 'dead-canyon-suburbs'"), true);
 assert.match(labBootstrap, /MOUNTAIN_REWARD_ID = 'mountain'/);
-assert.match(manifest, /SUBURBS summer track experiment/);
+assert.match(manifest, /DEAD CANYON and SUBURBS/);
 assert.equal(release.id, '2026.09.22-r285');
 
-assert.equal(
-  productionIndex.includes('/turn-lab/tracks/suburbs-world.js'),
-  false,
-  'Production TURN must not import SUBURBS'
-);
+assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/cliffside-inner-buildings-r202\.js/);
+assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/cliffside-house-inset-r203\.js/);
+assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/kenney-track-landmarks-r517\.js/);
+assert.equal(productionIndex.includes('/turn-lab/tracks/suburbs-world.js'), false);
+assert.equal(productionIndex.includes('/turn-lab/tracks/dead-canyon-world.js'), false);
 
 console.log(
-  'TURN LAB SUBURBS contract passed: ' +
-  routeLength.toFixed(1) +
-  ' m, 35 flat control points, bright Kenney neighbourhood, lake/dock/boat and parked cars.'
+  'TURN LAB dual-track contract passed: DEAD CANYON ' + deadLength.toFixed(1) +
+  ' m + preserved SUBURBS ' + suburbsLength.toFixed(1) + ' m island.'
 );
 
 async function readText(path) {
