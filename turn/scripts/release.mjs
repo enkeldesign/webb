@@ -245,7 +245,7 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
 function synchronizeTrackCatalogScalabilityTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   const aliases = Object.freeze({
-    '/turn/tracks/definitions.js': ['', '?build=20260805-r160', '?build=20260808-r162', '?lab-base=dead-canyon-suburbs'],
+    '/turn/tracks/definitions.js': ['', '?build=20260805-r160', '?build=20260806-r161', '?build=20260808-r162', '?lab-base=dead-canyon-suburbs'],
     '/turn/achievements/catalog-base.js': ['', '?revision=r222-awd-label', '?revision=r241-trophy-balance'],
     '/turn/achievements/scoring-achievements.js': ['', '?revision=r2-calibrated-targets', '?revision=r3-trophy-balance'],
     '/turn/audio/music/songbook.js': ['', '?revision=r197-audio-mix', '?revision=r214-mountain-ccttbb'],
