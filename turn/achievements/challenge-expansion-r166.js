@@ -2,6 +2,7 @@ import {
   ONBOARDING_ACHIEVEMENT_IDS,
   TRACK_IDS
 } from './catalog.js?revision=r241-learning-achievements';
+import { assertTrackConfigCoverage } from '../tracks/definitions.js';
 
 export const CHALLENGE_PROGRESS_STORAGE_KEY = 'turn-achievement-challenges-v1';
 export const CLEAN_LAP_TARGETS = Object.freeze({
@@ -12,6 +13,7 @@ export const CLEAN_LAP_TARGETS = Object.freeze({
   'midnight-city': 70,
   mountain: 70
 });
+assertTrackConfigCoverage(CLEAN_LAP_TARGETS, 'clean-lap targets');
 export const CATCH_GAS_MIN_OVERCHARGE = 0.001;
 
 const GOT_STARTED_ID = 'got-started';
