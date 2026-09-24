@@ -1,4 +1,4 @@
-name: TURN LAB SUBURBS visual smoke
+name: TURN LAB dual-track visual smoke
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ on:
       - '.github/workflows/turn-lab-mountain-long-visual.yml'
   push:
     branches:
-      - turn-lab/suburbs-summer
+      - turn-lab/dual-dead-canyon-suburbs-island
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Validate SUBURBS topology and performance contract
+      - name: Validate DEAD CANYON + SUBURBS contracts
         run: node turn-lab/tests/mountain-long-lab.mjs
 
       - name: Install Playwright Chromium
@@ -52,14 +52,14 @@ jobs:
           cat /tmp/turn-lab-mountain-http.log
           exit 1
 
-      - name: Render and validate SUBURBS runtime
+      - name: Render and validate both LAB tracks
         run: node turn-lab/tests/mountain-long-visual-smoke.mjs
 
-      - name: Upload SUBURBS inspection frames
+      - name: Upload dual-track inspection frames
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: turn-lab-suburbs-visual
-          path: suburbs-visual-artifact
+          name: turn-lab-dual-tracks-visual
+          path: lab-dual-tracks-visual-artifact
           if-no-files-found: warn
           retention-days: 7
