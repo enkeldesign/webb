@@ -535,10 +535,16 @@ for (const entry of [productionEntry, labEntry]) {
   assert.equal(map.imports['/turn/achievements/view.js?revision=r166-bella-records'],
     `/turn/achievements/view.js?build=${release.cacheKey}`,
     'Production and Lab must route cached achievement views to the current release presenter');
-  assert.match(entry, /"\/turn\/achievements\/catalog-base\.js\?revision=r222-awd-label": "\/turn\/achievements\/catalog-base\.js\?revision=r241-trophy-balance"/,
-    'Installed builds must not retain the old LISTEN CLOSELY trophy value');
-  assert.match(entry, /"\/turn\/achievements\/scoring-achievements\.js\?revision=r2-calibrated-targets": "\/turn\/achievements\/scoring-achievements\.js\?revision=r3-trophy-balance"/,
-    'Installed builds must not retain the old DRIFT trophy value');
+  assert.equal(
+    map.imports['/turn/achievements/catalog-base.js?revision=r222-awd-label'],
+    `/turn/achievements/catalog-base.js?build=${release.cacheKey}`,
+    'Installed builds must route the legacy catalog-base identity to the current release build'
+  );
+  assert.equal(
+    map.imports['/turn/achievements/scoring-achievements.js?revision=r2-calibrated-targets'],
+    `/turn/achievements/scoring-achievements.js?build=${release.cacheKey}`,
+    'Installed builds must route the legacy scoring identity to the current release build'
+  );
 }
 
 assert.doesNotMatch(challengeSource, /setInterval|requestAnimationFrame/,
