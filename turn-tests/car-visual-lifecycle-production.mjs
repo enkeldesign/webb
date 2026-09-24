@@ -8,6 +8,7 @@ import { setImmediate as settle } from 'node:timers/promises';
 import * as THREE from '../postal/vendor/three.module.min.js';
 import * as catalog from '../turn/vehicle/catalog.js';
 import * as wheelRig from '../turn/vehicle/wheel-animation-rig.js';
+import { assertTrackConfigCoverage } from '../turn/tracks/definitions.js';
 import {
   createCarVisualResourceOwner,
   disposeCarVisual,
@@ -41,7 +42,11 @@ async function moduleUnderTest(path, bindings, exports, suffix = '') {
 
 // Exercise the actual projected geometry with production Three, including slope,
 // banking, five cars, sample replacement, and idempotent GPU-resource disposal.
-const { createCarShadows } = await moduleUnderTest('turn/render/car-shadows.js', { THREE }, ['createCarShadows']);
+const { createCarShadows } = await moduleUnderTest(
+  'turn/render/car-shadows.js',
+  { THREE, assertTrackConfigCoverage },
+  ['createCarShadows']
+);
 const shadowScene = new THREE.Scene();
 const shadowSun = new THREE.DirectionalLight();
 shadowSun.position.set(-90, 150, 70);
