@@ -105,6 +105,8 @@ try {
   await page.evaluate(() => {
     const runtime = globalThis.__turnRuntime;
     runtime.renderer?.setAnimationLoop?.(null);
+    document.querySelector('.m8-home')?.style.setProperty('display', 'none', 'important');
+    document.querySelector('.track-select')?.style.setProperty('display', 'none', 'important');
     for (const selector of [
       '.race-hud', '.drive-pad', '.drive-pad-shell', '.minimap-shell',
       '.restart-lap-button', '.lap-result-toast', '.peripheral-hud'
@@ -123,6 +125,8 @@ try {
   await page.screenshot({ path: path.join(outputDir, 'suburbs-island.png'), fullPage: true });
 
   await page.evaluate(() => {
+    document.querySelector('.m8-home')?.style.removeProperty('display');
+    document.querySelector('.track-select')?.style.removeProperty('display');
     globalThis.__deadChoice = globalThis.__turnChooseTrack();
     return true;
   });
@@ -153,6 +157,20 @@ try {
       metrics: world.userData.turnDeadCanyon
     };
   });
+
+  await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    document.querySelector('.m8-home')?.style.setProperty('display', 'none', 'important');
+    document.querySelector('.track-select')?.style.setProperty('display', 'none', 'important');
+    runtime.camera.position.set(10, 205, -770);
+    runtime.camera.up.set(0, 1, 0);
+    runtime.camera.lookAt(430, 48, -10);
+    runtime.camera.fov = 66;
+    runtime.camera.updateProjectionMatrix();
+    runtime.camera.updateMatrixWorld(true);
+    runtime.renderer?.render?.(runtime.scene, runtime.camera);
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-restored.png'), fullPage: true });
 } finally {
   await browser.close();
