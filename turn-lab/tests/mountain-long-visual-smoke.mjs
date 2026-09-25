@@ -52,6 +52,11 @@ try {
   assert.match(await mountainHome.textContent(), /Dead Canyon/i);
   assert.match(await suburbsHome.textContent(), /Beachfront/i);
   assert.equal(await mountainHome.getAttribute('data-trophy-locked'), 'false');
+  assert.equal(await mountainHome.evaluate((node) => node.style.getPropertyValue('--track-accent')), '#df3045');
+  assert.equal(await mountainHome.evaluate((node) => node.style.getPropertyValue('--track-accent-soft')), '#f3a0a8');
+  assert.equal(await mountainHome.evaluate((node) =>
+    getComputedStyle(node).getPropertyValue('--track-card-paper').trim()
+  ), '#f3a0a8');
   assert.equal(await page.locator('html').getAttribute('data-turn-lab'), 'dead-canyon-suburbs');
   await page.screenshot({ path: path.join(outputDir, 'lab-home-both-tracks.png'), fullPage: true });
 
@@ -180,9 +185,22 @@ try {
     await Promise.resolve(globalThis.__turnRuntime?.activeWorld?.ready);
   });
 
-  deadCanyon = await page.evaluate(() => {
+  deadCanyon = await page.evaluate(async () => {
     const runtime = globalThis.__turnRuntime;
     const world = runtime.activeWorld;
+    const THREE = await import('three');
+    const children = [];
+    world.traverse((object) => children.push(object));
+    const shedPoles = world.getObjectByName('Dead Canyon Retro Urban open-shed-poles');
+    const shedRoof = world.getObjectByName('Dead Canyon Retro Urban open-shed-roof');
+    let shedRoofGap = null;
+    if (shedPoles && shedRoof) {
+      shedPoles.updateWorldMatrix(true, true);
+      shedRoof.updateWorldMatrix(true, true);
+      const poleBounds = new THREE.Box3().setFromObject(shedPoles);
+      const roofBounds = new THREE.Box3().setFromObject(shedRoof);
+      shedRoofGap = roofBounds.min.y - poleBounds.max.y;
+    }
     return {
       trackId: runtime.trackId,
       sampleCount: runtime.samples.length,
@@ -190,7 +208,21 @@ try {
         if (index === 0) return total;
         return total + sample.point.distanceTo(runtime.samples[index - 1].point);
       }, runtime.samples.at(-1).point.distanceTo(runtime.samples[0].point)),
-      metrics: world.userData.turnDeadCanyon
+      centralSweepMinimumRadius: Math.min(...runtime.samples.map((sample) =>
+        Math.hypot(sample.point.x, sample.point.z)
+      )),
+      metrics: world.userData.turnDeadCanyon,
+      yellowTrees: children.filter((object) =>
+        object.name?.includes('yellow-tree-')
+      ).length,
+      centralFormation: Boolean(world.getObjectByName('Dead Canyon central badlands formations')),
+      overhangs: children.filter((object) =>
+        object.name?.startsWith('Dead Canyon embedded overhang ')
+      ).map((object) => ({ name: object.name, x: object.position.x, y: object.position.y })),
+      crownShelves: children.filter((object) =>
+        object.name?.startsWith('DEAD CANYON CROWN shelf ')
+      ).map((object) => ({ name: object.name, x: object.position.x, z: object.position.z })),
+      shedRoofGap
     };
   });
 
@@ -198,16 +230,57 @@ try {
     const runtime = globalThis.__turnRuntime;
     document.querySelector('.m8-home')?.style.setProperty('display', 'none', 'important');
     document.querySelector('.track-select')?.style.setProperty('display', 'none', 'important');
-    runtime.camera.position.set(10, 205, -770);
+    runtime.camera.position.set(60, 155, -500);
     runtime.camera.up.set(0, 1, 0);
-    runtime.camera.lookAt(430, 48, -10);
-    runtime.camera.fov = 66;
+    runtime.camera.lookAt(280, 28, 40);
+    runtime.camera.fov = 58;
     runtime.camera.updateProjectionMatrix();
     runtime.camera.updateMatrixWorld(true);
     runtime.renderer?.render?.(runtime.scene, runtime.camera);
   });
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-restored.png'), fullPage: true });
+
+  await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    runtime.camera.position.set(-260, 125, -260);
+    runtime.camera.up.set(0, 1, 0);
+    runtime.camera.lookAt(120, 12, 45);
+    runtime.camera.fov = 58;
+    runtime.camera.updateProjectionMatrix();
+    runtime.camera.updateMatrixWorld(true);
+    runtime.renderer?.render?.(runtime.scene, runtime.camera);
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-center.png'), fullPage: true });
+
+  await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    runtime.camera.position.set(610, 120, -180);
+    runtime.camera.up.set(0, 1, 0);
+    runtime.camera.lookAt(835, 105, 55);
+    runtime.camera.fov = 54;
+    runtime.camera.updateProjectionMatrix();
+    runtime.camera.updateMatrixWorld(true);
+    runtime.renderer?.render?.(runtime.scene, runtime.camera);
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-wall.png'), fullPage: true });
+
+  await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    const shed = runtime.activeWorld.getObjectByName('Dead Canyon Retro Urban open-shed-poles');
+    if (!shed) return;
+    runtime.camera.position.set(shed.position.x - 48, shed.position.y + 18, shed.position.z - 42);
+    runtime.camera.up.set(0, 1, 0);
+    runtime.camera.lookAt(shed.position.x, shed.position.y + 5, shed.position.z);
+    runtime.camera.fov = 48;
+    runtime.camera.updateProjectionMatrix();
+    runtime.camera.updateMatrixWorld(true);
+    runtime.renderer?.render?.(runtime.scene, runtime.camera);
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-shed.png'), fullPage: true });
 } finally {
   await browser.close();
 }
@@ -260,6 +333,19 @@ assert.ok(deadCanyon.trackLength > 3150 && deadCanyon.trackLength < 3350);
 assert.equal(deadCanyon.metrics.version, 'dead-canyon-polish');
 assert.equal(deadCanyon.metrics.yellowStepBarrierCount, 0);
 assert.equal(deadCanyon.metrics.shedRoofSeated, true);
+assert.equal(deadCanyon.metrics.yellowTreeCount, 20);
+assert.equal(deadCanyon.metrics.centralRockFormationCount, 6);
+assert.equal(deadCanyon.centralFormation, true);
+assert.ok(deadCanyon.centralSweepMinimumRadius < 150,
+  'DEAD CANYON route must visibly enter the central basin');
+assert.equal(deadCanyon.yellowTrees, 20);
+assert.equal(deadCanyon.overhangs.length, 4);
+assert.ok(deadCanyon.overhangs[1].x > 780 && deadCanyon.overhangs[2].x > 840,
+  'upper canyon-wall rocks must be embedded into their matching cliff bands');
+assert.equal(deadCanyon.crownShelves.length, 3);
+assert.deepEqual(deadCanyon.crownShelves.map((shelf) => Math.round(shelf.x)), [790, 855, 925]);
+assert.ok(deadCanyon.shedRoofGap <= 0,
+  'DEAD CANYON shed roof must overlap the support tops rather than float above them');
 assert.deepEqual(deadCanyon.metrics.retroUrbanErrors, []);
 
 console.log('TURN LAB dual-track browser smoke passed:', JSON.stringify({

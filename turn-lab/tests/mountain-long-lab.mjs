@@ -75,6 +75,9 @@ assert.ok(deadLength > 3150 && deadLength < 3350,
   'Expected DEAD CANYON near 3.25 km, got ' + deadLength.toFixed(1));
 assert.equal(DEAD_CANYON_LAYOUT_RULES.sampleCount, 2160);
 assert.equal(DEAD_CANYON_LAYOUT_RULES.identity, 'dead-canyon-r4');
+assert.deepEqual(DEAD_CANYON_CONTROL_POINTS[49], [-40.0, 5.5, 130.0],
+  'DEAD CANYON must bring the west wash through the central basin');
+assert.equal(DEAD_CANYON_LAYOUT_RULES.routeNarrative.includes('central-badlands-sweep'), true);
 
 assert.equal(SUBURBS_CONTROL_POINTS.length, 35);
 assert.notDeepEqual(SUBURBS_CONTROL_POINTS, PRODUCTION_CLIFFSIDE_CONTROL_POINTS);
@@ -90,6 +93,8 @@ assert.equal(SUBURBS_LAYOUT_RULES.easyTrack, false);
 assert.match(definitions, /id === 'mountain'[\s\S]*name: 'Dead Canyon'/);
 assert.match(definitions, /id === 'cliffside'[\s\S]*name: 'Beachfront'/);
 assert.match(definitions, /name: 'Dead Canyon'[\s\S]*difficulty: 'ADVANCED'/);
+assert.match(definitions, /name: 'Dead Canyon'[\s\S]*accent: '#df3045'[\s\S]*accentSoft: '#f3a0a8'/);
+assert.match(definitions, /name: 'Dead Canyon'[\s\S]*fogFar: 900/);
 assert.match(definitions, /name: 'Beachfront'[\s\S]*difficulty: 'MEDIUM'/);
 assert.match(definitions, /storageRevision: 'dead-canyon-lab-r4'/);
 assert.match(definitions, /storageRevision: 'suburbs-lab'/);
@@ -132,18 +137,32 @@ assert.match(deadWorld, /version: 'dead-canyon-polish'/);
 assert.match(deadWorld, /DEAD CANYON CROWN/);
 assert.match(deadWorld, /yellowStepBarrierCount: 0/);
 assert.match(deadWorld, /shedRoofSeated: true/);
+assert.match(deadWorld, /yellowTreeCount: 20/);
+assert.match(deadWorld, /centralRockFormationCount: 6/);
+assert.match(deadWorld, /crownShelvesEmbedded: true/);
+assert.match(deadWorld, /Dead Canyon central badlands formations/);
+assert.match(deadWorld, /central-yellow-tree-/);
+assert.match(deadWorld, /supportTop - roofBounds\.min\.y - 0\.95/);
+assert.match(deadWorld, /\[790, 62, 22, 22, 31, 122/);
+assert.match(deadWorld, /\[855, 121, 68, 19, 43, 146/);
+assert.match(deadWorld, /\[925, 181, 42, 25, 37, 158/);
+assert.match(deadWorld, /const embeddedX = Math\.max\(x, 950\)/);
+assert.match(deadWorld, /block\.position\.set\(embeddedX, 185 \+ height \/ 2, z\)/);
+assert.match(deadWorld, /'yellow-tree-' \+ \(index \+ 1\),[\s\S]*-4\.8/);
+assert.match(deadWorld, /'central-yellow-tree-' \+ \(index \+ 1\),[\s\S]*-4\.2/);
 
 assert.match(paceNotes, /DEAD_CANYON_PACE_NOTES/);
 assert.match(paceNotes, /SUBURBS_PACE_NOTES/);
 assert.match(paceNotes, /id === 'mountain'/);
 assert.match(paceNotes, /id === 'cliffside'/);
-assert.match(introCamera, /mountain:[\s\S]*\[10, 205, -770\]/);
+assert.match(introCamera, /mountain:[\s\S]*\[60, 155, -500\][\s\S]*\[280, 28, 40\][\s\S]*fov: 58/);
 assert.match(introCamera, /cliffside:[\s\S]*\[15, 330, -610\]/);
 assert.match(lapSystem, /trackId === 'mountain'/);
 assert.match(lapSystem, /trackId === 'cliffside'/);
 
 assert.match(labIndex, /TURN LAB · DEAD CANYON \+ BEACHFRONT/);
 assert.equal(labIndex.includes("purpose: 'dead-canyon-suburbs'"), true);
+assert.match(labIndex, /track-card-mountain[\s\S]*--track-card-paper: #f3a0a8[\s\S]*--track-card-fold: #d96874/);
 assert.equal(labBootstrap.includes("dataset.turnLab = 'dead-canyon-suburbs'"), true);
 assert.match(labBootstrap, /MOUNTAIN_REWARD_ID = 'mountain'/);
 assert.match(manifest, /DEAD CANYON and BEACHFRONT/);
