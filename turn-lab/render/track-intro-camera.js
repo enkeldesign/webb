@@ -5,10 +5,11 @@ const INTRO_CAMERA_PRESETS = Object.freeze({
     fov: 52
   }),
   mountain: Object.freeze({
-    // DEAD CANYON: restored wide route-and-wall composition.
-    position: Object.freeze([10, 205, -770]),
-    target: Object.freeze([430, 48, -10]),
-    fov: 66
+    // DEAD CANYON: high southwest postcard across the new central sweep,
+    // with the stepped eastern wall still reading as the dominant backdrop.
+    position: Object.freeze([-430, 235, -620]),
+    target: Object.freeze([90, 34, 55]),
+    fov: 58
   }),
   cliffside: Object.freeze({
     // BEACHFRONT: island postcard with the course, hotel core and surrounding ocean.
