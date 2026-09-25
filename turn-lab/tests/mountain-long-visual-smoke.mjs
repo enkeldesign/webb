@@ -91,6 +91,7 @@ try {
         || object.name?.startsWith('Beachfront Kenney back-row house ')
       ).length,
       parkedCars: children.filter((object) => object.name?.startsWith('Beachfront parked ')).length,
+      grassVariationPatches: children.filter((object) => object.name?.startsWith('Beachfront grass variation ')).length,
       island: Boolean(world.getObjectByName('Beachfront island body')),
       sandRim: Boolean(world.getObjectByName('Beachfront island beach rim')),
       surroundingWater: Boolean(world.getObjectByName('Beachfront surrounding water')),
@@ -191,6 +192,8 @@ assert.equal(suburbs.metrics.islandCourse, true);
 assert.equal(suburbs.metrics.easyTrack, false);
 assert.ok(suburbs.houses >= 22);
 assert.ok(suburbs.parkedCars >= 7);
+assert.equal(suburbs.grassVariationPatches, 10);
+assert.equal(suburbs.metrics.grassVariationPatches, 10);
 assert.equal(suburbs.island, true);
 assert.equal(suburbs.sandRim, true);
 assert.equal(suburbs.surroundingWater, true);
