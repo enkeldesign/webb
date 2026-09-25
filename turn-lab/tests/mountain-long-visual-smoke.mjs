@@ -92,6 +92,14 @@ try {
       ).length,
       parkedCars: children.filter((object) => object.name?.startsWith('Beachfront parked ')).length,
       grassVariationPatches: children.filter((object) => object.name?.startsWith('Beachfront grass variation ')).length,
+      house14: (() => {
+        const object = world.getObjectByName('Beachfront Kenney house 14');
+        if (!object) return null;
+        const nearestRoad = Math.min(...runtime.samples.map((sample) =>
+          Math.hypot(sample.point.x - object.position.x, sample.point.z - object.position.z)
+        ));
+        return { x: object.position.x, z: object.position.z, nearestRoad };
+      })(),
       island: Boolean(world.getObjectByName('Beachfront island body')),
       sandRim: Boolean(world.getObjectByName('Beachfront island beach rim')),
       surroundingWater: Boolean(world.getObjectByName('Beachfront surrounding water')),
@@ -194,6 +202,9 @@ assert.ok(suburbs.houses >= 22);
 assert.ok(suburbs.parkedCars >= 7);
 assert.equal(suburbs.grassVariationPatches, 10);
 assert.equal(suburbs.metrics.grassVariationPatches, 10);
+assert.ok(suburbs.house14, 'BEACHFRONT east house diagnostic must exist');
+assert.ok(suburbs.house14.nearestRoad > 45,
+  'BEACHFRONT east house must stay fully clear of the racing line');
 assert.equal(suburbs.island, true);
 assert.equal(suburbs.sandRim, true);
 assert.equal(suburbs.surroundingWater, true);

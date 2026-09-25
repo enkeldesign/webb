@@ -55,7 +55,7 @@ const HOUSE_SITES = Object.freeze([
   Object.freeze({ progress: 0.650, type: 'u', palette: 'c', height: 11.0, along: -7, yaw: 0.04 }),
   Object.freeze({ progress: 0.705, type: 'b', palette: 'b', height: 10.5, along: 7, yaw: -0.05 }),
   Object.freeze({ progress: 0.760, type: 'd', palette: 'a', height: 9.8, along: -7, yaw: 0.08 }),
-  Object.freeze({ progress: 0.805, type: 'g', palette: 'default', height: 10.6, along: 8, inward: 23, yaw: -0.04 }),
+  Object.freeze({ progress: 0.805, type: 'g', palette: 'default', height: 10.6, along: 8, inward: 62, yaw: -0.04 }),
   Object.freeze({ progress: 0.875, type: 'n', palette: 'c', height: 11.0, along: -9, yaw: 0.05 }),
   Object.freeze({ progress: 0.930, type: 't', palette: 'b', height: 10.4, along: 8, yaw: -0.06 })
 ]);

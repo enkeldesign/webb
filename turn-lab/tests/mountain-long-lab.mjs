@@ -118,7 +118,7 @@ assert.match(suburbsWorld, /rocks-sand-a\.glb/);
 assert.match(suburbsWorld, /boat-sail-a\.glb/);
 assert.match(suburbsWorld, /Beachfront hotel tower/);
 assert.match(suburbsWorld, /Beachfront offshore sailboat/);
-assert.match(suburbsWorld, /progress: 0\.805[\s\S]*inward: 23/);
+assert.match(suburbsWorld, /progress: 0\.805[\s\S]*inward: 62/);
 assert.match(suburbsWorld, /Beachfront grass variation/);
 assert.match(suburbsWorld, /grassVariationPatches: 10/);
 assert.match(suburbsWorld, /function makeInstancedTrackStrip/);
