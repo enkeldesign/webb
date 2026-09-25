@@ -1,4 +1,4 @@
-# TURN LAB — DEAD CANYON + SUBURBS
+# TURN LAB — DEAD CANYON + BEACHFRONT
 
 `/turn-lab/` runs the current production TURN runtime with isolated LAB storage. Production `/turn/` files and production save data stay untouched.
 
@@ -7,11 +7,11 @@
 TURN LAB exposes both current experiments simultaneously:
 
 - **DEAD CANYON** uses the internal MOUNTAIN slot. It is restored to the post-#970 / #974 open-canyon state: about 3.25 km, ADVANCED, golden-hour canyon wall, the opening chicane, DEAD CANYON CROWN geology and the corrected DBE ear directions.
-- **SUBURBS** uses the internal CLIFFSIDE slot. Its existing roughly 1.9 km course geometry is preserved exactly, but the world now follows the mockup direction: a compact, toy-like **summer island** surrounded by water.
+- **BEACHFRONT** uses the internal CLIFFSIDE slot. Its existing roughly 1.9 km course geometry is preserved exactly, but the world now follows the mockup direction: a compact, toy-like **summer island** surrounded by water.
 
 Both are available from the normal track chooser. LAB still uses isolated save namespaces, and its bootstrap unlocks only the internal MOUNTAIN reward needed to make DEAD CANYON immediately testable.
 
-## SUBURBS island pass
+## BEACHFRONT island pass
 
 The road geometry is unchanged. The composition is not:
 
@@ -23,11 +23,11 @@ The road geometry is unchanged. The composition is not:
 - the dock is moved to the coast and extends over the surrounding water, with the Kenney rowboat moored beside it;
 - Kenney City Kit Suburban 2.0 houses and multiple palette variants remain the main visual language.
 
-SUBURBS is labelled **MEDIUM**, not EASY.
+BEACHFRONT is labelled **MEDIUM**, not EASY.
 
 ## DEAD CANYON restoration
 
-`turn-lab/tracks/dead-canyon-world.js` was never deleted. The matching r4 course geometry, ADVANCED metadata, DBE pace notes and wide canyon intro camera are restored alongside SUBURBS instead of being replaced by it.
+`turn-lab/tracks/dead-canyon-world.js` was never deleted. The matching r4 course geometry, ADVANCED metadata, DBE pace notes and wide canyon intro camera are restored alongside BEACHFRONT instead of being replaced by it.
 
 ## LAB isolation
 
