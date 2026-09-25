@@ -634,7 +634,6 @@ function makeRockFormations(world, samples, trackWidth) {
   dome.instanceMatrix.needsUpdate = true;
   dome.name = 'Dead Canyon eroded domes';
   world.add(dome);
-}
 
   // Fill the previously empty interior basin with large, readable formations.
   // The route now sweeps through the western half of the basin, while these
