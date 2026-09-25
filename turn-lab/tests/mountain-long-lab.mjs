@@ -118,7 +118,9 @@ assert.match(suburbsWorld, /rocks-sand-a\.glb/);
 assert.match(suburbsWorld, /boat-sail-a\.glb/);
 assert.match(suburbsWorld, /Beachfront hotel tower/);
 assert.match(suburbsWorld, /Beachfront offshore sailboat/);
-assert.match(suburbsWorld, /skipFoldedQuads: true/);
+assert.match(suburbsWorld, /function makeInstancedTrackStrip/);
+assert.match(suburbsWorld, /name: 'Beachfront sidewalk'/);
+assert.match(suburbsWorld, /name: 'Beachfront white road edge'/);
 assert.match(suburbsWorld, /new THREE\.CylinderGeometry\(ISLAND_RADIUS, ISLAND_RADIUS \+ 9, 1\.45, 64, 1, true\)/);
 assert.doesNotMatch(suburbsWorld, /pointInFrame\(frame,/);
 
