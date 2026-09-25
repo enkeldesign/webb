@@ -225,6 +225,9 @@ assert.ok(suburbs.houses >= 22);
 assert.ok(suburbs.parkedCars >= 7);
 assert.equal(suburbs.grassVariationPatches, 10);
 assert.equal(suburbs.metrics.grassVariationPatches, 10);
+assert.ok(suburbs.house14, 'BEACHFRONT east house diagnostic must exist');
+assert.ok(suburbs.house14.nearestRoad > 45,
+  'BEACHFRONT east house must stay fully clear of the racing line');
 assert.equal(suburbs.island, true);
 assert.equal(suburbs.sandRim, true);
 assert.equal(suburbs.surroundingWater, true);
