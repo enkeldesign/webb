@@ -32,7 +32,7 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
       sky: 0xe4ad8b,
       fog: 0xe4ad8b,
       fogNear: 260,
-      fogFar: 760,
+      fogFar: 900,
       lighting: Object.freeze({
         hemisphereSky: 0xffd7b4,
         hemisphereGround: 0x6b3b32,
