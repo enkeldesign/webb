@@ -77,7 +77,7 @@ assert.equal(DEAD_CANYON_LAYOUT_RULES.sampleCount, 2160);
 assert.equal(DEAD_CANYON_LAYOUT_RULES.identity, 'dead-canyon-r4');
 assert.deepEqual(DEAD_CANYON_CONTROL_POINTS[49], [-40.0, 5.5, 130.0],
   'DEAD CANYON must bring the west wash through the central basin');
-assert.match(mountainLayout, /'central-badlands-sweep'/);
+assert.equal(DEAD_CANYON_LAYOUT_RULES.routeNarrative.includes('central-badlands-sweep'), true);
 
 assert.equal(SUBURBS_CONTROL_POINTS.length, 35);
 assert.notDeepEqual(SUBURBS_CONTROL_POINTS, PRODUCTION_CLIFFSIDE_CONTROL_POINTS);
