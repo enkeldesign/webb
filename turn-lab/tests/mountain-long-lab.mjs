@@ -148,8 +148,8 @@ assert.match(deadWorld, /\[855, 121, 68, 19, 43, 146/);
 assert.match(deadWorld, /\[925, 181, 42, 25, 37, 158/);
 assert.match(deadWorld, /const embeddedX = Math\.max\(x, 950\)/);
 assert.match(deadWorld, /block\.position\.set\(embeddedX, 185 \+ height \/ 2, z\)/);
-assert.match(deadWorld, /'yellow-tree-' \+ \(index \+ 1\\),[\s\S]*-3\.15/);
-assert.match(deadWorld, /'central-yellow-tree-' \+ \(index \+ 1\\),[\s\S]*-3\.0/);
+assert.match(deadWorld, /'yellow-tree-' \+ \(index \+ 1\),[\s\S]*-3\.15/);
+assert.match(deadWorld, /'central-yellow-tree-' \+ \(index \+ 1\),[\s\S]*-3\.0/);
 
 assert.match(paceNotes, /DEAD_CANYON_PACE_NOTES/);
 assert.match(paceNotes, /SUBURBS_PACE_NOTES/);
