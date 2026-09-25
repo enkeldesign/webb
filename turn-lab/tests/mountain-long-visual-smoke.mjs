@@ -100,6 +100,41 @@ try {
         ));
         return { x: object.position.x, z: object.position.z, nearestRoad };
       })(),
+      houseBounds: await (async () => {
+        const THREE = await import('three');
+        const houses = children.filter((object) =>
+          object.name?.startsWith('Beachfront Kenney house ')
+          || object.name?.startsWith('Beachfront Kenney back-row house ')
+        );
+        return houses.map((object) => {
+          object.updateWorldMatrix(true, true);
+          const box = new THREE.Box3().setFromObject(object, true);
+          const centre = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          let nearestRoadToBounds = Infinity;
+          for (const sample of runtime.samples) {
+            const dx = sample.point.x < box.min.x
+              ? box.min.x - sample.point.x
+              : sample.point.x > box.max.x
+                ? sample.point.x - box.max.x
+                : 0;
+            const dz = sample.point.z < box.min.z
+              ? box.min.z - sample.point.z
+              : sample.point.z > box.max.z
+                ? sample.point.z - box.max.z
+                : 0;
+            nearestRoadToBounds = Math.min(nearestRoadToBounds, Math.hypot(dx, dz));
+          }
+          return {
+            name: object.name,
+            x: centre.x,
+            z: centre.z,
+            width: size.x,
+            depth: size.z,
+            nearestRoadToBounds
+          };
+        }).sort((a, b) => a.nearestRoadToBounds - b.nearestRoadToBounds);
+      })(),
       island: Boolean(world.getObjectByName('Beachfront island body')),
       sandRim: Boolean(world.getObjectByName('Beachfront island beach rim')),
       surroundingWater: Boolean(world.getObjectByName('Beachfront surrounding water')),
@@ -189,6 +224,8 @@ await fs.writeFile(
   path.join(outputDir, 'metrics.json'),
   JSON.stringify({ suburbs, deadCanyon, browserErrors }, null, 2) + '\n'
 );
+
+console.log('BEACHFRONT house bounds:', JSON.stringify(suburbs.houseBounds));
 
 assert.deepEqual(browserErrors, [], 'TURN LAB produced browser errors:\n' + browserErrors.join('\n'));
 
