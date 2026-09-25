@@ -972,7 +972,7 @@ function cloneTemplateAt(world, template, frame, along, lateral, scale, yawOffse
   object.position.copy(frame.point)
     .addScaledVector(frame.tangent, along)
     .addScaledVector(frame.normal, lateral);
-  object.position.y = Math.max(0.25, frame.point.y - 0.25) + verticalOffset;
+  object.position.y = Math.max(0.25, frame.point.y - 0.25);
   object.rotation.y = Math.atan2(frame.tangent.x, frame.tangent.z) + yawOffset;
   object.scale.multiplyScalar(scale);
   object.traverse((node) => {
@@ -1063,7 +1063,7 @@ function placeTemplate(world, template, frame, along, lateral, scale, yawOffset,
   object.position.copy(frame.point)
     .addScaledVector(frame.tangent, along)
     .addScaledVector(frame.normal, lateral);
-  object.position.y = Math.max(0.25, frame.point.y - 0.25);
+  object.position.y = Math.max(0.25, frame.point.y - 0.25) + verticalOffset;
   object.rotation.y = Math.atan2(frame.tangent.x, frame.tangent.z) + yawOffset;
   object.scale.multiplyScalar(scale);
   object.traverse((node) => {
