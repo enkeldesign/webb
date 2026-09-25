@@ -11,7 +11,7 @@ const INTRO_CAMERA_PRESETS = Object.freeze({
     fov: 66
   }),
   cliffside: Object.freeze({
-    // SUBURBS: island postcard with the course, neighbourhood and surrounding water.
+    // BEACHFRONT: island postcard with the course, hotel core and surrounding ocean.
     position: Object.freeze([15, 330, -610]),
     target: Object.freeze([20, 0, -5]),
     fov: 58

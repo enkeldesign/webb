@@ -32,6 +32,12 @@ const PALETTES = Object.freeze({
   c: KIT_BASE + 'Textures/variation-c.png'
 });
 const ROW_BOAT_URL = '/turn/assets/scenery/watercraft/boat-row-small.glb';
+const BEACHFRONT_HOTEL_URL = '/postal/assets/kenney/city-commercial/building-skyscraper-a.glb';
+const BEACHFRONT_PIRATE_ROOT = 'https://cdn.jsdelivr.net/gh/fluxoz/Sea-of-Friends@fd55881cdf6af657231e3ddc5790e65036452435/public/assets/kenney-pirate/';
+const BEACHFRONT_WATERCRAFT_ROOT = 'https://cdn.jsdelivr.net/gh/fluxoz/Sea-of-Friends@fd55881cdf6af657231e3ddc5790e65036452435/public/assets/kenney-watercraft/';
+const BEACHFRONT_PALM_URL = BEACHFRONT_PIRATE_ROOT + 'palm-detailed-straight.glb';
+const BEACHFRONT_ROCK_URL = BEACHFRONT_PIRATE_ROOT + 'rocks-sand-a.glb';
+const BEACHFRONT_SAILBOAT_URL = BEACHFRONT_WATERCRAFT_ROOT + 'boat-sail-a.glb';
 
 const HOUSE_SITES = Object.freeze([
   Object.freeze({ progress: 0.025, type: 'a', palette: 'default', height: 10.0, along: -12, yaw: -0.08 }),
@@ -78,11 +84,11 @@ const sourceCache = new Map();
 
 export function installSuburbsWorld({ scene, samples, trackWidth = 27, runtime } = {}) {
   if (!scene || !Array.isArray(samples) || samples.length < 16) {
-    throw new Error('TURN LAB: Suburbs requires a scene and sampled route.');
+    throw new Error('TURN LAB: Beachfront requires a scene and sampled route.');
   }
 
   const world = new THREE.Group();
-  world.name = 'TURN LAB Suburbs';
+  world.name = 'TURN LAB Beachfront';
   scene.add(world);
 
   makeSummerGround(world);
@@ -95,9 +101,9 @@ export function installSuburbsWorld({ scene, samples, trackWidth = 27, runtime }
   makeParkPlayground(world);
 
   const metrics = {
-    version: 'suburbs-summer',
+    version: 'beachfront-summer',
     routeSamples: samples.length,
-    theme: 'bright-summer-island-neighbourhood',
+    theme: 'bright-beachfront-island-resort',
     easyTrack: false,
     islandCourse: true,
     flatCourse: true,
@@ -112,30 +118,41 @@ export function installSuburbsWorld({ scene, samples, trackWidth = 27, runtime }
     surroundingWaterCount: 1,
     dockCount: 1,
     boatCount: 0,
+    hotelCount: 0,
+    palmCount: 0,
+    beachRockCount: 0,
+    sailboatCount: 0,
     playgroundPieces: 0,
     assetErrors: [],
-    kenneyKit: 'City Kit Suburban 2.0',
+    kenneyKit: 'City Kit Suburban 2.0 + City Kit Commercial 2.1 + Pirate Kit 2.1 + Watercraft Kit 2.1',
     paletteFamilies: Object.freeze(['default', 'variation-a', 'variation-b', 'variation-c']),
     dynamicLights: 0,
     shadowCasters: 0
   };
   world.userData.turnSuburbs = metrics;
+  world.userData.turnBeachfront = metrics;
 
-  metrics.playgroundPieces = world.getObjectByName('Suburbs playground')?.children.length || 0;
+  metrics.playgroundPieces = world.getObjectByName('Beachfront playground')?.children.length || 0;
 
   world.ready = Promise.all([
     installNeighbourhoodAssets(world, samples, trackWidth),
     installParkedCars(world, samples, trackWidth),
-    installBoat(world)
-  ]).then(([neighbourhood, cars, boat]) => {
-    Object.assign(metrics, neighbourhood);
+    installBoat(world),
+    installBeachfrontAssets(world, samples, trackWidth)
+  ]).then(([neighbourhood, cars, boat, beachfront]) => {
+    Object.assign(metrics, neighbourhood, beachfront);
     metrics.parkedCars = cars.placed;
-    metrics.boatCount = boat.placed;
-    metrics.assetErrors = [...neighbourhood.errors, ...cars.errors, ...boat.errors];
+    metrics.boatCount = boat.placed + beachfront.sailboatCount;
+    metrics.assetErrors = [
+      ...neighbourhood.errors,
+      ...cars.errors,
+      ...boat.errors,
+      ...beachfront.errors
+    ];
     return world;
   }).catch((error) => {
     metrics.assetErrors = [String(error?.message || error)];
-    console.warn('TURN LAB: SUBURBS dressing failed; the course remains playable.', error);
+    console.warn('TURN LAB: BEACHFRONT dressing failed; the course remains playable.', error);
     return world;
   });
 
@@ -154,36 +171,36 @@ function makeSummerGround(world) {
   );
   water.rotation.x = -Math.PI / 2;
   water.position.set(ISLAND_CENTER_X, WATER_LEVEL, ISLAND_CENTER_Z);
-  water.name = 'Suburbs surrounding water';
+  water.name = 'Beachfront surrounding water';
   world.add(water);
 
   const islandBody = new THREE.Mesh(
-    new THREE.CylinderGeometry(ISLAND_RADIUS, ISLAND_RADIUS + 9, 1.45, 64),
+    new THREE.CylinderGeometry(ISLAND_RADIUS, ISLAND_RADIUS + 9, 1.45, 64, 1, true),
     standardMaterial(0xc49a68, 1)
   );
   islandBody.scale.set(ISLAND_SCALE_X, 1, ISLAND_SCALE_Z);
   islandBody.position.set(ISLAND_CENTER_X, -0.69, ISLAND_CENTER_Z);
-  islandBody.name = 'Suburbs island body';
+  islandBody.name = 'Beachfront island body';
   world.add(islandBody);
 
   const beachRim = new THREE.Mesh(
-    new THREE.RingGeometry(318, ISLAND_RADIUS, 64),
+    new THREE.RingGeometry(316.6, ISLAND_RADIUS, 64),
     standardMaterial(0xf2d29d, 1)
   );
   beachRim.rotation.x = -Math.PI / 2;
   beachRim.scale.set(ISLAND_SCALE_X, ISLAND_SCALE_Z, 1);
-  beachRim.position.set(ISLAND_CENTER_X, 0.025, ISLAND_CENTER_Z);
-  beachRim.name = 'Suburbs island beach rim';
+  beachRim.position.set(ISLAND_CENTER_X, 0.04, ISLAND_CENTER_Z);
+  beachRim.name = 'Beachfront island beach rim';
   world.add(beachRim);
 
   const ground = new THREE.Mesh(
-    new THREE.CircleGeometry(319, 64),
+    new THREE.CircleGeometry(316.4, 64),
     standardMaterial(GRASS, 1)
   );
   ground.rotation.x = -Math.PI / 2;
   ground.scale.set(ISLAND_SCALE_X, ISLAND_SCALE_Z, 1);
-  ground.position.set(ISLAND_CENTER_X, 0.018, ISLAND_CENTER_Z);
-  ground.name = 'Suburbs island grass';
+  ground.position.set(ISLAND_CENTER_X, 0.055, ISLAND_CENTER_Z);
+  ground.name = 'Beachfront island grass';
   world.add(ground);
 
   const parkLawn = new THREE.Mesh(
@@ -192,45 +209,124 @@ function makeSummerGround(world) {
   );
   parkLawn.rotation.x = -Math.PI / 2;
   parkLawn.scale.set(1.25, 0.85, 1);
-  parkLawn.position.set(-58, 0.045, 30);
-  parkLawn.name = 'Suburbs park lawn';
+  parkLawn.position.set(-58, 0.075, 30);
+  parkLawn.name = 'Beachfront park lawn';
   world.add(parkLawn);
 }
 
 function makeRoad(world, samples, trackWidth) {
   const road = makeRibbon(samples, -trackWidth / 2, trackWidth / 2, ROAD_HEIGHT);
   road.material = standardMaterial(ROAD, 0.98);
-  road.name = 'Suburbs asphalt';
+  road.name = 'Beachfront asphalt';
   world.add(road);
 }
 
 function makeSidewalks(world, samples, trackWidth) {
   const half = trackWidth / 2;
   for (const side of [-1, 1]) {
-    const inner = side * (half + 0.20);
-    const outer = side * (half + 4.4);
-    const walk = makeRibbon(samples, Math.min(inner, outer), Math.max(inner, outer), ROAD_HEIGHT - 0.015);
-    walk.material = standardMaterial(SIDEWALK, 1);
-    walk.name = 'Suburbs sidewalk';
-    world.add(walk);
+    world.add(makeInstancedTrackStrip(samples, {
+      centerOffset: side * (half + 2.30),
+      width: 4.20,
+      y: ROAD_HEIGHT - 0.015,
+      material: standardMaterial(SIDEWALK, 1),
+      name: 'Beachfront sidewalk',
+      skipEastHairpinCusp: true
+    }));
 
-    const curbCenter = side * (half + 0.35);
-    const curb = makeRibbon(samples, curbCenter - 0.18, curbCenter + 0.18, ROAD_HEIGHT + 0.05);
-    curb.material = standardMaterial(SIDEWALK_EDGE, 1);
-    curb.name = 'Suburbs curb';
-    world.add(curb);
+    world.add(makeInstancedTrackStrip(samples, {
+      centerOffset: side * (half + 0.35),
+      width: 0.36,
+      y: ROAD_HEIGHT + 0.05,
+      material: standardMaterial(SIDEWALK_EDGE, 1),
+      name: 'Beachfront curb',
+      skipEastHairpinCusp: true
+    }));
   }
 }
 
 function makeRoadEdgeLines(world, samples, trackWidth) {
   const half = trackWidth / 2;
+  const material = new THREE.MeshBasicMaterial({ color: ROAD_EDGE, side: THREE.DoubleSide });
   for (const side of [-1, 1]) {
-    const center = side * (half - 0.42);
-    const line = makeRibbon(samples, center - 0.16, center + 0.16, ROAD_HEIGHT + 0.035);
-    line.material = new THREE.MeshBasicMaterial({ color: ROAD_EDGE, side: THREE.DoubleSide });
-    line.name = 'Suburbs white road edge';
-    world.add(line);
+    world.add(makeInstancedTrackStrip(samples, {
+      centerOffset: side * (half - 0.42),
+      width: 0.32,
+      y: ROAD_HEIGHT + 0.037,
+      material,
+      name: 'Beachfront white road edge',
+      skipEastHairpinCusp: true
+    }));
   }
+}
+
+function makeInstancedTrackStrip(samples, {
+  centerOffset,
+  width,
+  y,
+  material,
+  name,
+  step = 2,
+  overlap = 1.10,
+  skipEastHairpinCusp = false
+}) {
+  const geometry = new THREE.PlaneGeometry(1, 1);
+  geometry.rotateX(-Math.PI / 2);
+  const segmentCount = Math.ceil(samples.length / step);
+  const strip = new THREE.InstancedMesh(geometry, material, segmentCount);
+  const dummy = new THREE.Object3D();
+  const start = new THREE.Vector3();
+  const end = new THREE.Vector3();
+  const midpoint = new THREE.Vector3();
+
+  let instanceIndex = 0;
+  for (let sampleIndex = 0; sampleIndex < samples.length; sampleIndex += step) {
+    const nextIndex = (sampleIndex + step) % samples.length;
+    const sample = samples[sampleIndex];
+    const nextSample = samples[nextIndex];
+
+    start.copy(sample.point).addScaledVector(sample.normal, centerOffset);
+    end.copy(nextSample.point).addScaledVector(nextSample.normal, centerOffset);
+    midpoint.copy(start).add(end).multiplyScalar(0.5);
+
+    // The preserved route has one deliberately pinched east-side hairpin
+    // around x≈235, z≈-150. Its offset decoration geometrically self-intersects
+    // even when each short strip segment is valid, creating the folded/burn fan.
+    // Leave a small decoration gap through that cusp; the asphalt route itself
+    // is untouched.
+    if (
+      skipEastHairpinCusp
+      && midpoint.x > 215
+      && midpoint.x < 252
+      && midpoint.z > -185
+      && midpoint.z < -120
+    ) continue;
+
+    const dx = end.x - start.x;
+    const dz = end.z - start.z;
+    const length = Math.max(0.01, Math.hypot(dx, dz));
+    const centreDx = nextSample.point.x - sample.point.x;
+    const centreDz = nextSample.point.z - sample.point.z;
+    const centreLength = Math.max(0.01, Math.hypot(centreDx, centreDz));
+    const alignment = (dx * centreDx + dz * centreDz) / (length * centreLength);
+    const stretch = length / centreLength;
+
+    // Offset curves can form a cusp on the inside of a very tight hairpin.
+    // Never bridge across that cusp: a tiny clean gap is preferable to the
+    // old folded fan that stretched sidewalk/edge geometry across the road.
+    if (alignment < 0.15 || stretch > 2.5) continue;
+
+    dummy.position.set(midpoint.x, y, midpoint.z);
+    dummy.rotation.set(0, Math.atan2(dx, dz), 0);
+    dummy.scale.set(width, 1, length * overlap);
+    dummy.updateMatrix();
+    strip.setMatrixAt(instanceIndex, dummy.matrix);
+    instanceIndex += 1;
+  }
+
+  strip.count = instanceIndex;
+  strip.instanceMatrix.needsUpdate = true;
+  strip.name = name;
+  return strip;
 }
 
 function makeCenterDashes(world, samples) {
@@ -254,7 +350,7 @@ function makeCenterDashes(world, samples) {
     dashes.setMatrixAt(instanceIndex, dummy.matrix);
   });
   dashes.instanceMatrix.needsUpdate = true;
-  dashes.name = 'Suburbs sunny centre dashes';
+  dashes.name = 'Beachfront sunny centre dashes';
   world.add(dashes);
 }
 
@@ -269,11 +365,11 @@ function makeStartArea(world, samples, trackWidth) {
   stripe.position.copy(sample.point);
   stripe.position.y += ROAD_HEIGHT + 0.05;
   stripe.rotation.y = yaw;
-  stripe.name = 'Suburbs start finish stripe';
+  stripe.name = 'Beachfront start finish stripe';
   world.add(stripe);
 
   const arch = new THREE.Group();
-  arch.name = 'Suburbs start arch';
+  arch.name = 'Beachfront start arch';
   const postGeometry = new THREE.BoxGeometry(1.1, 8.0, 1.1);
   const beamGeometry = new THREE.BoxGeometry(trackWidth + 6.0, 1.35, 1.2);
   for (const side of [-1, 1]) {
@@ -297,12 +393,12 @@ function makeCoastalDock(world) {
   );
   beach.rotation.x = -Math.PI / 2;
   beach.scale.set(1.25, 0.62, 1);
-  beach.position.set(326, 0.055, 82);
-  beach.name = 'Suburbs dock beach';
+  beach.position.set(326, 0.075, 82);
+  beach.name = 'Beachfront dock beach';
   world.add(beach);
 
   const dock = new THREE.Group();
-  dock.name = 'Suburbs wooden dock';
+  dock.name = 'Beachfront wooden dock';
   for (let index = 0; index < 12; index += 1) {
     const plank = new THREE.Mesh(
       new THREE.BoxGeometry(3.8, 0.28, 1.65),
@@ -326,7 +422,7 @@ function makeCoastalDock(world) {
 
 function makeParkPlayground(world) {
   const park = new THREE.Group();
-  park.name = 'Suburbs playground';
+  park.name = 'Beachfront playground';
 
   const path = new THREE.Mesh(
     new THREE.RingGeometry(35, 39, 28),
@@ -360,7 +456,7 @@ function makeParkPlayground(world) {
 
   const picnic = new THREE.Mesh(new THREE.BoxGeometry(12, 0.35, 7), standardMaterial(0xff78ad, 1));
   picnic.position.set(-62, 0.24, 58);
-  picnic.name = 'Suburbs picnic blanket';
+  picnic.name = 'Beachfront picnic blanket';
   park.add(picnic);
 
   world.add(park);
@@ -374,8 +470,8 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const source = await loadKitSource('building-type-' + spec.type + '.glb', spec.palette);
     const house = prepareModel(source, { targetHeight: spec.height });
     placePrepared(world, house, {
-      name: 'Suburbs Kenney house ' + (index + 1),
-      position: pointInFrame(frame, 13.5, spec.along, 0.03),
+      name: 'Beachfront Kenney house ' + (index + 1),
+      position: pointInsideFrame(frame, 13.5, spec.along, 0.03),
       rotation: frame.yaw + Math.PI + spec.yaw,
       metadata: { turnSuburbsAsset: 'building-type-' + spec.type, palette: spec.palette }
     });
@@ -383,8 +479,8 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const drivewaySource = await loadKitSource('driveway-short.glb', spec.palette);
     const driveway = prepareModel(drivewaySource, { targetSpan: 12.5 });
     placePrepared(world, driveway, {
-      name: 'Suburbs Kenney driveway ' + (index + 1),
-      position: pointInFrame(frame, 6.6, spec.along, 0.035),
+      name: 'Beachfront Kenney driveway ' + (index + 1),
+      position: pointInsideFrame(frame, 6.6, spec.along, 0.035),
       rotation: frame.yaw,
       metadata: { turnSuburbsAsset: 'driveway-short' }
     });
@@ -393,8 +489,8 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const treeSource = await loadKitSource(treeFile, 'default');
     const tree = prepareModel(treeSource, { targetHeight: index % 3 === 0 ? 11.5 : 8.2 });
     placePrepared(world, tree, {
-      name: 'Suburbs Kenney garden tree ' + (index + 1),
-      position: pointInFrame(frame, 15, spec.along + (index % 2 ? 12 : -12), 0.03),
+      name: 'Beachfront Kenney garden tree ' + (index + 1),
+      position: pointInsideFrame(frame, 15, spec.along + (index % 2 ? 12 : -12), 0.03),
       rotation: frame.yaw + index * 0.41,
       metadata: { turnSuburbsAsset: treeFile }
     });
@@ -417,8 +513,8 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const source = await loadKitSource('building-type-' + spec.type + '.glb', spec.palette);
     const house = prepareModel(source, { targetHeight: spec.height });
     placePrepared(world, house, {
-      name: 'Suburbs Kenney back-row house ' + (index + 1),
-      position: pointInFrame(frame, 24, spec.along, 0.03),
+      name: 'Beachfront Kenney back-row house ' + (index + 1),
+      position: pointInsideFrame(frame, 24, spec.along, 0.03),
       rotation: frame.yaw + Math.PI + spec.yaw,
       metadata: {
         turnSuburbsAsset: 'building-type-' + spec.type,
@@ -440,8 +536,8 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     for (const along of [-18, -6, 6, 18]) {
       const fence = prepareModel(source, { targetSpan: 9.5 });
       placePrepared(world, fence, {
-        name: 'Suburbs Kenney garden fence ' + clusterIndex + '-' + along,
-        position: pointInFrame(frame, 21, along, 0.04),
+        name: 'Beachfront Kenney garden fence ' + clusterIndex + '-' + along,
+        position: pointInsideFrame(frame, 21, along, 0.04),
         rotation: frame.yaw + Math.PI / 2,
         metadata: { turnSuburbsAsset: 'fence-low' }
       });
@@ -484,7 +580,7 @@ async function installParkTrees(world) {
     const source = index % 3 === 0 ? largeSource : smallSource;
     const tree = prepareModel(source, { targetHeight: height });
     placePrepared(world, tree, {
-      name: 'Suburbs Kenney park tree ' + (index + 1),
+      name: 'Beachfront Kenney park tree ' + (index + 1),
       position: new THREE.Vector3(x, 0.03, z),
       rotation: index * 0.63,
       metadata: { turnSuburbsAsset: index % 3 === 0 ? 'tree-large' : 'tree-small' }
@@ -502,7 +598,7 @@ async function installParkPlanters(world) {
   sites.forEach(([x, z, yaw], index) => {
     const planter = prepareModel(source, { targetSpan: 4.8 });
     placePrepared(world, planter, {
-      name: 'Suburbs Kenney flower planter ' + (index + 1),
+      name: 'Beachfront Kenney flower planter ' + (index + 1),
       position: new THREE.Vector3(x, 0.04, z),
       rotation: yaw,
       metadata: { turnSuburbsAsset: 'planter' }
@@ -527,7 +623,7 @@ async function installParkPaths(world) {
   sites.forEach((spec, index) => {
     const path = prepareModel(spec.source, { targetSpan: spec.span });
     placePrepared(world, path, {
-      name: 'Suburbs Kenney park path ' + (index + 1),
+      name: 'Beachfront Kenney park path ' + (index + 1),
       position: new THREE.Vector3(spec.x, 0.035, spec.z),
       rotation: spec.yaw,
       metadata: { turnSuburbsAsset: spec.asset }
@@ -547,8 +643,8 @@ async function installParkedCars(world, samples, trackWidth) {
       targetLength: spec.carId === 'truck' ? 6.4 : 5.1,
       outline: false
     });
-    car.name = 'Suburbs parked ' + spec.carId + ' ' + (index + 1);
-    car.position.copy(pointInFrame(frame, spec.outward, spec.along, 0.12));
+    car.name = 'Beachfront parked ' + spec.carId + ' ' + (index + 1);
+    car.position.copy(pointInsideFrame(frame, spec.outward, spec.along, 0.12));
     car.rotation.y = frame.yaw + Math.PI + spec.yaw;
     car.userData.turnStaticSceneryCar = true;
     car.userData.turnSceneryOnly = true;
@@ -575,7 +671,7 @@ async function installBoat(world) {
     const gltf = await loader.loadAsync(ROW_BOAT_URL);
     const boat = prepareModel(gltf.scene, { targetSpan: 5.8 });
     placePrepared(world, boat, {
-      name: 'Suburbs moored summer boat',
+      name: 'Beachfront moored summer boat',
       position: new THREE.Vector3(370, WATER_LEVEL + 0.20, 94),
       rotation: -0.18,
       metadata: { turnSuburbsAsset: 'Kenney Watercraft row boat' }
@@ -585,6 +681,140 @@ async function installBoat(world) {
     errors.push(String(error?.message || error));
     return { placed: 0, errors };
   }
+}
+
+async function installBeachfrontAssets(world, samples, trackWidth) {
+  const result = {
+    hotelCount: 0,
+    palmCount: 0,
+    beachRockCount: 0,
+    sailboatCount: 0,
+    errors: []
+  };
+
+  let sources;
+  try {
+    sources = await Promise.all([
+      loadExternalSource(BEACHFRONT_HOTEL_URL),
+      loadExternalSource(BEACHFRONT_PALM_URL),
+      loadExternalSource(BEACHFRONT_ROCK_URL),
+      loadExternalSource(BEACHFRONT_SAILBOAT_URL)
+    ]);
+  } catch (error) {
+    result.errors.push(String(error?.message || error));
+    return result;
+  }
+
+  const [hotelSource, palmSource, rockSource, sailboatSource] = sources;
+  const hotelSites = [
+    [-58, -62, 42, 0.18],
+    [4, -76, 52, -0.12],
+    [70, -44, 45, 0.34],
+    [82, 28, 40, -0.26],
+    [32, 78, 48, 0.12],
+    [-38, 72, 43, -0.31]
+  ];
+  hotelSites.forEach(([x, z, height, yaw], index) => {
+    const hotel = prepareModel(hotelSource, { targetHeight: height });
+    placePrepared(world, hotel, {
+      name: 'Beachfront hotel tower ' + (index + 1),
+      position: new THREE.Vector3(x, 0.06, z),
+      rotation: yaw,
+      metadata: { turnBeachfrontAsset: 'Kenney City Kit Commercial skyscraper' }
+    });
+    result.hotelCount += 1;
+  });
+
+  const tropicalSites = [
+    [-142, -68, 14.0, 0.3], [-128, -5, 15.5, 1.1], [-125, 62, 13.5, 2.0],
+    [-92, 116, 16.0, 0.6], [-35, 132, 14.5, 1.6], [28, 132, 15.0, 2.5],
+    [92, 110, 16.5, 0.9], [136, 62, 14.0, 1.9], [148, -4, 15.5, 2.8],
+    [128, -76, 14.5, 0.4], [78, -126, 16.0, 1.4], [18, -142, 13.5, 2.2],
+    [-45, -135, 15.0, 0.7], [-102, -112, 14.5, 1.8]
+  ];
+  tropicalSites.forEach(([x, z, height, yaw], index) => {
+    const palm = prepareModel(palmSource, { targetHeight: height });
+    placePrepared(world, palm, {
+      name: 'Beachfront tropical interior palm ' + (index + 1),
+      position: new THREE.Vector3(x, 0.055, z),
+      rotation: yaw,
+      metadata: { turnBeachfrontAsset: 'Kenney Pirate Kit palm' }
+    });
+    result.palmCount += 1;
+  });
+
+  const coastRadius = ISLAND_RADIUS - 6.5;
+  for (let index = 0; index < 32; index += 1) {
+    const angle = (index / 32) * Math.PI * 2 + 0.08;
+    const point = new THREE.Vector3(
+      ISLAND_CENTER_X + Math.cos(angle) * coastRadius * ISLAND_SCALE_X,
+      0.055,
+      ISLAND_CENTER_Z + Math.sin(angle) * coastRadius * ISLAND_SCALE_Z
+    );
+    if (distanceToTrackXZ(samples, point) < trackWidth / 2 + 15) continue;
+
+    if (index % 2 === 0) {
+      const palm = prepareModel(palmSource, { targetHeight: 11.5 + (index % 3) * 1.5 });
+      placePrepared(world, palm, {
+        name: 'Beachfront beach palm ' + (index + 1),
+        position: point,
+        rotation: angle + Math.PI / 2,
+        metadata: { turnBeachfrontAsset: 'Kenney Pirate Kit beach palm' }
+      });
+      result.palmCount += 1;
+    } else {
+      const rock = prepareModel(rockSource, { targetSpan: 6.2 + (index % 4) * 0.7 });
+      placePrepared(world, rock, {
+        name: 'Beachfront beach rock ' + (index + 1),
+        position: point,
+        rotation: angle * 0.7,
+        metadata: { turnBeachfrontAsset: 'Kenney Pirate Kit sand rocks' }
+      });
+      result.beachRockCount += 1;
+    }
+  }
+
+  const sailboatSites = [
+    [492, -255, 13.5, 0.32],
+    [-438, -244, 12.5, -0.68],
+    [515, 168, 14.0, 1.12],
+    [-455, 226, 13.0, 0.54],
+    [92, 426, 12.0, -0.38]
+  ];
+  sailboatSites.forEach(([x, z, span, yaw], index) => {
+    const sailboat = prepareModel(sailboatSource, { targetSpan: span });
+    placePrepared(world, sailboat, {
+      name: 'Beachfront offshore sailboat ' + (index + 1),
+      position: new THREE.Vector3(x, WATER_LEVEL + 0.12, z),
+      rotation: yaw,
+      metadata: { turnBeachfrontAsset: 'Kenney Watercraft sailboat' }
+    });
+    result.sailboatCount += 1;
+  });
+
+  return result;
+}
+
+function distanceToTrackXZ(samples, point) {
+  let closest = Infinity;
+  for (const sample of samples) {
+    const dx = sample.point.x - point.x;
+    const dz = sample.point.z - point.z;
+    closest = Math.min(closest, Math.hypot(dx, dz));
+  }
+  return closest;
+}
+
+function loadExternalSource(url) {
+  const key = 'external:' + url;
+  if (!sourceCache.has(key)) {
+    const loader = new GLTFLoader();
+    sourceCache.set(key, loader.loadAsync(url).then((gltf) => gltf.scene).catch((error) => {
+      sourceCache.delete(key);
+      throw error;
+    }));
+  }
+  return sourceCache.get(key);
 }
 
 function loadKitSource(file, palette = 'default') {
@@ -651,7 +881,8 @@ function placePrepared(parent, object, { name, position, rotation = 0, metadata 
   object.rotation.y += rotation;
   Object.assign(object.userData, metadata, {
     turnSceneryOnly: true,
-    turnSuburbs: true
+    turnSuburbs: true,
+    turnBeachfront: true
   });
   parent.add(object);
   return object;
@@ -668,13 +899,14 @@ function frameAtProgress(samples, progress, trackWidth) {
     trackWidth,
     tangent: sample.tangent.clone().setY(0).normalize(),
     outward: sample.normal.clone().setY(0).normalize().multiplyScalar(side),
+    inward: sample.normal.clone().setY(0).normalize().multiplyScalar(-side),
     yaw: Math.atan2(sample.tangent.x, sample.tangent.z)
   };
 }
 
-function pointInFrame(frame, outwardDistance, tangentDistance = 0, y = 0) {
+function pointInsideFrame(frame, inwardDistance, tangentDistance = 0, y = 0) {
   const point = frame.sample.point.clone()
-    .addScaledVector(frame.outward, frame.trackWidth / 2 + outwardDistance)
+    .addScaledVector(frame.inward, frame.trackWidth / 2 + inwardDistance)
     .addScaledVector(frame.tangent, tangentDistance);
   point.y = y;
   return point;

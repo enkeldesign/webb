@@ -88,9 +88,9 @@ assert.equal(SUBURBS_LAYOUT_RULES.islandCourse, true);
 assert.equal(SUBURBS_LAYOUT_RULES.easyTrack, false);
 
 assert.match(definitions, /id === 'mountain'[\s\S]*name: 'Dead Canyon'/);
-assert.match(definitions, /id === 'cliffside'[\s\S]*name: 'Suburbs'/);
+assert.match(definitions, /id === 'cliffside'[\s\S]*name: 'Beachfront'/);
 assert.match(definitions, /name: 'Dead Canyon'[\s\S]*difficulty: 'ADVANCED'/);
-assert.match(definitions, /name: 'Suburbs'[\s\S]*difficulty: 'MEDIUM'/);
+assert.match(definitions, /name: 'Beachfront'[\s\S]*difficulty: 'MEDIUM'/);
 assert.match(definitions, /storageRevision: 'dead-canyon-lab-r4'/);
 assert.match(definitions, /storageRevision: 'suburbs-lab'/);
 assert.match(definitions, /export const TRACK_IDS = LAB_TRACK_METADATA\.ids/);
@@ -101,17 +101,28 @@ assert.match(definitions, /export const assertTrackConfigCoverage = production\.
 assert.match(registry, /entry\.id === 'mountain'[\s\S]*installDeadCanyonWorld/);
 assert.match(registry, /entry\.id === 'cliffside'[\s\S]*installSuburbsWorld/);
 
-assert.match(suburbsWorld, /Suburbs surrounding water/);
-assert.match(suburbsWorld, /Suburbs island body/);
-assert.match(suburbsWorld, /Suburbs island beach rim/);
-assert.match(suburbsWorld, /Suburbs wooden dock/);
-assert.match(suburbsWorld, /Suburbs moored summer boat/);
-assert.equal(suburbsWorld.includes('pointInFrame(frame, 13.5'), true);
-assert.equal(suburbsWorld.includes('pointInFrame(frame, 24'), true);
+assert.match(suburbsWorld, /Beachfront surrounding water/);
+assert.match(suburbsWorld, /Beachfront island body/);
+assert.match(suburbsWorld, /Beachfront island beach rim/);
+assert.match(suburbsWorld, /Beachfront wooden dock/);
+assert.match(suburbsWorld, /Beachfront moored summer boat/);
+assert.equal(suburbsWorld.includes('pointInsideFrame(frame, 13.5'), true);
+assert.equal(suburbsWorld.includes('pointInsideFrame(frame, 24'), true);
 assert.equal(suburbsWorld.includes('outward: 7.5'), true);
 assert.doesNotMatch(suburbsWorld, /function makeLakeAndDock/);
 assert.doesNotMatch(suburbsWorld, /Suburbs summer lake/);
 assert.doesNotMatch(suburbsWorld, /revision=/);
+assert.match(suburbsWorld, /BEACHFRONT_HOTEL_URL/);
+assert.match(suburbsWorld, /palm-detailed-straight\.glb/);
+assert.match(suburbsWorld, /rocks-sand-a\.glb/);
+assert.match(suburbsWorld, /boat-sail-a\.glb/);
+assert.match(suburbsWorld, /Beachfront hotel tower/);
+assert.match(suburbsWorld, /Beachfront offshore sailboat/);
+assert.match(suburbsWorld, /function makeInstancedTrackStrip/);
+assert.match(suburbsWorld, /name: 'Beachfront sidewalk'/);
+assert.match(suburbsWorld, /name: 'Beachfront white road edge'/);
+assert.match(suburbsWorld, /new THREE\.CylinderGeometry\(ISLAND_RADIUS, ISLAND_RADIUS \+ 9, 1\.45, 64, 1, true\)/);
+assert.doesNotMatch(suburbsWorld, /pointInFrame\(frame,/);
 
 assert.match(deadWorld, /version: 'dead-canyon-polish'/);
 assert.match(deadWorld, /DEAD CANYON CROWN/);
@@ -127,11 +138,11 @@ assert.match(introCamera, /cliffside:[\s\S]*\[15, 330, -610\]/);
 assert.match(lapSystem, /trackId === 'mountain'/);
 assert.match(lapSystem, /trackId === 'cliffside'/);
 
-assert.match(labIndex, /TURN LAB · DEAD CANYON \+ SUBURBS/);
+assert.match(labIndex, /TURN LAB · DEAD CANYON \+ BEACHFRONT/);
 assert.equal(labIndex.includes("purpose: 'dead-canyon-suburbs'"), true);
 assert.equal(labBootstrap.includes("dataset.turnLab = 'dead-canyon-suburbs'"), true);
 assert.match(labBootstrap, /MOUNTAIN_REWARD_ID = 'mountain'/);
-assert.match(manifest, /DEAD CANYON and SUBURBS/);
+assert.match(manifest, /DEAD CANYON and BEACHFRONT/);
 assert.equal(labIndex.includes(`production TURN ${release.id}`), true,
   'TURN LAB release identity must follow the current production release metadata');
 
@@ -143,7 +154,7 @@ assert.equal(productionIndex.includes('/turn-lab/tracks/dead-canyon-world.js'), 
 
 console.log(
   'TURN LAB dual-track contract passed: DEAD CANYON ' + deadLength.toFixed(1) +
-  ' m + preserved SUBURBS ' + suburbsLength.toFixed(1) + ' m island.'
+  ' m + preserved BEACHFRONT ' + suburbsLength.toFixed(1) + ' m island.'
 );
 
 async function readText(path) {

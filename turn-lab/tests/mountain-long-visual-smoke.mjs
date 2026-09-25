@@ -50,7 +50,7 @@ try {
   const mountainHome = page.locator('.m8-home .track-card[data-track-id="mountain"]');
   const suburbsHome = page.locator('.m8-home .track-card[data-track-id="cliffside"]');
   assert.match(await mountainHome.textContent(), /Dead Canyon/i);
-  assert.match(await suburbsHome.textContent(), /Suburbs/i);
+  assert.match(await suburbsHome.textContent(), /Beachfront/i);
   assert.equal(await mountainHome.getAttribute('data-trophy-locked'), 'false');
   assert.equal(await page.locator('html').getAttribute('data-turn-lab'), 'dead-canyon-suburbs');
   await page.screenshot({ path: path.join(outputDir, 'lab-home-both-tracks.png'), fullPage: true });
@@ -65,7 +65,7 @@ try {
 
   await page.waitForFunction(
     () => globalThis.__turnRuntime?.trackId === 'cliffside'
-      && globalThis.__turnRuntime?.activeWorld?.userData?.turnSuburbs,
+      && globalThis.__turnRuntime?.activeWorld?.userData?.turnBeachfront,
     null,
     { timeout: 90_000 }
   );
@@ -85,18 +85,18 @@ try {
         if (index === 0) return total;
         return total + sample.point.distanceTo(runtime.samples[index - 1].point);
       }, runtime.samples.at(-1).point.distanceTo(runtime.samples[0].point)),
-      metrics: world.userData.turnSuburbs,
+      metrics: world.userData.turnBeachfront,
       houses: children.filter((object) =>
-        object.name?.startsWith('Suburbs Kenney house ')
-        || object.name?.startsWith('Suburbs Kenney back-row house ')
+        object.name?.startsWith('Beachfront Kenney house ')
+        || object.name?.startsWith('Beachfront Kenney back-row house ')
       ).length,
-      parkedCars: children.filter((object) => object.name?.startsWith('Suburbs parked ')).length,
-      island: Boolean(world.getObjectByName('Suburbs island body')),
-      sandRim: Boolean(world.getObjectByName('Suburbs island beach rim')),
-      surroundingWater: Boolean(world.getObjectByName('Suburbs surrounding water')),
-      dock: Boolean(world.getObjectByName('Suburbs wooden dock')),
-      boat: Boolean(world.getObjectByName('Suburbs moored summer boat')),
-      staleLake: Boolean(world.getObjectByName('Suburbs summer lake')),
+      parkedCars: children.filter((object) => object.name?.startsWith('Beachfront parked ')).length,
+      island: Boolean(world.getObjectByName('Beachfront island body')),
+      sandRim: Boolean(world.getObjectByName('Beachfront island beach rim')),
+      surroundingWater: Boolean(world.getObjectByName('Beachfront surrounding water')),
+      dock: Boolean(world.getObjectByName('Beachfront wooden dock')),
+      boat: Boolean(world.getObjectByName('Beachfront moored summer boat')),
+      staleLake: Boolean(world.getObjectByName('Beachfront summer lake')),
       staleCliffsideVillage: Boolean(world.getObjectByName('Cliffside Kenney Inner Village')),
       staleOceanLiner: Boolean(world.getObjectByName('Cliffside Kenney Ocean Liner'))
     };
@@ -122,7 +122,7 @@ try {
     runtime.renderer?.render?.(runtime.scene, runtime.camera);
   });
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-  await page.screenshot({ path: path.join(outputDir, 'suburbs-island.png'), fullPage: true });
+  await page.screenshot({ path: path.join(outputDir, 'beachfront-island.png'), fullPage: true });
 
   await page.evaluate(() => {
     document.querySelector('.m8-home')?.style.removeProperty('display');
@@ -186,7 +186,7 @@ assert.deepEqual(browserErrors, [], 'TURN LAB produced browser errors:\n' + brow
 assert.equal(suburbs.trackId, 'cliffside');
 assert.equal(suburbs.sampleCount, 1440);
 assert.ok(suburbs.trackLength > 1850 && suburbs.trackLength < 2000);
-assert.equal(suburbs.metrics.version, 'suburbs-summer');
+assert.equal(suburbs.metrics.version, 'beachfront-summer');
 assert.equal(suburbs.metrics.islandCourse, true);
 assert.equal(suburbs.metrics.easyTrack, false);
 assert.ok(suburbs.houses >= 22);
@@ -199,6 +199,10 @@ assert.equal(suburbs.boat, true);
 assert.equal(suburbs.staleLake, false);
 assert.equal(suburbs.staleCliffsideVillage, false);
 assert.equal(suburbs.staleOceanLiner, false);
+assert.ok(suburbs.metrics.hotelCount >= 6);
+assert.ok(suburbs.metrics.palmCount >= 14);
+assert.ok(suburbs.metrics.beachRockCount >= 1);
+assert.equal(suburbs.metrics.sailboatCount, 5);
 assert.deepEqual(suburbs.metrics.assetErrors, []);
 
 assert.equal(deadCanyon.trackId, 'mountain');

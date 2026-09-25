@@ -53,7 +53,7 @@
     return keys[index] ?? null;
   };
 
-  // DEAD CANYON occupies the existing MOUNTAIN reward slot inside LAB. SUBURBS uses
+  // DEAD CANYON occupies the existing MOUNTAIN reward slot inside LAB. BEACHFRONT uses
   // the always-available CLIFFSIDE slot. Seed only MOUNTAIN's underlying reward in
   // prefixed LAB storage; production TURN is never touched.
   const ACHIEVEMENT_KEY = `${LOCAL_PREFIX}turn-achievements-v1`;
