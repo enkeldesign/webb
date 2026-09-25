@@ -88,7 +88,7 @@ export function installSuburbsWorld({ scene, samples, trackWidth = 27, runtime }
   }
 
   const world = new THREE.Group();
-  world.name = 'TURN LAB Suburbs';
+  world.name = 'TURN LAB Beachfront';
   scene.add(world);
 
   makeSummerGround(world);
@@ -129,7 +129,7 @@ export function installSuburbsWorld({ scene, samples, trackWidth = 27, runtime }
     dynamicLights: 0,
     shadowCasters: 0
   };
-  world.userData.turnBeachfront = metrics;
+  world.userData.turnSuburbs = metrics;
   world.userData.turnBeachfront = metrics;
 
   metrics.playgroundPieces = world.getObjectByName('Beachfront playground')?.children.length || 0;
@@ -802,7 +802,8 @@ function placePrepared(parent, object, { name, position, rotation = 0, metadata 
   object.rotation.y += rotation;
   Object.assign(object.userData, metadata, {
     turnSceneryOnly: true,
-    turnSuburbs: true
+    turnSuburbs: true,
+    turnBeachfront: true
   });
   parent.add(object);
   return object;
