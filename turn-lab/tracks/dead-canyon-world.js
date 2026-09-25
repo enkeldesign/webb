@@ -348,7 +348,9 @@ function makeEasternEscarpment(world) {
       new THREE.CylinderGeometry(width * 0.46, width * 0.56, height, 6, 1, false),
       material(color, 1, true)
     );
-    block.position.set(x, 220 + height / 2 - 5, z);
+    // Bury the skyline mesas deep into the top terrace. With only a 5 m
+    // overlap they could read as detached blocks through the canyon haze.
+    block.position.set(x, 185 + height / 2, z);
     block.rotation.y = 0.16 * index;
     block.name = `Dead Canyon integrated skyline mesa ${index + 1}`;
     block.castShadow = false;
