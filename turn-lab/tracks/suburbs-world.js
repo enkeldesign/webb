@@ -209,7 +209,7 @@ function makeSummerGround(world) {
   );
   parkLawn.rotation.x = -Math.PI / 2;
   parkLawn.scale.set(1.25, 0.85, 1);
-  parkLawn.position.set(-58, 0.045, 30);
+  parkLawn.position.set(-58, 0.075, 30);
   parkLawn.name = 'Beachfront park lawn';
   world.add(parkLawn);
 }
@@ -314,7 +314,7 @@ function makeCoastalDock(world) {
   );
   beach.rotation.x = -Math.PI / 2;
   beach.scale.set(1.25, 0.62, 1);
-  beach.position.set(326, 0.055, 82);
+  beach.position.set(326, 0.075, 82);
   beach.name = 'Beachfront dock beach';
   world.add(beach);
 
