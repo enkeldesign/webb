@@ -55,7 +55,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
   makeRoadsideChevrons(world, samples, trackWidth);
   makeCanyonOverhangs(world);
   makeDeadCanyonLandmark(world);
-  makeRockFormations(world);
+  makeRockFormations(world, samples, trackWidth);
   makeSolarField(world);
   makeTracksideRocks(world, samples, trackWidth);
   makeSun(world);
@@ -82,12 +82,14 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
     landmark: 'DEAD CANYON CROWN',
     standingRockCount: 1,
     tableMesaCount: 1,
-    yellowTreeCount: 6,
+    yellowTreeCount: 20,
+    centralRockFormationCount: 6,
     openShedCount: 1,
     rustTruckCount: 1,
     ruinClusterCount: 1,
     yellowStepBarrierCount: 0,
     embeddedWallRocks: true,
+    crownShelvesEmbedded: true,
     shedRoofSeated: true,
     needleCount: 0,
     geologyArchetypes: 4,
@@ -492,10 +494,13 @@ function makeCanyonOverhangs(world) {
   // Broad strata shapes: larger in wall-width/height, deliberately shallow in X.
   // Their centres sit inside the cliff face so no rock can read as floating.
   const specs = [
-    [744, 48, -430, 15, 27, 84, -0.08, 0.10],
-    [746, 86, -185, 16, 33, 98, 0.05, -0.08],
-    [745, 111, 330, 15, 31, 92, -0.04, 0.10],
-    [747, 143, 575, 16, 35, 104, 0.06, -0.06]
+    // Each rock is keyed to the cliff band at its height. The previous upper
+    // rocks all sat around x≈745, which left three of them visibly detached
+    // from the stepped wall. Keep only a shallow lip exposed.
+    [730, 48, -430, 18, 27, 84, -0.08, 0.10],
+    [792, 86, -185, 20, 31, 92, 0.05, -0.08],
+    [855, 111, 330, 20, 29, 88, -0.04, 0.10],
+    [860, 143, 575, 22, 36, 104, 0.06, -0.06]
   ];
   specs.forEach(([x, y, z, sx, sy, sz, rz, ry], index) => {
     const rock = new THREE.Mesh(
@@ -519,9 +524,11 @@ function makeDeadCanyonLandmark(world) {
   crown.name = 'DEAD CANYON CROWN landmark';
 
   const shelves = [
-    [748, 62, 55, 17, 34, 132, ROCK_DARK],
-    [750, 121, 55, 18, 40, 148, ROCK],
-    [752, 181, 55, 19, 44, 164, ROCK_LIGHT]
+    // Follow the stepped escarpment inward as height increases. Offset the
+    // shelves in Z and vary their spans so they read as geology, not a stack.
+    [790, 62, 22, 22, 31, 122, ROCK_DARK],
+    [855, 121, 68, 19, 43, 146, ROCK],
+    [925, 181, 42, 25, 37, 158, ROCK_LIGHT]
   ];
   shelves.forEach(([x, y, z, sx, sy, sz, color], index) => {
     const shelf = new THREE.Mesh(
@@ -530,7 +537,11 @@ function makeDeadCanyonLandmark(world) {
     );
     shelf.position.set(x, y, z);
     shelf.scale.set(sx, sy, sz);
-    shelf.rotation.set(0, 0.035 * (index - 1), -0.025 * index);
+    shelf.rotation.set(
+      0.025 * (index - 1),
+      [-0.12, 0.08, -0.05][index],
+      [-0.06, 0.035, -0.08][index]
+    );
     shelf.name = `DEAD CANYON CROWN shelf ${index + 1}`;
     shelf.castShadow = false;
     shelf.receiveShadow = false;
@@ -540,7 +551,7 @@ function makeDeadCanyonLandmark(world) {
   world.add(crown);
 }
 
-function makeRockFormations(world) {
+function makeRockFormations(world, samples, trackWidth) {
   // One table mesa is enough to make this geological form memorable.
   const tables = [
     [-250, 485, 82, 50, -0.22]
@@ -623,6 +634,36 @@ function makeRockFormations(world) {
   dome.instanceMatrix.needsUpdate = true;
   dome.name = 'Dead Canyon eroded domes';
   world.add(dome);
+}
+
+  // Fill the previously empty interior basin with large, readable formations.
+  // The route now sweeps through the western half of the basin, while these
+  // landmarks occupy the open eastern half with generous road clearance.
+  const centralSites = [
+    [125, 215, 36, 30, 24, 0.18],
+    [205, 145, 52, 38, 31, -0.34],
+    [285, 70, 68, 42, 35, 0.26],
+    [165, -70, 44, 34, 27, -0.16],
+    [270, -135, 58, 40, 33, 0.38],
+    [360, 165, 48, 36, 30, -0.28]
+  ];
+  const central = new THREE.InstancedMesh(
+    new THREE.DodecahedronGeometry(1, 0),
+    material(ROCK, 1, true),
+    centralSites.length
+  );
+  centralSites.forEach(([x, z, height, sx, sz, yaw], index) => {
+    const clearance = distanceToRouteXZ(samples, x, z);
+    const safeScale = clearance < trackWidth / 2 + 24 ? 0.72 : 1;
+    dummy.position.set(x, height * 0.44, z);
+    dummy.scale.set(sx * safeScale, height * 0.72, sz * safeScale);
+    dummy.rotation.set(0.05 * ((index % 3) - 1), yaw, 0.04 * (index % 2 ? 1 : -1));
+    dummy.updateMatrix();
+    central.setMatrixAt(index, dummy.matrix);
+  });
+  central.instanceMatrix.needsUpdate = true;
+  central.name = 'Dead Canyon central badlands formations';
+  world.add(central);
 }
 
 function makeSolarField(world) {
@@ -783,12 +824,18 @@ function placeVisibleRetroLandmarks(world, templates, samples, trackWidth) {
   let count = 0;
 
   const treePlacements = [
+    [0.090, -20, 32, 0.90],
     [0.115, -18, 31, 0.92],
     [0.115, 2, 36, 1.08],
     [0.115, 22, 32, 0.98],
+    [0.305, -18, 34, 0.96],
+    [0.305, 12, 39, 1.10],
     [0.685, -16, 31, 1.05],
     [0.685, 7, 37, 0.94],
-    [0.685, 28, 33, 1.12]
+    [0.685, 28, 33, 1.12],
+    [0.865, -18, 34, 0.92],
+    [0.865, 8, 38, 1.06],
+    [0.865, 30, 35, 0.98]
   ];
   treePlacements.forEach(([progress, along, lateralDistance, scale], index) => {
     const frame = frameAt(samples, progress);
@@ -801,7 +848,31 @@ function placeVisibleRetroLandmarks(world, templates, samples, trackWidth) {
       side * (trackWidth / 2 + lateralDistance),
       scale,
       index * 0.27,
-      'yellow-tree-' + (index + 1)
+      'yellow-tree-' + (index + 1),
+      -1.75
+    );
+  });
+
+  const centralTrees = [
+    [75, 245, 0.94, 0.20],
+    [125, 185, 1.08, -0.34],
+    [185, 100, 0.96, 0.48],
+    [235, 15, 1.12, -0.16],
+    [120, -105, 0.92, 0.28],
+    [215, -165, 1.04, -0.42],
+    [315, -80, 0.98, 0.12],
+    [330, 125, 1.10, -0.26]
+  ];
+  centralTrees.forEach(([x, z, scale, yaw], index) => {
+    count += placeAbsoluteTemplate(
+      world,
+      templates.parkTree,
+      x,
+      z,
+      scale,
+      yaw,
+      'central-yellow-tree-' + (index + 1),
+      -1.55
     );
   });
 
@@ -839,7 +910,10 @@ function placeOpenShed(world, templates, frame, trackWidth) {
     const roofBounds = new THREE.Box3().setFromObject(roof);
     const supportTop = poleBounds?.max?.y;
     if (Number.isFinite(supportTop) && Number.isFinite(roofBounds.min.y)) {
-      roof.position.y += supportTop - roofBounds.min.y - 0.10;
+      // Deliberately overlap the roof with the support tops a little. The OBJ's
+      // bounds include thin underside geometry, so merely matching the bounds
+      // still reads as a visible air gap from race-camera height.
+      roof.position.y += supportTop - roofBounds.min.y - 0.95;
     }
     count += 1;
   }
@@ -899,7 +973,7 @@ function cloneTemplateAt(world, template, frame, along, lateral, scale, yawOffse
   object.position.copy(frame.point)
     .addScaledVector(frame.tangent, along)
     .addScaledVector(frame.normal, lateral);
-  object.position.y = Math.max(0.25, frame.point.y - 0.25);
+  object.position.y = Math.max(0.25, frame.point.y - 0.25) + verticalOffset;
   object.rotation.y = Math.atan2(frame.tangent.x, frame.tangent.z) + yawOffset;
   object.scale.multiplyScalar(scale);
   object.traverse((node) => {
@@ -983,7 +1057,7 @@ function outwardSide(frame) {
   return radialDot >= 0 ? 1 : -1;
 }
 
-function placeTemplate(world, template, frame, along, lateral, scale, yawOffset, name) {
+function placeTemplate(world, template, frame, along, lateral, scale, yawOffset, name, verticalOffset = 0) {
   if (!template) return 0;
   const object = template.clone(true);
   object.name = 'Dead Canyon Retro Urban ' + name;
@@ -1000,6 +1074,30 @@ function placeTemplate(world, template, frame, along, lateral, scale, yawOffset,
   });
   world.add(object);
   return 1;
+}
+
+function placeAbsoluteTemplate(world, template, x, z, scale, yaw, name, y = 0) {
+  if (!template) return 0;
+  const object = template.clone(true);
+  object.name = 'Dead Canyon Retro Urban ' + name;
+  object.position.set(x, y, z);
+  object.rotation.y = yaw;
+  object.scale.multiplyScalar(scale);
+  object.traverse((node) => {
+    if (!node.isMesh) return;
+    node.castShadow = false;
+    node.receiveShadow = false;
+  });
+  world.add(object);
+  return 1;
+}
+
+function distanceToRouteXZ(samples, x, z) {
+  let nearest = Infinity;
+  for (const sample of samples) {
+    nearest = Math.min(nearest, Math.hypot(sample.point.x - x, sample.point.z - z));
+  }
+  return nearest;
 }
 
 function normalizeHeight(object, targetHeight) {
