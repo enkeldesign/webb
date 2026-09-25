@@ -287,6 +287,16 @@ function makeInstancedTrackStrip(samples, {
     const dx = end.x - start.x;
     const dz = end.z - start.z;
     const length = Math.max(0.01, Math.hypot(dx, dz));
+    const centreDx = nextSample.point.x - sample.point.x;
+    const centreDz = nextSample.point.z - sample.point.z;
+    const centreLength = Math.max(0.01, Math.hypot(centreDx, centreDz));
+    const alignment = (dx * centreDx + dz * centreDz) / (length * centreLength);
+    const stretch = length / centreLength;
+
+    // Offset curves can form a cusp on the inside of a very tight hairpin.
+    // Never bridge across that cusp: a tiny clean gap is preferable to the
+    // old folded fan that stretched sidewalk/edge geometry across the road.
+    if (alignment < 0.15 || stretch > 2.5) continue;
 
     dummy.position.set(midpoint.x, y, midpoint.z);
     dummy.rotation.set(0, Math.atan2(dx, dz), 0);
@@ -296,6 +306,7 @@ function makeInstancedTrackStrip(samples, {
     instanceIndex += 1;
   }
 
+  strip.count = instanceIndex;
   strip.instanceMatrix.needsUpdate = true;
   strip.name = name;
   return strip;
