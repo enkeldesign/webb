@@ -1,7 +1,7 @@
-// TURN LAB SUBURBS island experiment.
+// TURN LAB BEACHFRONT island experiment.
 // Production CLIFFSIDE is reused only as the internal LAB slot so TURN keeps the
 // mature race, replay, scoring and accessibility runtime while LAB supplies the
-// existing SUBURBS course as a compact summer island.
+// existing BEACHFRONT course as a compact summer island.
 export const CLIFFSIDE_CONTROL_POINTS = Object.freeze([
   [0, 0, -250],
   [-70, 0, -258],
