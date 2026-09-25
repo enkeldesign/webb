@@ -51,6 +51,15 @@
   <link rel="stylesheet" href="./track-select-r77.css?build=20260924-r286">
   <link rel="stylesheet" href="./track-select-r78.css?build=20260924-r286">
   <link rel="stylesheet" href="./track-select-r79.css?build=20260924-r286">
+  <style>
+    /* LAB identity only: production MOUNTAIN owns the mountain card class.
+       DEAD CANYON overrides its passive paper/fold here; selection already uses
+       the LAB definition's red --track-accent token. */
+    html[data-turn-lab="dead-canyon-suburbs"] .track-card-mountain {
+      --track-card-paper: #f3a0a8;
+      --track-card-fold: #d96874;
+    }
+  </style>
   <link rel="stylesheet" href="./track-intro.css?build=20260924-r286">
   <link rel="stylesheet" href="./garage/lot-r10.css?build=20260924-r286-native-html">
   <link rel="stylesheet" href="./garage/lot-stat-legend.css?build=20260924-r286">
