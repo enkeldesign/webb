@@ -251,7 +251,8 @@ function makeRoadEdgeLines(world, samples, trackWidth) {
       width: 0.32,
       y: ROAD_HEIGHT + 0.037,
       material,
-      name: 'Beachfront white road edge'
+      name: 'Beachfront white road edge',
+      skipEastHairpinCusp: true
     }));
   }
 }
@@ -263,7 +264,8 @@ function makeInstancedTrackStrip(samples, {
   material,
   name,
   step = 2,
-  overlap = 1.10
+  overlap = 1.10,
+  skipEastHairpinCusp = false
 }) {
   const geometry = new THREE.PlaneGeometry(1, 1);
   geometry.rotateX(-Math.PI / 2);
@@ -283,6 +285,18 @@ function makeInstancedTrackStrip(samples, {
     start.copy(sample.point).addScaledVector(sample.normal, centerOffset);
     end.copy(nextSample.point).addScaledVector(nextSample.normal, centerOffset);
     midpoint.copy(start).add(end).multiplyScalar(0.5);
+
+    // The preserved route has one deliberately pinched east-side hairpin.
+    // Its inner offset line geometrically self-intersects even when each short
+    // strip segment is valid, creating the white folded/burn fan seen in LAB.
+    // Leave a small edge-line gap through the cusp; the asphalt route itself
+    // is untouched.
+    if (
+      skipEastHairpinCusp
+      && midpoint.x > 215
+      && midpoint.z > -35
+      && midpoint.z < 100
+    ) continue;
 
     const dx = end.x - start.x;
     const dz = end.z - start.z;
