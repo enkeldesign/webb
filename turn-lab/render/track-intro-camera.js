@@ -5,10 +5,10 @@ const INTRO_CAMERA_PRESETS = Object.freeze({
     fov: 52
   }),
   mountain: Object.freeze({
-    // DEAD CANYON: high southwest postcard across the new central sweep,
-    // with the stepped eastern wall still reading as the dominant backdrop.
-    position: Object.freeze([-430, 235, -620]),
-    target: Object.freeze([90, 34, 55]),
+    // DEAD CANYON: lower south-canyon postcard. The central sweep fills the
+    // foreground while the stepped eastern wall remains inside the haze range.
+    position: Object.freeze([60, 155, -500]),
+    target: Object.freeze([280, 28, 40]),
     fov: 58
   }),
   cliffside: Object.freeze({
