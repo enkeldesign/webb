@@ -67,7 +67,7 @@ const BACK_ROW_SITES = Object.freeze([
   Object.freeze({ progress: 0.430, type: 'p', palette: 'a', height: 10.4, along: 18, yaw: -0.05 }),
   Object.freeze({ progress: 0.585, type: 'r', palette: 'c', height: 10.9, along: -17, yaw: 0.07 }),
   Object.freeze({ progress: 0.690, type: 'a', palette: 'a', height: 9.8, along: 18, yaw: -0.08 }),
-  Object.freeze({ progress: 0.825, type: 'm', palette: 'b', height: 10.3, along: -17, yaw: 0.05 }),
+  Object.freeze({ progress: 0.825, type: 'm', palette: 'b', height: 10.3, along: -17, inward: 72, yaw: 0.05 }),
   Object.freeze({ progress: 0.955, type: 'u', palette: 'c', height: 10.8, along: 17, yaw: -0.06 })
 ]);
 
@@ -547,7 +547,7 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const house = prepareModel(source, { targetHeight: spec.height });
     placePrepared(world, house, {
       name: 'Beachfront Kenney back-row house ' + (index + 1),
-      position: pointInsideFrame(frame, 24, spec.along, 0.03),
+      position: pointInsideFrame(frame, spec.inward ?? 24, spec.along, 0.03),
       rotation: frame.yaw + Math.PI + spec.yaw,
       metadata: {
         turnSuburbsAsset: 'building-type-' + spec.type,
