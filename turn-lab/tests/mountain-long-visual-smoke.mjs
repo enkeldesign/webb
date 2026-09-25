@@ -100,14 +100,6 @@ try {
         ));
         return { x: object.position.x, z: object.position.z, nearestRoad };
       })(),
-      blueTruck: (() => {
-        const object = world.getObjectByName('Beachfront parked truck 7');
-        if (!object) return null;
-        const nearestRoad = Math.min(...runtime.samples.map((sample) =>
-          Math.hypot(sample.point.x - object.position.x, sample.point.z - object.position.z)
-        ));
-        return { x: object.position.x, z: object.position.z, nearestRoad };
-      })(),
       island: Boolean(world.getObjectByName('Beachfront island body')),
       sandRim: Boolean(world.getObjectByName('Beachfront island beach rim')),
       surroundingWater: Boolean(world.getObjectByName('Beachfront surrounding water')),
@@ -140,21 +132,6 @@ try {
   });
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await page.screenshot({ path: path.join(outputDir, 'beachfront-island.png'), fullPage: true });
-
-  await page.evaluate(() => {
-    const runtime = globalThis.__turnRuntime;
-    const house = runtime.activeWorld.getObjectByName('Beachfront Kenney house 14');
-    if (!house) return;
-    runtime.camera.position.set(house.position.x + 55, 28, house.position.z + 70);
-    runtime.camera.up.set(0, 1, 0);
-    runtime.camera.lookAt(house.position.x, 2, house.position.z);
-    runtime.camera.fov = 52;
-    runtime.camera.updateProjectionMatrix();
-    runtime.camera.updateMatrixWorld(true);
-    runtime.renderer?.render?.(runtime.scene, runtime.camera);
-  });
-  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-  await page.screenshot({ path: path.join(outputDir, 'beachfront-house14.png'), fullPage: true });
 
   await page.evaluate(() => {
     document.querySelector('.m8-home')?.style.removeProperty('display');
@@ -249,8 +226,6 @@ assert.equal(deadCanyon.metrics.version, 'dead-canyon-polish');
 assert.equal(deadCanyon.metrics.yellowStepBarrierCount, 0);
 assert.equal(deadCanyon.metrics.shedRoofSeated, true);
 assert.deepEqual(deadCanyon.metrics.retroUrbanErrors, []);
-
-console.log('BEACHFRONT diagnostic:', JSON.stringify({ house14: suburbs.house14, blueTruck: suburbs.blueTruck }));
 
 console.log('TURN LAB dual-track browser smoke passed:', JSON.stringify({
   suburbsLength: suburbs.trackLength,
