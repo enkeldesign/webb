@@ -851,7 +851,7 @@ function placeVisibleRetroLandmarks(world, templates, samples, trackWidth) {
       scale,
       index * 0.27,
       'yellow-tree-' + (index + 1),
-      -3.15
+      -4.8
     );
   });
 
@@ -874,7 +874,7 @@ function placeVisibleRetroLandmarks(world, templates, samples, trackWidth) {
       scale,
       yaw,
       'central-yellow-tree-' + (index + 1),
-      -3.0
+      -4.2
     );
   });
 
