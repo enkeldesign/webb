@@ -350,7 +350,8 @@ function makeEasternEscarpment(world) {
     );
     // Bury the skyline mesas deep into the top terrace. With only a 5 m
     // overlap they could read as detached blocks through the canyon haze.
-    block.position.set(x, 185 + height / 2, z);
+    const embeddedX = Math.max(x, 950);
+    block.position.set(embeddedX, 185 + height / 2, z);
     block.rotation.y = 0.16 * index;
     block.name = `Dead Canyon integrated skyline mesa ${index + 1}`;
     block.castShadow = false;
@@ -850,7 +851,7 @@ function placeVisibleRetroLandmarks(world, templates, samples, trackWidth) {
       scale,
       index * 0.27,
       'yellow-tree-' + (index + 1),
-      -1.75
+      -3.15
     );
   });
 
@@ -873,7 +874,7 @@ function placeVisibleRetroLandmarks(world, templates, samples, trackWidth) {
       scale,
       yaw,
       'central-yellow-tree-' + (index + 1),
-      -1.55
+      -3.0
     );
   });
 
