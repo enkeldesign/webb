@@ -92,14 +92,6 @@ try {
       ).length,
       parkedCars: children.filter((object) => object.name?.startsWith('Beachfront parked ')).length,
       grassVariationPatches: children.filter((object) => object.name?.startsWith('Beachfront grass variation ')).length,
-      house14: (() => {
-        const object = world.getObjectByName('Beachfront Kenney house 14');
-        if (!object) return null;
-        const nearestRoad = Math.min(...runtime.samples.map((sample) =>
-          Math.hypot(sample.point.x - object.position.x, sample.point.z - object.position.z)
-        ));
-        return { x: object.position.x, z: object.position.z, nearestRoad };
-      })(),
       houseBounds: await (async () => {
         const THREE = await import('three');
         const houses = children.filter((object) =>
@@ -239,9 +231,15 @@ assert.ok(suburbs.houses >= 22);
 assert.ok(suburbs.parkedCars >= 7);
 assert.equal(suburbs.grassVariationPatches, 10);
 assert.equal(suburbs.metrics.grassVariationPatches, 10);
-assert.ok(suburbs.house14, 'BEACHFRONT east house diagnostic must exist');
-assert.ok(suburbs.house14.nearestRoad > 45,
-  'BEACHFRONT east house must stay fully clear of the racing line');
+const closestHouseToRoad = suburbs.houseBounds[0];
+const formerRoadHouse = suburbs.houseBounds.find((house) =>
+  house.name === 'Beachfront Kenney back-row house 7'
+);
+assert.ok(formerRoadHouse, 'BEACHFRONT former road house must exist');
+assert.ok(formerRoadHouse.nearestRoadToBounds > 20,
+  'BEACHFRONT back-row house 7 footprint must stay clear of the road');
+assert.ok(closestHouseToRoad.nearestRoadToBounds > 14,
+  'No BEACHFRONT house footprint may overlap the asphalt');
 assert.equal(suburbs.island, true);
 assert.equal(suburbs.sandRim, true);
 assert.equal(suburbs.surroundingWater, true);
