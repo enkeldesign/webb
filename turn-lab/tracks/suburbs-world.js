@@ -10,6 +10,8 @@ const SIDEWALK_EDGE = 0xb9b4a8;
 const GRASS = 0x67c95f;
 const GRASS_LIGHT = 0x82da6f;
 const GRASS_DARK = 0x4eab50;
+const GRASS_WARM = 0x93d86b;
+const GRASS_COOL = 0x59bd63;
 const WATER = 0x41b8e7;
 const WOOD = 0xb57845;
 const WOOD_DARK = 0x765039;
@@ -53,7 +55,7 @@ const HOUSE_SITES = Object.freeze([
   Object.freeze({ progress: 0.650, type: 'u', palette: 'c', height: 11.0, along: -7, yaw: 0.04 }),
   Object.freeze({ progress: 0.705, type: 'b', palette: 'b', height: 10.5, along: 7, yaw: -0.05 }),
   Object.freeze({ progress: 0.760, type: 'd', palette: 'a', height: 9.8, along: -7, yaw: 0.08 }),
-  Object.freeze({ progress: 0.805, type: 'g', palette: 'default', height: 10.6, along: 8, yaw: -0.04 }),
+  Object.freeze({ progress: 0.805, type: 'g', palette: 'default', height: 10.6, along: 8, inward: 23, yaw: -0.04 }),
   Object.freeze({ progress: 0.875, type: 'n', palette: 'c', height: 11.0, along: -9, yaw: 0.05 }),
   Object.freeze({ progress: 0.930, type: 't', palette: 'b', height: 10.4, along: 8, yaw: -0.06 })
 ]);
@@ -104,6 +106,7 @@ export function installSuburbsWorld({ scene, samples, trackWidth = 27, runtime }
     version: 'beachfront-summer',
     routeSamples: samples.length,
     theme: 'bright-beachfront-island-resort',
+    grassVariationPatches: 10,
     easyTrack: false,
     islandCourse: true,
     flatCourse: true,
@@ -203,6 +206,8 @@ function makeSummerGround(world) {
   ground.name = 'Beachfront island grass';
   world.add(ground);
 
+  makeGrassVariation(world);
+
   const parkLawn = new THREE.Mesh(
     new THREE.CircleGeometry(112, 32),
     standardMaterial(GRASS_LIGHT, 1)
@@ -212,6 +217,34 @@ function makeSummerGround(world) {
   parkLawn.position.set(-58, 0.075, 30);
   parkLawn.name = 'Beachfront park lawn';
   world.add(parkLawn);
+}
+
+function makeGrassVariation(world) {
+  const specs = [
+    [-172, -120, 70, 40, -0.18, GRASS_DARK],
+    [-102, 118, 76, 46, 0.31, GRASS_LIGHT],
+    [-18, -150, 92, 44, -0.08, GRASS_COOL],
+    [44, 126, 88, 50, 0.12, GRASS_WARM],
+    [132, -92, 72, 42, 0.42, GRASS_LIGHT],
+    [162, 56, 64, 38, -0.27, GRASS_DARK],
+    [-152, 24, 58, 34, 0.15, GRASS_WARM],
+    [-46, 54, 66, 38, -0.36, GRASS_COOL],
+    [72, -26, 74, 42, 0.22, GRASS_DARK],
+    [128, 128, 52, 32, -0.11, GRASS_WARM]
+  ];
+
+  specs.forEach(([x, z, radiusX, radiusZ, yaw, color], index) => {
+    const patch = new THREE.Mesh(
+      new THREE.CircleGeometry(1, 7),
+      standardMaterial(color, 1)
+    );
+    patch.rotation.x = -Math.PI / 2;
+    patch.rotation.z = yaw;
+    patch.scale.set(radiusX, radiusZ, 1);
+    patch.position.set(x, 0.064 + (index % 3) * 0.001, z);
+    patch.name = 'Beachfront grass variation ' + (index + 1);
+    world.add(patch);
+  });
 }
 
 function makeRoad(world, samples, trackWidth) {
@@ -471,7 +504,7 @@ async function installNeighbourhoodAssets(world, samples, trackWidth) {
     const house = prepareModel(source, { targetHeight: spec.height });
     placePrepared(world, house, {
       name: 'Beachfront Kenney house ' + (index + 1),
-      position: pointInsideFrame(frame, 13.5, spec.along, 0.03),
+      position: pointInsideFrame(frame, spec.inward ?? 13.5, spec.along, 0.03),
       rotation: frame.yaw + Math.PI + spec.yaw,
       metadata: { turnSuburbsAsset: 'building-type-' + spec.type, palette: spec.palette }
     });
