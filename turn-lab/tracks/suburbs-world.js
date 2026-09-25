@@ -288,16 +288,17 @@ function makeInstancedTrackStrip(samples, {
     end.copy(nextSample.point).addScaledVector(nextSample.normal, centerOffset);
     midpoint.copy(start).add(end).multiplyScalar(0.5);
 
-    // The preserved route has one deliberately pinched east-side hairpin.
-    // Its inner offset line geometrically self-intersects even when each short
-    // strip segment is valid, creating the white folded/burn fan seen in LAB.
-    // Leave a small edge-line gap through the cusp; the asphalt route itself
+    // The preserved route has one deliberately pinched east-side hairpin
+    // around x≈235, z≈-150. Its offset decoration geometrically self-intersects
+    // even when each short strip segment is valid, creating the folded/burn fan.
+    // Leave a small decoration gap through that cusp; the asphalt route itself
     // is untouched.
     if (
       skipEastHairpinCusp
-      && midpoint.x > 215
-      && midpoint.z > -35
-      && midpoint.z < 100
+      && midpoint.x > 205
+      && midpoint.x < 270
+      && midpoint.z > -220
+      && midpoint.z < -105
     ) continue;
 
     const dx = end.x - start.x;
