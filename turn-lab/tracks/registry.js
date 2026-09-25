@@ -1,5 +1,5 @@
 // TURN LAB registry overlay. Both experimental tracks are offered simultaneously:
-// MOUNTAIN -> DEAD CANYON, CLIFFSIDE -> SUBURBS.
+// MOUNTAIN -> DEAD CANYON, CLIFFSIDE -> BEACHFRONT.
 import * as production from '/turn/tracks/registry.js?lab-base=dead-canyon-suburbs';
 
 export const TRACK_RUNTIME_REGISTRY = Object.freeze(production.TRACK_RUNTIME_REGISTRY.map((entry) => {
