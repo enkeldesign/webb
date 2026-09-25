@@ -241,10 +241,43 @@ function makeSidewalks(world, samples, trackWidth) {
 
 function makeRoadEdgeLines(world, samples, trackWidth) {
   const half = trackWidth / 2;
+  const step = 2;
+  const geometry = new THREE.PlaneGeometry(1, 1);
+  geometry.rotateX(-Math.PI / 2);
+  const material = new THREE.MeshBasicMaterial({ color: ROAD_EDGE, side: THREE.DoubleSide });
+
   for (const side of [-1, 1]) {
     const center = side * (half - 0.42);
-    const line = makeRibbon(samples, center - 0.16, center + 0.16, ROAD_HEIGHT + 0.035, { skipFoldedQuads: true });
-    line.material = new THREE.MeshBasicMaterial({ color: ROAD_EDGE, side: THREE.DoubleSide });
+    const segmentCount = Math.ceil(samples.length / step);
+    const line = new THREE.InstancedMesh(geometry, material, segmentCount);
+    const dummy = new THREE.Object3D();
+    const start = new THREE.Vector3();
+    const end = new THREE.Vector3();
+    const midpoint = new THREE.Vector3();
+
+    let instanceIndex = 0;
+    for (let sampleIndex = 0; sampleIndex < samples.length; sampleIndex += step) {
+      const nextIndex = (sampleIndex + step) % samples.length;
+      const sample = samples[sampleIndex];
+      const nextSample = samples[nextIndex];
+
+      start.copy(sample.point).addScaledVector(sample.normal, center);
+      end.copy(nextSample.point).addScaledVector(nextSample.normal, center);
+      midpoint.copy(start).add(end).multiplyScalar(0.5);
+
+      const dx = end.x - start.x;
+      const dz = end.z - start.z;
+      const length = Math.max(0.01, Math.hypot(dx, dz));
+
+      dummy.position.set(midpoint.x, ROAD_HEIGHT + 0.037, midpoint.z);
+      dummy.rotation.set(0, Math.atan2(dx, dz), 0);
+      dummy.scale.set(0.32, 1, length * 1.08);
+      dummy.updateMatrix();
+      line.setMatrixAt(instanceIndex, dummy.matrix);
+      instanceIndex += 1;
+    }
+
+    line.instanceMatrix.needsUpdate = true;
     line.name = 'Beachfront white road edge';
     world.add(line);
   }
