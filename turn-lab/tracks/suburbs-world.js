@@ -224,63 +224,81 @@ function makeRoad(world, samples, trackWidth) {
 function makeSidewalks(world, samples, trackWidth) {
   const half = trackWidth / 2;
   for (const side of [-1, 1]) {
-    const inner = side * (half + 0.20);
-    const outer = side * (half + 4.4);
-    const walk = makeRibbon(samples, Math.min(inner, outer), Math.max(inner, outer), ROAD_HEIGHT - 0.015, { skipFoldedQuads: true });
-    walk.material = standardMaterial(SIDEWALK, 1);
-    walk.name = 'Beachfront sidewalk';
-    world.add(walk);
+    world.add(makeInstancedTrackStrip(samples, {
+      centerOffset: side * (half + 2.30),
+      width: 4.20,
+      y: ROAD_HEIGHT - 0.015,
+      material: standardMaterial(SIDEWALK, 1),
+      name: 'Beachfront sidewalk'
+    }));
 
-    const curbCenter = side * (half + 0.35);
-    const curb = makeRibbon(samples, curbCenter - 0.18, curbCenter + 0.18, ROAD_HEIGHT + 0.05, { skipFoldedQuads: true });
-    curb.material = standardMaterial(SIDEWALK_EDGE, 1);
-    curb.name = 'Beachfront curb';
-    world.add(curb);
+    world.add(makeInstancedTrackStrip(samples, {
+      centerOffset: side * (half + 0.35),
+      width: 0.36,
+      y: ROAD_HEIGHT + 0.05,
+      material: standardMaterial(SIDEWALK_EDGE, 1),
+      name: 'Beachfront curb'
+    }));
   }
 }
 
 function makeRoadEdgeLines(world, samples, trackWidth) {
   const half = trackWidth / 2;
-  const step = 2;
+  const material = new THREE.MeshBasicMaterial({ color: ROAD_EDGE, side: THREE.DoubleSide });
+  for (const side of [-1, 1]) {
+    world.add(makeInstancedTrackStrip(samples, {
+      centerOffset: side * (half - 0.42),
+      width: 0.32,
+      y: ROAD_HEIGHT + 0.037,
+      material,
+      name: 'Beachfront white road edge'
+    }));
+  }
+}
+
+function makeInstancedTrackStrip(samples, {
+  centerOffset,
+  width,
+  y,
+  material,
+  name,
+  step = 2,
+  overlap = 1.10
+}) {
   const geometry = new THREE.PlaneGeometry(1, 1);
   geometry.rotateX(-Math.PI / 2);
-  const material = new THREE.MeshBasicMaterial({ color: ROAD_EDGE, side: THREE.DoubleSide });
+  const segmentCount = Math.ceil(samples.length / step);
+  const strip = new THREE.InstancedMesh(geometry, material, segmentCount);
+  const dummy = new THREE.Object3D();
+  const start = new THREE.Vector3();
+  const end = new THREE.Vector3();
+  const midpoint = new THREE.Vector3();
 
-  for (const side of [-1, 1]) {
-    const center = side * (half - 0.42);
-    const segmentCount = Math.ceil(samples.length / step);
-    const line = new THREE.InstancedMesh(geometry, material, segmentCount);
-    const dummy = new THREE.Object3D();
-    const start = new THREE.Vector3();
-    const end = new THREE.Vector3();
-    const midpoint = new THREE.Vector3();
+  let instanceIndex = 0;
+  for (let sampleIndex = 0; sampleIndex < samples.length; sampleIndex += step) {
+    const nextIndex = (sampleIndex + step) % samples.length;
+    const sample = samples[sampleIndex];
+    const nextSample = samples[nextIndex];
 
-    let instanceIndex = 0;
-    for (let sampleIndex = 0; sampleIndex < samples.length; sampleIndex += step) {
-      const nextIndex = (sampleIndex + step) % samples.length;
-      const sample = samples[sampleIndex];
-      const nextSample = samples[nextIndex];
+    start.copy(sample.point).addScaledVector(sample.normal, centerOffset);
+    end.copy(nextSample.point).addScaledVector(nextSample.normal, centerOffset);
+    midpoint.copy(start).add(end).multiplyScalar(0.5);
 
-      start.copy(sample.point).addScaledVector(sample.normal, center);
-      end.copy(nextSample.point).addScaledVector(nextSample.normal, center);
-      midpoint.copy(start).add(end).multiplyScalar(0.5);
+    const dx = end.x - start.x;
+    const dz = end.z - start.z;
+    const length = Math.max(0.01, Math.hypot(dx, dz));
 
-      const dx = end.x - start.x;
-      const dz = end.z - start.z;
-      const length = Math.max(0.01, Math.hypot(dx, dz));
-
-      dummy.position.set(midpoint.x, ROAD_HEIGHT + 0.037, midpoint.z);
-      dummy.rotation.set(0, Math.atan2(dx, dz), 0);
-      dummy.scale.set(0.32, 1, length * 1.08);
-      dummy.updateMatrix();
-      line.setMatrixAt(instanceIndex, dummy.matrix);
-      instanceIndex += 1;
-    }
-
-    line.instanceMatrix.needsUpdate = true;
-    line.name = 'Beachfront white road edge';
-    world.add(line);
+    dummy.position.set(midpoint.x, y, midpoint.z);
+    dummy.rotation.set(0, Math.atan2(dx, dz), 0);
+    dummy.scale.set(width, 1, length * overlap);
+    dummy.updateMatrix();
+    strip.setMatrixAt(instanceIndex, dummy.matrix);
+    instanceIndex += 1;
   }
+
+  strip.instanceMatrix.needsUpdate = true;
+  strip.name = name;
+  return strip;
 }
 
 function makeCenterDashes(world, samples) {
@@ -874,28 +892,18 @@ function trackCentre(samples) {
   return centre;
 }
 
-function makeRibbon(samples, left, right, yOffset, { skipFoldedQuads = false } = {}) {
+function makeRibbon(samples, left, right, yOffset) {
   const positions = [];
   const indices = [];
-  const leftPoints = [];
-  const rightPoints = [];
   for (let index = 0; index <= samples.length; index += 1) {
     const sample = samples[index % samples.length];
     const a = sample.point.clone().addScaledVector(sample.normal, left);
     const b = sample.point.clone().addScaledVector(sample.normal, right);
     a.y += yOffset;
     b.y += yOffset;
-    leftPoints.push(a);
-    rightPoints.push(b);
     positions.push(a.x, a.y, a.z, b.x, b.y, b.z);
   }
   for (let index = 0; index < samples.length; index += 1) {
-    const aPoint = leftPoints[index];
-    const bPoint = rightPoints[index];
-    const cPoint = leftPoints[index + 1];
-    const dPoint = rightPoints[index + 1];
-    if (skipFoldedQuads && quadHasFold(aPoint, bPoint, cPoint, dPoint)) continue;
-
     const a = index * 2;
     const b = a + 1;
     const c = a + 2;
@@ -907,17 +915,6 @@ function makeRibbon(samples, left, right, yOffset, { skipFoldedQuads = false } =
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   return new THREE.Mesh(geometry, standardMaterial(ROAD, 1));
-}
-
-function quadHasFold(a, b, c, d) {
-  const first = signedTriangleAreaXZ(a, c, b);
-  const second = signedTriangleAreaXZ(b, c, d);
-  const epsilon = 0.0001;
-  return Math.abs(first) < epsilon || Math.abs(second) < epsilon || first * second < 0;
-}
-
-function signedTriangleAreaXZ(a, b, c) {
-  return (b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x);
 }
 
 function standardMaterial(color, roughness = 1) {
