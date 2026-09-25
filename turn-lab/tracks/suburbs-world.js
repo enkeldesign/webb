@@ -229,7 +229,8 @@ function makeSidewalks(world, samples, trackWidth) {
       width: 4.20,
       y: ROAD_HEIGHT - 0.015,
       material: standardMaterial(SIDEWALK, 1),
-      name: 'Beachfront sidewalk'
+      name: 'Beachfront sidewalk',
+      skipEastHairpinCusp: true
     }));
 
     world.add(makeInstancedTrackStrip(samples, {
@@ -237,7 +238,8 @@ function makeSidewalks(world, samples, trackWidth) {
       width: 0.36,
       y: ROAD_HEIGHT + 0.05,
       material: standardMaterial(SIDEWALK_EDGE, 1),
-      name: 'Beachfront curb'
+      name: 'Beachfront curb',
+      skipEastHairpinCusp: true
     }));
   }
 }
