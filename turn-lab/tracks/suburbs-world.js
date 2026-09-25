@@ -295,10 +295,10 @@ function makeInstancedTrackStrip(samples, {
     // is untouched.
     if (
       skipEastHairpinCusp
-      && midpoint.x > 205
-      && midpoint.x < 270
-      && midpoint.z > -220
-      && midpoint.z < -105
+      && midpoint.x > 215
+      && midpoint.x < 252
+      && midpoint.z > -185
+      && midpoint.z < -120
     ) continue;
 
     const dx = end.x - start.x;
