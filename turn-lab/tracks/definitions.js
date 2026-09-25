@@ -1,6 +1,6 @@
 // TURN LAB definition overlay. Production tracks remain intact except two internal
 // slots used to expose both LAB courses at the same time:
-// MOUNTAIN -> DEAD CANYON, CLIFFSIDE -> SUBURBS.
+// MOUNTAIN -> DEAD CANYON, CLIFFSIDE -> BEACHFRONT.
 import * as production from '/turn/tracks/definitions.js?lab-base=dead-canyon-suburbs';
 
 export const DEFAULT_TRACK_ID = production.DEFAULT_TRACK_ID;
@@ -46,10 +46,10 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
   if (track.id === 'cliffside') {
     return Object.freeze({
       ...track,
-      name: 'Suburbs',
+      name: 'Beachfront',
       difficulty: 'MEDIUM',
       eyebrow: 'LAB TRACK',
-      description: 'Summer island. Park sweepers. Cul-de-sac. Backyard rhythm.',
+      description: 'Bright beachfront island. Seaside sweepers. Hotel skyline. Tropical interior.',
       accent: '#25b97a',
       accentSoft: '#d8ffd8',
       storageRevision: 'suburbs-lab',
