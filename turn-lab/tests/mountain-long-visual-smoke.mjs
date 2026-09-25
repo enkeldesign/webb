@@ -73,7 +73,7 @@ try {
     await Promise.resolve(globalThis.__turnRuntime?.activeWorld?.ready);
   });
 
-  suburbs = await page.evaluate(() => {
+  suburbs = await page.evaluate(async () => {
     const runtime = globalThis.__turnRuntime;
     const world = runtime.activeWorld;
     const children = [];
