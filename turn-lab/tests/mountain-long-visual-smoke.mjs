@@ -54,6 +54,9 @@ try {
   assert.equal(await mountainHome.getAttribute('data-trophy-locked'), 'false');
   assert.equal(await mountainHome.evaluate((node) => node.style.getPropertyValue('--track-accent')), '#df3045');
   assert.equal(await mountainHome.evaluate((node) => node.style.getPropertyValue('--track-accent-soft')), '#f3a0a8');
+  assert.equal(await mountainHome.evaluate((node) =>
+    getComputedStyle(node).getPropertyValue('--track-card-paper').trim()
+  ), '#f3a0a8');
   assert.equal(await page.locator('html').getAttribute('data-turn-lab'), 'dead-canyon-suburbs');
   await page.screenshot({ path: path.join(outputDir, 'lab-home-both-tracks.png'), fullPage: true });
 
@@ -227,9 +230,9 @@ try {
     const runtime = globalThis.__turnRuntime;
     document.querySelector('.m8-home')?.style.setProperty('display', 'none', 'important');
     document.querySelector('.track-select')?.style.setProperty('display', 'none', 'important');
-    runtime.camera.position.set(-430, 235, -620);
+    runtime.camera.position.set(60, 155, -500);
     runtime.camera.up.set(0, 1, 0);
-    runtime.camera.lookAt(90, 34, 55);
+    runtime.camera.lookAt(280, 28, 40);
     runtime.camera.fov = 58;
     runtime.camera.updateProjectionMatrix();
     runtime.camera.updateMatrixWorld(true);
@@ -263,6 +266,21 @@ try {
   });
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await page.screenshot({ path: path.join(outputDir, 'dead-canyon-wall.png'), fullPage: true });
+
+  await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    const shed = runtime.activeWorld.getObjectByName('Dead Canyon Retro Urban open-shed-poles');
+    if (!shed) return;
+    runtime.camera.position.set(shed.position.x - 48, shed.position.y + 18, shed.position.z - 42);
+    runtime.camera.up.set(0, 1, 0);
+    runtime.camera.lookAt(shed.position.x, shed.position.y + 5, shed.position.z);
+    runtime.camera.fov = 48;
+    runtime.camera.updateProjectionMatrix();
+    runtime.camera.updateMatrixWorld(true);
+    runtime.renderer?.render?.(runtime.scene, runtime.camera);
+  });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.screenshot({ path: path.join(outputDir, 'dead-canyon-shed.png'), fullPage: true });
 } finally {
   await browser.close();
 }
