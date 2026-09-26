@@ -68,14 +68,13 @@ assert.ok(
   'The loading cover must remain above the early Countryside frame until Home is complete'
 );
 
-assert.match(screenReaderCoordinator, /const LANDSCAPE_SETTLE_MS = 1200/,
-  'Automatic non-visual onboarding must leave a short quiet window after landscape settles');
-assert.match(screenReaderCoordinator, /function installLandscapeWatch\(\)[\s\S]*window\.addEventListener\('resize', handleLandscapeCandidate[\s\S]*window\.addEventListener\('orientationchange', handleLandscapeCandidate[\s\S]*visualViewport\?\.addEventListener\('resize', handleLandscapeCandidate/,
-  'The onboarding coordinator must react to both viewport and OS orientation transitions');
-assert.match(screenReaderCoordinator, /function scheduleNonVisualOnboarding\(\)[\s\S]*if \(viewportIsPortrait\(\)\) return;[\s\S]*window\.setTimeout\([\s\S]*viewportIsPortrait\(\)\) return;[\s\S]*speak\(`TURN is ready\. \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`/,
-  'The onboarding itself must only enter the live region after landscape remains confirmed');
-assert.match(screenReaderCoordinator, /if \(viewportIsPortrait\(\)\) \{\s*speak\('TURN is ready\. Rotate your device to landscape\.', \{ priority: 'assertive' \}\);\s*\} else \{\s*scheduleNonVisualOnboarding\(\);/,
-  'Portrait Home may request rotation, but must not append the onboarding before landscape');
+assert.match(screenReaderCoordinator, /const VIEWPORT_SETTLE_MS = 1200/,
+  'Existing onboarding retains its quiet settling window in either orientation');
+assert.match(screenReaderCoordinator, /function installViewportWatch\(\)[\s\S]*window\.addEventListener\('resize', handleViewportChange[\s\S]*window\.addEventListener\('orientationchange', handleViewportChange[\s\S]*visualViewport\?\.addEventListener\('resize', handleViewportChange/,
+  'The onboarding coordinator follows viewport and OS orientation transitions');
+assert.match(screenReaderCoordinator, /function scheduleNonVisualOnboarding\(\)[\s\S]*speak\(`TURN is ready\. \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`/);
+assert.doesNotMatch(screenReaderCoordinator, /viewportIsPortrait|Rotate your device to landscape/,
+  'Home must neither request rotation nor withhold existing onboarding in portrait');
 assert.doesNotMatch(screenReaderCoordinator, /speak\(`\$\{readyMessage\} \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`/,
   'The old portrait-ready plus onboarding utterance must not return');
 
@@ -152,7 +151,7 @@ assert.equal(achievementCardMatchesFilters(
   { activeTags: new Set(['new']), activeStatuses: new Set() }
 ), true, 'NEW must be derived from the live unseen marker without replacing static tags');
 
-console.log(`TURN ${release.version} startup cover, landscape-gated screen-reader onboarding, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement navigation passed.`);
+console.log(`TURN ${release.version} startup cover, orientation-independent screen-reader onboarding, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement navigation passed.`);
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

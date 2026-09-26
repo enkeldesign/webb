@@ -39,6 +39,8 @@ function createEnvironment() {
   const mutationObservers = [];
   let dialogOpen = false;
   let roleDialogOpen = false;
+  let roleDialogParentHidden = false;
+  const roleDialog = { closest() { return roleDialogParentHidden ? {} : null; } };
 
   const bodyClasses = new Set();
   const controls = { hidden: false };
@@ -52,8 +54,11 @@ function createEnvironment() {
     querySelector(selector) {
       if (selector === '#controls') return controls;
       if (selector === 'dialog[open]') return dialogOpen ? {} : null;
-      if (selector === '[role="dialog"]:not([hidden])') return roleDialogOpen ? {} : null;
+      if (selector === '[role="dialog"]:not([hidden])') return roleDialogOpen ? roleDialog : null;
       return null;
+    },
+    querySelectorAll(selector) {
+      return selector === '[role="dialog"]:not([hidden])' && roleDialogOpen ? [roleDialog] : [];
     },
     addEventListener(name, listener) { documentListeners.set(name, listener); },
     removeEventListener(name, listener) {
@@ -109,6 +114,7 @@ function createEnvironment() {
     bodyClasses,
     setDialogOpen(value) { dialogOpen = Boolean(value); },
     setRoleDialogOpen(value) { roleDialogOpen = Boolean(value); },
+    setRoleDialogParentHidden(value) { roleDialogParentHidden = Boolean(value); },
     dispatchWindow,
     dispatchDocument,
     notifyMutation
@@ -258,6 +264,15 @@ harness.notifyMutation();
 assert.equal(state.touchBrake, false, 'Opening a dialog while a drive key is held must clear that held input');
 assert.equal(controller.getHeldCount(), 0);
 harness.setDialogOpen(false);
+
+harness.setRoleDialogOpen(true);
+harness.setRoleDialogParentHidden(true);
+harness.dispatchWindow('keydown', keyEvent({ code: 'KeyW', key: 'w' }));
+assert.equal(state.touchGas, true, 'A detail dialog inside a hidden/closed parent cannot block race input');
+harness.setRoleDialogParentHidden(false);
+harness.notifyMutation('role-dialog');
+assert.equal(state.touchGas, false, 'Presenting the detail dialog releases held driving input');
+harness.setRoleDialogOpen(false);
 
 harness.dispatchWindow('keydown', keyEvent({ code: 'KeyW', key: 'w' }));
 assert.equal(state.touchGas, true);

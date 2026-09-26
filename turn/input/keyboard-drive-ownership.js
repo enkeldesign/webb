@@ -41,7 +41,13 @@ export function createKeyboardDriveOwnership({
     if (documentRef.body.classList?.contains('turn-lot-open')) return true;
     if (documentRef.body.classList?.contains('turn-spectating')) return true;
     if (documentRef.querySelector?.('dialog[open]')) return true;
-    return Boolean(documentRef.querySelector?.('[role="dialog"]:not([hidden])'));
+    const selector = '[role="dialog"]:not([hidden])';
+    const dialogs = documentRef.querySelectorAll?.(selector)
+      || [documentRef.querySelector?.(selector)];
+    // Trophy Road's detail dialog lives inside a hidden layer/closed dialog.
+    // Only a presented overlay owns input; hidden descendants must not stop racing.
+    return [...dialogs].some((dialog) => dialog
+      && !dialog.closest?.('[hidden], dialog:not([open])'));
   }
 
   function ownsGameplay() {

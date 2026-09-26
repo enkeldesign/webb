@@ -2,7 +2,7 @@
   const STATUS_ID = 'turn-screen-reader-status';
   const SKIP_STYLE_ID = 'turn-screen-reader-skip-link-styles';
   const TRAINING_SPEECH_CHANNEL = 'dbe-training';
-  const LANDSCAPE_SETTLE_MS = 1200;
+  const VIEWPORT_SETTLE_MS = 1200;
   const NON_VISUAL_ONBOARDING_MESSAGE = 'Non-visual onboarding. To race, choose a track on Home, then choose a car. For a guided introduction to Drive By Ear and non-visual gameplay, choose Drive By Ear one oh one. The first two links on Home let you replay this introduction or jump directly to Drive By Ear one oh one.';
   const MENU_GLYPHS = new Set(['…', '⋮', '☰']);
   const TRAINING_START_MESSAGES = Object.freeze({
@@ -22,60 +22,48 @@
   let homeReadyHandled = false;
   let onboardingTimer = 0;
   let onboardingAnnounced = false;
-  let landscapeWatchInstalled = false;
+  let viewportWatchInstalled = false;
   let externalPriorityTimer = 0;
   let externalPriorityUntil = 0;
   let discoveryObserver = null;
-
-  function viewportIsPortrait() {
-    const viewport = window.visualViewport;
-    const width = viewport?.width || window.innerWidth || document.documentElement.clientWidth;
-    const height = viewport?.height || window.innerHeight || document.documentElement.clientHeight;
-    return height > width;
-  }
 
   function clearOnboardingTimer() {
     window.clearTimeout(onboardingTimer);
     onboardingTimer = 0;
   }
 
-  function removeLandscapeWatch() {
-    if (!landscapeWatchInstalled) return;
-    landscapeWatchInstalled = false;
-    window.removeEventListener('resize', handleLandscapeCandidate);
-    window.removeEventListener('orientationchange', handleLandscapeCandidate);
-    window.visualViewport?.removeEventListener('resize', handleLandscapeCandidate);
+  function removeViewportWatch() {
+    if (!viewportWatchInstalled) return;
+    viewportWatchInstalled = false;
+    window.removeEventListener('resize', handleViewportChange);
+    window.removeEventListener('orientationchange', handleViewportChange);
+    window.visualViewport?.removeEventListener('resize', handleViewportChange);
   }
 
   function scheduleNonVisualOnboarding() {
     if (!homeReadyHandled || onboardingAnnounced) return;
     clearOnboardingTimer();
-    if (viewportIsPortrait()) return;
 
     onboardingTimer = window.setTimeout(() => {
       onboardingTimer = 0;
-      if (!homeReadyHandled || onboardingAnnounced || viewportIsPortrait()) return;
+      if (!homeReadyHandled || onboardingAnnounced) return;
       onboardingAnnounced = true;
-      removeLandscapeWatch();
+      removeViewportWatch();
       speak(`TURN is ready. ${NON_VISUAL_ONBOARDING_MESSAGE}`, { priority: 'assertive' });
-    }, LANDSCAPE_SETTLE_MS);
+    }, VIEWPORT_SETTLE_MS);
   }
 
-  function handleLandscapeCandidate() {
+  function handleViewportChange() {
     if (!homeReadyHandled || onboardingAnnounced) return;
-    if (viewportIsPortrait()) {
-      clearOnboardingTimer();
-      return;
-    }
     scheduleNonVisualOnboarding();
   }
 
-  function installLandscapeWatch() {
-    if (landscapeWatchInstalled || onboardingAnnounced) return;
-    landscapeWatchInstalled = true;
-    window.addEventListener('resize', handleLandscapeCandidate, { passive: true });
-    window.addEventListener('orientationchange', handleLandscapeCandidate, { passive: true });
-    window.visualViewport?.addEventListener('resize', handleLandscapeCandidate, { passive: true });
+  function installViewportWatch() {
+    if (viewportWatchInstalled || onboardingAnnounced) return;
+    viewportWatchInstalled = true;
+    window.addEventListener('resize', handleViewportChange, { passive: true });
+    window.addEventListener('orientationchange', handleViewportChange, { passive: true });
+    window.visualViewport?.addEventListener('resize', handleViewportChange, { passive: true });
   }
 
   function ensureStatusRegion() {
@@ -654,12 +642,8 @@
       }
     }
 
-    installLandscapeWatch();
-    if (viewportIsPortrait()) {
-      speak('TURN is ready. Rotate your device to landscape.', { priority: 'assertive' });
-    } else {
-      scheduleNonVisualOnboarding();
-    }
+    installViewportWatch();
+    scheduleNonVisualOnboarding();
   }, { once: true });
 
   window.addEventListener('turn:track-changed', () => {
