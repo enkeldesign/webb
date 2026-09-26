@@ -6,24 +6,30 @@ import { TRACK_DEFINITIONS } from '../turn/tracks/definitions.js';
 const [
   index,
   releaseSource,
-  postcardCss,
-  depthCss,
-  runwayCss,
+  trackSelectCss,
   midnightCss,
   appSource,
   chooserSource
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/track-select-r77.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/track-select-r78.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/track-select-r79.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/track-select.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-midnight-city-postcard-r130.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/track-select.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
+const layer = (revision) => {
+  const marker = `/* ==== Layer ${revision} `;
+  const start = trackSelectCss.indexOf(marker);
+  assert.ok(start >= 0, `track-select.css must keep its ${revision} layer`);
+  const end = trackSelectCss.indexOf('/* ==== Layer ', start + marker.length);
+  return trackSelectCss.slice(start, end < 0 ? undefined : end);
+};
+const postcardCss = layer('r77');
+const depthCss = layer('r78');
+const runwayCss = layer('r79');
 const tracks = Object.fromEntries(TRACK_DEFINITIONS.map((track) => [track.id, track]));
 
 assert.equal(tracks.countryside.accent, '#ff4fa3', 'Countryside keeps its established pink identity');
@@ -41,13 +47,12 @@ for (const track of TRACK_DEFINITIONS) {
   assert.ok(contrastRatio(track.accent, '#08090a') >= 4.5, `${track.name} accent must keep black text at WCAG AA contrast`);
 }
 
-for (const stylesheet of ['track-select-r77.css', 'track-select-r78.css', 'track-select-r79.css']) {
-  assert.match(
-    index,
-    new RegExp(`${stylesheet.replace('.', '\\.')}\\?build=${release.cacheKey}`),
-    `Production must load ${stylesheet} through the current release cache key`
-  );
-}
+assert.match(
+  index,
+  new RegExp(`track-select\\.css\\?build=${release.cacheKey}`),
+  'Production must load the consolidated track-select.css through the current release cache key'
+);
+assert.doesNotMatch(index, /track-select-r\d+\.css/, 'Track chooser styles must stay consolidated in track-select.css');
 assert.match(postcardCss, /\.track-card-countryside[\s\S]*--track-card-paper: #f7dce7/);
 assert.match(postcardCss, /\.track-card-airport[\s\S]*--track-card-paper: #fff4c7/);
 assert.match(postcardCss, /\.track-card-cliffside[\s\S]*--track-card-paper: #d5f3ef/);

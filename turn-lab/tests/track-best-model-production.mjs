@@ -33,7 +33,7 @@ const [
   app,
   selector,
   renderer,
-  css,
+  trackSelectCss,
   scaleCss,
   hud,
   driftRuntime,
@@ -44,7 +44,7 @@ const [
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/track-best-car.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/track-select-r61.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/track-select.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-record-car-scale.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/hud.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/scoring/drift-attack-runtime.js', import.meta.url), 'utf8'),
@@ -52,13 +52,17 @@ const [
 ]);
 
 const release = JSON.parse(releaseSource);
+const layerStart = trackSelectCss.indexOf('/* ==== Layer r61 ');
+assert.ok(layerStart >= 0, 'track-select.css must keep its r61 record-car layer');
+const layerEnd = trackSelectCss.indexOf('/* ==== Layer ', layerStart + 1);
+const css = trackSelectCss.slice(layerStart, layerEnd < 0 ? undefined : layerEnd);
 const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (path) => `${path}?build=${release.cacheKey}`;
 const bestLayoutBlock = css.match(/\.track-card-best \{[\s\S]*?\n\}/)?.[0] || '';
 
-assert.match(index, new RegExp(`track-select-r61\\.css\\?build=${release.cacheKey}`), 'Production must load the record-car thumbnail layout through the current release');
+assert.match(index, new RegExp(`track-select\\.css\\?build=${release.cacheKey}`), 'Production must load the record-car thumbnail layout through the current release');
 assert.equal(imports['./ui/track-select.js?build=20260722-r51'], releaseTarget('./ui/track-select.js'), 'Production must publish the enhanced selector');
 const rivalStorageTarget = new URL(
   imports['./race/rival-storage.js?build=20260722-r50'] || '',
