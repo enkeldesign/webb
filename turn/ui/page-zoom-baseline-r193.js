@@ -163,6 +163,8 @@
 
   function processStylesheet(sheet) {
     if (!sheet || processedSheets.has(sheet)) return;
+    // Responsive layouts specify real CSS pixels and accessible target sizes.
+    if (sheet.ownerNode?.hasAttribute('data-turn-responsive')) return;
     let rules;
     try {
       rules = sheet.cssRules;

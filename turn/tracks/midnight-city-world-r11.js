@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
-import { installMidnightCityWorld as installMidnightCityWorldR7 } from './midnight-city-world-r7.js?build=20260924-r286';
+import { installMidnightCityWorld as installMidnightCityWorldR7 } from './midnight-city-world-r7.js?build=20260926-r287';
 import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js?revision=r175-reconcile';
 import { installSharedNightSky } from '/turn/tracks/shared-night-sky.js';
 

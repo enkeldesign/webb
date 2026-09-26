@@ -1,3 +1,4 @@
+import { showRaceOrientationRecommendation, clearRaceOrientationRecommendation } from './race-orientation.js';
 import { getTrackDefinition } from '../tracks/catalog.js?build=20260722-r50';
 
 export const TRACK_INTRO_HOLD_MS = 2100;
@@ -18,6 +19,7 @@ export async function showTrackIntro(trackId) {
   intro.setAttribute('aria-hidden', 'false');
   intro.classList.remove('is-visible');
   document.body.classList.add('turn-track-intro');
+  showRaceOrientationRecommendation(intro);
 
   await nextPaint();
   if (currentPresentation !== presentationId) return;
@@ -30,6 +32,7 @@ export async function showTrackIntro(trackId) {
   await wait(TRACK_INTRO_FADE_MS);
   if (currentPresentation !== presentationId) return;
 
+  clearRaceOrientationRecommendation();
   intro.hidden = true;
   intro.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('turn-track-intro');

@@ -1,4 +1,4 @@
-name: TURN support feedback browser regression
+name: TURN browser regressions
 
 on:
   pull_request:
@@ -11,6 +11,13 @@ on:
       - 'turn/m8-home.js'
       - 'turn/scripts/release.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
+      - 'turn-tests/responsive-browser-smoke.mjs'
+      - 'turn/responsive.css'
+      - 'turn/main.js'
+      - 'turn/index.html'
+      - 'turn/ui/race-orientation.js'
+      - 'turn/ui/track-intro.js'
+      - 'turn/orientation-compat.js'
       - '.github/workflows/turn-support-feedback-browser.yml'
   push:
     branches:
@@ -24,6 +31,13 @@ on:
       - 'turn/m8-home.js'
       - 'turn/scripts/release.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
+      - 'turn-tests/responsive-browser-smoke.mjs'
+      - 'turn/responsive.css'
+      - 'turn/main.js'
+      - 'turn/index.html'
+      - 'turn/ui/race-orientation.js'
+      - 'turn/ui/track-intro.js'
+      - 'turn/orientation-compat.js'
       - '.github/workflows/turn-support-feedback-browser.yml'
 
 concurrency:
@@ -48,7 +62,7 @@ jobs:
 
       - name: Install Playwright browsers
         run: |
-          npm install --no-save --package-lock=false playwright@1.55.0
+          npm install --no-save --package-lock=false playwright@1.55.0 three@0.184.0
           npx playwright install --with-deps chromium webkit
 
       - name: Start static TURN server
@@ -63,3 +77,6 @@ jobs:
 
       - name: Verify support feedback lifecycle in Chromium and WebKit
         run: node turn-tests/support-feedback-browser-smoke.mjs
+
+      - name: Verify responsive layouts and orientation in Chromium and WebKit
+        run: node turn-tests/responsive-browser-smoke.mjs

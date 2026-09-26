@@ -44,7 +44,7 @@ function importMap(source) {
 
 assert.match(
   index,
-  /<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no">/,
+  /<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no">/,
   'Production must explicitly disable legacy virtual-viewport shrinking'
 );
 assert.match(index, /pwa-usable-viewport-r181\.js\?revision=r181-usable-web-layer/);
@@ -61,12 +61,12 @@ assert.match(nextIndex, /pwa-usable-viewport-r181\.js\?revision=r181-usable-web-
 for (const manifest of [productionManifest, nextManifest]) {
   assert.equal(manifest.display, 'standalone', 'iOS must use the stable standalone presentation mode');
   assert.deepEqual(manifest.display_override, ['standalone']);
-  assert.equal(manifest.orientation, 'landscape');
+  assert.equal(manifest.orientation, 'any');
 }
 
-assert.match(main, /screen\.width/);
-assert.match(main, /screen\.height/,
-  'The compatibility boundary must explicitly neutralize the legacy physical-screen sizing path');
+assert.doesNotMatch(main, /screen\.(width|height|availWidth|availHeight)/,
+  'Physical screen size must not enlarge the game beyond a desktop/PWA window');
+assert.match(main, /getBoundingClientRect/);
 assert.match(styles, /min-height: 100lvh/,
   'The compatibility boundary must override the legacy large-viewport minimum in installed mode');
 
@@ -137,8 +137,8 @@ assert.equal(labManifest.start_url, '/turn-lab/');
 assert.equal(labManifest.scope, '/turn-lab/');
 assert.equal(labManifest.display, 'standalone');
 assert.deepEqual(labManifest.display_override, ['standalone']);
-assert.equal(labManifest.orientation, 'landscape',
-  'TURN LAB must return to production landscape behavior while portrait play is retired');
+assert.equal(labManifest.orientation, 'any',
+  'The shared production race UI supports both orientations');
 
 assert.match(labBootstrap, /LOCAL_PREFIX = 'turn-lab:'/,
   'LAB local storage must stay in its own namespace');
@@ -225,3 +225,22 @@ assert.match(labRepair, /if \(repairInFlight \|\| autoConfirmationTimer \|\| !do
 await import('./short-viewport-repair-production.mjs');
 
 console.log(`TURN ${release.id} usable iOS standalone viewport boundary, revived TURN LAB shell and archived diagnostic bench passed.`);
+
+// A first landscape race consumes the handoff just like a portrait race does.
+// Reloads in the same tab consult sessionStorage; blocked storage uses memory.
+const orientationModule = new URL('../turn/ui/race-orientation.js', import.meta.url);
+for (const firstPortrait of [true, false]) {
+  const values = new Map();
+  const storage = { getItem: key => values.get(key), setItem: (key, value) => values.set(key, value) };
+  const first = await import(`${orientationModule}?first=${firstPortrait}`);
+  assert.equal(first.claimOrientationRecommendation({ portrait: firstPortrait, storage }), firstPortrait);
+  assert.equal(first.claimOrientationRecommendation({ portrait: true, storage }), false);
+  const reload = await import(`${orientationModule}?reload=${firstPortrait}`);
+  assert.equal(reload.claimOrientationRecommendation({ portrait: true, storage }), false);
+}
+const blocked = await import(`${orientationModule}?blocked`);
+const blockedStorage = { getItem() { throw new Error('Storage disabled'); } };
+assert.equal(blocked.claimOrientationRecommendation({ portrait: true, storage: blockedStorage }), true);
+assert.equal(blocked.claimOrientationRecommendation({ portrait: true, storage: blockedStorage }), false);
+assert.doesNotMatch(index, /user-scalable=no|maximum-scale=1|class="rotate-panel"/);
+console.log('Responsive orientation sessions, zoom and viewport boundaries passed.');

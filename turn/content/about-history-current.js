@@ -801,6 +801,20 @@ const mergedLatest = previousLatest?.date === '12 September'
       entries: Object.freeze([...PERK_CHANGELOG_ENTRIES, ...RELIABILITY_CHANGELOG_ENTRIES])
     });
 
+const RESPONSIVE_HISTORY = Object.freeze({
+  period: '26 September',
+  title: 'TURN fits the way you hold it',
+  paragraphs: Object.freeze([
+    'TURN 1.22.0 supports portrait and landscape from launch through racing. Portrait separates DRIFT and FLOW into lower corner readouts with upward intensity meters, keeps the road above the thumb zones, and mirrors the composition for left-handed controls.',
+    'Home, The Lot and dialogs reflow for smaller windows and larger text. Track lists grow with the catalog, the showroom stays bounded on large screens, and the first portrait race transition offers one optional landscape recommendation per session.'
+  ]),
+  milestones: Object.freeze([
+    'Portrait racing with tilt or steering pad and either handedness',
+    'Responsive menus, zoom and variable-length track lists',
+    'TURN 1.22.0 · 2026.09.26-r287'
+  ])
+});
+
 export const DEVELOPMENT_HISTORY = Object.freeze([
   ...BASE_DEVELOPMENT_HISTORY,
   PERK_HISTORY,
@@ -856,7 +870,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   MIDNIGHT_PURPLE_LOW_CITY_HISTORY,
   AIRPORT_HAIRPIN_SEAM_HISTORY,
   AIRPORT_HAIRPIN_SEAM_SHADING_HISTORY,
-  LOT_TABLET_LAYOUT_HISTORY
+  LOT_TABLET_LAYOUT_HISTORY,
+  RESPONSIVE_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -999,11 +1014,19 @@ Object.freeze({
   entries: Object.freeze([
     Object.freeze(['1.21.30 r285', 'Makes the procedural stars a little more visible on MOUNTAIN and MIDNIGHT CITY by increasing brightness without changing star size, density or sky motion.'])
   ])
+}),
+Object.freeze({
+  date: '26 September',
+  entries: Object.freeze([
+    Object.freeze(['1.22.0 r287', 'Supports portrait and landscape racing with mirrored controls, separated DRIFT/FLOW panels and upward intensity meters. Removes the rotate gate and automatic landscape lock.']),
+    Object.freeze(['Responsive navigation', 'Reflows Home, The Lot and dialogs for smaller windows and enlarged text; keeps growing track catalogs reachable and limits large-screen stretching.']),
+    Object.freeze(['Race orientation', 'Recommends landscape once at the first portrait race handoff while keeping portrait fully supported and immediately playable.'])
+  ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.21.30',
-  build: '2026.09.24-r286',
-  note: 'TURN 1.21.30 makes the shared procedural night-sky stars slightly more visible while preserving their size, density and stable world-locked treatment.'
+  version: '1.22.0',
+  build: '2026.09.26-r287',
+  note: 'TURN 1.22.0 supports portrait and landscape throughout the game, with responsive controls, menus and one optional landscape recommendation at the first portrait race handoff.'
 });

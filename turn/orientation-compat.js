@@ -60,15 +60,12 @@
   let sensorOffsetLocked = false;
   let lastBaseAngle = null;
   let gameplayActive = false;
-  let gameplayAngle = null;
-  let preferredLandscapeLock = 'landscape';
   let lastResolvedRoll = 0;
   let steeringNeutralRoll = 0;
   let steeringLimitLevel = 0;
   let hardLimitLatched = false;
   let directionalFeedbackActive = false;
   let lastFeedbackSide = null;
-  let lockUnsupportedReported = false;
 
   function normalizeDegrees(value) {
     if (!Number.isFinite(value)) return null;
@@ -144,7 +141,7 @@
   }
 
   function resolvedAngle() {
-    return gameplayActive && gameplayAngle != null ? gameplayAngle : computedAngle();
+    return computedAngle();
   }
 
   function dispatchDirectionalFeedback(relativeRoll, { enteredHard = false, forceClear = false } = {}) {
@@ -224,40 +221,6 @@
     dispatchDirectionalFeedback(relativeRoll, { enteredHard });
   }
 
-  function currentLandscapeLockType() {
-    const type = String(orientation.type || '');
-    if (type === 'landscape-primary' || type === 'landscape-secondary') return type;
-    return 'landscape';
-  }
-
-  async function tryOrientationLock(type) {
-    if (typeof orientation.lock !== 'function') {
-      if (!lockUnsupportedReported) {
-        lockUnsupportedReported = true;
-        console.info('TURN: OS orientation lock is not exposed by this WebKit build; using the in-game guard only.');
-      }
-      return false;
-    }
-
-    try {
-      await orientation.lock(type);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  async function requestLandscapeLock() {
-    if (await tryOrientationLock('landscape')) return true;
-
-    const exactType = preferredLandscapeLock === 'landscape'
-      ? currentLandscapeLockType()
-      : preferredLandscapeLock;
-    return exactType !== 'landscape' ? tryOrientationLock(exactType) : false;
-  }
-
-  globalThis.__turnRequestLandscapeLock = requestLandscapeLock;
-
   function setGameplayActive(active) {
     const nextActive = Boolean(active);
     if (nextActive === gameplayActive) return;
@@ -266,15 +229,9 @@
     document.body.classList.toggle('turn-race-active', gameplayActive);
 
     if (gameplayActive) {
-      preferredLandscapeLock = currentLandscapeLockType();
-      gameplayAngle = computedAngle();
       steeringNeutralRoll = lastResolvedRoll;
       clearSteeringLimitFeedback();
-      void requestLandscapeLock();
-      console.info(`TURN: race orientation guard locked at ${gameplayAngle}° (${preferredLandscapeLock}).`);
     } else {
-      gameplayAngle = null;
-      preferredLandscapeLock = 'landscape';
       clearSteeringLimitFeedback();
     }
   }
@@ -318,10 +275,6 @@
     updateSteeringLimitFeedback(lastResolvedRoll);
   }
 
-  function retryGameplayLock() {
-    if (gameplayActive) void requestLandscapeLock();
-  }
-
   function bindDirectUiControls() {
     document.querySelector('#motionButton')?.addEventListener('click', resetSensorCalibration);
     document.querySelector('#calibrateButton')?.addEventListener('click', () => {
@@ -332,29 +285,18 @@
   }
 
   window.addEventListener('devicemotion', observeMotion, { passive: true });
-  window.addEventListener('orientationchange', () => {
-    if (gameplayActive) {
-      void requestLandscapeLock();
-      return;
-    }
+  // Follow the browser's actual orientation. Never request a landscape lock.
+  // The race input handler recentres on the first sample in the new orientation.
+  function orientationChanged() {
     resetSensorCalibration();
-  }, { passive: true });
-  orientation.addEventListener?.('change', retryGameplayLock, { passive: true });
-  window.addEventListener('pageshow', retryGameplayLock, { passive: true });
-  document.addEventListener('fullscreenchange', retryGameplayLock, { passive: true });
-  document.addEventListener('webkitfullscreenchange', retryGameplayLock, { passive: true });
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) retryGameplayLock();
-  }, { passive: true });
+    clearSteeringLimitFeedback();
+  }
+  window.addEventListener('orientationchange', orientationChanged, { passive: true });
+  orientation.addEventListener?.('change', orientationChanged, { passive: true });
 
   window.addEventListener('turn:ui-state-change', (event) => {
     setGameplayActive(Boolean(event.detail?.running));
   });
-
-  document.addEventListener('pointerdown', (event) => {
-    const startsGame = event.target.closest?.('#motionButton, #manualButton, .lot-race');
-    if (startsGame) void requestLandscapeLock();
-  }, { passive: true, capture: true });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bindDirectUiControls, { once: true });
@@ -390,7 +332,7 @@
 
   console.info(
     installed
-      ? 'TURN: adaptive motion-axis compatibility and race orientation guard enabled.'
+      ? 'TURN: adaptive motion-axis compatibility enabled.'
       : 'TURN: ScreenOrientation angle could not be shimmed; using browser values as-is.'
   );
 })();
