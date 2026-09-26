@@ -74,8 +74,8 @@ assert.match(productionIndex, new RegExp(`href="\\.\\/install-gate\\.css\\?build
 assert.match(productionIndex, new RegExp(`href="\\.\\/orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait"`));
 assert.match(productionIndex, new RegExp(`src="\\.\\/live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering"`));
 assert.match(productionIndex, new RegExp(`href="\\.\\/m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font-v3"`));
-assert.match(productionIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
-assert.match(productionIndex, /aria-label="Rotate your device to landscape"/);
+assert.doesNotMatch(productionIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
+assert.match(productionIndex, /responsive\.css\?build=/);
 assert.doesNotMatch(productionIndex, /Return to landscape/);
 assert.match(productionIndex, /id="intro" hidden aria-hidden="true"/);
 assert.match(productionIndex, /id="motionButton"/);
@@ -166,8 +166,8 @@ assert.match(nextIndex, new RegExp(`install-gate\\.css\\?build=${release.cacheKe
 assert.match(nextIndex, new RegExp(`orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait`));
 assert.match(nextIndex, new RegExp(`live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering`));
 assert.match(nextIndex, new RegExp(`m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font-v3`));
-assert.match(nextIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
-assert.match(nextIndex, /aria-label="Rotate your device to landscape"/);
+assert.doesNotMatch(nextIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
+assert.match(nextIndex, /responsive\.css\?build=/);
 assert.doesNotMatch(nextIndex, /Return to landscape/);
 assert.ok(nextIndex.indexOf('/turn-next/storage-bootstrap.js') < nextIndex.indexOf('/turn-next/app.js'));
 assert.match(nextIndex, /\/turn-next\/identity\.css/);

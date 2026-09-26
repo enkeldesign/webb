@@ -47,8 +47,8 @@ function validateParityEntry(current, release) {
   assert.match(current, new RegExp(`live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering`));
   assert.match(current, new RegExp(`m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font`));
   assert.match(current, /id="installGate"/);
-  assert.match(current, /ROTATE YOUR DEVICE TO LANDSCAPE/);
-  assert.match(current, /aria-label="Rotate your device to landscape"/);
+  assert.doesNotMatch(current, /ROTATE YOUR DEVICE TO LANDSCAPE/);
+  assert.match(current, /responsive\.css\?build=/);
   assert.doesNotMatch(current, /Return to landscape/);
   assert.match(current, /id="intro" hidden aria-hidden="true"/);
   assert.match(current, /id="motionButton"/);

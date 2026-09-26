@@ -1,3 +1,4 @@
+import { showRaceOrientationRecommendation } from '../ui/race-orientation.js';
 function requireFunction(value, name) {
   if (typeof value !== 'function') {
     throw new TypeError(`TURN race session requires ${name}().`);
@@ -63,7 +64,6 @@ export function createRaceSessionOrchestrator({
 
   const windowRef = environment.window || environment;
   const documentRef = environment.document || windowRef?.document;
-  const screenRef = environment.screen || windowRef?.screen;
   const clock = typeof now === 'function'
     ? now
     : () => environment.performance?.now?.() ?? windowRef?.performance?.now?.() ?? Date.now();
@@ -148,6 +148,9 @@ export function createRaceSessionOrchestrator({
 
   async function startGame(fullscreenPromise = Promise.resolve(false), { announceStart = true } = {}) {
     phase = 'starting';
+    if (documentRef?.body?.appendChild) {
+      showRaceOrientationRecommendation(documentRef.body, { staged: true });
+    }
     state.running = true;
     state.lastFrame = clock();
     prepareRace(state);
@@ -169,9 +172,6 @@ export function createRaceSessionOrchestrator({
     }
 
     await fullscreenPromise;
-    try {
-      await screenRef?.orientation?.lock?.('landscape');
-    } catch (_) {}
 
     resizeViewport();
     setTimer(resizeViewport, 300);

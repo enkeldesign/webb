@@ -60,8 +60,8 @@ assert.ok(
   'Live steering changes must use the installed motion compatibility bridge'
 );
 assert.equal(imports['./render/camera.js?build=20260720-r19'], `./render/camera.js?build=${release.cacheKey}`, 'The current release must publish the guarded race camera');
-assert.match(index, /<strong>ROTATE YOUR DEVICE TO LANDSCAPE<\/strong>/, 'The first-encounter landscape instruction must describe the required action');
-assert.match(index, /aria-label="Rotate your device to landscape"/);
+assert.doesNotMatch(index, /ROTATE YOUR DEVICE TO LANDSCAPE|class="rotate-panel"/, 'Responsive racing must not require rotation');
+assert.match(index, /responsive\.css\?build=/);
 assert.doesNotMatch(index, /Return to landscape/);
 
 assert.match(css, /--manual-steer-left/);
@@ -108,17 +108,9 @@ assert.match(orientationCompat, /configuredHardLimitDegrees - 4/, 'Near feedback
 assert.match(orientationCompat, /configuredHardLimitDegrees - 6\.5/, 'Feedback hysteresis fallback must clear below the configured limit');
 assert.match(orientationCompat, /globalThis\.__TURN_MOTION_SAFE_ZONE__/, 'The canonical host configuration must remain overridable by future platforms');
 assert.match(orientationCompat, /document\.body\.classList\.toggle\('turn-race-active', gameplayActive\)/, 'Race lifecycle must control the orientation-warning suppression class');
-assert.match(orientationCompat, /gameplayAngle = computedAngle\(\)/, 'The race must freeze its starting motion-axis orientation');
-assert.match(orientationCompat, /return gameplayActive && gameplayAngle != null \? gameplayAngle : computedAngle\(\)/, 'Live viewport flips must not remap steering while racing');
-assert.match(orientationCompat, /preferredLandscapeLock = currentLandscapeLockType\(\)/, 'The exact starting landscape side must remain available as a fallback');
-assert.match(orientationCompat, /await orientation\.lock\(type\)/, 'Supported browsers must receive an actual Screen Orientation lock request');
-assert.match(orientationCompat, /if \(await tryOrientationLock\('landscape'\)\) return true/, 'Generic landscape must be preferred so both turning directions remain valid');
-assert.match(orientationCompat, /return exactType !== 'landscape' \? tryOrientationLock\(exactType\) : false/, 'Exact-side locking must be fallback-only');
-assert.match(orientationCompat, /#motionButton, #manualButton, \.lot-race/, 'Only actual game-start gestures should retry the browser orientation lock');
-assert.doesNotMatch(orientationCompat, /if \(gameplayActive \|\| startsGame\)/, 'Regular GAS, DRIFT and BOOST touches must not repeatedly re-lock orientation');
-assert.match(orientationCompat, /globalThis\.__turnRequestLandscapeLock = requestLandscapeLock/, 'The landscape-lock request must remain reusable by the runtime');
-assert.match(orientationCompat, /document\.addEventListener\('fullscreenchange'/, 'Entering fullscreen must retry the browser orientation lock');
-assert.match(orientationCompat, /window\.addEventListener\('pageshow'/, 'Returning to the web app must retry the browser orientation lock');
+assert.match(orientationCompat, /function resolvedAngle\(\) \{\s*return computedAngle\(\)/, 'Motion axes follow the actual orientation');
+assert.doesNotMatch(orientationCompat, /orientation\.lock|requestLandscapeLock|gameplayAngle/, 'Rotation is never locked or frozen by the game');
+assert.match(orientationCompat, /orientation\.addEventListener\?\.\('change', orientationChanged/, 'Rotation resets motion calibration');
 assert.match(orientationCompat, /navigator\.vibrate\?\.\(pattern\)/, 'Approaching the guard should provide haptic feedback where supported');
 assert.match(orientationCompat, /window\.addEventListener\('turn:ui-state-change'/, 'The guard must follow the actual race lifecycle rather than viewport shape alone');
 
@@ -131,4 +123,4 @@ assert.doesNotMatch(camera, /camera\.rotateZ\(-state\.roll\)/, 'The camera must 
 assert.match(motion, /resolveSteeringRollLimit/);
 assert.match(motion, /return Number\.isFinite\(fallback\) && fallback > 0 \? fallback : degToRad\(14\)/, 'Motion input must retain a safe fallback when no host configuration exists');
 
-console.log(`TURN ${release.id} manual and live steering plus canonical race orientation guard passed.`);
+console.log(`TURN ${release.id} manual and live steering plus responsive orientation compatibility passed.`);

@@ -128,33 +128,20 @@ function createHarness({ width, height }) {
   };
 }
 
-const portrait = createHarness({ width: 390, height: 844 });
-portrait.dispatchHomeReady();
-assert.equal(
-  portrait.status()?.textContent,
-  'TURN is ready. Rotate your device to landscape.',
-  'Portrait Home readiness must immediately explain the required current orientation action'
-);
-assert.equal(portrait.status()?.getAttribute('aria-live'), 'assertive');
-
-const landscape = createHarness({ width: 844, height: 390 });
-landscape.dispatchHomeReady();
-assert.equal(
-  landscape.status(),
-  null,
-  'Landscape readiness must wait for the viewport to settle before speaking onboarding'
-);
-landscape.advance(1199);
-assert.equal(landscape.status(), null, 'Landscape onboarding must not speak before the 1200 ms settle window');
-landscape.advance(1);
-assert.match(
-  landscape.status()?.textContent || '',
-  /^TURN is ready\. Non-visual onboarding\./,
-  'Stable landscape readiness must hand off directly into the non-visual onboarding message'
-);
-assert.equal(landscape.status()?.getAttribute('aria-live'), 'assertive');
+for (const [width, height] of [[390, 844], [844, 390]]) {
+  const viewport = createHarness({ width, height });
+  viewport.dispatchHomeReady();
+  assert.equal(viewport.status(), null, 'Home waits for the viewport to settle without an orientation announcement');
+  viewport.advance(1199);
+  assert.equal(viewport.status(), null, 'Onboarding retains its existing 1200 ms settle window');
+  viewport.advance(1);
+  assert.match(viewport.status()?.textContent || '', /^TURN is ready\. Non-visual onboarding\./,
+    'Both orientations receive the same existing onboarding');
+  assert.doesNotMatch(viewport.status().textContent, /rotate|landscape/i);
+  assert.equal(viewport.status().getAttribute('aria-live'), 'assertive');
+}
 
 assert.match(index, /startup-screen-reader-handoff-r529\.js/,
   'Production TURN must load the screen-reader startup handoff before app startup');
 
-console.log('TURN startup readiness announces portrait orientation immediately and settled landscape onboarding after 1200 ms.');
+console.log('TURN startup readiness preserves settled onboarding in portrait and landscape without a rotation request.');

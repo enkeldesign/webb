@@ -191,50 +191,15 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x38d9ff);
 scene.fog = new THREE.Fog(0x74c0fc, 180, 700);
 
-function isStandaloneDisplayMode() {
-  return document.documentElement.classList.contains('turn-standalone')
-    || window.matchMedia?.('(display-mode: standalone)').matches
-    || window.matchMedia?.('(display-mode: fullscreen)').matches
-    || navigator.standalone === true;
-}
-
-function getStandaloneScreenSize(width, height) {
-  if (!isStandaloneDisplayMode()) return { width: 0, height: 0 };
-
-  const reportedWidth = Math.max(
-    Number(screen.width) || 0,
-    Number(screen.availWidth) || 0
-  );
-  const reportedHeight = Math.max(
-    Number(screen.height) || 0,
-    Number(screen.availHeight) || 0
-  );
-  if (!reportedWidth || !reportedHeight) return { width: 0, height: 0 };
-
-  const longSide = Math.max(reportedWidth, reportedHeight);
-  const shortSide = Math.min(reportedWidth, reportedHeight);
-  return width >= height
-    ? { width: longSide, height: shortSide }
-    : { width: shortSide, height: longSide };
-}
-
 function getViewportSize() {
-  const viewport = window.visualViewport;
+  // The game occupies the usable layout viewport, including desktop PWA windows.
+  // Physical screen dimensions and a pinched visual viewport are not its size.
+  const rect = document.querySelector('#game')?.getBoundingClientRect();
   const root = document.documentElement;
-  const layoutWidth = Math.max(
-    Number(viewport?.width) || 0,
-    Number(window.innerWidth) || 0,
-    Number(root.clientWidth) || 0
-  );
-  const layoutHeight = Math.max(
-    Number(viewport?.height) || 0,
-    Number(window.innerHeight) || 0,
-    Number(root.clientHeight) || 0
-  );
-  const standaloneScreen = getStandaloneScreenSize(layoutWidth, layoutHeight);
-  const width = Math.max(1, Math.round(Math.max(layoutWidth, standaloneScreen.width)));
-  const height = Math.max(1, Math.round(Math.max(layoutHeight, standaloneScreen.height)));
-  return { width, height };
+  return {
+    width: Math.max(1, Math.round(rect?.width || root.clientWidth || window.innerWidth)),
+    height: Math.max(1, Math.round(rect?.height || root.clientHeight || window.innerHeight))
+  };
 }
 
 const initialViewport = getViewportSize();
@@ -871,12 +836,21 @@ function motionPoseFromGravity(event) {
   return motionPoseFromGravityState(event);
 }
 
+let lastMotionOrientation = null;
 function handleMotion(event) {
   const pose = motionPoseFromGravity(event);
   if (!pose) return;
   state.motionSeen = true;
   state.targetRoll = pose.roll;
   state.targetPitch = pose.pitch;
+  const orientation = getScreenOrientationAngle();
+  if (lastMotionOrientation !== null && orientation !== lastMotionOrientation) {
+    state.neutralRoll = state.roll = state.horizonRollReference = pose.roll;
+    state.neutralPitch = state.pitch = pose.pitch;
+    state.steering = 0;
+    state.steeringEngaged = false;
+  }
+  lastMotionOrientation = orientation;
 }
 
 const raceSession = createRaceSessionOrchestrator({
@@ -1291,6 +1265,9 @@ function resize() {
     document.documentElement.style.setProperty('--app-width', `${width}px`);
     document.documentElement.style.setProperty('--app-height', `${height}px`);
     camera.aspect = width / height;
+    camera.zoom = height > width ? .8 : 1;
+    if (height > width) camera.setViewOffset(width, height, 0, height * .16, width, height);
+    else camera.clearViewOffset();
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.setSize(width, height);

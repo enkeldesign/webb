@@ -283,6 +283,22 @@ function synchronizeKeyboardDrivingTargets(importMap, release) {
   }
 }
 
+function synchronizeResponsiveTargets(importMap, release) {
+  const imports = importMap.imports ||= {};
+  for (const pathname of ['/turn/ui/track-intro.js', '/turn/ui/race-orientation.js']) {
+    const target = `${pathname}?build=${release.cacheKey}`;
+    imports[pathname] = target;
+    for (const [specifier, existing] of Object.entries(imports)) {
+      if (typeof existing === 'string' && new URL(existing, 'https://enkel.design/turn/').pathname === pathname) {
+        imports[specifier] = target;
+      }
+    }
+  }
+  for (const suffix of ['?source=20260729-r118-m8', '?build=20260725-r75']) {
+    imports[`/turn/ui/track-intro.js${suffix}`] = `/turn/ui/track-intro.js?build=${release.cacheKey}`;
+  }
+}
+
 function synchronizeSettingsUiTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   const modules = {
@@ -500,6 +516,7 @@ function renderSharedResourceImports(source, release) {
     synchronizePlatformContextTarget(importMap, release);
     synchronizeKeyboardDrivingTargets(importMap, release);
     synchronizeSettingsUiTargets(importMap, release);
+    synchronizeResponsiveTargets(importMap, release);
     synchronizeDriveByEarTrainingTargets(importMap, release);
     synchronizePerkFeedbackTargets(importMap, release);
     synchronizeGraphicsRuntimeTarget(importMap, release);
@@ -539,6 +556,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizePlatformContextTarget(importMap, release);
   synchronizeKeyboardDrivingTargets(importMap, release);
   synchronizeSettingsUiTargets(importMap, release);
+  synchronizeResponsiveTargets(importMap, release);
   synchronizeDriveByEarTrainingTargets(importMap, release);
   synchronizePerkFeedbackTargets(importMap, release);
   synchronizeGraphicsRuntimeTarget(importMap, release);

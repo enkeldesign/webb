@@ -160,7 +160,7 @@ assert.equal(await motion.orchestrator.requestMotion(), true);
 assert.equal(motion.orchestrator.route, 'session-orchestrator');
 assert.equal(motion.orchestrator.getPhase(), 'racing');
 assert.equal(motion.fullscreenRequests, 1);
-assert.equal(motion.orientationLocks, 1);
+assert.equal(motion.orientationLocks, 0, 'Starting a race preserves the chosen orientation');
 assert.equal(motion.boostRefills, 1, 'Every successful race start must refill Boost exactly once');
 assert.deepEqual(motion.motionListener.options, { passive: true });
 motion.motionListener.listener({ sample: 'tilt' });

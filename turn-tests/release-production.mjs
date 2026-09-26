@@ -61,8 +61,8 @@ assert.match(index, new RegExp(`orientation-guard\\.css\\?build=${escapeRegExp(r
 assert.match(index, new RegExp(`live-steering-setting\\.js\\?build=${escapeRegExp(release.cacheKey)}-live-steering`));
 assert.match(index, new RegExp(`m8-menu-font-fix\\.css\\?build=${escapeRegExp(release.cacheKey)}-menu-font-v3`));
 assert.match(index, new RegExp(`app\\.js\\?build=${escapeRegExp(release.cacheKey)}-browser-consent`));
-assert.match(index, /ROTATE YOUR DEVICE TO LANDSCAPE/);
-assert.match(index, /aria-label="Rotate your device to landscape"/);
+assert.doesNotMatch(index, /ROTATE YOUR DEVICE TO LANDSCAPE/);
+assert.match(index, /responsive\.css\?build=/);
 assert.doesNotMatch(index, /Return to landscape/);
 assert.match(app, /const launchReady = globalThis\.__turnLaunchReady/);
 assert.match(app, /await launchReady/);
@@ -237,7 +237,7 @@ for (const anchor of [
 const manifestData = JSON.parse(manifest);
 assert.equal(manifestData.start_url, '/turn/');
 assert.equal(manifestData.scope, '/turn/');
-assert.equal(manifestData.orientation, 'landscape');
+assert.equal(manifestData.orientation, 'any');
 assert.equal(manifestData.background_color, '#08090a');
 assert.equal(manifestData.theme_color, '#08090a');
 assert.ok(
@@ -251,7 +251,7 @@ assert.match(nextIndex, new RegExp(`install-gate\\.js\\?build=${escapeRegExp(rel
 assert.match(nextIndex, new RegExp(`install-gate\\.css\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
 assert.match(nextIndex, new RegExp(`live-steering-setting\\.js\\?build=${escapeRegExp(release.cacheKey)}-live-steering`));
 assert.match(nextIndex, new RegExp(`m8-menu-font-fix\\.css\\?build=${escapeRegExp(release.cacheKey)}-menu-font-v3`));
-assert.match(nextIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
+assert.doesNotMatch(nextIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
 assert.doesNotMatch(nextIndex, /Return to landscape/);
 assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
 assert.match(nextApp, /browser-consent/);
