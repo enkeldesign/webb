@@ -219,7 +219,7 @@ assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
   `${releaseTarget('./garage/lot-track-select.js')}&revision=r252-supercar-outward-rims`
 );
-assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'));
+assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('/turn/ui/track-intro.js'));
 assert.ok(
   imports['./race/lap-system.js?build=20260720-r19']?.startsWith(releaseTarget('./race/lap-system-r86.js')),
   'Production must route lap completion through the current Super Sedan policy'

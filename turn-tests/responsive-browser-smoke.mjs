@@ -187,8 +187,11 @@ async function responsiveRace(browser, name) {
           assert.equal(drift.x < flow.x, handedness === 'right', 'Portrait scores mirror');
           const gauge = await bounds(page, '.score-feedback-gauge-shell[data-score-channel="drift"]');
           assert.ok(gauge.width > 20 && gauge.y < drift.y, 'Portrait intensity grows above its score');
-          const transform = await page.locator('[data-score-feedback-meter-fill]').first().evaluate((node) => globalThis.getComputedStyle(node).transform);
-          assert.match(transform, /^matrix\(1, 0, 0, 0\.65/, 'Portrait fill scales vertically');
+          const scale = await page.locator('[data-score-feedback-meter-fill]').first().evaluate((node) => {
+            const matrix = new globalThis.DOMMatrix(globalThis.getComputedStyle(node).transform);
+            return { x: matrix.a, y: matrix.d };
+          });
+          assert.ok(Math.abs(scale.x - 1) < .001 && Math.abs(scale.y - .65) < .001, 'Portrait fill scales vertically');
         }
       }
       assert.equal(await page.locator('.rotate-panel').count(), 0);
