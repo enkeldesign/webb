@@ -1,24 +1,33 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import * as THREE from 'three';
+import { register } from 'node:module';
 
-import { TRACK_DEFINITIONS, TRACK_IDS } from '../turn/tracks/definitions.js';
-import { createTrackRuntime } from '../turn/tracks/catalog.js';
-import { TRACK_RUNTIME_REGISTRY } from '../turn/tracks/registry.js';
-import { getTrackPaceNotes, PACE_NOTE_DIRECTION, PACE_NOTE_LENGTH } from '../turn/tracks/pace-notes.js';
-import {
+// CI installs no packages: resolve bare `three` to the repository's vendored copy of
+// the production Three version (the same copy car-visual-lifecycle-production uses).
+const vendoredThree = new URL('../postal/vendor/three.module.min.js', import.meta.url).href;
+register(`data:text/javascript,${encodeURIComponent(`
+  export async function resolve(specifier, context, next) {
+    return specifier === 'three' ? { url: ${JSON.stringify(vendoredThree)}, shortCircuit: true } : next(specifier, context);
+  }`)}`);
+
+const THREE = await import('three');
+const { TRACK_DEFINITIONS, TRACK_IDS } = await import('../turn/tracks/definitions.js');
+const { createTrackRuntime } = await import('../turn/tracks/catalog.js');
+const { TRACK_RUNTIME_REGISTRY } = await import('../turn/tracks/registry.js');
+const { getTrackPaceNotes, PACE_NOTE_DIRECTION, PACE_NOTE_LENGTH } = await import('../turn/tracks/pace-notes.js');
+const {
   BEACHFRONT_CHECKPOINTS,
   DEAD_CANYON_CHECKPOINTS,
   LAP_CHECKPOINTS,
   LAP_VOID_DISABLED_TRACKS,
   MOUNTAIN_LONG_CHECKPOINTS,
   updateLapProgressState
-} from '../turn/race/lap-system-r86.js';
-import { TRACK_SHADOW_ROAD_HEIGHT } from '../turn/render/car-shadows.js';
-import { TRACK_ICON_ASSETS } from '../turn/ui/track-icons.js';
-import { TRACK_COLOR_CUES } from '../turn/accessibility/color-cues.js';
-import { TRACK_COLOR_RULES, matchesTrackColor } from '../turn/achievements/chromatic-camouflage-r183.js';
-import { TRACK_SONGS } from '../turn/audio/music/songbook.js';
+} = await import('../turn/race/lap-system-r86.js');
+const { TRACK_SHADOW_ROAD_HEIGHT } = await import('../turn/render/car-shadows.js');
+const { TRACK_ICON_ASSETS } = await import('../turn/ui/track-icons.js');
+const { TRACK_COLOR_CUES } = await import('../turn/accessibility/color-cues.js');
+const { TRACK_COLOR_RULES, matchesTrackColor } = await import('../turn/achievements/chromatic-camouflage-r183.js');
+const { TRACK_SONGS } = await import('../turn/audio/music/songbook.js');
 
 // #983: BEACHFRONT and DEAD CANYON are first-class production tracks, and the
 // catalog is ordered by difficulty with two tracks per tier.
