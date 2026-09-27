@@ -54,6 +54,12 @@
 }
 
 /* Reflow when track browser + menu (or preview + attributes) cannot fit. */
+/* The Lot attribute labels: at the 11px text floor ACCELERATION needs 96px, so the
+   label column is 98px wherever the stat rows are side by side. */
+:root body .lot-showroom .lot-stat {
+  grid-template-columns: 98px minmax(0, 1fr);
+}
+
 @media (max-width: 46em) {
   :root body .m8-home.m8-home-fixed-layout { overflow-y: auto; overflow-x: hidden; scroll-padding-block: 12px 84px; }
   :root body .m8-home.m8-home-fixed-layout .m8-home-shell { display: block; height: auto; min-height: 100%; }
@@ -135,8 +141,8 @@
   }
   :root body .lot-showroom .lot-card-info-scroll { flex: none; overflow: visible; }
   :root body .lot-showroom .lot-stats { flex: none; height: auto; grid-template-rows: none; grid-auto-rows: minmax(22px, auto); gap: 6px; }
-  :root body .lot-showroom .lot-stat { grid-template-columns: minmax(96px, .65fr) minmax(0, 1fr); }
-  :root body .lot-showroom .lot-stat > span { font-size: .68rem; line-height: 1.2; white-space: normal; }
+  :root body .lot-showroom .lot-stat { grid-template-columns: minmax(98px, .65fr) minmax(0, 1fr); }
+  :root body .lot-showroom .lot-stat > span { font-size: max(var(--turn-text-floor), .68rem); line-height: 1.2; white-space: normal; }
   :root body .lot-showroom .lot-card-actions { position: static; margin-top: 12px; }
   :root body .lot-showroom .lot-race { min-height: 48px; height: auto; white-space: normal; }
 }
@@ -154,7 +160,7 @@
   :root:has(.utility-group[data-menu-state="staged"]) { --turn-race-footer: 104px; }
   :root body .topbar { gap: 10px; }
   :root body .stats { display: flex; flex: 1 1 auto; gap: 6px; min-width: 0; flex-wrap: wrap; }
-  :root body .stats .chip { width: auto; min-width: 0; height: auto; min-height: 42px; padding: 6px; font-size: .52rem; }
+  :root body .stats .chip { width: auto; min-width: 0; height: auto; min-height: 42px; padding: 6px; font-size: max(var(--turn-text-floor), .52rem); }
   :root body .stats .chip strong { font-size: .8rem; white-space: nowrap; }
   :root body .map-wrap { width: clamp(70px, 21vw, 128px); flex-shrink: 0; }
   :root body .controls { display: block; left: var(--turn-edge); right: var(--turn-edge); bottom: var(--turn-race-bottom); height: var(--turn-race-pad-height); }
@@ -163,7 +169,7 @@
   :root body .drive-stack { width: var(--turn-race-pad-width); --drive-pad-height: var(--turn-race-pad-height); --drift-lock-bubble-width: 38px; --shift-bubble-width: 38px; --reverse-bubble-width: 38px; }
   :root body .drive-pad { border-radius: 24px; }
   :root body .drive-pad :is(.drive-zone, .drive-gas-zone, .drive-brake-zone) { font-size: .78rem; }
-  :root body .drive-stack :is(.drive-lock-bubble, .drive-shift-bubble, .drive-reverse-bubble) span { font-size: .65rem; }
+  :root body .drive-stack :is(.drive-lock-bubble, .drive-shift-bubble, .drive-reverse-bubble) span { font-size: max(var(--turn-text-floor), .65rem); }
   :root body .manual-steer { left: var(--turn-edge); right: auto; bottom: var(--turn-race-bottom); width: calc(100vw - 2 * var(--turn-edge) - var(--turn-race-pad-width) - 46px); max-width: 210px; height: 106px; }
   :root.turn-left-handed-controls body .manual-steer { right: var(--turn-edge); left: auto; }
   :root body .manual-steer-knob { width: 54px; }
@@ -171,7 +177,7 @@
     position: fixed; inset: auto var(--turn-edge) max(8px, env(safe-area-inset-bottom));
     display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; transform: none;
   }
-  :root body .utility-group .utility { flex: 1 1 auto; min-height: 44px; max-width: 220px; padding: 6px 8px; white-space: normal; font-size: .66rem; }
+  :root body .utility-group .utility { flex: 1 1 auto; min-height: 44px; max-width: 220px; padding: 6px 8px; white-space: normal; font-size: max(var(--turn-text-floor), .66rem); }
   :root body #scoreFeedback {
     top: auto; bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 14px);
     left: var(--turn-edge); right: var(--turn-edge); width: auto; height: 74px;
@@ -181,9 +187,9 @@
   :root.turn-left-handed-controls body #scoreFeedback { flex-direction: row-reverse; }
   :root body .score-feedback-row { flex: 0 0 min(32%, 180px); width: min(32%, 180px); height: 74px; margin: 0; }
   :root body .score-feedback-state { padding: 7px; height: 100%; }
-  :root body .score-feedback-heading, :root body .score-feedback-lap { font-size: .5rem; }
+  :root body .score-feedback-heading, :root body .score-feedback-lap { font-size: max(var(--turn-text-floor), .5rem); }
   :root body .score-feedback-values strong { font-size: clamp(.9rem, 4vw, 1.25rem); }
-  :root body .score-feedback-values b { font-size: .65rem; }
+  :root body .score-feedback-values b { font-size: max(var(--turn-text-floor), .65rem); }
   :root body #scoreFeedback .score-feedback-gauge-shell {
     inset: auto 12px calc(100% - 2px); width: auto; height: clamp(38px, 8dvh, 76px);
     transform: scaleY(1); transform-origin: center bottom;
@@ -249,11 +255,148 @@
   :root body .map-wrap { display: none; }
   :root body .stats { gap: 3px; }
   :root body .stats .chip { padding: 4px; min-height: 32px; }
-  :root body .stats .chip strong { font-size: .66rem; }
+  :root body .stats .chip strong { font-size: max(var(--turn-text-floor), .66rem); }
   :root body #scoreFeedback { top: 80px; bottom: auto; height: 44px; }
   :root body .score-feedback-row { height: 44px; flex-basis: 45%; width: 45%; }
   :root body .score-feedback-state { padding: 3px 5px; }
   :root body .score-feedback-values strong { font-size: .9rem; }
   :root body #scoreFeedback .score-feedback-gauge-shell { height: 8px; }
   :root body .score-feedback-footer { display: none; }
+}
+
+/* Touch targets: every control reaches --turn-target-min in every orientation
+   (WCAG 2.5.5). Text buttons grow to the minimum height; small icon controls keep
+   their visual size and gain a transparent hit area instead. The Lot's car arrows
+   sit at the 3D view's clipped edge, so they grow to the visible minimum. */
+:root body :is(
+  .turn-music-home-toggle,
+  .m8-track-bests-toggle,
+  .m8-home-menu > button,
+  .m8-home-menu .m8-track-continue,
+  .lot-back,
+  .lot-race,
+  .lot-perk-button,
+  .lot-shift-trigger,
+  .lot-paint-save-action,
+  .lot-paint-lock-button,
+  .utility-group .utility
+) {
+  min-height: var(--turn-target-min);
+}
+:root body .utility-group .utility {
+  min-width: var(--turn-target-min);
+}
+:root body .lot-showroom .lot-cycle {
+  min-width: var(--turn-target-min);
+  min-height: var(--turn-target-min);
+}
+:root body :is(.lot-stats-help, .m8-about-trigger) {
+  position: relative;
+}
+:root body :is(.lot-stats-help, .m8-about-trigger)::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc((100% - var(--turn-target-min)) / 2));
+}
+
+/* Short landscape phones: 44px Home actions beside the track list. The MENU heading
+   stays for assistive technology only. RACE docks at the bottom corner and the menu
+   scrolls behind it, in browser tabs and the installed app alike. (The installed
+   app's own dock in m8-home-fixed-layout.js is injected into a scaled stylesheet,
+   so its 430px query only ever matched 322.5px-tall viewports.) */
+@media (orientation: landscape) and (max-height: 430px) {
+  :root body .m8-home.m8-home-fixed-layout .m8-home-menu {
+    gap: 6px;
+  }
+  :root body .m8-home.m8-home-fixed-layout .m8-home-menu h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :root body .m8-home.m8-home-fixed-layout .m8-home-menu > button {
+    margin: 0;
+  }
+  html .m8-home-fixed-layout .m8-home-menu {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    box-sizing: border-box;
+    padding-right: 8px;
+    padding-bottom: 76px;
+    scroll-padding-bottom: 76px;
+  }
+  html .m8-home-fixed-layout .m8-track-continue {
+    position: fixed;
+    z-index: 70;
+    right: max(14px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: clamp(150px, 20vw, 205px);
+    max-width: calc(100vw - 28px - env(safe-area-inset-left) - env(safe-area-inset-right));
+  }
+}
+
+/* The Lot on short landscape phones: with 11px captions the header band only fits
+   THE LOT itself, so the decorative subtitle stays for assistive technology only.
+   The heading clears the fixed-width BACK, the trophy summary widens instead of
+   truncating, and stat labels get a column that fits ACCELERATION at the floor. */
+@media (orientation: landscape) and (max-height: 430px) {
+  :root body .lot-showroom .lot-back {
+    width: 76px;
+    min-width: 0;
+    padding-inline: 8px;
+  }
+  :root body .lot-showroom .lot-heading {
+    top: max(5px, env(safe-area-inset-top));
+    left: calc(max(9px, env(safe-area-inset-left)) + 86px);
+    height: var(--turn-target-min);
+  }
+  :root body .lot-showroom .lot-heading h1 {
+    line-height: 1;
+  }
+  :root body .lot-showroom .lot-heading p {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :root body .lot-showroom .lot-progress-summary {
+    flex: 0 1 auto;
+    max-width: 52%;
+  }
+  :root body .lot-showroom :is(.lot-car-option, .lot-car-option:focus-visible) {
+    width: 112px;
+    min-width: 112px;
+  }
+}
+
+/* Lot progress summary: at the text floor the "N TROPHIES TO NEXT CAR" line is longer
+   than the summary pill on mid-size tablets, so it wraps instead of truncating. */
+:root body .lot-showroom .lot-progress-summary small {
+  overflow: visible;
+  line-height: 1.15;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+/* Trophy Road tiles: at the 11px floor a tile cannot also carry the reward name and
+   state word (both were truncated or overlapping at every width), so it shows the
+   icon, the threshold and the earned / locked badge. The name and state stay in each
+   button's accessible name and in the detail sheet; NEXT keeps its outline and the
+   NEXT summary card above the road. */
+:root body .turn-trophy-road-marker small,
+:root body .turn-trophy-road-marker .turn-trophy-road-marker-state {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:root body .turn-trophy-road-landmark b {
+  white-space: nowrap;
 }
