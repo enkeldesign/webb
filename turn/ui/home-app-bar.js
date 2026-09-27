@@ -109,9 +109,11 @@ export function installHomeAppBar({ documentRef = document } = {}) {
   });
   // Menu entries open their own dialogs; close the sheet first so only one modal is
   // ever open. MUSIC toggles in place, so it keeps the sheet open.
+  // Closing in the capture phase, before the entry's own handler runs, moves focus
+  // back to ☰ first; that dialog then records ☰ as the control to return focus to.
   menu.addEventListener('click', (event) => {
     if (event.target instanceof Element && event.target.closest('button')) close();
-  });
+  }, { capture: true });
 
   const observer = new MutationObserver(place);
   observer.observe(home, { childList: true, subtree: true });
