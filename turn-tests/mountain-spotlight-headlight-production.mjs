@@ -5,7 +5,7 @@ const [sharedHeadlight, mountainWrapper, world, midnight, registry, mountainLong
   fs.readFile(new URL('../turn/tracks/night-player-spotlight-r560.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-player-headlight-r8.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world-r11.js', import.meta.url), 'utf8'),
+  readMidnightCityLayer('r11'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-long.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
@@ -53,7 +53,7 @@ assert.match(world, /mountain-player-headlight-r8\.js\?revision=r175-reconcile/,
   'MOUNTAIN must also cache-bust the wrapper that imports the shared spotlight');
 assert.match(world, /installMountainSpotlightHeadlight\(runtime\?\.playerCar, runtime\)/,
   'The MOUNTAIN world must attach the shared spotlight to the production player car');
-assert.match(midnight, /night-player-spotlight-r560\.js\?revision=r175-reconcile/,
+assert.match(await fs.readFile(new URL('../turn/tracks/midnight-city-world.js', import.meta.url), 'utf8'), /night-player-spotlight-r560\.js\?revision=r175-reconcile/,
   'MIDNIGHT CITY must import the exact same reconciled shared spotlight module');
 assert.match(midnight, /installNightPlayerSpotlight\(options\.runtime\?\.playerCar, options\.runtime\)/,
   'MIDNIGHT CITY must install the exact same shared spotlight rig');
@@ -64,7 +64,17 @@ assert.ok(registry.includes(`./mountain-world-long.js?build=${release.cacheKey}`
   'Production must route MOUNTAIN through the current release-bound long-world wrapper without changing its shared headlight rig');
 assert.ok(mountainLong.includes(`./mountain-world-r3.js?build=${release.cacheKey}`),
   'The long MOUNTAIN wrapper must route the mature base world through the current release identity');
-assert.ok(registry.includes(`./midnight-city-world-r11.js?build=${release.cacheKey}`),
+assert.ok(registry.includes(`./midnight-city-world.js?build=${release.cacheKey}`),
   'Production must route MIDNIGHT CITY through the current release-bound upward-road-normal repair');
 
 console.log('TURN shared MOUNTAIN + MIDNIGHT CITY reconciled 220 m shadowless spotlight contract passed.');
+
+// MIDNIGHT CITY layers now live in one module; read the section a former file became.
+async function readMidnightCityLayer(revision) {
+  const source = await fs.readFile(new URL('../turn/tracks/midnight-city-world.js', import.meta.url), 'utf8');
+  const marker = `// ==== Layer ${revision} (`;
+  const start = source.indexOf(marker);
+  if (start < 0) throw new Error(`midnight-city-world.js is missing its ${revision} layer`);
+  const end = source.indexOf('// ==== Layer ', start + marker.length);
+  return source.slice(start, end < 0 ? undefined : end);
+}

@@ -174,7 +174,7 @@ const [
   fs.readFile(new URL('../../turn/tracks/airport-world-r50.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
+  readMidnightCityLayer('r7'),
   fs.readFile(new URL('../../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/mountain-world-long.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/mountain-long-extension-r1.js', import.meta.url), 'utf8'),
@@ -209,7 +209,7 @@ assert.match(registry, new RegExp(`mountain-world-long\\.js\\?build=${release.ca
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'mountain'/);
 assert.match(manager, /track\.fogNear/);
-assert.match(cityWorld, /installMidnightCityWorld as installMidnightCityWorldR6/);
+assert.match(cityWorld, /const installMidnightCityWorldR6 = installMidnightCityLayerR6;/);
 assert.match(cityWorld, /new THREE\.InstancedMesh/);
 assert.doesNotMatch(cityWorld, /setAnimationLoop|requestAnimationFrame|setInterval/);
 assert.match(mountainWorld, /ground: 'continuous-snow-and-granite-terrain-body'/);
@@ -287,4 +287,14 @@ function mockVertexColors(hexes) {
 function linearRgb(hex) {
   const linear = (channel) => { const value = channel / 255; return value < 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4; };
   return { r: linear((hex >> 16) & 0xff), g: linear((hex >> 8) & 0xff), b: linear(hex & 0xff) };
+}
+
+// MIDNIGHT CITY layers now live in one module; read the section a former file became.
+async function readMidnightCityLayer(revision) {
+  const source = await fs.readFile(new URL('../../turn/tracks/midnight-city-world.js', import.meta.url), 'utf8');
+  const marker = `// ==== Layer ${revision} (`;
+  const start = source.indexOf(marker);
+  if (start < 0) throw new Error(`midnight-city-world.js is missing its ${revision} layer`);
+  const end = source.indexOf('// ==== Layer ', start + marker.length);
+  return source.slice(start, end < 0 ? undefined : end);
 }

@@ -13,19 +13,19 @@ const [
   registrySource,
   releaseSource
 ] = await Promise.all([
-  fs.readFile(new URL('../turn/tracks/midnight-city-world-r3.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world-r4.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world-r5.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world-r6.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world-r11.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world.js', import.meta.url), 'utf8'),
+  readMidnightCityLayer('r3'),
+  readMidnightCityLayer('r4'),
+  readMidnightCityLayer('r5'),
+  readMidnightCityLayer('r6'),
+  readMidnightCityLayer('r7'),
+  readMidnightCityLayer('r11'),
+  readMidnightCityLayer('r1'),
   fs.readFile(new URL('../turn/tracks/shared-night-sky.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
 ]);
 
-assert.match(claritySource, /installMidnightCityWorld as installMidnightCityWorldR2/);
+assert.match(claritySource, /const installMidnightCityWorldR2 = installMidnightCityLayerR2;/);
 assert.match(claritySource, /removeUnanchoredStreetPools\(world\)/);
 assert.match(claritySource, /Midnight City projected headlights/);
 assert.match(claritySource, /continuous cyan-left amber-right reflective ribbons and studs/);
@@ -73,7 +73,7 @@ assert.match(signParkSource, /noDynamicLightsAdded: true/);
 assert.doesNotMatch(signParkSource, /requestAnimationFrame|setAnimationLoop|setInterval|setTimeout/);
 
 await fs.access(new URL('../turn/LILYA.PNG', import.meta.url));
-assert.match(easterEggSource, /installMidnightCityWorld as installMidnightCityWorldR7/);
+assert.match(easterEggSource, /const installMidnightCityWorldR7 = installMidnightCityLayerR7;/);
 assert.match(easterEggSource, /repairTrackSurfaceWinding\(world\)/,
   'MIDNIGHT CITY must repair the original downward-facing road ribbon winding before installing the physical headlight');
 assert.match(easterEggSource, /const TRACK_SURFACE_NAME = \/\^Midnight City \(race road\|road edge\|sidewalk\)\//,
@@ -177,9 +177,19 @@ assert.doesNotMatch(
 );
 
 const release = JSON.parse(releaseSource);
-assert.match(registrySource, new RegExp(`midnight-city-world-r11\\.js\\?build=${release.cacheKey}`),
+assert.match(registrySource, new RegExp(`midnight-city-world\\.js\\?build=${release.cacheKey}`),
   'Production must load the current-build Midnight City wrapper so nested lighting fixes cannot remain cached');
 assert.match(registrySource, /'midnight-city'\(\{ scene, samples, trackWidth, runtime \}\)/);
 assert.match(registrySource, /installMidnightCityWorld\(\{ scene, samples, trackWidth, runtime \}\)/);
 
 console.log('TURN Midnight City lighting, upward road normals, shared night spotlight, scenery and wrong-way-only lazy LILYA placement passed.');
+
+// MIDNIGHT CITY layers now live in one module; read the section a former file became.
+async function readMidnightCityLayer(revision) {
+  const source = await fs.readFile(new URL('../turn/tracks/midnight-city-world.js', import.meta.url), 'utf8');
+  const marker = `// ==== Layer ${revision} (`;
+  const start = source.indexOf(marker);
+  if (start < 0) throw new Error(`midnight-city-world.js is missing its ${revision} layer`);
+  const end = source.indexOf('// ==== Layer ', start + marker.length);
+  return source.slice(start, end < 0 ? undefined : end);
+}

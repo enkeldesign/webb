@@ -141,7 +141,7 @@ for (const worldModule of [
   'airport-world-r56.js',
   'cliffside-world-r76.js',
   'harbor-world.js',
-  'midnight-city-world-r11.js',
+  'midnight-city-world.js',
   'mountain-world-long.js'
 ]) {
   const escapedWorldModule = worldModule.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

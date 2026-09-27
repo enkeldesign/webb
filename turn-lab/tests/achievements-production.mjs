@@ -73,7 +73,7 @@ const [
   fs.readFile(new URL('../../turn/achievements/challenge-expansion-r166.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/countryside-bella-r166.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/render/world.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/midnight-city-world-r11.js', import.meta.url), 'utf8'),
+  readMidnightCityLayer('r11'),
   fs.readFile(new URL('../../turn/tracks/harbor-hidden-face-r89.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/sports-sedan-easter-egg.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
@@ -633,3 +633,13 @@ assert.match(workflow, /Run achievement system regression/);
 assert.match(workflow, /node turn-lab\/tests\/achievements-production\.mjs/);
 
 console.log('TURN achievement catalog and calibrated scoring integrity regression passed.');
+
+// MIDNIGHT CITY layers now live in one module; read the section a former file became.
+async function readMidnightCityLayer(revision) {
+  const source = await fs.readFile(new URL('../../turn/tracks/midnight-city-world.js', import.meta.url), 'utf8');
+  const marker = `// ==== Layer ${revision} (`;
+  const start = source.indexOf(marker);
+  if (start < 0) throw new Error(`midnight-city-world.js is missing its ${revision} layer`);
+  const end = source.indexOf('// ==== Layer ', start + marker.length);
+  return source.slice(start, end < 0 ? undefined : end);
+}

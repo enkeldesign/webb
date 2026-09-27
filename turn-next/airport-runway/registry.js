@@ -8,7 +8,7 @@ import {
 import { installAirportRunwayWorld } from '/turn-next/airport-runway/world.js';
 import { installCliffsideWorld } from '/turn/tracks/cliffside-world-r76.js?build=20260808-r162';
 import { installHarborWorld } from '/turn/tracks/harbor-world-r81.js?build=20260808-r162';
-import { installMidnightCityWorld } from '/turn/tracks/midnight-city-world-r11.js?build=20260802-r11';
+import { installMidnightCityWorld } from '/turn/tracks/midnight-city-world.js';
 import { isForgivingTrackSurface } from '/turn/tracks/airport-runoff.js?build=20260722-r52';
 
 const WORLD_INSTALLERS = Object.freeze({

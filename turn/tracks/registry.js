@@ -5,7 +5,6 @@ import {
   createTrackRuntime,
   normalizeTrackId
 } from './catalog.js';
-// Historical regression markers: midnight-city-world-r11.js?build=20260802-r11, midnight-city-world-r11.js?build=20260818-r560-shared-spotlight, midnight-city-world-r11.js?build=20260818-r561-200m-headlight, midnight-city-world-r11.js?build=20260818-r562-road-headlight-response, midnight-city-world-r11.js?build=20260818-r563-lower-headlight-target, midnight-city-world-r11.js?build=20260818-r174-night-headlight-tune, midnight-city-world-r11.js?build=20260818-r175-reconcile-night-headlight
 // Historical MOUNTAIN base markers retained because the promoted long wrapper still
 // builds this exact mature world first: mountain-world-r3.js?revision=r3-continuous-terrain-v1,
 // mountain-world-r3.js?revision=r6-night-treatment,
@@ -39,7 +38,7 @@ const WORLD_INSTALLER_LOADERS = Object.freeze({
   },
   async 'midnight-city'({ scene, samples, trackWidth, runtime }) {
     const { installMidnightCityWorld } = await import(
-      './midnight-city-world-r11.js?build=20260926-r288'
+      './midnight-city-world.js?build=20260926-r288'
     );
     return installMidnightCityWorld({ scene, samples, trackWidth, runtime });
   },

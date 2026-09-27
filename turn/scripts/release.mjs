@@ -32,14 +32,7 @@ const companionPaths = Object.freeze([
   'turn/stats/index.html',
   'turn/stats/stats.js',
   'turn/tracks/registry.js',
-  'turn/tracks/mountain-world-long.js',
-  'turn/tracks/midnight-city-world-r2.js',
-  'turn/tracks/midnight-city-world-r3.js',
-  'turn/tracks/midnight-city-world-r4.js',
-  'turn/tracks/midnight-city-world-r5.js',
-  'turn/tracks/midnight-city-world-r6.js',
-  'turn/tracks/midnight-city-world-r7.js',
-  'turn/tracks/midnight-city-world-r11.js'
+  'turn/tracks/mountain-world-long.js'
 ]);
 
 export async function loadReleaseDefinition() {
@@ -443,11 +436,6 @@ function synchronizeProjectedShadowTargets(importMap, release) {
     "/turn/tracks/harbor-world-r82.js",
     "/turn/tracks/harbor-world.js",
     "/turn/tracks/kenney-track-landmarks-r517.js",
-    "/turn/tracks/midnight-city-world-r2.js",
-    "/turn/tracks/midnight-city-world-r3.js",
-    "/turn/tracks/midnight-city-world-r4.js",
-    "/turn/tracks/midnight-city-world-r5.js",
-    "/turn/tracks/midnight-city-world-r6.js",
     "/turn/tracks/midnight-city-world.js",
     "/turn/tracks/mountain-long-extension-r1.js",
     "/turn/tracks/mountain-world-r3-polish.js",
@@ -703,7 +691,7 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
   if (repositoryPath === 'turn/tracks/registry.js') {
     return source
       .replace(
-        /(await import\(\s*'\.\/midnight-city-world-r11\.js\?build=)[^']+('\s*\))/,
+        /(await import\(\s*'\.\/midnight-city-world\.js\?build=)[^']+('\s*\))/,
         `$1${release.cacheKey}$2`
       )
       .replace(
@@ -714,12 +702,6 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
   if (repositoryPath === 'turn/tracks/mountain-world-long.js') {
     return source.replace(
       /(from '\.\/mountain-world-r3\.js\?build=)[^']+(')/,
-      `$1${release.cacheKey}$2`
-    );
-  }
-  if (/^turn\/tracks\/midnight-city-world-r(?:2|3|4|5|6|7|11)\.js$/.test(repositoryPath)) {
-    return source.replace(
-      /(from '\.\/midnight-city-world(?:-r\d+)?\.js\?build=)[^']+(')/,
       `$1${release.cacheKey}$2`
     );
   }
