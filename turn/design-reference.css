@@ -129,11 +129,11 @@ tr:last-child > * { border-bottom: 0; }
 .specimen-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 14px; padding: 12px 18px; border-bottom: 2px solid var(--turn-ink); border-radius: 14px 14px 0 0; background: var(--turn-blue-100); font-size: .85rem; }
 .specimen-label { font-size: .7rem; }
 .specimen-body { padding: 26px; }
-.button-sample, .icon-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: var(--turn-target-min); padding: 10px 16px; border: 3px solid var(--turn-ink); border-radius: 14px; background: var(--turn-action-utility); box-shadow: 4px 4px 0 var(--turn-ink); font-size: .8rem; font-weight: 850; text-decoration: none; line-height: 1.3; }
-.button-sample.primary { border-radius: var(--turn-radius-pill); background: var(--turn-action-primary); }
+.button-sample, .icon-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: var(--turn-target-min); padding: 10px 16px; border: var(--turn-border-control) solid var(--turn-ink); border-radius: var(--turn-radius-control); background: var(--turn-action-utility); box-shadow: var(--turn-shadow-control); font-size: .8rem; font-weight: 850; text-decoration: none; line-height: 1.3; }
+.button-sample.primary { background: var(--turn-action-primary); box-shadow: var(--turn-shadow-action); }
 .button-sample.success { background: var(--turn-action-success); }
 .button-sample.navigation { background: var(--turn-action-navigation); }
-.button-sample:active:not(:disabled), .icon-button:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--turn-ink); }
+.button-sample:active:not(:disabled), .icon-button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--turn-ink); }
 .button-sample:hover:not(:disabled) { text-decoration: underline; }
 .button-sample:disabled { background: var(--turn-muted); box-shadow: none; border-style: dashed; }
 .icon-button { width: 48px; min-width: 48px; height: 48px; border-radius: 50%; background: var(--turn-action-navigation); font-size: 1.5rem; padding: 0; }

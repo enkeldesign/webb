@@ -31,6 +31,13 @@
   --turn-target-min: 44px;
   --turn-control-height: max(var(--turn-target-min), 2.75em);
 
+  /* Buttons: one rounded-rectangle shape. Pills are for chips, tags and toggles;
+     the round orange close is the one dismiss shape. */
+  --turn-radius-control: 12px;
+  --turn-border-control: 3px;
+  --turn-shadow-control: 3px 3px 0 var(--turn-ink, #08090a);
+  --turn-shadow-action: 4px 4px 0 var(--turn-ink, #08090a);
+
   /* Motion: functional only. */
   --turn-motion-fast: 120ms;
   --turn-motion-base: 180ms;
