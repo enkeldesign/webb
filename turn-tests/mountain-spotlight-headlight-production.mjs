@@ -3,11 +3,11 @@ import fs from 'node:fs/promises';
 
 const [sharedHeadlight, mountainWrapper, world, midnight, registry, mountainLong, releaseSource] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/night-player-spotlight-r560.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/mountain-player-headlight-r8.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-world-base.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-world-base.js', import.meta.url), 'utf8'),
   readMidnightCityLayer('r11'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/mountain-world-long.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
@@ -49,8 +49,8 @@ assert.match(mountainWrapper, /night-player-spotlight-r560\.js\?revision=r175-re
   'MOUNTAIN must cache-bust to the reconciled shared spotlight module');
 assert.match(mountainWrapper, /installNightPlayerSpotlight\(playerCar, runtime\)/,
   'MOUNTAIN must delegate to the shared night-track spotlight implementation');
-assert.match(world, /mountain-player-headlight-r8\.js\?revision=r175-reconcile/,
-  'MOUNTAIN must also cache-bust the wrapper that imports the shared spotlight');
+assert.match(world, /function installMountainSpotlightHeadlight\(playerCar, runtime\)/,
+  'The MOUNTAIN world owns its thin wrapper around the shared spotlight');
 assert.match(world, /installMountainSpotlightHeadlight\(runtime\?\.playerCar, runtime\)/,
   'The MOUNTAIN world must attach the shared spotlight to the production player car');
 assert.match(await fs.readFile(new URL('../turn/tracks/midnight-city-world.js', import.meta.url), 'utf8'), /night-player-spotlight-r560\.js\?revision=r175-reconcile/,
@@ -60,10 +60,10 @@ assert.match(midnight, /installNightPlayerSpotlight\(options\.runtime\?\.playerC
 assert.match(midnight, /shared-warm-shadowless-spotlight-identical-to-mountain/);
 assert.match(midnight, /repairTrackSurfaceWinding\(world\)/,
   'MIDNIGHT CITY must correct its inherited downward road normals before the shared spotlight is evaluated');
-assert.ok(registry.includes(`./mountain-world-long.js?build=${release.cacheKey}`),
-  'Production must route MOUNTAIN through the current release-bound long-world wrapper without changing its shared headlight rig');
-assert.ok(mountainLong.includes(`./mountain-world-r3.js?build=${release.cacheKey}`),
-  'The long MOUNTAIN wrapper must route the mature base world through the current release identity');
+assert.ok(registry.includes("'./mountain-world.js'"),
+  'Production must route MOUNTAIN through the long-world entry module without changing its shared headlight rig');
+assert.ok(mountainLong.includes("from './mountain-world-base.js'"),
+  'The long MOUNTAIN entry must build the mature base world first');
 assert.ok(registry.includes(`./midnight-city-world.js?build=${release.cacheKey}`),
   'Production must route MIDNIGHT CITY through the current release-bound upward-road-normal repair');
 

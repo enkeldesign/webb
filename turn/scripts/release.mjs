@@ -31,8 +31,7 @@ const companionPaths = Object.freeze([
   'turn/design-dialogs.html',
   'turn/stats/index.html',
   'turn/stats/stats.js',
-  'turn/tracks/registry.js',
-  'turn/tracks/mountain-world-long.js'
+  'turn/tracks/registry.js'
 ]);
 
 export async function loadReleaseDefinition() {
@@ -195,6 +194,40 @@ function synchronizeVisualResourceTargets(importMap, release) {
   }
 }
 
+// Canonical modules imported by bare path: drop every alias that routes to or from a
+// retired layer, and keep exactly one release-bound entry per module (updated in place).
+function consolidateModuleRoutes(imports, release, modules) {
+  for (const [pathname, retired] of Object.entries(modules)) {
+    const owned = new Set([pathname, ...retired]);
+    for (const [specifier, existing] of Object.entries(imports)) {
+      const keyPath = new URL(specifier, 'https://enkel.design/turn/').pathname;
+      const targetPath = typeof existing === 'string' ? new URL(existing, 'https://enkel.design/turn/').pathname : '';
+      if (specifier === pathname) continue;
+      if (owned.has(keyPath) || owned.has(targetPath)) delete imports[specifier];
+    }
+    imports[pathname] = `${pathname}?build=${release.cacheKey}`;
+  }
+}
+
+const TRACK_WORLD_MODULES = Object.freeze({
+  '/turn/tracks/cliffside-world.js': ['/turn/tracks/cliffside-world-r76.js'],
+  '/turn/tracks/cliffside-village.js': ['/turn/tracks/cliffside-inner-buildings-r202.js', '/turn/tracks/cliffside-house-inset-r203.js'],
+  '/turn/tracks/mountain-world.js': ['/turn/tracks/mountain-world-long.js'],
+  '/turn/tracks/mountain-world-base.js': ['/turn/tracks/mountain-world-r3.js', '/turn/tracks/mountain-player-headlight-r8.js'],
+  '/turn/tracks/mountain-terrain.js': ['/turn/tracks/mountain-world-r3-terrain.js'],
+  '/turn/tracks/mountain-scenery.js': ['/turn/tracks/mountain-world-r3-scenery.js'],
+  '/turn/tracks/mountain-polish.js': ['/turn/tracks/mountain-world-r3-polish.js'],
+  '/turn/tracks/mountain-visual-polish.js': ['/turn/tracks/mountain-world-r4-visual-polish.js'],
+  '/turn/tracks/mountain-waterfall.js': ['/turn/tracks/mountain-world-r4-waterfall-notch.js', '/turn/tracks/mountain-world-r4-waterfall-face.js'],
+  '/turn/tracks/mountain-village.js': ['/turn/tracks/mountain-world-r5-suburban-village.js'],
+  '/turn/tracks/mountain-night.js': ['/turn/tracks/mountain-world-r6-night.js'],
+  '/turn/tracks/mountain-long-extension.js': ['/turn/tracks/mountain-long-extension-r1.js']
+});
+
+function synchronizeTrackWorldTargets(importMap, release) {
+  consolidateModuleRoutes(importMap.imports ||= {}, release, TRACK_WORLD_MODULES);
+}
+
 function synchronizeAchievementProgressionTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   const storeTarget = `/turn/achievements/store.js?build=${release.cacheKey}`;
@@ -226,16 +259,7 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
       '/turn/progression/trophy-road-chromatic-r183.js'
     ]
   });
-  for (const [pathname, retired] of Object.entries(progressionModules)) {
-    const owned = new Set([pathname, ...retired]);
-    for (const [specifier, existing] of Object.entries(imports)) {
-      const keyPath = new URL(specifier, 'https://enkel.design/turn/').pathname;
-      const targetPath = typeof existing === 'string' ? new URL(existing, 'https://enkel.design/turn/').pathname : '';
-      if (specifier === pathname) continue;
-      if (owned.has(keyPath) || owned.has(targetPath)) delete imports[specifier];
-    }
-    imports[pathname] = `${pathname}?build=${release.cacheKey}`;
-  }
+  consolidateModuleRoutes(imports, release, progressionModules);
 
   // Support-feedback modules are active production code. Keep historical import
   // specifiers as aliases, but route every active identity through the current
@@ -413,7 +437,6 @@ function synchronizeLowGraphicsProducerTargets(importMap, release) {
     '/turn/tracks/airport-emergency-r493.js?revision=r527-no-finish-sync-wreck',
     '/turn/tracks/airport-world-r50.js?build=20260722-r50',
     '/turn/tracks/airport-world-r53.js?build=20260814-r57',
-    '/turn/tracks/cliffside-world.js?base=20260725-r72',
     '/turn/tracks/countryside-world-r531.js?revision=r532-countryside-nature-polish',
     '/turn/tracks/start-area-polish-r519.js?revision=r519-midnight-full-width-accents',
     '/turn/tracks/airport-start-banner-r520.js?revision=r520-signature-yellow'
@@ -455,8 +478,6 @@ function synchronizeProjectedShadowTargets(importMap, release) {
     "/turn/tracks/airport-world-r50.js",
     "/turn/tracks/airport-world-r52.js",
     "/turn/tracks/airport-world-r53.js",
-    "/turn/tracks/cliffside-inner-buildings-r202.js",
-    "/turn/tracks/cliffside-world-r76.js",
     "/turn/tracks/cliffside-world.js",
     "/turn/tracks/contextual-road-edges.js",
     "/turn/tracks/countryside-bella-r166.js",
@@ -465,14 +486,6 @@ function synchronizeProjectedShadowTargets(importMap, release) {
     "/turn/tracks/harbor-world.js",
     "/turn/tracks/kenney-track-landmarks-r517.js",
     "/turn/tracks/midnight-city-world.js",
-    "/turn/tracks/mountain-long-extension-r1.js",
-    "/turn/tracks/mountain-world-r3-polish.js",
-    "/turn/tracks/mountain-world-r3-scenery.js",
-    "/turn/tracks/mountain-world-r3-terrain.js",
-    "/turn/tracks/mountain-world-r3.js",
-    "/turn/tracks/mountain-world-r4-visual-polish.js",
-    "/turn/tracks/mountain-world-r5-suburban-village.js",
-    "/turn/tracks/mountain-world-r6-night.js",
     "/turn/tracks/night-player-spotlight-r560.js",
     "/turn/tracks/start-area-polish-r519.js",
     "/turn/training/course.js",
@@ -493,10 +506,8 @@ function synchronizeProjectedShadowTargets(importMap, release) {
     '/turn/performance-monitor.js?build=20260720-r20',
     '/turn/tracks/airport-emergency-r494.js?revision=r496-hud-depth',
     '/turn/tracks/airport-world-r52.js?build=20260722-r52',
-    '/turn/tracks/cliffside-inner-buildings-r202.js?revision=r202-kenney-suburban-village',
     '/turn/tracks/contextual-road-edges.js?revision=r518-signature-yellow',
     '/turn/tracks/harbor-world.js?base=20260725-r80',
-    '/turn/tracks/mountain-long-extension-r1.js?revision=mountain-long-r18',
     '/turn/tracks/night-player-spotlight-r560.js?revision=r175-reconcile'
   ]) {
     const pathname = new URL(specifier, 'https://enkel.design').pathname;
@@ -528,6 +539,7 @@ function renderSharedResourceImports(source, release) {
     synchronizeLowGraphicsProducerTargets(importMap, release);
     synchronizeProjectedShadowTargets(importMap, release);
     synchronizeNightSkyTargets(importMap, release);
+    synchronizeTrackWorldTargets(importMap, release);
     return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
   });
 }
@@ -569,6 +581,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeProjectedShadowTargets(importMap, release);
   synchronizeNightSkyTargets(importMap, release);
   synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);
+  synchronizeTrackWorldTargets(importMap, release);
   // These presentation modules now use the release build instead of a new
   // hand-maintained revision. Advance every alias, including installed routes.
   for (const [specifier, target] of Object.entries(importMap.imports || {})) {
@@ -602,10 +615,6 @@ export function renderReleaseIndex(source, release) {
     )
     .replace(
       /(src="\.\/render\/skid-continuity-r198\.js\?revision=r198-skid-continuity)(?:&build=\d{8}-r\d+)?"/,
-      `$1&build=${release.cacheKey}"`
-    )
-    .replace(
-      /(src="\.\/tracks\/cliffside-inner-buildings-r202\.js\?revision=r202-kenney-suburban-village)(?:&build=\d{8}-r\d+)?"/,
       `$1&build=${release.cacheKey}"`
     )
     .replace(
@@ -665,16 +674,8 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
       `$1&build=${release.cacheKey}"`
     )
     .replace(
-      /(src="\.\/tracks\/cliffside-inner-buildings-r202\.js\?revision=r202-kenney-suburban-village)(?:&build=\d{8}-r\d+)?"/,
-      `$1&build=${release.cacheKey}"`
-    )
-    .replace(
       /(src="\.\/tracks\/kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish)(?:&build=\d{8}-r\d+)?"/,
       `$1&build=${release.cacheKey}"`
-    )
-    .replace(
-      /^\s*"\.\/tracks\/mountain-world-r3\.js\?(?:revision=r177-ipad-sky-aspect|build=\d{8}-r\d+)": "\/turn-lab\/tracks\/mountain-world-lab-r1\.js\?revision=mountain-slip-bridge-r18",\n/m,
-      ''
     )
     .replace(/<script type="importmap">[\s\S]*?<\/script>/, productionImportMap);
 }
@@ -720,17 +721,7 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
       .replace(
         /(await import\(\s*'\.\/midnight-city-world\.js\?build=)[^']+('\s*\))/,
         `$1${release.cacheKey}$2`
-      )
-      .replace(
-        /(await import\(\s*'\.\/mountain-world-long\.js\?build=)[^']+('\s*\))/,
-        `$1${release.cacheKey}$2`
       );
-  }
-  if (repositoryPath === 'turn/tracks/mountain-world-long.js') {
-    return source.replace(
-      /(from '\.\/mountain-world-r3\.js\?build=)[^']+(')/,
-      `$1${release.cacheKey}$2`
-    );
   }
   assert.ok(repositoryPath === 'turn/design.html' || repositoryPath === 'turn/design-dialogs.html',
     `Unknown release companion: ${repositoryPath}`);

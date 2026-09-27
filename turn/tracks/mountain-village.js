@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { safeTracksidePosition } from './mountain-world-r3-terrain.js';
+import { safeTracksidePosition } from './mountain-terrain.js';
 
 const REVISION = 'r5-kenney-suburban-village';
 const ASSET_BASE = 'https://cdn.jsdelivr.net/gh/immaculate-lift-studio/CityCrafter3D@0831a1937a59562b6165ccfab30f64f35c957b6f/addons/citycrafter/assets/example_assets/kenney_city-kit-suburban_20/Models/GLB%20format/';

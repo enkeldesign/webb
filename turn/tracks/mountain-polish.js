@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MOUNTAIN_R3, material, offsetPoint } from './mountain-world-r3-terrain.js';
+import { MOUNTAIN_R3, material, offsetPoint } from './mountain-terrain.js';
 
 const { GRANITE_DARK, WATER, WATER_LIGHT, WATERFALL, LAKE, ROAD_HEIGHT } = MOUNTAIN_R3;
 const FOUNDATION_DEPTH = 4.6;

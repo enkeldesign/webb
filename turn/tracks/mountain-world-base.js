@@ -1,13 +1,12 @@
 import * as THREE from 'three';
-import { installMountainTerrain } from './mountain-world-r3-terrain.js';
-import { installMountainScenery } from './mountain-world-r3-scenery.js';
-import { installMountainR3Polish } from './mountain-world-r3-polish.js';
-import { installMountainR4VisualPolish } from './mountain-world-r4-visual-polish.js';
-import { installMountainR4WaterfallNotch } from './mountain-world-r4-waterfall-notch.js';
-import { installMountainR4DriverFacingWaterfall } from './mountain-world-r4-waterfall-face.js';
-import { installMountainR5SuburbanVillage } from './mountain-world-r5-suburban-village.js';
-import { installMountainR6Night } from './mountain-world-r6-night.js';
-import { installMountainSpotlightHeadlight } from './mountain-player-headlight-r8.js?revision=r175-reconcile';
+import { installMountainTerrain } from './mountain-terrain.js';
+import { installMountainScenery } from './mountain-scenery.js';
+import { installMountainR3Polish } from './mountain-polish.js';
+import { installMountainR4VisualPolish } from './mountain-visual-polish.js';
+import { installMountainR4DriverFacingWaterfall, installMountainR4WaterfallNotch } from './mountain-waterfall.js';
+import { installMountainR5SuburbanVillage } from './mountain-village.js';
+import { installMountainR6Night } from './mountain-night.js';
+import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js?revision=r175-reconcile';
 
 const MOUNTAIN_VILLAGE_BENCHES = new Set([
   'Mountain village bench r4',
@@ -172,6 +171,11 @@ function addStaticMoonlitHillFill(world) {
   });
   world.userData.turnMountainMoonlitHillMeshes = meshCount;
   return meshCount;
+}
+
+// MOUNTAIN uses the exact same physical spotlight rig and configuration as MIDNIGHT CITY.
+function installMountainSpotlightHeadlight(playerCar, runtime) {
+  return installNightPlayerSpotlight(playerCar, runtime);
 }
 
 export function installMountainWorld({ scene, samples, trackWidth = 27, runtime } = {}) {

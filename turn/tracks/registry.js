@@ -5,11 +5,6 @@ import {
   createTrackRuntime,
   normalizeTrackId
 } from './catalog.js';
-// Historical MOUNTAIN base markers retained because the promoted long wrapper still
-// builds this exact mature world first: mountain-world-r3.js?revision=r3-continuous-terrain-v1,
-// mountain-world-r3.js?revision=r6-night-treatment,
-// mountain-world-r3.js?revision=r177-ipad-sky-aspect.
-// The promoted long MOUNTAIN then adds only its tested bridge/lower-valley extension.
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 import './contextual-road-edges.js?revision=r518-signature-yellow';
 import './start-area-polish-r519.js?revision=r519-midnight-full-width-accents';
@@ -29,7 +24,7 @@ const WORLD_INSTALLER_LOADERS = Object.freeze({
     return installAirportWorld({ scene, samples, trackWidth, runtime });
   },
   async cliffside({ scene, samples, trackWidth }) {
-    const { installCliffsideWorld } = await import('./cliffside-world-r76.js');
+    const { installCliffsideWorld } = await import('./cliffside-world.js');
     return installCliffsideWorld({ scene, samples, trackWidth });
   },
   async harbor({ scene, samples, trackWidth }) {
@@ -38,13 +33,13 @@ const WORLD_INSTALLER_LOADERS = Object.freeze({
   },
   async 'midnight-city'({ scene, samples, trackWidth, runtime }) {
     const { installMidnightCityWorld } = await import(
-      './midnight-city-world.js?build=20260926-r290'
+      './midnight-city-world.js?build=20260926-r291'
     );
     return installMidnightCityWorld({ scene, samples, trackWidth, runtime });
   },
   async mountain({ scene, samples, trackWidth, runtime }) {
     const { installMountainWorld } = await import(
-      './mountain-world-long.js?build=20260926-r290'
+      './mountain-world.js'
     );
     return installMountainWorld({ scene, samples, trackWidth, runtime });
   }

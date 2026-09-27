@@ -175,12 +175,12 @@ const [
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
   readMidnightCityLayer('r7'),
-  fs.readFile(new URL('../../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/mountain-world-long.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/mountain-long-extension-r1.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/mountain-world-r3-terrain.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/mountain-world-r3-scenery.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/mountain-world-r3-polish.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-world-base.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-world.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-long-extension.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-terrain.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-scenery.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-polish.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')
 ]);
 assert.match(definitionsBase, /id: 'midnight-city'[\s\S]*difficulty: 'ADVANCED'/);
@@ -205,7 +205,7 @@ assert.match(airportWorld, /const innerOffset = side \* \(trackWidth \/ 2 - 0\.0
   'Airport hairpin fix must leave the authored curb offsets unchanged');
 assert.doesNotMatch(airportWorld, /AIRPORT_HAIRPIN_REFERENCE[\s\S]*?controlPoints/,
   'Airport hairpin seam fix must not rewrite the control-point route');
-assert.match(registry, new RegExp(`mountain-world-long\\.js\\?build=${release.cacheKey}`));
+assert.match(registry, /await import\(\s*'\.\/mountain-world\.js'\s*\)/);
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'mountain'/);
 assert.match(manager, /track\.fogNear/);

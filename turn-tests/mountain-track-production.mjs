@@ -21,8 +21,6 @@ import { TROPHY_ROAD_REWARDS, rewardForTrack } from '../turn/progression/trophy-
 import { TRACK_COLOR_CUES } from '../turn/accessibility/color-cues.js';
 import { TRACK_COLOR_RULES } from '../turn/achievements/chromatic-camouflage-r183.js';
 
-const release = JSON.parse(await fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'));
-
 const [
   definitions,
   definitionsBase,
@@ -46,15 +44,15 @@ const [
   fs.readFile(new URL('../turn/tracks/pace-notes.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/pace-notes-base.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/mountain-world-long.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/mountain-long-extension-r1.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-world-base.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-world.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-long-extension.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/race/world-collision.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/race/world-collision-base.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/race/mountain-bridge-guide.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/mountain-world-r3-terrain.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/mountain-world-r3-scenery.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/mountain-world-r6-night.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-terrain.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-scenery.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-night.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/shared-night-sky.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/progression/m8-trophy-gate.js', import.meta.url), 'utf8')
 ]);
@@ -145,8 +143,8 @@ assert.match(definitionsBase, /storageRevision: 'mountain-r1'/,
 assert.match(paceNotes, /pace-notes-base\.js/);
 assert.match(paceNotesBase, /const MOUNTAIN_PACE_NOTES/,
   'The retired short-course pace map remains available only as the retained base');
-assert.match(registry, new RegExp(`mountain-world-long\\.js\\?build=${release.cacheKey}`));
-assert.match(longWorld, new RegExp(`mountain-world-r3\\.js\\?build=${release.cacheKey}`));
+assert.match(registry, /await import\(\s*'\.\/mountain-world\.js'\s*\)/);
+assert.match(longWorld, /from '\.\/mountain-world-base\.js'/);
 assert.match(longWorld, /installBaseMountainWorld/);
 assert.match(longWorld, /installMountainLongExtension/);
 assert.match(longWorld, /BASE_WORLD_SAMPLE_COUNT = 1080/);

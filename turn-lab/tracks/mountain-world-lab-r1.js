@@ -1,8 +1,8 @@
 // TURN LAB world wrapper: build the current production MOUNTAIN first, then add
 // only the long-course bridge/valley dressing. The query suffix deliberately avoids
 // the LAB import-map key so this import cannot recurse back into this wrapper.
-import { installMountainWorld as installProductionMountainWorld } from '/turn/tracks/mountain-world-r3.js?lab-base=mountain-long';
-import { installMountainLongExtension } from './mountain-long-extension-r1.js?revision=mountain-long-r18';
+import { installMountainWorld as installProductionMountainWorld } from '/turn/tracks/mountain-world-base.js?lab-base=mountain-long';
+import { installMountainLongExtension } from './mountain-long-extension.js';
 
 const PRODUCTION_WORLD_SAMPLE_COUNT = 1080;
 
