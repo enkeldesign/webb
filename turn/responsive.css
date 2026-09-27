@@ -132,9 +132,17 @@
   }
   :root:has(.utility-group[data-menu-state="staged"]) { --turn-race-footer: 104px; }
   :root body .topbar { gap: 10px; }
-  :root body .stats { display: flex; flex: 1 1 auto; gap: 6px; min-width: 0; flex-wrap: wrap; }
-  :root body .stats .chip { width: auto; min-width: 0; height: auto; min-height: 42px; padding: 6px; font-size: max(var(--turn-text-floor), .52rem); }
-  :root body .stats .chip strong { font-size: .8rem; white-space: nowrap; }
+  /* A fixed grid, never content-sized: SPEED · LAP · POSITION, then TIME · BEST.
+     Digits are tabular, so a changing value never moves a chip. Without rivals the
+     POSITION cell is unused and SPEED and LAP share the first row. */
+  :root body .stats {
+    display: grid; flex: 1 1 auto; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; min-width: 0;
+  }
+  :root body .stats > .chip { grid-column: span 2; width: auto; min-width: 0; height: auto; min-height: 42px; padding: 6px; overflow: hidden; font-size: max(var(--turn-text-floor), .52rem); }
+  :root body .stats > .chip:nth-child(n + 4) { grid-column: span 3; }
+  :root body .stats:has(> .race-position-hud[hidden]) > .chip:nth-child(-n + 2) { grid-column: span 3; }
+  :root body .stats > .race-position-hud[hidden] { display: none !important; }
+  :root body .stats .chip strong { overflow: hidden; font-size: .8rem; font-variant-numeric: tabular-nums; text-overflow: clip; white-space: nowrap; }
   :root body .map-wrap { width: clamp(70px, 21vw, 128px); flex-shrink: 0; }
   :root body .controls { display: block; left: var(--turn-edge); right: var(--turn-edge); bottom: var(--turn-race-bottom); height: var(--turn-race-pad-height); }
   :root body .controls .pedals { position: absolute; right: 0; bottom: 0; left: auto; padding: 0; }
@@ -151,8 +159,18 @@
     display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; transform: none;
   }
   :root body .utility-group .utility { flex: 1 1 auto; min-height: 44px; max-width: 220px; padding: 6px 8px; white-space: normal; font-size: max(var(--turn-text-floor), .66rem); }
+  /* BOOST sits directly above the drive pad, next to the BOOST zone it reports on,
+     instead of in the gap between the pad and the menu row. */
+  /* It stays centred on its own left edge (translateX(-50%)), like everywhere else,
+     so the full / empty / overcharge flash keyframes keep working unchanged. */
+  :root body .boost-hud {
+    left: calc(100% - var(--turn-edge) - (var(--turn-race-pad-width) / 2));
+    bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 10px);
+    width: var(--turn-race-pad-width);
+  }
+  :root.turn-left-handed-controls body .boost-hud { left: calc(var(--turn-edge) + (var(--turn-race-pad-width) / 2)); }
   :root body #scoreFeedback {
-    top: auto; bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 14px);
+    top: auto; bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 54px);
     left: var(--turn-edge); right: var(--turn-edge); width: auto; height: 74px;
     display: flex; flex-direction: row; justify-content: space-between;
     --score-feedback-paper-height: 74px;
@@ -191,6 +209,9 @@
 @media (max-width: 22em) and (orientation: portrait) {
   :root { --turn-edge: max(8px, env(safe-area-inset-left), env(safe-area-inset-right)); --turn-race-pad-width: 136px; }
   :root body .manual-steer { border-width: 3px; }
+  /* Keep race utility labels on one line so the menu rows stay 44px tall and clear
+     of the drive pad. */
+  :root body .utility-group .utility { padding-inline: 6px; white-space: nowrap; }
   :root body .manual-steer::before, :root body .manual-steer::after { font-size: 1.5rem; }
 }
 @media (max-height: 38em) and (orientation: portrait) {
@@ -333,4 +354,31 @@
 }
 :root body .turn-trophy-road-landmark b {
   white-space: nowrap;
+}
+
+/* Race utilities sit 6px apart, so the ACHIEVEMENTS count lives inside its button
+   (right edge) rather than hanging over the neighbouring control. */
+:root body .utility-group .turn-race-achievements-button {
+  position: relative;
+  padding-right: 40px;
+}
+:root body .utility-group .turn-race-achievements-button .turn-achievements-trigger-badge {
+  top: 50%;
+  right: 7px;
+  width: 26px;
+  height: 26px;
+  transform: translateY(-50%);
+  box-shadow: none;
+}
+/* The blank-screen eye is a square icon control: it keeps 44 × 44 instead of
+   growing with the row (its aspect ratio would otherwise make the whole row taller). */
+:root body .utility-group .turn-screen-blank-control {
+  flex: 0 0 var(--turn-target-min);
+  width: var(--turn-target-min);
+  height: var(--turn-target-min);
+}
+/* HUD digits are tabular in every orientation, so a changing time or speed never
+   shifts its label or neighbours. */
+:root body :is(.stats .chip strong, .stats .chip strong span, #scoreFeedback strong) {
+  font-variant-numeric: tabular-nums;
 }

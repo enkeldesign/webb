@@ -249,6 +249,32 @@ async function responsiveRace(browser, name) {
         }
       }
       assert.equal(await page.locator('.rotate-panel').count(), 0);
+      if (height > width) {
+        // The portrait stat chips are a fixed grid: wider values never move a chip.
+        const chipRects = () => page.$$eval('.stats > .chip', (chips) => chips
+          .filter((chip) => chip.getBoundingClientRect().width > 0)
+          .map((chip) => { const rect = chip.getBoundingClientRect(); return [rect.x, rect.y, rect.width, rect.height].map(Math.round).join(','); }));
+        const before = await chipRects();
+        await page.evaluate(() => {
+          document.querySelector('#speed').textContent = '288';
+          document.querySelector('#lapTime').textContent = '10:48.888';
+          document.querySelector('#bestTime').textContent = '10:48.888';
+        });
+        assert.deepEqual(await chipRects(), before, `${width}x${height}: stat chips keep their place as values grow`);
+        // Race utilities, BOOST and the drive pad never overlap.
+        const clash = await page.evaluate(() => {
+          const rects = [...document.querySelectorAll('.utility-group > .utility, .drive-pad, .boost-hud')]
+            .filter((node) => node.getBoundingClientRect().width > 0 && globalThis.getComputedStyle(node).display !== 'none')
+            .map((node) => [node.className.split(' ').slice(0, 2).join('.'), node.getBoundingClientRect()]);
+          const hits = [];
+          for (let i = 0; i < rects.length; i += 1) for (let j = i + 1; j < rects.length; j += 1) {
+            const [a, r] = rects[i]; const [b, q] = rects[j];
+            if (Math.min(r.right, q.right) - Math.max(r.left, q.left) > 1 && Math.min(r.bottom, q.bottom) - Math.max(r.top, q.top) > 1) hits.push(`${a} × ${b}`);
+          }
+          return hits;
+        });
+        assert.deepEqual(clash, [], `${width}x${height}: race controls do not overlap`);
+      }
     }
     await page.setViewportSize({ width: 393, height: 852 });
     await page.keyboard.down('ArrowUp');
