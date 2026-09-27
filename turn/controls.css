@@ -17,12 +17,35 @@
   .turn-dbe-training-how button,
   .turn-dbe-training-settings button,
   .m8-feedback-actions > :is(button, a),
-  .m8-reset-rivals
+  .m8-reset-rivals,
+  .m8-reset-cancel,
+  .m8-reset-confirm-button,
+  .turn-dbe-training-race-nav button
 ) {
   min-height: var(--turn-target-min);
   border-width: var(--turn-border-control);
   border-radius: var(--turn-radius-control);
   box-shadow: var(--turn-shadow-control);
+}
+
+/* Pressed: the button moves 2px into its 3px shadow, leaving 1px, the same for
+   every control. */
+:root body :is(
+  .turn-home-sheet .m8-home-menu > button,
+  .utility-group .utility,
+  .lot-screen.lot-showroom .lot-back,
+  .lot-screen.lot-showroom .lot-cycle,
+  .turn-dbe-training-actions button,
+  .turn-dbe-training-how button,
+  .turn-dbe-training-settings button,
+  .m8-feedback-actions > :is(button, a),
+  .m8-reset-rivals,
+  .m8-reset-cancel,
+  .m8-reset-confirm-button,
+  .turn-dbe-training-race-nav button
+):active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
 }
 
 /* Chips keep their pill, and reach the touch minimum. */
