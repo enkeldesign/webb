@@ -12,11 +12,12 @@ import {
   readTrophyRoadSnapshot
 } from '../../turn/progression/trophy-road.js';
 
-const [source, roadSource, indexSource, releaseSource] = await Promise.all([
+const [source, roadSource, indexSource, releaseSource, responsiveCss] = await Promise.all([
   fs.readFile(new URL('../../turn/testing/admin-unlock-sequence.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/trophy-road.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/responsive.css', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
 
@@ -227,6 +228,12 @@ assert.match(indexSource,
 assert.match(indexSource,
   new RegExp(`src="\\.\\/live-steering-setting\\.js\\?build=${escapeRegex(release.cacheKey)}-live-steering"`),
   'The hidden recognizer must not disturb the canonical steering entry');
+
+// The sequence repeats taps on one control; iOS double-tap-to-zoom would swallow them.
+assert.match(responsiveCss, /:where\(\*\) \{ touch-action: manipulation; \}/,
+  'Every element opts out of double-tap zoom at zero specificity, keeping pinch-zoom');
+assert.doesNotMatch(indexSource, /user-scalable\s*=\s*no|maximum-scale\s*=\s*1/,
+  'Pinch-zoom must stay available');
 
 console.log('TURN rewards-only admin unlock and fresh-profile reward locking regression passed.');
 

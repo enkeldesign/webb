@@ -4,6 +4,12 @@
 :root {
   --turn-edge: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
 }
+/* No double-tap-to-zoom anywhere: repeated taps on one control (the records toggle,
+   steppers) must each register instead of zooming, and iOS then fires clicks without
+   waiting for a second tap. Pinch-zoom and scrolling stay available (WCAG 1.4.4).
+   touch-action is not inherited, so it is set on every element; :where() keeps it at
+   zero specificity, so explicit rules (race pads' none, rails' pan-y) still win. */
+:where(*) { touch-action: manipulation; }
 :root body .rotate-panel { display: none !important; }
 :root body .m8-home-shell { max-width: 1440px; margin-inline: auto; }
 :root body .m8-home.m8-home-fixed-layout .m8-track-rail {
