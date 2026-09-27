@@ -66,8 +66,12 @@ assert.ok(
 const viewportGap = await fs.readFile(new URL('../turn/ios-viewport-gap.js', import.meta.url), 'utf8');
 assert.match(viewportGap, /Math\.abs\(gap - top\) <= INSET_TOLERANCE/,
   'Compensation applies only when the gap matches the top safe-area inset');
-assert.match(viewportGap, /html\.\$\{CLASS\} body \{[\s\S]*height: 100lvh !important;[\s\S]*transform: translateZ\(0\);/,
-  'Only the fixed body grows to the large viewport and contains fixed layers');
+// iOS draws no content in the gap (1.24.5 moved RACE into it and clipped it), so the
+// app stays inside the layout viewport and the strip only takes the screen colour.
+assert.doesNotMatch(viewportGap, /height: 100lvh|translateZ|dialog\[open\]/,
+  'Content never moves into the gap, where iOS does not draw it');
+assert.match(viewportGap, /:has\(body:is\(\.turn-home-open, \.turn-lot-open\)\)[\s\S]*turn-surface-page/,
+  'The strip under Home and The Lot is Paper');
 assert.match(nextIndex, /pwa-usable-viewport-r181\.js\?revision=r181-usable-web-layer/);
 
 for (const manifest of [productionManifest, nextManifest]) {
