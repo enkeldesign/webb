@@ -1,6 +1,6 @@
 // Production MOUNTAIN long-course wrapper. Build the established production
 // mountain first, then add the tested bridge/lower-valley extension.
-import { installMountainWorld as installBaseMountainWorld } from './mountain-world-r3.js?build=20260926-r288';
+import { installMountainWorld as installBaseMountainWorld } from './mountain-world-r3.js?build=20260926-r289';
 import { installMountainLongExtension } from './mountain-long-extension-r1.js?revision=mountain-long-r18';
 
 const BASE_WORLD_SAMPLE_COUNT = 1080;
