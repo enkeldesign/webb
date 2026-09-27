@@ -39,6 +39,27 @@
   box-shadow: var(--turn-shadow-dialog);
 }
 
+/* Dialog and screen titles take focus when they open, so screen readers start
+   there, but they are not controls: no focus ring. Buttons keep theirs. */
+:root body :is(h1, h2, h3, [role="heading"])[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/* The support-challenge dialog drew its own frame around the card, so the card's
+   larger corners showed notches. The card is the one surface now. */
+:root body dialog.turn-support-challenge-dialog {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+:root body .turn-support-challenge-card {
+  border: var(--turn-border-dialog) solid var(--turn-ink, #08090a);
+  background: var(--turn-surface-page, #fff8e8);
+}
+
 /* Portrait phones: every dialog is a bottom sheet — full width, anchored above the
    home indicator, rounded only at the top, and never taller than the space below
    the status bar. */
@@ -61,6 +82,18 @@
     border-radius: var(--turn-radius-dialog) var(--turn-radius-dialog) 0 0;
     box-shadow: 0 -4px 0 var(--turn-ink, #08090a);
     transform: none;
+  }
+
+  /* SHIFT: six levers never fit a phone's width; three per row keep every label
+     whole. (lot-shift.css is scaled, so its own 520px switch only fires below
+     390px.) */
+  :root body .lot-shift-dialog .lot-shift-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 8px;
+  }
+
+  :root body .lot-shift-dialog .lot-shift-option-label {
+    overflow-wrap: anywhere;
   }
 
   /* Reader dialogs (TURN history) keep their full height. */
