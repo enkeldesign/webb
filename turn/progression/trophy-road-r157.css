@@ -21,22 +21,32 @@
   visibility: hidden;
 }
 
+/* Earned: a large, faint Ink check watermark behind the card's content. The icon,
+   threshold and name draw over it, the category colour shows through, and it has
+   no badge silhouette, so it never reads as the round lock. */
+.turn-trophy-road-marker.is-unlocked {
+  isolation: isolate;
+}
+
+.turn-trophy-road-marker.is-unlocked > :not(.turn-trophy-road-marker-earned, .turn-trophy-road-marker-lock) {
+  position: relative;
+  z-index: 1;
+}
+
 .turn-trophy-road-marker-earned {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  z-index: 0;
+  inset: 0;
   display: grid;
-  box-sizing: border-box;
-  width: 46px;
-  height: 46px;
-  padding: 5px;
   place-items: center;
-  border: 3px solid var(--turn-ink, #08090a);
-  border-radius: 50%;
+  margin: 0;
+  padding: 0;
+  border: 0;
   background: transparent;
-  box-shadow: 2px 2px 0 var(--turn-ink, #08090a);
   color: var(--turn-ink, #08090a);
-  font-size: 1.65rem;
+  opacity: .16;
+  font-size: 3.4rem;
+  font-style: normal;
   font-weight: 950;
   line-height: 1;
   pointer-events: none;
@@ -62,13 +72,7 @@
 
 @media (max-height: 430px) and (orientation: landscape) {
   .turn-trophy-road-marker-earned {
-    top: 4px;
-    right: 4px;
-    width: 36px;
-    height: 36px;
-    padding: 4px;
-    border-width: 2px;
-    font-size: 1.3rem;
+    font-size: 2.6rem;
   }
 
   .turn-trophy-road-marker-lock {
