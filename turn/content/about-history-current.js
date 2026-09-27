@@ -1019,6 +1019,7 @@ Object.freeze({
   date: '26 September',
   entries: Object.freeze([
     Object.freeze(['1.22.0 r287', 'Supports portrait and landscape racing with mirrored controls, separated DRIFT/FLOW panels and upward intensity meters. Removes the rotate gate and automatic landscape lock.']),
+    Object.freeze(['1.22.1 r288', 'Loads the track chooser styles as one stylesheet, builds MIDNIGHT CITY from one module and removes unused legacy track, audio and garage files. Nothing changes in play.']),
     Object.freeze(['Responsive navigation', 'Reflows Home, The Lot and dialogs for smaller windows and enlarged text; keeps growing track catalogs reachable and limits large-screen stretching.']),
     Object.freeze(['Race orientation', 'Recommends landscape once at the first portrait race handoff while keeping portrait fully supported and immediately playable.'])
   ])
@@ -1026,7 +1027,7 @@ Object.freeze({
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.22.0',
-  build: '2026.09.26-r287',
-  note: 'TURN 1.22.0 supports portrait and landscape throughout the game, with responsive controls, menus and one optional landscape recommendation at the first portrait race handoff.'
+  version: '1.22.1',
+  build: '2026.09.26-r288',
+  note: 'TURN 1.22.1 is a maintenance release that consolidates the track chooser styles and the MIDNIGHT CITY world and removes unused legacy files without changing how the game plays.'
 });

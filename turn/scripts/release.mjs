@@ -32,14 +32,7 @@ const companionPaths = Object.freeze([
   'turn/stats/index.html',
   'turn/stats/stats.js',
   'turn/tracks/registry.js',
-  'turn/tracks/mountain-world-long.js',
-  'turn/tracks/midnight-city-world-r2.js',
-  'turn/tracks/midnight-city-world-r3.js',
-  'turn/tracks/midnight-city-world-r4.js',
-  'turn/tracks/midnight-city-world-r5.js',
-  'turn/tracks/midnight-city-world-r6.js',
-  'turn/tracks/midnight-city-world-r7.js',
-  'turn/tracks/midnight-city-world-r11.js'
+  'turn/tracks/mountain-world-long.js'
 ]);
 
 export async function loadReleaseDefinition() {
@@ -423,24 +416,17 @@ function synchronizeProjectedShadowTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   const paths = new Set([
     "/turn/garage/lot-r10.js",
-    "/turn/garage/lot.js",
     "/turn/graphics-profile.js",
     "/turn/main.js",
     "/turn/performance-monitor.js",
     "/turn/performance-profile.js",
     "/turn/render/car-shadows.js",
     "/turn/three-runtime.js",
-    "/turn/tracks/airport-emergency-r489.js",
-    "/turn/tracks/airport-emergency-r490.js",
-    "/turn/tracks/airport-emergency-r491.js",
-    "/turn/tracks/airport-emergency-r492.js",
     "/turn/tracks/airport-emergency-r493.js",
     "/turn/tracks/airport-emergency-r494.js",
     "/turn/tracks/airport-world-r50.js",
     "/turn/tracks/airport-world-r52.js",
     "/turn/tracks/airport-world-r53.js",
-    "/turn/tracks/airport-world.js",
-    "/turn/tracks/cliffside-inner-buildings-r201.js",
     "/turn/tracks/cliffside-inner-buildings-r202.js",
     "/turn/tracks/cliffside-world-r76.js",
     "/turn/tracks/cliffside-world.js",
@@ -450,24 +436,15 @@ function synchronizeProjectedShadowTargets(importMap, release) {
     "/turn/tracks/harbor-world-r82.js",
     "/turn/tracks/harbor-world.js",
     "/turn/tracks/kenney-track-landmarks-r517.js",
-    "/turn/tracks/midnight-city-world-r2.js",
-    "/turn/tracks/midnight-city-world-r3.js",
-    "/turn/tracks/midnight-city-world-r4.js",
-    "/turn/tracks/midnight-city-world-r5.js",
-    "/turn/tracks/midnight-city-world-r6.js",
     "/turn/tracks/midnight-city-world.js",
     "/turn/tracks/mountain-long-extension-r1.js",
-    "/turn/tracks/mountain-world-r2-scenery.js",
-    "/turn/tracks/mountain-world-r2-terrain.js",
     "/turn/tracks/mountain-world-r3-polish.js",
     "/turn/tracks/mountain-world-r3-scenery.js",
     "/turn/tracks/mountain-world-r3-terrain.js",
     "/turn/tracks/mountain-world-r3.js",
-    "/turn/tracks/mountain-world-r4-cabin-fix.js",
     "/turn/tracks/mountain-world-r4-visual-polish.js",
     "/turn/tracks/mountain-world-r5-suburban-village.js",
     "/turn/tracks/mountain-world-r6-night.js",
-    "/turn/tracks/mountain-world.js",
     "/turn/tracks/night-player-spotlight-r560.js",
     "/turn/tracks/start-area-polish-r519.js",
     "/turn/training/course.js",
@@ -714,7 +691,7 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
   if (repositoryPath === 'turn/tracks/registry.js') {
     return source
       .replace(
-        /(await import\(\s*'\.\/midnight-city-world-r11\.js\?build=)[^']+('\s*\))/,
+        /(await import\(\s*'\.\/midnight-city-world\.js\?build=)[^']+('\s*\))/,
         `$1${release.cacheKey}$2`
       )
       .replace(
@@ -725,12 +702,6 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
   if (repositoryPath === 'turn/tracks/mountain-world-long.js') {
     return source.replace(
       /(from '\.\/mountain-world-r3\.js\?build=)[^']+(')/,
-      `$1${release.cacheKey}$2`
-    );
-  }
-  if (/^turn\/tracks\/midnight-city-world-r(?:2|3|4|5|6|7|11)\.js$/.test(repositoryPath)) {
-    return source.replace(
-      /(from '\.\/midnight-city-world(?:-r\d+)?\.js\?build=)[^']+(')/,
       `$1${release.cacheKey}$2`
     );
   }

@@ -44,9 +44,9 @@ const [
   fs.readFile(new URL('../turn/tracks/cliffside-world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/start-area-polish-r519.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/world-assets.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world-r2.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world-r3.js', import.meta.url), 'utf8')
+  readMidnightCityLayer('r1'),
+  readMidnightCityLayer('r2'),
+  readMidnightCityLayer('r3')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -193,3 +193,13 @@ function extractFunction(source, name) {
 }
 
 console.log('LOW GRAPHICS production contract passed.');
+
+// MIDNIGHT CITY layers now live in one module; read the section a former file became.
+async function readMidnightCityLayer(revision) {
+  const source = await fs.readFile(new URL('../turn/tracks/midnight-city-world.js', import.meta.url), 'utf8');
+  const marker = `// ==== Layer ${revision} (`;
+  const start = source.indexOf(marker);
+  if (start < 0) throw new Error(`midnight-city-world.js is missing its ${revision} layer`);
+  const end = source.indexOf('// ==== Layer ', start + marker.length);
+  return source.slice(start, end < 0 ? undefined : end);
+}
