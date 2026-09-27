@@ -400,8 +400,12 @@ const { installHomeFeedback } = await import(
 );
 installHomeFeedback();
 installStylesheet('./home-app-bar.css', 'data-turn-home-app-bar');
-// Real CSS pixels: exempt the app bar from the 0.75 UI baseline, like responsive.css.
-document.querySelector('link[data-turn-home-app-bar]')?.setAttribute('data-turn-responsive', '');
+installStylesheet('./action-dock.css', 'data-turn-action-dock');
+// Real CSS pixels: exempt the app bar and action dock from the 0.75 UI baseline,
+// like responsive.css.
+for (const attribute of ['data-turn-home-app-bar', 'data-turn-action-dock']) {
+  document.querySelector(`link[${attribute}]`)?.setAttribute('data-turn-responsive', '');
+}
 const { installHomeAppBar } = await import(withBuild('./ui/home-app-bar.js'));
 installHomeAppBar();
 installStylesheet(

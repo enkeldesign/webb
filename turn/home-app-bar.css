@@ -6,14 +6,10 @@
      the status bar and stays put while the page scrolls;
    - a Paper sheet for everything else (SETTINGS, HOW TO PLAY, DRIVE BY EAR 101,
      GIVE FEEDBACK, MUSIC, ABOUT TURN and the build line);
-   - RACE on a Paper dock: full width above the bottom safe area in portrait,
-     bottom-right in landscape. */
+   - RACE in the shared action dock (action-dock.css). */
 
 :root {
   --turn-app-bar-height: 56px;
-  --turn-dock-height: 56px;
-  --turn-dock-gap: 12px;
-  --turn-dock-space: calc(var(--turn-dock-height) + (2 * var(--turn-dock-gap)) + max(0px, env(safe-area-inset-bottom)));
 }
 
 /* Whatever the viewport does at the edges (the iOS standalone short-viewport bug,
@@ -220,58 +216,6 @@ html body .m8-home.turn-app-bar-layout .m8-home-main {
   html body .m8-home.turn-app-bar-layout .m8-track-rail {
     padding-bottom: var(--turn-dock-space);
     scroll-padding-bottom: var(--turn-dock-space);
-  }
-}
-
-/* ---------- RACE dock ---------- */
-
-html body .m8-home.turn-app-bar-layout .m8-track-continue {
-  position: fixed;
-  z-index: 15;
-  right: max(var(--turn-gutter, 16px), env(safe-area-inset-right));
-  bottom: max(var(--turn-dock-gap), env(safe-area-inset-bottom));
-  width: clamp(200px, 24vw, 320px);
-  height: var(--turn-dock-height);
-  min-height: var(--turn-dock-height);
-  margin: 0;
-  padding: 0 16px;
-  box-sizing: border-box;
-  /* Shape and colour come from the primary-action role in design-semantic.css. */
-  border: 3px solid var(--turn-ink, #08090a);
-  color: var(--turn-ink, #08090a);
-  box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
-  font-size: 18px;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  line-height: 1;
-}
-
-html body .m8-home.turn-app-bar-layout .m8-track-continue:active {
-  transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
-}
-
-@media (max-width: 46em) and (orientation: portrait) {
-  html body .m8-home.turn-app-bar-layout .m8-home-main {
-    padding-bottom: calc(var(--turn-dock-space) + 16px);
-  }
-
-  html body .m8-home.turn-app-bar-layout .m8-track-continue {
-    left: max(var(--turn-gutter, 16px), env(safe-area-inset-left));
-    width: auto;
-  }
-
-  /* RACE sits on a Paper bar that runs into the bottom safe area, so cards never
-     show around or under it. */
-  html body .m8-home.turn-app-bar-layout .m8-home-main::after {
-    content: "";
-    position: fixed;
-    z-index: 14;
-    inset: auto 0 0;
-    height: var(--turn-dock-space);
-    border-top: 3px solid var(--turn-ink, #08090a);
-    background: var(--turn-surface-page, #fff8e8);
-    pointer-events: none;
   }
 }
 
