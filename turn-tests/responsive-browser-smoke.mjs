@@ -200,12 +200,14 @@ async function responsiveRace(browser, name) {
       await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
     }
     // Home RACE and The Lot's RACE THIS CAR are one component: same place, size and look.
-    const dockStyle = (selector) => page.locator(selector).evaluate((node) => {
+    // Measured at rest: the pointer that tapped Home RACE would otherwise hover the
+    // button now in the same place.
+    const dockStyle = async (selector) => (await page.mouse.move(1, 1), page.locator(selector).evaluate((node) => {
       const rect = node.getBoundingClientRect();
       const style = globalThis.getComputedStyle(node);
       return [rect.x, rect.y, rect.width, rect.height].map(Math.round).concat(
         ['font-size', 'font-weight', 'border-top-left-radius', 'background-color', 'box-shadow'].map((key) => style.getPropertyValue(key)));
-    });
+    }));
     const homeDock = await dockStyle('.m8-track-continue');
     await page.locator('.m8-track-continue').click();
     await page.waitForSelector('.lot-showroom');
