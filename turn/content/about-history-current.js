@@ -1052,13 +1052,14 @@ Object.freeze({
     Object.freeze(['1.23.1 r294', 'Moves the hidden tester unlock onto Home controls every new profile can reach, so it no longer depends on a locked track.']),
     Object.freeze(['1.23.2 r295', 'Turns off double-tap-to-zoom so quick repeated taps on one button register as taps on iPhone and iPad. Pinch-zoom still works.']),
     Object.freeze(['1.23.3 r296', 'Adds TURN’s rendered-size design tokens (type scale, touch targets, spacing rhythm, motion) and richer Display P3 accent colours on wide-gamut screens.']),
-    Object.freeze(['1.23.4 r297', 'Text never renders below 11px and every button, arrow and info control has at least a 44px touch area. Short landscape phones keep RACE docked on Home and fit The Lot’s header and car names.'])
+    Object.freeze(['1.23.4 r297', 'Text never renders below 11px and every button, arrow and info control has at least a 44px touch area. Short landscape phones keep RACE docked on Home and fit The Lot’s header and car names.']),
+    Object.freeze(['1.23.5 r298', 'Portrait Home gets a compact two-row header, so more tracks fit on the first screen, and RACE sits on its own bar above the bottom safe area.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.23.4',
-  build: '2026.09.27-r297',
-  note: 'TURN 1.23.4 sets an 11px text floor and 44px touch targets across Home, The Lot, Trophy Road and the race HUD.'
+  version: '1.23.5',
+  build: '2026.09.27-r298',
+  note: 'TURN 1.23.5 tightens portrait Home: a compact header and a docked RACE bar.'
 });

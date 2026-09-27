@@ -149,6 +149,20 @@ async function responsiveRace(browser, name) {
       const home = await bounds(page, '.m8-home');
       assert.ok(home.scrollWidth <= home.clientWidth + 1, `${name} ${width}: Home reflows horizontally`);
       await readability(page, `${name} ${width}x${height} Home`);
+      if (width >= 320 && width <= 736 && height > width) {
+        // Portrait phones: a compact header, and the menu scrolls clear of the docked RACE bar.
+        const head = await bounds(page, '.m8-home-head');
+        assert.ok(head.height <= (width >= 390 ? 90 : 104), `${name} ${width}x${height}: portrait header is ${head.height}px`);
+        const clear = await page.evaluate(() => {
+          const scroller = document.querySelector('.m8-home');
+          scroller.scrollTop = scroller.scrollHeight;
+          const race = document.querySelector('.m8-track-continue').getBoundingClientRect();
+          const menu = [...document.querySelectorAll('.m8-home-menu > button:not(.m8-track-continue)')]
+            .map((button) => button.getBoundingClientRect()).filter((rect) => rect.height > 0);
+          return Math.max(...menu.map((rect) => rect.bottom)) <= race.top - 12;
+        });
+        assert.ok(clear, `${name} ${width}x${height}: the last menu control scrolls clear of RACE`);
+      }
       const last = page.locator('.track-card').last();
       await last.scrollIntoViewIfNeeded();
       const card = await last.boundingBox();
