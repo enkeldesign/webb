@@ -149,19 +149,22 @@ async function responsiveRace(browser, name) {
       const home = await bounds(page, '.m8-home');
       assert.ok(home.scrollWidth <= home.clientWidth + 1, `${name} ${width}: Home reflows horizontally`);
       await readability(page, `${name} ${width}x${height} Home`);
+      // Every orientation: one slim app bar (logo, ACHIEVEMENTS, menu) and a docked RACE.
+      const head = await bounds(page, '.m8-home-head');
+      assert.ok(head.height <= 64, `${name} ${width}x${height}: the app bar is ${head.height}px`);
+      for (const control of ['.turn-home-menu-button', '.turn-app-bar-actions .m8-achievements-button', '.m8-track-continue']) {
+        within(await bounds(page, control), width, height, `${name} ${width}x${height} ${control}`);
+      }
       if (width >= 320 && width <= 736 && height > width) {
-        // Portrait phones: a compact header, and the menu scrolls clear of the docked RACE bar.
-        const head = await bounds(page, '.m8-home-head');
-        assert.ok(head.height <= (width >= 390 ? 90 : 104), `${name} ${width}x${height}: portrait header is ${head.height}px`);
+        // Portrait phones: the last track card scrolls clear of the docked RACE bar.
         const clear = await page.evaluate(() => {
           const scroller = document.querySelector('.m8-home');
           scroller.scrollTop = scroller.scrollHeight;
           const race = document.querySelector('.m8-track-continue').getBoundingClientRect();
-          const menu = [...document.querySelectorAll('.m8-home-menu > button:not(.m8-track-continue)')]
-            .map((button) => button.getBoundingClientRect()).filter((rect) => rect.height > 0);
-          return Math.max(...menu.map((rect) => rect.bottom)) <= race.top - 12;
+          const cards = [...document.querySelectorAll('.track-card')].map((card) => card.getBoundingClientRect());
+          return Math.max(...cards.map((rect) => rect.bottom)) <= race.top - 12;
         });
-        assert.ok(clear, `${name} ${width}x${height}: the last menu control scrolls clear of RACE`);
+        assert.ok(clear, `${name} ${width}x${height}: the last track card scrolls clear of RACE`);
       }
       const last = page.locator('.track-card').last();
       await last.scrollIntoViewIfNeeded();
@@ -177,6 +180,7 @@ async function responsiveRace(browser, name) {
     // A halved CSS viewport covers page-zoom reflow; doubling root text separately
     // exercises text resizing without shrinking the game surface.
     for (const [trigger, dialog] of [['.m8-home-settings', '.m8-settings-dialog'], ['.m8-achievements-button', '.turn-achievements-dialog']]) {
+      if (!(await page.locator(trigger).isVisible())) await page.locator('.turn-home-menu-button').click();
       await page.locator(trigger).click();
       await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; });
       await settle(page);

@@ -1,5 +1,4 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-fixed-home-styles';
-const SHORT_VIEWPORT_STYLE_ID = 'turn-m8-short-viewport-race-dock';
 const LAYOUT_ID = 'fixed-grid-v8-shared-track-bests';
 const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
 const MUSIC_LAST_VOLUME_STORAGE_KEY = 'turn-racing-music-last-volume-v1';
@@ -96,37 +95,6 @@ function installStylesheet() {
   document.head.appendChild(stylesheet);
 }
 
-function installShortViewportRaceDock() {
-  if (document.getElementById(SHORT_VIEWPORT_STYLE_ID)) return;
-  const style = document.createElement('style');
-  style.id = SHORT_VIEWPORT_STYLE_ID;
-  style.textContent = `
-    @media (max-height: 430px) and (orientation: landscape) {
-      html.turn-standalone .m8-home-fixed-layout .m8-home-menu {
-        overflow-y: auto;
-        overflow-x: hidden;
-        overscroll-behavior-y: contain;
-        overscroll-behavior-x: none;
-        touch-action: pan-y;
-        box-sizing: border-box;
-        padding-right: 8px;
-        padding-bottom: 76px;
-        scroll-padding-bottom: 76px;
-      }
-
-      html.turn-standalone .m8-home-fixed-layout .m8-track-continue {
-        position: fixed;
-        z-index: 70;
-        right: max(14px, env(safe-area-inset-right));
-        bottom: max(12px, env(safe-area-inset-bottom));
-        width: clamp(150px, 20vw, 205px);
-        max-width: calc(100vw - 28px - env(safe-area-inset-left) - env(safe-area-inset-right));
-      }
-    }
-  `;
-  document.head.appendChild(style);
-}
-
 function waitForHome() {
   const existing = document.querySelector('.m8-home');
   if (existing) return Promise.resolve(existing);
@@ -187,7 +155,6 @@ function installDriveByEarSpokenLabels(training) {
 
 export async function installM8HomeFixedLayout() {
   installStylesheet();
-  installShortViewportRaceDock();
   const home = await waitForHome();
   if (home.dataset.m8HomeLayout === LAYOUT_ID) return globalThis.__turnHomeLayout;
 

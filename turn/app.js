@@ -399,6 +399,11 @@ const { installHomeFeedback } = await import(
   withBuild('./ui/home-feedback.js?revision=r137-feedback-above-fold')
 );
 installHomeFeedback();
+installStylesheet('./home-app-bar.css', 'data-turn-home-app-bar');
+// Real CSS pixels: exempt the app bar from the 0.75 UI baseline, like responsive.css.
+document.querySelector('link[data-turn-home-app-bar]')?.setAttribute('data-turn-responsive', '');
+const { installHomeAppBar } = await import(withBuild('./ui/home-app-bar.js'));
+installHomeAppBar();
 installStylesheet(
   './m8-record-car-scale.css?revision=r206-three-records',
   'data-turn-m8-record-car-scale'

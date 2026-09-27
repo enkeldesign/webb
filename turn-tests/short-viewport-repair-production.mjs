@@ -1,20 +1,23 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [homeLayout, repair] = await Promise.all([
+const [homeLayout, repair, appBarCss] = await Promise.all([
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/pwa-short-viewport-repair-r184.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/pwa-short-viewport-repair-r184.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/home-app-bar.css', import.meta.url), 'utf8')
 ]);
 
+// The Home menu lives in the app bar's sheet; on short screens it scrolls inside the
+// sheet, vertically only.
+const sheetMenuRule = appBarCss.match(/\.turn-home-sheet \.m8-home-menu \{[^}]*\}/)?.[0] || '';
 for (const verticalOnlyMenuRule of [
   'overflow-y: auto',
   'overflow-x: hidden',
   'overscroll-behavior-x: none',
-  'touch-action: pan-y',
-  'padding-right: 8px'
+  'touch-action: pan-y'
 ]) {
   assert.ok(
-    homeLayout.includes(verticalOnlyMenuRule),
+    sheetMenuRule.includes(verticalOnlyMenuRule),
     `Short-viewport Home menu must keep scrolling vertical-only: ${verticalOnlyMenuRule}`
   );
 }
