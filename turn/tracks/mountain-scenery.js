@@ -9,7 +9,7 @@ import {
   nearestTrackDistanceXZ,
   nearestNonLocalTrackDistanceXZ,
   safeTracksidePosition
-} from './mountain-world-r3-terrain.js';
+} from './mountain-terrain.js';
 
 const {
   GRANITE_DARK,

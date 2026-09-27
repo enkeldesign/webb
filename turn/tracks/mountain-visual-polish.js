@@ -5,7 +5,7 @@ import {
   material,
   safeTracksidePosition,
   seededRandom
-} from './mountain-world-r3-terrain.js';
+} from './mountain-terrain.js';
 
 const {
   GRANITE_DARK,

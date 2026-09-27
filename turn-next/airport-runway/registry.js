@@ -6,7 +6,7 @@ import {
   normalizeTrackId
 } from '/turn-next/airport-runway/catalog.js';
 import { installAirportRunwayWorld } from '/turn-next/airport-runway/world.js';
-import { installCliffsideWorld } from '/turn/tracks/cliffside-world-r76.js?build=20260808-r162';
+import { installCliffsideWorld } from '/turn/tracks/cliffside-world.js';
 import { installHarborWorld } from '/turn/tracks/harbor-world-r81.js?build=20260808-r162';
 import { installMidnightCityWorld } from '/turn/tracks/midnight-city-world.js?build=20260926-r288';
 import { isForgivingTrackSurface } from '/turn/tracks/airport-runoff.js?build=20260722-r52';

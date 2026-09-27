@@ -169,8 +169,8 @@ assert.match(manifest, /DEAD CANYON and BEACHFRONT/);
 assert.equal(labIndex.includes(`production TURN ${release.id}`), true,
   'TURN LAB release identity must follow the current production release metadata');
 
-assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/cliffside-inner-buildings-r202\.js/);
-assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/cliffside-house-inset-r203\.js/);
+assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/cliffside-village\.js/,
+  'BEACHFRONT replaces the CLIFFSIDE slot in LAB, so the production CLIFFSIDE village must not install there');
 assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/kenney-track-landmarks-r517\.js/);
 assert.equal(productionIndex.includes('/turn-lab/tracks/suburbs-world.js'), false);
 assert.equal(productionIndex.includes('/turn-lab/tracks/dead-canyon-world.js'), false);

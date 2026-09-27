@@ -139,10 +139,10 @@ assert.doesNotMatch(lapSystem, /state\.recording\.map\(/,
 // Home needs track metadata, not every track's complete Three.js world graph.
 for (const worldModule of [
   'airport-world-r56.js',
-  'cliffside-world-r76.js',
+  'cliffside-world.js',
   'harbor-world.js',
   'midnight-city-world.js',
-  'mountain-world-long.js'
+  'mountain-world.js'
 ]) {
   const escapedWorldModule = worldModule.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   assert.match(trackRegistry, new RegExp(`await import\\([\\s\\S]{0,160}${escapedWorldModule}`),

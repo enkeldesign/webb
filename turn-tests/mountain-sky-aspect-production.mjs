@@ -3,8 +3,8 @@ import fs from 'node:fs/promises';
 
 const [skySource, worldSource, nightSource] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/shared-night-sky.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/mountain-world-r6-night.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/tracks/mountain-world-base.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-night.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(skySource, /const SKY_REFERENCE_ASPECT = 1536 \/ 709/,

@@ -52,7 +52,7 @@ const [
   fs.readFile(new URL('../turn/tracks/definitions.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/definitions-base.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/cliffside-world.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/cliffside-world-r76.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/cliffside-world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/race/world-collision.js', import.meta.url), 'utf8'),
@@ -86,15 +86,15 @@ assert.doesNotMatch(
   'The centre rebuild must not touch physics, collision, storage or race state'
 );
 assert.equal(
-  imports['./tracks/cliffside-world.js'],
-  `./tracks/cliffside-world-r76.js?build=${release.cacheKey}`,
-  'Production must route Cliffside through the scenery-only wrapper'
+  imports['/turn/tracks/cliffside-world.js'],
+  `/turn/tracks/cliffside-world.js?build=${release.cacheKey}`,
+  'Production must route Cliffside through its one consolidated world module on the current build'
 );
 assert.match(scenicWorldSource, /world\.name = 'TURN Cliffside r76'/);
 assert.match(
   registrySource,
-  /async cliffside\(\{ scene, samples, trackWidth \}\) \{[\s\S]*await import\('\.\/cliffside-world-r76\.js'\)/,
-  'The runtime registry must load the r76 scenery wrapper directly so import-map aliases cannot drop the inner highlands'
+  /async cliffside\(\{ scene, samples, trackWidth \}\) \{[\s\S]*await import\('\.\/cliffside-world\.js'\)/,
+  'The runtime registry must load the consolidated Cliffside world, which includes the inner highlands layer'
 );
 assert.match(physicsSource, /collisionProfile: currentCollisionProfile\(\),[\s\S]*dt/, 'Shoulder drag must remain frame-rate independent');
 assert.match(
