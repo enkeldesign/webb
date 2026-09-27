@@ -113,3 +113,21 @@
   --m8-yellow: var(--turn-yellow-600);
   --m8-blue: var(--turn-blue-300);
 }
+
+/* Display P3 accents. Same OKLab lightness and hue as the sRGB values above, with
+   chroma raised (up to 25%) inside the P3 gamut; contrast with ink changes by at most
+   0.2 and every pair stays above WCAG AA. Paper, ink and tints stay sRGB. Role tokens
+   inherit the upgrade through var(). */
+@media (color-gamut: p3) {
+  @supports (color: color(display-p3 1 1 1)) {
+    :root {
+      --turn-pink-500: color(display-p3 0.99 0.241 0.635);
+      --turn-blue-500: color(display-p3 0.391 0.843 0.999);
+      --turn-yellow-400: color(display-p3 0.998 0.831 0.168);
+      --turn-yellow-600: color(display-p3 0.985 0.742 0.073);
+      --turn-green-500: color(display-p3 0.581 0.924 0.583);
+      --turn-orange-500: color(display-p3 0.995 0.456 0.275);
+      --turn-red-500: color(display-p3 0.994 0.385 0.384);
+    }
+  }
+}

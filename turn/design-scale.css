@@ -1,0 +1,45 @@
+/* TURN design tokens, layer 3: rendered size, type and motion.
+   Real CSS pixels. Linked with data-turn-responsive, so it is exempt from the 0.75
+   UI baseline that rewrites the older stylesheets (design-tokens.css geometry
+   included). var() values are never rewritten, so these tokens render at their
+   stated size wherever they are used, in scaled or unscaled sheets alike.
+   Principle: dense, not tiny. No text below --turn-text-floor; no touch target
+   below --turn-target-min. */
+:root {
+  /* Type scale (mobile-first). Weight carries hierarchy; the system sans stays. */
+  --turn-text-floor: 11px;
+  --turn-type-micro: 11px;                          /* chips, stat and HUD captions: uppercase, 800, +0.04em */
+  --turn-type-small: 13px;                          /* secondary copy, descriptions */
+  --turn-type-body: 15px;                           /* body text, button labels */
+  --turn-type-title: clamp(17px, 4.4vw, 21px);      /* card and dialog-section titles */
+  --turn-type-heading: clamp(22px, 6vw, 30px);      /* screen headings */
+  --turn-type-display: clamp(28px, 8vw, 44px);      /* THE LOT, SETTINGS, ACHIEVEMENTS */
+  --turn-weight-label: 800;
+  --turn-weight-title: 900;
+  --turn-weight-display: 950;
+  --turn-leading-tight: 1;
+  --turn-leading-title: 1.1;
+  --turn-leading-body: 1.35;
+  --turn-tracking-micro: 0.04em;
+
+  /* Layout rhythm on top of the 4-based --turn-space-* scale. */
+  --turn-gutter: clamp(12px, 4vw, 24px);
+  --turn-stack: clamp(8px, 2.2vh, 16px);
+  --turn-content-max: 640px;                        /* portrait reading width on tall screens */
+
+  /* Touch (WCAG 2.5.5 AAA, Apple HIG). */
+  --turn-target-min: 44px;
+  --turn-control-height: max(var(--turn-target-min), 2.75em);
+
+  /* Motion: functional only. */
+  --turn-motion-fast: 120ms;
+  --turn-motion-base: 180ms;
+  --turn-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --turn-motion-fast: 0ms;
+    --turn-motion-base: 0ms;
+  }
+}
