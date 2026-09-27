@@ -20,10 +20,11 @@ for (const page of [design, dialogs]) {
   assert.match(page, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
   assert.doesNotMatch(page, /user-scalable=no/);
   assert.doesNotMatch(page, /<script\b/i, 'Design references must remain static');
-  assert.doesNotMatch(page, /https?:\/\//i, 'Design references must remain dependency-free');
+  assert.doesNotMatch(page, /<(?:script|link|img)\b[^>]*(?:src|href)="https?:/i,
+    'Reference assets must remain local; production source links may point to GitHub');
   assert.match(page, /href="\.\/design-tokens\.css\?revision=r162-social-sharing"/);
   assert.match(page, /href="\.\/design-semantic\.css\?revision=r162-social-sharing"/);
-  assert.match(page, /href="\.\/design-reference\.css\?revision=r204-current-product-language"/);
+  assert.match(page, /href="\.\/design-reference\.css"/);
   assert.match(page, /class="system-toolbar" aria-label="Design reference pages"/);
   assert.match(page, />Design system<\/a>[\s\S]*>Dialogs<\/a>[\s\S]*>Open TURN<\/a>/);
   assert.match(page, /href="\.\/" target="_blank" rel="noopener">Open TURN<\/a>/,
@@ -36,9 +37,10 @@ for (const page of [design, dialogs]) {
 
 assert.match(design, /href="\.\/design\.html" aria-current="page">Design system<\/a>/);
 assert.match(dialogs, /href="\.\/design-dialogs\.html" aria-current="page">Dialogs<\/a>/);
-assert.match(design, /Current product language · September 2026/);
-assert.match(design, /Built from the game, not beside it\./);
-assert.match(design, /what the shipped game actually does today instead of presenting an aspirational concept board/);
+assert.match(design, /data-reviewed-release="\d+\.\d+\.\d+"/);
+assert.match(design, /data-reviewed-build="\d{4}\.\d{2}\.\d{2}-r\d+"/);
+assert.match(design, /The release label updates automatically\. This review date does not\./);
+assert.match(dialogs, /data-reviewed-release="\d+\.\d+\.\d+"/);
 assert.doesNotMatch(design, /Normative production system · TURN 1\.7/);
 assert.doesNotMatch(design, /TURN V1\.7\.0 · BUILD 2026\.08\.09-R163/);
 assert.doesNotMatch(design, /TRACK PREVIEW|3D CAR VIEW|Actual components, not substitute illustrations/,
@@ -178,8 +180,8 @@ for (const decision of [
   'Easy', 'Medium', 'Advanced', 'Expert', 'Locked',
   'Device steering', 'On-screen steering', 'Left-handed layout', 'Drive By Ear',
   'DRIFT and FLOW scorekeeper', 'Drift', 'Boost', 'Gas', 'Brake', 'R', 'Lock', 'Shift',
-  'Scorekeeper paper', 'Trophy Road is a literal road now', 'START', 'FINISH',
-  'Vehicle', 'Feature / perk', 'Scoring', 'The Lot', 'SPORTS CAR',
+  'Scorekeeper paper', 'Trophy Road', 'START', 'FINISH',
+  'Vehicle', 'Feature / perk', 'Scoring', 'The Lot', 'SEDAN',
   'Screen reader', 'Blank screen', 'Reduced motion'
 ]) {
   assert.ok(design.toLocaleLowerCase('en').includes(decision.toLocaleLowerCase('en')), `Missing current design decision ${decision}`);
@@ -211,7 +213,7 @@ assert.match(referenceCss, /\.reward-tile\.scoring\.unlocked[\s\S]*var\(--turn-p
 assert.match(referenceCss, /@media \(prefers-reduced-motion: reduce\)/);
 
 assert.match(dialogs, /TURN dialogs/i);
-assert.match(dialogs, /Standardize the shell, not the content\./);
+assert.match(dialogs, /one scrolling body and an orange close control/);
 assert.match(dialogs, /Production dialog inventory/);
 assert.match(dialogs, /About TURN/);
 assert.match(dialogs, /Development history &amp; changelog/);
@@ -219,8 +221,8 @@ assert.match(dialogs, /Drive By Ear 101 introduction/);
 assert.match(dialogs, /Motion access denied/);
 assert.match(dialogs, /In-race audio settings/);
 assert.match(dialogs, /Compact[\s\S]*Standard[\s\S]*Wide[\s\S]*Reader/);
-assert.match(dialogs, /Do not stack modal dialogs/);
-assert.match(dialogs, /Focus the heading first/);
+assert.match(dialogs, /One active focus context/);
+assert.match(dialogs, /Choose initial focus deliberately/);
 assert.match(dialogs, /Return focus/);
 assert.match(dialogs, /Contain scrolling/);
 

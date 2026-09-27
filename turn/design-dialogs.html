@@ -5,143 +5,97 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <meta name="robots" content="noindex">
-  <title>TURN Design System — Dialogs</title>
+  <meta name="description" content="TURN interface reference: components, responsive layouts, accessibility and implementation guidance.">
+  <title>TURN — Dialogs</title>
   <link rel="stylesheet" href="./design-tokens.css?revision=r162-social-sharing">
+  <link rel="stylesheet" href="./design-scale.css" data-turn-responsive>
   <link rel="stylesheet" href="./design-semantic.css?revision=r162-social-sharing">
-  <link rel="stylesheet" href="./dialog-system-r163.css?revision=r163-modal-pattern">
-  <link rel="stylesheet" href="./design-reference.css?revision=r204-current-product-language">
+  <link rel="stylesheet" href="./design-reference.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to dialog system</a>
-
+  <a class="skip-link" href="#main">Skip to dialogs</a>
   <header class="system-header">
     <div class="system-header__inner">
-      <div class="turn-mark" aria-hidden="true"><span>TURN</span></div>
-      <div class="system-title">
-        <p>Design system · dialog architecture</p>
-        <h1>DIALOG SYSTEM</h1>
-      </div>
-      <div class="system-meta" aria-label="Reference baseline">
-        <strong>Production reference</strong>
-        <span>TURN 1.24.0</span>
-        <span>Build 2026.09.27-r303</span>
-      </div>
+      <a class="turn-mark" href="./design.html" aria-label="TURN design system">TURN<span aria-hidden="true">↗</span></a>
+      <div class="system-title"><p>The interface reference</p><h1>Dialogs</h1></div>
+      <div class="system-meta" aria-label="Current production release"><strong>Production release</strong><span>TURN 1.24.0</span><span>Build 2026.09.27-r303</span></div>
     </div>
   </header>
+  <div class="system-toolbar" aria-label="Design reference pages"><div class="system-toolbar__inner">
+    <a href="./design.html">Design system</a>
+    <a href="./design-dialogs.html" aria-current="page">Dialogs</a>
+    <a href="./" target="_blank" rel="noopener">Open TURN</a>
+  </div></div>
+  <div class="reference-shell">
+    <aside class="reference-index">
+      <nav class="section-nav" aria-label="Dialog sections">
+        <p class="index-label">On this page</p>
+        <a href="#anatomy"><span aria-hidden="true">01</span>Anatomy</a><a href="#sizes"><span aria-hidden="true">02</span>Sizes & reflow</a><a href="#inventory"><span aria-hidden="true">03</span>Inventory</a><a href="#behavior"><span aria-hidden="true">04</span>Focus & dismissal</a><a href="#implementation"><span aria-hidden="true">05</span>Implementation</a>
+      </nav>
+      <div class="index-note"><span class="status-badge reviewed">Reviewed</span><p>Content checked against <strong>1.24.0 / r303</strong><br><time datetime="2026-09-27">27 September 2026</time></p><small>The release label updates automatically. This review date does not.</small></div>
+    </aside>
+    <main id="main" tabindex="-1" data-reviewed-release="1.24.0" data-reviewed-build="2026.09.27-r303">
 
-  <div class="system-toolbar" aria-label="Design reference pages">
-    <div class="system-toolbar__inner">
-      <a href="./design.html">Design system</a>
-      <a href="./design-dialogs.html" aria-current="page">Dialogs</a>
-      <a href="./" target="_blank" rel="noopener">Open TURN</a>
-    </div>
-  </div>
-
-  <nav class="section-nav" aria-label="Dialog system sections">
-    <a href="#anatomy">Anatomy</a>
-    <a href="#sizes">Sizes</a>
-    <a href="#inventory">Inventory</a>
-    <a href="#behavior">Behavior</a>
-  </nav>
-
-  <main id="main">
-    <section id="anatomy" aria-labelledby="dialogs-title">
-      <div class="lead-board">
-        <div class="lead-copy">
-          <span class="kicker">TURN dialogs</span>
-          <h2 id="dialogs-title">Standardize the shell, not the content.</h2>
-          <p>TURN has many kinds of dialog content, but they share one production structure: a strong Paper surface, a compact heading region, one scrolling body when needed, optional actions, and an orange close control. Size is chosen from the system scale rather than invented per feature.</p>
-        </div>
-        <aside class="status-board">
-          <span class="kicker">Dialog contract</span>
-          <strong>One modal at a time.</strong>
-          <div class="status-row"><span class="status-dot" aria-hidden="true"></span><span>Heading receives initial focus where appropriate.</span></div>
-          <div class="status-row"><span class="status-dot" aria-hidden="true"></span><span>Body owns scrolling, not the whole viewport.</span></div>
-          <div class="status-row"><span class="status-dot" aria-hidden="true"></span><span>Close returns focus to the trigger.</span></div>
-        </aside>
-      </div>
-
-      <div class="specimen" style="margin-top:24px">
-        <div class="specimen-head"><strong>Normative anatomy</strong><span class="specimen-label">Header · body · actions</span></div>
-        <div class="specimen-body">
-          <div class="dialog-demo">
-            <div class="dialog-demo__head">
-              <div><span class="dialog-demo__eyebrow">How to play</span><h3>DRIFT POINTS</h3></div>
-              <button class="dialog-demo__close" type="button" aria-label="Close">×</button>
-            </div>
-            <div class="dialog-demo__body">
-              <div class="dialog-demo__panel"><strong>BODY</strong><p>The content region owns overflow when the dialog is taller than the available viewport.</p></div>
-              <div class="dialog-demo__panel"><strong>ACTIONS</strong><p>Use actions only when the task needs an explicit next step. Close remains a navigation action.</p></div>
-            </div>
-          </div>
-          <div class="table-wrap" style="margin-top:24px">
-            <table>
-              <thead><tr><th>Part</th><th>Production class</th><th>Responsibility</th></tr></thead>
-              <tbody>
-                <tr><td>Dialog</td><td><code>.turn-dialog</code></td><td>Modal root and size variables.</td></tr>
-                <tr><td>Surface</td><td><code>.turn-dialog__surface</code></td><td>Paper card, border, radius, shadow and vertical composition.</td></tr>
-                <tr><td>Header</td><td><code>.turn-dialog__header</code></td><td>Label, title and close control.</td></tr>
-                <tr><td>Body</td><td><code>.turn-dialog__body</code></td><td>Owns scrolling and overscroll containment.</td></tr>
-                <tr><td>Actions</td><td><code>.turn-dialog__actions</code></td><td>Optional task completion or navigation actions.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="sizes" aria-labelledby="sizes-title">
-      <div class="section-head">
-        <div><span class="kicker">Size scale</span><h2 id="sizes-title">Compact. Standard. Wide. Reader.</h2></div>
-        <p>Size describes content complexity. It should not be used to make a dialog feel important.</p>
-      </div>
-      <div class="grid">
-        <article class="card"><span class="token-label">Compact</span><h3>≤ 660px</h3><p>Short decisions, simple notices and small About-style content.</p></article>
-        <article class="card"><span class="token-label">Standard</span><h3>≤ 760px</h3><p>Feedback forms, audio settings and medium-complexity tasks.</p></article>
-        <article class="card"><span class="token-label">Wide</span><h3>≤ 1040px</h3><p>Settings, How to Play, Achievements and multi-column configuration.</p></article>
-        <article class="card"><span class="token-label">Reader</span><h3>Near full screen</h3><p>History and changelog. The shell is fixed; the reading pane scrolls.</p></article>
-      </div>
-    </section>
-
-    <section id="inventory" aria-labelledby="inventory-title">
-      <div class="section-head">
-        <div><span class="kicker">Production dialog inventory</span><h2 id="inventory-title">Map shipped content to the system.</h2></div>
-        <p>Specialized content is expected. Specialized modal mechanics are not.</p>
-      </div>
-      <div class="table-wrap">
+      <section id="anatomy" aria-labelledby="dialogs-title">
+        <div class="section-head"><div><span class="kicker">01 / TURN dialogs</span><h2 id="dialogs-title">A consistent frame.<br>A clear way back.</h2></div><span class="status-badge shipped">Shipped anatomy</span></div>
+        <p class="section-intro">Use a Paper surface, a readable heading, one scrolling body and an orange close control. Size follows the task. Focus and dismissal are part of the component contract.</p>
+        <figure class="specimen"><div class="specimen-head"><strong>Header → body → optional actions</strong><span class="status-badge schematic">Anatomy specimen</span></div><div class="specimen-body"><div class="dialog-demo"><div class="dialog-demo__head"><div><span class="dialog-demo__eyebrow">How to play</span><h3>DRIFT POINTS</h3></div><span class="dialog-demo__close" aria-hidden="true">×</span></div><div class="dialog-demo__body" tabindex="0" role="region" aria-label="Scrollable dialog anatomy example"><div class="dialog-demo__panel"><strong>1 / Heading stays in the shell</strong><p>Give the title room to wrap. The orange close control stays reachable when content becomes long or text grows.</p></div><div class="dialog-demo__panel"><strong>2 / The body owns overflow</strong><p>Only this region scrolls. Try scrolling here: the heading and action region remain outside the moving content.</p></div><div class="dialog-demo__panel"><strong>3 / Long content stays accessible</strong><p>Use real headings, lists and form groups. Keep the final control reachable without moving the whole modal shell off screen.</p></div></div><div class="dialog-demo__actions"><span class="status-badge schematic">Optional task actions</span></div></div><figcaption class="sample-note">This is a scrollable structural example, not an open modal. The close symbol is illustrative; no focus trap or dismissal behaviour is attached.</figcaption></div></figure>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Dialog anatomy classes"><table><thead><tr><th>Part</th><th>Production class</th><th>Responsibility</th></tr></thead><tbody><tr><th>Dialog</th><td><code>.turn-dialog</code></td><td>Named modal root and size variables.</td></tr><tr><th>Surface</th><td><code>.turn-dialog__surface</code></td><td>Paper, border, radius, shadow and vertical composition.</td></tr><tr><th>Header</th><td><code>.turn-dialog__header</code></td><td>Title and orange close control.</td></tr><tr><th>Body</th><td><code>.turn-dialog__body</code></td><td>Scrolling and overscroll containment.</td></tr><tr><th>Actions</th><td><code>.turn-dialog__actions</code></td><td>Optional explicit next step.</td></tr></tbody></table></div>
+      </section>
+      <section id="sizes" aria-labelledby="sizes-title">
+        <div class="section-head"><div><span class="kicker">02 / Sizes &amp; reflow</span><h2 id="sizes-title">Fit the task to the space.</h2></div></div>
+        <p class="section-intro">Compact, standard, wide and reader describe content needs. Available viewport space always takes precedence over the nominal size.</p>
+        <div class="dialog-size-grid"><article class="card"><span class="token-label">Compact</span><h3>660px</h3><i class="size-bar" style="--size:45%" aria-hidden="true"></i><p>About and short notices.</p></article><article class="card"><span class="token-label">Standard</span><h3>760px</h3><i class="size-bar" style="--size:60%" aria-hidden="true"></i><p>Feedback and audio settings.</p></article><article class="card"><span class="token-label">Wide</span><h3>1040px</h3><i class="size-bar" style="--size:80%" aria-hidden="true"></i><p>Settings, guides and Achievements.</p></article><article class="card"><span class="token-label">Reader</span><h3>Viewport</h3><i class="size-bar" style="--size:100%" aria-hidden="true"></i><p>History and changelog.</p></article></div>
+        <aside class="callout"><strong>These pixel widths are authored maxima.</strong><p>TURN’s historical 0.75 normalizer affects older stylesheet dimensions. Responsive rules use actual CSS pixels. Use <code>var(--turn-target-min)</code> from the unscaled <code>design-scale.css</code> for a 44px touch target, and inspect computed geometry before copying other dimensions.</p></aside>
+        <div class="component-grid"><article class="card"><h3>Portrait phones: bottom sheets</h3><p>Up to 46em wide in portrait, every modal (including The Lot’s SHIFT chooser, RESET RIVALS and the motion-access notice) is a bottom sheet: full width, flush with the bottom edge, rounded only at the top, never taller than the space below the status bar, and padded above the home indicator. It rises 24px on open unless reduced motion is on (TURN 1.24.0, <code>surfaces.css</code>).</p></article><article class="card"><h3>Elevation</h3><p>Everywhere else a dialog card uses the dialog level: <code>--turn-radius-dialog</code> (24px), <code>--turn-border-dialog</code> (4px) and <code>--turn-shadow-dialog</code> (8px 8px 0 Ink). Cards inside a dialog step down to the control level.</p></article><article class="card"><h3>Narrow or enlarged text</h3><p>Wrap the title, preserve the close target and stack content columns. Use the available width without forcing horizontal scrolling through a form. Check at 200% text.</p></article><article class="card"><h3>Short landscape</h3><p>Reduce padding and decorative space. Keep the header and actions outside the body’s scrolling region. Respect safe areas and the usable viewport height.</p></article></div>
+      </section>
+      <section id="inventory" aria-labelledby="inventory-title">
+        <div class="section-head"><div><span class="kicker">03 / Production dialog inventory</span><h2 id="inventory-title">One shell. Different tasks.</h2></div></div>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Production dialog inventory">
         <table>
           <thead><tr><th>Dialog</th><th>Size</th><th>Notes</th></tr></thead>
           <tbody>
             <tr><td>About TURN</td><td>Compact</td><td>Short product summary and History / Changelog entry.</td></tr>
             <tr><td>Development history &amp; changelog</td><td>Reader</td><td>Tabbed reader; one internal body owns scroll.</td></tr>
             <tr><td>Give Feedback</td><td>Standard</td><td>Native form controls and compact heading spacing.</td></tr>
-            <tr><td>Settings</td><td>Wide</td><td>Use available width for grouped controls; avoid a long single column.</td></tr>
+            <tr><td>Settings</td><td>Wide</td><td>Use grouped columns when they fit; reflow to one column on narrow screens.</td></tr>
             <tr><td>How to Play</td><td>Wide</td><td>Native disclosures, selectable text and large readable sections.</td></tr>
-            <tr><td>Achievements</td><td>Wide</td><td>Collection and Trophy Road content; reward details may use a contextual modal layer.</td></tr>
+            <tr><td>Achievements</td><td>Wide</td><td>Collection and Trophy Road content; reward details use a contextual layer with one active focus context.</td></tr>
             <tr><td>Drive By Ear 101 introduction</td><td>Wide</td><td>Training setup with clear primary action.</td></tr>
             <tr><td>Motion access denied</td><td>Compact</td><td>Explains fallback without trapping the player.</td></tr>
             <tr><td>In-race audio settings</td><td>Standard</td><td>Readable without pausing or obscuring more race state than necessary.</td></tr>
           </tbody>
         </table>
       </div>
-    </section>
 
-    <section id="behavior" aria-labelledby="behavior-title">
-      <div class="section-head">
-        <div><span class="kicker">Behavior</span><h2 id="behavior-title">The interaction model is as normative as the border.</h2></div>
-        <p>Modal consistency depends on focus, scrolling and dismissal behavior as much as visual styling.</p>
-      </div>
-      <div class="grid">
-        <article class="card"><span class="principle-number">1</span><h3>Do not stack modal dialogs</h3><p>Close the source dialog before opening another modal. Restore the source when the reader or subtask closes if that is the user’s expected return point.</p></article>
-        <article class="card"><span class="principle-number">2</span><h3>Focus the heading first</h3><p>For information-heavy dialogs, focus the labelled heading programmatically with <code>tabindex="-1"</code>. Do not force initial focus to Close.</p></article>
-        <article class="card"><span class="principle-number">3</span><h3>Return focus</h3><p>Closing a dialog returns focus to the control that opened it. This applies to website About as well as in-game dialogs.</p></article>
-        <article class="card"><span class="principle-number">4</span><h3>Contain scrolling</h3><p>Use <code>overscroll-behavior</code>, stable scrollbars and an internal body so the modal shell does not slide around in short landscape viewports.</p></article>
-        <article class="card"><span class="principle-number">5</span><h3>Dismiss outside where appropriate</h3><p>Contextual reward detail can close on outside click. Task dialogs should not accidentally discard user input unless that behavior is explicitly safe.</p></article>
-        <article class="card"><span class="principle-number">6</span><h3>Respect reduced motion</h3><p>Dialog navigation should not depend on decorative animation. Scrolling and transition behavior simplify under reduced-motion preferences.</p></article>
-      </div>
-    </section>
-  </main>
+        <p class="small">The portrait landscape-recommendation notice is non-modal. It belongs to <a href="./design.html#feedback">Notices &amp; feedback</a> and must not inherit a modal focus trap.</p>
+      </section>
+      <section id="behavior" aria-labelledby="behavior-title">
+        <div class="section-head"><div><span class="kicker">04 / Focus &amp; dismissal</span><h2 id="behavior-title">Make the return journey explicit.</h2></div></div>
+        <div class="a11y-grid"><article class="card"><span class="token-label">01 / Open</span><h3>Choose initial focus deliberately</h3><p>For information-heavy content, focus the labelled heading with <code>tabindex="-1"</code>. A short input task may start at its first field. Do not automatically focus Close for every dialog.</p></article><article class="card"><span class="token-label">02 / Interact</span><h3>One active focus context</h3><p>Keep modal background content out of keyboard interaction. Forms own their keys, and opening a dialog releases held driving actions.</p></article><article class="card"><span class="token-label">03 / Read</span><h3>Contain scrolling</h3><p>The body owns overflow and overscroll containment. Keep focus visible and allow the final item to scroll fully into view.</p></article><article class="card"><span class="token-label">04 / Close</span><h3>Return focus</h3><p>Return to the trigger when it still exists. If the source surface was replaced, choose a logical point in that surface rather than dropping focus onto the document body.</p></article><article class="card"><span class="token-label">05 / Dismiss</span><h3>Specify Escape and outside click</h3><p>Use the existing modal close path for Escape. Outside-click dismissal is appropriate for reward detail; task dialogs must protect input that would otherwise be lost.</p></article><article class="card"><span class="token-label">06 / Motion</span><h3>Respect reduced motion</h3><p>Keep navigation and state understandable with simplified transitions. Do not animate focus or rely on a wiggle to explain a task.</p></article></div>
+        <aside class="callout"><strong>Contextual reward detail needs an explicit relationship.</strong><p>Achievements can present a reward detail layer within its flow. Keep a single active focus context and restore the selected reward when details close. For separate tasks such as the history reader, follow the existing close-and-return orchestration. Avoid adding independent modal stacks.</p></aside>
+      </section>
+      <section id="implementation" aria-labelledby="implementation-title">
+        <div class="section-head"><div><span class="kicker">05 / Implementation</span><h2 id="implementation-title">Reuse the contract.</h2></div></div>
+        <p class="section-intro">The shell below shows the class anatomy. Focus restoration, input release and dismissal belong to the existing dialog controller; markup alone does not implement them.</p>
+        <pre tabindex="0" aria-label="Dialog markup example"><code>&lt;dialog class="m8-dialog turn-dialog turn-dialog--standard"
+        aria-labelledby="example-title"&gt;
+  &lt;article class="m8-dialog-card turn-dialog__surface"&gt;
+    &lt;header class="turn-dialog__header"&gt;
+      &lt;h2 id="example-title" tabindex="-1"&gt;Title&lt;/h2&gt;
+      &lt;button type="button" data-turn-navigation-action
+              aria-label="Close title"&gt;×&lt;/button&gt;
+    &lt;/header&gt;
+    &lt;div class="turn-dialog__body"&gt;…&lt;/div&gt;
+    &lt;div class="turn-dialog__actions"&gt;…&lt;/div&gt;
+  &lt;/article&gt;
+&lt;/dialog&gt;</code></pre>
+        <p class="source-note">Production source · <a href="https://github.com/enkeldesign/webb/blob/main/turn/dialog-system-r163.css">dialog-system-r163.css</a> · <a href="https://github.com/enkeldesign/webb/blob/main/turn/responsive.css">responsive.css</a> · <a href="https://github.com/enkeldesign/webb/blob/main/turn/input/keyboard-drive-ownership.js">input/keyboard-drive-ownership.js</a></p>
+        <p class="small">Review a new dialog with keyboard, screen reader, enlarged text and short viewports. Return to the <a href="./design.html#legacy">handoff checklist</a> before passing it to another developer.</p>
+      </section>
 
-  <footer><div class="footer-inner"><strong>TURN Dialog System</strong><span>Current product language · September 2026</span></div></footer>
+    </main>
+  </div>
+  <footer><div class="footer-inner"><strong>TURN / Interface reference</strong><span>Paper. Ink. Room to play.</span><a href="#main">Back to content ↑</a></div></footer>
 </body>
 </html>
