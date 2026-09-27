@@ -1063,13 +1063,14 @@ Object.freeze({
     Object.freeze(['1.24.2 r305', 'In landscape the race buttons keep their full labels: ACHIEVEMENTS is a trophy with its count, as on Home, and BOOST sits clear above the row. In portrait the DRIFT and FLOW meters sit under their scores instead of over the car.']),
     Object.freeze(['1.24.3 r306', 'Dialogs tidy up: titles no longer show a focus outline when a dialog opens, the menu fits a landscape phone without scrolling, the challenge dialog has one clean frame with standard buttons, and SHIFT lays its levers out in three columns on phones with the round close button.']),
     Object.freeze(['1.24.4 r307', 'The Lot on phones: RACE THIS CAR always takes the tap, even with COLOR scrolled beneath it, and the status bar keeps a sky backdrop. In landscape the attributes keep readable rows and scroll, and the SHIFT button no longer spills over the divider.']),
-    Object.freeze(['1.24.5 r308', 'On iPhones where the installed app was laid out one status bar shorter than the screen, it now reaches the bottom edge: no more strip of background under RACE, the race controls and dialogs.'])
+    Object.freeze(['1.24.5 r308', 'On iPhones where the installed app was laid out one status bar shorter than the screen, it now reaches the bottom edge: no more strip of background under RACE, the race controls and dialogs.']),
+    Object.freeze(['1.24.6 r309', 'Hotfix for 1.24.5 on iPhone: RACE and the menu are whole again. iOS draws nothing in the strip below the installed app, so the strip now takes the colour of the screen above it (Paper under Home and The Lot, Ink under a race).'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.24.5',
-  build: '2026.09.27-r308',
-  note: 'TURN 1.24.5 closes the strip of background along the bottom of the installed app on iPhone.'
+  version: '1.24.6',
+  build: '2026.09.27-r309',
+  note: 'TURN 1.24.6 restores RACE on iPhone and colours the bottom strip to match the screen.'
 });

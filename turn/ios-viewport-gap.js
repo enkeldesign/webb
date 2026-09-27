@@ -1,13 +1,11 @@
 // iOS standalone viewport gap. On some iPhones the installed app is laid out one
 // status-bar inset shorter than the screen (portrait: client/dvh 793 of lvh 852,
-// top inset 59) while it still paints from the very top, so everything anchored to
-// the bottom stops early above a strip of page background. The viewport meta pulse
-// in pwa-short-viewport-repair-r184.js does not recover this case.
-//
-// When the gap matches the top inset, the body takes the full large-viewport height
-// and becomes the containing block for fixed descendants (a transform), so fixed
-// layers anchored to the bottom reach the real screen edge. Modal dialogs live in
-// the top layer, outside the body, and extend by the same gap.
+// top inset 59) while it paints from the very top, so a strip of the root
+// background shows below the app. The viewport meta pulse in
+// pwa-short-viewport-repair-r184.js does not recover this case, and iOS draws no
+// page content in the strip, so it takes the colour of the screen above it:
+// Paper under Home and The Lot (their docks are Paper), Ink under a race, and
+// the loading artwork's green end while loading.
 (() => {
   const root = document.documentElement;
   const isStandalone =
@@ -20,28 +18,34 @@
   const CLASS = 'turn-viewport-gap';
   const MIN_GAP = 20;
   const INSET_TOLERANCE = 4;
-  const SETTLE_DELAYS_MS = Object.freeze([0, 120, 400, 900]);
+  const SETTLE_DELAYS_MS = Object.freeze([0, 120, 400, 900, 1600, 2600]);
 
+  // iOS paints nothing but the root background below the short layout viewport:
+  // moving content down there only clips it (1.24.5). So the strip takes the
+  // colour of the screen above it instead. The r181 boundary paints it cyan.
   const style = document.createElement('style');
   style.id = 'turn-viewport-gap-style';
+  // Real CSS pixels: the 0.75 UI baseline leaves this sheet alone.
+  style.setAttribute('data-turn-responsive', '');
   style.textContent = `
-    /* Only the fixed body grows: a fixed box adds nothing to the document's
-       scrollable height, so the page cannot rubber-band by the gap. */
-    html.${CLASS} body {
-      height: 100lvh !important;
-      min-height: 100lvh !important;
-      transform: translateZ(0);
+    /* Loading: the artwork's 145deg cyan-to-green gradient has no single bottom
+       colour, so it resolves into its own green end over its last 120px, and the
+       strip continues in that green. (Layers repeat install-gate.css.) */
+    html.${CLASS}:has(.install-gate.turn-startup-loading:not([hidden])) {
+      background: #8ce99a !important;
     }
-    html.${CLASS} dialog[open]::backdrop {
-      bottom: calc(-1 * var(--turn-viewport-gap, 0px));
+    html.${CLASS} .install-gate.turn-startup-loading {
+      background:
+        linear-gradient(to bottom, transparent calc(100% - 120px), #8ce99a),
+        radial-gradient(circle at 12% 20%, rgb(255 212 59 / 0.95) 0 7%, transparent 7.5%),
+        radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.9) 0 10%, transparent 10.5%),
+        linear-gradient(145deg, #38d9ff 0 45%, #8ce99a 100%);
     }
-    html.${CLASS} .turn-home-sheet[open] {
-      height: calc(100% + var(--turn-viewport-gap, 0px));
+    html.${CLASS}:has(body.turn-race-active) {
+      background: #08090a !important;
     }
-    @media (max-width: 46em) and (orientation: portrait) {
-      :root.${CLASS} body :is(dialog.m8-dialog, dialog.audio-settings-dialog, dialog.turn-support-challenge-dialog, dialog.turn-yourturn-share-dialog, dialog.turn-motion-denied-dialog, dialog.lot-shift-dialog, dialog.nuke-dialog)[open] {
-        bottom: calc(-1 * var(--turn-viewport-gap, 0px));
-      }
+    html.${CLASS}:has(body:is(.turn-home-open, .turn-lot-open)) {
+      background: var(--turn-surface-page, #fff8e8) !important;
     }
   `;
   document.head.appendChild(style);
@@ -73,8 +77,7 @@
   let timers = [];
   function settle() {
     for (const timer of timers) window.clearTimeout(timer);
-    // documentElement.clientHeight is the layout viewport whatever the root's own
-    // height, so the compensation never skews the next measurement.
+    // iOS settles its viewport numbers late after a rotation; measure again after it.
     timers = SETTLE_DELAYS_MS.map((delay) => window.setTimeout(sync, delay));
   }
 
@@ -82,6 +85,7 @@
     window.addEventListener(eventName, settle, { passive: true });
   }
   window.visualViewport?.addEventListener('resize', settle, { passive: true });
+  window.matchMedia?.('(orientation: portrait)').addEventListener?.('change', settle);
   if (document.body) settle();
   else document.addEventListener('DOMContentLoaded', settle, { once: true });
 
