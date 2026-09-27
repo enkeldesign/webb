@@ -6,12 +6,13 @@
   semantic colour and shape decisions.
 */
 
-/* Main forward flow: one colour and one shape. */
+/* Main forward flow: one colour and one shape (the shared rounded-rectangle
+   control radius from design-scale.css). */
 .install-primary,
 .m8-home-fixed-layout .m8-track-continue,
 .track-select-continue,
 .lot-race {
-  border-radius: var(--turn-radius-pill) !important;
+  border-radius: var(--turn-radius-control, 12px) !important;
   background: var(--turn-action-primary) !important;
 }
 

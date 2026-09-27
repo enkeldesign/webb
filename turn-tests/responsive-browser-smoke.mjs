@@ -188,6 +188,20 @@ async function responsiveRace(browser, name) {
     await page.setViewportSize({ width: 393, height: 852 });
     // A halved CSS viewport covers page-zoom reflow; doubling root text separately
     // exercises text resizing without shrinking the game surface.
+    // One button shape: the menu sheet's entries are the shared rounded rectangle,
+    // and its close is the same round close as every dialog.
+    await page.locator('.turn-home-menu-button').click();
+    const shape = (selector) => page.$$eval(selector, (nodes) => nodes
+      .filter((node) => node.getBoundingClientRect().width > 0)
+      .map((node) => { const style = globalThis.getComputedStyle(node); return [style.borderTopLeftRadius, style.borderTopWidth, style.boxShadow].join(' / '); }));
+    assert.deepEqual([...new Set(await shape('.turn-home-sheet .m8-home-menu > button'))], ['12px / 3px / rgb(8, 9, 10) 3px 3px 0px 0px'],
+      'Menu entries use the shared control shape');
+    const sheetClose = (await shape('.turn-home-sheet-close'))[0];
+    await page.locator('.m8-home-settings').click();
+    await page.waitForSelector('.m8-settings-dialog[open]');
+    assert.equal(sheetClose, (await shape('.m8-settings-dialog [data-dialog-close]'))[0], 'The sheet closes like every dialog');
+    await page.locator('.m8-settings-dialog [data-dialog-close]').click();
+    await page.waitForFunction(() => !document.querySelector('dialog[open]'));
     for (const [trigger, dialog] of [['.m8-home-settings', '.m8-settings-dialog'], ['.m8-achievements-button', '.turn-achievements-dialog']]) {
       if (!(await page.locator(trigger).isVisible())) await page.locator('.turn-home-menu-button').click();
       await page.locator(trigger).click();
