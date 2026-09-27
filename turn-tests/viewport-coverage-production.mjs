@@ -72,6 +72,8 @@ assert.doesNotMatch(viewportGap, /height: 100lvh|translateZ|dialog\[open\]/,
   'Content never moves into the gap, where iOS does not draw it');
 assert.match(viewportGap, /:has\(body:is\(\.turn-home-open, \.turn-lot-open\)\)[\s\S]*turn-surface-page/,
   'The strip under Home and The Lot is Paper');
+assert.match(viewportGap, /install-gate\.turn-startup-loading[\s\S]*linear-gradient\(to bottom, transparent calc\(100% - 120px\), #8ce99a\)/,
+  'While loading, the artwork resolves into the green the strip continues in');
 assert.match(nextIndex, /pwa-usable-viewport-r181\.js\?revision=r181-usable-web-layer/);
 
 for (const manifest of [productionManifest, nextManifest]) {

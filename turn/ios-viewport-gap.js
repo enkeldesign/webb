@@ -4,7 +4,8 @@
 // background shows below the app. The viewport meta pulse in
 // pwa-short-viewport-repair-r184.js does not recover this case, and iOS draws no
 // page content in the strip, so it takes the colour of the screen above it:
-// Paper under Home and The Lot (their docks are Paper), Ink under a race.
+// Paper under Home and The Lot (their docks are Paper), Ink under a race, and
+// the loading artwork's green end while loading.
 (() => {
   const root = document.documentElement;
   const isStandalone =
@@ -24,7 +25,22 @@
   // colour of the screen above it instead. The r181 boundary paints it cyan.
   const style = document.createElement('style');
   style.id = 'turn-viewport-gap-style';
+  // Real CSS pixels: the 0.75 UI baseline leaves this sheet alone.
+  style.setAttribute('data-turn-responsive', '');
   style.textContent = `
+    /* Loading: the artwork's 145deg cyan-to-green gradient has no single bottom
+       colour, so it resolves into its own green end over its last 120px, and the
+       strip continues in that green. (Layers repeat install-gate.css.) */
+    html.${CLASS}:has(.install-gate.turn-startup-loading:not([hidden])) {
+      background: #8ce99a !important;
+    }
+    html.${CLASS} .install-gate.turn-startup-loading {
+      background:
+        linear-gradient(to bottom, transparent calc(100% - 120px), #8ce99a),
+        radial-gradient(circle at 12% 20%, rgb(255 212 59 / 0.95) 0 7%, transparent 7.5%),
+        radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.9) 0 10%, transparent 10.5%),
+        linear-gradient(145deg, #38d9ff 0 45%, #8ce99a 100%);
+    }
     html.${CLASS}:has(body.turn-race-active) {
       background: #08090a !important;
     }
