@@ -428,7 +428,7 @@
   }
   :root body .m8-home.m8-home-fixed-layout .m8-home-pitch p {
     margin: 0;
-    font-size: clamp(14px, 4.1vw, 18px);
+    font-size: clamp(0.875rem, 4.1vw, 1.125rem);
     line-height: var(--turn-leading-title);
   }
   :root body .m8-home.m8-home-fixed-layout .turn-music-home-toggle {
