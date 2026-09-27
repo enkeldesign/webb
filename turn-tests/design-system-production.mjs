@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [design, dialogs, referenceCss, tokens, semantic, releaseSource, index] = await Promise.all([
+const [design, dialogs, referenceCss, tokens, semantic, releaseSource, index, scale] = await Promise.all([
   fs.readFile(new URL('../turn/design.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-dialogs.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-reference.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-tokens.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-semantic.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/design-scale.css', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -228,6 +229,19 @@ assert.match(index, new RegExp(`version: '${escapeRegex(release.version)}'`));
 assert.match(index, new RegExp(`id: '${escapeRegex(release.id)}'`));
 assert.match(index, new RegExp(`cacheKey: '${escapeRegex(release.cacheKey)}'`));
 
+// Layer 3: rendered-size tokens in real CSS pixels, exempt from the 0.75 baseline.
+assert.match(index, new RegExp(`href="\\./design-tokens\\.css\\?build=${escapeRegex(release.cacheKey)}">\\n\\s*<link rel="stylesheet" href="\\./design-scale\\.css\\?build=${escapeRegex(release.cacheKey)}" data-turn-responsive>`),
+  'design-scale.css loads right after the palette tokens, exempt from the UI baseline');
+for (const [token, value] of [['--turn-text-floor', '11px'], ['--turn-type-micro', '11px'], ['--turn-target-min', '44px'],
+  ['--turn-type-body', '15px'], ['--turn-gutter', 'clamp(12px, 4vw, 24px)']]) {
+  assert.match(scale, new RegExp(`${token}: ${escapeRegex(value)};`), `${token} must be ${value}`);
+}
+assert.match(scale, /prefers-reduced-motion: reduce[\s\S]*--turn-motion-base: 0ms/);
+assert.match(tokens, /@media \(color-gamut: p3\) \{\s*@supports \(color: color\(display-p3 1 1 1\)\)/,
+  'P3 accents apply only on wide-gamut displays that parse display-p3, with sRGB as the fallback');
+assert.match(tokens, /--turn-pink-500: #ff4fa3;[\s\S]*--turn-pink-500: color\(display-p3 /,
+  'The sRGB accent is declared first and remains the default');
+assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-scale"[\s\S]*no text below 11px/);
 console.log('TURN current product-language design system, palette, gameplay, progression and dialog reference passed.');
 
 function escapeRegex(value) {

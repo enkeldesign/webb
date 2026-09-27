@@ -1050,13 +1050,14 @@ Object.freeze({
     Object.freeze(['Trophy Road', 'Replaces the MIDNIGHT CITY and MOUNTAIN rewards with MEDIUM, ADVANCED and EXPERT track tiers, moves AWD · TRACTION to 500 and gives TRUCK its TORQUE perk from the start.']),
     Object.freeze(['Track chooser', 'CLIFFSIDE is now EASY and MIDNIGHT CITY EXPERT. Wide screens use fewer, roomier track cards so long names are never cut off.']),
     Object.freeze(['1.23.1 r294', 'Moves the hidden tester unlock onto Home controls every new profile can reach, so it no longer depends on a locked track.']),
-    Object.freeze(['1.23.2 r295', 'Turns off double-tap-to-zoom so quick repeated taps on one button register as taps on iPhone and iPad. Pinch-zoom still works.'])
+    Object.freeze(['1.23.2 r295', 'Turns off double-tap-to-zoom so quick repeated taps on one button register as taps on iPhone and iPad. Pinch-zoom still works.']),
+    Object.freeze(['1.23.3 r296', 'Adds TURN’s rendered-size design tokens (type scale, touch targets, spacing rhythm, motion) and richer Display P3 accent colours on wide-gamut screens.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.23.2',
-  build: '2026.09.27-r295',
-  note: 'TURN 1.23.2 turns off double-tap-to-zoom so quick repeated taps register on iPhone and iPad, while pinch-zoom still works.'
+  version: '1.23.3',
+  build: '2026.09.27-r296',
+  note: 'TURN 1.23.3 adds rendered-size design tokens and Display P3 accent colours on wide-gamut screens.'
 });

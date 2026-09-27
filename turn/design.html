@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex">
   <title>TURN Design System</title>
   <link rel="stylesheet" href="./design-tokens.css?revision=r162-social-sharing">
+  <link rel="stylesheet" href="./design-scale.css" data-turn-responsive>
   <link rel="stylesheet" href="./design-semantic.css?revision=r162-social-sharing">
   <link rel="stylesheet" href="./design-reference.css?revision=r204-current-product-language">
 </head>
@@ -22,8 +23,8 @@
       </div>
       <div class="system-meta" aria-label="Reference baseline">
         <strong>Production reference</strong>
-        <span>TURN 1.23.2</span>
-        <span>Build 2026.09.27-r295</span>
+        <span>TURN 1.23.3</span>
+        <span>Build 2026.09.27-r296</span>
       </div>
     </div>
   </header>
@@ -264,6 +265,36 @@
           </div>
         </details>
       </div>
+      <div id="rendered-scale" style="margin-top: 32px">
+        <div class="section-head" style="margin-bottom: 18px">
+          <div><span class="kicker">Layer 3</span><h2 style="font-size: clamp(1.9rem, 4vw, 3.2rem)">Rendered size</h2></div>
+          <p>design-scale.css states real CSS pixels and is exempt from the legacy 0.75 UI baseline, so these values are what players see. Dense, not tiny: no text below 11px and no touch target below 44px.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Token</th><th>Value</th><th>Use</th></tr></thead>
+            <tbody>
+              <tr class="mapping-group"><td colspan="3">Type</td></tr>
+              <tr><td><code>--turn-type-micro</code></td><td>11px · 800 · uppercase · +0.04em</td><td>Chips, stat labels, HUD captions. Also the text floor.</td></tr>
+              <tr><td><code>--turn-type-small</code></td><td>13px · 700</td><td>Secondary copy, descriptions</td></tr>
+              <tr><td><code>--turn-type-body</code></td><td>15px · 700 · 1.35</td><td>Body text, button labels</td></tr>
+              <tr><td><code>--turn-type-title</code></td><td>clamp(17px, 4.4vw, 21px) · 900</td><td>Card and dialog-section titles</td></tr>
+              <tr><td><code>--turn-type-heading</code></td><td>clamp(22px, 6vw, 30px) · 950</td><td>Screen headings</td></tr>
+              <tr><td><code>--turn-type-display</code></td><td>clamp(28px, 8vw, 44px) · 950</td><td>THE LOT, SETTINGS, ACHIEVEMENTS</td></tr>
+              <tr class="mapping-group"><td colspan="3">Layout and touch</td></tr>
+              <tr><td><code>--turn-gutter</code></td><td>clamp(12px, 4vw, 24px)</td><td>Screen side padding</td></tr>
+              <tr><td><code>--turn-stack</code></td><td>clamp(8px, 2.2vh, 16px)</td><td>Vertical rhythm between blocks</td></tr>
+              <tr><td><code>--turn-content-max</code></td><td>640px</td><td>Reading width on tall portrait screens</td></tr>
+              <tr><td><code>--turn-target-min</code></td><td>44px</td><td>Every touch target, in every orientation</td></tr>
+              <tr class="mapping-group"><td colspan="3">Motion</td></tr>
+              <tr><td><code>--turn-motion-fast</code> · <code>--turn-motion-base</code></td><td>120ms · 180ms, 0ms with reduced motion</td><td>State acknowledgement only</td></tr>
+              <tr><td><code>--turn-ease</code></td><td>cubic-bezier(0.2, 0.8, 0.2, 1)</td><td>Enter and settle</td></tr>
+              <tr class="mapping-group"><td colspan="3">Colour on wide-gamut screens</td></tr>
+              <tr><td>Display P3 accents</td><td>Pink, blue, yellow, green, orange, red</td><td>Same OKLab lightness and hue with up to 25% more chroma on P3 displays; sRGB elsewhere. Contrast with ink changes by at most 0.2.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <section id="components" aria-labelledby="components-title">
@@ -422,7 +453,7 @@
         <article class="layout-specimen">
           <div class="layout-caption"><strong>Home / track selection</strong><span>Yellow header · Paper canvas · tracks + menu</span></div>
           <div class="home-mini">
-            <div class="home-mini__head"><div class="home-mini__logo">TURN</div><div class="home-mini__pitch">A tiny racing game with a lot going on.</div><div class="home-mini__build">TURN 1.23.2 · 2026.09.27-r295</div></div>
+            <div class="home-mini__head"><div class="home-mini__logo">TURN</div><div class="home-mini__pitch">A tiny racing game with a lot going on.</div><div class="home-mini__build">TURN 1.23.3 · 2026.09.27-r296</div></div>
             <div class="home-mini__main">
               <div>
                 <h3 style="margin:0 0 12px">TRACKS</h3>
