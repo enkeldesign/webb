@@ -38,6 +38,16 @@
   --turn-shadow-control: 3px 3px 0 var(--turn-ink, #08090a);
   --turn-shadow-action: 4px 4px 0 var(--turn-ink, #08090a);
 
+  /* Surfaces: three elevation levels. Readouts (HUD chips, cards inside a dialog)
+     share the control radius, border and shadow; cards and panels sit above them;
+     dialogs sit above everything. */
+  --turn-radius-card: 18px;
+  --turn-border-card: 4px;
+  --turn-shadow-card: 6px 6px 0 var(--turn-ink, #08090a);
+  --turn-radius-dialog: 24px;
+  --turn-border-dialog: 4px;
+  --turn-shadow-dialog: 8px 8px 0 var(--turn-ink, #08090a);
+
   /* Motion: functional only. */
   --turn-motion-fast: 120ms;
   --turn-motion-base: 180ms;

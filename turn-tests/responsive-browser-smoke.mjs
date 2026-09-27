@@ -209,6 +209,11 @@ async function responsiveRace(browser, name) {
       await settle(page);
       const box = await bounds(page, dialog);
       within(box, 393, 852, dialog);
+      // Portrait phones: every dialog is a bottom sheet, full width and flush with
+      // the bottom edge.
+      const sheet = await bounds(page, `${dialog} > :first-child`);
+      assert.ok(Math.round(sheet.x) === 0 && Math.round(sheet.width) === 393 && Math.round(sheet.bottom) === 852,
+        `${dialog} is a portrait bottom sheet`);
       assert.ok(box.scrollWidth <= box.clientWidth + 1, 'Dialog text reflows at 200%');
       await page.locator(`${dialog} [data-dialog-close]`).click();
       await page.evaluate(() => { document.documentElement.style.fontSize = ''; });

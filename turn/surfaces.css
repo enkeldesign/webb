@@ -1,0 +1,127 @@
+/* TURN surfaces: three elevation levels, portrait dialog sheets and one toast
+   region (real CSS pixels: linked with data-turn-responsive, so the 0.75 UI
+   baseline never rewrites it). Tokens live in design-scale.css.
+
+   1. Readout  — HUD chips, minimap, cards inside a dialog:
+      --turn-radius-control, 3px border, --turn-shadow-control.
+   2. Card     — track cards, The Lot's panels, toasts:
+      --turn-radius-card, --turn-border-card, --turn-shadow-card.
+   3. Dialog   — every modal: --turn-radius-dialog, --turn-border-dialog,
+      --turn-shadow-dialog. On portrait phones dialogs are bottom sheets. */
+
+/* ---------- 1. Readouts ---------- */
+
+:root body :is(.stats .chip, .map-wrap, .m8-setting-card) {
+  border-width: var(--turn-border-control);
+  border-radius: var(--turn-radius-control);
+  box-shadow: var(--turn-shadow-control);
+}
+
+/* ---------- 2. Cards ---------- */
+
+/* Track cards keep their border width: their compact height is computed from it. */
+:root body .m8-home .track-card {
+  border-radius: var(--turn-radius-card);
+  box-shadow: var(--turn-shadow-card);
+}
+
+:root body .lot-screen.lot-showroom :is(.lot-card, .lot-viewbox) {
+  border-width: var(--turn-border-card);
+  border-radius: var(--turn-radius-card);
+  box-shadow: var(--turn-shadow-card);
+}
+
+/* ---------- 3. Dialogs ---------- */
+
+:root body :is(dialog.m8-dialog > .m8-dialog-card, .audio-settings-card, .turn-support-challenge-card, .turn-yourturn-share-card) {
+  border-width: var(--turn-border-dialog);
+  border-radius: var(--turn-radius-dialog);
+  box-shadow: var(--turn-shadow-dialog);
+}
+
+/* Portrait phones: every dialog is a bottom sheet — full width, anchored above the
+   home indicator, rounded only at the top, and never taller than the space below
+   the status bar. */
+@media (max-width: 46em) and (orientation: portrait) {
+  :root body :is(dialog.m8-dialog, dialog.audio-settings-dialog, dialog.turn-support-challenge-dialog, dialog.turn-yourturn-share-dialog)[open] {
+    inset: auto 0 0;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    margin: auto 0 0;
+  }
+
+  :root body :is(dialog.m8-dialog > .m8-dialog-card, .audio-settings-card, .turn-support-challenge-card, .turn-yourturn-share-card) {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    max-height: calc(100dvh - max(12px, env(safe-area-inset-top)) - 8px);
+    padding-bottom: max(18px, calc(env(safe-area-inset-bottom) + 12px));
+    border-bottom-width: 0;
+    border-radius: var(--turn-radius-dialog) var(--turn-radius-dialog) 0 0;
+    box-shadow: 0 -4px 0 var(--turn-ink, #08090a);
+  }
+
+  /* Reader dialogs (TURN history) keep their full height. */
+  :root body dialog.m8-dialog.turn-dialog--reader > .m8-dialog-card {
+    height: calc(100dvh - max(12px, env(safe-area-inset-top)) - 8px);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :root body :is(dialog.m8-dialog, dialog.audio-settings-dialog, dialog.turn-support-challenge-dialog, dialog.turn-yourturn-share-dialog)[open] > :first-child {
+      animation: turn-sheet-rise var(--turn-motion-base, 180ms) var(--turn-ease, ease-out);
+    }
+    @keyframes turn-sheet-rise {
+      from { transform: translateY(24px); opacity: 0; }
+    }
+  }
+}
+
+/* ---------- Toasts ---------- */
+
+/* One region, top centre, below the status bar (and the Home app bar). Toasts
+   stack in arrival order instead of overlapping. */
+.turn-toast-region {
+  position: fixed;
+  z-index: 2147482500;
+  top: max(12px, calc(env(safe-area-inset-top) + 8px));
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(680px, calc(100vw - 24px));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+:root body .turn-toast-region > :is(.turn-achievement-toast, .turn-support-home-toast) {
+  position: relative;
+  inset: auto;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  border-width: var(--turn-border-card);
+  border-radius: var(--turn-radius-card);
+  box-shadow: var(--turn-shadow-card);
+  transform: translateY(-12px);
+}
+
+:root body .turn-toast-region > :is(.turn-achievement-toast, .turn-support-home-toast).is-visible {
+  transform: none;
+}
+
+:root body .turn-toast-region > :is(.turn-achievement-toast, .turn-support-home-toast):not(.is-visible) {
+  visibility: hidden;
+  height: 0;
+  min-height: 0;
+  padding-block: 0;
+  border-width: 0;
+  overflow: hidden;
+}
+
+:root body .turn-toast-region > .turn-trophy-reward-toast {
+  pointer-events: auto;
+}
