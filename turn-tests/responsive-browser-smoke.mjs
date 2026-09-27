@@ -209,6 +209,11 @@ async function responsiveRace(browser, name) {
       await settle(page);
       const box = await bounds(page, dialog);
       within(box, 393, 852, dialog);
+      // Portrait phones: every dialog is a bottom sheet, full width and flush with
+      // the bottom edge.
+      const sheet = await bounds(page, `${dialog} > :first-child`);
+      assert.ok(Math.round(sheet.x) === 0 && Math.round(sheet.width) === 393 && Math.round(sheet.bottom) === 852,
+        `${dialog} is a portrait bottom sheet`);
       assert.ok(box.scrollWidth <= box.clientWidth + 1, 'Dialog text reflows at 200%');
       await page.locator(`${dialog} [data-dialog-close]`).click();
       await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
@@ -227,6 +232,15 @@ async function responsiveRace(browser, name) {
     await page.waitForSelector('.lot-showroom');
     await settle(page);
     assert.deepEqual(await dockStyle('.lot-race'), homeDock, `${name}: RACE THIS CAR matches Home RACE`);
+    // Standalone dialogs (Lot SHIFT, reset rivals) are portrait sheets too.
+    for (const dialog of ['.lot-shift-dialog', '.nuke-dialog']) {
+      await page.$eval(dialog, (node) => node.showModal());
+      await settle(page);
+      const sheet = await bounds(page, `${dialog} > :first-child`);
+      assert.ok(Math.round(sheet.x) === 0 && Math.round(sheet.width) === 393 && Math.round(sheet.bottom) === 852,
+        `${dialog} is a portrait bottom sheet`);
+      await page.$eval(dialog, (node) => node.close());
+    }
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height });
       await settle(page);

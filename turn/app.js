@@ -402,13 +402,16 @@ installHomeFeedback();
 installStylesheet('./home-app-bar.css', 'data-turn-home-app-bar');
 installStylesheet('./action-dock.css', 'data-turn-action-dock');
 installStylesheet('./controls.css', 'data-turn-controls');
-// Real CSS pixels: exempt the app bar, action dock and controls from the 0.75 UI
-// baseline, like responsive.css.
-for (const attribute of ['data-turn-home-app-bar', 'data-turn-action-dock', 'data-turn-controls']) {
+installStylesheet('./surfaces.css', 'data-turn-surfaces');
+// Real CSS pixels: exempt the app bar, action dock, controls and surfaces from the
+// 0.75 UI baseline, like responsive.css.
+for (const attribute of ['data-turn-home-app-bar', 'data-turn-action-dock', 'data-turn-controls', 'data-turn-surfaces']) {
   document.querySelector(`link[${attribute}]`)?.setAttribute('data-turn-responsive', '');
 }
 const { installHomeAppBar } = await import(withBuild('./ui/home-app-bar.js'));
 installHomeAppBar();
+const { installToastRegion } = await import(withBuild('./ui/toast-region.js'));
+installToastRegion();
 installStylesheet(
   './m8-record-car-scale.css?revision=r206-three-records',
   'data-turn-m8-record-car-scale'
