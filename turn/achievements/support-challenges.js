@@ -3,11 +3,11 @@ import {
   HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT,
   LEARN_TO_PLAY_ACHIEVEMENT_ID
 } from './learning-progress.js?revision=r1-learning-achievements';
-import { TRACK_IDS, TRACK_NAMES, VEHICLE_NAMES } from './catalog.js?revision=r241-learning-achievements';
+import { TRACK_IDS, TRACK_NAMES, VEHICLE_NAMES } from './catalog.js';
 import {
   isTrackUnlocked,
   isVehicleUnlocked
-} from '../progression/trophy-road-perks-r164.js?revision=r243-mountain-1300';
+} from '../progression/trophy-road.js';
 import { completeTrackOrder, getTrackStorageRevision } from '../tracks/definitions.js';
 
 export const SUPPORT_CHALLENGE_STORAGE_KEY = 'turn-support-challenges-v1';

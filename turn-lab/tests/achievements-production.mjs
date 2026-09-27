@@ -60,8 +60,8 @@ const [
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/achievements/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/catalog-base.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/achievements/catalog-production.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/achievements/catalog-chromatic-r183.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/catalog.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/secret-catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/secret-events.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/secret-achievements.js', import.meta.url), 'utf8'),
@@ -476,10 +476,11 @@ for (let index = 0; index < rivals.length; index += 1) {
 assert.equal(completedNightShiftSheriff(nightShift, { position: 1, total: 5 }), true);
 assert.equal(completedNightShiftSheriff(nightShift, { position: 2, total: 5 }), false);
 
-assert.match(catalogSource, /Stable production achievement facade/);
-assert.match(catalogSource, /catalog-production\.js\?revision=r241-learning-achievements/);
+assert.match(catalogSource, /Production achievement catalog/);
+assert.match(catalogSource, /Presentation layer: authored track icons/,
+  'The authored track-icon presentation lives in the one production catalog module');
 assert.doesNotMatch(catalogSource, /id: 'an-army-of-me'/,
-  'The stable facade must not duplicate the production achievement definitions');
+  'The production catalog must not duplicate the base achievement definitions');
 assert.match(baseCatalogSource, /id: 'an-army-of-me'/);
 assert.match(baseCatalogSource, /id: 'on-course-of-course'/);
 assert.match(baseCatalogSource, /cat: '<svg/);
@@ -488,7 +489,7 @@ assert.match(baseCatalogSource, /convertible: 'AWD'/,
   'Stable vehicle IDs must use the current AWD name in achievement copy');
 assert.match(productionCatalogSource, /catalog-base\.js\?revision=r241-trophy-balance/);
 assert.doesNotMatch(productionCatalogSource, /from '.\/catalog\.js/,
-  'The production catalog must extend the explicit base module, never depend on the public facade');
+  'The production catalog must extend the explicit base module, never import itself');
 assert.match(productionCatalogSource, /title: 'MAYDAY!'/);
 assert.match(productionCatalogSource, /title: 'GOT STARTED'/);
 assert.match(productionCatalogSource, /title: 'CATCH THE CHARGE'/);
@@ -497,8 +498,12 @@ assert.match(productionCatalogSource, /TRACK_SAFETY_ACHIEVEMENTS/);
 assert.match(productionCatalogSource, /countryside: '15 seconds'/);
 assert.match(productionCatalogSource, /'midnight-city': '70 seconds'/);
 assert.match(productionCatalogSource, /mountain: '70 seconds'/);
-assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r241-learning-achievements/,
-  'The old Chromatic catalog URL must converge on the same production source of truth');
+assert.equal(legacyCatalogSource, catalogSource,
+  'Every achievements consumer reads the one production catalog module');
+for (const retired of ['catalog-production.js', 'catalog-track-icons.js', 'catalog-chromatic-r183.js']) {
+  await assert.rejects(fs.access(new URL(`../../turn/achievements/${retired}`, import.meta.url)),
+    `${retired} is folded into catalog.js and must not return as a revision layer`);
+}
 
 assert.match(secretCatalog, /title: 'FIND LILYA!'/);
 assert.match(secretCatalog, /title: 'FIND DARVID!'/);
@@ -607,8 +612,8 @@ for (const source of [runtime, view, storeSource, challengeSource, secretRuntime
   assert.doesNotMatch(source, /catalog-base\.js/,
     'Runtime consumers must use the stable production catalog facade, never the internal base catalog');
 }
-assert.match(runtime, /catalog\.js\?revision=r241-learning-achievements/,
-  'Achievement consumers must load the current AWD vehicle label');
+assert.match(runtime, /from '\.\/catalog\.js'/,
+  'Achievement consumers must load the one production catalog (with the current AWD vehicle label)');
 assert.match(runtime, /store\.js\?revision=r243-mountain-1300/,
   'The runtime must execute the MOUNTAIN threshold migration under a fresh module identity');
 assert.match(runtime, /view\.js\?revision=r244-reward-toast-guide/);

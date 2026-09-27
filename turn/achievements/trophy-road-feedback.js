@@ -1,4 +1,4 @@
-import { CATEGORY } from './catalog.js?revision=r241-learning-achievements';
+import { CATEGORY } from './catalog.js';
 import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r253-supercar-release';
 import {
   achievementCardMatchesFilters
@@ -6,7 +6,7 @@ import {
 import {
   TROPHY_ROAD_REWARD_ICONS,
   getTrophyRoadReward
-} from '../progression/trophy-road.js?revision=r253-supercar-release';
+} from '../progression/trophy-road.js';
 
 const FILTER_STYLE_ID = 'turn-achievement-filter-row-styles';
 const FILTER_ROWS = Object.freeze([

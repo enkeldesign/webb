@@ -1,4 +1,4 @@
-import { TRACK_IDS } from './catalog-chromatic-r183.js';
+import { TRACK_IDS } from './catalog.js';
 import { getStoredBestLap } from '../race/rival-storage.js';
 import { assertTrackConfigCoverage } from '../tracks/definitions.js';
 

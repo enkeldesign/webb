@@ -1,7 +1,7 @@
 import {
   ONBOARDING_ACHIEVEMENT_IDS,
   TRACK_IDS
-} from './catalog.js?revision=r241-learning-achievements';
+} from './catalog.js';
 import { assertTrackConfigCoverage } from '../tracks/definitions.js';
 
 export const CHALLENGE_PROGRESS_STORAGE_KEY = 'turn-achievement-challenges-v1';

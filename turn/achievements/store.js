@@ -2,7 +2,7 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   getAchievement
-} from './catalog.js?revision=r241-learning-achievements';
+} from './catalog.js';
 import {
   DRIVE_BY_EAR_PART_IDS,
   HOW_TO_PLAY_DISCLOSURE_IDS
@@ -15,7 +15,7 @@ import {
   grandfatheredRewardIdsForVersion,
   migrateStoredRewardIdsForVersion,
   rewardIdsForTrophies
-} from '../progression/trophy-road-perks-r164.js?revision=r243-mountain-1300';
+} from '../progression/trophy-road.js';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;

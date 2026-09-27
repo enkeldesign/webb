@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { getAchievement as getProductionAchievement } from '../../turn/achievements/catalog-chromatic-r183.js';
+import { getAchievement as getProductionAchievement } from '../../turn/achievements/catalog.js';
 
 const root = process.cwd();
 const turnDir = path.join(root, 'turn');

@@ -7,7 +7,7 @@ import {
   TRACK_NAMES,
   VEHICLE_NAMES,
   TRACK_IDS
-} from './catalog.js?revision=r241-learning-achievements';
+} from './catalog.js';
 import {
   TIME_TRIAL_ACHIEVEMENT_IDS
 } from './time-trials.js?revision=r166-bella-records';
@@ -29,7 +29,7 @@ import {
   TROPHY_ROAD_REWARD_ICONS,
   getTrophyRoadReward,
   trophyRoadOverview
-} from '../progression/trophy-road.js?revision=r243-mountain-1300';
+} from '../progression/trophy-road.js';
 
 const TOAST_VISIBLE_MS = 3600;
 const ATTENTION_VISIBLE_MS = 900;

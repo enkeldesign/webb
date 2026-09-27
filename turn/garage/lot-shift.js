@@ -4,7 +4,7 @@ import {
   isVehiclePerkUnlocked,
   rewardForFeature,
   showTrophyUnlockNotice
-} from '../progression/trophy-road.js?revision=r243-mountain-1300';
+} from '../progression/trophy-road.js';
 import {
   VEHICLE_SHIFT_FEATURE_ID,
   VEHICLE_SHIFT_STAT_FIELDS,

@@ -9,7 +9,7 @@ import {
   isPaintUnlocked,
   getTrophyRoadReward,
   showTrophyUnlockNotice
-} from './trophy-road.js?revision=r243-mountain-1300';
+} from './trophy-road.js';
 
 const PAINT_REWARD_ID = 'paintjob';
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));

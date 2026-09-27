@@ -29,7 +29,7 @@ import {
   TROPHY_ROAD_REWARDS as PRODUCTION_TROPHY_ROAD_REWARDS,
   getTrophyRoadReward as getProductionTrophyRoadReward,
   rewardIdsForTrophies as productionRewardIdsForTrophies
-} from '../../turn/progression/trophy-road-perks-r164.js';
+} from '../../turn/progression/trophy-road.js';
 
 const [
   roadSource,
@@ -53,7 +53,7 @@ const [
   fs.readFile(new URL('../../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/progression/trophy-road-perks-r164.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/progression/trophy-road.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/m8-trophy-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/lot-trophy-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8')
@@ -632,15 +632,16 @@ assert.match(view, /data-trophy-reward-type="\$\{reward\.type\}"/,
   'Reward styling must be driven by semantic reward type');
 assert.doesNotMatch(feedback, /requestAnimationFrame|scrollLeft|scrollBy|scrollWidth|clientWidth/,
   'Trophy Road must not maintain carousel geometry or a layout animation path');
-assert.match(app, /trophy-road\.js\?revision=r253-supercar-release/);
+assert.match(app, /withBuild\('\.\/progression\/trophy-road\.js'\)/,
+  'app.js prepares the profile through the same canonical Trophy Road module instance as every other consumer');
 assert.match(app, /trophy-road-r157\.css\?revision=r244-reward-toast-guide/);
 assert.match(workflow, /Run Trophy Road progression regression/);
 assert.match(workflow, /node turn-lab\/tests\/trophy-road-production\.mjs/);
-assert.match(perkWrapper, /export \* from '\.\/trophy-road\.js\?revision=r243-mountain-1300'/,
-  'Compatibility imports must re-export the one canonical Trophy Road definition');
-assert.match(homeGate, /trophy-road\.js\?revision=r243-mountain-1300/);
-assert.match(lotGate, /trophy-road\.js\?revision=r243-mountain-1300/);
-assert.match(paintGate, /trophy-road\.js\?revision=r243-mountain-1300/);
+assert.match(perkWrapper, /export const TROPHY_ROAD_REWARDS/,
+  'Every consumer reads the one canonical Trophy Road definition');
+for (const gate of [homeGate, lotGate, paintGate]) {
+  assert.match(gate, /from '\.\/trophy-road\.js'/, 'Trophy gates import the canonical Trophy Road module by its bare path');
+}
 assert.match(paintGate, /reward\(\)\?\.threshold \|\| 800/);
 
 assert.match(perkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/,

@@ -211,8 +211,30 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
   ]) {
     imports[specifier] = challengeTarget;
   }
-  imports['/turn/achievements/catalog-production.js?revision=r241-learning-achievements-base']
-    = `/turn/achievements/catalog-production.js?build=${release.cacheKey}`;
+  // The achievements catalog and Trophy Road are each one canonical module. Every
+  // importer uses the bare path, so each resolves to exactly one module instance;
+  // app.js's withBuild() URL matches the target, so it shares that instance too.
+  const progressionModules = Object.freeze({
+    '/turn/achievements/catalog.js': [
+      '/turn/achievements/catalog-production.js',
+      '/turn/achievements/catalog-track-icons.js',
+      '/turn/achievements/catalog-chromatic-r183.js'
+    ],
+    '/turn/progression/trophy-road.js': [
+      '/turn/progression/trophy-road-track-icons.js',
+      '/turn/progression/trophy-road-perks-r164.js',
+      '/turn/progression/trophy-road-chromatic-r183.js'
+    ]
+  });
+  for (const [pathname, retired] of Object.entries(progressionModules)) {
+    const owned = new Set([pathname, ...retired]);
+    for (const [specifier, existing] of Object.entries(imports)) {
+      const keyPath = new URL(specifier, 'https://enkel.design/turn/').pathname;
+      const targetPath = typeof existing === 'string' ? new URL(existing, 'https://enkel.design/turn/').pathname : '';
+      if (owned.has(keyPath) || owned.has(targetPath)) delete imports[specifier];
+    }
+    imports[pathname] = `${pathname}?build=${release.cacheKey}`;
+  }
 
   // Support-feedback modules are active production code. Keep historical import
   // specifiers as aliases, but route every active identity through the current
@@ -364,8 +386,6 @@ for (const [specifier, existing] of Object.entries(imports)) {
 }
 for (const specifier of legacyCatalogSpecifiers) imports[specifier] = catalogTarget;
 
-  imports['/turn/progression/trophy-road.js?revision=r253-supercar-release-base']
-    = `/turn/progression/trophy-road.js?build=${release.cacheKey}`;
 }
 
 function synchronizeGraphicsRuntimeTarget(importMap, release) {
@@ -547,7 +567,6 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
     if (typeof target !== 'string' || !target.startsWith('/turn/')) continue;
     const pathname = new URL(target, 'https://enkel.design').pathname;
     if (pathname === '/turn/garage/lot-enhancement-runtime.js'
-      || pathname === '/turn/progression/trophy-road-track-icons.js'
       || pathname === '/turn/garage/lot-track-select.js'
       || pathname === '/turn/m8-home.js') {
       synchronizeReleaseBoundImportTarget(importMap, release, specifier);

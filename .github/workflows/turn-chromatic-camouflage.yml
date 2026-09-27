@@ -5,11 +5,10 @@ on:
     branches:
       - main
     paths:
-      - 'turn/achievements/catalog-chromatic-r183.js'
+      - 'turn/achievements/catalog.js'
       - 'turn/achievements/chromatic-camouflage-r183.js'
       - 'turn/achievements/challenge-expansion-r166.js'
-      - 'turn/progression/trophy-road-perks-r164.js'
-      - 'turn/progression/trophy-road-chromatic-r183.js'
+      - 'turn/progression/trophy-road.js'
       - 'turn/progression/trophy-road-r157.css'
       - 'turn/progression/m8-trophy-gate.js'
       - 'turn/progression/lot-trophy-gate.js'
@@ -20,11 +19,10 @@ on:
     branches:
       - main
     paths:
-      - 'turn/achievements/catalog-chromatic-r183.js'
+      - 'turn/achievements/catalog.js'
       - 'turn/achievements/chromatic-camouflage-r183.js'
       - 'turn/achievements/challenge-expansion-r166.js'
-      - 'turn/progression/trophy-road-perks-r164.js'
-      - 'turn/progression/trophy-road-chromatic-r183.js'
+      - 'turn/progression/trophy-road.js'
       - 'turn/progression/trophy-road-r157.css'
       - 'turn/progression/m8-trophy-gate.js'
       - 'turn/progression/lot-trophy-gate.js'
@@ -53,11 +51,10 @@ jobs:
 
       - name: Syntax-check achievement progression modules
         run: |
-          node --check turn/achievements/catalog-chromatic-r183.js
+          node --check turn/achievements/catalog.js
           node --check turn/achievements/chromatic-camouflage-r183.js
           node --check turn/achievements/challenge-expansion-r166.js
-          node --check turn/progression/trophy-road-perks-r164.js
-          node --check turn/progression/trophy-road-chromatic-r183.js
+          node --check turn/progression/trophy-road.js
           node --check turn/progression/m8-trophy-gate.js
           node --check turn/progression/lot-trophy-gate.js
           node --check turn/progression/lot-paint-reward.js

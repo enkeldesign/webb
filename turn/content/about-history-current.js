@@ -1021,6 +1021,7 @@ Object.freeze({
     Object.freeze(['1.22.0 r287', 'Supports portrait and landscape racing with mirrored controls, separated DRIFT/FLOW panels and upward intensity meters. Removes the rotate gate and automatic landscape lock.']),
     Object.freeze(['1.22.1 r288', 'Loads the track chooser styles as one stylesheet, builds MIDNIGHT CITY from one module and removes unused legacy track, audio and garage files. Nothing changes in play.']),
     Object.freeze(['1.22.2 r289', 'Shows a closable LANDSCAPE ORIENTATION RECOMMENDED notice on Home and The Lot in portrait while the portrait design is still being refined. It returns on the next launch in portrait.']),
+    Object.freeze(['1.22.3 r290', 'Loads achievements and Trophy Road from one module each instead of stacked revision layers. Nothing changes in play.']),
     Object.freeze(['Responsive navigation', 'Reflows Home, The Lot and dialogs for smaller windows and enlarged text; keeps growing track catalogs reachable and limits large-screen stretching.']),
     Object.freeze(['Race orientation', 'Recommends landscape once at the first portrait race handoff while keeping portrait fully supported and immediately playable.'])
   ])
@@ -1028,7 +1029,7 @@ Object.freeze({
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.22.2',
-  build: '2026.09.26-r289',
-  note: 'TURN 1.22.2 recommends landscape on Home and The Lot in portrait with a closable notice while the portrait design is still being refined.'
+  version: '1.22.3',
+  build: '2026.09.26-r290',
+  note: 'TURN 1.22.3 is a maintenance release that loads achievements and Trophy Road from one module each without changing how the game plays.'
 });

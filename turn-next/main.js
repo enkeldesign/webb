@@ -33,7 +33,7 @@ import { installPerformanceMonitor, recordPerformanceFrame } from '/turn/perform
 import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked
-} from '/turn/progression/trophy-road.js?revision=r253-supercar-release';
+} from '/turn/progression/trophy-road.js';
 import {
   resetVehiclePerkRuntimeState,
   resolveGraduatedStageFeedback

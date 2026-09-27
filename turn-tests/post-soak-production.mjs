@@ -24,7 +24,7 @@ const [
   fs.readFile(new URL('../turn/ui/steering-limit-warning.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/progression/trophy-road-chromatic-r183.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/progression/trophy-road.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8')
@@ -160,15 +160,13 @@ assert.equal(
 );
 assert.match(lotPerk, /vehiclePerkPresentation\(vehicleId, getCarDefinition\(vehicleId\)\?\.perk\)/);
 assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r217-stable-perk-slot/);
-assert.match(trophyWrapper, /export \* from '\.\/trophy-road\.js\?revision=r243-mountain-1300'/,
-  'The Chromatic compatibility facade must expose the canonical Trophy Road catalog');
+assert.match(trophyWrapper, /export const TROPHY_ROAD_REWARDS/,
+  'Every consumer reads the one canonical Trophy Road reward catalog');
 
 for (const index of [productionIndex, labIndex]) {
-  assert.match(
-    index,
-    /\/turn\/progression\/trophy-road-chromatic-r183\.js\?revision=r253-supercar-release/,
-    'Production and LAB must load the canonical Trophy Road reward catalog'
-  );
+  const imports = JSON.parse(index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)[1]).imports;
+  assert.match(imports['/turn/progression/trophy-road.js'] || '', /^\/turn\/progression\/trophy-road\.js\?build=/,
+    'Production and LAB must load the canonical Trophy Road reward catalog');
   assert.match(index, /app\.js\?build=[^"']*r164-long-session-robustness-post-soak/);
   assert.match(
     index,

@@ -1,7 +1,7 @@
 import {
   MIDNIGHT_CITY_ID,
   POLICE_CAR_ID
-} from './catalog.js?revision=r146-achievement-expansion';
+} from './catalog.js';
 
 const RIVAL_COUNT = 4;
 const PROGRESS_EPSILON = 0.002;
