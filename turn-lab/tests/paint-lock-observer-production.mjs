@@ -196,7 +196,7 @@ assert.match(
 const canonicalLotCatalog = `/turn/vehicle/catalog.js?build=${release.cacheKey}`;
 assert.equal(
   imports['/turn/progression/lot-paint-reward.js?revision=r206-pwa-color'],
-  '/turn/progression/lot-paint-reward.js?revision=r243-mountain-1300',
+  `/turn/progression/lot-paint-reward.js?build=${release.cacheKey}`,
   'Installed PWAs must refetch the COLOR state module with current Trophy Road thresholds'
 );
 assert.equal(

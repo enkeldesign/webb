@@ -231,6 +231,7 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
     for (const [specifier, existing] of Object.entries(imports)) {
       const keyPath = new URL(specifier, 'https://enkel.design/turn/').pathname;
       const targetPath = typeof existing === 'string' ? new URL(existing, 'https://enkel.design/turn/').pathname : '';
+      if (specifier === pathname) continue;
       if (owned.has(keyPath) || owned.has(targetPath)) delete imports[specifier];
     }
     imports[pathname] = `${pathname}?build=${release.cacheKey}`;
@@ -243,7 +244,14 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
     '/turn/achievements/support-challenges.js': [''],
     '/turn/achievements/support-challenge-feedback.js': ['', '?revision=r244-reward-toast-guide'],
     '/turn/achievements/view.js': ['', '?revision=r244-reward-toast-guide'],
-    '/turn/achievements/home-reward-replay-r225.js': ['', '?revision=r244-reward-toast-guide']
+    '/turn/achievements/home-reward-replay-r225.js': ['', '?revision=r244-reward-toast-guide'],
+    // Consumers of the canonical catalog and Trophy Road modules (#989): their
+    // historical revision URLs follow the release build so edits always reach players.
+    '/turn/achievements/night-shift.js': ['?revision=r146-achievement-expansion'],
+    '/turn/garage/lot-perk-disclosure.js': ['?revision=r243-mountain-1300'],
+    '/turn/garage/lot-shift.js': ['?revision=r243-mountain-1300'],
+    '/turn/progression/lot-paint-reward.js': ['?revision=r246-lot-saved-paint'],
+    '/turn/progression/lot-trophy-gate.js': ['?revision=r243-mountain-1300']
   };
   for (const [pathname, suffixes] of Object.entries(releaseOwnedModules)) {
     const target = `${pathname}?build=${release.cacheKey}`;
