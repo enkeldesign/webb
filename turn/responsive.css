@@ -161,11 +161,14 @@
   :root body .utility-group .utility { flex: 1 1 auto; min-height: 44px; max-width: 220px; padding: 6px 8px; white-space: normal; font-size: max(var(--turn-text-floor), .66rem); }
   /* BOOST sits directly above the drive pad, next to the BOOST zone it reports on,
      instead of in the gap between the pad and the menu row. */
+  /* It stays centred on its own left edge (translateX(-50%)), like everywhere else,
+     so the full / empty / overcharge flash keyframes keep working unchanged. */
   :root body .boost-hud {
-    left: auto; right: var(--turn-edge); bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 10px);
-    width: var(--turn-race-pad-width); transform: none;
+    left: calc(100% - var(--turn-edge) - (var(--turn-race-pad-width) / 2));
+    bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 10px);
+    width: var(--turn-race-pad-width);
   }
-  :root.turn-left-handed-controls body .boost-hud { left: var(--turn-edge); right: auto; }
+  :root.turn-left-handed-controls body .boost-hud { left: calc(var(--turn-edge) + (var(--turn-race-pad-width) / 2)); }
   :root body #scoreFeedback {
     top: auto; bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 54px);
     left: var(--turn-edge); right: var(--turn-edge); width: auto; height: 74px;
