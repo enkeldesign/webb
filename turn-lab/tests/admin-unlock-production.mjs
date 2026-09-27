@@ -34,10 +34,14 @@ function createMemoryStorage(initial = {}) {
 assert.deepEqual(ADMIN_UNLOCK_SEQUENCE, [
   'track:countryside',
   'track:cliffside',
+  'track:countryside',
+  'track:cliffside',
+  'action:records',
+  'action:records',
   'action:records',
   'action:records',
   'action:feedback'
-], 'The admin path uses only Home controls a fresh profile can reach');
+], 'The admin path uses only Home controls a fresh profile can reach, repeated so exploration cannot complete it');
 
 let index = 0;
 for (const irrelevant of ['action:feedback', 'action:records', 'track:cliffside']) {
@@ -52,11 +56,18 @@ for (let step = 0; step < ADMIN_UNLOCK_SEQUENCE.length; step += 1) {
 }
 assert.equal(index, 0, 'The recognizer must reset after a completed sequence');
 assert.equal(advanceAdminUnlockSequence(2, 'action:race').nextIndex, 0,
-  'Any other Home action breaks the sequence');
-assert.equal(advanceAdminUnlockSequence(3, 'track:countryside').nextIndex, 1,
+  'RACE breaks the sequence');
+assert.equal(advanceAdminUnlockSequence(5, 'action:other').nextIndex, 0,
+  'Any other Home control breaks the sequence');
+assert.equal(advanceAdminUnlockSequence(5, 'track:countryside').nextIndex, 1,
   'A mismatch matching the first token should immediately restart the sequence');
-assert.equal(advanceAdminUnlockSequence(2, 'action:feedback').completed, false,
-  'GIVE FEEDBACK completes only after both records taps');
+let casual = 0;
+for (const token of ['track:countryside', 'track:cliffside', 'action:records', 'action:records', 'action:feedback']) {
+  const result = advanceAdminUnlockSequence(casual, token);
+  assert.equal(result.completed, false, 'Casual exploration of the two tracks, records and feedback must not unlock');
+  casual = result.nextIndex;
+}
+assert.equal(advanceAdminUnlockSequence(8, 'action:feedback').completed, true);
 
 const rewardIds = TROPHY_ROAD_REWARDS.map(({ id }) => id);
 const existing = {
@@ -187,6 +198,8 @@ assert.match(source, /\.m8-feedback-button:not\(\.m8-achievements-button\):not\(
   'Only GIVE FEEDBACK finishes the sequence, not ACHIEVEMENTS or DBE, which share its styling class');
 assert.match(source, /target\.closest\('\.m8-track-continue'\)\) return 'action:race'/,
   'RACE breaks a partial sequence');
+assert.match(source, /target\.closest\('\.m8-home button, \.m8-home a'\)\) return 'action:other'/,
+  'Every other Home control breaks a partial sequence');
 assert.doesNotMatch(source, /lot-screen|lot-race|vehicle:/, 'The admin path no longer passes through The Lot');
 assert.match(source, /unlockRewardsForTesting\(storage\)/);
 assert.match(source, /markDeveloperDevice\(storage\)/);

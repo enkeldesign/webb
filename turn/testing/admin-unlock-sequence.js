@@ -12,12 +12,17 @@ import {
   markDeveloperDevice
 } from '../telemetry/client.js?revision=r3-scoring-calibration';
 
-// Home only, on controls every fresh profile can use: COUNTRYSIDE, CLIFFSIDE,
-// SHOW RECORDS, HIDE RECORDS, then GIVE FEEDBACK reloads into the test profile.
-// The records toggle counts either way, since its state persists between visits.
+// Home only, on controls every fresh profile can use: COUNTRYSIDE, CLIFFSIDE twice,
+// the records toggle four times, then GIVE FEEDBACK reloads into the test profile.
+// The repetition keeps ordinary exploration from completing it; any other Home
+// button resets it. The records toggle counts either way, since its state persists.
 export const ADMIN_UNLOCK_SEQUENCE = Object.freeze([
   'track:countryside',
   'track:cliffside',
+  'track:countryside',
+  'track:cliffside',
+  'action:records',
+  'action:records',
   'action:records',
   'action:records',
   'action:feedback'
@@ -185,6 +190,8 @@ function homeTokenFromClick(target) {
   if (target.closest('.m8-track-bests-toggle')) return 'action:records';
   if (target.closest(FEEDBACK_TRIGGER)) return 'action:feedback';
   if (target.closest('.m8-track-continue')) return 'action:race';
+  // Any other Home control breaks a partial sequence.
+  if (target.closest('.m8-home button, .m8-home a')) return 'action:other';
   return '';
 }
 
