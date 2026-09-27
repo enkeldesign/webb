@@ -1056,13 +1056,14 @@ Object.freeze({
     Object.freeze(['1.23.5 r298', 'Portrait Home gets a compact two-row header, so more tracks fit on the first screen, and RACE sits on its own bar above the bottom safe area.']),
     Object.freeze(['1.23.6 r299', 'Home gets one slim app bar in every orientation: the TURN logo, ACHIEVEMENTS with its badge, and a menu button that opens SETTINGS, HOW TO PLAY, DRIVE BY EAR 101, GIVE FEEDBACK, MUSIC and ABOUT TURN. RACE stays docked, and the installed app no longer shows a strip of background under it.']),
     Object.freeze(['1.23.7 r300', 'The race HUD no longer jumps: SPEED, LAP, POSITION, TIME and BEST sit in a fixed grid with even-width digits. In portrait the BOOST meter sits above the drive pad, the blank-screen button stays square, and ACHIEVEMENTS keeps its count inside the button, so nothing overlaps.']),
-    Object.freeze(['1.23.8 r301', 'RACE on Home and RACE THIS CAR in The Lot are now the same button in the same place: docked full width at the bottom in portrait, bottom-right in landscape.'])
+    Object.freeze(['1.23.8 r301', 'RACE on Home and RACE THIS CAR in The Lot are now the same button in the same place: docked full width at the bottom in portrait, bottom-right in landscape.']),
+    Object.freeze(['1.23.9 r302', 'Buttons share one rounded-rectangle shape, border and shadow, and are at least 44px tall, including those in SETTINGS, HOW TO PLAY, GIVE FEEDBACK and DRIVE BY EAR 101. Pills stay for chips such as SHOW RECORDS and the achievement filters, which are now 44px tall too.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.23.8',
-  build: '2026.09.27-r301',
-  note: 'TURN 1.23.8 docks RACE and RACE THIS CAR in the same place, with the same look.'
+  version: '1.23.9',
+  build: '2026.09.27-r302',
+  note: 'TURN 1.23.9 gives every button one shape and a 44px touch target.'
 });
