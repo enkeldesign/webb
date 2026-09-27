@@ -3,7 +3,6 @@ import fs from 'node:fs/promises';
 import {
   ADMIN_UNLOCK_SEQUENCE,
   advanceAdminUnlockSequence,
-  completeAdminUnlockFromLot,
   createAdminRewardState,
   unlockRewardsForTesting
 } from '../../turn/testing/admin-unlock-sequence.js';
@@ -34,21 +33,14 @@ function createMemoryStorage(initial = {}) {
 
 assert.deepEqual(ADMIN_UNLOCK_SEQUENCE, [
   'track:countryside',
-  'track:airport',
-  'track:countryside',
-  'track:airport',
   'track:cliffside',
-  'track:countryside',
-  'track:airport',
-  'track:cliffside',
-  'track:harbor',
-  'action:race',
-  'vehicle:convertible',
-  'action:race-this-car'
-]);
+  'action:records',
+  'action:records',
+  'action:feedback'
+], 'The admin path uses only Home controls a fresh profile can reach');
 
 let index = 0;
-for (const irrelevant of ['action:race-this-car', 'track:harbor', 'vehicle:convertible']) {
+for (const irrelevant of ['action:feedback', 'action:records', 'track:cliffside']) {
   index = advanceAdminUnlockSequence(index, irrelevant).nextIndex;
   assert.equal(index, 0, 'Activity before the first Countryside selection must not matter');
 }
@@ -59,25 +51,12 @@ for (let step = 0; step < ADMIN_UNLOCK_SEQUENCE.length; step += 1) {
   index = result.nextIndex;
 }
 assert.equal(index, 0, 'The recognizer must reset after a completed sequence');
-assert.equal(advanceAdminUnlockSequence(4, 'track:harbor').nextIndex, 0);
-assert.equal(advanceAdminUnlockSequence(4, 'track:countryside').nextIndex, 1,
+assert.equal(advanceAdminUnlockSequence(2, 'action:race').nextIndex, 0,
+  'Any other Home action breaks the sequence');
+assert.equal(advanceAdminUnlockSequence(3, 'track:countryside').nextIndex, 1,
   'A mismatch matching the first token should immediately restart the sequence');
-
-let lotEntryIndex = 0;
-for (const token of ADMIN_UNLOCK_SEQUENCE.slice(0, 10)) {
-  lotEntryIndex = advanceAdminUnlockSequence(lotEntryIndex, token).nextIndex;
-}
-assert.equal(ADMIN_UNLOCK_SEQUENCE[lotEntryIndex], 'vehicle:convertible');
-assert.equal(completeAdminUnlockFromLot(lotEntryIndex, 'convertible').completed, true,
-  'AWD already selected on Lot entry must complete without another vehicle click');
-assert.equal(completeAdminUnlockFromLot(lotEntryIndex, 'classic').completed, false,
-  'RACE THIS CAR must not complete while another vehicle is selected');
-const explicitAwdIndex = advanceAdminUnlockSequence(
-  lotEntryIndex,
-  'vehicle:convertible'
-).nextIndex;
-assert.equal(completeAdminUnlockFromLot(explicitAwdIndex, 'convertible').completed, true,
-  'Selecting AWD after entering The Lot must also complete');
+assert.equal(advanceAdminUnlockSequence(2, 'action:feedback').completed, false,
+  'GIVE FEEDBACK completes only after both records taps');
 
 const rewardIds = TROPHY_ROAD_REWARDS.map(({ id }) => id);
 const existing = {
@@ -202,11 +181,13 @@ assert.deepEqual(
   'The hidden developer rewards profile must not be mistaken for the fresh-install bug'
 );
 
-assert.match(source, /target\.closest\('\.m8-track-continue'\)/,
-  'The Home RACE action must be the separator that opens The Lot');
-assert.match(source, /aria-checked="true"/,
-  'The final action must detect an AWD that was already selected on Lot entry');
-assert.match(source, /completeAdminUnlockFromLot\(sequenceIndex, selectedVehicleId\)/);
+assert.match(source, /target\.closest\('\.m8-track-bests-toggle'\)\) return 'action:records'/,
+  'Both SHOW RECORDS and HIDE RECORDS count, whatever the remembered records state');
+assert.match(source, /\.m8-feedback-button:not\(\.m8-achievements-button\):not\(\.turn-dbe-training-home\)/,
+  'Only GIVE FEEDBACK finishes the sequence, not ACHIEVEMENTS or DBE, which share its styling class');
+assert.match(source, /target\.closest\('\.m8-track-continue'\)\) return 'action:race'/,
+  'RACE breaks a partial sequence');
+assert.doesNotMatch(source, /lot-screen|lot-race|vehicle:/, 'The admin path no longer passes through The Lot');
 assert.match(source, /unlockRewardsForTesting\(storage\)/);
 assert.match(source, /markDeveloperDevice\(storage\)/);
 assert.match(source, /snapshot\.rewards\.unlocked = \[\.\.\.rewardIds\]/);

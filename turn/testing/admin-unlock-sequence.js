@@ -12,25 +12,20 @@ import {
   markDeveloperDevice
 } from '../telemetry/client.js?revision=r3-scoring-calibration';
 
+// Home only, on controls every fresh profile can use: COUNTRYSIDE, CLIFFSIDE,
+// SHOW RECORDS, HIDE RECORDS, then GIVE FEEDBACK reloads into the test profile.
+// The records toggle counts either way, since its state persists between visits.
 export const ADMIN_UNLOCK_SEQUENCE = Object.freeze([
   'track:countryside',
-  'track:airport',
-  'track:countryside',
-  'track:airport',
   'track:cliffside',
-  'track:countryside',
-  'track:airport',
-  'track:cliffside',
-  'track:harbor',
-  'action:race',
-  'vehicle:convertible',
-  'action:race-this-car'
+  'action:records',
+  'action:records',
+  'action:feedback'
 ]);
 
 const INSTALL_FLAG = '__turnAdminUnlockSequenceInstalled';
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 const ADMIN_REWARD_PROFILE_VERSION = 2;
-const FINAL_VEHICLE_ID = 'convertible';
 const LEGACY_TIMESTAMP_TOLERANCE_MS = 5000;
 
 function parseStoredState(storage) {
@@ -118,18 +113,6 @@ export function advanceAdminUnlockSequence(currentIndex, token) {
   });
 }
 
-export function completeAdminUnlockFromLot(currentIndex, selectedVehicleId) {
-  if (selectedVehicleId !== FINAL_VEHICLE_ID) {
-    return Object.freeze({ nextIndex: 0, completed: false });
-  }
-
-  let index = currentIndex;
-  if (ADMIN_UNLOCK_SEQUENCE[index] === `vehicle:${FINAL_VEHICLE_ID}`) {
-    index = advanceAdminUnlockSequence(index, `vehicle:${FINAL_VEHICLE_ID}`).nextIndex;
-  }
-  return advanceAdminUnlockSequence(index, 'action:race-this-car');
-}
-
 function copyStateIntoLiveStore(snapshot) {
   const liveState = globalThis.__turnAchievements?.store?.state;
   if (!liveState) return;
@@ -194,18 +177,15 @@ export function unlockRewardsForTesting(storage = globalThis.localStorage) {
   return true;
 }
 
+const FEEDBACK_TRIGGER = '.m8-home-menu .m8-feedback-button:not(.m8-achievements-button):not(.turn-dbe-training-home)';
+
 function homeTokenFromClick(target) {
   const track = target.closest('.track-card[data-track-id]:not([disabled])');
   if (track) return `track:${track.dataset.trackId || ''}`;
+  if (target.closest('.m8-track-bests-toggle')) return 'action:records';
+  if (target.closest(FEEDBACK_TRIGGER)) return 'action:feedback';
   if (target.closest('.m8-track-continue')) return 'action:race';
   return '';
-}
-
-function selectedVehicleFromLot(lotScreen, rememberedVehicleId = '') {
-  if (rememberedVehicleId) return rememberedVehicleId;
-  return lotScreen
-    ?.querySelector('.lot-car-option[data-car-id][aria-checked="true"]')
-    ?.dataset.carId || '';
 }
 
 export function installAdminUnlockSequence({
@@ -217,59 +197,19 @@ export function installAdminUnlockSequence({
   if (globalThis[INSTALL_FLAG]) return globalThis[INSTALL_FLAG];
 
   let sequenceIndex = 0;
-  let lotArmed = false;
-  let rememberedVehicleId = '';
-
-  function resetSequence() {
-    sequenceIndex = 0;
-    lotArmed = false;
-    rememberedVehicleId = '';
-  }
 
   const handleClick = (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
 
-    const homeToken = homeTokenFromClick(target);
-    if (homeToken) {
-      const result = advanceAdminUnlockSequence(sequenceIndex, homeToken);
-      sequenceIndex = result.nextIndex;
-      lotArmed = homeToken === 'action:race'
-        && ADMIN_UNLOCK_SEQUENCE[sequenceIndex] === `vehicle:${FINAL_VEHICLE_ID}`;
-      if (!lotArmed) rememberedVehicleId = '';
-      return;
-    }
-
-    if (!lotArmed) return;
-    const lotScreen = target.closest('.lot-screen');
-    if (!lotScreen) return;
-
-    const vehicle = target.closest('.lot-car-option[data-car-id]');
-    if (vehicle) {
-      rememberedVehicleId = vehicle.dataset.carId || '';
-      if (rememberedVehicleId === FINAL_VEHICLE_ID
-          && ADMIN_UNLOCK_SEQUENCE[sequenceIndex] === `vehicle:${FINAL_VEHICLE_ID}`) {
-        sequenceIndex = advanceAdminUnlockSequence(
-          sequenceIndex,
-          `vehicle:${FINAL_VEHICLE_ID}`
-        ).nextIndex;
-      }
-      return;
-    }
-
-    if (target.closest('.lot-back')) {
-      resetSequence();
-      return;
-    }
-
-    if (!target.closest('.lot-race')) return;
-    const selectedVehicleId = selectedVehicleFromLot(lotScreen, rememberedVehicleId);
-    const result = completeAdminUnlockFromLot(sequenceIndex, selectedVehicleId);
-    resetSequence();
+    const token = homeTokenFromClick(target);
+    if (!token) return;
+    const result = advanceAdminUnlockSequence(sequenceIndex, token);
+    sequenceIndex = result.nextIndex;
     if (!result.completed || !unlockRewardsForTesting(storage)) return;
 
-    // The current Home and Lot were rendered from the pre-unlock snapshot. Stop this
-    // race launch and reload once so every reward gate rebuilds from the test profile.
+    // Home was rendered from the pre-unlock snapshot. Skip the feedback dialog and
+    // reload once so every reward gate rebuilds from the test profile.
     event.preventDefault();
     event.stopImmediatePropagation();
     globalThis.setTimeout?.(reload, 0);
