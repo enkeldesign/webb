@@ -15,6 +15,19 @@
     navigator.standalone === true;
   if (!isStandalone || globalThis.__turnViewportGap) return;
 
+  // Tester strip probe (ui/viewport-readout.js, AT LAUNCH): paint every candidate
+  // surface magenta before the first paint, to see whether iOS samples the strip
+  // colour only at launch.
+  let launchProbe = false;
+  try { launchProbe = localStorage.getItem('turn-strip-probe-v1') === '1'; } catch (_) {}
+  if (launchProbe) {
+    const probe = document.createElement('style');
+    probe.id = 'turn-strip-probe-launch';
+    probe.textContent = ':root:root, :root:root body { background: #ff00ff !important; }';
+    document.head.appendChild(probe);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#ff00ff');
+  }
+
   const CLASS = 'turn-viewport-gap';
   const MIN_GAP = 20;
   const INSET_TOLERANCE = 4;
