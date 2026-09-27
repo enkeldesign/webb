@@ -190,6 +190,9 @@ function homeTokenFromClick(target) {
   if (target.closest('.m8-track-bests-toggle')) return 'action:records';
   if (target.closest(FEEDBACK_TRIGGER)) return 'action:feedback';
   if (target.closest('.m8-track-continue')) return 'action:race';
+  // Opening or closing the menu sheet is navigation, not a step: GIVE FEEDBACK lives
+  // inside it.
+  if (target.closest('.turn-home-menu-button, .turn-home-sheet-close')) return '';
   // Any other Home control breaks a partial sequence.
   if (target.closest('.m8-home button, .m8-home a')) return 'action:other';
   return '';

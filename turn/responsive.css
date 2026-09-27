@@ -63,18 +63,6 @@
 @media (max-width: 46em) {
   :root body .m8-home.m8-home-fixed-layout { overflow-y: auto; overflow-x: hidden; scroll-padding-block: 12px 84px; }
   :root body .m8-home.m8-home-fixed-layout .m8-home-shell { display: block; height: auto; min-height: 100%; }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-head {
-    height: auto; min-height: 92px;
-    grid-template-columns: 72px minmax(0, 1fr) !important;
-    gap: 10px 14px; padding: max(8px, env(safe-area-inset-top)) var(--turn-edge) 10px;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-logo { width: 72px; height: 72px; box-shadow: none; }
-  :root body .m8-home.m8-home-fixed-layout .turn-music-home-toggle { grid-column: 2; grid-row: 2; justify-self: end; min-height: 44px; transform: none; }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-pitch p { font-size: clamp(1rem, 3.8vw, 1.5rem); }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-meta {
-    display: flex !important; grid-column: 1 / -1 !important; grid-row: 3; justify-self: start; align-items: flex-start; margin: 0;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-build { display: block !important; white-space: normal; grid-column: 1 / -1; grid-row: auto; justify-self: start; margin: 0; padding: 0; }
   :root body .m8-home.m8-home-fixed-layout .m8-home-main {
     display: flex; flex-direction: column; height: auto; overflow: visible;
     gap: 24px; padding: 16px var(--turn-edge) max(88px, calc(env(safe-area-inset-bottom) + 80px));
@@ -87,25 +75,10 @@
   :root body .m8-home.m8-home-fixed-layout .m8-track-scroll-indicator,
   :root body .m8-home.m8-home-fixed-layout .m8-track-scroll-viewport::before,
   :root body .m8-home.m8-home-fixed-layout .m8-track-scroll-viewport::after { display: none; }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-menu {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
-    width: 100%; max-height: none; height: auto; padding: 0 6px 8px 0;
-    overflow: visible; gap: 12px; align-content: start;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-menu h2,
-  :root body .m8-home.m8-home-fixed-layout .m8-home-status { grid-column: 1 / -1; }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-menu button,
   :root body .m8-home.m8-home-fixed-layout .m8-track-bests-toggle {
-    position: static; width: auto; min-width: 0; min-height: 44px; height: auto;
-    margin: 0; white-space: normal; font-size: .8rem;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-menu > button { grid-area: auto; }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-menu .m8-track-continue {
-    position: fixed; inset: auto var(--turn-edge) max(12px, env(safe-area-inset-bottom));
-    z-index: 5; min-height: 48px; margin: 0; width: auto;
+    min-height: 44px; height: auto; white-space: normal; font-size: .8rem;
   }
   :root body .m8-home.m8-home-fixed-layout .track-card-name { white-space: normal; overflow-wrap: anywhere; }
-  :root body .m8-home.m8-home-fixed-layout .m8-about-trigger { min-height: 44px; padding: 8px 0; }
 
   :root body .install-gate .install-shell { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   :root body .install-gate { overflow-y: auto; padding: 20px var(--turn-edge); }
@@ -159,9 +132,17 @@
   }
   :root:has(.utility-group[data-menu-state="staged"]) { --turn-race-footer: 104px; }
   :root body .topbar { gap: 10px; }
-  :root body .stats { display: flex; flex: 1 1 auto; gap: 6px; min-width: 0; flex-wrap: wrap; }
-  :root body .stats .chip { width: auto; min-width: 0; height: auto; min-height: 42px; padding: 6px; font-size: max(var(--turn-text-floor), .52rem); }
-  :root body .stats .chip strong { font-size: .8rem; white-space: nowrap; }
+  /* A fixed grid, never content-sized: SPEED · LAP · POSITION, then TIME · BEST.
+     Digits are tabular, so a changing value never moves a chip. Without rivals the
+     POSITION cell is unused and SPEED and LAP share the first row. */
+  :root body .stats {
+    display: grid; flex: 1 1 auto; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; min-width: 0;
+  }
+  :root body .stats > .chip { grid-column: span 2; width: auto; min-width: 0; height: auto; min-height: 42px; padding: 6px; overflow: hidden; font-size: max(var(--turn-text-floor), .52rem); }
+  :root body .stats > .chip:nth-child(n + 4) { grid-column: span 3; }
+  :root body .stats:has(> .race-position-hud[hidden]) > .chip:nth-child(-n + 2) { grid-column: span 3; }
+  :root body .stats > .race-position-hud[hidden] { display: none !important; }
+  :root body .stats .chip strong { overflow: hidden; font-size: .8rem; font-variant-numeric: tabular-nums; text-overflow: clip; white-space: nowrap; }
   :root body .map-wrap { width: clamp(70px, 21vw, 128px); flex-shrink: 0; }
   :root body .controls { display: block; left: var(--turn-edge); right: var(--turn-edge); bottom: var(--turn-race-bottom); height: var(--turn-race-pad-height); }
   :root body .controls .pedals { position: absolute; right: 0; bottom: 0; left: auto; padding: 0; }
@@ -178,8 +159,18 @@
     display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; transform: none;
   }
   :root body .utility-group .utility { flex: 1 1 auto; min-height: 44px; max-width: 220px; padding: 6px 8px; white-space: normal; font-size: max(var(--turn-text-floor), .66rem); }
+  /* BOOST sits directly above the drive pad, next to the BOOST zone it reports on,
+     instead of in the gap between the pad and the menu row. */
+  /* It stays centred on its own left edge (translateX(-50%)), like everywhere else,
+     so the full / empty / overcharge flash keyframes keep working unchanged. */
+  :root body .boost-hud {
+    left: calc(100% - var(--turn-edge) - (var(--turn-race-pad-width) / 2));
+    bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 10px);
+    width: var(--turn-race-pad-width);
+  }
+  :root.turn-left-handed-controls body .boost-hud { left: calc(var(--turn-edge) + (var(--turn-race-pad-width) / 2)); }
   :root body #scoreFeedback {
-    top: auto; bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 14px);
+    top: auto; bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 54px);
     left: var(--turn-edge); right: var(--turn-edge); width: auto; height: 74px;
     display: flex; flex-direction: row; justify-content: space-between;
     --score-feedback-paper-height: 74px;
@@ -218,6 +209,9 @@
 @media (max-width: 22em) and (orientation: portrait) {
   :root { --turn-edge: max(8px, env(safe-area-inset-left), env(safe-area-inset-right)); --turn-race-pad-width: 136px; }
   :root body .manual-steer { border-width: 3px; }
+  /* Keep race utility labels on one line so the menu rows stay 44px tall and clear
+     of the drive pad. */
+  :root body .utility-group .utility { padding-inline: 6px; white-space: nowrap; }
   :root body .manual-steer::before, :root body .manual-steer::after { font-size: 1.5rem; }
 }
 @media (max-height: 38em) and (orientation: portrait) {
@@ -272,7 +266,7 @@
   .turn-music-home-toggle,
   .m8-track-bests-toggle,
   .m8-home-menu > button,
-  .m8-home-menu .m8-track-continue,
+  .m8-track-continue,
   .lot-back,
   .lot-race,
   .lot-perk-button,
@@ -297,45 +291,6 @@
   content: "";
   position: absolute;
   inset: min(0px, calc((100% - var(--turn-target-min)) / 2));
-}
-
-/* Short landscape phones: 44px Home actions beside the track list. The MENU heading
-   stays for assistive technology only. RACE docks at the bottom corner and the menu
-   scrolls behind it, in browser tabs and the installed app alike. (The installed
-   app's own dock in m8-home-fixed-layout.js is injected into a scaled stylesheet,
-   so its 430px query only ever matched 322.5px-tall viewports.) */
-@media (orientation: landscape) and (max-height: 430px) {
-  :root body .m8-home.m8-home-fixed-layout .m8-home-menu {
-    gap: 6px;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-menu h2 {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-menu > button {
-    margin: 0;
-  }
-  html .m8-home-fixed-layout .m8-home-menu {
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-    box-sizing: border-box;
-    padding-right: 8px;
-    padding-bottom: 76px;
-    scroll-padding-bottom: 76px;
-  }
-  html .m8-home-fixed-layout .m8-track-continue {
-    position: fixed;
-    z-index: 70;
-    right: max(14px, env(safe-area-inset-right));
-    bottom: max(12px, env(safe-area-inset-bottom));
-    width: clamp(150px, 20vw, 205px);
-    max-width: calc(100vw - 28px - env(safe-area-inset-left) - env(safe-area-inset-right));
-  }
 }
 
 /* The Lot on short landscape phones: with 11px captions the header band only fits
@@ -401,77 +356,29 @@
   white-space: nowrap;
 }
 
-/* Portrait Home: a compact two-row header (logo, pitch and MUSIC on one row; build
-   and ABOUT TURN on the next) gives the track list about 130px more of the first
-   screen. The menu keeps two columns down to 320px; RACE stays docked above the
-   bottom safe area and the list keeps room to scroll past it. */
-@media (max-width: 46em) and (orientation: portrait) {
-  :root body .m8-home.m8-home-fixed-layout .m8-home-head {
-    min-height: 0;
-    grid-template-columns: 48px minmax(0, 1fr) auto !important;
-    grid-template-rows: auto auto;
-    align-items: center;
-    gap: 6px 12px;
-    padding: max(8px, env(safe-area-inset-top)) var(--turn-edge) 8px;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-logo {
-    grid-column: 1;
-    grid-row: 1;
-    width: 48px;
-    height: 48px;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-pitch {
-    grid-column: 2;
-    grid-row: 1;
-    min-width: 0;
-    margin: 0;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-pitch p {
-    margin: 0;
-    font-size: clamp(0.875rem, 4.1vw, 1.125rem);
-    line-height: var(--turn-leading-title);
-  }
-  :root body .m8-home.m8-home-fixed-layout .turn-music-home-toggle {
-    grid-column: 3;
-    grid-row: 1;
-    align-self: center;
-    justify-self: end;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-meta {
-    grid-column: 1 / -1 !important;
-    grid-row: 2;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    width: 100%;
-    min-width: 0;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-build {
-    min-width: 0;
-    letter-spacing: var(--turn-tracking-micro);
-  }
-  /* A real 44px box: the padding makes the target, the negative margin keeps the
-     row at text height. */
-  :root body .m8-home.m8-home-fixed-layout .m8-about-trigger {
-    flex: none;
-    min-height: 0;
-    margin-block: -16px;
-    padding: 16px 0;
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-menu {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  /* The docked RACE sits on a page-coloured bar that runs into the bottom safe
-     area, so track cards never show around or under the button. */
-  :root body .m8-home.m8-home-fixed-layout .m8-home-main::after {
-    content: "";
-    position: fixed;
-    z-index: 4;
-    inset: auto 0 0;
-    height: calc(max(12px, env(safe-area-inset-bottom)) + 60px);
-    border-top: 3px solid var(--turn-ink, #08090a);
-    background: var(--turn-surface-page, #fff8e8);
-    pointer-events: none;
-  }
+/* Race utilities sit 6px apart, so the ACHIEVEMENTS count lives inside its button
+   (right edge) rather than hanging over the neighbouring control. */
+:root body .utility-group .turn-race-achievements-button {
+  position: relative;
+  padding-right: 40px;
+}
+:root body .utility-group .turn-race-achievements-button .turn-achievements-trigger-badge {
+  top: 50%;
+  right: 7px;
+  width: 26px;
+  height: 26px;
+  transform: translateY(-50%);
+  box-shadow: none;
+}
+/* The blank-screen eye is a square icon control: it keeps 44 × 44 instead of
+   growing with the row (its aspect ratio would otherwise make the whole row taller). */
+:root body .utility-group .turn-screen-blank-control {
+  flex: 0 0 var(--turn-target-min);
+  width: var(--turn-target-min);
+  height: var(--turn-target-min);
+}
+/* HUD digits are tabular in every orientation, so a changing time or speed never
+   shifts its label or neighbours. */
+:root body :is(.stats .chip strong, .stats .chip strong span, #scoreFeedback strong) {
+  font-variant-numeric: tabular-nums;
 }

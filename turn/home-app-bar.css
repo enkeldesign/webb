@@ -1,0 +1,412 @@
+/* TURN Home app bar, menu sheet and RACE dock (real CSS pixels: linked with
+   data-turn-responsive, so the 0.75 UI baseline never rewrites it).
+
+   One composition in every orientation:
+   - a slim Yellow bar (logo · support challenge · ACHIEVEMENTS · ☰) that sits below
+     the status bar and stays put while the page scrolls;
+   - a Paper sheet for everything else (SETTINGS, HOW TO PLAY, DRIVE BY EAR 101,
+     GIVE FEEDBACK, MUSIC, ABOUT TURN and the build line);
+   - RACE in the shared action dock (action-dock.css). */
+
+:root {
+  --turn-app-bar-height: 56px;
+}
+
+/* Whatever the viewport does at the edges (the iOS standalone short-viewport bug,
+   overscroll), the canvas behind Home is Paper, never a stray accent strip. */
+html:has(.m8-home.turn-app-bar-layout:not([hidden])) {
+  background: var(--turn-surface-page, #fff8e8);
+}
+
+/* ---------- App bar ---------- */
+
+/* Anything scrolled into view (focus, find, a script) lands below the sticky bar
+   and above the docked RACE, never under either. */
+:root body .m8-home.m8-home-fixed-layout.turn-app-bar-layout {
+  scroll-padding-top: calc(var(--turn-app-bar-height) + max(8px, env(safe-area-inset-top)) + 12px);
+  scroll-padding-bottom: calc(var(--turn-dock-space) + 12px);
+}
+
+html body .m8-home.turn-app-bar-layout .m8-home-shell {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+html body .m8-home.turn-app-bar-layout .m8-home-head {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  height: auto;
+  min-height: 0;
+  box-sizing: border-box;
+  padding:
+    max(8px, env(safe-area-inset-top))
+    max(var(--turn-gutter, 16px), env(safe-area-inset-right))
+    8px
+    max(var(--turn-gutter, 16px), env(safe-area-inset-left));
+  border-bottom: 3px solid var(--turn-ink, #08090a);
+  background: var(--m8-yellow, #ffbd12);
+}
+
+html body .m8-home.turn-app-bar-layout .m8-home-logo {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  max-width: none;
+  margin: 0;
+  border-radius: 10px;
+  box-shadow: none;
+  object-fit: cover;
+}
+
+/* The pitch keeps its slot for the support challenge trigger; its tagline moves
+   under the page heading. */
+html body .m8-home.turn-app-bar-layout .m8-home-pitch {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+html body .m8-home.turn-app-bar-layout .m8-home-pitch .m8-how-button {
+  display: none;
+}
+
+html body .m8-home.turn-app-bar-layout .turn-app-bar-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* Icon buttons in the bar: 44px, Paper, Ink border, one radius. */
+html body .m8-home.turn-app-bar-layout .turn-app-bar-actions > button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: 12px;
+  background: var(--turn-paper, #fff8e8);
+  color: var(--turn-ink, #08090a);
+  box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  transform: none;
+}
+
+html body .m8-home.turn-app-bar-layout .turn-app-bar-actions > button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+}
+
+html body .m8-home.turn-app-bar-layout .turn-app-bar-actions > button:focus-visible {
+  outline: 4px solid var(--turn-ink, #08090a);
+  outline-offset: 3px;
+}
+
+/* ACHIEVEMENTS: a trophy with its badge; the text stays as the accessible name. */
+html body .m8-home.turn-app-bar-layout .turn-app-bar-actions .m8-achievements-button {
+  background: var(--turn-action-success, #8ce99a) !important;
+}
+
+html body .m8-home.turn-app-bar-layout .turn-app-bar-actions .m8-achievements-button::before {
+  content: "";
+  width: 24px;
+  height: 24px;
+  background: currentColor;
+  -webkit-mask: var(--turn-trophy-icon) center / contain no-repeat;
+  mask: var(--turn-trophy-icon) center / contain no-repeat;
+  --turn-trophy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4h10v5a5 5 0 0 1-10 0z'/%3E%3Cpath d='M7 6H4v1a4 4 0 0 0 4 4M17 6h3v1a4 4 0 0 1-4 4M12 14v4M8 21h8M9 18h6'/%3E%3C/svg%3E");
+}
+
+html body .m8-home.turn-app-bar-layout .turn-app-bar-actions .turn-achievements-trigger-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+html body .m8-home.turn-app-bar-layout .turn-app-bar-actions .turn-achievements-trigger-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  min-width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border: 2px solid var(--turn-ink, #08090a);
+  border-radius: 11px;
+  background: var(--turn-yellow-400, #ffd43b);
+  color: var(--turn-ink, #08090a);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 18px;
+  text-align: center;
+  transform: none;
+}
+
+/* ☰ */
+html body .m8-home.turn-app-bar-layout .turn-home-menu-icon {
+  display: grid;
+  gap: 4px;
+  width: 20px;
+}
+
+html body .m8-home.turn-app-bar-layout .turn-home-menu-icon i {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+/* ---------- Page heading ---------- */
+
+html body .m8-home.turn-app-bar-layout .turn-home-tagline {
+  flex: 1 0 100%;
+  order: 1;
+  margin: -4px 0 4px;
+  font-size: var(--turn-type-small, 13px);
+  font-weight: var(--turn-weight-label, 800);
+  line-height: var(--turn-leading-title, 1.1);
+  letter-spacing: var(--turn-tracking-micro, 0.04em);
+}
+
+html body .m8-home.turn-app-bar-layout .turn-home-tagline br {
+  display: none;
+}
+
+html body .m8-home.turn-app-bar-layout .m8-track-heading-row {
+  flex-wrap: wrap;
+  column-gap: 16px;
+}
+
+html body .m8-home.turn-app-bar-layout .m8-track-heading-row > .m8-track-bests-toggle {
+  order: 2;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  html body .m8-home.turn-app-bar-layout .turn-home-tagline {
+    display: none;
+  }
+}
+
+/* ---------- Page body: the track list gets the full width ---------- */
+
+html body .m8-home.turn-app-bar-layout .m8-home-main {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 46.0625em), (orientation: landscape) {
+  /* The rail scrolls on its own in landscape; its last cards scroll clear of RACE. */
+  html body .m8-home.turn-app-bar-layout .m8-track-rail {
+    padding-bottom: var(--turn-dock-space);
+    scroll-padding-bottom: var(--turn-dock-space);
+  }
+}
+
+/* ---------- Menu sheet ---------- */
+
+.turn-home-sheet {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(360px, calc(100vw - 32px));
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: 0;
+  border-left: 3px solid var(--turn-ink, #08090a);
+  background: var(--turn-surface-page, #fff8e8);
+  color: var(--turn-ink, #08090a);
+  overflow: hidden;
+}
+
+.turn-home-sheet[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.turn-home-sheet::backdrop {
+  background: rgb(8 9 10 / 0.55);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .turn-home-sheet[open] {
+    animation: turn-home-sheet-in var(--turn-motion-base, 180ms) var(--turn-ease, ease-out);
+  }
+  @keyframes turn-home-sheet-in {
+    from { transform: translateX(24px); opacity: 0; }
+  }
+}
+
+.turn-home-sheet-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding:
+    max(12px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    12px
+    20px;
+  border-bottom: 3px solid var(--turn-ink, #08090a);
+  background: var(--m8-yellow, #ffbd12);
+}
+
+html body .turn-home-sheet .turn-home-sheet-head h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.turn-home-sheet-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: 12px;
+  background: var(--turn-orange-500, #ff7b54);
+  color: var(--turn-ink, #08090a);
+  box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+  font: 900 26px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.turn-home-sheet-close:focus-visible,
+html body .turn-home-sheet .m8-home-menu > button:focus-visible {
+  outline: 4px solid var(--turn-ink, #08090a);
+  outline-offset: 3px;
+}
+
+/* The menu itself: one column of full-width 48px entries. */
+html body .turn-home-sheet .m8-home-menu {
+  position: static;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  margin: 0;
+  padding: 20px max(16px, env(safe-area-inset-right)) 20px 20px;
+  border: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
+  visibility: visible;
+}
+
+html body .turn-home-sheet .m8-home-menu > h2 {
+  display: none;
+}
+
+html body .turn-home-sheet .m8-home-menu > button {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 48px;
+  margin: 0;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: 14px;
+  background: var(--turn-paper, #fff8e8);
+  color: var(--turn-ink, #08090a);
+  box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  text-align: left;
+  white-space: normal;
+  transform: none;
+}
+
+html body .turn-home-sheet .m8-home-menu > button:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+}
+
+.turn-home-sheet-footer {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 10px;
+  padding:
+    14px
+    max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom))
+    20px;
+  border-top: 3px solid var(--turn-ink, #08090a);
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .turn-music-home-toggle {
+  position: static;
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: none;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 4px;
+  font-size: 14px;
+  transform: none;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .m8-home-meta {
+  display: flex !important;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .m8-home-build {
+  display: block !important;
+  margin: 0;
+  padding: 0;
+  font-size: var(--turn-type-micro, 11px);
+  letter-spacing: var(--turn-tracking-micro, 0.04em);
+  white-space: normal;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
+  min-height: 44px;
+  margin: 0;
+  padding: 0 4px;
+}

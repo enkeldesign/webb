@@ -74,6 +74,8 @@ async function run(name, browser) {
       .map((property) => `${property}: ${style.getPropertyValue(property)}`);
   }, selector);
   const noticeClose = await closeStyle('.turn-landscape-notice-close');
+  // SETTINGS lives in the Home menu sheet.
+  await page.locator('.turn-home-menu-button').click();
   await page.locator('.m8-home-settings').click();
   await page.waitForSelector('.m8-settings-dialog[open]');
   assert.deepEqual(noticeClose, await closeStyle('.m8-settings-dialog [data-dialog-close]'),

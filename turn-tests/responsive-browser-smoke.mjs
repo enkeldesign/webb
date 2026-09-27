@@ -37,11 +37,19 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 // owned by the race layout and are measured there, not here.
 async function readability(page, label) {
   const { text, targets } = await page.evaluate(() => {
+    // Content scrolled under the full-width portrait action dock is off screen until
+    // the page scrolls, like content below the fold.
+    const dock = [...document.querySelectorAll('.m8-track-continue, .lot-race')]
+      .map((node) => node.getBoundingClientRect())
+      .find((rect) => rect.width >= globalThis.innerWidth * 0.8);
+    const foldTop = dock ? dock.top - 12 : globalThis.innerHeight;
     const visible = (el) => {
       const rect = el.getBoundingClientRect();
       const style = globalThis.getComputedStyle(el);
+      const insideDock = Boolean(el.closest('.m8-track-continue, .lot-race'));
       return rect.width > 1 && rect.height > 1 && style.visibility !== 'hidden'
         && rect.bottom > 0 && rect.top < globalThis.innerHeight && rect.right > 0 && rect.left < globalThis.innerWidth
+        && (insideDock || (rect.top + rect.height / 2) < foldTop)
         && !el.closest('[aria-hidden="true"], [hidden], .lot-a11y-only, .visually-hidden, .sr-only');
     };
     const text = [...document.querySelectorAll('body *')]
@@ -55,6 +63,7 @@ async function readability(page, label) {
         const rect = el.getBoundingClientRect();
         const cx = rect.left + rect.width / 2; const cy = rect.top + rect.height / 2;
         return ![[-21.5, 0], [21.5, 0], [0, -21.5], [0, 21.5]].every(([dx, dy]) => {
+          if (cy + dy >= foldTop) return true;
           const hit = document.elementFromPoint(cx + dx, cy + dy);
           return hit && (hit === el || el.contains(hit));
         });
@@ -149,19 +158,22 @@ async function responsiveRace(browser, name) {
       const home = await bounds(page, '.m8-home');
       assert.ok(home.scrollWidth <= home.clientWidth + 1, `${name} ${width}: Home reflows horizontally`);
       await readability(page, `${name} ${width}x${height} Home`);
+      // Every orientation: one slim app bar (logo, ACHIEVEMENTS, menu) and a docked RACE.
+      const head = await bounds(page, '.m8-home-head');
+      assert.ok(head.height <= 64, `${name} ${width}x${height}: the app bar is ${head.height}px`);
+      for (const control of ['.turn-home-menu-button', '.turn-app-bar-actions .m8-achievements-button', '.m8-track-continue']) {
+        within(await bounds(page, control), width, height, `${name} ${width}x${height} ${control}`);
+      }
       if (width >= 320 && width <= 736 && height > width) {
-        // Portrait phones: a compact header, and the menu scrolls clear of the docked RACE bar.
-        const head = await bounds(page, '.m8-home-head');
-        assert.ok(head.height <= (width >= 390 ? 90 : 104), `${name} ${width}x${height}: portrait header is ${head.height}px`);
+        // Portrait phones: the last track card scrolls clear of the docked RACE bar.
         const clear = await page.evaluate(() => {
           const scroller = document.querySelector('.m8-home');
           scroller.scrollTop = scroller.scrollHeight;
           const race = document.querySelector('.m8-track-continue').getBoundingClientRect();
-          const menu = [...document.querySelectorAll('.m8-home-menu > button:not(.m8-track-continue)')]
-            .map((button) => button.getBoundingClientRect()).filter((rect) => rect.height > 0);
-          return Math.max(...menu.map((rect) => rect.bottom)) <= race.top - 12;
+          const cards = [...document.querySelectorAll('.track-card')].map((card) => card.getBoundingClientRect());
+          return Math.max(...cards.map((rect) => rect.bottom)) <= race.top - 12;
         });
-        assert.ok(clear, `${name} ${width}x${height}: the last menu control scrolls clear of RACE`);
+        assert.ok(clear, `${name} ${width}x${height}: the last track card scrolls clear of RACE`);
       }
       const last = page.locator('.track-card').last();
       await last.scrollIntoViewIfNeeded();
@@ -177,6 +189,7 @@ async function responsiveRace(browser, name) {
     // A halved CSS viewport covers page-zoom reflow; doubling root text separately
     // exercises text resizing without shrinking the game surface.
     for (const [trigger, dialog] of [['.m8-home-settings', '.m8-settings-dialog'], ['.m8-achievements-button', '.turn-achievements-dialog']]) {
+      if (!(await page.locator(trigger).isVisible())) await page.locator('.turn-home-menu-button').click();
       await page.locator(trigger).click();
       await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; });
       await settle(page);
@@ -186,8 +199,20 @@ async function responsiveRace(browser, name) {
       await page.locator(`${dialog} [data-dialog-close]`).click();
       await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
     }
+    // Home RACE and The Lot's RACE THIS CAR are one component: same place, size and look.
+    // Measured at rest: the pointer that tapped Home RACE would otherwise hover the
+    // button now in the same place.
+    const dockStyle = async (selector) => (await page.mouse.move(1, 1), page.locator(selector).evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      const style = globalThis.getComputedStyle(node);
+      return [rect.x, rect.y, rect.width, rect.height].map(Math.round).concat(
+        ['font-size', 'font-weight', 'border-top-left-radius', 'background-color', 'box-shadow'].map((key) => style.getPropertyValue(key)));
+    }));
+    const homeDock = await dockStyle('.m8-track-continue');
     await page.locator('.m8-track-continue').click();
     await page.waitForSelector('.lot-showroom');
+    await settle(page);
+    assert.deepEqual(await dockStyle('.lot-race'), homeDock, `${name}: RACE THIS CAR matches Home RACE`);
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height });
       await settle(page);
@@ -245,6 +270,32 @@ async function responsiveRace(browser, name) {
         }
       }
       assert.equal(await page.locator('.rotate-panel').count(), 0);
+      if (height > width) {
+        // The portrait stat chips are a fixed grid: wider values never move a chip.
+        const chipRects = () => page.$$eval('.stats > .chip', (chips) => chips
+          .filter((chip) => chip.getBoundingClientRect().width > 0)
+          .map((chip) => { const rect = chip.getBoundingClientRect(); return [rect.x, rect.y, rect.width, rect.height].map(Math.round).join(','); }));
+        const before = await chipRects();
+        await page.evaluate(() => {
+          document.querySelector('#speed').textContent = '288';
+          document.querySelector('#lapTime').textContent = '10:48.888';
+          document.querySelector('#bestTime').textContent = '10:48.888';
+        });
+        assert.deepEqual(await chipRects(), before, `${width}x${height}: stat chips keep their place as values grow`);
+        // Race utilities, BOOST and the drive pad never overlap.
+        const clash = await page.evaluate(() => {
+          const rects = [...document.querySelectorAll('.utility-group > .utility, .drive-pad, .boost-hud')]
+            .filter((node) => node.getBoundingClientRect().width > 0 && globalThis.getComputedStyle(node).display !== 'none')
+            .map((node) => [node.className.split(' ').slice(0, 2).join('.'), node.getBoundingClientRect()]);
+          const hits = [];
+          for (let i = 0; i < rects.length; i += 1) for (let j = i + 1; j < rects.length; j += 1) {
+            const [a, r] = rects[i]; const [b, q] = rects[j];
+            if (Math.min(r.right, q.right) - Math.max(r.left, q.left) > 1 && Math.min(r.bottom, q.bottom) - Math.max(r.top, q.top) > 1) hits.push(`${a} × ${b}`);
+          }
+          return hits;
+        });
+        assert.deepEqual(clash, [], `${width}x${height}: race controls do not overlap`);
+      }
     }
     await page.setViewportSize({ width: 393, height: 852 });
     await page.keyboard.down('ArrowUp');

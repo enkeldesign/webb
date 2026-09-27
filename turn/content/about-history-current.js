@@ -1053,13 +1053,16 @@ Object.freeze({
     Object.freeze(['1.23.2 r295', 'Turns off double-tap-to-zoom so quick repeated taps on one button register as taps on iPhone and iPad. Pinch-zoom still works.']),
     Object.freeze(['1.23.3 r296', 'Adds TURN’s rendered-size design tokens (type scale, touch targets, spacing rhythm, motion) and richer Display P3 accent colours on wide-gamut screens.']),
     Object.freeze(['1.23.4 r297', 'Text never renders below 11px and every button, arrow and info control has at least a 44px touch area. Short landscape phones keep RACE docked on Home and fit The Lot’s header and car names.']),
-    Object.freeze(['1.23.5 r298', 'Portrait Home gets a compact two-row header, so more tracks fit on the first screen, and RACE sits on its own bar above the bottom safe area.'])
+    Object.freeze(['1.23.5 r298', 'Portrait Home gets a compact two-row header, so more tracks fit on the first screen, and RACE sits on its own bar above the bottom safe area.']),
+    Object.freeze(['1.23.6 r299', 'Home gets one slim app bar in every orientation: the TURN logo, ACHIEVEMENTS with its badge, and a menu button that opens SETTINGS, HOW TO PLAY, DRIVE BY EAR 101, GIVE FEEDBACK, MUSIC and ABOUT TURN. RACE stays docked, and the installed app no longer shows a strip of background under it.']),
+    Object.freeze(['1.23.7 r300', 'The race HUD no longer jumps: SPEED, LAP, POSITION, TIME and BEST sit in a fixed grid with even-width digits. In portrait the BOOST meter sits above the drive pad, the blank-screen button stays square, and ACHIEVEMENTS keeps its count inside the button, so nothing overlaps.']),
+    Object.freeze(['1.23.8 r301', 'RACE on Home and RACE THIS CAR in The Lot are now the same button in the same place: docked full width at the bottom in portrait, bottom-right in landscape.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.23.5',
-  build: '2026.09.27-r298',
-  note: 'TURN 1.23.5 tightens portrait Home: a compact header and a docked RACE bar.'
+  version: '1.23.8',
+  build: '2026.09.27-r301',
+  note: 'TURN 1.23.8 docks RACE and RACE THIS CAR in the same place, with the same look.'
 });

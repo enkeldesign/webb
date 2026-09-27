@@ -46,8 +46,9 @@ function sampleViewport() {
 
 function hasBadSignature(sample) {
   return Boolean(
+    // The short viewport shows up in portrait as well (a strip of page background
+    // under the docked RACE bar and the race controls), so both orientations repair.
     isStandalone() &&
-    sample?.landscape &&
     sample.gap >= BAD_GAP_MIN &&
     Math.abs(sample.clientH - sample.dvh) <= 2 &&
     Math.abs(sample.visualH - sample.dvh) <= 2
