@@ -4,6 +4,7 @@ import {
   rewardForTrack,
   showTrophyUnlockNotice
 } from './trophy-road.js';
+import { TRACK_NAMES } from '../tracks/definitions.js';
 
 export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
   const home = document.querySelector('.m8-home');
@@ -19,8 +20,10 @@ export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
         card,
         trackId,
         reward,
+        // A tier reward unlocks several tracks, so every message names this track.
+        trackName: TRACK_NAMES[trackId] || reward.shortTitle,
         choiceMarker: card.querySelector('.track-card-choice-marker'),
-        originalLabel: card.getAttribute('aria-label') || `${reward.shortTitle} track`
+        originalLabel: card.getAttribute('aria-label') || `${TRACK_NAMES[trackId] || reward.shortTitle} track`
       };
     })
     .filter(Boolean);
@@ -42,7 +45,7 @@ export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
 
   function explainLock(entry) {
     if (!entry) return;
-    showTrophyUnlockNotice({ reward: entry.reward, itemName: entry.reward.shortTitle });
+    showTrophyUnlockNotice({ reward: entry.reward, itemName: entry.trackName });
   }
 
   function syncChoiceLockIcon(entry, isLocked) {
@@ -67,7 +70,7 @@ export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
     entry.card.setAttribute(
       'aria-label',
       isLocked
-        ? `${entry.reward.shortTitle}, locked. Unlocks at ${entry.reward.threshold} trophies. Select for unlock information.`
+        ? `${entry.trackName}, locked. Unlocks at ${entry.reward.threshold} trophies. Select for unlock information.`
         : (entry.card.dataset.trackAccessibleLabel || entry.originalLabel)
     );
     syncChoiceLockIcon(entry, isLocked);
@@ -82,7 +85,7 @@ export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
       continueButton.setAttribute('aria-disabled', 'true');
       continueButton.setAttribute(
         'aria-label',
-        `Race on ${selectedEntry.reward.shortTitle}, locked. Unlocks at ${selectedEntry.reward.threshold} trophies.`
+        `Race on ${selectedEntry.trackName}, locked. Unlocks at ${selectedEntry.reward.threshold} trophies.`
       );
       return;
     }

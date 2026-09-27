@@ -5,6 +5,18 @@ export const LAP_CHECKPOINTS = baseLapSystem.LAP_CHECKPOINTS;
 export const MOUNTAIN_LONG_CHECKPOINTS = Object.freeze(
   Array.from({ length: 24 }, (_, index) => (index + 1) / 25)
 );
+export const BEACHFRONT_CHECKPOINTS = Object.freeze(
+  Array.from({ length: 20 }, (_, index) => (index + 1) / 21)
+);
+export const DEAD_CANYON_CHECKPOINTS = Object.freeze(
+  Array.from({ length: 24 }, (_, index) => (index + 1) / 25)
+);
+// Track-specific checkpoint sets; every other track uses LAP_CHECKPOINTS.
+const TRACK_CHECKPOINTS = Object.freeze({
+  mountain: MOUNTAIN_LONG_CHECKPOINTS,
+  beachfront: BEACHFRONT_CHECKPOINTS,
+  'dead-canyon': DEAD_CANYON_CHECKPOINTS
+});
 export const COUNTRYSIDE_CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 3;
 export const LAP_VOID_DISABLED_TRACKS = Object.freeze(['cliffside']);
 const COUNTRYSIDE_TRACK_CENTER = Object.freeze({ x: 0, z: 0 });
@@ -18,9 +30,7 @@ export function updateLapProgressState(options = {}) {
   const checkpoints = options.checkpoints ?? (
     LAP_VOID_DISABLED_TRACKS.includes(trackId)
       ? NO_CHECKPOINTS
-      : trackId === 'mountain'
-        ? MOUNTAIN_LONG_CHECKPOINTS
-        : LAP_CHECKPOINTS
+      : TRACK_CHECKPOINTS[trackId] || LAP_CHECKPOINTS
   );
   const checkpointGateHalfWidthFactor = options.checkpointGateHalfWidthFactor ?? (
     trackId === 'countryside' ? COUNTRYSIDE_CHECKPOINT_GATE_HALF_WIDTH_FACTOR : undefined

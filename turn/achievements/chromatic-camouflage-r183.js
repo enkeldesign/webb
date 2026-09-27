@@ -19,6 +19,9 @@ export const TRACK_COLOR_RULES = Object.freeze({
   airport: Object.freeze({ hueMin: 40, hueMax: 65, name: 'yellow' }),
   harbor: Object.freeze({ hueMin: 15, hueMax: 39.999, name: 'orange' }),
   cliffside: Object.freeze({ hueMin: 165, hueMax: 205, name: 'cyan' }),
+  beachfront: Object.freeze({ hueMin: 105, hueMax: 164.999, name: 'green' }),
+  // Red wraps through 0°, between Countryside's pink and Harbor's orange.
+  'dead-canyon': Object.freeze({ hueMin: 350.001, hueMax: 14.999, name: 'red' }),
   'midnight-city': Object.freeze({ hueMin: 240, hueMax: 285, name: 'violet' }),
   mountain: Object.freeze({ hueMin: 206, hueMax: 230, name: 'blue' })
 });
@@ -64,7 +67,9 @@ export function matchesTrackColor(trackId, color) {
   if (!rule || !hsl) return false;
   if (hsl.saturation < COLOR_LIMITS.minSaturation) return false;
   if (hsl.lightness < COLOR_LIMITS.minLightness || hsl.lightness > COLOR_LIMITS.maxLightness) return false;
-  return hsl.hue >= rule.hueMin && hsl.hue <= rule.hueMax;
+  return rule.hueMin <= rule.hueMax
+    ? hsl.hue >= rule.hueMin && hsl.hue <= rule.hueMax
+    : hsl.hue >= rule.hueMin || hsl.hue <= rule.hueMax;
 }
 
 export function qualifyingChromaticCamouflage(getBestLap = getStoredBestLap) {

@@ -7,9 +7,11 @@ import { assertTrackConfigCoverage } from '../tracks/definitions.js';
 export const CHALLENGE_PROGRESS_STORAGE_KEY = 'turn-achievement-challenges-v1';
 export const CLEAN_LAP_TARGETS = Object.freeze({
   countryside: 15,
-  airport: 20,
   cliffside: 20,
+  airport: 20,
+  beachfront: 35,
   harbor: 30,
+  'dead-canyon': 45,
   'midnight-city': 70,
   mountain: 70
 });

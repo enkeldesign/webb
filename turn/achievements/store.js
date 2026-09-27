@@ -13,6 +13,7 @@ import {
   TROPHY_ROAD_STORAGE_VERSION,
   getTrophyRoadReward,
   grandfatheredRewardIdsForVersion,
+  legacyTrackIdsForState,
   migrateStoredRewardIdsForVersion,
   rewardIdsForTrophies
 } from '../progression/trophy-road.js';
@@ -35,7 +36,8 @@ function defaultStoredState() {
     rewards: {
       unlocked: [],
       seen: [],
-      grandfathered: []
+      grandfathered: [],
+      tracks: []
     }
   };
 }
@@ -138,9 +140,11 @@ export function normalizeAchievementState(value) {
   const rewardIds = TROPHY_ROAD_REWARDS.map((reward) => reward.id);
   const earnedRewardIds = rewardIdsForTrophies(totalTrophies(unlocked, bonuses));
   const storedRewardIds = migrateStoredRewardIdsForVersion(
-    normalizedStringArray(value.rewards?.unlocked, rewardIds),
+    normalizedStringArray(value.rewards?.unlocked),
     sourceVersion
   );
+  // Per-track access carried over from before the difficulty tiers (see trophy-road.js).
+  const legacyTrackIds = legacyTrackIdsForState(value, totalTrophies(unlocked, bonuses));
   const migratedRewardIds = grandfatheredRewardIdsForVersion(sourceVersion);
   const storedGrandfatheredIds = normalizedStringArray(
     value.rewards?.grandfathered,
@@ -178,7 +182,8 @@ export function normalizeAchievementState(value) {
     rewards: {
       unlocked: unlockedRewards,
       seen: seenRewards,
-      grandfathered: grandfatheredRewardIds
+      grandfathered: grandfatheredRewardIds,
+      tracks: legacyTrackIds
     }
   };
 }
@@ -244,6 +249,10 @@ export function createAchievementStore(storage = globalThis.localStorage) {
 
   function isRewardUnlocked(id) {
     return state.rewards.unlocked.includes(id);
+  }
+
+  function hasLegacyTrack(trackId) {
+    return Array.isArray(state.rewards.tracks) && state.rewards.tracks.includes(trackId);
   }
 
   function hasBonus(id) {
@@ -364,6 +373,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     hasBonus,
     trophyTotal,
     isRewardUnlocked,
+    hasLegacyTrack,
     syncRewards,
     addTrack,
     addBlankTrack,

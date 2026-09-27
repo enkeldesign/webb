@@ -68,7 +68,7 @@ function compactVisualOverflowAllowance(rail) {
 
   // Compact Home deliberately reserves the rail's bottom padding for card shadows and
   // the pressed/selected movement. scrollHeight includes that visual overflow even when
-  // all six card border boxes fit, so only overflow beyond the reserve should create a
+  // every card border box fits, so only overflow beyond the reserve should create a
   // scroll surface. Expanded cards get no allowance because their content is intrinsic.
   const paddingBottom = Number.parseFloat(getComputedStyle(rail).paddingBottom);
   return Number.isFinite(paddingBottom) ? Math.max(0, paddingBottom) : 0;

@@ -143,7 +143,8 @@ function copyStateIntoLiveStore(snapshot) {
   liveState.rewards = {
     unlocked: [...snapshot.rewards.unlocked],
     seen: [...snapshot.rewards.seen],
-    grandfathered: [...(snapshot.rewards.grandfathered || [])]
+    grandfathered: [...(snapshot.rewards.grandfathered || [])],
+    tracks: [...(snapshot.rewards.tracks || [])]
   };
 }
 

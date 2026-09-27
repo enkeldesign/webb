@@ -1,5 +1,7 @@
 import * as THREE from 'three';
+import { BEACHFRONT_CONTROL_POINTS } from './beachfront-layout.js';
 import { CLIFFSIDE_CONTROL_POINTS } from './cliffside-layout.js';
+import { DEAD_CANYON_CONTROL_POINTS } from './dead-canyon-layout.js';
 import { HARBOR_CONTROL_POINTS } from './harbor-layout.js';
 import { MIDNIGHT_CITY_CONTROL_POINTS } from './midnight-city-layout.js';
 import { MOUNTAIN_CONTROL_POINTS } from './mountain-layout.js';
@@ -66,8 +68,14 @@ const CONTROL_POINT_FACTORIES = Object.freeze({
   cliffside() {
     return CLIFFSIDE_CONTROL_POINTS.map(([x, y, z]) => new THREE.Vector3(x, y, z));
   },
+  beachfront() {
+    return BEACHFRONT_CONTROL_POINTS.map(([x, y, z]) => new THREE.Vector3(x, y, z));
+  },
   harbor() {
     return HARBOR_CONTROL_POINTS.map(([x, y, z]) => new THREE.Vector3(x, y, z));
+  },
+  'dead-canyon'() {
+    return DEAD_CANYON_CONTROL_POINTS.map(([x, y, z]) => new THREE.Vector3(x, y, z));
   },
   'midnight-city'() {
     return MIDNIGHT_CITY_CONTROL_POINTS.map(([x, y, z]) => new THREE.Vector3(x, y, z));
