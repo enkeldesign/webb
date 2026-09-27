@@ -29,12 +29,13 @@ export function viewportSnapshot({ documentRef = document, windowRef = window } 
     lvh: measure(documentRef, '100lvh'),
     safeTop: measure(documentRef, 'env(safe-area-inset-top, 0px)'),
     safeBottom: measure(documentRef, 'env(safe-area-inset-bottom, 0px)'),
-    repair: root.dataset.turnViewportRepair || 'none'
+    repair: root.dataset.turnViewportRepair || 'none',
+    gap: root.dataset.turnViewportGap || 'none'
   };
 }
 
 export function formatViewportSnapshot(s) {
-  return `VIEWPORT · screen ${s.screen} · inner ${s.inner} · client ${s.client} · visual ${s.visual} · svh/dvh/lvh ${s.svh}/${s.dvh}/${s.lvh} · safe ${s.safeTop}/${s.safeBottom} · repair ${s.repair}`;
+  return `VIEWPORT · screen ${s.screen} · inner ${s.inner} · client ${s.client} · visual ${s.visual} · svh/dvh/lvh ${s.svh}/${s.dvh}/${s.lvh} · safe ${s.safeTop}/${s.safeBottom} · repair ${s.repair} · gap ${s.gap}`;
 }
 
 export function installViewportReadout({ documentRef = document, windowRef = window } = {}) {

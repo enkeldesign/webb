@@ -56,6 +56,18 @@ assert.ok(
   index.indexOf('pwa-usable-viewport-r181.js') < index.indexOf('app.js?build='),
   'The PWA boundary must be installed before main.js can publish physical-screen dimensions'
 );
+// iOS standalone can lay the app out one top inset short of the screen; the gap
+// compensation runs right after the usable-viewport boundary it extends.
+assert.ok(
+  index.indexOf('pwa-usable-viewport-r181.js') < index.indexOf('ios-viewport-gap.js?build=') &&
+    index.indexOf('ios-viewport-gap.js?build=') < index.indexOf('app.js?build='),
+  'The iOS viewport-gap compensation loads after the PWA boundary and before the app'
+);
+const viewportGap = await fs.readFile(new URL('../turn/ios-viewport-gap.js', import.meta.url), 'utf8');
+assert.match(viewportGap, /Math\.abs\(gap - top\) <= INSET_TOLERANCE/,
+  'Compensation applies only when the gap matches the top safe-area inset');
+assert.match(viewportGap, /html\.\$\{CLASS\} body \{[\s\S]*height: 100lvh !important;[\s\S]*transform: translateZ\(0\);/,
+  'Only the fixed body grows to the large viewport and contains fixed layers');
 assert.match(nextIndex, /pwa-usable-viewport-r181\.js\?revision=r181-usable-web-layer/);
 
 for (const manifest of [productionManifest, nextManifest]) {
