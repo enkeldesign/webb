@@ -57,6 +57,36 @@ const belowNotice = (page, selector) => page.evaluate((selector) => {
   return document.querySelector(selector).getBoundingClientRect().top >= strip.bottom - 0.5;
 }, selector);
 
+// WebKit on CI has occasionally never started the race after RACE THIS CAR (the whole
+// test normally takes about 22 s). On a timeout, report what the app is showing
+// instead, so the failure names its cause.
+async function waitForRaceStart(page, name) {
+  try {
+    await page.waitForSelector('#controls:not([hidden])', { timeout: 90000 });
+  } catch (error) {
+    const state = await page.evaluate(() => {
+      const visible = (selector) => {
+        const node = document.querySelector(selector);
+        return node ? !node.hidden && node.getBoundingClientRect().height > 0 : null;
+      };
+      const race = document.querySelector('.lot-race');
+      return {
+        homeVisible: visible('.m8-home'),
+        homeStatus: document.querySelector('.m8-home-status')?.textContent?.trim() || '',
+        lotOpen: document.body.classList.contains('turn-lot-open'),
+        lotRace: race ? { disabled: race.disabled, busy: race.getAttribute('aria-busy') } : null,
+        lotRaceStatus: document.querySelector('.lot-race-status')?.textContent?.trim() || '',
+        trackIntroVisible: visible('#trackIntro'),
+        introVisible: visible('#intro'),
+        bodyClasses: document.body.className,
+        racePhase: globalThis.__turnNextRaceSession?.getPhase?.() ?? null,
+        running: globalThis.__turnRuntime?.state?.running ?? null
+      };
+    }).catch((evaluateError) => ({ evaluateError: String(evaluateError) }));
+    throw new Error(`${name}: the race never started after RACE THIS CAR. App state: ${JSON.stringify(state)}`, { cause: error });
+  }
+}
+
 async function run(name, browser) {
   // Phone portrait: Home shows the notice first in reading order, below nothing, covering nothing.
   let { context, page, errors } = await openHome(browser, phone);
@@ -100,7 +130,7 @@ async function run(name, browser) {
     assert.ok(await belowNotice(page, selector), `${name}: ${selector} is not covered by the notice`);
   }
   await page.locator('.lot-race').click();
-  await page.waitForSelector('#controls:not([hidden])', { timeout: 90000 });
+  await waitForRaceStart(page, name);
   await page.waitForFunction(() => !document.querySelector('.turn-landscape-notice:not([hidden])'), null, { timeout: 30000 });
   assert.deepEqual(errors, [], `${name}: no page errors`);
   await context.close();
