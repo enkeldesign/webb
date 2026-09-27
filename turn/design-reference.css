@@ -176,7 +176,7 @@ input[type="radio"]:checked::after { content: ""; width: 12px; height: 12px; bor
 .race-views figcaption { margin-top: 18px; }
 figcaption strong { display: block; margin-bottom: 6px; }
 .race-demo { position: relative; overflow: hidden; border: 3px solid var(--turn-ink); border-radius: 22px; background: var(--turn-road); color: var(--turn-ink); }
-.race-demo.landscape { min-height: 300px; aspect-ratio: 5 / 3; }
+.race-demo.landscape { width: 100%; min-height: min(300px, 60vw); aspect-ratio: 5 / 3; }
 .race-demo.portrait { width: min(100%, 280px); height: 430px; margin-inline: auto; }
 .race-road { position: absolute; inset: -25% 25%; border: 24px solid rgb(255 248 232 / .18); border-radius: 40%; transform: rotate(15deg); }
 .race-topline { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; padding: 5px 9px; border: 2px solid var(--turn-ink); border-radius: 8px; background: var(--turn-paper); font-size: max(var(--turn-text-floor), .55rem); font-weight: 800; }
