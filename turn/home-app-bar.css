@@ -405,6 +405,14 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-home-build {
   white-space: normal;
 }
 
+/* Tester-only viewport numbers (ui/viewport-readout.js). */
+html body .turn-home-sheet .turn-home-sheet-footer .turn-viewport-readout {
+  margin: 0;
+  font-size: var(--turn-type-micro, 11px);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
 html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
   min-height: 44px;
   margin: 0;

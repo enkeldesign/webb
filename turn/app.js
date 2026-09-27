@@ -412,6 +412,8 @@ const { installHomeAppBar } = await import(withBuild('./ui/home-app-bar.js'));
 installHomeAppBar();
 const { installToastRegion } = await import(withBuild('./ui/toast-region.js'));
 installToastRegion();
+const { installViewportReadout } = await import(withBuild('./ui/viewport-readout.js'));
+installViewportReadout();
 installStylesheet(
   './m8-record-car-scale.css?revision=r206-three-records',
   'data-turn-m8-record-car-scale'
