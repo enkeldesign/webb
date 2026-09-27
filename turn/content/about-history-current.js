@@ -1023,6 +1023,7 @@ Object.freeze({
     Object.freeze(['1.22.2 r289', 'Shows a closable LANDSCAPE ORIENTATION RECOMMENDED notice on Home and The Lot in portrait while the portrait design is still being refined. It returns on the next launch in portrait.']),
     Object.freeze(['1.22.3 r290', 'Loads achievements and Trophy Road from one module each instead of stacked revision layers. Nothing changes in play.']),
     Object.freeze(['1.22.4 r291', 'Builds CLIFFSIDE and MOUNTAIN from named modules instead of stacked revision layers. Nothing changes in play.']),
+    Object.freeze(['1.22.5 r292', 'Gives the portrait landscape notice the same round orange close button as TURN dialogs, and loads TURN colours from one design-token source.']),
     Object.freeze(['Responsive navigation', 'Reflows Home, The Lot and dialogs for smaller windows and enlarged text; keeps growing track catalogs reachable and limits large-screen stretching.']),
     Object.freeze(['Race orientation', 'Recommends landscape once at the first portrait race handoff while keeping portrait fully supported and immediately playable.'])
   ])
@@ -1030,7 +1031,7 @@ Object.freeze({
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.22.4',
-  build: '2026.09.26-r291',
-  note: 'TURN 1.22.4 is a maintenance release that builds CLIFFSIDE and MOUNTAIN from named modules without changing how the game plays.'
+  version: '1.22.5',
+  build: '2026.09.26-r292',
+  note: 'TURN 1.22.5 matches the portrait landscape notice close button to TURN dialogs and loads TURN colours from one design-token source.'
 });

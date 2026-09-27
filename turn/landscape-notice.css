@@ -1,4 +1,7 @@
 /* Temporary portrait notice, drawn in the style of the retired rotate card.
+   This stylesheet is loaded unscaled (data-turn-responsive), so every length below is a
+   real CSS pixel: the values reproduce the card as rendered under the 0.75 UI baseline,
+   and the close button matches the Home dialog close exactly.
    The strip continues the colour of the surface beneath it (set from JS), and the
    card uses cyan, TURN's information colour, distinct from the yellow Home header.
    It sits above Home (1400) and The Lot (70) but below the install gate (2000). */
@@ -30,30 +33,30 @@ body.turn-landscape-notice-visible .lot-screen {
 .turn-landscape-notice-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 12px;
+  gap: 9px;
   align-items: center;
-  max-width: 560px;
+  max-width: 420px;
   margin: 0 auto;
-  padding: 12px 10px 12px 14px;
+  padding: 9px 7.5px 9px 10.5px;
   border: 4px solid var(--ink, #08090a);
-  border-radius: 18px;
+  border-radius: 13.5px;
   background: var(--turn-action-information, #38d9ff);
   color: var(--ink, #08090a);
-  box-shadow: 6px 6px 0 var(--ink, #08090a);
+  box-shadow: 4.5px 4.5px 0 var(--ink, #08090a);
 }
 
 .turn-landscape-notice-phone {
-  width: 46px;
-  height: 27px;
+  width: 34.5px;
+  height: 20.25px;
   border: 4px solid var(--ink, #08090a);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--paper, #fff8e8);
   transform: rotate(-10deg);
 }
 
 .turn-landscape-notice-copy h2 {
-  margin: 0 0 3px;
-  font-size: 0.84rem;
+  margin: 0 0 2.25px;
+  font-size: 10.08px;
   font-weight: 900;
   letter-spacing: 0.02em;
   line-height: 1.15;
@@ -61,31 +64,30 @@ body.turn-landscape-notice-visible .lot-screen {
 
 .turn-landscape-notice-copy p {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 9.6px;
   font-weight: 700;
   line-height: 1.3;
 }
 
+/* Same as the Home dialog close (.m8-dialog-head > button): 44px round orange. */
 .turn-landscape-notice-close {
-  display: grid;
-  place-items: center;
-  /* TURN renders its UI at a 0.75 baseline (page-zoom-baseline-r193.js):
-     59px here is a real 44px touch target. */
-  width: 59px;
-  height: 59px;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  border: 3px solid var(--ink, #08090a);
-  border-radius: 12px;
-  background: var(--paper, #fff8e8);
+  border: 4px solid var(--ink, #08090a);
+  border-radius: 50%;
+  background: var(--turn-action-navigation, #ff7b54);
   color: var(--ink, #08090a);
+  box-shadow: 5.25px 5.25px 0 var(--ink, #08090a);
   font: inherit;
-  font-size: 1.5rem;
-  font-weight: 900;
+  font-size: 24px;
+  font-weight: 950;
   line-height: 1;
-  cursor: pointer;
+  text-align: center;
 }
 
 .turn-landscape-notice-close:focus-visible {
-  outline: 4px solid var(--ink, #08090a);
+  outline: 5px solid var(--paper, #fff8e8);
   outline-offset: 3px;
 }
