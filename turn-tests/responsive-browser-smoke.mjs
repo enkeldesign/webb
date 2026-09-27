@@ -32,6 +32,40 @@ const server = http.createServer(async (request, response) => {
 });
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const origin = `http://127.0.0.1:${server.address().port}`;
+// Dense, not tiny: visible text never below 11px, visible controls never below 44px.
+// The drive pad's contextual LOCK / SHIFT / REVERSE bubbles are gameplay geometry
+// owned by the race layout and are measured there, not here.
+async function readability(page, label) {
+  const { text, targets } = await page.evaluate(() => {
+    const visible = (el) => {
+      const rect = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      return rect.width > 1 && rect.height > 1 && style.visibility !== 'hidden'
+        && rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth
+        && !el.closest('[aria-hidden="true"], [hidden], .lot-a11y-only, .visually-hidden, .sr-only');
+    };
+    const text = [...document.querySelectorAll('body *')]
+      .filter((el) => [...el.childNodes].some((node) => node.nodeType === 3 && node.textContent.trim()) && visible(el))
+      .filter((el) => parseFloat(getComputedStyle(el).fontSize) < 10.95)
+      .map((el) => `${el.className?.toString().split(' ')[0] || el.tagName} ${parseFloat(getComputedStyle(el).fontSize).toFixed(1)}px`);
+    const targets = [...document.querySelectorAll('button, a[href], summary, [role="button"]')]
+      .filter((el) => visible(el) && !el.closest('.drive-stack'))
+      .filter((el) => { const rect = el.getBoundingClientRect(); return rect.width < 43.5 || rect.height < 43.5; })
+      .filter((el) => { // A transparent hit area may extend a small icon control.
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2; const cy = rect.top + rect.height / 2;
+        return ![[-21.5, 0], [21.5, 0], [0, -21.5], [0, 21.5]].every(([dx, dy]) => {
+          const hit = document.elementFromPoint(cx + dx, cy + dy);
+          return hit && (hit === el || el.contains(hit));
+        });
+      })
+      .map((el) => { const rect = el.getBoundingClientRect(); return `${el.className?.toString().split(' ')[0] || el.tagName} ${Math.round(rect.width)}x${Math.round(rect.height)}`; });
+    return { text: [...new Set(text)], targets: [...new Set(targets)] };
+  });
+  assert.deepEqual(text, [], `${label}: no visible text below 11px`);
+  assert.deepEqual(targets, [], `${label}: no visible control below 44x44`);
+}
+
 const settle = (page) => page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 
 async function bounds(page, selector) {
@@ -114,6 +148,7 @@ async function responsiveRace(browser, name) {
       await settle(page);
       const home = await bounds(page, '.m8-home');
       assert.ok(home.scrollWidth <= home.clientWidth + 1, `${name} ${width}: Home reflows horizontally`);
+      await readability(page, `${name} ${width}x${height} Home`);
       const last = page.locator('.track-card').last();
       await last.scrollIntoViewIfNeeded();
       const card = await last.boundingBox();
@@ -144,6 +179,7 @@ async function responsiveRace(browser, name) {
       await settle(page);
       const lot = await bounds(page, '.lot-screen');
       assert.ok(lot.scrollWidth <= lot.clientWidth + 1, `${name} ${width}: Lot reflows`);
+      await readability(page, `${name} ${width}x${height} Lot`);
       if (width > 736) assert.ok((await bounds(page, '.lot-side')).height <= 481, 'Large-screen preview stays bounded');
       await page.locator('.lot-race').scrollIntoViewIfNeeded();
       within(await bounds(page, '.lot-race'), width, height, 'Lot RACE action');
