@@ -43,7 +43,11 @@ assert.doesNotMatch(productionIndex, /challenge-mode|challenge-codec|RACE MY GHO
 assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${escapeRegex(release.version)} · Build ${escapeRegex(release.id)}`));
 assert.match(nextIndex, /"\/turn\/tracks\/track-manager\.js\?build=20260805-r160": "\/turn\/tracks\/track-manager\.js\?source=20260729-r118-m8"/,
   'Challenge mode must reuse TURN NEXT’s canonical Track Manager singleton');
-assert.match(nextIndex, /"\/turn\/tracks\/catalog\.js\?build=20260805-r160": "\/turn\/tracks\/catalog\.js\?source=20260729-r118-m8"/);
+assert.match(
+  nextIndex,
+  new RegExp(`"\\/turn\\/tracks\\/catalog\\.js\\?build=20260805-r160": "\\/turn\\/tracks\\/catalog\\.js\\?build=${escapeRegex(release.cacheKey)}"`),
+  'Challenge mode must reuse the one canonical track catalog on the current build'
+);
 assert.match(
   nextIndex,
   new RegExp(`"\\/turn\\/vehicle\\/catalog\\.js\\?build=20260805-r160": "\\/turn\\/vehicle\\/catalog\\.js\\?build=${escapeRegex(release.cacheKey)}"`),

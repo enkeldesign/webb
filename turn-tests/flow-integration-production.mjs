@@ -41,7 +41,7 @@ for (const target of [8000, 11000, 20000, 18000, 7000, 12000, 13000, 23000, 2500
 }
 assert.match(scoringCatalog, /'midnight-city': 20000/);
 assert.match(scoringCatalog, /mountain: 20000/);
-assert.equal(TRACK_SCORING_ACHIEVEMENTS.length, 12);
+assert.equal(TRACK_SCORING_ACHIEVEMENTS.length, 16);
 assert.ok(TRACK_SCORING_ACHIEVEMENTS
   .filter((achievement) => achievement.scoreChannel === 'drift')
   .every((achievement) => achievement.trophies === 75));

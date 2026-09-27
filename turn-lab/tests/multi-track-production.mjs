@@ -36,15 +36,17 @@ assert.deepEqual(
   })),
   [
     { id: 'countryside', difficulty: 'EASY', storageRevision: 'countryside', freeRoamDistance: 170 },
+    { id: 'cliffside', difficulty: 'EASY', storageRevision: 'cliffside-r68', freeRoamDistance: 22.2 },
     { id: 'airport', difficulty: 'MEDIUM', storageRevision: 'airport-r50', freeRoamDistance: 95 },
-    { id: 'cliffside', difficulty: 'MEDIUM', storageRevision: 'cliffside-r68', freeRoamDistance: 22.2 },
+    { id: 'beachfront', difficulty: 'MEDIUM', storageRevision: 'beachfront', freeRoamDistance: 21.5 },
     { id: 'harbor', difficulty: 'ADVANCED', storageRevision: 'harbor-r80', freeRoamDistance: 170 },
-    { id: 'midnight-city', difficulty: 'ADVANCED', storageRevision: 'midnight-city-r2', freeRoamDistance: 34 },
+    { id: 'dead-canyon', difficulty: 'ADVANCED', storageRevision: 'dead-canyon', freeRoamDistance: 23.5 },
+    { id: 'midnight-city', difficulty: 'EXPERT', storageRevision: 'midnight-city-r2', freeRoamDistance: 34 },
     { id: 'mountain', difficulty: 'EXPERT', storageRevision: 'mountain-r3-start-seam', freeRoamDistance: 18.2 }
   ],
   'Every playable track must own identity, difficulty, record namespace and containment in one source of truth'
 );
-assert.deepEqual(TRACK_PLACEHOLDERS, [], 'Track 6 must be a real playable MOUNTAIN track rather than the old TBA teaser');
+assert.deepEqual(TRACK_PLACEHOLDERS, [], 'Every catalog entry must be a real playable track rather than a TBA teaser');
 assert.equal(getTrackStorageRevision('midnight-city'), 'midnight-city-r2');
 assert.equal(getTrackFreeRoamDistance('midnight-city'), 34);
 assert.equal(getTrackStorageRevision('mountain'), 'mountain-r3-start-seam');
@@ -183,7 +185,7 @@ const [
   fs.readFile(new URL('../../turn/tracks/mountain-polish.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')
 ]);
-assert.match(definitionsBase, /id: 'midnight-city'[\s\S]*difficulty: 'ADVANCED'/);
+assert.match(definitionsBase, /id: 'midnight-city'[\s\S]*?difficulty: 'EXPERT'/);
 assert.match(definitionsBase, /storageRevision: 'midnight-city-r2'/);
 assert.match(definitionsBase, /id: 'mountain'[\s\S]*difficulty: 'EXPERT'/);
 assert.match(definitions, /storageRevision: 'mountain-r3-start-seam'/);

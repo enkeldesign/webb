@@ -48,6 +48,8 @@ assert.deepEqual(TRACK_COLOR_CUES, {
   airport: 'yellow',
   harbor: 'orange',
   cliffside: 'cyan',
+  beachfront: 'green',
+  'dead-canyon': 'red',
   'midnight-city': 'violet',
   mountain: 'blue'
 });
@@ -165,4 +167,4 @@ assert.match(historySource, /native HTML color input/i);
 assert.doesNotMatch(historySource, /native paint activation bridge|assistive-technology bridge/i,
   'Current release history must not claim an activation bridge that no longer exists');
 
-console.log(`TURN ${release.version} ${release.id} HTML-first native color input, pre-Paintjob car cue and six-track color-cue regression passed.`);
+console.log(`TURN ${release.version} ${release.id} HTML-first native color input, pre-Paintjob car cue and eight-track color-cue regression passed.`);

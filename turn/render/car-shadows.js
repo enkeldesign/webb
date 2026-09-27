@@ -3,7 +3,7 @@ import { assertTrackConfigCoverage } from '../tracks/definitions.js';
 
 // Match the authored road decks, not the vehicle's suspension/body height.
 export const TRACK_SHADOW_ROAD_HEIGHT = Object.freeze({ countryside: 0.13, airport: 0.17, cliffside: 0.12,
-  harbor: 0.18, 'midnight-city': 0.16, mountain: 0.14 });
+  beachfront: 0.16, harbor: 0.18, 'dead-canyon': 0.16, 'midnight-city': 0.16, mountain: 0.14 });
 assertTrackConfigCoverage(TRACK_SHADOW_ROAD_HEIGHT, 'projected-shadow road heights');
 const SURFACE_LIFT = 0.018;
 const PATCH_REACH = 12;

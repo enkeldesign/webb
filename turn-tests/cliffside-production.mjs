@@ -27,23 +27,21 @@ const AIRPORT_CONTROL_POINTS = [
   [-229, 0, -45], [-215, 0, -88]
 ];
 
-assert.equal(TRACK_DEFINITIONS.length, 6, 'TURN must expose six playable tracks');
+assert.equal(TRACK_DEFINITIONS.length, 8, 'TURN exposes eight playable tracks');
 assert.deepEqual(
   TRACK_DEFINITIONS.map(({ id, difficulty }) => ({ id, difficulty })),
   [
     { id: 'countryside', difficulty: 'EASY' },
+    { id: 'cliffside', difficulty: 'EASY' },
     { id: 'airport', difficulty: 'MEDIUM' },
-    { id: 'cliffside', difficulty: 'MEDIUM' },
+    { id: 'beachfront', difficulty: 'MEDIUM' },
     { id: 'harbor', difficulty: 'ADVANCED' },
-    { id: 'midnight-city', difficulty: 'ADVANCED' },
+    { id: 'dead-canyon', difficulty: 'ADVANCED' },
+    { id: 'midnight-city', difficulty: 'EXPERT' },
     { id: 'mountain', difficulty: 'EXPERT' }
   ]
 );
-assert.deepEqual(
-  TRACK_PLACEHOLDERS,
-  [],
-  'Track 6 must now be the playable Mountain track rather than a locked teaser'
-);
+assert.deepEqual(TRACK_PLACEHOLDERS, [], 'Every catalog entry is a playable track, never a locked teaser');
 assert.equal(getTrackStorageRevision('cliffside'), 'cliffside-r68');
 assert.equal(CLIFFSIDE_LAYOUT_RULES.minimumTurnRadiusComparedWithAirport, 'not-smaller');
 assert.equal(CLIFFSIDE_LAYOUT_RULES.verticalRoadOverlap, false);
@@ -122,7 +120,7 @@ assert.match(selectorSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
 assert.match(selectorSource, /\.track-card:not\(\[disabled\]\)/);
 
 console.log(
-  `TURN Cliffside passed within the six-track lineup: radius ${cliffsideRadius.toFixed(2)}, elevation ${minimumElevation.toFixed(1)} to ${maximumElevation.toFixed(1)}.`
+  `TURN Cliffside passed within the eight-track lineup: radius ${cliffsideRadius.toFixed(2)}, elevation ${minimumElevation.toFixed(1)} to ${maximumElevation.toFixed(1)}.`
 );
 
 function sampleCentripetalClosed(controlPoints, subdivisions) {

@@ -124,7 +124,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
     title: 'TRACTION',
     description: 'Shallow off-road driving causes much less slowdown, while deep off-road remains punishing.',
     rewardId: 'awd-traction',
-    threshold: 400
+    threshold: 500
   }),
   classic: Object.freeze({
     title: 'GRADUATED',
@@ -176,9 +176,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
   }),
   truck: Object.freeze({
     title: 'TORQUE',
-    description: 'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.',
-    rewardId: 'truck-torque',
-    threshold: 500
+    description: 'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.'
   }),
   van: Object.freeze({
     title: 'CARRY ON',

@@ -13,17 +13,21 @@ export const SCORING_MASTER_ACHIEVEMENT_ID = 'drift-flow-master';
 export const SCORING_ACHIEVEMENT_TARGETS = Object.freeze({
   drift: Object.freeze({
     countryside: 8000,
-    airport: 11000,
     cliffside: 20000,
+    airport: 11000,
+    beachfront: 20000,
     harbor: 18000,
+    'dead-canyon': 20000,
     'midnight-city': 20000,
     mountain: 20000
   }),
   flow: Object.freeze({
     countryside: 7000,
-    airport: 12000,
     cliffside: 13000,
+    airport: 12000,
+    beachfront: 13000,
     harbor: 23000,
+    'dead-canyon': 20000,
     'midnight-city': 25000,
     mountain: 20000
   })

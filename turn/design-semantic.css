@@ -33,24 +33,18 @@
 }
 
 /* Difficulty is always expressed by text plus a stable supporting colour. */
-.track-card-countryside .track-card-difficulty,
 .track-card[data-track-difficulty="easy"] .track-card-difficulty {
   background: var(--turn-difficulty-easy) !important;
 }
 
-.track-card-airport .track-card-difficulty,
-.track-card-cliffside .track-card-difficulty,
 .track-card[data-track-difficulty="medium"] .track-card-difficulty {
   background: var(--turn-difficulty-medium) !important;
 }
 
-.track-card-harbor .track-card-difficulty,
-.track-card-midnight-city .track-card-difficulty,
 .track-card[data-track-difficulty="advanced"] .track-card-difficulty {
   background: var(--turn-difficulty-advanced) !important;
 }
 
-.track-card-mountain .track-card-difficulty,
 .track-card[data-track-difficulty="expert"] .track-card-difficulty {
   background: var(--turn-difficulty-expert) !important;
 }

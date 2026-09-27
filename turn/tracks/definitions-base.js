@@ -7,6 +7,8 @@ export const DEFAULT_TRACK_ID = 'countryside';
 export const TRACK_SAMPLE_COUNT = 720;
 export const TRACK_SELECTION_KEY = 'turn-selected-track-v1';
 
+// Canonical production order: difficulty first (EASY, MEDIUM, ADVANCED, EXPERT),
+// two tracks per tier. Every track-derived surface follows this order.
 const TRACKS = [
   {
     id: 'countryside',
@@ -26,27 +28,10 @@ const TRACKS = [
     fog: 0x74c0fc
   },
   {
-    id: 'airport',
-    name: 'Airport',
-    difficulty: 'MEDIUM',
-    eyebrow: 'TRACK 2',
-    description: 'Runway speed. Apron precision.',
-    accent: '#ffd43b',
-    accentSoft: '#fff0a6',
-    storageRevision: 'airport-r50',
-    freeRoamDistance: 95,
-    collisionProfile: {
-      freeRoamDistance: 95,
-      colliders: []
-    },
-    sky: 0x55c9ed,
-    fog: 0x9bdcf2
-  },
-  {
     id: 'cliffside',
     name: 'Cliffside',
-    difficulty: 'MEDIUM',
-    eyebrow: 'TRACK 3',
+    difficulty: 'EASY',
+    eyebrow: 'TRACK 2',
     description: 'Linked curves. Mountain rhythm. Ocean flow.',
     accent: '#26c7c3',
     accentSoft: '#bcefeb',
@@ -65,10 +50,59 @@ const TRACKS = [
     fog: 0xb5dded
   },
   {
+    id: 'airport',
+    name: 'Airport',
+    difficulty: 'MEDIUM',
+    eyebrow: 'TRACK 3',
+    description: 'Runway speed. Apron precision.',
+    accent: '#ffd43b',
+    accentSoft: '#fff0a6',
+    storageRevision: 'airport-r50',
+    freeRoamDistance: 95,
+    collisionProfile: {
+      freeRoamDistance: 95,
+      colliders: []
+    },
+    sky: 0x55c9ed,
+    fog: 0x9bdcf2
+  },
+  {
+    id: 'beachfront',
+    name: 'Beachfront',
+    difficulty: 'MEDIUM',
+    eyebrow: 'TRACK 4',
+    description: 'Bright beachfront island. Seaside sweepers. Hotel skyline. Tropical interior.',
+    accent: '#25b97a',
+    accentSoft: '#d8ffd8',
+    storageRevision: 'beachfront',
+    sampleCount: 1440,
+    freeRoamDistance: 21.5,
+    collisionProfile: {
+      freeRoamDistance: 21.5,
+      shoulderStartDistance: 15.5,
+      shoulderDrag: 1.35,
+      boundaryBounce: 0.028,
+      boundaryTangentRetention: 0.965,
+      boundaryMinimumRecoverySpeed: 5,
+      colliders: []
+    },
+    sky: 0x74ccf4,
+    fog: 0x9edff4,
+    fogNear: 480,
+    fogFar: 880,
+    lighting: {
+      hemisphereSky: 0xcaf5ff,
+      hemisphereGround: 0x73b85f,
+      hemisphereIntensity: 1.2,
+      directionalColor: 0xffefc2,
+      directionalIntensity: 1.35
+    }
+  },
+  {
     id: 'harbor',
     name: 'Harbor',
     difficulty: 'ADVANCED',
-    eyebrow: 'TRACK 4',
+    eyebrow: 'TRACK 5',
     description: 'Switchbacks. Container canyons. Quayside speed.',
     accent: '#ff8f3d',
     accentSoft: '#ffd0a8',
@@ -82,10 +116,43 @@ const TRACKS = [
     fog: 0xb6d6d4
   },
   {
+    id: 'dead-canyon',
+    name: 'Dead Canyon',
+    difficulty: 'ADVANCED',
+    eyebrow: 'TRACK 6',
+    description: 'Canyon road. Dust haze. One chicane. Long desert speed.',
+    // LAB's #df3045, lifted just enough for WCAG AA black text on the selected card.
+    accent: '#e5404f',
+    accentSoft: '#f3a0a8',
+    storageRevision: 'dead-canyon',
+    sampleCount: 2160,
+    freeRoamDistance: 23.5,
+    collisionProfile: {
+      freeRoamDistance: 23.5,
+      shoulderStartDistance: 15.2,
+      shoulderDrag: 1.55,
+      boundaryBounce: 0.035,
+      boundaryTangentRetention: 0.95,
+      boundaryMinimumRecoverySpeed: 6,
+      colliders: []
+    },
+    sky: 0xe4ad8b,
+    fog: 0xe4ad8b,
+    fogNear: 260,
+    fogFar: 900,
+    lighting: {
+      hemisphereSky: 0xffd7b4,
+      hemisphereGround: 0x6b3b32,
+      hemisphereIntensity: 1.05,
+      directionalColor: 0xffcf8d,
+      directionalIntensity: 1.18
+    }
+  },
+  {
     id: 'midnight-city',
     name: 'Midnight City',
-    difficulty: 'ADVANCED',
-    eyebrow: 'TRACK 5',
+    difficulty: 'EXPERT',
+    eyebrow: 'TRACK 7',
     description: 'District avenues. Neon corners. A full-city endurance lap.',
     accent: '#9d7cff',
     accentSoft: '#d8ccff',
@@ -117,7 +184,7 @@ const TRACKS = [
     id: 'mountain',
     name: 'Mountain',
     difficulty: 'EXPERT',
-    eyebrow: 'TRACK 6',
+    eyebrow: 'TRACK 8',
     description: 'Village climb. Snow line. Hairpin descent.',
     accent: '#4dabf7',
     accentSoft: '#d7efff',

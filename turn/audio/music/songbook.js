@@ -9,11 +9,14 @@ import { MOUNTAIN_SONG } from './mountain.js?revision=r214-mountain-ccttbb';
 
 export { MENU_SONG };
 
+// BEACHFRONT and DEAD CANYON deliberately reuse the CLIFFSIDE and MOUNTAIN songs.
 export const TRACK_SONGS = Object.freeze({
   countryside: COUNTRYSIDE_SONG,
-  airport: AIRPORT_SONG,
   cliffside: CLIFFSIDE_SONG,
+  airport: AIRPORT_SONG,
+  beachfront: CLIFFSIDE_SONG,
   harbor: HARBOR_SONG,
+  'dead-canyon': MOUNTAIN_SONG,
   'midnight-city': MIDNIGHT_CITY_SONG,
   mountain: MOUNTAIN_SONG
 });

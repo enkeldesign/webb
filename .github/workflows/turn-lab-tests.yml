@@ -139,6 +139,9 @@ jobs:
       - name: Run production track-catalog scalability regression
         run: node turn-tests/track-catalog-scalability-production.mjs
 
+      - name: Run eight-track catalog, BEACHFRONT and DEAD CANYON regression
+        run: node turn-tests/eight-track-catalog-production.mjs
+
       - name: Run Mountain production regression
         run: node turn-tests/mountain-track-production.mjs
 

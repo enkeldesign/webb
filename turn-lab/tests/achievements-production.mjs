@@ -85,26 +85,26 @@ const [
 
 assert.equal(ACHIEVEMENT_STORAGE_KEY, 'turn-achievements-v1');
 assert.equal(CHALLENGE_PROGRESS_STORAGE_KEY, 'turn-achievement-challenges-v1');
-assert.equal(BASE_ACHIEVEMENTS.length, 29,
-  'The internal base catalog should remain the 29-achievement foundation');
+assert.equal(BASE_ACHIEVEMENTS.length, 31,
+  'The internal base catalog is the 25-achievement foundation plus one SPRINT per track');
 assert.equal(
   BASE_ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  1775,
+  1825,
   'The base catalog must stay separate from production progression balancing'
 );
-assert.equal(ACHIEVEMENTS.length, 61,
-  'Production TURN must expose 48 core achievements plus 13 scoring achievements');
-assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 61,
+assert.equal(ACHIEVEMENTS.length, 71,
+  'Production TURN must expose 54 core achievements plus 17 scoring achievements');
+assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 71,
   'Production achievement ids must remain unique');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 12,
   'GOT STARTED must remain the master of the twelve prerequisite Getting Started achievements, not recursively require itself');
-assert.equal(totalAvailableTrophies(), 4625,
-  'The learning and balance pass must expose the complete 4,625-trophy supply');
+assert.equal(totalAvailableTrophies(), 5325,
+  'Eight tracks expose the complete 5,325-trophy supply');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300,
   'Trophy Road uses the first 2300 trophies while the full catalog retains headroom');
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  4625
+  5325
 );
 assert.ok(ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.trophies)));
 assert.ok(ACHIEVEMENTS.every((achievement) => !Object.hasOwn(achievement, 'points')));
@@ -165,7 +165,9 @@ const scoringTargets = Object.freeze({
   countryside: Object.freeze({ drift: 8000, flow: 7000 }),
   airport: Object.freeze({ drift: 11000, flow: 12000 }),
   cliffside: Object.freeze({ drift: 20000, flow: 13000 }),
+  beachfront: Object.freeze({ drift: 20000, flow: 13000 }),
   harbor: Object.freeze({ drift: 18000, flow: 23000 }),
+  'dead-canyon': Object.freeze({ drift: 20000, flow: 20000 }),
   'midnight-city': Object.freeze({ drift: 20000, flow: 25000 }),
   mountain: Object.freeze({ drift: 20000, flow: 20000 })
 });
@@ -254,16 +256,18 @@ assert.equal(TIME_TRIALS.length, TRACK_IDS.length);
 assert.equal(TIME_TRIAL_ACHIEVEMENT_IDS.length, TRACK_IDS.length);
 assert.equal(TIME_TRIAL_MASTER_ID, 'faster-than-the-dev');
 assert.equal(byId('faster-than-the-dev')?.progressMax, TRACK_IDS.length,
-  'FASTER THAN THE DEV must require all six developer targets');
+  'FASTER THAN THE DEV must require every developer target');
 assert.equal(byId('faster-than-the-dev')?.trophies, 300,
   'FASTER THAN THE DEV must retain the August progression rebalance');
 assert.deepEqual(
   TIME_TRIALS.map(({ trackId, targetSeconds }) => [trackId, targetSeconds]),
   [
     ['countryside', 11],
-    ['airport', 15],
     ['cliffside', 14],
+    ['airport', 15],
+    ['beachfront', 24],
     ['harbor', 22],
+    ['dead-canyon', 33],
     ['midnight-city', 50],
     ['mountain', 47]
   ]
@@ -286,9 +290,11 @@ assert.equal(completedAllTimeTrials((id) => id !== 'harbor-sprint', 'harbor-spri
 
 assert.deepEqual(CLEAN_LAP_TARGETS, {
   countryside: 15,
-  airport: 20,
   cliffside: 20,
+  airport: 20,
+  beachfront: 35,
   harbor: 30,
+  'dead-canyon': 45,
   'midnight-city': 70,
   mountain: 70
 });
@@ -328,8 +334,9 @@ assert.deepEqual(normalizeChallengeProgress({
 });
 
 const empty = normalizeAchievementState(null);
-assert.equal(empty.version, 9,
-  'Trophy Road v8 adds the reordered road and explicit grandfathering');
+assert.equal(empty.version, 10,
+  'Trophy Road v10 moves track unlocks to difficulty tiers');
+assert.deepEqual(empty.rewards.tracks, [], 'A fresh profile has no legacy track entitlements');
 assert.deepEqual(empty.progress.tracks, []);
 assert.deepEqual(empty.progress.blankTracks, []);
 assert.deepEqual(empty.progress.driveByEarParts, []);
@@ -531,12 +538,17 @@ assert.match(timeTrialSource, /targetSeconds: 14/);
 assert.match(timeTrialSource, /targetSeconds: 22/);
 assert.match(timeTrialSource, /targetSeconds: 50/);
 assert.match(timeTrialSource, /targetSeconds: 47/);
+assert.match(timeTrialSource, /targetSeconds: 24/);
+assert.match(timeTrialSource, /targetSeconds: 33/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 for (const entry of [productionEntry, labEntry]) {
-  assert.match(entry, /"\/turn\/achievements\/time-trials\.js\?revision=r166-bella-records": "\/turn\/achievements\/time-trials\.js\?revision=r224-sprint-targets"/,
-    'Production and Lab must route cached achievement imports to the new Sprint targets');
   const release = JSON.parse(await fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'));
   const map = JSON.parse(entry.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1]);
+  for (const suffix of ['', '?revision=r166-bella-records', '?revision=r224-sprint-targets']) {
+    assert.equal(map.imports[`/turn/achievements/time-trials.js${suffix}`],
+      `/turn/achievements/time-trials.js?build=${release.cacheKey}`,
+      'Production and Lab must route cached achievement imports to the current Sprint targets');
+  }
   assert.equal(map.imports['/turn/achievements/view.js?revision=r166-bella-records'],
     `/turn/achievements/view.js?build=${release.cacheKey}`,
     'Production and Lab must route cached achievement views to the current release presenter');

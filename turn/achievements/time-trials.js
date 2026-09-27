@@ -7,13 +7,6 @@ export const TIME_TRIALS = Object.freeze([
     description: 'Finish Countryside in under 11 seconds.'
   }),
   Object.freeze({
-    id: 'airport-sprint',
-    trackId: 'airport',
-    targetSeconds: 15,
-    title: 'AIRPORT SPRINT',
-    description: 'Finish Airport in under 15 seconds.'
-  }),
-  Object.freeze({
     id: 'cliffside-sprint',
     trackId: 'cliffside',
     targetSeconds: 14,
@@ -21,11 +14,32 @@ export const TIME_TRIALS = Object.freeze([
     description: 'Finish Cliffside in under 14 seconds.'
   }),
   Object.freeze({
+    id: 'airport-sprint',
+    trackId: 'airport',
+    targetSeconds: 15,
+    title: 'AIRPORT SPRINT',
+    description: 'Finish Airport in under 15 seconds.'
+  }),
+  Object.freeze({
+    id: 'beachfront-sprint',
+    trackId: 'beachfront',
+    targetSeconds: 24,
+    title: 'BEACHFRONT SPRINT',
+    description: 'Finish Beachfront in under 24 seconds.'
+  }),
+  Object.freeze({
     id: 'harbor-sprint',
     trackId: 'harbor',
     targetSeconds: 22,
     title: 'HARBOR SPRINT',
     description: 'Finish Harbor in under 22 seconds.'
+  }),
+  Object.freeze({
+    id: 'dead-canyon-sprint',
+    trackId: 'dead-canyon',
+    targetSeconds: 33,
+    title: 'DEAD CANYON SPRINT',
+    description: 'Finish Dead Canyon in under 33 seconds.'
   }),
   Object.freeze({
     id: 'midnight-sprint',

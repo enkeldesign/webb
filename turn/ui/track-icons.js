@@ -8,7 +8,9 @@ export const TRACK_ICON_ASSETS = Object.freeze({
   countryside: '/turn/assets/trophy-road/countryside.svg',
   airport: '/turn/assets/trophy-road/airport.svg',
   cliffside: '/turn/assets/trophy-road/cliffside.svg',
+  beachfront: '/turn/assets/trophy-road/beachfront.svg',
   harbor: '/turn/assets/trophy-road/harbor.svg',
+  'dead-canyon': '/turn/assets/trophy-road/dead-canyon.svg',
   'midnight-city': '/turn/assets/trophy-road/midnight-city.svg',
   mountain: '/turn/assets/trophy-road/mountain.svg'
 });

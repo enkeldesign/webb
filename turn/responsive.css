@@ -7,7 +7,10 @@
 :root body .rotate-panel { display: none !important; }
 :root body .m8-home-shell { max-width: 1440px; margin-inline: auto; }
 :root body .m8-home.m8-home-fixed-layout .m8-track-rail {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  /* The track-name type grows with the viewport width, so the minimum card grows with
+     it: wide windows get fewer, roomier columns and long one-word names (COUNTRYSIDE,
+     BEACHFRONT) never run under the preview. No column count is assumed. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, clamp(230px, 26vw, 350px)), 1fr));
   grid-auto-rows: minmax(min-content, auto);
   align-content: start;
   overflow-y: auto;

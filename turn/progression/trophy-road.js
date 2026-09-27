@@ -6,7 +6,7 @@ import { TRACK_ICON_MARKUP } from '../ui/track-icons.js?revision=r1-track-reward
 import { AUTHORED_PERK_ICON } from '../ui/perk-icon.js';
 
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
-export const TROPHY_ROAD_STORAGE_VERSION = 9;
+export const TROPHY_ROAD_STORAGE_VERSION = 10;
 export const TROPHY_ROAD_MAX_THRESHOLD = 2300;
 
 export const TROPHY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>';
@@ -16,8 +16,16 @@ function authoredRewardIcon(name) {
   return `<span class="turn-trophy-road-authored-icon is-${name}" aria-hidden="true"></span>`;
 }
 
+// A difficulty tier unlocks two tracks, so its reward shows both pictograms.
+function trackPairIcon(firstTrackId, secondTrackId) {
+  const half = (trackId) => `<span style="display:block;flex:1 1 0;min-width:0;height:100%">${TRACK_ICON_MARKUP[trackId]}</span>`;
+  return `<span aria-hidden="true" style="display:flex;align-items:center;gap:6%;width:100%;height:100%">${half(firstTrackId)}${half(secondTrackId)}</span>`;
+}
+
 export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
-  skyline: TRACK_ICON_MARKUP['midnight-city'],
+  'medium-tracks': trackPairIcon('airport', 'beachfront'),
+  'advanced-tracks': trackPairIcon('harbor', 'dead-canyon'),
+  'expert-tracks': trackPairIcon('midnight-city', 'mountain'),
   race: authoredRewardIcon('race-car'),
   future: authoredRewardIcon('future-racer'),
   paint: AUTHORED_PAINT_ICON,
@@ -26,7 +34,6 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   vintage: authoredRewardIcon('vintage-racer'),
   rally: authoredRewardIcon('rally-racer'),
   supercar: authoredRewardIcon('supercar'),
-  mountain: TRACK_ICON_MARKUP.mountain,
   shift: authoredRewardIcon('shift'),
   drift: AUTHORED_DRIFT_ICON,
   flow: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 24c8-16 18-16 28 0s20 16 28 0"></path><path d="M4 34c8-16 18-16 28 0s20 16 28 0"></path></svg>',
@@ -46,13 +53,22 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     description: 'Unlock the Vintage Racer: the car for linking corners beautifully.<br><strong>DRIFTAGE:</strong> DRIFT drains less speed, steering becomes more aggressive and it can hold larger slip angles.'
   }),
   Object.freeze({
-    id: 'midnight-city',
-    title: 'MIDNIGHT CITY',
-    shortTitle: 'Midnight City',
+    id: 'medium-tracks',
+    title: 'MEDIUM TRACKS',
+    shortTitle: 'Medium Tracks',
     type: 'track',
-    trackId: 'midnight-city',
-    icon: 'skyline',
-    description: 'Unlock MIDNIGHT CITY: an ADVANCED ≈4.7 km night-time city endurance lap through neon avenues and technical corners.'
+    trackIds: Object.freeze(['airport', 'beachfront']),
+    icon: 'medium-tracks',
+    description: 'Unlock the MEDIUM tracks: AIRPORT’s runway speed and apron precision, and BEACHFRONT’s ≈1.9 km of seaside sweepers around a tropical resort island.'
+  }),
+  Object.freeze({
+    id: 'advanced-tracks',
+    title: 'ADVANCED TRACKS',
+    shortTitle: 'Advanced Tracks',
+    type: 'track',
+    trackIds: Object.freeze(['harbor', 'dead-canyon']),
+    icon: 'advanced-tracks',
+    description: 'Unlock the ADVANCED tracks: HARBOR’s switchbacks and container canyons, and DEAD CANYON’s ≈3.3 km desert run through red badlands with one tight chicane.'
   }),
   Object.freeze({
     id: 'race-car',
@@ -77,13 +93,13 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     description: 'Unlock the Fire Truck, Ambulance and Police Car. All three have maximum Boost tanks.<br><strong>SIRENS:</strong> Boost activates flashing emergency lights and sirens.'
   }),
   Object.freeze({
-    id: 'mountain',
-    title: 'MOUNTAIN',
-    shortTitle: 'Mountain',
+    id: 'expert-tracks',
+    title: 'EXPERT TRACKS',
+    shortTitle: 'Expert Tracks',
     type: 'track',
-    trackId: 'mountain',
-    icon: 'mountain',
-    description: 'Unlock MOUNTAIN: an EXPERT ≈3.8 km alpine route from the snowy village through the summit and waterfall, across the lake bridge, then through the lower valley and village tunnel return.'
+    trackIds: Object.freeze(['midnight-city', 'mountain']),
+    icon: 'expert-tracks',
+    description: 'Unlock the EXPERT tracks: MIDNIGHT CITY’s ≈4.7 km night-time endurance lap through neon avenues, and MOUNTAIN’s ≈3.8 km alpine route over the summit, waterfall and lake bridge.'
   }),
   Object.freeze({
     id: 'monster',
@@ -148,17 +164,6 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     perkTitle: 'TRACTION',
     perkDescription: 'Shallow off-road driving causes much less slowdown, while deep off-road remains punishing.',
     description: 'Unlock <strong>TRACTION</strong> for AWD. Shallow off-road driving causes much less slowdown, while deep off-road remains punishing.'
-  }),
-  Object.freeze({
-    id: 'truck-torque',
-    title: 'TRUCK · TORQUE',
-    shortTitle: 'Truck Torque',
-    type: 'vehicle-perk',
-    vehicleId: 'truck',
-    icon: 'perk',
-    perkTitle: 'TORQUE',
-    perkDescription: 'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.',
-    description: 'Unlock <strong>TORQUE</strong> for Truck. OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.'
   }),
   Object.freeze({
     id: 'van-carry-on',
@@ -244,17 +249,18 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
   })
 ]);
 
+// EASY tracks are open from the start; each harder difficulty tier is one reward.
 const REWARD_ORDER = Object.freeze([
-  Object.freeze(['awd-traction', 400]),
-  Object.freeze(['truck-torque', 500]),
+  Object.freeze(['medium-tracks', 400]),
+  Object.freeze(['awd-traction', 500]),
   Object.freeze(['drift-attack', 600]),
-  Object.freeze(['midnight-city', 700]),
+  Object.freeze(['advanced-tracks', 700]),
   Object.freeze(['paintjob', 800]),
   Object.freeze(['vintage-racer', 900]),
   Object.freeze(['shift', 1000]),
   Object.freeze(['race-car', 1100]),
   Object.freeze(['emergency-pack', 1200]),
-  Object.freeze(['mountain', 1300]),
+  Object.freeze(['expert-tracks', 1300]),
   Object.freeze(['van-carry-on', 1400]),
   Object.freeze(['flow', 1500]),
   Object.freeze(['future-racer', 1600]),
@@ -267,10 +273,11 @@ const REWARD_ORDER = Object.freeze([
   Object.freeze(['supercar', 2300])
 ]);
 const MAJOR_REWARD_IDS = new Set([
+  'medium-tracks',
   'drift-attack',
-  'midnight-city',
+  'advanced-tracks',
   'shift',
-  'mountain',
+  'expert-tracks',
   'flow'
 ]);
 const REWARD_DEFINITION_BY_ID = new Map(
@@ -289,7 +296,7 @@ export const TROPHY_ROAD_REWARDS = Object.freeze(REWARD_ORDER.map(([id, threshol
 
 const REWARD_BY_ID = new Map(TROPHY_ROAD_REWARDS.map((reward) => [reward.id, reward]));
 const REWARD_BY_TRACK = new Map(
-  TROPHY_ROAD_REWARDS.filter((reward) => reward.trackId).map((reward) => [reward.trackId, reward])
+  TROPHY_ROAD_REWARDS.flatMap((reward) => (reward.trackIds || []).map((trackId) => [trackId, reward]))
 );
 const REWARD_BY_VEHICLE = new Map(
   TROPHY_ROAD_REWARDS.flatMap((reward) => (reward.vehicleIds || []).map((vehicleId) => [vehicleId, reward]))
@@ -312,6 +319,16 @@ const VERSION_THREE_GRANDFATHERED_REWARDS = Object.freeze([
   'monster',
   'vintage-racer',
   'rally-racer'
+]);
+// Before difficulty tiers (storage version 10), AIRPORT and HARBOR were open to
+// everyone, while MIDNIGHT CITY and MOUNTAIN were individual rewards. Existing
+// profiles keep exactly those tracks as per-track entitlements: a legacy track
+// never grants its whole tier, and nothing else is derived from it.
+const TRACK_TIER_STORAGE_VERSION = 10;
+const PRE_TIER_OPEN_TRACK_IDS = Object.freeze(['airport', 'harbor']);
+const PRE_TIER_TRACK_REWARDS = Object.freeze([
+  Object.freeze({ rewardId: 'midnight-city', trackId: 'midnight-city', threshold: 700 }),
+  Object.freeze({ rewardId: 'mountain', trackId: 'mountain', threshold: 1300 })
 ]);
 const VERSION_FOUR_GRANDFATHERED_REWARDS = Object.freeze(['vintage-racer', 'rally-racer']);
 const PRE_SHIFT_GRANDFATHERED_REWARDS = Object.freeze([
@@ -349,7 +366,9 @@ export function rewardForVehiclePerk(vehicleId) {
   return REWARD_BY_VEHICLE_PERK.get(vehicleId) || null;
 }
 
-export function grandfatheredRewardIdsForVersion(version) {
+// Historical reward ids, including rewards that no longer exist (the individual
+// MIDNIGHT CITY and MOUNTAIN track rewards and TRUCK · TORQUE).
+function historicalGrandfatheredRewardIds(version) {
   const numericVersion = Number(version) || 0;
   if (numericVersion < 3) return [...PRE_SHIFT_GRANDFATHERED_REWARDS];
   if (numericVersion === 3) return [...VERSION_THREE_GRANDFATHERED_REWARDS];
@@ -357,8 +376,8 @@ export function grandfatheredRewardIdsForVersion(version) {
   return [];
 }
 
-export function migrateStoredRewardIdsForVersion(ids, version) {
-  const storedIds = Array.isArray(ids) ? [...new Set(ids)] : [];
+function historicalStoredRewardIds(ids, version) {
+  const storedIds = Array.isArray(ids) ? [...new Set(ids.filter((id) => typeof id === 'string'))] : [];
   const numericVersion = Number(version);
   if (numericVersion === 5) {
     return storedIds.filter((id) => id !== 'future-racer' && id !== 'rally-racer');
@@ -367,6 +386,41 @@ export function migrateStoredRewardIdsForVersion(ids, version) {
     storedIds.push('mountain');
   }
   return storedIds;
+}
+
+export function grandfatheredRewardIdsForVersion(version) {
+  return historicalGrandfatheredRewardIds(version).filter((id) => REWARD_BY_ID.has(id));
+}
+
+export function migrateStoredRewardIdsForVersion(ids, version) {
+  return historicalStoredRewardIds(ids, version).filter((id) => REWARD_BY_ID.has(id));
+}
+
+// Tracks this profile may use regardless of its difficulty-tier rewards. A profile
+// from before the tiers keeps every track it could already use; `legacyTrophies`
+// (when known) also honours a pre-tier track reward that was earned but not stored.
+export function legacyTrackIdsForState(state, legacyTrophies = null) {
+  if (!state || typeof state !== 'object') return [];
+  const gated = (trackId) => REWARD_BY_TRACK.has(trackId);
+  const kept = Array.isArray(state.rewards?.tracks)
+    ? state.rewards.tracks.filter((trackId) => typeof trackId === 'string' && gated(trackId))
+    : [];
+  const version = Number(state.version || 0);
+  if (version >= TRACK_TIER_STORAGE_VERSION) return [...new Set(kept)];
+
+  const historical = new Set([
+    ...historicalStoredRewardIds([
+      ...(Array.isArray(state.rewards?.unlocked) ? state.rewards.unlocked : []),
+      ...(Array.isArray(state.rewards?.grandfathered) ? state.rewards.grandfathered : [])
+    ], version),
+    ...historicalGrandfatheredRewardIds(version)
+  ]);
+  const trophies = Number(legacyTrophies);
+  const legacyTracks = PRE_TIER_TRACK_REWARDS
+    .filter(({ rewardId, threshold }) => historical.has(rewardId)
+      || (Number.isFinite(trophies) && trophies >= threshold))
+    .map(({ trackId }) => trackId);
+  return [...new Set([...kept, ...PRE_TIER_OPEN_TRACK_IDS, ...legacyTracks])].filter(gated);
 }
 
 export function rewardIdsForTrophies(trophies) {
@@ -546,7 +600,9 @@ function hasAchievementProgress(state) {
 
 function hasEveryRewardStored(state) {
   const stored = new Set(Array.isArray(state?.rewards?.unlocked) ? state.rewards.unlocked : []);
-  return PRE_SHIFT_GRANDFATHERED_REWARDS.every((rewardId) => stored.has(rewardId));
+  return PRE_SHIFT_GRANDFATHERED_REWARDS
+    .filter((rewardId) => REWARD_BY_ID.has(rewardId))
+    .every((rewardId) => stored.has(rewardId));
 }
 
 function cleanTrophyRoadState() {
@@ -555,7 +611,7 @@ function cleanTrophyRoadState() {
     unlocked: {},
     seen: [],
     progress: { tracks: [], blankTracks: [] },
-    rewards: { unlocked: [], seen: [], grandfathered: [] }
+    rewards: { unlocked: [], seen: [], grandfathered: [], tracks: [] }
   };
 }
 
@@ -620,14 +676,15 @@ export function readTrophyRoadSnapshot(storage = globalThis.localStorage) {
   const stored = [
     ...(Array.isArray(state?.rewards?.unlocked) ? state.rewards.unlocked : []),
     ...(Array.isArray(state?.rewards?.grandfathered) ? state.rewards.grandfathered : [])
-  ].filter((id) => REWARD_BY_ID.has(id));
+  ];
   const migratedStored = migrateStoredRewardIdsForVersion(stored, sourceVersion);
   const migrated = state ? grandfatheredRewardIdsForVersion(sourceVersion) : [];
   const unlockedRewardIds = [...new Set([...migratedStored, ...migrated])];
 
   return Object.freeze({
     isLegacyProfile: Boolean(state) && sourceVersion < 3,
-    unlockedRewardIds: Object.freeze(unlockedRewardIds)
+    unlockedRewardIds: Object.freeze(unlockedRewardIds),
+    legacyTrackIds: Object.freeze(legacyTrackIdsForState(state))
   });
 }
 
@@ -640,7 +697,10 @@ export function isTrophyRoadRewardUnlocked(rewardId, storage = globalThis.localS
 
 export function isTrackUnlocked(trackId, storage = globalThis.localStorage) {
   const reward = rewardForTrack(trackId);
-  return !reward || isTrophyRoadRewardUnlocked(reward.id, storage);
+  if (!reward || isTrophyRoadRewardUnlocked(reward.id, storage)) return true;
+  const liveStore = globalThis.__turnAchievements?.store;
+  if (liveStore?.hasLegacyTrack?.(trackId)) return true;
+  return readTrophyRoadSnapshot(storage).legacyTrackIds.includes(trackId);
 }
 
 export function isVehicleUnlocked(vehicleId, storage = globalThis.localStorage) {

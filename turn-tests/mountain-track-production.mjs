@@ -60,7 +60,7 @@ const [
 const mountain = TRACK_DEFINITIONS.find((track) => track.id === 'mountain');
 assert.ok(mountain, 'MOUNTAIN must remain a production track');
 assert.equal(mountain.name, 'Mountain');
-assert.equal(mountain.eyebrow, 'TRACK 6');
+assert.equal(mountain.eyebrow, 'TRACK 8');
 assert.equal(mountain.difficulty, 'EXPERT');
 assert.equal(mountain.storageRevision, 'mountain-r3-start-seam');
 assert.equal(mountain.sampleCount, 2160);
@@ -220,7 +220,8 @@ assert.match(sharedNightSky, /gradientAnchor: 'projected-world-horizon-from-came
 assert.doesNotMatch(sharedNightSky, /requestAnimationFrame|setAnimationLoop|setInterval/);
 
 const reward = rewardForTrack('mountain');
-assert.equal(reward?.id, 'mountain');
+assert.equal(reward?.id, 'expert-tracks', 'MOUNTAIN unlocks with the EXPERT tier');
+assert.deepEqual(reward?.trackIds, ['midnight-city', 'mountain']);
 assert.equal(reward?.threshold, 1300);
 assert.equal(TROPHY_ROAD_REWARDS.find(({ id }) => id === 'rally-racer')?.threshold, 2000);
 assert.equal(TROPHY_ROAD_REWARDS.at(-1)?.id, 'supercar');

@@ -7,6 +7,8 @@ export const TRACK_COLOR_CUES = Object.freeze({
   airport: 'yellow',
   harbor: 'orange',
   cliffside: 'cyan',
+  beachfront: 'green',
+  'dead-canyon': 'red',
   'midnight-city': 'violet',
   mountain: 'blue'
 });

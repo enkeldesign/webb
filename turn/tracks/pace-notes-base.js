@@ -102,11 +102,46 @@ const MOUNTAIN_PACE_NOTES = Object.freeze([
   createPaceNote('mountain-8', 0.962, 0.995, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.SHORT }])
 ]);
 
+// BEACHFRONT and DEAD CANYON: authored in TURN LAB with corrected left/right ears.
+const BEACHFRONT_PACE_NOTES = Object.freeze([
+  createPaceNote('beachfront-west-sweeper', 0.055, 0.120, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }]),
+  createPaceNote('beachfront-west-top', 0.135, 0.205, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('beachfront-park-s', 0.225, 0.275, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('beachfront-north-gardens', 0.305, 0.405, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }]),
+  createPaceNote('beachfront-lakeside-left', 0.485, 0.545, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.LONG }]),
+  createPaceNote('beachfront-east-sweep', 0.570, 0.645, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('beachfront-culdesac-entry', 0.675, 0.730, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('beachfront-culdesac-exit', 0.735, 0.805, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('beachfront-backyard-hairpin', 0.825, 0.855, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 4, length: PACE_NOTE_LENGTH.SHORT }]),
+  createPaceNote('beachfront-home-sweeper', 0.880, 0.965, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }])
+]);
+
+const DEAD_CANYON_PACE_NOTES = Object.freeze([
+  createPaceNote('dead-canyon-chicane', 0.030, 0.095, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.SHORT },
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.SHORT },
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.SHORT }
+  ]),
+  createPaceNote('dead-canyon-2', 0.115, 0.175, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }]),
+  createPaceNote('dead-canyon-3', 0.205, 0.265, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('dead-canyon-north-sweep', 0.345, 0.445, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }]),
+  createPaceNote('dead-canyon-5', 0.470, 0.525, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('dead-canyon-6', 0.555, 0.615, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }]),
+  createPaceNote('dead-canyon-7', 0.640, 0.695, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('dead-canyon-8', 0.710, 0.765, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.LONG }]),
+  createPaceNote('dead-canyon-9', 0.785, 0.835, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.SHORT }]),
+  createPaceNote('dead-canyon-10', 0.850, 0.890, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('dead-canyon-11', 0.900, 0.940, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('dead-canyon-12', 0.948, 0.982, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.LONG }])
+]);
+
 export const TRACK_PACE_NOTE_MAPS = Object.freeze({
   countryside: COUNTRYSIDE_PACE_NOTES,
   airport: AIRPORT_PACE_NOTES,
   cliffside: CLIFFSIDE_PACE_NOTES,
+  beachfront: BEACHFRONT_PACE_NOTES,
   harbor: HARBOR_PACE_NOTES,
+  'dead-canyon': DEAD_CANYON_PACE_NOTES,
   'midnight-city': MIDNIGHT_CITY_PACE_NOTES,
   mountain: MOUNTAIN_PACE_NOTES
 });

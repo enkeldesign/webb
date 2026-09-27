@@ -6,7 +6,7 @@ import { TRACK_DEFINITIONS } from '../turn/tracks/definitions.js';
 
 const cliffside = TRACK_DEFINITIONS.find((track) => track.id === 'cliffside');
 assert.ok(cliffside, 'Cliffside must remain a registered playable track');
-assert.equal(cliffside.difficulty, 'MEDIUM');
+assert.equal(cliffside.difficulty, 'EASY');
 assert.equal(cliffside.storageRevision, 'cliffside-r68', 'Scenery polish must preserve every existing record');
 assert.equal(cliffside.freeRoamDistance, 22.2, 'The final safety edge must sit well beyond the curb');
 assert.equal(cliffside.collisionProfile.shoulderStartDistance, 15.2);

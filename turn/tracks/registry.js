@@ -27,13 +27,21 @@ const WORLD_INSTALLER_LOADERS = Object.freeze({
     const { installCliffsideWorld } = await import('./cliffside-world.js');
     return installCliffsideWorld({ scene, samples, trackWidth });
   },
+  async beachfront({ scene, samples, trackWidth, runtime }) {
+    const { installBeachfrontWorld } = await import('./beachfront-world.js');
+    return installBeachfrontWorld({ scene, samples, trackWidth, runtime });
+  },
   async harbor({ scene, samples, trackWidth }) {
     const { installHarborWorld } = await import('./harbor-world.js');
     return installHarborWorld({ scene, samples, trackWidth });
   },
+  async 'dead-canyon'({ scene, samples, trackWidth, runtime }) {
+    const { installDeadCanyonWorld } = await import('./dead-canyon-world.js');
+    return installDeadCanyonWorld({ scene, samples, trackWidth, runtime });
+  },
   async 'midnight-city'({ scene, samples, trackWidth, runtime }) {
     const { installMidnightCityWorld } = await import(
-      './midnight-city-world.js?build=20260926-r292'
+      './midnight-city-world.js?build=20260927-r293'
     );
     return installMidnightCityWorld({ scene, samples, trackWidth, runtime });
   },
@@ -55,7 +63,13 @@ const FORGIVING_SURFACES = Object.freeze({
   cliffside() {
     return false;
   },
+  beachfront() {
+    return false;
+  },
   harbor() {
+    return false;
+  },
+  'dead-canyon'() {
     return false;
   },
   'midnight-city'() {
