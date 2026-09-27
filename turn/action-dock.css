@@ -50,13 +50,41 @@
 }
 
 /* The Lot: the button left its card, so the card keeps the dock's height free
-   at its foot instead. */
+   at its foot instead. The actions box is a flex item with its own z-index, so it
+   is the stacking context the fixed dock paints in: keep it above the card's other
+   layers (COLOR sits at 7), or scrolled card content paints over the dock. */
 :root body .lot-screen.lot-showroom .lot-card-actions {
   position: static;
+  z-index: 15;
   min-height: 0;
   margin: 0;
   padding: 0;
   background: none;
+}
+
+/* Short landscape: the card's info area scrolls instead of squeezing its contents
+   into the space left beside the dock. Its rows keep their natural height: the
+   ATTRIBUTES row fits the 44px SHIFT button, and each attribute row fits 11px
+   text (about 20px). */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root body .lot-screen.lot-showroom .lot-card-info-scroll > * {
+    flex-shrink: 0;
+  }
+
+  /* The last visible row fades out, so the list reads as scrollable; the end of
+     the list scrolls clear of the fade. */
+  :root body .lot-screen.lot-showroom .lot-card-info-scroll {
+    padding-bottom: 18px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
+  }
+
+  :root body .lot-screen.lot-showroom .lot-stats {
+    flex: none;
+    height: auto;
+    grid-template-rows: none;
+    grid-auto-rows: minmax(20px, auto);
+  }
 }
 
 /* Short landscape screens trade 8px of dock height for the content beside it. */
