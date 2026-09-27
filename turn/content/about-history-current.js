@@ -1059,13 +1059,14 @@ Object.freeze({
     Object.freeze(['1.23.8 r301', 'RACE on Home and RACE THIS CAR in The Lot are now the same button in the same place: docked full width at the bottom in portrait, bottom-right in landscape.']),
     Object.freeze(['1.23.9 r302', 'Buttons share one rounded-rectangle shape, border and shadow, and are at least 44px tall, including those in SETTINGS, HOW TO PLAY, GIVE FEEDBACK and DRIVE BY EAR 101. Pills stay for chips such as SHOW RECORDS and the achievement filters, which are now 44px tall too.']),
     Object.freeze(['1.24.0 r303', 'Cards, panels and dialogs share three consistent depths. On phones held upright, dialogs open as bottom sheets above the home indicator. Achievement, Trophy Road and support-challenge notices appear together at the top and stack instead of overlapping RACE or each other.']),
-    Object.freeze(['1.24.1 r304', 'Testers can see the screen measurements behind the strip of background along the bottom of the installed app on some iPhones, at the bottom of the menu.'])
+    Object.freeze(['1.24.1 r304', 'Testers can see the screen measurements behind the strip of background along the bottom of the installed app on some iPhones, at the bottom of the menu.']),
+    Object.freeze(['1.24.2 r305', 'In landscape the race buttons keep their full labels: ACHIEVEMENTS is a trophy with its count, as on Home, and BOOST sits clear above the row. In portrait the DRIFT and FLOW meters sit under their scores instead of over the car.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.24.1',
-  build: '2026.09.27-r304',
-  note: 'TURN 1.24.1 adds a tester-only viewport readout to diagnose the installed app\'s bottom strip on iPhone.'
+  version: '1.24.2',
+  build: '2026.09.27-r305',
+  note: 'TURN 1.24.2 keeps race button labels whole in landscape and moves the portrait DRIFT and FLOW meters off the car.'
 });
