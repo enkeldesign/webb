@@ -124,8 +124,10 @@
     for (const property of properties) {
       const value = style.getPropertyValue(property);
       if (property === 'font-size' && selectorTargetsRoot(selectorText)) continue;
-      const nextValue = scaleAbsoluteLengths(value);
+      let nextValue = scaleAbsoluteLengths(value);
       if (nextValue === value) continue;
+      // Dense, not tiny: scaled text never drops below the design-scale.css floor.
+      if (property === 'font-size') nextValue = `max(var(--turn-text-floor, 11px), ${nextValue})`;
       const priority = style.getPropertyPriority(property);
       style.setProperty(property, nextValue, priority);
       diagnostics.declarations += 1;
