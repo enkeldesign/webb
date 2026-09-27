@@ -1049,13 +1049,14 @@ Object.freeze({
     Object.freeze(['1.23.0 r293', 'Adds BEACHFRONT (MEDIUM) and DEAD CANYON (ADVANCED) with their own records, rivals, pace notes and achievements. Orders tracks by difficulty and unlocks each tier on Trophy Road at 400, 700 and 1300 trophies; existing players keep every track they could already race.']),
     Object.freeze(['Trophy Road', 'Replaces the MIDNIGHT CITY and MOUNTAIN rewards with MEDIUM, ADVANCED and EXPERT track tiers, moves AWD · TRACTION to 500 and gives TRUCK its TORQUE perk from the start.']),
     Object.freeze(['Track chooser', 'CLIFFSIDE is now EASY and MIDNIGHT CITY EXPERT. Wide screens use fewer, roomier track cards so long names are never cut off.']),
-    Object.freeze(['1.23.1 r294', 'Moves the hidden tester unlock onto Home controls every new profile can reach, so it no longer depends on a locked track.'])
+    Object.freeze(['1.23.1 r294', 'Moves the hidden tester unlock onto Home controls every new profile can reach, so it no longer depends on a locked track.']),
+    Object.freeze(['1.23.2 r295', 'Turns off double-tap-to-zoom so quick repeated taps on one button register as taps on iPhone and iPad. Pinch-zoom still works.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.23.1',
-  build: '2026.09.27-r294',
-  note: 'TURN 1.23.1 moves the hidden tester unlock onto Home controls every new profile can reach.'
+  version: '1.23.2',
+  build: '2026.09.27-r295',
+  note: 'TURN 1.23.2 turns off double-tap-to-zoom so quick repeated taps register on iPhone and iPad, while pinch-zoom still works.'
 });
