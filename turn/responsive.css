@@ -400,3 +400,78 @@
 :root body .turn-trophy-road-landmark b {
   white-space: nowrap;
 }
+
+/* Portrait Home: a compact two-row header (logo, pitch and MUSIC on one row; build
+   and ABOUT TURN on the next) gives the track list about 130px more of the first
+   screen. The menu keeps two columns down to 320px; RACE stays docked above the
+   bottom safe area and the list keeps room to scroll past it. */
+@media (max-width: 46em) and (orientation: portrait) {
+  :root body .m8-home.m8-home-fixed-layout .m8-home-head {
+    min-height: 0;
+    grid-template-columns: 48px minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: 6px 12px;
+    padding: max(8px, env(safe-area-inset-top)) var(--turn-edge) 8px;
+  }
+  :root body .m8-home.m8-home-fixed-layout .m8-home-logo {
+    grid-column: 1;
+    grid-row: 1;
+    width: 48px;
+    height: 48px;
+  }
+  :root body .m8-home.m8-home-fixed-layout .m8-home-pitch {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    margin: 0;
+  }
+  :root body .m8-home.m8-home-fixed-layout .m8-home-pitch p {
+    margin: 0;
+    font-size: clamp(14px, 4.1vw, 18px);
+    line-height: var(--turn-leading-title);
+  }
+  :root body .m8-home.m8-home-fixed-layout .turn-music-home-toggle {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+    justify-self: end;
+  }
+  :root body .m8-home.m8-home-fixed-layout .m8-home-meta {
+    grid-column: 1 / -1 !important;
+    grid-row: 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+  }
+  :root body .m8-home.m8-home-fixed-layout .m8-home-build {
+    min-width: 0;
+    letter-spacing: var(--turn-tracking-micro);
+  }
+  /* A real 44px box: the padding makes the target, the negative margin keeps the
+     row at text height. */
+  :root body .m8-home.m8-home-fixed-layout .m8-about-trigger {
+    flex: none;
+    min-height: 0;
+    margin-block: -16px;
+    padding: 16px 0;
+  }
+  :root body .m8-home.m8-home-fixed-layout .m8-home-menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* The docked RACE sits on a page-coloured bar that runs into the bottom safe
+     area, so track cards never show around or under the button. */
+  :root body .m8-home.m8-home-fixed-layout .m8-home-main::after {
+    content: "";
+    position: fixed;
+    z-index: 4;
+    inset: auto 0 0;
+    height: calc(max(12px, env(safe-area-inset-bottom)) + 60px);
+    border-top: 3px solid var(--turn-ink, #08090a);
+    background: var(--turn-surface-page, #fff8e8);
+    pointer-events: none;
+  }
+}
