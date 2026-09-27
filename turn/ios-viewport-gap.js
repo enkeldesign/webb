@@ -1,7 +1,7 @@
 // iOS standalone viewport gap. On some iPhones the installed app is laid out one
 // status-bar inset shorter than the screen (portrait: client/dvh 793 of lvh 852,
-// top inset 59) while it paints from the very top, so a strip of the root
-// background shows below the app. The viewport meta pulse in
+// top inset 59) while it paints from the very top, so a strip shows below the
+// app in the body's background colour. The viewport meta pulse in
 // pwa-short-viewport-repair-r184.js does not recover this case, and iOS draws no
 // page content in the strip, so it takes the colour of the screen above it:
 // Paper under Home and The Lot (their docks are Paper), Ink under a race, and
@@ -33,9 +33,12 @@
   const INSET_TOLERANCE = 4;
   const SETTLE_DELAYS_MS = Object.freeze([0, 120, 400, 900, 1600, 2600]);
 
-  // iOS paints nothing but the root background below the short layout viewport:
-  // moving content down there only clips it (1.24.5). So the strip takes the
-  // colour of the screen above it instead. The r181 boundary paints it cyan.
+  // iOS paints nothing of the page below the short layout viewport except the
+  // body's background: moving content down there only clips it (1.24.5), and the
+  // root background is ignored (1.24.6). The 1.24.7 strip test on a device showed
+  // BODY colours the strip, live and at launch. So the body takes the colour of
+  // the screen above it; it sits behind every screen, so only the strip shows it.
+  // The r181 boundary paints it cyan.
   const style = document.createElement('style');
   style.id = 'turn-viewport-gap-style';
   // Real CSS pixels: the 0.75 UI baseline leaves this sheet alone.
@@ -44,7 +47,7 @@
     /* Loading: the artwork's 145deg cyan-to-green gradient has no single bottom
        colour, so it resolves into its own green end over its last 120px, and the
        strip continues in that green. (Layers repeat install-gate.css.) */
-    html.${CLASS}:has(.install-gate.turn-startup-loading:not([hidden])) {
+    html.${CLASS}:has(.install-gate.turn-startup-loading:not([hidden])) body {
       background: #8ce99a !important;
     }
     html.${CLASS} .install-gate.turn-startup-loading {
@@ -54,10 +57,10 @@
         radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.9) 0 10%, transparent 10.5%),
         linear-gradient(145deg, #38d9ff 0 45%, #8ce99a 100%);
     }
-    html.${CLASS}:has(body.turn-race-active) {
+    html.${CLASS}:has(body.turn-race-active) body {
       background: #08090a !important;
     }
-    html.${CLASS}:has(body:is(.turn-home-open, .turn-lot-open)) {
+    html.${CLASS}:has(body:is(.turn-home-open, .turn-lot-open)) body {
       background: var(--turn-surface-page, #fff8e8) !important;
     }
   `;

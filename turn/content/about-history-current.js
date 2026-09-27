@@ -1066,13 +1066,14 @@ Object.freeze({
     Object.freeze(['1.24.5 r308', 'On iPhones where the installed app was laid out one status bar shorter than the screen, it now reaches the bottom edge: no more strip of background under RACE, the race controls and dialogs.']),
     Object.freeze(['1.24.6 r309', 'Hotfix for 1.24.5 on iPhone: RACE and the menu are whole again. iOS draws nothing in the strip below the installed app, so the strip now takes the colour of the screen above it (Paper under Home and The Lot, Ink under a race).']),
     Object.freeze(['1.24.7 r310', 'Testers get a strip test under the menu readout: it turns one surface at a time magenta to find what colours the strip along the bottom of the installed app on iPhone.']),
-    Object.freeze(['1.24.8 r311', 'Trophy Road: an earned reward shows a large, faint check behind its icon and trophy number instead of a ring on top of them, so the number stays readable on phones and earned never looks like locked.'])
+    Object.freeze(['1.24.8 r311', 'Trophy Road: an earned reward shows a large, faint check behind its icon and trophy number instead of a ring on top of them, so the number stays readable on phones and earned never looks like locked.']),
+    Object.freeze(['1.24.9 r312', 'On iPhones where the installed app leaves a strip along the bottom, the strip now takes the colour of the screen above it: Paper under Home and The Lot, Ink during a race, and green while loading. The tester strip test showed iOS takes that colour from the page body.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.24.8',
-  build: '2026.09.27-r311',
-  note: 'TURN 1.24.8 keeps Trophy Road thresholds readable under a watermark check.'
+  version: '1.24.9',
+  build: '2026.09.27-r312',
+  note: 'TURN 1.24.9 colours the iPhone bottom strip to match each screen.'
 });
