@@ -25,7 +25,7 @@ import {
 import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked
-} from '../progression/trophy-road.js?revision=r253-supercar-release';
+} from '../progression/trophy-road.js';
 import {
   VEHICLE_SHIFT_STAT_FIELDS,
   VEHICLE_SHIFT_FEATURE_ID,

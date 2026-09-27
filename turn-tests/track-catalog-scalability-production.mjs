@@ -36,7 +36,7 @@ const [
   read('turn/stats/stats.js'),
   read('turn/achievements/support-challenges.js'),
   read('turn/achievements/challenge-expansion-r166.js'),
-  read('turn/achievements/catalog-production.js'),
+  read('turn/achievements/catalog.js'),
   read('turn/achievements/chromatic-camouflage-r183.js'),
   read('turn/render/car-shadows.js'),
   read('.github/workflows/turn-lab-tests.yml')

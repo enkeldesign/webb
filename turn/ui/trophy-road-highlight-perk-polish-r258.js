@@ -1,4 +1,4 @@
-import { TROPHY_ROAD_REWARDS } from '../progression/trophy-road.js?revision=r253-supercar-release';
+import { TROPHY_ROAD_REWARDS } from '../progression/trophy-road.js';
 
 const STYLE_ID = 'turn-trophy-road-highlight-perk-polish-r258-styles';
 const rewardByTitle = new Map(TROPHY_ROAD_REWARDS.map((reward) => [reward.title, reward]));

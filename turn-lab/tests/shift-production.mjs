@@ -45,7 +45,7 @@ import {
 } from '../../turn/progression/trophy-road.js';
 import {
   TROPHY_ROAD_REWARDS as PRODUCTION_TROPHY_ROAD_REWARDS
-} from '../../turn/progression/trophy-road-perks-r164.js';
+} from '../../turn/progression/trophy-road.js';
 
 function createMemoryStorage(initial = {}) {
   const memory = new Map(Object.entries(initial));

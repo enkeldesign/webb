@@ -211,8 +211,31 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
   ]) {
     imports[specifier] = challengeTarget;
   }
-  imports['/turn/achievements/catalog-production.js?revision=r241-learning-achievements-base']
-    = `/turn/achievements/catalog-production.js?build=${release.cacheKey}`;
+  // The achievements catalog and Trophy Road are each one canonical module. Every
+  // importer uses the bare path, so each resolves to exactly one module instance;
+  // app.js's withBuild() URL matches the target, so it shares that instance too.
+  const progressionModules = Object.freeze({
+    '/turn/achievements/catalog.js': [
+      '/turn/achievements/catalog-production.js',
+      '/turn/achievements/catalog-track-icons.js',
+      '/turn/achievements/catalog-chromatic-r183.js'
+    ],
+    '/turn/progression/trophy-road.js': [
+      '/turn/progression/trophy-road-track-icons.js',
+      '/turn/progression/trophy-road-perks-r164.js',
+      '/turn/progression/trophy-road-chromatic-r183.js'
+    ]
+  });
+  for (const [pathname, retired] of Object.entries(progressionModules)) {
+    const owned = new Set([pathname, ...retired]);
+    for (const [specifier, existing] of Object.entries(imports)) {
+      const keyPath = new URL(specifier, 'https://enkel.design/turn/').pathname;
+      const targetPath = typeof existing === 'string' ? new URL(existing, 'https://enkel.design/turn/').pathname : '';
+      if (specifier === pathname) continue;
+      if (owned.has(keyPath) || owned.has(targetPath)) delete imports[specifier];
+    }
+    imports[pathname] = `${pathname}?build=${release.cacheKey}`;
+  }
 
   // Support-feedback modules are active production code. Keep historical import
   // specifiers as aliases, but route every active identity through the current
@@ -221,7 +244,14 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
     '/turn/achievements/support-challenges.js': [''],
     '/turn/achievements/support-challenge-feedback.js': ['', '?revision=r244-reward-toast-guide'],
     '/turn/achievements/view.js': ['', '?revision=r244-reward-toast-guide'],
-    '/turn/achievements/home-reward-replay-r225.js': ['', '?revision=r244-reward-toast-guide']
+    '/turn/achievements/home-reward-replay-r225.js': ['', '?revision=r244-reward-toast-guide'],
+    // Consumers of the canonical catalog and Trophy Road modules (#989): their
+    // historical revision URLs follow the release build so edits always reach players.
+    '/turn/achievements/night-shift.js': ['?revision=r146-achievement-expansion'],
+    '/turn/garage/lot-perk-disclosure.js': ['?revision=r243-mountain-1300'],
+    '/turn/garage/lot-shift.js': ['?revision=r243-mountain-1300'],
+    '/turn/progression/lot-paint-reward.js': ['?revision=r246-lot-saved-paint'],
+    '/turn/progression/lot-trophy-gate.js': ['?revision=r243-mountain-1300']
   };
   for (const [pathname, suffixes] of Object.entries(releaseOwnedModules)) {
     const target = `${pathname}?build=${release.cacheKey}`;
@@ -364,8 +394,6 @@ for (const [specifier, existing] of Object.entries(imports)) {
 }
 for (const specifier of legacyCatalogSpecifiers) imports[specifier] = catalogTarget;
 
-  imports['/turn/progression/trophy-road.js?revision=r253-supercar-release-base']
-    = `/turn/progression/trophy-road.js?build=${release.cacheKey}`;
 }
 
 function synchronizeGraphicsRuntimeTarget(importMap, release) {
@@ -547,7 +575,6 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
     if (typeof target !== 'string' || !target.startsWith('/turn/')) continue;
     const pathname = new URL(target, 'https://enkel.design').pathname;
     if (pathname === '/turn/garage/lot-enhancement-runtime.js'
-      || pathname === '/turn/progression/trophy-road-track-icons.js'
       || pathname === '/turn/garage/lot-track-select.js'
       || pathname === '/turn/m8-home.js') {
       synchronizeReleaseBoundImportTarget(importMap, release, specifier);

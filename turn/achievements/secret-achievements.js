@@ -1,4 +1,4 @@
-import { ACHIEVEMENTS, ICONS } from './catalog.js?revision=r241-learning-achievements';
+import { ACHIEVEMENTS, ICONS } from './catalog.js';
 import {
   acknowledgeSecretAchievement,
   pendingSecretAchievements

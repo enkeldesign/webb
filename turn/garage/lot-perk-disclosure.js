@@ -3,7 +3,7 @@ import { vehiclePerkPresentation } from '../vehicle/perk-presentation.js?revisio
 import {
   isVehiclePerkUnlocked,
   rewardForVehiclePerk
-} from '../progression/trophy-road.js?revision=r243-mountain-1300';
+} from '../progression/trophy-road.js';
 
 const STYLE_ID = 'turn-lot-perk-popover-r225-styles';
 const activeDisclosures = new WeakMap();

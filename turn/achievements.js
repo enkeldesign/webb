@@ -10,7 +10,7 @@ export {
   TRACK_SCORING_ACHIEVEMENT_IDS,
   completedAllScoringAchievements,
   qualifyingScoringAchievement
-} from './achievements/catalog.js?revision=r241-learning-achievements';
+} from './achievements/catalog.js';
 export {
   ACHIEVEMENT_STORAGE_KEY,
   loadAchievementState,
@@ -50,5 +50,5 @@ export {
   isVehicleUnlocked,
   isPaintUnlocked,
   prepareTrophyRoadProfile
-} from './progression/trophy-road-perks-r164.js?revision=r243-mountain-1300';
+} from './progression/trophy-road.js';
 export { installAchievements } from './achievements/runtime.js?revision=r244-reward-toast-guide';

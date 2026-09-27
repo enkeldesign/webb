@@ -14,7 +14,10 @@ const currentRelease = JSON.parse(await fs.readFile(path.join(repositoryRoot, 't
 
 const criticalReleaseTargets = Object.freeze({
   '/turn/vehicle/catalog.js': `/turn/vehicle/catalog.js?build=${currentRelease.cacheKey}` ,
-  '/turn/vehicle/car-models.js': `/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=${currentRelease.cacheKey}`
+  '/turn/vehicle/car-models.js': `/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=${currentRelease.cacheKey}`,
+  // Achievements and Trophy Road are one canonical module each, imported by bare path.
+  '/turn/achievements/catalog.js': `/turn/achievements/catalog.js?build=${currentRelease.cacheKey}`,
+  '/turn/progression/trophy-road.js': `/turn/progression/trophy-road.js?build=${currentRelease.cacheKey}`
 });
 
 const crossDeploymentCompatibilityRoutes = Object.freeze({
@@ -35,29 +38,12 @@ const crossDeploymentCompatibilityRoutes = Object.freeze({
   '/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility': `/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=${currentRelease.cacheKey}`,
   '/turn/vehicle/perk-presentation.js': `/turn/vehicle/perk-presentation.js?build=${currentRelease.cacheKey}`,
   '/turn/vehicle/perk-presentation.js?revision=r220-apex-grip': `/turn/vehicle/perk-presentation.js?build=${currentRelease.cacheKey}`,
-  '/turn/progression/trophy-road.js?revision=r253-supercar-release-base': `/turn/progression/trophy-road.js?build=${currentRelease.cacheKey}`,
   '/turn/ui/shift-feedback.js?revision=r232-double-shift': '/turn/ui/shift-feedback.js?revision=r255-flow-shift-accessibility',
   '/turn/ui/shift-feedback.js?revision=r253-supercar-release': '/turn/ui/shift-feedback.js?revision=r255-flow-shift-accessibility'
 });
 
-const legacyTrophyRoadCompatibilityRoutes = Object.freeze({
-  '/turn/progression/trophy-road.js?revision=r243-mountain-1300': '/turn/progression/trophy-road.js?revision=r253-supercar-release',
-  '/turn/progression/trophy-road.js?revision=r248-supercar': '/turn/progression/trophy-road.js?revision=r253-supercar-release'
-});
-
-function productionPresentationRoutes(release) {
-  const trophyRoadPresentation = `/turn/progression/trophy-road-track-icons.js?revision=r1-track-reward-icons&build=${release.cacheKey}`;
+function productionPresentationRoutes() {
   return Object.freeze({
-    '/turn/progression/trophy-road.js?revision=r243-mountain-1300': trophyRoadPresentation,
-    '/turn/progression/trophy-road.js?revision=r248-supercar': trophyRoadPresentation,
-    '/turn/progression/trophy-road.js?revision=r253-supercar-release': trophyRoadPresentation,
-    '/turn/achievements/catalog.js?revision=r222-awd-label': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-    '/turn/achievements/catalog.js?revision=r240-trophy-road-2': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-    '/turn/achievements/catalog.js?revision=r241-learning-achievements': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-    '/turn/achievements/catalog-production.js?revision=r222-awd-label': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-    '/turn/achievements/catalog-production.js?revision=r240-trophy-road-2': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-    '/turn/achievements/catalog-production.js?revision=r241-learning-achievements': '/turn/achievements/catalog-track-icons.js?revision=r1-track-reward-icons',
-    '/turn/achievements/catalog-production.js?revision=r241-learning-achievements-base': `/turn/achievements/catalog-production.js?build=${release.cacheKey}`,
     '/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims': '/turn/garage/lot-showroom-track-icon.js?revision=r2-swift-lot-ui'
   });
 }
@@ -77,12 +63,12 @@ const requiredActiveModules = Object.freeze([
   'turn/vehicle/shift-tuning.js',
   'turn/vehicle/shift-profile.js',
   'turn/vehicle/wheel-animation-rig.js',
-  'turn/achievements/catalog-track-icons.js',
-  'turn/achievements/catalog-production.js',
+  'turn/achievements/catalog.js',
+  'turn/achievements/catalog.js',
   'turn/achievements/challenge-expansion-r166.js',
   'turn/achievements/trophy-road-feedback.js',
   'turn/achievements/trophy-road-showcase.js',
-  'turn/progression/trophy-road-track-icons.js',
+  'turn/progression/trophy-road.js',
   'turn/garage/lot-showroom-track-icon.js',
   'turn/assets/cars/supercar-model-data.js'
 ]);
@@ -359,13 +345,20 @@ const yourTurnImportMap = parseImportMap(yourTurnDocument);
 assert.deepEqual(labImportMap, headGraph.importMap, 'TURN LAB must use the exact production import map');
 assertRouteTargets(headGraph.importMap, criticalReleaseTargets, 'Production TURN');
 assertRouteTargets(headGraph.importMap, crossDeploymentCompatibilityRoutes, 'Production TURN');
-assertRouteTargets(headGraph.importMap, productionPresentationRoutes(headGraph.release), 'Production TURN');
+assertRouteTargets(headGraph.importMap, productionPresentationRoutes(), 'Production TURN');
 assertRouteTargets(nextImportMap, criticalReleaseTargets, 'TURN NEXT');
 assertRouteTargets(nextImportMap, crossDeploymentCompatibilityRoutes, 'TURN NEXT');
-assertRouteTargets(nextImportMap, legacyTrophyRoadCompatibilityRoutes, 'TURN NEXT');
 assertRouteTargets(yourTurnImportMap, criticalReleaseTargets, 'YOUR TURN');
 assertRouteTargets(yourTurnImportMap, crossDeploymentCompatibilityRoutes, 'YOUR TURN');
-assertRouteTargets(yourTurnImportMap, legacyTrophyRoadCompatibilityRoutes, 'YOUR TURN');
+for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['TURN NEXT', nextImportMap], ['YOUR TURN', yourTurnImportMap]]) {
+  // One canonical module each: no revision aliases, and nothing routes to a retired layer.
+  for (const [specifier, target] of Object.entries(importMap.imports || {})) {
+    for (const value of [specifier, String(target)]) {
+      assert.doesNotMatch(value, /\/(achievements\/catalog|progression\/trophy-road)\.js\?revision=|catalog-(production|track-icons|chromatic-r183)\.js|trophy-road-(perks-r164|track-icons|chromatic-r183)\.js/,
+        `${label} must not route ${specifier} through a retired achievements or Trophy Road layer`);
+    }
+  }
+}
 
 await Promise.all([
   assertLocalImportTargetsExist(headGraph.importMap, 'Production TURN'),

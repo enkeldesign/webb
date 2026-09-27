@@ -3,7 +3,7 @@ import {
   isVehicleUnlocked,
   rewardForVehicle,
   showTrophyUnlockNotice
-} from './trophy-road.js?revision=r243-mountain-1300';
+} from './trophy-road.js';
 // Historical compatibility marker: trophy-road.js?revision=r164-vintage-rally-perks
 
 const FALLBACK_VEHICLE_ID = 'classic';

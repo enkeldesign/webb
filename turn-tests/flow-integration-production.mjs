@@ -12,7 +12,7 @@ const [main, setting, toast, announcements, achievements, scoringCatalog, achiev
   fs.readFile(new URL('../turn/ui/drift-attack-setting.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/lap-result-toast.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/race-announcements.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/achievements/catalog-production.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/achievements/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/scoring-achievements.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/runtime.js', import.meta.url), 'utf8')
 ]);

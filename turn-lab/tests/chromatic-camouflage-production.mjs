@@ -7,7 +7,7 @@ import {
   TRACK_IDS,
   TRACK_NAMES,
   getAchievement
-} from '../../turn/achievements/catalog-chromatic-r183.js';
+} from '../../turn/achievements/catalog.js';
 import {
   CHROMATIC_CAMOUFLAGE_ID,
   matchesTrackColor,
@@ -21,7 +21,7 @@ import {
   TROPHY_ROAD_MAX_THRESHOLD,
   TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_REWARD_ICONS
-} from '../../turn/progression/trophy-road-chromatic-r183.js';
+} from '../../turn/progression/trophy-road.js';
 
 const [releaseSource, indexSource, moduleSource, trophyRoadCss, trophyRoadBaseCss] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
@@ -298,10 +298,10 @@ assert.ok(
   indexSource.includes(`TURN v${release.version} · Build ${release.id}`),
   'Production entry point must display the current release source of truth'
 );
-assert.match(indexSource, /catalog-chromatic-r183\.js/,
-  'Production must route the achievement store and view through the production achievement catalog');
-assert.match(indexSource, /trophy-road-chromatic-r183\.js/,
-  'Production must expose the expanded Trophy Road wrapper');
+assert.match(indexSource, /"\/turn\/achievements\/catalog\.js": "\/turn\/achievements\/catalog\.js\?build=/,
+  'Production must route the achievement store and view through the one production achievement catalog');
+assert.match(indexSource, /"\/turn\/progression\/trophy-road\.js": "\/turn\/progression\/trophy-road\.js\?build=/,
+  'Production must expose the one canonical Trophy Road module');
 assert.match(indexSource, /chromatic-camouflage-r183\.js/,
   'Production must install the hidden achievement evaluator');
 assert.doesNotMatch(indexSource, /airport-runway/,

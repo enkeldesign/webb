@@ -2,7 +2,7 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   TRAINING_CAR_ID
-} from './catalog.js?revision=r241-learning-achievements';
+} from './catalog.js';
 import {
   createAchievementStore,
   normalizeAchievementState

@@ -4,7 +4,7 @@ import {
 } from '../achievements/store.js?revision=r243-mountain-1300';
 import {
   TROPHY_ROAD_REWARDS
-} from '../progression/trophy-road.js?revision=r243-mountain-1300';
+} from '../progression/trophy-road.js';
 import {
   CHALLENGE_PROGRESS_STORAGE_KEY
 } from '../achievements/challenge-expansion-r166.js?revision=r166-bella-records';

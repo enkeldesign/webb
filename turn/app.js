@@ -207,7 +207,7 @@ installStylesheet(
   'data-turn-trophy-road'
 );
 const { prepareTrophyRoadProfile } = await import(
-  withBuild('./progression/trophy-road.js?revision=r253-supercar-release')
+  withBuild('./progression/trophy-road.js')
 );
 prepareTrophyRoadProfile();
 

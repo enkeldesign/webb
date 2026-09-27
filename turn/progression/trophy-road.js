@@ -2,6 +2,8 @@ import {
   AUTHORED_DRIFT_ICON,
   AUTHORED_PAINT_ICON
 } from '../ui/authored-icons.js?revision=r247-paintjob-icon';
+import { TRACK_ICON_MARKUP } from '../ui/track-icons.js?revision=r1-track-reward-icons';
+import { AUTHORED_PERK_ICON } from '../ui/perk-icon.js';
 
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
 export const TROPHY_ROAD_STORAGE_VERSION = 9;
@@ -15,7 +17,7 @@ function authoredRewardIcon(name) {
 }
 
 export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
-  skyline: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M3 43h58M8 43V24h10v19M21 43V13h13v30M37 43V20h8v23M48 43V9h10v34"></path><path d="M11 29h3M11 35h3M25 19h4M25 26h4M25 33h4M51 15h3M51 22h3M51 29h3"></path><path d="M8 8a8 8 0 1 0 9 9A7 7 0 0 1 8 8Z"></path></svg>',
+  skyline: TRACK_ICON_MARKUP['midnight-city'],
   race: authoredRewardIcon('race-car'),
   future: authoredRewardIcon('future-racer'),
   paint: AUTHORED_PAINT_ICON,
@@ -24,11 +26,11 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   vintage: authoredRewardIcon('vintage-racer'),
   rally: authoredRewardIcon('rally-racer'),
   supercar: authoredRewardIcon('supercar'),
-  mountain: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 42 23 13l8 12L40 8l20 34Z"></path><path d="m17 22 6-9 5 8 4-6 8-7 7 13"></path><path d="M39 42c5-8 9-11 15-13M43 35l4 2-2 4 5 2"></path></svg>',
+  mountain: TRACK_ICON_MARKUP.mountain,
   shift: authoredRewardIcon('shift'),
   drift: AUTHORED_DRIFT_ICON,
   flow: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 24c8-16 18-16 28 0s20 16 28 0"></path><path d="M4 34c8-16 18-16 28 0s20 16 28 0"></path></svg>',
-  perk: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M35 3 14 28h15l-3 17 24-28H35Z"></path><path d="M8 11h12M5 18h10M46 35h11"></path></svg>'
+  perk: AUTHORED_PERK_ICON
 });
 
 const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
