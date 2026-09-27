@@ -37,11 +37,19 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 // owned by the race layout and are measured there, not here.
 async function readability(page, label) {
   const { text, targets } = await page.evaluate(() => {
+    // Content scrolled under the full-width portrait action dock is off screen until
+    // the page scrolls, like content below the fold.
+    const dock = [...document.querySelectorAll('.m8-track-continue, .lot-race')]
+      .map((node) => node.getBoundingClientRect())
+      .find((rect) => rect.width >= globalThis.innerWidth * 0.8);
+    const foldTop = dock ? dock.top - 12 : globalThis.innerHeight;
     const visible = (el) => {
       const rect = el.getBoundingClientRect();
       const style = globalThis.getComputedStyle(el);
+      const insideDock = Boolean(el.closest('.m8-track-continue, .lot-race'));
       return rect.width > 1 && rect.height > 1 && style.visibility !== 'hidden'
         && rect.bottom > 0 && rect.top < globalThis.innerHeight && rect.right > 0 && rect.left < globalThis.innerWidth
+        && (insideDock || (rect.top + rect.height / 2) < foldTop)
         && !el.closest('[aria-hidden="true"], [hidden], .lot-a11y-only, .visually-hidden, .sr-only');
     };
     const text = [...document.querySelectorAll('body *')]
@@ -55,6 +63,7 @@ async function readability(page, label) {
         const rect = el.getBoundingClientRect();
         const cx = rect.left + rect.width / 2; const cy = rect.top + rect.height / 2;
         return ![[-21.5, 0], [21.5, 0], [0, -21.5], [0, 21.5]].every(([dx, dy]) => {
+          if (cy + dy >= foldTop) return true;
           const hit = document.elementFromPoint(cx + dx, cy + dy);
           return hit && (hit === el || el.contains(hit));
         });
@@ -190,8 +199,18 @@ async function responsiveRace(browser, name) {
       await page.locator(`${dialog} [data-dialog-close]`).click();
       await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
     }
+    // Home RACE and The Lot's RACE THIS CAR are one component: same place, size and look.
+    const dockStyle = (selector) => page.locator(selector).evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      const style = globalThis.getComputedStyle(node);
+      return [rect.x, rect.y, rect.width, rect.height].map(Math.round).concat(
+        ['font-size', 'font-weight', 'border-top-left-radius', 'background-color', 'box-shadow'].map((key) => style.getPropertyValue(key)));
+    });
+    const homeDock = await dockStyle('.m8-track-continue');
     await page.locator('.m8-track-continue').click();
     await page.waitForSelector('.lot-showroom');
+    await settle(page);
+    assert.deepEqual(await dockStyle('.lot-race'), homeDock, `${name}: RACE THIS CAR matches Home RACE`);
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height });
       await settle(page);

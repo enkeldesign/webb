@@ -1,0 +1,89 @@
+/* TURN action dock: the one forward action on a screen (Home RACE, The Lot's RACE
+   THIS CAR) looks and works the same everywhere (real CSS pixels: linked with
+   data-turn-responsive, so the 0.75 UI baseline never rewrites it).
+
+   - Portrait phones: full width on a Paper bar with an Ink rule that runs into the
+     bottom safe area; the page keeps room to scroll past it.
+   - Everywhere else: bottom-right, the same size, above the safe area.
+   Shape and colour come from the primary-action role in design-semantic.css. */
+
+:root {
+  --turn-dock-height: 56px;
+  --turn-dock-gap: 12px;
+  --turn-dock-space: calc(var(--turn-dock-height) + (2 * var(--turn-dock-gap)) + max(0px, env(safe-area-inset-bottom)));
+}
+
+:root body :is(.m8-home.turn-app-bar-layout .m8-track-continue, .lot-screen.lot-showroom .lot-race) {
+  position: fixed;
+  z-index: 15;
+  inset: auto max(var(--turn-gutter, 16px), env(safe-area-inset-right)) max(var(--turn-dock-gap), env(safe-area-inset-bottom)) auto;
+  width: clamp(200px, 24vw, 320px);
+  height: var(--turn-dock-height);
+  min-height: var(--turn-dock-height);
+  margin: 0;
+  padding: 0 16px;
+  box-sizing: border-box;
+  border: 3px solid var(--turn-ink, #08090a);
+  color: var(--turn-ink, #08090a);
+  box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
+  font-size: 18px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+:root body :is(.m8-home.turn-app-bar-layout .m8-track-continue, .lot-screen.lot-showroom .lot-race):active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+}
+
+/* The Lot: the button left its card, so the card keeps the dock's height free
+   at its foot instead. */
+:root body .lot-screen.lot-showroom .lot-card-actions {
+  position: static;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  background: none;
+}
+
+/* Short landscape screens trade 8px of dock height for the content beside it. */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root {
+    --turn-dock-height: 48px;
+  }
+}
+
+@media (min-width: 46.0625em), (orientation: landscape) {
+  :root body .lot-screen.lot-showroom .lot-card {
+    padding-bottom: calc(var(--turn-dock-height) + var(--turn-dock-gap) + 4px);
+  }
+}
+
+@media (max-width: 46em) and (orientation: portrait) {
+  :root body :is(.m8-home.turn-app-bar-layout .m8-track-continue, .lot-screen.lot-showroom .lot-race) {
+    left: max(var(--turn-gutter, 16px), env(safe-area-inset-left));
+    width: auto;
+  }
+
+  :root body .m8-home.turn-app-bar-layout .m8-home-main,
+  :root body .lot-screen.lot-showroom {
+    padding-bottom: calc(var(--turn-dock-space) + 16px);
+    scroll-padding-bottom: calc(var(--turn-dock-space) + 12px);
+  }
+
+  /* The Paper bar under the dock, so content never shows around or under it. It
+     belongs to the button's own container, so it shares the button's stacking
+     context and always paints just below it. */
+  :root body :is(.m8-home.turn-app-bar-layout .m8-home-main, .lot-screen.lot-showroom .lot-card-actions)::after {
+    content: "";
+    position: fixed;
+    z-index: 14;
+    inset: auto 0 0;
+    height: var(--turn-dock-space);
+    border-top: 3px solid var(--turn-ink, #08090a);
+    background: var(--turn-surface-page, #fff8e8);
+    pointer-events: none;
+  }
+}
