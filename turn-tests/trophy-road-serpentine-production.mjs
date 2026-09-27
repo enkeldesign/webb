@@ -206,7 +206,7 @@ assert.doesNotMatch(semanticStyles, /:has\([^)]*is-selected/,
   'Reward-modal colour must not require relational marker matching');
 assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*z-index:\s*0;[\s\S]*inset:\s*0;[\s\S]*opacity:\s*\.16;/,
   'Earned rewards show a large faint check watermark behind the card content, never over the threshold');
-assert.match(semanticStyles, /\.turn-trophy-road-marker\.is-unlocked > :not\(\.turn-trophy-road-marker-earned, \.turn-trophy-road-marker-lock\) \{[\s\S]*z-index:\s*1;/,
+assert.match(semanticStyles, /\.turn-trophy-road-marker\.is-unlocked > :is\(\.turn-trophy-road-marker-icon, b\) \{[\s\S]*z-index:\s*1;/,
   'The icon, threshold and name draw over the earned watermark');
 assert.match(semanticStyles, /\.turn-trophy-road-marker-lock \{[\s\S]*top:\s*-10px;[\s\S]*right:\s*-10px;[\s\S]*width:\s*30px;[\s\S]*height:\s*30px;/,
   'Locked rewards must keep the smaller outside-corner lock silhouette');

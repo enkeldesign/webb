@@ -28,7 +28,9 @@
   isolation: isolate;
 }
 
-.turn-trophy-road-marker.is-unlocked > :not(.turn-trophy-road-marker-earned, .turn-trophy-road-marker-lock) {
+/* Only the visible icon and threshold are lifted: the state and name labels stay
+   absolutely positioned where responsive.css hides them on phone tiles. */
+.turn-trophy-road-marker.is-unlocked > :is(.turn-trophy-road-marker-icon, b) {
   position: relative;
   z-index: 1;
 }
