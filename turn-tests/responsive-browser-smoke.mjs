@@ -232,6 +232,18 @@ async function responsiveRace(browser, name) {
     await page.waitForSelector('.lot-showroom');
     await settle(page);
     assert.deepEqual(await dockStyle('.lot-race'), homeDock, `${name}: RACE THIS CAR matches Home RACE`);
+    // Nothing in the Lot card paints over the dock: with COLOR scrolled under it, a tap
+    // on RACE THIS CAR still reaches the button.
+    assert.ok(await page.evaluate(() => {
+      const screen = document.querySelector('.lot-screen');
+      const colors = document.querySelector('.lot-colors');
+      const race = document.querySelector('.lot-race');
+      const dock = race.getBoundingClientRect();
+      screen.scrollTop += colors.getBoundingClientRect().top - dock.top;
+      const hit = document.elementFromPoint(dock.x + dock.width / 2, dock.y + dock.height / 2);
+      screen.scrollTop = 0;
+      return race.contains(hit);
+    }), `${name}: RACE THIS CAR receives taps with COLOR scrolled under it`);
     // Standalone dialogs (Lot SHIFT, reset rivals) are portrait sheets too.
     for (const dialog of ['.lot-shift-dialog', '.nuke-dialog']) {
       await page.$eval(dialog, (node) => node.showModal());

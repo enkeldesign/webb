@@ -117,6 +117,12 @@
   :root body .lot-showroom .lot-stat { grid-template-columns: minmax(98px, .65fr) minmax(0, 1fr); }
   :root body .lot-showroom .lot-stat > span { font-size: max(var(--turn-text-floor), .68rem); line-height: 1.2; white-space: normal; }
   :root body .lot-showroom .lot-card-actions { position: static; margin-top: 12px; }
+  /* The page scrolls under the status bar; keep the clock and battery on the Lot's
+     sky rather than over its content. */
+  :root body .lot-screen.lot-showroom::after {
+    content: ""; position: fixed; z-index: 20; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+    background: #8ed8ff; pointer-events: none;
+  }
   :root body .lot-showroom .lot-race { min-height: 48px; height: auto; white-space: normal; }
 }
 
