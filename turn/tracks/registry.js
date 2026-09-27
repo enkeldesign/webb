@@ -38,13 +38,13 @@ const WORLD_INSTALLER_LOADERS = Object.freeze({
   },
   async 'midnight-city'({ scene, samples, trackWidth, runtime }) {
     const { installMidnightCityWorld } = await import(
-      './midnight-city-world.js?build=20260926-r288'
+      './midnight-city-world.js?build=20260926-r289'
     );
     return installMidnightCityWorld({ scene, samples, trackWidth, runtime });
   },
   async mountain({ scene, samples, trackWidth, runtime }) {
     const { installMountainWorld } = await import(
-      './mountain-world-long.js?build=20260926-r288'
+      './mountain-world-long.js?build=20260926-r289'
     );
     return installMountainWorld({ scene, samples, trackWidth, runtime });
   }

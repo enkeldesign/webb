@@ -386,6 +386,9 @@ const { installM8HomeFixedLayout } = await import(
   withBuild('./m8-home-fixed-layout.js?revision=r218-track-record-breathing&trophy-road=r159&achievements=r166-bella-records&achievement-filters=r254&bella-rescue=r174-siren-zone&music=warm-v2&robustness=r164-long-session')
 );
 await installM8HomeFixedLayout();
+installStylesheet('./landscape-notice.css', 'data-turn-landscape-notice');
+const { installLandscapeNotice } = await import(withBuild('./ui/landscape-notice.js'));
+installLandscapeNotice();
 installStylesheet(
   './home-feedback-r135.css?revision=r224-modal-headings',
   'data-turn-home-feedback'

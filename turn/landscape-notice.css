@@ -1,0 +1,91 @@
+/* Temporary portrait notice, drawn in the style of the retired rotate card.
+   The strip continues the colour of the surface beneath it (set from JS), and the
+   card uses cyan, TURN's information colour, distinct from the yellow Home header.
+   It sits above Home (1400) and The Lot (70) but below the install gate (2000). */
+.turn-landscape-notice {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1600;
+  padding:
+    max(10px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right))
+    10px
+    max(12px, env(safe-area-inset-left));
+  background: var(--turn-landscape-notice-backdrop, var(--ink, #08090a));
+}
+
+.turn-landscape-notice[hidden] {
+  display: none;
+}
+
+/* Move the menu surfaces below the strip instead of covering their headings and
+   controls. !important is needed to beat the fixed Home layout's inset rule. */
+body.turn-landscape-notice-visible .m8-home,
+body.turn-landscape-notice-visible .lot-screen {
+  top: var(--turn-landscape-notice-space, 0px) !important;
+}
+
+.turn-landscape-notice-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 12px 10px 12px 14px;
+  border: 4px solid var(--ink, #08090a);
+  border-radius: 18px;
+  background: var(--turn-action-information, #38d9ff);
+  color: var(--ink, #08090a);
+  box-shadow: 6px 6px 0 var(--ink, #08090a);
+}
+
+.turn-landscape-notice-phone {
+  width: 46px;
+  height: 27px;
+  border: 4px solid var(--ink, #08090a);
+  border-radius: 8px;
+  background: var(--paper, #fff8e8);
+  transform: rotate(-10deg);
+}
+
+.turn-landscape-notice-copy h2 {
+  margin: 0 0 3px;
+  font-size: 0.84rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+}
+
+.turn-landscape-notice-copy p {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.turn-landscape-notice-close {
+  display: grid;
+  place-items: center;
+  /* TURN renders its UI at a 0.75 baseline (page-zoom-baseline-r193.js):
+     59px here is a real 44px touch target. */
+  width: 59px;
+  height: 59px;
+  padding: 0;
+  border: 3px solid var(--ink, #08090a);
+  border-radius: 12px;
+  background: var(--paper, #fff8e8);
+  color: var(--ink, #08090a);
+  font: inherit;
+  font-size: 1.5rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.turn-landscape-notice-close:focus-visible {
+  outline: 4px solid var(--ink, #08090a);
+  outline-offset: 3px;
+}
