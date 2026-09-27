@@ -66,8 +66,20 @@ async function run(name, browser) {
   assert.equal(await page.locator('.turn-landscape-notice').evaluate((node) => node === document.body.firstElementChild), true,
     `${name}: the notice comes first in reading order`);
   assert.equal(await page.locator('.turn-landscape-notice-close').getAttribute('aria-label'), 'Close landscape recommendation');
-  const close = await page.locator('.turn-landscape-notice-close').boundingBox();
-  assert.ok(close.width >= 44 && close.height >= 44, `${name}: the close target is at least 44 px`);
+  // The notice close must look exactly like the existing Home dialog close.
+  const closeStyle = (selector) => page.evaluate((selector) => {
+    const style = globalThis.getComputedStyle(document.querySelector(selector));
+    return ['width', 'height', 'border-top-width', 'border-top-color', 'border-top-left-radius', 'background-color',
+      'color', 'box-shadow', 'font-size', 'font-weight', 'line-height', 'font-family', 'text-align']
+      .map((property) => `${property}: ${style.getPropertyValue(property)}`);
+  }, selector);
+  const noticeClose = await closeStyle('.turn-landscape-notice-close');
+  await page.locator('.m8-home-settings').click();
+  await page.waitForSelector('.m8-settings-dialog[open]');
+  assert.deepEqual(noticeClose, await closeStyle('.m8-settings-dialog [data-dialog-close]'),
+    `${name}: the notice close matches the Home dialog close`);
+  await page.locator('.m8-settings-dialog [data-dialog-close]').click();
+  await page.waitForFunction(() => !document.querySelector('.m8-settings-dialog[open]'));
   assert.ok(await belowNotice(page, '.m8-home'), `${name}: Home moves below the notice instead of being covered`);
 
   // Rotating to landscape removes it and returns Home to the top; rotating back restores it.

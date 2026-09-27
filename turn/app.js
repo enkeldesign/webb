@@ -387,6 +387,8 @@ const { installM8HomeFixedLayout } = await import(
 );
 await installM8HomeFixedLayout();
 installStylesheet('./landscape-notice.css', 'data-turn-landscape-notice');
+// Real CSS pixels: exempt the notice from the 0.75 UI baseline, like responsive.css.
+document.querySelector('link[data-turn-landscape-notice]')?.setAttribute('data-turn-responsive', '');
 const { installLandscapeNotice } = await import(withBuild('./ui/landscape-notice.js'));
 installLandscapeNotice();
 installStylesheet(

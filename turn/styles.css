@@ -1,12 +1,13 @@
 :root {
   color-scheme: dark;
   font-family: Inter, ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --ink: #08090a;
-  --paper: #fff8e8;
-  --cyan: #38d9ff;
-  --pink: #ff4fa3;
-  --yellow: #ffd43b;
-  --lime: #8ce99a;
+  /* Colour aliases for existing selectors; design-tokens.css is the source of truth. */
+  --ink: var(--turn-ink);
+  --paper: var(--turn-paper);
+  --cyan: var(--turn-blue-500);
+  --pink: var(--turn-pink-500);
+  --yellow: var(--turn-yellow-400);
+  --lime: var(--turn-green-500);
   --app-width: 100vw;
   --app-height: 100vh;
 }
