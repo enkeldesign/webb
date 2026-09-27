@@ -39,15 +39,15 @@ async function readability(page, label) {
   const { text, targets } = await page.evaluate(() => {
     const visible = (el) => {
       const rect = el.getBoundingClientRect();
-      const style = getComputedStyle(el);
+      const style = globalThis.getComputedStyle(el);
       return rect.width > 1 && rect.height > 1 && style.visibility !== 'hidden'
-        && rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth
+        && rect.bottom > 0 && rect.top < globalThis.innerHeight && rect.right > 0 && rect.left < globalThis.innerWidth
         && !el.closest('[aria-hidden="true"], [hidden], .lot-a11y-only, .visually-hidden, .sr-only');
     };
     const text = [...document.querySelectorAll('body *')]
       .filter((el) => [...el.childNodes].some((node) => node.nodeType === 3 && node.textContent.trim()) && visible(el))
-      .filter((el) => parseFloat(getComputedStyle(el).fontSize) < 10.95)
-      .map((el) => `${el.className?.toString().split(' ')[0] || el.tagName} ${parseFloat(getComputedStyle(el).fontSize).toFixed(1)}px`);
+      .filter((el) => parseFloat(globalThis.getComputedStyle(el).fontSize) < 10.95)
+      .map((el) => `${el.className?.toString().split(' ')[0] || el.tagName} ${parseFloat(globalThis.getComputedStyle(el).fontSize).toFixed(1)}px`);
     const targets = [...document.querySelectorAll('button, a[href], summary, [role="button"]')]
       .filter((el) => visible(el) && !el.closest('.drive-stack'))
       .filter((el) => { const rect = el.getBoundingClientRect(); return rect.width < 43.5 || rect.height < 43.5; })
