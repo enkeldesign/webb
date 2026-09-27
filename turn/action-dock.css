@@ -33,6 +33,17 @@
   white-space: nowrap;
 }
 
+/* Interaction states are shared too: a small lift on hover, an Ink focus ring that
+   reads on Paper, the dock bar and the sky alike. */
+:root body :is(.m8-home.turn-app-bar-layout .m8-track-continue, .lot-screen.lot-showroom .lot-race):hover {
+  transform: translateY(-2px);
+}
+
+:root body :is(.m8-home.turn-app-bar-layout .m8-track-continue, .lot-screen.lot-showroom .lot-race):focus-visible {
+  outline: 4px solid var(--turn-ink, #08090a);
+  outline-offset: 3px;
+}
+
 :root body :is(.m8-home.turn-app-bar-layout .m8-track-continue, .lot-screen.lot-showroom .lot-race):active {
   transform: translate(3px, 3px);
   box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
