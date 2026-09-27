@@ -128,7 +128,6 @@ html body .m8-home.turn-app-bar-layout .turn-app-bar-actions .m8-achievements-bu
   background: currentColor;
   -webkit-mask: var(--turn-trophy-icon) center / contain no-repeat;
   mask: var(--turn-trophy-icon) center / contain no-repeat;
-  --turn-trophy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4h10v5a5 5 0 0 1-10 0z'/%3E%3Cpath d='M7 6H4v1a4 4 0 0 0 4 4M17 6h3v1a4 4 0 0 1-4 4M12 14v4M8 21h8M9 18h6'/%3E%3C/svg%3E");
 }
 
 html body .m8-home.turn-app-bar-layout .turn-app-bar-actions .turn-achievements-trigger-label {
@@ -403,6 +402,38 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-home-build {
   font-size: var(--turn-type-micro, 11px);
   letter-spacing: var(--turn-tracking-micro, 0.04em);
   white-space: normal;
+}
+
+/* Short landscape: the sheet widens and its four entries sit in two columns, and
+   the footer becomes one wrapping row, so every entry shows without scrolling. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .turn-home-sheet {
+    width: min(520px, calc(100vw - 32px));
+  }
+
+  html body .turn-home-sheet .m8-home-menu {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 10px;
+    padding-block: 14px;
+  }
+
+  html body .turn-home-sheet .turn-home-sheet-footer {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 16px;
+    padding-top: 8px;
+  }
+
+  html body .turn-home-sheet .turn-home-sheet-footer .m8-home-meta {
+    flex: 1 1 auto;
+  }
+
+  html body .turn-home-sheet .turn-home-sheet-footer .turn-viewport-readout {
+    flex-basis: 100%;
+  }
 }
 
 /* Tester-only viewport numbers (ui/viewport-readout.js). */

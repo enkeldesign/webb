@@ -232,6 +232,18 @@ async function responsiveRace(browser, name) {
     await page.waitForSelector('.lot-showroom');
     await settle(page);
     assert.deepEqual(await dockStyle('.lot-race'), homeDock, `${name}: RACE THIS CAR matches Home RACE`);
+    // Nothing in the Lot card paints over the dock: with COLOR scrolled under it, a tap
+    // on RACE THIS CAR still reaches the button.
+    assert.ok(await page.evaluate(() => {
+      const screen = document.querySelector('.lot-screen');
+      const colors = document.querySelector('.lot-colors');
+      const race = document.querySelector('.lot-race');
+      const dock = race.getBoundingClientRect();
+      screen.scrollTop += colors.getBoundingClientRect().top - dock.top;
+      const hit = document.elementFromPoint(dock.x + dock.width / 2, dock.y + dock.height / 2);
+      screen.scrollTop = 0;
+      return race.contains(hit);
+    }), `${name}: RACE THIS CAR receives taps with COLOR scrolled under it`);
     // Standalone dialogs (Lot SHIFT, reset rivals) are portrait sheets too.
     for (const dialog of ['.lot-shift-dialog', '.nuke-dialog']) {
       await page.$eval(dialog, (node) => node.showModal());
@@ -239,6 +251,9 @@ async function responsiveRace(browser, name) {
       const sheet = await bounds(page, `${dialog} > :first-child`);
       assert.ok(Math.round(sheet.x) === 0 && Math.round(sheet.width) === 393 && Math.round(sheet.bottom) === 852,
         `${dialog} is a portrait bottom sheet`);
+      if (dialog === '.lot-shift-dialog') {
+        assert.equal((await shape('.lot-shift-close'))[0], sheetClose, 'SHIFT closes like every dialog');
+      }
       await page.$eval(dialog, (node) => node.close());
     }
     for (const [width, height] of sizes) {
@@ -289,12 +304,13 @@ async function responsiveRace(browser, name) {
           within(flow, width, height, 'Flow score');
           assert.equal(drift.x < flow.x, handedness === 'right', 'Portrait scores mirror');
           const gauge = await bounds(page, '.score-feedback-gauge-shell[data-score-channel="drift"]');
-          assert.ok(gauge.width > 20 && gauge.y < drift.y, 'Portrait intensity grows above its score');
+          // The gauge sits under its score, out of the car's line, never above it.
+          assert.ok(gauge.width > 20 && gauge.y >= drift.bottom - 4, 'Portrait intensity sits under its score');
           const scale = await page.locator('[data-score-feedback-meter-fill]').first().evaluate((node) => {
             const matrix = new globalThis.DOMMatrix(globalThis.getComputedStyle(node).transform);
             return { x: matrix.a, y: matrix.d };
           });
-          assert.ok(Math.abs(scale.x - 1) < .001 && Math.abs(scale.y - .65) < .001, 'Portrait fill scales vertically');
+          assert.ok(Math.abs(scale.x - .65) < .001 && scale.y >= 1 && scale.y <= 1.08, `Portrait fill scales horizontally, as in landscape (${JSON.stringify(scale)})`);
         }
       }
       assert.equal(await page.locator('.rotate-panel').count(), 0);

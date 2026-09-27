@@ -20,7 +20,9 @@
   .m8-reset-rivals,
   .m8-reset-cancel,
   .m8-reset-confirm-button,
-  .turn-dbe-training-race-nav button
+  .turn-dbe-training-race-nav button,
+  .turn-support-challenge-actions button,
+  .lot-shift-actions button
 ) {
   min-height: var(--turn-target-min);
   border-width: var(--turn-border-control);
@@ -42,7 +44,9 @@
   .m8-reset-rivals,
   .m8-reset-cancel,
   .m8-reset-confirm-button,
-  .turn-dbe-training-race-nav button
+  .turn-dbe-training-race-nav button,
+  .turn-support-challenge-actions button,
+  .lot-shift-actions button
 ):active {
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
@@ -53,9 +57,22 @@
   min-height: var(--turn-target-min);
 }
 
-/* The menu sheet closes like every dialog: the round orange close. */
-:root body .turn-home-sheet .turn-home-sheet-close {
+/* The trophy icon: ACHIEVEMENTS on Home's app bar and in the race row. */
+:root {
+  --turn-trophy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4h10v5a5 5 0 0 1-10 0z'/%3E%3Cpath d='M7 6H4v1a4 4 0 0 0 4 4M17 6h3v1a4 4 0 0 1-4 4M12 14v4M8 21h8M9 18h6'/%3E%3C/svg%3E");
+}
+
+/* The menu sheet and SHIFT close like every dialog: the round orange close. */
+:root body :is(.turn-home-sheet .turn-home-sheet-close, .lot-shift-dialog .lot-shift-close) {
   border-width: 4px;
   border-radius: 50%;
   box-shadow: 5.25px 5.25px 0 var(--turn-ink, #08090a);
+}
+
+:root body .lot-shift-dialog .lot-shift-close {
+  flex: 0 0 var(--turn-target-min);
+  width: var(--turn-target-min);
+  height: var(--turn-target-min);
+  min-height: var(--turn-target-min);
+  padding: 0;
 }
