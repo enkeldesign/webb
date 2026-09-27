@@ -251,6 +251,9 @@ async function responsiveRace(browser, name) {
       const sheet = await bounds(page, `${dialog} > :first-child`);
       assert.ok(Math.round(sheet.x) === 0 && Math.round(sheet.width) === 393 && Math.round(sheet.bottom) === 852,
         `${dialog} is a portrait bottom sheet`);
+      if (dialog === '.lot-shift-dialog') {
+        assert.equal((await shape('.lot-shift-close'))[0], sheetClose, 'SHIFT closes like every dialog');
+      }
       await page.$eval(dialog, (node) => node.close());
     }
     for (const [width, height] of sizes) {
