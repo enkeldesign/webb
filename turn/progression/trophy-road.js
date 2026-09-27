@@ -600,7 +600,9 @@ function hasAchievementProgress(state) {
 
 function hasEveryRewardStored(state) {
   const stored = new Set(Array.isArray(state?.rewards?.unlocked) ? state.rewards.unlocked : []);
-  return PRE_SHIFT_GRANDFATHERED_REWARDS.every((rewardId) => stored.has(rewardId));
+  return PRE_SHIFT_GRANDFATHERED_REWARDS
+    .filter((rewardId) => REWARD_BY_ID.has(rewardId))
+    .every((rewardId) => stored.has(rewardId));
 }
 
 function cleanTrophyRoadState() {

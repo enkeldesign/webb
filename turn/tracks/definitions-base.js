@@ -121,7 +121,8 @@ const TRACKS = [
     difficulty: 'ADVANCED',
     eyebrow: 'TRACK 6',
     description: 'Canyon road. Dust haze. One chicane. Long desert speed.',
-    accent: '#df3045',
+    // LAB's #df3045, lifted just enough for WCAG AA black text on the selected card.
+    accent: '#e5404f',
     accentSoft: '#f3a0a8',
     storageRevision: 'dead-canyon',
     sampleCount: 2160,

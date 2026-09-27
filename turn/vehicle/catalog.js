@@ -124,7 +124,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
     title: 'TRACTION',
     description: 'Shallow off-road driving causes much less slowdown, while deep off-road remains punishing.',
     rewardId: 'awd-traction',
-    threshold: 400
+    threshold: 500
   }),
   classic: Object.freeze({
     title: 'GRADUATED',

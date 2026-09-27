@@ -38,7 +38,7 @@ const catchTheCharge = getAchievement('catch-the-charge');
 const headStart = getAchievement('head-start');
 const gotStarted = getAchievement('got-started');
 
-assert.equal(ACHIEVEMENTS.length, 61,
+assert.equal(ACHIEVEMENTS.length, 71,
   'Production TURN should expose the complete achievement and scoring catalog');
 assert.equal(GOT_STARTED_ACHIEVEMENT, gotStarted);
 assert.equal(gotStarted?.title, 'GOT STARTED');
@@ -168,23 +168,23 @@ challengeApi.disconnect();
 
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
-  4625,
+  5325,
   'The learning and balance pass must expose the complete trophy supply'
 );
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300);
 assert.deepEqual(
   TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
   [
-    ['awd-traction', 400],
-    ['truck-torque', 500],
+    ['medium-tracks', 400],
+    ['awd-traction', 500],
     ['drift-attack', 600],
-    ['midnight-city', 700],
+    ['advanced-tracks', 700],
     ['paintjob', 800],
     ['vintage-racer', 900],
     ['shift', 1000],
     ['race-car', 1100],
     ['emergency-pack', 1200],
-    ['mountain', 1300],
+    ['expert-tracks', 1300],
     ['van-carry-on', 1400],
     ['flow', 1500],
     ['future-racer', 1600],
@@ -198,8 +198,8 @@ assert.deepEqual(
   ]
 );
 assert.deepEqual(TRACK_IDS, [
-  'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain'
-], 'Every-track achievements must include the sixth production track');
+  'countryside', 'cliffside', 'airport', 'beachfront', 'harbor', 'dead-canyon', 'midnight-city', 'mountain'
+], 'Every-track achievements must include all eight production tracks');
 
 for (const [icon, authoredClass, file] of [
   ['future', 'future-racer', 'future-racer.svg'],
@@ -243,6 +243,8 @@ const factoryRoute = Object.freeze({
   airport: Object.freeze({ time: 21, carId: 'classic', carColor: '#ffcc00' }),
   harbor: Object.freeze({ time: 35, carId: 'vintage-racer', carColor: '#8b5a2b' }),
   cliffside: Object.freeze({ time: 24, carId: 'race-future', carColor: '#00aabb' }),
+  beachfront: Object.freeze({ time: 38, carId: 'suv', carColor: '#25b97a' }),
+  'dead-canyon': Object.freeze({ time: 50, carId: 'truck', carColor: '#df3045' }),
   'midnight-city': Object.freeze({ time: 70, carId: 'sedan-sports', carColor: '#5e3c87' }),
   mountain: Object.freeze({ time: 98, carId: 'toy-racer', carColor: '#4dabf7' })
 });

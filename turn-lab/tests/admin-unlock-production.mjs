@@ -180,7 +180,7 @@ const falseGrandfatherStorage = createMemoryStorage({
   })
 });
 const repairedFreshProfile = prepareTrophyRoadProfile(falseGrandfatherStorage);
-assert.equal(repairedFreshProfile?.version, 9);
+assert.equal(repairedFreshProfile?.version, 10);
 assert.deepEqual(repairedFreshProfile?.rewards?.unlocked, [],
   'The accidental all-rewards fresh profile must self-repair without another data clear');
 assert.deepEqual(readTrophyRoadSnapshot(falseGrandfatherStorage).unlockedRewardIds, []);

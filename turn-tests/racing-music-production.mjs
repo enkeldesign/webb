@@ -84,7 +84,10 @@ for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'ha
 const expectedTrackIds = TRACK_IDS;
 assert.equal(MENU_SONG.id, 'menu');
 assert.deepEqual(Object.keys(TRACK_SONGS), expectedTrackIds);
-assert.equal(SONGBOOK.length, TRACK_IDS.length + 1, 'Songbook contains menu music plus one song per production track');
+assert.equal(SONGBOOK.length, new Set(Object.values(TRACK_SONGS)).size + 1,
+  'Songbook contains menu music plus each distinct track song once');
+assert.equal(TRACK_SONGS.beachfront, TRACK_SONGS.cliffside, 'BEACHFRONT reuses the CLIFFSIDE song');
+assert.equal(TRACK_SONGS['dead-canyon'], TRACK_SONGS.mountain, 'DEAD CANYON reuses the MOUNTAIN song');
 assert.equal(TRACK_SONGS.airport.id, 'airport', 'Airport keeps the canonical track song id');
 assert.equal(TRACK_SONGS.airport.name, 'Paper Skies', 'Airport exposes the new Paper Skies title');
 assert.equal(TRACK_SONGS.airport.bpm, 144, 'Paper Skies keeps its authored tempo');

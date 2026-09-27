@@ -683,11 +683,6 @@ async function installParkedCars(world, samples, trackWidth) {
     car.rotation.y = frame.yaw + Math.PI + spec.yaw;
     car.userData.turnStaticSceneryCar = true;
     car.userData.turnSceneryOnly = true;
-    car.traverse((node) => {
-      if (!node?.isMesh) return;
-      node.castShadow = false;
-      node.receiveShadow = false;
-    });
     world.add(car);
     return true;
   }));
@@ -887,8 +882,6 @@ function prepareModel(source, { targetHeight = null, targetSpan = null } = {}) {
       if ('metalness' in mat) mat.metalness = 0;
       mat.needsUpdate = true;
     }
-    node.castShadow = false;
-    node.receiveShadow = false;
   });
   model.updateWorldMatrix(true, true);
 

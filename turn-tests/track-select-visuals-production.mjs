@@ -38,8 +38,13 @@ assert.equal(tracks.cliffside.accent, '#26c7c3', 'Cliffside keeps its blue-green
 assert.equal(tracks.harbor.accent, '#ff8f3d', 'Harbor needs a distinct rust-orange dock identity');
 assert.equal(tracks['midnight-city'].accent, '#9d7cff', 'Midnight City keeps its established violet identity');
 assert.equal(tracks.mountain.accent, '#4dabf7', 'Mountain keeps its established alpine-blue identity');
+assert.equal(tracks.beachfront.accent, '#25b97a', 'Beachfront keeps its tropical green identity');
+assert.equal(tracks['dead-canyon'].accent, '#e5404f', 'Dead Canyon keeps its badlands red identity');
+assert.equal(tracks.cliffside.difficulty, 'EASY');
+assert.equal(tracks.beachfront.difficulty, 'MEDIUM');
 assert.equal(tracks.harbor.difficulty, 'ADVANCED');
-assert.equal(tracks['midnight-city'].difficulty, 'ADVANCED');
+assert.equal(tracks['dead-canyon'].difficulty, 'ADVANCED');
+assert.equal(tracks['midnight-city'].difficulty, 'EXPERT');
 assert.equal(tracks.mountain.difficulty, 'EXPERT');
 assert.equal(new Set(TRACK_DEFINITIONS.map((track) => track.accent)).size, TRACK_DEFINITIONS.length, 'Every playable track needs a distinct accent');
 
@@ -67,6 +72,16 @@ assert.match(
   /\.track-card-mountain[\s\S]*--track-card-paper: #d7efff[\s\S]*--track-card-fold: #b9dced/,
   'Unselected Mountain must use a light alpine-blue paper and the same folded-corner treatment as the other tracks'
 );
+assert.match(postcardCss, /\.track-card-beachfront \{[\s\S]*--track-card-paper: #d8f6dc/,
+  'Unselected Beachfront gets a pale green postcard');
+assert.match(postcardCss, /\.track-card-dead-canyon \{[\s\S]*--track-card-paper: #f3a0a8[\s\S]*--track-card-fold: #d96874/,
+  'Unselected Dead Canyon stays clearly red, distinct from Countryside pink');
+assert.match(postcardCss, /\.track-card-beachfront \.track-card-preview \{[\s\S]*#2fc1c8[\s\S]*#f1d99a/,
+  'Beachfront postcard reads as turquoise sea and sand beach');
+assert.match(postcardCss, /\.track-card-beachfront \.track-card-preview::before[\s\S]*#2f9d5c[\s\S]*#5c3f2a/,
+  'Beachfront postcard carries palms behind the route map');
+assert.match(postcardCss, /\.track-card-dead-canyon \.track-card-preview::before[\s\S]*#b44a3c[\s\S]*#8f3a33/,
+  'Dead Canyon postcard carries stepped red mesas behind the route map');
 assert.match(postcardCss, /\.track-card-preview::after[\s\S]*repeating-linear-gradient/, 'Every preview gets the small track-coloured curb motif');
 assert.match(postcardCss, /\.track-card-cliffside \.track-card-preview[\s\S]*#4ba8c8/, 'Cliffside preview must retain visible ocean blue');
 assert.match(postcardCss, /\.track-card-harbor \.track-card-preview[\s\S]*#287f9f/, 'Harbor preview must retain visible quay water');

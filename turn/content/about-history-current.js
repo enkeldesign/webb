@@ -815,6 +815,20 @@ const RESPONSIVE_HISTORY = Object.freeze({
   ])
 });
 
+const EIGHT_TRACK_HISTORY = Object.freeze({
+  period: '27 September',
+  title: 'Eight tracks, four difficulties',
+  paragraphs: Object.freeze([
+    'TURN 1.23.0 adds BEACHFRONT, a bright MEDIUM island lap of seaside sweepers around a tropical resort, and DEAD CANYON, a long ADVANCED run through red badlands with one tight chicane. Both arrive with their own records, rivals, Drive By Ear pace notes, colour cues and a full set of achievements.',
+    'The eight tracks are ordered by difficulty, two per tier, and Trophy Road now unlocks a whole tier at a time: MEDIUM at 400 trophies, ADVANCED at 700 and EXPERT at 1300. TRUCK has TORQUE from the start, and every track an existing player could already race stays open.'
+  ]),
+  milestones: Object.freeze([
+    'BEACHFRONT and DEAD CANYON',
+    'Difficulty-tier track unlocks on Trophy Road',
+    'TURN 1.23.0 · 2026.09.27-r293'
+  ])
+});
+
 export const DEVELOPMENT_HISTORY = Object.freeze([
   ...BASE_DEVELOPMENT_HISTORY,
   PERK_HISTORY,
@@ -871,7 +885,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   AIRPORT_HAIRPIN_SEAM_HISTORY,
   AIRPORT_HAIRPIN_SEAM_SHADING_HISTORY,
   LOT_TABLET_LAYOUT_HISTORY,
-  RESPONSIVE_HISTORY
+  RESPONSIVE_HISTORY,
+  EIGHT_TRACK_HISTORY
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -1027,11 +1042,19 @@ Object.freeze({
     Object.freeze(['Responsive navigation', 'Reflows Home, The Lot and dialogs for smaller windows and enlarged text; keeps growing track catalogs reachable and limits large-screen stretching.']),
     Object.freeze(['Race orientation', 'Recommends landscape once at the first portrait race handoff while keeping portrait fully supported and immediately playable.'])
   ])
+}),
+Object.freeze({
+  date: '27 September',
+  entries: Object.freeze([
+    Object.freeze(['1.23.0 r293', 'Adds BEACHFRONT (MEDIUM) and DEAD CANYON (ADVANCED) with their own records, rivals, pace notes and achievements. Orders tracks by difficulty and unlocks each tier on Trophy Road at 400, 700 and 1300 trophies; existing players keep every track they could already race.']),
+    Object.freeze(['Trophy Road', 'Replaces the MIDNIGHT CITY and MOUNTAIN rewards with MEDIUM, ADVANCED and EXPERT track tiers, moves AWD · TRACTION to 500 and gives TRUCK its TORQUE perk from the start.']),
+    Object.freeze(['Track chooser', 'CLIFFSIDE is now EASY and MIDNIGHT CITY EXPERT. Wide screens use fewer, roomier track cards so long names are never cut off.'])
+  ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.22.5',
-  build: '2026.09.26-r292',
-  note: 'TURN 1.22.5 matches the portrait landscape notice close button to TURN dialogs and loads TURN colours from one design-token source.'
+  version: '1.23.0',
+  build: '2026.09.27-r293',
+  note: 'TURN 1.23.0 adds BEACHFRONT and DEAD CANYON, orders the eight tracks by difficulty and unlocks each difficulty tier on Trophy Road.'
 });

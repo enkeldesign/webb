@@ -127,7 +127,6 @@ function makeDesertFloor(world) {
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.set(110, -0.22, 0);
-  floor.receiveShadow = false;
   floor.name = 'Dead Canyon desert floor';
   world.add(floor);
 }
@@ -185,7 +184,6 @@ function makeTerrainRibbon(world, samples, trackWidth) {
       side: THREE.DoubleSide
     })
   );
-  terrain.receiveShadow = false;
   terrain.name = 'Dead Canyon route terrain';
   world.add(terrain);
 }
@@ -225,8 +223,6 @@ function makeTerrainSkirts(world, samples, trackWidth) {
     geometry.computeVertexNormals();
     const skirt = new THREE.Mesh(geometry, material(SAND_DARK, 1, true));
     skirt.name = `Dead Canyon terrain skirt ${side.name}`;
-    skirt.castShadow = false;
-    skirt.receiveShadow = false;
     world.add(skirt);
   }
 }
@@ -354,8 +350,6 @@ function makeEasternEscarpment(world) {
     block.position.set(embeddedX, 185 + height / 2, z);
     block.rotation.y = 0.16 * index;
     block.name = `Dead Canyon integrated skyline mesa ${index + 1}`;
-    block.castShadow = false;
-    block.receiveShadow = false;
     block.frustumCulled = false;
     world.add(block);
   });
@@ -401,8 +395,6 @@ function makeFacetedCliffBand(spec, segments, depth) {
   geometry.computeVertexNormals();
 
   const mesh = new THREE.Mesh(geometry, material(spec.color, 1, true));
-  mesh.castShadow = false;
-  mesh.receiveShadow = false;
   return mesh;
 }
 
@@ -514,8 +506,6 @@ function makeCanyonOverhangs(world) {
     rock.scale.set(sx, sy, sz);
     rock.rotation.set(0, ry, rz);
     rock.name = `Dead Canyon embedded overhang ${index + 1}`;
-    rock.castShadow = false;
-    rock.receiveShadow = false;
     world.add(rock);
   });
 }
@@ -546,8 +536,6 @@ function makeDeadCanyonLandmark(world) {
       [-0.06, 0.035, -0.08][index]
     );
     shelf.name = `DEAD CANYON CROWN shelf ${index + 1}`;
-    shelf.castShadow = false;
-    shelf.receiveShadow = false;
     crown.add(shelf);
   });
 
@@ -786,8 +774,6 @@ async function installRetroUrbanSites(world, samples, trackWidth) {
         object.material = material(spec.color, key === 'truck' ? 0.72 : 0.94, true);
       }
 
-      object.castShadow = false;
-      object.receiveShadow = false;
     });
     normalizeHeight(source, spec.height);
     source.name = 'Dead Canyon Kenney Retro Urban ' + key;
@@ -978,11 +964,6 @@ function cloneTemplateAt(world, template, frame, along, lateral, scale, yawOffse
   object.position.y = Math.max(0.25, frame.point.y - 0.25);
   object.rotation.y = Math.atan2(frame.tangent.x, frame.tangent.z) + yawOffset;
   object.scale.multiplyScalar(scale);
-  object.traverse((node) => {
-    if (!node.isMesh) return;
-    node.castShadow = false;
-    node.receiveShadow = false;
-  });
   world.add(object);
   return object;
 }
@@ -1069,11 +1050,6 @@ function placeTemplate(world, template, frame, along, lateral, scale, yawOffset,
   object.position.y = Math.max(0.25, frame.point.y - 0.25) + verticalOffset;
   object.rotation.y = Math.atan2(frame.tangent.x, frame.tangent.z) + yawOffset;
   object.scale.multiplyScalar(scale);
-  object.traverse((node) => {
-    if (!node.isMesh) return;
-    node.castShadow = false;
-    node.receiveShadow = false;
-  });
   world.add(object);
   return 1;
 }
@@ -1085,11 +1061,6 @@ function placeAbsoluteTemplate(world, template, x, z, scale, yaw, name, y = 0) {
   object.position.set(x, y, z);
   object.rotation.y = yaw;
   object.scale.multiplyScalar(scale);
-  object.traverse((node) => {
-    if (!node.isMesh) return;
-    node.castShadow = false;
-    node.receiveShadow = false;
-  });
   world.add(object);
   return 1;
 }
@@ -1137,7 +1108,6 @@ function makeRibbon(samples, leftOffset, rightOffset, lift = 0) {
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   const mesh = new THREE.Mesh(geometry, material(0xffffff));
-  mesh.receiveShadow = false;
   return mesh;
 }
 

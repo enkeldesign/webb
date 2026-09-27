@@ -15,9 +15,11 @@ assert.match(intro, /clip:rect\(0 0 0 0\)/,
 
 const expectedDescriptions = new Map([
   ['countryside', 'Fast, flowing and forgiving.'],
-  ['airport', 'Runway speed. Apron precision.'],
   ['cliffside', 'Linked curves. Mountain rhythm. Ocean flow.'],
+  ['airport', 'Runway speed. Apron precision.'],
+  ['beachfront', 'Bright beachfront island. Seaside sweepers. Hotel skyline. Tropical interior.'],
   ['harbor', 'Switchbacks. Container canyons. Quayside speed.'],
+  ['dead-canyon', 'Canyon road. Dust haze. One chicane. Long desert speed.'],
   ['midnight-city', 'District avenues. Neon corners. A full-city endurance lap.'],
   ['mountain', 'Summit climb. Waterfall descent. Lake bridge. Valley lights.']
 ]);

@@ -145,12 +145,18 @@ assert.equal(getPresentationAchievement('catch-the-charge')?.icon, 'safety',
 assert.equal(PRESENTATION_ICONS.drift, AUTHORED_DRIFT_ICON);
 assert.equal(PRESENTATION_ICONS.safety, AUTHORED_SAFETY_ICON);
 
-const midnightReward = getPresentationTrophyRoadReward('midnight-city');
-const mountainReward = getPresentationTrophyRoadReward('mountain');
-assert.equal(PRESENTATION_TROPHY_ROAD_REWARD_ICONS[midnightReward.icon], TRACK_ICON_MARKUP['midnight-city'],
-  'MIDNIGHT CITY must use the new authored track icon on Trophy Road');
-assert.equal(PRESENTATION_TROPHY_ROAD_REWARD_ICONS[mountainReward.icon], TRACK_ICON_MARKUP.mountain,
-  'MOUNTAIN must use the new authored track icon on Trophy Road');
+// A difficulty-tier reward shows the authored pictograms of both tracks it unlocks.
+for (const rewardId of ['medium-tracks', 'advanced-tracks', 'expert-tracks']) {
+  const reward = getPresentationTrophyRoadReward(rewardId);
+  const markup = PRESENTATION_TROPHY_ROAD_REWARD_ICONS[reward.icon];
+  assert.equal(reward.trackIds.length, 2);
+  let position = -1;
+  for (const trackId of reward.trackIds) {
+    const next = markup.indexOf(TRACK_ICON_MARKUP[trackId]);
+    assert.ok(next > position, `${rewardId} must show the ${trackId} pictogram, in catalog order`);
+    position = next;
+  }
+}
 
 const release = JSON.parse(await fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'));
 for (const document of [productionIndex, labIndex]) {
@@ -168,7 +174,7 @@ for (const [name, source] of [['Home reward replay', homeRewardReplay], ['Reward
   assert.match(source, /from '\.\.\/progression\/trophy-road\.js'/,
     `${name} must import the one canonical Trophy Road module that carries the authored track icons`);
 }
-assert.match(trophyRoadPerksFacade, /TRACK_ICON_MARKUP\['midnight-city'\]/,
+assert.match(trophyRoadPerksFacade, /TRACK_ICON_MARKUP\[trackId\]/,
   'Trophy Road itself owns the authored track icon presentation');
 assert.match(lotTrackIconWrapper, /__turnNextHome\?\.getSelectedTrackId\?\.\(\)/,
   'The Lot track pictogram must mirror Home selection instead of owning duplicate state');

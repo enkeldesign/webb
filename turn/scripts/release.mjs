@@ -298,7 +298,11 @@ function synchronizeTrackCatalogScalabilityTargets(importMap, release) {
     '/turn/audio/music/songbook.js': ['', '?revision=r197-audio-mix', '?revision=r214-mountain-ccttbb'],
     '/turn/accessibility/color-cues.js': ['', '?revision=r163'],
     '/turn/ui/track-icons.js': ['', '?revision=r1-track-reward-icons'],
-    '/turn/tracks/pace-notes-base.js': ['']
+    '/turn/tracks/pace-notes-base.js': [''],
+    // #983: the eight-track catalog, its difficulty order and per-track SPRINT targets.
+    '/turn/tracks/definitions-base.js': [''],
+    '/turn/tracks/catalog.js': ['', '?source=20260729-r118-m8', '?build=20260806-r161', '?build=20260818-r175'],
+    '/turn/achievements/time-trials.js': ['', '?revision=r166-bella-records', '?revision=r224-sprint-targets']
   });
 
   for (const [pathname, suffixes] of Object.entries(aliases)) {
