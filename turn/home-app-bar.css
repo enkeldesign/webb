@@ -404,6 +404,38 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-home-build {
   white-space: normal;
 }
 
+/* Short landscape: the sheet widens and its four entries sit in two columns, and
+   the footer becomes one wrapping row, so every entry shows without scrolling. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .turn-home-sheet {
+    width: min(520px, calc(100vw - 32px));
+  }
+
+  html body .turn-home-sheet .m8-home-menu {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 10px;
+    padding-block: 14px;
+  }
+
+  html body .turn-home-sheet .turn-home-sheet-footer {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 16px;
+    padding-top: 8px;
+  }
+
+  html body .turn-home-sheet .turn-home-sheet-footer .m8-home-meta {
+    flex: 1 1 auto;
+  }
+
+  html body .turn-home-sheet .turn-home-sheet-footer .turn-viewport-readout {
+    flex-basis: 100%;
+  }
+}
+
 /* Tester-only viewport numbers (ui/viewport-readout.js). */
 html body .turn-home-sheet .turn-home-sheet-footer .turn-viewport-readout {
   margin: 0;
