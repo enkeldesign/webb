@@ -1,95 +1,4 @@
-@import url('./design-semantic.css?build=20260928-r316');
-
-.m8-home-fixed-layout .m8-feedback-button {
-  align-self: auto;
-  display: block;
-  justify-self: auto;
-  width: 100%;
-  min-width: 0;
-  margin: 0 0 clamp(12px, 2.5vh, 19.5px);
-  padding: clamp(6.75px, 1.5vh, 10.5px) 9px;
-  border: 4px solid var(--m8-ink);
-  border-radius: 749.25px;
-  background: #ffd85c;
-  box-shadow: 5.25px 5.25px 0 var(--m8-ink);
-  font-size: max(var(--turn-text-floor, 11px), clamp(0.675rem, 1.65vw, 0.975rem));
-  line-height: 1;
-  letter-spacing: 0.025em;
-  text-align: center;
-}
-
-.m8-home-fixed-layout .m8-feedback-button:hover {
-  transform: translateY(-1.5px);
-}
-
-.m8-home-fixed-layout .m8-feedback-button:active {
-  transform: translate(4.5px, 4.5px);
-  box-shadow: 0.75px 0.75px 0 var(--m8-ink);
-}
-
-.m8-home-fixed-layout .m8-feedback-button:focus-visible {
-  outline: 5px solid var(--m8-cream);
-  outline-offset: 3px;
-}
-
-.m8-home-fixed-layout .m8-home-meta {
-  grid-column: 3;
-  grid-row: 1;
-  align-self: center;
-  justify-self: end;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.75px;
-  margin-block: max(8px, env(safe-area-inset-top)) 8px;
-}
-
-.m8-home-fixed-layout .m8-home-meta .m8-home-build {
-  margin: 0;
-}
-
-/* Visually a text link; semantically a button because it opens a dialog. */
-.m8-home-fixed-layout .m8-about-trigger {
-  -webkit-appearance: none;
-  appearance: none;
-  min-width: 0;
-  min-height: auto;
-  margin: 0;
-  padding: 2.25px 7.5px 3.75px;
-  border: 0;
-  border-radius: 3px;
-  background: transparent;
-  color: inherit;
-  box-shadow: none !important;
-  text-shadow: none;
-  transform: none !important;
-  font: inherit;
-  font-size: max(var(--turn-text-floor, 11px), clamp(0.465rem, 1vw, 0.615rem));
-  font-weight: 900;
-  line-height: 1.1;
-  letter-spacing: 0.025em;
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 0.18em;
-  cursor: pointer;
-}
-
-.m8-home-fixed-layout .m8-about-trigger:hover {
-  box-shadow: none !important;
-  transform: none !important;
-  text-decoration-thickness: 2.25px;
-}
-
-.m8-home-fixed-layout .m8-about-trigger:active {
-  box-shadow: none !important;
-  transform: none !important;
-  text-decoration-thickness: 2.25px;
-}
-
-.m8-home-fixed-layout .m8-about-trigger:focus-visible {
-  outline: 4px solid var(--m8-blue);
-  outline-offset: 1.5px;
-}
+@import url('./design-semantic.css?build=20260928-r321');
 
 .m8-feedback-dialog {
   width: min(570px, calc(100vw - 24px));
@@ -212,17 +121,6 @@
 }
 
 @media (max-height: 420px) and (orientation: landscape) {
-  .m8-home-fixed-layout .m8-feedback-button {
-    margin-bottom: 9.75px;
-    padding-block: 6px;
-    border-width: 2.25px;
-    box-shadow: 3.75px 3.75px 0 var(--m8-ink);
-    font-size: max(var(--turn-text-floor, 11px), 0.615rem);
-  }
-
-  .m8-home-fixed-layout .m8-home-meta {
-    margin-block: max(5px, env(safe-area-inset-top)) 5px;
-  }
 
   .m8-feedback-dialog .m8-dialog-card,
   .m8-about-dialog .m8-dialog-card {
@@ -240,21 +138,6 @@
 }
 
 @media (max-width: 570px) and (orientation: portrait) {
-  .m8-home-fixed-layout .m8-home-menu {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .m8-home-fixed-layout .m8-home-meta {
-    display: none;
-  }
-
-  .m8-home-fixed-layout .m8-feedback-button {
-    margin: 0;
-    padding: 7.5px 3.75px;
-    border-width: 3px;
-    box-shadow: 5.25px 5.25px 0 var(--m8-ink);
-    font-size: max(var(--turn-text-floor, 11px), 0.54rem);
-  }
 
   .m8-feedback-actions {
     display: grid;

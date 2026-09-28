@@ -11,7 +11,7 @@ const turnNextRoot = path.resolve(here, '../../turn-next');
 const index = fs.readFileSync(path.join(turnRoot, 'index.html'), 'utf8');
 const nextIndex = fs.readFileSync(path.join(turnNextRoot, 'index.html'), 'utf8');
 const homeSource = fs.readFileSync(path.join(turnRoot, 'm8-home.js'), 'utf8');
-const orientationGuard = fs.readFileSync(path.join(turnRoot, 'orientation-guard.css'), 'utf8');
+const appBar = fs.readFileSync(path.join(turnRoot, 'home-app-bar.css'), 'utf8');
 const release = JSON.parse(fs.readFileSync(path.join(turnRoot, 'release.json'), 'utf8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(turnRoot, 'site.webmanifest'), 'utf8'));
 const nextManifest = JSON.parse(fs.readFileSync(path.join(turnNextRoot, 'site.webmanifest'), 'utf8'));
@@ -27,8 +27,8 @@ for (const source of [index, nextIndex]) {
 
 assert.match(homeSource, /<img class="m8-home-logo" src="\/turn\/TURNicon\.PNG\?icon=\$\{ICON_REVISION\}" alt="TURN">/);
 assert.match(homeSource, /ICON_REVISION = '20260803-profile-512'/);
-assert.match(orientationGuard, /\.m8-home-fixed-layout \.m8-home-logo[\s\S]*object-fit: contain/);
-assert.match(orientationGuard, /object-position: left center/);
+// The app bar shows the square profile icon at 40px, filling its rounded frame.
+assert.match(appBar, /\.m8-home-logo \{[^}]*width: 40px;[^}]*height: 40px;[^}]*object-fit: cover;/);
 
 assert.match(index, new RegExp(`<link rel="manifest" href="\\.\\/site\\.webmanifest\\?build=${release.cacheKey}-icon-20260803-profile-512">`));
 assert.match(nextIndex, new RegExp(`<link rel="manifest" href="\\/turn-next\\/site\\.webmanifest\\?source=${release.cacheKey}-icon-20260803-profile-512-m8\\.5">`));

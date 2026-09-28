@@ -16,12 +16,14 @@ const server = http.createServer(async (request, response) => {
     const filename = path.resolve(root, `.${pathname}`);
     if (!filename.startsWith(root)) throw new Error('Outside fixture root');
     let body = await fs.readFile(filename);
-    if (pathname === '/turn/tracks/catalog.js') {
-      // Exercise the real catalog renderer with extra selection entries. These
+    if (pathname === '/turn/roadbook/roadbook.js') {
+      // Exercise the real ROADBOOK renderer with extra catalog entries. These
       // fixtures never enter racing or bypass mandatory track integration checks.
-      body = body.toString().replace('...TRACK_PLACEHOLDERS', `...TRACK_PLACEHOLDERS,
-        ...Array.from({ length: 4 }, (_, index) => ({ ...TRACK_CATALOG[0],
-          id: 'responsive-fixture-' + index, name: 'Additional responsive track ' + index, locked: true }))`);
+      const source = body.toString();
+      const placeholders = 'const placeholders = Array.isArray(TRACK_PLACEHOLDERS) ? TRACK_PLACEHOLDERS : [];';
+      if (!source.includes(placeholders)) throw new Error('ROADBOOK placeholder fixture point moved');
+      body = source.replace(placeholders, `const placeholders = [...(TRACK_PLACEHOLDERS || []),
+        ...Array.from({ length: 4 }, (_, index) => ({ id: 'responsive-fixture-' + index, name: 'Additional responsive track ' + index }))];`);
     }
     response.writeHead(200, { 'content-type': types[path.extname(filename)] || 'application/octet-stream' });
     response.end(body);
@@ -39,14 +41,14 @@ async function readability(page, label) {
   const { text, targets } = await page.evaluate(() => {
     // Content scrolled under the full-width portrait action dock is off screen until
     // the page scrolls, like content below the fold.
-    const dock = [...document.querySelectorAll('.m8-track-continue, .lot-race')]
+    const dock = [...document.querySelectorAll('.roadbook-dock, .lot-race')]
       .map((node) => node.getBoundingClientRect())
       .find((rect) => rect.width >= globalThis.innerWidth * 0.8);
     const foldTop = dock ? dock.top - 12 : globalThis.innerHeight;
     const visible = (el) => {
       const rect = el.getBoundingClientRect();
       const style = globalThis.getComputedStyle(el);
-      const insideDock = Boolean(el.closest('.m8-track-continue, .lot-race'));
+      const insideDock = Boolean(el.closest('.roadbook-dock, .lot-race'));
       return rect.width > 1 && rect.height > 1 && style.visibility !== 'hidden'
         && rect.bottom > 0 && rect.top < globalThis.innerHeight && rect.right > 0 && rect.left < globalThis.innerWidth
         && (insideDock || (rect.top + rect.height / 2) < foldTop)
@@ -149,40 +151,74 @@ async function responsiveRace(browser, name) {
     await page.goto(`${origin}/turn/`);
     if (await page.locator('#playBrowserButton').isVisible()) await page.locator('#playBrowserButton').click();
     await page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), { timeout: 60000 });
-    const count = await page.locator('.track-card').count();
-    assert.ok(count > 6, 'Catalog fixture exceeds six tracks, without defining a maximum');
-    assert.equal(await page.locator('.track-card[data-track-id^="responsive-fixture-"]').count(), 4);
+    const count = await page.locator('.roadbook-card').count();
+    assert.ok(count > 10, 'Catalog fixture exceeds ten entries, without defining a maximum');
+    assert.equal(await page.locator('.roadbook-card.is-coming-soon').count(), 4);
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height });
       await settle(page);
       const home = await bounds(page, '.m8-home');
       assert.ok(home.scrollWidth <= home.clientWidth + 1, `${name} ${width}: Home reflows horizontally`);
       await readability(page, `${name} ${width}x${height} Home`);
-      // Every orientation: one slim app bar (logo, ACHIEVEMENTS, menu) and a docked RACE.
+      // Every orientation: one slim app bar (logo, ACHIEVEMENTS, menu) and a docked CHOOSE CAR.
       const head = await bounds(page, '.m8-home-head');
       assert.ok(head.height <= 64, `${name} ${width}x${height}: the app bar is ${head.height}px`);
       for (const control of ['.turn-home-menu-button', '.turn-app-bar-actions .m8-achievements-button', '.m8-track-continue']) {
         within(await bounds(page, control), width, height, `${name} ${width}x${height} ${control}`);
       }
       if (width >= 320 && width <= 736 && height > width) {
-        // Portrait phones: the last track card scrolls clear of the docked RACE bar.
+        // Portrait phones: the last track card scrolls clear of the dock.
         const clear = await page.evaluate(() => {
           const scroller = document.querySelector('.m8-home');
           scroller.scrollTop = scroller.scrollHeight;
-          const race = document.querySelector('.m8-track-continue').getBoundingClientRect();
-          const cards = [...document.querySelectorAll('.track-card')].map((card) => card.getBoundingClientRect());
-          return Math.max(...cards.map((rect) => rect.bottom)) <= race.top - 12;
+          const dock = document.querySelector('.roadbook-dock').getBoundingClientRect();
+          const cards = [...document.querySelectorAll('.roadbook-card')].map((card) => card.getBoundingClientRect());
+          return Math.max(...cards.map((rect) => rect.bottom)) <= dock.top;
         });
-        assert.ok(clear, `${name} ${width}x${height}: the last track card scrolls clear of RACE`);
+        assert.ok(clear, `${name} ${width}x${height}: the last track card scrolls clear of the dock`);
       }
-      const last = page.locator('.track-card').last();
+      const last = page.locator('.roadbook-card').last();
       await last.scrollIntoViewIfNeeded();
       const card = await last.boundingBox();
       assert.ok(card.y < height && card.y + card.height > 0, 'Last catalog entry remains reachable');
-      await page.locator('.m8-track-bests-toggle').click();
-      await last.scrollIntoViewIfNeeded();
-      assert.equal(await page.locator('.track-card').count(), count, 'Expanded records retain the entire catalog');
-      await page.locator('.m8-track-bests-toggle').click();
+      if (await page.locator('.roadbook-sheet-button').isVisible()) {
+        await page.locator('.roadbook-sheet-button').click();
+        await page.waitForSelector('#turnTrackSheet[open]');
+        await settle(page);
+        const sheet = await bounds(page, '#turnTrackSheet .turn-pr-sheet-card');
+        within(sheet, width, height, `${name} ${width}x${height} Track sheet`);
+        // A sheet that fits because it collapsed is not a sheet: it shows its content.
+        const head = await bounds(page, '#turnTrackSheet .turn-pr-sheet-head');
+        assert.ok(sheet.height >= Math.min(240, height - 48) && head.bottom <= sheet.bottom + 0.5,
+          `${name} ${width}x${height}: the Track sheet shows its content (${JSON.stringify({ sheet: sheet.height, head: head.bottom })})`);
+        const body = await bounds(page, '#turnTrackSheet .turn-pr-sheet-body');
+        assert.ok(body.scrollWidth <= body.clientWidth + 1, `${name} ${width}x${height}: the Track sheet reflows`);
+        await readability(page, `${name} ${width}x${height} Track sheet`);
+        // If the close control cannot take the tap, say where it is drawn and what
+        // is on top of it there instead of only timing out.
+        await page.locator('#turnTrackSheet .turn-pr-close').click({ timeout: 8000 }).catch(async (error) => {
+          const where = await page.evaluate(() => {
+            const box = (node) => {
+              const rect = node?.getBoundingClientRect();
+              return rect && [rect.x, rect.y, rect.width, rect.height].map(Math.round);
+            };
+            const close = document.querySelector('#turnTrackSheet .turn-pr-close');
+            const rect = close.getBoundingClientRect();
+            const top = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+            return {
+              close: box(close),
+              card: box(document.querySelector('#turnTrackSheet .turn-pr-sheet-card')),
+              dialog: box(document.querySelector('#turnTrackSheet')),
+              top: top && `${top.tagName}.${String(top.className)}`,
+              scroll: [globalThis.scrollX, globalThis.scrollY, document.scrollingElement.scrollTop],
+              visualViewport: globalThis.visualViewport && [globalThis.visualViewport.offsetLeft, globalThis.visualViewport.offsetTop,
+                globalThis.visualViewport.width, globalThis.visualViewport.height, globalThis.visualViewport.scale]
+            };
+          });
+          throw new Error(`${name} ${width}x${height}: the Track sheet close cannot take a tap ${JSON.stringify(where)}\n${error.message.split('\n')[0]}`);
+        });
+        await page.waitForFunction(() => !document.querySelector('#turnTrackSheet').open);
+      }
       assert.equal(await page.locator('.turn-orientation-hint').count(), 0);
     }
     await page.setViewportSize({ width: 393, height: 852 });
@@ -218,20 +254,19 @@ async function responsiveRace(browser, name) {
       await page.locator(`${dialog} [data-dialog-close]`).click();
       await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
     }
-    // Home RACE and The Lot's RACE THIS CAR are one component: same place, size and look.
-    // Measured at rest: the pointer that tapped Home RACE would otherwise hover the
-    // button now in the same place.
+    // CHOOSE CAR and The Lot's RACE THIS CAR are both the forward action at the foot
+    // of the screen, in the primary colour. (GARAGE moves onto the shared dock next.)
     const dockStyle = async (selector) => (await page.mouse.move(1, 1), page.locator(selector).evaluate((node) => {
       const rect = node.getBoundingClientRect();
-      const style = globalThis.getComputedStyle(node);
-      return [rect.x, rect.y, rect.width, rect.height].map(Math.round).concat(
-        ['font-size', 'font-weight', 'border-top-left-radius', 'background-color', 'box-shadow'].map((key) => style.getPropertyValue(key)));
+      return { bottomGap: Math.round(globalThis.innerHeight - rect.bottom), background: globalThis.getComputedStyle(node).backgroundColor };
     }));
     const homeDock = await dockStyle('.m8-track-continue');
     await page.locator('.m8-track-continue').click();
     await page.waitForSelector('.lot-showroom');
     await settle(page);
-    assert.deepEqual(await dockStyle('.lot-race'), homeDock, `${name}: RACE THIS CAR matches Home RACE`);
+    const lotDock = await dockStyle('.lot-race');
+    assert.equal(lotDock.background, homeDock.background, `${name}: RACE THIS CAR uses Home's primary colour`);
+    assert.ok(homeDock.bottomGap <= 24 && lotDock.bottomGap <= 24, `${name}: both forward actions sit at the foot (${JSON.stringify([homeDock, lotDock])})`);
     // Nothing in the Lot card paints over the dock: with COLOR scrolled under it, a tap
     // on RACE THIS CAR still reaches the button.
     assert.ok(await page.evaluate(() => {

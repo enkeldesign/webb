@@ -54,7 +54,7 @@ const [
   fs.readFile(new URL('../turn/tracks/mountain-scenery.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-night.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/shared-night-sky.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/progression/m8-trophy-gate.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/roadbook/roadbook.js', import.meta.url), 'utf8')
 ]);
 
 const mountain = TRACK_DEFINITIONS.find((track) => track.id === 'mountain');

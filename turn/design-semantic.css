@@ -1,4 +1,4 @@
-@import url('./design-tokens.css?build=20260928-r316');
+@import url('./design-tokens.css?build=20260928-r321');
 
 /*
   Normative production roles.
@@ -9,7 +9,6 @@
 /* Main forward flow: one colour and one shape (the shared rounded-rectangle
    control radius from design-scale.css). */
 .install-primary,
-.m8-home-fixed-layout .m8-track-continue,
 .track-select-continue,
 .lot-race {
   border-radius: var(--turn-radius-control, 12px) !important;
@@ -24,35 +23,6 @@
 
 .yourturn-actions button.is-game {
   background: var(--turn-action-game) !important;
-}
-
-/* Home menu utilities deliberately step back from the selected-track action. */
-.m8-home-fixed-layout .m8-home-settings,
-.m8-home-fixed-layout .m8-how-button,
-.m8-home-fixed-layout .m8-feedback-button {
-  background: var(--turn-action-utility) !important;
-}
-
-/* Difficulty is always expressed by text plus a stable supporting colour. */
-.track-card[data-track-difficulty="easy"] .track-card-difficulty {
-  background: var(--turn-difficulty-easy) !important;
-}
-
-.track-card[data-track-difficulty="medium"] .track-card-difficulty {
-  background: var(--turn-difficulty-medium) !important;
-}
-
-.track-card[data-track-difficulty="advanced"] .track-card-difficulty {
-  background: var(--turn-difficulty-advanced) !important;
-}
-
-.track-card[data-track-difficulty="expert"] .track-card-difficulty {
-  background: var(--turn-difficulty-expert) !important;
-}
-
-.track-card-locked .track-card-difficulty,
-.track-card[data-track-difficulty="locked"] .track-card-difficulty {
-  background: var(--turn-difficulty-locked) !important;
 }
 
 /* Close, leave and back always communicate navigation or context change. */

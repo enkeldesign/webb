@@ -39,7 +39,7 @@ function installStylesheet() {
 
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = '/turn/social/your-turn-share.css?build=20260928-r316';
+  link.href = '/turn/social/your-turn-share.css?build=20260928-r321';
   link.setAttribute('data-turn-yourturn-share', '');
   const ready = new Promise((resolve, reject) => {
     link.addEventListener('load', () => resolve(link), { once: true });
@@ -82,25 +82,6 @@ function createComposer() {
   return dialog;
 }
 
-function wrapTrackCard(card) {
-  if (card.parentElement?.classList.contains('turn-yourturn-track-slot')) {
-    return card.parentElement;
-  }
-  const slot = document.createElement('div');
-  slot.className = 'turn-yourturn-track-slot';
-  card.replaceWith(slot);
-  slot.appendChild(card);
-
-  const share = document.createElement('button');
-  share.type = 'button';
-  share.className = 'turn-yourturn-track-share';
-  share.dataset.trackId = card.dataset.trackId || '';
-  share.innerHTML = SHARE_ICON;
-  share.hidden = true;
-  slot.appendChild(share);
-  return slot;
-}
-
 function currentRaceIsVisible() {
   const hud = document.querySelector('#hud');
   return Boolean(hud && !hud.hidden && !document.body.classList.contains('turn-home-open'));
@@ -112,11 +93,6 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
 
   await installStylesheet();
   const runtime = globalThis.__turnRuntime;
-  const rail = home.querySelector('.m8-track-rail');
-  if (!rail) throw new Error('TURN YOUR TURN sharing could not find the track rail.');
-
-  for (const card of rail.querySelectorAll('.track-card')) wrapTrackCard(card);
-  globalThis.__turnHomeCardScrollFixes?.syncIndicator?.();
 
   const dialog = createComposer();
   const details = dialog.querySelector('.turn-yourturn-share-details');
@@ -125,7 +101,6 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   const submit = dialog.querySelector('.turn-yourturn-share-submit');
   const close = dialog.querySelector('.turn-yourturn-share-close');
   const back = dialog.querySelector('.turn-yourturn-share-back');
-  const trackButtons = [...rail.querySelectorAll('.turn-yourturn-track-share')];
   const toast = document.querySelector('.lap-result-toast');
   let toastShare = null;
   let toastLap = null;
@@ -192,21 +167,11 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
     toast.appendChild(toastShare);
   }
 
+  // ROADBOOK's Track sheet offers SHARE for a track's best lap; tell it when the
+  // shareable laps change.
   function syncTrackShareButtons() {
-    for (const button of trackButtons) {
-      const trackId = button.dataset.trackId || '';
-      const card = button.parentElement?.querySelector('.track-card');
-      const shareState = shareStateFor(trackId);
-      const unavailable = card?.disabled || card?.classList.contains('is-trophy-locked');
-      button.hidden = !(card?.classList.contains('is-selected') && shareState.shareable && !unavailable);
-      button.setAttribute(
-        'aria-label',
-        shareState.shareable
-          ? `Share your best lap on ${formatTrackName(trackId)} as a YOUR TURN challenge`
-          : `No shareable best lap on ${formatTrackName(trackId)}`
-      );
-    }
     shareButtonsDirty = false;
+    document.dispatchEvent(new CustomEvent('turn:your-turn-share-changed'));
   }
 
   function setNameValidation(message = '') {
@@ -331,15 +296,6 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
     }
   }
 
-  for (const button of trackButtons) {
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const trackId = button.dataset.trackId || '';
-      openComposer(trackId, getStoredBestReplayLap(trackId), button);
-    });
-  }
-
   toastShare?.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -363,13 +319,6 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   input.addEventListener('input', () => {
     if (normalizeChallengeName(input.value, '')) setNameValidation('');
   });
-
-  const selectionObserver = typeof MutationObserver === 'function'
-    ? new MutationObserver(syncTrackShareButtons)
-    : null;
-  for (const card of rail.querySelectorAll('.track-card')) {
-    selectionObserver?.observe(card, { attributes: true, attributeFilter: ['class', 'aria-pressed', 'disabled'] });
-  }
 
   window.addEventListener('turn:rivals-reset', (event) => {
     if (event.detail?.scope === 'all-tracks') {
@@ -432,10 +381,11 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
     }
   });
 
-  syncTrackShareButtons();
-
   const api = Object.freeze({
     dialog,
+    canShare(trackId) {
+      return shareStateFor(trackId).shareable;
+    },
     openForTrack(trackId, trigger = null) {
       return openComposer(trackId, getStoredBestReplayLap(trackId), trigger);
     },
@@ -444,6 +394,7 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   globalThis[INSTALL_FLAG] = api;
   globalThis.__turnYourTurnShare = api;
   document.documentElement.dataset.turnYourTurnShare = 'r3-runtime-state';
+  syncTrackShareButtons();
   return api;
 }
 

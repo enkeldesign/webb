@@ -13,7 +13,8 @@ const [
   coveredRendering,
   yourTurnIndex,
   yourTurnUi,
-  challengeStore
+  challengeStore,
+  roadbookSource
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/social/your-turn-share-bootstrap.js', import.meta.url), 'utf8'),
@@ -26,7 +27,8 @@ const [
   fs.readFile(new URL('../turn/render/covered-rendering.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/ui.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/challenge-store.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../yourturn/challenge-store.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/roadbook/roadbook.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(turnIndex, /\.\/social\/your-turn-share-bootstrap\.js\?revision=r4-runtime-share-state/,
@@ -78,12 +80,17 @@ assert.match(shareSource, /saveSocialRacerName\(racerName\)/,
 assert.match(shareSource, /const shareStateByTrack = new Map\(\)/,
   'TURN sharing must keep best-time/shareability state in memory after hydration');
 const homeShareSync = shareSource.match(/function syncTrackShareButtons\(\) \{[\s\S]*?\n  \}/)?.[0] || '';
-assert.match(homeShareSync, /shareStateFor\(trackId\)/,
+assert.match(shareSource, /canShare\(trackId\) \{\s*return shareStateFor\(trackId\)\.shareable;/,
   'Home share controls must use in-memory sharing state');
 assert.doesNotMatch(homeShareSync, /getStoredBestLap|getStoredBestReplayLap|hasStoredBestReplayLap/,
   'Home share-control refreshes must not reread persistence');
-assert.match(shareSource, /card\?\.classList\.contains\('is-selected'\) && shareState\.shareable/,
-  'Only the selected track with a shareable replay gets the Home share control');
+// ROADBOOK offers SHARE in the chosen track's personal bests, never for a locked track.
+assert.match(roadbookSource, /share\?\.canShare\?\.\(track\.id\) \|\| lockFor\(track\.id\)\) return;/,
+  'Only a playable track with a shareable replay gets the Home share control');
+assert.match(roadbookSource, /share\.openForTrack\(track\.id, button\)/,
+  'The Track sheet SHARE opens the composer and returns focus to itself');
+assert.match(roadbookSource, /turn:your-turn-share-changed/,
+  'The Track sheet refreshes when a race changes the shareable lap');
 assert.match(shareSource, /time < previousBest - PB_EPSILON/,
   'The lap-result share entry must appear only for a new personal best');
 assert.match(shareSource, /lap-result-yourturn-share/);
@@ -96,28 +103,12 @@ assert.match(shareSource, /__turnAudio\?\.silence\?\.\(\)/,
 assert.match(coveredRendering, /turn-runtime-paused/,
   'The renderer guard must honour the sharing modal pause class');
 
-assert.match(shareCss, /\.turn-yourturn-track-share/);
+assert.doesNotMatch(shareCss, /\.turn-yourturn-track-(?:share|slot)/, 'The old track-card SHARE overlay is gone');
 assert.match(shareCss, /\.lap-result-yourturn-share/);
-assert.match(shareCss, /\.turn-yourturn-share-submit[\s\S]*#ff4fa3/,
+assert.match(shareCss, /\.turn-yourturn-share-submit \{\s*background: var\(--turn-action-share, #ff7c9f\)/,
   'SHARE YOUR TURN remains the pink CTA');
 assert.match(shareCss, /\.turn-yourturn-share-back[\s\S]*#ff9b66/,
   'Back remains the navigation orange');
-assert.match(shareCss, /\.turn-yourturn-track-slot[\s\S]*position: relative/,
-  'The separate share button must use a valid sibling wrapper rather than nesting a button inside the track button');
-assert.match(shareCss, /\.m8-home:not\(\.is-showing-track-bests\) \.turn-yourturn-track-share \{[\s\S]*display: none !important/,
-  'Closed track cards must never show the Home SHARE control over the map');
-assert.match(shareCss, /anchor-scope: --turn-yourturn-time-copy/,
-  'Each card wrapper must scope its own TIME-row anchor');
-assert.match(shareCss, /\.track-card-record\.is-time \.track-card-record-copy \{[\s\S]*anchor-name: --turn-yourturn-time-copy/,
-  'The share control must be visually anchored to the TIME record copy, not the card corner');
-const trackShareRule = shareCss.match(/\.turn-yourturn-track-share \{[\s\S]*?\n\}/)?.[0] || '';
-assert.match(trackShareRule, /left: 42%;[\s\S]*top: 50%/,
-  'Browsers without CSS anchor positioning must still keep SHARE in the TIME-record area');
-assert.doesNotMatch(trackShareRule, /right:|bottom:/,
-  'The Home SHARE control must not retain the old bottom-right corner placement');
-assert.match(shareCss, /position-anchor: --turn-yourturn-time-copy;[\s\S]*left: calc\(anchor\(right\) \+ clamp\(7\.5px, 1vw, 10\.5px\)\);[\s\S]*top: anchor\(center\)/,
-  'Supporting browsers must place SHARE directly beside the TIME record');
-
 assert.match(profileSource, /turn-social-racer-id-v1/);
 assert.match(profileSource, /turn-social-racer-name-v1/);
 assert.match(profileSource, /__TURN_SHARED_LOCAL_STORAGE__/,

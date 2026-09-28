@@ -2,7 +2,7 @@
   --m8-yellow: #ffbd12;
   --m8-blue: #68c8f2;
   --m8-cream: #fff8e8;
-  --m8-pink: #ff4fa3;
+  --m8-pink: var(--turn-pink-500, #ff7c9f);
   --m8-ink: #08090a;
 }
 
@@ -12,10 +12,7 @@
   z-index: 1400;
   overflow: auto;
   color: var(--m8-ink);
-  background:
-    radial-gradient(circle at 82% 29%, #ff8caf 0 8%, transparent 8.3%),
-    radial-gradient(circle at 13% 84%, #ffe087 0 7%, transparent 7.3%),
-    linear-gradient(to bottom, var(--m8-yellow) 0 30%, var(--m8-blue) 30% 100%);
+  background: var(--turn-surface-page, var(--m8-cream));
 }
 
 .m8-home[hidden] {
@@ -67,8 +64,6 @@
 
 .m8-how-button,
 .m8-home-settings,
-.m8-track-continue,
-.m8-track-scroll-buttons button,
 .m8-dialog button {
   border: 4px solid var(--m8-ink);
   color: var(--m8-ink);
@@ -117,119 +112,6 @@
   font-size: 1.25em;
 }
 
-.m8-home-main {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
-  min-height: 0;
-  padding: clamp(18px, 3vh, 30px) max(24px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
-}
-
-.m8-track-heading-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: clamp(9px, 2vh, 15px);
-}
-
-.m8-track-heading-row h1 {
-  margin: 0;
-  padding: 3.75px clamp(12px, 4vw, 45px);
-  border-radius: 5.25px;
-  background: rgb(136 232 255 / 0.48);
-  font-size: max(var(--turn-text-floor, 11px), clamp(1.35rem, 4.2vw, 3rem));
-  line-height: 0.95;
-  letter-spacing: -0.05em;
-}
-
-.m8-track-scroll-buttons {
-  display: flex;
-  gap: 9px;
-}
-
-.m8-track-scroll-buttons button {
-  width: 37.5px;
-  height: 37.5px;
-  padding: 0;
-  border-radius: 50%;
-  background: var(--m8-pink);
-  font-size: max(var(--turn-text-floor, 11px), 1.725rem);
-  line-height: 0.8;
-}
-
-.m8-track-scroll-buttons button:disabled {
-  opacity: 0.35;
-  box-shadow: 2.25px 2.25px 0 var(--m8-ink);
-}
-
-.m8-track-rail {
-  display: flex;
-  align-items: stretch;
-  gap: clamp(13.5px, 2.2vw, 22.5px);
-  min-width: 0;
-  min-height: 0;
-  overflow-x: auto;
-  overflow-y: visible;
-  padding: 2.25px max(14vw, 52.5px) 11.25px 3px;
-  scroll-padding-inline: 3px max(14vw, 52.5px);
-  scroll-snap-type: x mandatory;
-  overscroll-behavior-inline: contain;
-  scrollbar-color: var(--m8-ink) rgb(255 248 232 / 0.5);
-  scrollbar-width: thin;
-  -webkit-overflow-scrolling: touch;
-}
-
-.m8-track-rail .track-card {
-  flex: 0 0 clamp(262.5px, 40vw, 442.5px);
-  width: clamp(262.5px, 40vw, 442.5px);
-  min-height: clamp(165px, 36vh, 300px);
-  scroll-snap-align: start;
-  scroll-snap-stop: normal;
-}
-
-.m8-track-rail .track-card-preview {
-  height: clamp(82.5px, 21vh, 157.5px);
-}
-
-.m8-track-rail .track-card-summary {
-  grid-template-columns: minmax(0, 1fr) minmax(90px, auto);
-}
-
-.m8-track-rail .track-card-difficulty {
-  grid-column: 1;
-  justify-self: start;
-  padding: 3px 13.5px;
-  border: 4px solid var(--m8-ink);
-  border-radius: 749.25px;
-  background: var(--m8-cream);
-  font-size: max(var(--turn-text-floor, 11px), clamp(0.54rem, 1.2vw, 0.735rem));
-  letter-spacing: 0.12em;
-}
-
-.m8-track-rail .track-card-best {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 6px;
-}
-
-.m8-track-rail .track-card-best-model {
-  width: clamp(36px, 6vw, 63px);
-  height: 34.5px;
-  object-fit: contain;
-}
-
-.m8-track-continue {
-  justify-self: center;
-  width: min(645px, 78vw);
-  margin-top: clamp(7.5px, 1.5vh, 13.5px);
-  padding: 7.5px 18px;
-  border-radius: 749.25px;
-  background: var(--selected-track-accent, var(--m8-pink));
-  font-size: max(var(--turn-text-floor, 11px), clamp(0.675rem, 1.8vw, 0.975rem));
-  letter-spacing: 0.09em;
-}
-
 .m8-home-status {
   min-height: 1.3em;
   margin: 7.5px 0 0;
@@ -239,15 +121,11 @@
 
 .m8-how-button:hover,
 .m8-home-settings:hover,
-.m8-track-continue:hover,
-.m8-track-scroll-buttons button:hover:not(:disabled),
 .m8-dialog button:hover {
   transform: translateY(-1.5px);
 }
 
 .m8-how-button:active,
-.m8-track-continue:active,
-.m8-track-scroll-buttons button:active:not(:disabled),
 .m8-dialog button:active {
   transform: translate(4.5px, 4.5px);
   box-shadow: 0.75px 0.75px 0 var(--m8-ink);
@@ -255,8 +133,6 @@
 
 .m8-how-button:focus-visible,
 .m8-home-settings:focus-visible,
-.m8-track-continue:focus-visible,
-.m8-track-scroll-buttons button:focus-visible,
 .m8-dialog :focus-visible {
   outline: 5px solid var(--m8-cream);
   outline-offset: 3px;
@@ -561,50 +437,9 @@
     padding: 6.75px 13.5px;
     font-size: max(var(--turn-text-floor, 11px), clamp(0.645rem, 1.6vw, 0.8625rem));
   }
-
-  .m8-home-main {
-    padding-top: 9px;
-    padding-bottom: max(6px, env(safe-area-inset-bottom));
-  }
-
-  .m8-track-heading-row {
-    margin-bottom: 6px;
-  }
-
-  .m8-track-heading-row h1 {
-    font-size: max(var(--turn-text-floor, 11px), clamp(1.0875rem, 3.5vw, 1.95rem));
-  }
-
-  .m8-track-scroll-buttons button {
-    width: 31.5px;
-    height: 31.5px;
-    font-size: max(var(--turn-text-floor, 11px), 1.425rem);
-  }
-
-  .m8-track-rail .track-card {
-    flex-basis: clamp(236.25px, 39vw, 375px);
-    width: clamp(236.25px, 39vw, 375px);
-    min-height: 153.75px;
-    padding: 7.5px;
-    gap: 4.5px;
-  }
-
-  .m8-track-rail .track-card-preview {
-    min-height: 60px;
-    height: 17vh;
-  }
-
-  .m8-track-continue {
-    margin-top: 4.5px;
-    padding-block: 5.25px;
-  }
 }
 
 @media (max-width: 570px) and (orientation: portrait) {
-  .m8-home {
-    background: linear-gradient(to bottom, var(--m8-yellow) 0 35%, var(--m8-blue) 35% 100%);
-  }
-
   .m8-home-head {
     grid-template-columns: 82.5px minmax(0, 1fr);
     grid-template-rows: auto auto;
@@ -630,19 +465,6 @@
     grid-row: 2;
     justify-self: start;
     padding-left: 0;
-  }
-
-  .m8-track-heading-row h1 {
-    font-size: max(var(--turn-text-floor, 11px), 1.3125rem);
-  }
-
-  .m8-track-rail {
-    padding-right: 15vw;
-  }
-
-  .m8-track-rail .track-card {
-    flex-basis: min(82vw, 345px);
-    width: min(82vw, 345px);
   }
 
   .m8-guide-grid,

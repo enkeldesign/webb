@@ -345,10 +345,6 @@ installStylesheet(
   'data-turn-m8-home-styles'
 );
 installStylesheet(
-  './m8-midnight-city-postcard-r130.css?revision=r130-neon-skyline',
-  'data-turn-midnight-city-postcard'
-);
-installStylesheet(
   './m8-how-to-play-r126.css?revision=r220-overcharge-disclosure',
   'data-turn-m8-how-to-play'
 );
@@ -357,6 +353,8 @@ installStylesheet(
   'data-turn-settings-components'
 );
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
+installStylesheet('./pre-race.css', 'data-turn-pre-race');
+installStylesheet('./roadbook/roadbook.css', 'data-turn-roadbook');
 const { installM8HomeNavigation } = await import(
   withBuild('./m8-home.js?revision=r217-track-record-layout&trophy-road=r159&showroom=r200')
 );
@@ -406,10 +404,6 @@ const { installToastRegion } = await import(withBuild('./ui/toast-region.js'));
 installToastRegion();
 const { installViewportReadout } = await import(withBuild('./ui/viewport-readout.js'));
 installViewportReadout();
-installStylesheet(
-  './m8-record-car-scale.css?revision=r206-three-records',
-  'data-turn-m8-record-car-scale'
-);
 document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
 await new Promise((resolve) => requestAnimationFrame(resolve));
 startupCover.finish();

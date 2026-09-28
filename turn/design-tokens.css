@@ -19,7 +19,7 @@
   --turn-blue-200: #8ed8ff;
   --turn-blue-100: #bdeeff;
 
-  --turn-pink-500: #ff4fa3;
+  --turn-pink-500: #ff7c9f;
   --turn-pink-200: #ff8caf;
   --turn-pink-100: #ffd1e6;
 
@@ -116,12 +116,13 @@
 
 /* Display P3 accents. Same OKLab lightness and hue as the sRGB values above, with
    chroma raised (up to 25%) inside the P3 gamut; contrast with ink changes by at most
-   0.2 and every pair stays above WCAG AA. Paper, ink and tints stay sRGB. Role tokens
-   inherit the upgrade through var(). */
+   0.2 and every pair stays above WCAG AA. Pink, the primary action, is the exact P3
+   equivalent of its sRGB value: raised, it was far louder than every other accent.
+   Paper, ink and tints stay sRGB. Role tokens inherit the upgrade through var(). */
 @media (color-gamut: p3) {
   @supports (color: color(display-p3 1 1 1)) {
     :root {
-      --turn-pink-500: color(display-p3 0.99 0.241 0.635);
+      --turn-pink-500: color(display-p3 0.935 0.515 0.624);
       --turn-blue-500: color(display-p3 0.391 0.843 0.999);
       --turn-yellow-400: color(display-p3 0.998 0.831 0.168);
       --turn-yellow-600: color(display-p3 0.985 0.742 0.073);

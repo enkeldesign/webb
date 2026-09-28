@@ -1,9 +1,4 @@
-@import url('../design-semantic.css?build=20260928-r316');
-
-/* The Home destination inherits the exact Give Feedback typography and geometry. */
-.m8-home-fixed-layout .m8-achievements-button {
-  background: var(--turn-action-success, #8ce99a);
-}
+@import url('../design-semantic.css?build=20260928-r321');
 
 /* Give the road the complete summary width. Totals stay in their own header row. */
 .turn-achievements-dialog .turn-achievements-summary {
@@ -760,21 +755,6 @@
   background: var(--turn-action-warning, #ffd43b);
 }
 
-/* Trophy-locked track cards remain visible and selectable for information. */
-.track-card[data-trophy-locked="true"] {
-  cursor: pointer;
-}
-
-.track-card[data-trophy-locked="true"] .track-card-preview,
-.track-card[data-trophy-locked="true"] .track-card-best {
-  filter: grayscale(.7) brightness(.68);
-  opacity: .58;
-}
-
-.track-card[data-trophy-locked="true"] .track-card-choice-marker {
-  position: relative;
-}
-
 .turn-track-lock-icon {
   position: absolute;
   inset: 0;
@@ -789,24 +769,6 @@
 
 .turn-track-lock-icon[hidden] {
   display: none;
-}
-
-.m8-race-button[data-trophy-locked="true"]::before {
-  content: '';
-  display: inline-block;
-  width: 1.05em;
-  height: 1.05em;
-  margin-right: .45em;
-  background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='5' y='10' width='14' height='11' rx='2' fill='none' stroke='black' stroke-width='2.4'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3M12 14v3' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='5' y='10' width='14' height='11' rx='2' fill='none' stroke='black' stroke-width='2.4'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3M12 14v3' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
-  vertical-align: -.12em;
-}
-
-.m8-race-button[data-trophy-locked="true"][aria-disabled="true"] {
-  background: var(--turn-muted, #d6d0c2);
-  cursor: help;
-  opacity: .72;
 }
 
 /* Locked vehicles remain inspectable. Only racing is disabled. */
@@ -1139,8 +1101,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .turn-trophy-road-marker,
-  .track-card[data-trophy-locked="true"],
-  .turn-unlock-notice {
+.turn-unlock-notice {
     transition: none;
   }
 }

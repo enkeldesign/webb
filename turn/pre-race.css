@@ -1,0 +1,881 @@
+/* TURN pre-race primitives: the shared type scale, cards, chips, buttons, dock and
+   modal sheet used by ROADBOOK (choose your track) and GARAGE (choose your car).
+
+   Authored at the rendered size: 44px means 44 CSS px. Text sizes are rem, so
+   browser zoom and Safari's text size carry through; layout switches on container
+   width and usable height, never on device names. */
+
+:root {
+  --turn-pr-card: #fffcf2;
+  --turn-pr-muted: rgb(8 9 10 / 0.68);
+  --turn-pr-faint: rgb(8 9 10 / 0.32);
+  --turn-pr-rule: 3px solid var(--turn-ink, #08090a);
+  --turn-pr-radius: 14px;
+  --turn-pr-radius-sheet: 20px;
+  --turn-pr-shadow: 5px 5px 0 var(--turn-ink, #08090a);
+  --turn-pr-shadow-action: 4px 4px 0 var(--turn-ink, #08090a);
+  --turn-pr-gutter: 16px;
+  --turn-pr-max-width: 72.5rem;
+  --turn-pr-target: 44px;
+
+  --turn-pr-font-display: system-ui, -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  --turn-pr-font-body: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --turn-pr-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  --turn-pr-type-display: clamp(2rem, 0.9rem + 7vw, 3.5rem);
+  --turn-pr-type-sheet: clamp(1.375rem, 0.9rem + 2.4vw, 1.75rem);
+  --turn-pr-type-lead: 1.125rem;
+  --turn-pr-type-title: 1.25rem;
+  --turn-pr-type-body: 1rem;
+  --turn-pr-type-spec: 0.875rem;
+  --turn-pr-type-meta: 0.75rem;
+  --turn-pr-type-number: 1.5rem;
+}
+
+/* ---------- Type ---------- */
+
+.turn-pr-page-head {
+  margin: 0 0 20px;
+}
+
+.turn-pr-display {
+  margin: 0;
+  color: var(--turn-ink, #08090a);
+  font-family: var(--turn-pr-font-display);
+  font-size: var(--turn-pr-type-display);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.turn-pr-display:focus,
+.turn-pr-panel-title:focus {
+  outline: none;
+}
+
+.turn-pr-display:focus-visible,
+.turn-pr-panel-title:focus-visible {
+  outline: 3px solid var(--turn-ink, #08090a);
+  outline-offset: 4px;
+}
+
+.turn-pr-lead {
+  margin: 6px 0 0;
+  color: var(--turn-pr-muted);
+  font-family: var(--turn-pr-font-body);
+  font-size: var(--turn-pr-type-lead);
+  font-weight: 450;
+  line-height: 1.3;
+}
+
+.turn-pr-section-title {
+  margin: 0;
+  padding: 0 0 6px;
+  border-bottom: var(--turn-pr-rule);
+  color: var(--turn-ink, #08090a);
+  font-family: var(--turn-pr-font-mono);
+  font-size: var(--turn-pr-type-meta);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+/* ---------- Icons ---------- */
+
+.turn-pr-icon {
+  display: inline-block;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--turn-ink, #08090a);
+}
+
+.turn-pr-icon.is-large {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.turn-pr-icon:empty {
+  display: none;
+}
+
+.turn-pr-lock-icon {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+}
+
+.turn-pr-lock-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The real route: an Ink outline with the track's accent inside. */
+.turn-pr-route {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.turn-pr-route path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.turn-pr-route-outline {
+  stroke: var(--turn-ink, #08090a);
+  stroke-width: 6px;
+}
+
+.turn-pr-route-line {
+  stroke: var(--turn-pr-accent, var(--turn-pink-500, #ff4fa3));
+  stroke-width: 3px;
+}
+
+/* ---------- Chips ---------- */
+
+.turn-pr-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: 0 0.5rem;
+  box-sizing: border-box;
+  border: 2px solid var(--turn-ink, #08090a);
+  border-radius: 999px;
+  background: var(--turn-pr-card);
+  color: var(--turn-ink, #08090a);
+  font-family: var(--turn-pr-font-mono);
+  font-size: var(--turn-pr-type-meta);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.turn-pr-chip.is-easy { background: var(--turn-difficulty-easy, #d9f5c2); }
+.turn-pr-chip.is-medium { background: var(--turn-difficulty-medium, #ffe087); }
+.turn-pr-chip.is-advanced { background: var(--turn-difficulty-advanced, #ffb89f); }
+.turn-pr-chip.is-expert { background: var(--turn-difficulty-expert, #ff9b91); }
+
+/* ---------- Card: ordinal tab · content · identity cell ---------- */
+
+.turn-pr-card {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr) 5.5rem;
+  align-items: stretch;
+  width: 100%;
+  min-height: 5.75rem;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: var(--turn-pr-rule);
+  border-radius: var(--turn-pr-radius);
+  background: var(--turn-pr-card);
+  box-shadow: none;
+  color: var(--turn-ink, #08090a);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* The tab carries the ordinal over the item's pictogram; the name gets the full
+   width of the content. */
+.turn-pr-card-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0;
+  border-right: var(--turn-pr-rule);
+}
+
+.turn-pr-card-ordinal {
+  font-family: var(--turn-pr-font-mono);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.turn-pr-card-tab .turn-pr-icon {
+  width: 1.625rem;
+  height: 1.625rem;
+  color: inherit;
+}
+
+.turn-pr-card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.turn-pr-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 1.5rem;
+}
+
+.turn-pr-card-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--turn-pr-font-mono);
+  font-size: var(--turn-pr-type-meta);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.turn-pr-check {
+  font-family: var(--turn-pr-font-body);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.turn-pr-card-name {
+  min-width: 0;
+  font-family: var(--turn-pr-font-display);
+  font-size: var(--turn-pr-type-title);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  hyphens: manual;
+  overflow-wrap: break-word;
+  text-transform: uppercase;
+}
+
+.turn-pr-card-art {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  border-left: var(--turn-pr-rule);
+  background: var(--turn-paper, #fff8e8);
+}
+
+.turn-pr-card-art .turn-pr-route {
+  max-width: 4rem;
+  max-height: 4rem;
+}
+
+/* Selected: the tab inverts to Ink, the card lifts on a hard shadow and says so. */
+.turn-pr-card.is-selected {
+  box-shadow: var(--turn-pr-shadow);
+}
+
+.turn-pr-card.is-selected .turn-pr-card-tab {
+  background: var(--turn-ink, #08090a);
+  color: var(--turn-paper, #fff8e8);
+}
+
+/* Locked: still inspectable, visibly quieter, with the trophy threshold. */
+.turn-pr-card.is-locked:not(.is-selected) {
+  border-color: var(--turn-pr-faint);
+  background: transparent;
+}
+
+.turn-pr-card.is-locked:not(.is-selected) :is(.turn-pr-card-tab, .turn-pr-card-art) {
+  border-color: var(--turn-pr-faint);
+}
+
+.turn-pr-card.is-locked :is(.turn-pr-card-tab, .turn-pr-card-name) {
+  color: var(--turn-pr-muted);
+}
+
+.turn-pr-card.is-locked.is-selected .turn-pr-card-tab {
+  color: var(--turn-paper, #fff8e8);
+}
+
+.turn-pr-card.is-locked .turn-pr-card-art {
+  background: transparent;
+}
+
+.turn-pr-card.is-locked .turn-pr-route-line {
+  stroke: var(--turn-paper, #fff8e8);
+}
+
+.turn-pr-card.is-locked .turn-pr-route-outline {
+  stroke: var(--turn-pr-faint);
+}
+
+.turn-pr-card.is-coming-soon {
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  border-style: dashed;
+  border-color: var(--turn-pr-faint);
+  background: transparent;
+  color: var(--turn-pr-muted);
+  cursor: default;
+}
+
+.turn-pr-card.is-coming-soon .turn-pr-card-tab {
+  border-right-style: dashed;
+  border-color: var(--turn-pr-faint);
+}
+
+.turn-pr-card:focus-visible {
+  outline: 3px solid var(--turn-ink, #08090a);
+  outline-offset: 4px;
+}
+
+@media (hover: hover) {
+  .turn-pr-card:not(.is-coming-soon):hover {
+    border-color: var(--turn-ink, #08090a);
+  }
+}
+
+/* Narrow cards give the name room: the identity cell shrinks before the name does. */
+/* The narrowest cards (320px screens) drop the route; the Track sheet shows it. */
+@container (max-width: 20rem) {
+  .turn-pr-card {
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+  }
+
+  .turn-pr-card-art {
+    display: none;
+  }
+}
+
+@container (min-width: 20.0625rem) and (max-width: 24rem) {
+  .turn-pr-card {
+    grid-template-columns: 2.75rem minmax(0, 1fr) 4.5rem;
+  }
+}
+
+@container (max-width: 24rem) {
+  .turn-pr-card-ordinal {
+    font-size: 1.0625rem;
+  }
+
+  .turn-pr-card-art {
+    padding: 8px;
+  }
+}
+
+/* ---------- Buttons ---------- */
+
+.turn-pr-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: var(--turn-pr-target);
+  min-height: 3.5rem;
+  margin: 0;
+  padding: 0 18px;
+  box-sizing: border-box;
+  border: var(--turn-pr-rule);
+  border-radius: var(--turn-pr-radius);
+  background: var(--turn-pr-card);
+  box-shadow: none;
+  color: var(--turn-ink, #08090a);
+  font-family: var(--turn-pr-font-display);
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.1;
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.turn-pr-button.is-primary {
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 16px;
+  background: var(--turn-action-primary, #ff4fa3);
+  box-shadow: var(--turn-pr-shadow-action);
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.turn-pr-button-arrow {
+  font-size: 1.375rem;
+  line-height: 1;
+}
+
+.turn-pr-button.is-compact {
+  min-height: var(--turn-pr-target);
+  padding: 0 14px;
+  font-size: 0.9375rem;
+}
+
+.turn-pr-button:focus-visible,
+.turn-pr-close:focus-visible {
+  outline: 3px solid var(--turn-ink, #08090a);
+  outline-offset: 3px;
+}
+
+.turn-pr-button.is-primary:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+}
+
+/* A locked choice keeps its place and explains itself instead of continuing. */
+.turn-pr-button.is-primary.is-locked {
+  background: var(--turn-pr-card);
+  box-shadow: none;
+  color: var(--turn-pr-muted);
+}
+
+.turn-pr-button.is-primary.is-locked .turn-pr-button-arrow {
+  display: none;
+}
+
+.turn-pr-button:disabled {
+  cursor: progress;
+}
+
+@media (hover: hover) {
+  .turn-pr-button.is-primary:not(:disabled, .is-locked):hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Orange closes and goes back, everywhere. */
+.turn-pr-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--turn-pr-target);
+  height: var(--turn-pr-target);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: var(--turn-pr-rule);
+  border-radius: 50%;
+  background: var(--turn-action-navigation, #ff7b54);
+  box-shadow: none;
+  color: var(--turn-ink, #08090a);
+  font-family: var(--turn-pr-font-body);
+  font-size: 1.625rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* ---------- Dock: the chosen context above the actions ---------- */
+
+.turn-pr-dock {
+  position: fixed;
+  z-index: 15;
+  inset: auto 0 0;
+  box-sizing: border-box;
+  padding:
+    10px
+    max(var(--turn-pr-gutter), env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom))
+    max(var(--turn-pr-gutter), env(safe-area-inset-left));
+  border-top: var(--turn-pr-rule);
+  background: var(--turn-surface-page, #fff8e8);
+}
+
+.turn-pr-dock-inner {
+  display: grid;
+  gap: 8px;
+  max-width: var(--turn-pr-max-width);
+  margin: 0 auto;
+}
+
+.turn-pr-dock-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--turn-pr-font-mono);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.turn-pr-dock-context .turn-pr-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.turn-pr-dock-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.turn-pr-dock-detail {
+  flex: none;
+  color: var(--turn-pr-muted);
+}
+
+.turn-pr-dock-detail::before {
+  content: "· ";
+}
+
+.turn-pr-dock-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.turn-pr-dock-actions > .is-primary {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.turn-pr-dock-actions > .is-secondary {
+  flex: none;
+}
+
+/* Phones in portrait: the secondary action joins the context line, so the primary
+   action keeps its full label at the full width. */
+@media (max-width: 26.25rem) {
+  .turn-pr-dock-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "context secondary"
+      "primary primary";
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .turn-pr-dock-context {
+    grid-area: context;
+  }
+
+  .turn-pr-dock-actions {
+    display: contents;
+  }
+
+  .turn-pr-dock-actions > .is-secondary {
+    grid-area: secondary;
+    min-height: var(--turn-pr-target);
+    padding: 0 12px;
+    font-size: 0.9375rem;
+  }
+
+  .turn-pr-dock-actions > .is-primary {
+    grid-area: primary;
+  }
+}
+
+/* A media query, not a container query: containment on an ancestor would make it the
+   fixed dock's containing block. */
+@media (min-width: 40rem) {
+  .turn-pr-dock-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .turn-pr-dock-actions > .is-primary {
+    flex: none;
+    min-width: 15rem;
+  }
+}
+
+/* ---------- Panel and sheet: yellow masthead, Paper body ---------- */
+
+.turn-pr-panel,
+.turn-pr-sheet-card {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: var(--turn-pr-rule);
+  border-radius: var(--turn-pr-radius-sheet);
+  background: var(--turn-surface-page, #fff8e8);
+  color: var(--turn-ink, #08090a);
+}
+
+.turn-pr-panel-head,
+.turn-pr-sheet-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  min-height: 4.25rem;
+  padding: 12px 14px 12px 16px;
+  box-sizing: border-box;
+  border-bottom: var(--turn-pr-rule);
+  background: var(--turn-yellow-600, #ffbd12);
+}
+
+.turn-pr-panel-title,
+.turn-pr-sheet-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--turn-pr-font-display);
+  font-size: var(--turn-pr-type-sheet);
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  overflow-wrap: break-word;
+  text-transform: uppercase;
+}
+
+.turn-pr-panel-body,
+.turn-pr-sheet-body {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-height: 0;
+  padding: 16px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.turn-pr-sheet {
+  width: min(34rem, calc(100% - (2 * var(--turn-pr-gutter))));
+  max-width: none;
+  /* Viewport units, not percentages: WebKit collapses a percentage max-height chain
+     inside a top-layer dialog to the card's border. */
+  max-height: calc(100dvh - (2 * var(--turn-pr-gutter)));
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--turn-ink, #08090a);
+  overflow: visible;
+}
+
+.turn-pr-sheet[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.turn-pr-sheet::backdrop {
+  background: rgb(8 9 10 / 0.55);
+}
+
+.turn-pr-sheet-card {
+  /* The card takes its content height and shrinks, with its body scrolling, when the
+     dialog's max-height is reached. */
+  flex: 0 1 auto;
+  min-height: 0;
+  box-shadow: 8px 8px 0 var(--turn-ink, #08090a);
+}
+
+/* ---------- Track detail (Track sheet and overview) ---------- */
+
+.turn-pr-detail-route {
+  position: relative;
+  height: clamp(9rem, 32vh, 13rem);
+  box-sizing: border-box;
+  border: var(--turn-pr-rule);
+  border-radius: var(--turn-pr-radius);
+  background: var(--turn-pr-card);
+}
+
+.turn-pr-detail-route > .turn-pr-icon {
+  position: absolute;
+  z-index: 1;
+  top: 10px;
+  right: 12px;
+}
+
+.turn-pr-detail-route .turn-pr-chip {
+  position: absolute;
+  z-index: 1;
+  top: 12px;
+  left: 12px;
+}
+
+.turn-pr-detail-route .turn-pr-route {
+  position: absolute;
+  inset: 22px 20px 18px;
+  width: calc(100% - 40px);
+  height: calc(100% - 40px);
+}
+
+.turn-pr-detail-route .turn-pr-route-outline {
+  stroke-width: 12px;
+}
+
+.turn-pr-detail-route .turn-pr-route-line {
+  stroke-width: 6px;
+}
+
+.turn-pr-detail-description {
+  margin: 0;
+  color: var(--turn-ink, #08090a);
+  font-family: var(--turn-pr-font-body);
+  font-size: var(--turn-pr-type-body);
+  font-weight: 450;
+  line-height: 1.45;
+}
+
+.turn-pr-lock-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 2px solid var(--turn-ink, #08090a);
+  border-radius: 12px;
+  background: var(--turn-orange-100, #ffd0ae);
+  font-family: var(--turn-pr-font-body);
+  font-size: var(--turn-pr-type-spec);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.turn-pr-lock-note .turn-pr-lock-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 1px;
+}
+
+.turn-pr-records {
+  display: grid;
+  gap: 4px;
+}
+
+.turn-pr-record-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.turn-pr-record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 4rem;
+  padding: 8px 0 8px 14px;
+  border-bottom: 2px solid rgb(8 9 10 / 0.14);
+  box-shadow: inset 6px 0 0 var(--turn-pr-record-accent, var(--turn-ink, #08090a));
+}
+
+.turn-pr-record.is-time { --turn-pr-record-accent: var(--turn-yellow-400, #ffd43b); }
+.turn-pr-record.is-drift { --turn-pr-record-accent: var(--turn-control-drift, #38d9ff); }
+.turn-pr-record.is-flow { --turn-pr-record-accent: var(--turn-pink-500, #ff4fa3); }
+
+.turn-pr-record-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding-left: 6px;
+}
+
+.turn-pr-record-label {
+  font-family: var(--turn-pr-font-mono);
+  font-size: var(--turn-pr-type-meta);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+}
+
+.turn-pr-record-value {
+  font-family: var(--turn-pr-font-display);
+  font-size: var(--turn-pr-type-number);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.turn-pr-record:is(.is-empty, .is-locked) .turn-pr-record-value {
+  color: var(--turn-pr-muted);
+  font-family: var(--turn-pr-font-body);
+  font-size: var(--turn-pr-type-spec);
+  font-weight: 650;
+}
+
+.turn-pr-record.is-locked .turn-pr-record-value .turn-pr-lock-icon {
+  margin-right: 6px;
+}
+
+.turn-pr-record-car {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--turn-pr-muted);
+  font-family: var(--turn-pr-font-body);
+  font-size: var(--turn-pr-type-spec);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: right;
+}
+
+.turn-pr-record-model {
+  display: block;
+  width: auto;
+  height: 2.75rem;
+  max-width: 5rem;
+  object-fit: contain;
+}
+
+.turn-pr-detail-actions:empty {
+  display: none;
+}
+
+.turn-pr-detail-actions {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 12px;
+}
+
+/* Short landscape: the sheet uses its width, route and records side by side. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .turn-pr-sheet {
+    width: min(48rem, calc(100% - (2 * var(--turn-pr-gutter))));
+  }
+
+  .turn-pr-sheet-head {
+    min-height: 3.5rem;
+    padding-block: 6px;
+  }
+
+  .turn-pr-sheet-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    column-gap: 20px;
+  }
+
+  .turn-pr-sheet-body .turn-pr-records {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+
+  .turn-pr-sheet-body .turn-pr-detail-route {
+    height: 9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-pr-button,
+  .turn-pr-card {
+    transition: none;
+  }
+}

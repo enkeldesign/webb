@@ -366,6 +366,7 @@ function synchronizeUiBaselineTargets(importMap, release) {
     ['/turn/ui/minor-ux-polish-r229.js', ['?revision=r229-discoverability-cues']],
     ['/turn/ui/leader-marker-r500.js', ['?revision=r227-night-marker-outline']],
     ['/turn/ui/player-marker-r428.js', ['?revision=r227-night-marker-outline']],
+    ['/turn/roadbook/roadbook.js', []],
     // Modules that request a stylesheet by a release-bound literal URL.
     ['/turn/social/your-turn-share.js', ['?revision=r4-runtime-share-state']],
     ['/turn/content/about-turn.js', ['?revision=r1']],

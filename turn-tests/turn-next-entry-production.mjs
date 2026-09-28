@@ -24,9 +24,8 @@ const [
   homeSource,
   homeCss,
   fixedLayoutSource,
-  fixedLayoutCss,
-  cardScrollSource,
-  cardScrollCss
+  roadbookSource,
+  roadbookCss
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
@@ -46,13 +45,12 @@ const [
   fs.readFile(new URL('../turn/install-gate.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/live-steering-setting.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-menu-font-fix.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/pre-race.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home-fixed-layout.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/roadbook/roadbook.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/roadbook/roadbook.css', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -73,7 +71,7 @@ assert.match(productionIndex, new RegExp(`src="\\.\\/install-gate\\.js\\?build=$
 assert.match(productionIndex, new RegExp(`href="\\.\\/install-gate\\.css\\?build=${release.cacheKey}-social-browser"`));
 assert.match(productionIndex, new RegExp(`href="\\.\\/orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait"`));
 assert.match(productionIndex, new RegExp(`src="\\.\\/live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering"`));
-assert.match(productionIndex, new RegExp(`href="\\.\\/m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font-v3"`));
+assert.doesNotMatch(productionIndex, /m8-menu-font-fix\.css/);
 assert.doesNotMatch(productionIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
 assert.match(productionIndex, /responsive\.css\?build=/);
 assert.doesNotMatch(productionIndex, /Return to landscape/);
@@ -144,16 +142,8 @@ assert.match(liveSteeringSource, /raceSession\.prepareManualAccess\(\)/);
 assert.match(liveSteeringSource, /__turnMotionLifecycle\?\.stop\?\.\(\)/);
 assert.match(liveSteeringSource, /steering-mode-changed/);
 assert.match(liveSteeringSource, /saveSteeringMode\(activeMode\)/);
-assert.match(menuFontCss, /\.m8-home\.m8-home-fixed-layout \.m8-home-main \.m8-track-heading-row h1,/);
-assert.match(menuFontCss, /\.m8-home\.m8-home-fixed-layout \.m8-home-main \.m8-home-menu h2/);
-assert.match(menuFontCss, /font-family: inherit/);
-assert.match(menuFontCss, /font-size: max\(var\(--turn-text-floor, 11px\), clamp\(1\.2375rem, 3\.2vw, 2\.25rem\)\)/);
-assert.match(menuFontCss, /font-style: normal/);
-assert.match(menuFontCss, /font-variant: normal/);
-assert.match(menuFontCss, /font-weight: 950/);
-assert.match(menuFontCss, /font-stretch: normal/);
-assert.match(menuFontCss, /line-height: 0\.95/);
-assert.match(menuFontCss, /letter-spacing: -0\.035em/);
+// The ROADBOOK heading (pre-race.css) keeps the heavy, tight TURN display face.
+assert.match(menuFontCss, /\.turn-pr-display \{[^}]*font-weight: 900;[^}]*letter-spacing: -0\.035em;[^}]*line-height: 0\.95;/);
 
 assert.match(nextIndex, /data-turn-deployment="next"/);
 assert.match(nextIndex, /<base href="\/turn\/">/);
@@ -165,7 +155,7 @@ assert.match(nextIndex, new RegExp(`install-gate\\.js\\?build=${release.cacheKey
 assert.match(nextIndex, new RegExp(`install-gate\\.css\\?build=${release.cacheKey}-social-browser`));
 assert.match(nextIndex, new RegExp(`orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait`));
 assert.match(nextIndex, new RegExp(`live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering`));
-assert.match(nextIndex, new RegExp(`m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font-v3`));
+assert.doesNotMatch(nextIndex, /m8-menu-font-fix\.css/);
 assert.doesNotMatch(nextIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
 assert.match(nextIndex, /responsive\.css\?build=/);
 assert.doesNotMatch(nextIndex, /Return to landscape/);
@@ -189,22 +179,20 @@ assert.match(motionLifecycleBridge, /motion\.subscribe\(listener\)/);
 assert.match(displayLifecycleBridge, /display\.requestFullscreen\(root\)/);
 assert.match(displayLifecycleBridge, /display\.lockLandscape\(\)/);
 
-assert.match(homeSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
+assert.match(homeSource, /installRoadbook\(\{/);
+assert.match(roadbookSource, /tracks\.map\(renderCard\)/);
 assert.match(homeSource, /raceSession\.prepareMotionAccess\(\)/);
 assert.match(homeSource, /runtime\.openLot = leaveRaceForHome/);
 assert.match(homeCss, /\.m8-home \{[\s\S]*z-index: 1400/);
 assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
-assert.match(fixedLayoutSource, /installM8HomeCardScrollFixes\(\)/);
-assert.match(fixedLayoutCss, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-assert.match(cardScrollSource, /rail\.dataset\.scrollMode = 'native'/);
-assert.doesNotMatch(cardScrollSource, /pointerdown|pointermove|setPointerCapture|startInertia/);
-assert.match(cardScrollCss, /touch-action: pan-y pinch-zoom/);
-assert.match(cardScrollCss, /-webkit-overflow-scrolling: touch/);
+assert.doesNotMatch(fixedLayoutSource, /installM8HomeCardScrollFixes|m8-home-card-scroll-fixes/);
+assert.match(roadbookCss, /repeat\(2, minmax\(0, 1fr\)\)/);
+assert.doesNotMatch(roadbookSource, /pointerdown|pointermove|setPointerCapture|startInertia/,
+  'ROADBOOK scrolls natively with the page');
 
 assert.match(orientationGuardCss, /#intro[\s\S]*display: none !important/);
 assert.match(orientationGuardCss, /body[\s\S]*position: fixed/);
 assert.match(orientationGuardCss, /\.rotate-panel \{[\s\S]*z-index: 1700/);
-assert.match(orientationGuardCss, /object-fit: contain/);
 assert.doesNotMatch(orientationGuardCss, /100lvh/);
 
 assert.match(storage, /const LOCAL_PREFIX = 'turn-next:';/);

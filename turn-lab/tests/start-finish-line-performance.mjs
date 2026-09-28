@@ -36,10 +36,12 @@ const shareButtonSync = sharing.match(
   /function syncTrackShareButtons\(\) \{[\s\S]*?\n  \}/
 )?.[0] || '';
 assert.ok(shareButtonSync, 'YOUR TURN must retain Home share-button synchronization');
-assert.match(shareButtonSync, /shareStateFor\(trackId\)/,
-  'Home share buttons must read session state');
+assert.match(shareButtonSync, /turn:your-turn-share-changed/,
+  'Home (the ROADBOOK Track sheet) hears when shareable laps change');
 assert.doesNotMatch(shareButtonSync, /getStoredBestLap|getStoredBestReplayLap|hasStoredBestReplayLap/,
   'Returning from a race to Home must not consult persistence for share-button state');
+assert.match(sharing, /canShare\(trackId\) \{\s*return shareStateFor\(trackId\)\.shareable;/,
+  'Home share controls must read session state');
 
 const lapResultListener = sharing.match(
   /window\.addEventListener\('turn:lap-result',[\s\S]*?\n  \}\);/

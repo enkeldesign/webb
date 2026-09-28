@@ -849,7 +849,7 @@ export async function installSupportChallenges({
       howButton.click();
       return;
     }
-    const card = home.querySelector(`.track-card[data-track-id="${active.trackId}"]:not([disabled])`);
+    const card = home.querySelector(`.roadbook-card[data-track-id="${active.trackId}"]`);
     if (!card) return;
     card.click();
     raceButton.click();

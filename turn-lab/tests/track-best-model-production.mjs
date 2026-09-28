@@ -34,10 +34,11 @@ const [
   selector,
   renderer,
   trackSelectCss,
-  scaleCss,
+  preRaceCss,
   hud,
   driftRuntime,
-  flowRuntime
+  flowRuntime,
+  roadbook
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
@@ -45,10 +46,11 @@ const [
   fs.readFile(new URL('../../turn/ui/track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/track-best-car.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/track-select.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/m8-record-car-scale.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/pre-race.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/hud.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/scoring/drift-attack-runtime.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/scoring/flow-runtime.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/scoring/flow-runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/roadbook/roadbook.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -178,19 +180,18 @@ assert.match(css, /@media \(max-height: 457\.5px\) and \(orientation: landscape\
 assert.match(css, /\.track-card-coming-soon \{[\s\S]*grid-template-columns: minmax\(0, 1fr\)[\s\S]*width: 100%/, 'The locked card must not reserve an empty car column');
 assert.match(css, /\.track-card-best-model\[hidden\] \{[\s\S]*display: none;/, 'No-time cards must remove the decorative model from layout');
 
-assert.match(app, /m8-record-car-scale\.css\?revision=r206-three-records/, 'The three-record car override must load after the fixed Home layout');
-assert.ok(
-  app.indexOf('await installM8HomeFixedLayout()') < app.indexOf('m8-record-car-scale.css?revision=r206-three-records'),
-  'The three-record car override must win the M8 layout cascade'
-);
-assert.match(scaleCss, /\.track-card-record[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(69px, 40%\)/, 'Each Home record must reserve readable copy and car columns');
-assert.match(scaleCss, /\.track-card-record-model[\s\S]*justify-self: end/, 'Record cars must align consistently at the outside edge');
-assert.match(scaleCss, /object-position: right center/, 'The visible car must face the record copy from a consistent image box');
-assert.match(scaleCss, /width: clamp\(66px, 9vw, 91\.5px\)/, 'Standard record cars must be clearly visible without dominating the card');
-assert.match(scaleCss, /height: clamp\(36px, 7vh, 49\.5px\)/, 'Three standard car rows must fit inside an expanded card');
-assert.match(scaleCss, /width: clamp\(54px, 9vw, 76\.5px\)/, 'Short landscape cards must use the smaller three-record car');
-assert.match(scaleCss, /height: 34\.5px/, 'Short landscape record cars must stay within their record rows');
-assert.doesNotMatch(scaleCss, /width: clamp\(108px, 18vw, 177px\)|height: clamp\(64\.5px, 14vh, 105px\)/, 'The post-crop oversized dimensions must not return');
+// Home personal bests (ROADBOOK Track sheet and overview) show each record's car.
+assert.match(roadbook, /renderBestCarThumbnail\(record\)/, 'Each Home record must request its stored record car');
+assert.match(roadbook, /<img class="turn-pr-record-model" alt="" draggable="false" hidden>/,
+  'The record car is decorative beside its readable name and hidden until rendered');
+assert.match(roadbook, /model\.hidden = false/, 'The model must appear only after its render succeeds');
+assert.match(roadbook, /generation !== thumbnailGeneration/, 'A newer track selection must win over slower renders');
+assert.match(roadbook, /for \(const \{ model, record \} of requests\)/, 'Record cars render one at a time');
+assert.match(preRaceCss, /\.turn-pr-record-model \{[^}]*height: 2\.75rem;[^}]*object-fit: contain;/,
+  'Record cars keep one readable size inside their row');
+assert.match(preRaceCss, /\.turn-pr-record \{[^}]*grid-template-columns: minmax\(0, 1fr\) auto;/,
+  'Each record reserves the copy column and sizes the car column to its content');
+assert.doesNotMatch(app, /m8-record-car-scale/, 'The retired Home record-car layer stays retired');
 
 assert.doesNotMatch(app, /installPlayerMapMarker|player-map-marker\.js/, 'The runtime must not install a second player-marker overlay');
 assert.match(hud, /const PLAYER_MAP_RADIUS = 9;/, 'The canonical local-player marker must be larger than six-pixel rival dots');

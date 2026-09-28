@@ -10,7 +10,7 @@ const fixture = `<!doctype html><html class="turn-home-ready"><head>
 <section class="m8-home" hidden><div class="m8-home-pitch"></div>
 <div class="m8-home-menu"><p class="m8-home-status"></p></div>
 <button class="m8-how-button">HOW TO PLAY</button>
-<button class="track-card" data-track-id="countryside">COUNTRYSIDE</button>
+<button class="roadbook-card" data-track-id="countryside">COUNTRYSIDE</button>
 <button class="m8-track-continue">RACE</button></section>
 <div class="utility-group" data-menu-state="racing"></div>
 <div class="drive-pad"></div><button id="calibrateButton">Calibrate</button>
@@ -132,7 +132,7 @@ for (const [name, browserType] of [['Chromium', chromium], ['WebKit', webkit]]) 
     const routing = await solo.page.evaluate(async () => {
       let track = '';
       let car = '';
-      document.querySelector('.track-card').addEventListener('click', (event) => { track = event.currentTarget.dataset.trackId; });
+      document.querySelector('.roadbook-card').addEventListener('click', (event) => { track = event.currentTarget.dataset.trackId; });
       document.querySelector('.m8-track-continue').addEventListener('click', () => {
         const lot = document.createElement('section');
         lot.className = 'lot-screen';

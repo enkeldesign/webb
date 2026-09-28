@@ -108,14 +108,12 @@ export function installHomeRivalReset(root = document) {
           globalThis.__turnRuntime?.state || {},
           TRACK_CATALOG.map((entry) => entry.id)
         );
-        clearTrackCardRecords(root);
         window.dispatchEvent(new CustomEvent('turn:rivals-reset', {
           detail: { scope: 'all-tracks' }
         }));
         status.textContent = 'Personal rivals reset on all tracks.';
       } else {
         globalThis.__turnResetRivals?.();
-        clearTrackCardRecord(root, track.id);
         status.textContent = `Personal rivals reset for ${track.name}.`;
       }
 
@@ -140,35 +138,4 @@ export function installHomeRivalReset(root = document) {
   dialog.dataset.rivalResetVersion = RESET_VERSION;
   document.documentElement.dataset.turnHomeRivalReset = RESET_VERSION;
   return true;
-}
-
-function clearTrackCardRecords(root) {
-  for (const bestBox of root.querySelectorAll('[data-track-best]')) {
-    clearBestBox(bestBox);
-  }
-}
-
-function clearTrackCardRecord(root, trackId) {
-  const bestBox = [...root.querySelectorAll('[data-track-best]')].find((entry) => (
-    entry.dataset.trackBest === trackId
-  ));
-  if (bestBox) clearBestBox(bestBox);
-}
-
-function clearBestBox(bestBox) {
-  const timeRecord = bestBox.querySelector('[data-track-record-kind="time"]') || bestBox;
-  const time = timeRecord.querySelector('.track-card-best-time');
-  const car = timeRecord.querySelector('.track-card-record-car, .track-card-best-car');
-  const model = timeRecord.querySelector('.track-card-record-model, .track-card-best-model');
-
-  if (time) time.textContent = 'NO TIME YET';
-  if (car) {
-    car.textContent = '';
-    car.hidden = true;
-  }
-  if (model) {
-    model.hidden = true;
-    model.removeAttribute('src');
-    delete model.dataset.previewKey;
-  }
 }

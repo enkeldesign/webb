@@ -1,18 +1,12 @@
 import {
   TRACK_CATALOG,
-  TRACK_SELECTION_CATALOG,
-  getTrackPreviewPoints,
   loadTrackSelection,
   normalizeTrackId
 } from '/turn/tracks/catalog.js?source=20260729-r118-m8';
 import { activateTrack } from '/turn/tracks/track-manager.js?source=20260729-r118-m8';
 import { prepareEnhancedLot, showEnhancedLot as showTheLot } from '/turn/garage/lot-track-select.js?revision=r200-production-candidate';
 import { showTrackIntro } from '/turn/ui/track-intro.js?source=20260729-r118-m8';
-import { getStoredBestLap } from '/turn/race/rival-storage.js?source=20260729-r118-m8';
-import { getCarDefinition } from '/turn/vehicle/catalog.js?source=20260729-r118-m8';
-import { renderBestCarThumbnail } from '/turn/ui/track-best-car.js?revision=r253-supercar-release';
-import { getBestDriftRecord } from '/turn/scoring/drift-records.js?revision=r206-home-track-records';
-import { getBestFlowRecord } from '/turn/scoring/flow-records.js?revision=r206-home-track-records';
+import { installRoadbook } from '/turn/roadbook/roadbook.js';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';
 import {
   CONTROL_HANDEDNESS,
@@ -24,12 +18,8 @@ import {
 const STEERING_MODE_KEY = 'turn-steering-mode-v1';
 const STEERING_MODE = Object.freeze({ MOTION: 'motion', MANUAL: 'manual' });
 const ICON_REVISION = '20260803-profile-512';
-const SCORE_FORMATTER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-const TRACK_RECORD_KINDS = Object.freeze(['time', 'drift', 'flow']);
-const TRACK_RECORDS_EXPANDED_KEY = 'turn-track-records-expanded-v1';
 
 let installed = false;
-let previewGeneration = 0;
 
 function waitForRuntime() {
   if (globalThis.__turnRuntime && globalThis.__turnNextRaceSession) {
@@ -84,276 +74,12 @@ function saveSteeringMode(mode) {
   return normalized;
 }
 
-function loadTrackRecordsExpandedPreference() {
-  try {
-    return localStorage.getItem(TRACK_RECORDS_EXPANDED_KEY) === 'true';
-  } catch (_) {
-    return false;
-  }
-}
-
-function saveTrackRecordsExpandedPreference(expanded) {
-  try {
-    localStorage.setItem(TRACK_RECORDS_EXPANDED_KEY, expanded ? 'true' : 'false');
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
-
 function selectedVehicle(runtime) {
   return {
     carId: runtime.state.vehicleId,
     color: runtime.state.vehicleColor,
     secondaryColor: runtime.state.vehicleSecondaryColor
   };
-}
-
-function formatTime(seconds) {
-  if (!Number.isFinite(seconds)) return 'NO TIME YET';
-  const minutes = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-  const ms = Math.floor((seconds % 1) * 1000).toString().padStart(3, '0');
-  return `${minutes}:${secs}.${ms}`;
-}
-
-function formatScore(score) {
-  const rounded = Math.round(Number(score));
-  return Number.isFinite(rounded) && rounded > 0
-    ? SCORE_FORMATTER.format(rounded)
-    : 'NO SCORE YET';
-}
-
-function makePreviewSvg(trackId, accent) {
-  const points = getTrackPreviewPoints(trackId, 110);
-  const xs = points.map((point) => point.x);
-  const zs = points.map((point) => point.z);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minZ = Math.min(...zs);
-  const maxZ = Math.max(...zs);
-  const width = Math.max(1, maxX - minX);
-  const height = Math.max(1, maxZ - minZ);
-  const scale = Math.min(270 / width, 135 / height);
-  const offsetX = (320 - width * scale) / 2;
-  const offsetY = (185 - height * scale) / 2;
-  const path = points.map((point, index) => {
-    const x = offsetX + (point.x - minX) * scale;
-    const y = offsetY + (point.z - minZ) * scale;
-    return `${index ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`;
-  }).join(' ');
-  const startX = offsetX + (points[0].x - minX) * scale;
-  const startY = offsetY + (points[0].z - minZ) * scale;
-
-  return `
-    <svg viewBox="0 0 320 185" focusable="false">
-      <path class="track-preview-shadow" d="${path} Z"></path>
-      <path class="track-preview-road" d="${path} Z"></path>
-      <path class="track-preview-line" d="${path} Z" style="stroke:${accent}"></path>
-      <circle class="track-preview-start" cx="${startX.toFixed(1)}" cy="${startY.toFixed(1)}" r="7"></circle>
-    </svg>`;
-}
-
-function makeLockedPreviewSvg() {
-  return `
-    <svg viewBox="0 0 320 185" focusable="false">
-      <path class="track-preview-shadow" d="M48 136 L48 62 Q50 28 84 40 L126 82 L174 42 Q194 28 216 44 L270 74 L270 142 L214 142 L177 116 L137 150 L76 150 Z"></path>
-      <path class="track-preview-road" d="M48 136 L48 62 Q50 28 84 40 L126 82 L174 42 Q194 28 216 44 L270 74 L270 142 L214 142 L177 116 L137 150 L76 150 Z"></path>
-    </svg>`;
-}
-
-function renderTrackRecord(kind, label, valueClass) {
-  return `
-    <span class="track-card-record is-${kind}" data-track-record-kind="${kind}">
-      <span class="track-card-record-copy">
-        <span class="track-card-record-label">${label}</span>
-        <strong class="track-card-record-value ${valueClass}">${kind === 'time' ? 'NO TIME YET' : 'NO SCORE YET'}</strong>
-        <small class="track-card-record-car" hidden></small>
-      </span>
-      <img class="track-card-record-model" alt="" aria-hidden="true" draggable="false" hidden>
-    </span>`;
-}
-
-function renderTrackCard(track) {
-  if (track.locked) {
-    return `
-      <button
-        class="track-card track-card-locked is-locked"
-        type="button"
-        data-track-id="${track.id}"
-        aria-label="${track.eyebrow}, ${track.name}, locked"
-        disabled
-        style="--track-accent:${track.accent};--track-accent-soft:${track.accentSoft}"
-      >
-        <span class="track-card-compact">
-          <span class="track-card-summary">
-            <span class="track-card-choice">
-              <span class="track-card-choice-marker" aria-hidden="true"></span>
-              <strong class="track-card-name">${track.name}</strong>
-            </span>
-            <strong class="track-card-difficulty">LOCKED</strong>
-          </span>
-          <span class="track-card-preview" aria-hidden="true">${makeLockedPreviewSvg()}</span>
-        </span>
-        <span class="track-card-best track-card-coming-soon">
-          <span class="track-card-best-copy"><span>BEST:</span><strong>COMING SOON</strong></span>
-        </span>
-      </button>`;
-  }
-
-  return `
-    <button
-      class="track-card track-card-${track.id}"
-      type="button"
-      data-track-id="${track.id}"
-      data-track-difficulty="${track.difficulty.toLowerCase()}"
-      aria-label="${track.name}, ${track.difficulty} difficulty track"
-      aria-pressed="false"
-      style="--track-accent:${track.accent};--track-accent-soft:${track.accentSoft}"
-    >
-      <span class="track-card-compact">
-        <span class="track-card-summary">
-          <span class="track-card-choice">
-            <span class="track-card-choice-marker" aria-hidden="true"></span>
-            <strong class="track-card-name">${track.name.toUpperCase()}</strong>
-          </span>
-          <strong class="track-card-difficulty">${track.difficulty}</strong>
-        </span>
-        <span class="track-card-preview" aria-hidden="true">${makePreviewSvg(track.id, track.accent)}</span>
-      </span>
-      <span class="track-card-best track-card-records" data-track-best="${track.id}" hidden>
-        <strong class="track-card-records-title">BEST:</strong>
-        ${renderTrackRecord('time', 'TIME', 'track-card-best-time')}
-        ${renderTrackRecord('drift', 'DRIFT', 'track-card-best-drift')}
-        ${renderTrackRecord('flow', 'FLOW', 'track-card-best-flow')}
-      </span>
-    </button>`;
-}
-
-function recordCarName(record) {
-  return record ? getCarDefinition(record.carId).name.toUpperCase() : '';
-}
-
-function recordAccessibleCopy(kind, record) {
-  const label = kind === 'time' ? 'time' : kind;
-  if (!record) return `No best ${label}`;
-  const value = kind === 'time' ? formatTime(record.time) : formatScore(record.score);
-  return `Best ${label} ${value} with ${getCarDefinition(record.carId).name}`;
-}
-
-function updateTrackCardAccessibleLabel(card, track, records, expanded) {
-  if (!card) return;
-  const baseLabel = `${track.name}, ${track.difficulty} difficulty track`;
-  const recordLabel = TRACK_RECORD_KINDS
-    .map((kind) => recordAccessibleCopy(kind, records[kind]))
-    .join('. ');
-  const label = expanded ? `${baseLabel}. ${recordLabel}` : baseLabel;
-  card.dataset.trackAccessibleLabel = label;
-  if (card.dataset.trophyLocked !== 'true') card.setAttribute('aria-label', `${label}.`);
-}
-
-function resetTrackRecordModel(model) {
-  if (!model) return;
-  model.hidden = true;
-  model.removeAttribute('src');
-  delete model.dataset.previewKey;
-}
-
-function updateTrackRecordRow({
-  kind,
-  record,
-  renderModels,
-  row,
-  track
-}) {
-  if (!row) return null;
-  const value = row.querySelector('.track-card-record-value');
-  const car = row.querySelector('.track-card-record-car');
-  const model = row.querySelector('.track-card-record-model');
-
-  if (value) {
-    value.textContent = kind === 'time'
-      ? formatTime(record?.time ?? Infinity)
-      : formatScore(record?.score);
-  }
-  if (car) {
-    car.textContent = recordCarName(record);
-    car.hidden = !record;
-  }
-  resetTrackRecordModel(model);
-  if (!record || !model || !renderModels) return null;
-
-  const previewKey = [
-    track.id,
-    kind,
-    record.carId,
-    record.carColor,
-    record.carSecondaryColor
-  ].join(':');
-  model.dataset.previewKey = previewKey;
-  return Object.freeze({ kind, model, previewKey, record, track });
-}
-
-function trackRecordsAreExpanded(root) {
-  return root.classList.contains('is-showing-track-bests');
-}
-
-function trackRecordModelsShouldRender(root) {
-  return trackRecordsAreExpanded(root) && !root.hidden;
-}
-
-async function renderTrackRecordModels(root, requests, generation) {
-  for (const request of requests) {
-    if (generation !== previewGeneration || !trackRecordModelsShouldRender(root)) return;
-    try {
-      const source = await renderBestCarThumbnail(request.record);
-      if (
-        generation !== previewGeneration
-        || !trackRecordModelsShouldRender(root)
-        || request.model.dataset.previewKey !== request.previewKey
-      ) return;
-      request.model.src = source;
-      request.model.hidden = false;
-    } catch (error) {
-      console.warn(
-        `TURN: could not render the ${request.track.name} ${request.kind} record car.`,
-        error
-      );
-    }
-  }
-}
-
-function refreshTrackRecords(root, { renderModels = trackRecordModelsShouldRender(root) } = {}) {
-  const generation = ++previewGeneration;
-  const expanded = trackRecordsAreExpanded(root);
-  const modelRequests = [];
-  for (const track of TRACK_CATALOG) {
-    const bestLap = getStoredBestLap(track.id);
-    const bestDrift = getBestDriftRecord(track.id);
-    const bestFlow = getBestFlowRecord(track.id);
-    const records = { time: bestLap, drift: bestDrift, flow: bestFlow };
-    const bestBox = root.querySelector(`[data-track-best="${track.id}"]`);
-    const card = bestBox?.closest('.track-card');
-    updateTrackCardAccessibleLabel(card, track, records, expanded);
-    for (const kind of TRACK_RECORD_KINDS) {
-      const modelRequest = updateTrackRecordRow({
-        kind,
-        record: records[kind],
-        renderModels,
-        row: bestBox?.querySelector(`[data-track-record-kind="${kind}"]`),
-        track
-      });
-      if (modelRequest) modelRequests.push(modelRequest);
-    }
-  }
-  if (modelRequests.length) void renderTrackRecordModels(root, modelRequests, generation);
-}
-
-function clearTrackRecordModels(root) {
-  previewGeneration += 1;
-  for (const model of root.querySelectorAll('.track-card-record-model')) {
-    resetTrackRecordModel(model);
-  }
 }
 
 function openDialog(dialog, trigger) {
@@ -647,62 +373,48 @@ export async function installM8HomeNavigation() {
   let lotWarmupPromise = null;
   let lotWarmupScheduled = false;
 
+  // Home is the app bar (logo, support challenge, ACHIEVEMENTS, ☰), the ☰ sheet's
+  // menu and ROADBOOK. home-app-bar.js places the menu in its sheet.
   const home = document.createElement('section');
   home.className = 'm8-home';
-  home.classList.toggle('is-showing-track-bests', loadTrackRecordsExpandedPreference());
   home.setAttribute('aria-labelledby', 'm8HomeTitle');
   home.innerHTML = `
     <div class="m8-home-shell">
       <header class="m8-home-head">
         <img class="m8-home-logo" src="/turn/TURNicon.PNG?icon=${ICON_REVISION}" alt="TURN">
-        <div class="m8-home-pitch">
-          <p>TILT. DRIFT. FLOW.<br>BEAT YOUR BEST.</p>
-          <button class="m8-how-button" type="button">HOW TO PLAY</button>
-        </div>
+        <div class="m8-home-pitch"></div>
         <span class="m8-home-build">TURN NEXT · M8 · SOURCE 2026.07.29-R118</span>
-        <button class="m8-home-settings" type="button"><span aria-hidden="true">⚙</span> SETTINGS</button>
       </header>
-
-      <main class="m8-home-main">
-        <div class="m8-track-heading-row">
-          <h1 id="m8HomeTitle" tabindex="-1">CHOOSE YOUR TRACK</h1>
-          <button
-            class="m8-track-bests-toggle"
-            type="button"
-            aria-controls="m8TrackRail"
-            aria-expanded="false"
-          >SHOW RECORDS</button>
-          <div class="m8-track-scroll-buttons" aria-label="Scroll tracks">
-            <button class="m8-track-previous" type="button" aria-label="Scroll to previous tracks">‹</button>
-            <button class="m8-track-next" type="button" aria-label="Scroll to more tracks">›</button>
-          </div>
-        </div>
-        <div class="m8-track-rail" id="m8TrackRail" aria-label="Available tracks">
-          ${TRACK_SELECTION_CATALOG.map(renderTrackCard).join('')}
-        </div>
-        <button class="m8-track-continue" type="button">CONTINUE</button>
+      <aside class="m8-home-menu" aria-labelledby="m8MenuTitle">
+        <h2 id="m8MenuTitle">MENU</h2>
+        <button class="m8-home-settings" type="button">SETTINGS</button>
+        <button class="m8-how-button" type="button">HOW TO PLAY</button>
         <p class="m8-home-status" role="status" aria-live="polite"></p>
-      </main>
+      </aside>
     </div>`;
   document.body.appendChild(home);
 
-  const rail = home.querySelector('.m8-track-rail');
-  const cards = [...rail.querySelectorAll('.track-card:not([disabled])')];
-  const trackBestsToggle = home.querySelector('.m8-track-bests-toggle');
-  const continueButton = home.querySelector('.m8-track-continue');
-  const previousButton = home.querySelector('.m8-track-previous');
-  const nextButton = home.querySelector('.m8-track-next');
   const howButton = home.querySelector('.m8-how-button');
   const homeSettingsButton = home.querySelector('.m8-home-settings');
   const homeStatus = home.querySelector('.m8-home-status');
   const howDialog = createHowToPlayDialog();
+
+  const roadbook = installRoadbook({
+    home,
+    getSelectedTrackId: () => selectedTrackId,
+    onSelectTrack(trackId) {
+      selectedTrackId = normalizeTrackId(trackId);
+    },
+    onChooseCar: () => continueToTrack()
+  });
+  const continueButton = roadbook.chooseButton;
 
   const settings = createSettingsDialog({
     getSelectedTrackId: () => selectedTrackId,
     async onRivalsReset() {
       await activateTrack(selectedTrackId, runtime);
       globalThis.__turnResetRivals?.();
-      refreshTrackRecords(home);
+      roadbook.refreshRecords();
     }
   });
 
@@ -756,100 +468,35 @@ export async function installM8HomeNavigation() {
     });
   }
 
-  function syncSelection({ scroll = false } = {}) {
-    for (const card of cards) {
-      const selected = card.dataset.trackId === selectedTrackId;
-      card.classList.toggle('is-selected', selected);
-      card.setAttribute('aria-pressed', String(selected));
-    }
-    const track = selectedTrack();
-    continueButton.textContent = `CONTINUE TO ${track.name.toUpperCase()}`;
-    continueButton.style.setProperty('--selected-track-accent', track.accent || '#ff4fa3');
-    if (scroll) {
-      rail.querySelector(`[data-track-id="${selectedTrackId}"]`)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
-      });
-    }
-  }
-
-  function syncScrollButtons() {
-    const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
-    previousButton.disabled = rail.scrollLeft <= 4;
-    nextButton.disabled = rail.scrollLeft >= max - 4;
-  }
-
   function syncRaceSettingsVisibility() {
     raceSettingsButton.hidden = utilityGroup?.dataset.menuState !== 'staged';
-  }
-
-  function syncTrackBestVisibility() {
-    const expanded = trackRecordsAreExpanded(home);
-    trackBestsToggle.textContent = expanded ? 'HIDE RECORDS' : 'SHOW RECORDS';
-    trackBestsToggle.setAttribute('aria-expanded', String(expanded));
-    trackBestsToggle.setAttribute(
-      'aria-label',
-      expanded ? 'Hide best records for all tracks' : 'Show best records for all tracks'
-    );
-    for (const bestBox of home.querySelectorAll('[data-track-best]')) {
-      bestBox.hidden = !expanded;
-    }
-
-    if (expanded) refreshTrackRecords(home, { renderModels: true });
-    else {
-      clearTrackRecordModels(home);
-      refreshTrackRecords(home, { renderModels: false });
-      rail.scrollTop = 0;
-    }
-
-    requestAnimationFrame(() => globalThis.__turnHomeCardScrollFixes?.syncIndicator?.());
-    document.dispatchEvent(new CustomEvent('turn:home-track-bests-changed', {
-      detail: { expanded }
-    }));
-  }
-
-  function setTrackRecordsExpanded(expanded, { persist = false } = {}) {
-    const next = Boolean(expanded);
-    home.classList.toggle('is-showing-track-bests', next);
-    if (persist) saveTrackRecordsExpandedPreference(next);
-    syncTrackBestVisibility();
-    return next;
-  }
-
-  function toggleTrackBests() {
-    setTrackRecordsExpanded(!trackRecordsAreExpanded(home), { persist: true });
   }
 
   function showHome({ focus = false } = {}) {
     intro.hidden = true;
     home.hidden = false;
     document.body.classList.add('turn-m8-active', 'turn-home-open');
-    syncTrackBestVisibility();
-    syncSelection();
+    roadbook.sync();
+    roadbook.refreshRecords();
     scheduleEnhancedLotWarmup();
     window.dispatchEvent(new CustomEvent('turn:home-shown', { detail: { focus } }));
-    requestAnimationFrame(() => {
-      syncScrollButtons();
-      if (focus) home.querySelector('#m8HomeTitle')?.focus?.();
-    });
+    if (focus) requestAnimationFrame(() => home.querySelector('#m8HomeTitle')?.focus?.());
   }
 
   function hideHome() {
+    roadbook.closeSheet();
     home.hidden = true;
     document.body.classList.remove('turn-home-open');
     window.dispatchEvent(new CustomEvent('turn:home-hidden'));
   }
 
   async function continueToTrack() {
-    if (setupPending) return;
+    if (setupPending) return false;
     const trackId = selectedTrackId;
     const trackName = selectedTrack().name.toUpperCase();
     const setupMessage = `PREPARING ${trackName} AND THE LOT…`;
     setupPending = true;
-    continueButton.disabled = true;
-    continueButton.textContent = `PREPARING ${trackName}…`;
-    continueButton.setAttribute('aria-busy', 'true');
+    roadbook.setBusy(`PREPARING ${trackName}…`);
     homeStatus.textContent = setupMessage;
     pendingAccess = null;
 
@@ -893,9 +540,7 @@ export async function installM8HomeNavigation() {
       return false;
     } finally {
       setupPending = false;
-      continueButton.disabled = false;
-      continueButton.removeAttribute('aria-busy');
-      syncSelection();
+      roadbook.setBusy('');
       if (homeStatus.textContent === setupMessage) homeStatus.textContent = '';
     }
   }
@@ -906,19 +551,6 @@ export async function installM8HomeNavigation() {
     return true;
   }
 
-  for (const card of cards) {
-    card.addEventListener('click', () => {
-      if (setupPending) return;
-      selectedTrackId = normalizeTrackId(card.dataset.trackId);
-      syncSelection({ scroll: true });
-    });
-  }
-  continueButton.addEventListener('click', continueToTrack);
-  trackBestsToggle.addEventListener('click', toggleTrackBests);
-  previousButton.addEventListener('click', () => rail.scrollBy({ left: -rail.clientWidth * 0.82, behavior: 'smooth' }));
-  nextButton.addEventListener('click', () => rail.scrollBy({ left: rail.clientWidth * 0.82, behavior: 'smooth' }));
-  rail.addEventListener('scroll', syncScrollButtons, { passive: true });
-  window.addEventListener('resize', syncScrollButtons, { passive: true });
   howButton.addEventListener('click', () => openDialog(howDialog, howButton));
   homeSettingsButton.addEventListener('click', () => {
     settings.sync();
@@ -934,20 +566,19 @@ export async function installM8HomeNavigation() {
     : null;
   menuObserver?.observe(utilityGroup, { attributes: true, attributeFilter: ['data-menu-state'] });
   window.addEventListener('turn:ui-state-change', syncRaceSettingsVisibility);
-  window.addEventListener('turn:rivals-reset', () => refreshTrackRecords(home));
 
   runtime.openLot = leaveRaceForHome;
   runtime.openHome = leaveRaceForHome;
   document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
   globalThis.__turnNextHome = Object.freeze({
     route: 'home-m8',
+    roadbook,
     showHome,
     hideHome,
     continueToTrack,
     leaveRaceForHome,
     getSelectedTrackId: () => selectedTrackId,
-    getSteeringMode: loadSteeringMode,
-    getTrackRecordsExpanded: () => trackRecordsAreExpanded(home)
+    getSteeringMode: loadSteeringMode
   });
 
   syncRaceSettingsVisibility();

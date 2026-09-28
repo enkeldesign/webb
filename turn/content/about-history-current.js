@@ -1071,13 +1071,14 @@ Object.freeze({
     Object.freeze(['1.24.10 r313', 'The iPhone bottom strip is now green for the whole loading screen. It stayed cyan in 1.24.9 because the loading screen keeps a hidden flag while it shows in the installed app.']),
     Object.freeze(['1.24.11 r314', 'Removes the portrait LANDSCAPE ORIENTATION RECOMMENDED box from Home and The Lot; the rotate hint on the track loading screen stays. Also removes the tester STRIP TEST buttons now that the iPhone bottom strip matches every screen.']),
     Object.freeze(['1.25.0 r315', 'TURN\'s interface is now authored at its real size: the 75% runtime rewriter that resized every stylesheet on launch is retired, with every value written at the size it already rendered. Nothing should look different.']),
-    Object.freeze(['1.25.1 r316', 'In landscape on phones, the buttons before a race start no longer run off the screen: when they do not fit, SETTINGS, RECALIBRATE, SPECTATE and the rest move into a ☰ menu, and LEAVE RACE, blank screen and ACHIEVEMENTS stay in the row.'])
+    Object.freeze(['1.25.1 r316', 'In landscape on phones, the buttons before a race start no longer run off the screen: when they do not fit, SETTINGS, RECALIBRATE, SPECTATE and the rest move into a ☰ menu, and LEAVE RACE, blank screen and ACHIEVEMENTS stay in the row.']),
+    Object.freeze(['1.26.0 r321', 'ROADBOOK replaces the Home track list: numbered track cards with each track\'s pictogram and real route, the Track sheet with personal bests, a dock that keeps the chosen track above CHOOSE CAR, and an inline overview on iPad'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.25.1',
-  build: '2026.09.28-r316',
-  note: 'TURN 1.25.1 adds a ☰ menu when the race start buttons do not fit.'
+  version: '1.26.0',
+  build: '2026.09.28-r321',
+  note: 'ROADBOOK: choose your track, then CHOOSE CAR. Track sheet shows each track\'s personal bests.'
 });

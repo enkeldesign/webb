@@ -13,9 +13,9 @@ import {
 } from '../telemetry/client.js?revision=r3-scoring-calibration';
 
 // Home only, on controls every fresh profile can use: COUNTRYSIDE, CLIFFSIDE twice,
-// the records toggle four times, then GIVE FEEDBACK reloads into the test profile.
-// The repetition keeps ordinary exploration from completing it; any other Home
-// button resets it. The records toggle counts either way, since its state persists.
+// TRACK SHEET four times, then GIVE FEEDBACK reloads into the test profile. The
+// repetition keeps ordinary exploration from completing it; any other Home button
+// resets it. Closing the Track sheet between taps is navigation, not a step.
 export const ADMIN_UNLOCK_SEQUENCE = Object.freeze([
   'track:countryside',
   'track:cliffside',
@@ -185,14 +185,15 @@ export function unlockRewardsForTesting(storage = globalThis.localStorage) {
 const FEEDBACK_TRIGGER = '.m8-home-menu .m8-feedback-button:not(.m8-achievements-button):not(.turn-dbe-training-home)';
 
 function homeTokenFromClick(target) {
-  const track = target.closest('.track-card[data-track-id]:not([disabled])');
+  const track = target.closest('.roadbook-card[data-track-id]');
   if (track) return `track:${track.dataset.trackId || ''}`;
-  if (target.closest('.m8-track-bests-toggle')) return 'action:records';
+  // The Track sheet button, or on spacious iPads the overview's route that replaces it.
+  if (target.closest('.roadbook-sheet-button, .roadbook-overview .turn-pr-detail-route')) return 'action:records';
   if (target.closest(FEEDBACK_TRIGGER)) return 'action:feedback';
   if (target.closest('.m8-track-continue')) return 'action:race';
   // Opening or closing the menu sheet is navigation, not a step: GIVE FEEDBACK lives
   // inside it.
-  if (target.closest('.turn-home-menu-button, .turn-home-sheet-close')) return '';
+  if (target.closest('.turn-home-menu-button, .turn-home-sheet-close, .roadbook-sheet .turn-pr-close')) return '';
   // Any other Home control breaks a partial sequence.
   if (target.closest('.m8-home button, .m8-home a')) return 'action:other';
   return '';

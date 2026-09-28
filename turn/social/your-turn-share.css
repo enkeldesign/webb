@@ -1,34 +1,5 @@
-.turn-yourturn-track-slot {
-  position: relative;
-  min-width: 0;
-  min-height: 0;
-}
 
-.m8-track-rail .turn-yourturn-track-slot {
-  flex: 0 0 clamp(262.5px, 40vw, 442.5px);
-  width: clamp(262.5px, 40vw, 442.5px);
-  min-height: clamp(165px, 36vh, 300px);
-  scroll-snap-align: start;
-}
 
-.m8-track-rail .turn-yourturn-track-slot > .track-card {
-  width: 100%;
-  height: 100%;
-  min-height: inherit;
-  scroll-snap-align: none;
-}
-
-.m8-home-fixed-layout .m8-track-rail .turn-yourturn-track-slot {
-  width: 100%;
-  min-height: var(--m8-track-card-min-block-size, clamp(99px, 20vh, 132px));
-  scroll-snap-align: start;
-}
-
-.m8-home-fixed-layout .m8-track-rail .turn-yourturn-track-slot > .track-card {
-  min-height: inherit;
-}
-
-.turn-yourturn-track-share,
 .lap-result-yourturn-share {
   display: grid;
   place-items: center;
@@ -41,22 +12,10 @@
   touch-action: manipulation;
 }
 
-.turn-yourturn-track-share {
-  position: absolute;
-  z-index: 4;
-  left: 42%;
-  top: 50%;
-  width: clamp(34.5px, 4.6vw, 43.5px);
-  height: clamp(34.5px, 4.6vw, 43.5px);
-  translate: -50% -50%;
-}
-
-.turn-yourturn-track-share[hidden],
 .lap-result-yourturn-share[hidden] {
   display: none !important;
 }
 
-.turn-yourturn-track-share svg,
 .lap-result-yourturn-share svg {
   width: 58%;
   height: 58%;
@@ -67,18 +26,15 @@
   stroke-linejoin: round;
 }
 
-.turn-yourturn-track-share:hover,
 .lap-result-yourturn-share:hover {
   transform: translateY(-1.5px);
 }
 
-.turn-yourturn-track-share:active,
 .lap-result-yourturn-share:active {
   transform: translate(3px, 3px);
   box-shadow: 0.75px 0.75px 0 #08090a;
 }
 
-.turn-yourturn-track-share:focus-visible,
 .lap-result-yourturn-share:focus-visible {
   outline: 3.75px solid #38d9ff;
   outline-offset: 3px;
@@ -245,7 +201,7 @@
 }
 
 .turn-yourturn-share-submit {
-  background: #ff4fa3;
+  background: var(--turn-action-share, #ff7c9f);
 }
 
 .turn-yourturn-share-back {
@@ -288,35 +244,5 @@
 @media (prefers-reduced-motion: reduce) {
   .turn-yourturn-share-dialog::backdrop {
     backdrop-filter: none;
-  }
-}
-
-/*
- * The track card itself is a button, so the SHARE button must stay its sibling rather
- * than becoming an invalid interactive descendant. Scope a CSS anchor to each wrapper
- * and visually attach that sibling to the TIME record only while records are open.
- */
-.turn-yourturn-track-slot {
-  anchor-scope: --turn-yourturn-time-copy;
-}
-
-.m8-home.is-showing-track-bests
-  .turn-yourturn-track-slot:has(> .turn-yourturn-track-share:not([hidden]))
-  .track-card-record.is-time .track-card-record-copy {
-  width: fit-content;
-  max-width: calc(100% - clamp(46.5px, 6vw, 58.5px));
-  anchor-name: --turn-yourturn-time-copy;
-}
-
-.m8-home:not(.is-showing-track-bests) .turn-yourturn-track-share {
-  display: none !important;
-}
-
-@supports (anchor-name: --turn-yourturn-time-copy) {
-  .m8-home.is-showing-track-bests .turn-yourturn-track-share {
-    position-anchor: --turn-yourturn-time-copy;
-    left: calc(anchor(right) + clamp(7.5px, 1vw, 10.5px));
-    top: anchor(center);
-    translate: 0 -50%;
   }
 }

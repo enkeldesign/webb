@@ -183,7 +183,7 @@ const [
   fs.readFile(new URL('../../turn/tracks/mountain-terrain.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/mountain-scenery.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/mountain-polish.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/roadbook/roadbook.js', import.meta.url), 'utf8')
 ]);
 assert.match(definitionsBase, /id: 'midnight-city'[\s\S]*?difficulty: 'EXPERT'/);
 assert.match(definitionsBase, /storageRevision: 'midnight-city-r2'/);
@@ -244,7 +244,10 @@ assert.match(mountainPolish, /Mountain river waterfall spillway r3/);
 for (const source of [mountainWorld, mountainLongWorld, mountainExtension, mountainTerrain, mountainScenery, mountainPolish]) {
   assert.doesNotMatch(source, /setAnimationLoop|requestAnimationFrame|setInterval/);
 }
-assert.match(home, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
+// ROADBOOK renders every catalog track, then any placeholders, from the catalog.
+assert.match(home, /const tracks = TRACK_CATALOG;/);
+assert.match(home, /tracks\.map\(renderCard\)/);
+assert.match(home, /placeholders\.map\(/);
 
 console.log(`TURN six-track runtime passed: Midnight City ${midnightLength.toFixed(0)} units, long Mountain ${mountainLength.toFixed(0)} units.`);
 

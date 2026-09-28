@@ -12,7 +12,7 @@
   --turn-dock-space: calc(var(--turn-dock-height) + (2 * var(--turn-dock-gap)) + max(0px, env(safe-area-inset-bottom)));
 }
 
-:root body :is(.m8-home.turn-app-bar-layout .m8-track-continue, .lot-screen.lot-showroom .lot-race) {
+:root body :is(.lot-screen.lot-showroom .lot-race) {
   position: fixed;
   z-index: 15;
   inset: auto max(var(--turn-gutter, 16px), env(safe-area-inset-right)) max(var(--turn-dock-gap), env(safe-area-inset-bottom)) auto;
@@ -34,16 +34,16 @@
 
 /* Interaction states are shared too: a small lift on hover, an Ink focus ring that
    reads on Paper, the dock bar and the sky alike. */
-:root body :is(.m8-home.turn-app-bar-layout .m8-track-continue, .lot-screen.lot-showroom .lot-race):hover {
+:root body :is(.lot-screen.lot-showroom .lot-race):hover {
   transform: translateY(-2px);
 }
 
-:root body :is(.m8-home.turn-app-bar-layout .m8-track-continue, .lot-screen.lot-showroom .lot-race):focus-visible {
+:root body :is(.lot-screen.lot-showroom .lot-race):focus-visible {
   outline: 4px solid var(--turn-ink, #08090a);
   outline-offset: 3px;
 }
 
-:root body :is(.m8-home.turn-app-bar-layout .m8-track-continue, .lot-screen.lot-showroom .lot-race):active {
+:root body :is(.lot-screen.lot-showroom .lot-race):active {
   transform: translate(3px, 3px);
   box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
 }
@@ -100,12 +100,11 @@
 }
 
 @media (max-width: 46em) and (orientation: portrait) {
-  :root body :is(.m8-home.turn-app-bar-layout .m8-track-continue, .lot-screen.lot-showroom .lot-race) {
+  :root body :is(.lot-screen.lot-showroom .lot-race) {
     left: max(var(--turn-gutter, 16px), env(safe-area-inset-left));
     width: auto;
   }
 
-  :root body .m8-home.turn-app-bar-layout .m8-home-main,
   :root body .lot-screen.lot-showroom {
     padding-bottom: calc(var(--turn-dock-space) + 16px);
     scroll-padding-bottom: calc(var(--turn-dock-space) + 12px);
@@ -114,7 +113,7 @@
   /* The Paper bar under the dock, so content never shows around or under it. It
      belongs to the button's own container, so it shares the button's stacking
      context and always paints just below it. */
-  :root body :is(.m8-home.turn-app-bar-layout .m8-home-main, .lot-screen.lot-showroom .lot-card-actions)::after {
+  :root body :is(.lot-screen.lot-showroom .lot-card-actions)::after {
     content: "";
     position: fixed;
     z-index: 14;
