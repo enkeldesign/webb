@@ -158,7 +158,7 @@ for (const token of [
   assert.ok(tokens.includes(token), `Missing geometry or elevation token ${token}`);
 }
 
-assert.match(semantic, /@import url\('\.\/design-tokens\.css\?revision=r162-social-sharing'\)/);
+assert.match(semantic, new RegExp(`@import url\\('\\./design-tokens\\.css\\?build=${release.cacheKey}'\\)`));
 assert.match(semantic, /\.install-primary,[\s\S]*\.m8-home-fixed-layout \.m8-track-continue,[\s\S]*\.track-select-continue,[\s\S]*\.lot-race/);
 assert.match(semantic, /\.drive-drift-zone,[\s\S]*var\(--turn-control-drift\)/);
 assert.match(semantic, /\.drive-pad \.drive-gas-zone,[\s\S]*var\(--turn-control-gas\)/);
