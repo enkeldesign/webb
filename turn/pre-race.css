@@ -655,7 +655,9 @@
 .turn-pr-sheet {
   width: min(34rem, calc(100% - (2 * var(--turn-pr-gutter))));
   max-width: none;
-  max-height: calc(100% - (2 * var(--turn-pr-gutter)));
+  /* Viewport units, not percentages: WebKit collapses a percentage max-height chain
+     inside a top-layer dialog to the card's border. */
+  max-height: calc(100dvh - (2 * var(--turn-pr-gutter)));
   margin: auto;
   padding: 0;
   border: 0;
@@ -666,6 +668,7 @@
 
 .turn-pr-sheet[open] {
   display: flex;
+  flex-direction: column;
 }
 
 .turn-pr-sheet::backdrop {
@@ -673,8 +676,10 @@
 }
 
 .turn-pr-sheet-card {
-  flex: 1 1 auto;
-  max-height: 100%;
+  /* The card takes its content height and shrinks, with its body scrolling, when the
+     dialog's max-height is reached. */
+  flex: 0 1 auto;
+  min-height: 0;
   box-shadow: 8px 8px 0 var(--turn-ink, #08090a);
 }
 

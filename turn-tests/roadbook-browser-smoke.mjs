@@ -159,7 +159,10 @@ async function phoneFlow(browserType, name) {
         focus: document.activeElement === dialog.querySelector('#turnTrackSheetTitle'),
         closeColor: globalThis.getComputedStyle(close).backgroundColor,
         closeSize: [closeBox.width, closeBox.height],
-        inside: card.top >= 0 && card.bottom <= globalThis.innerHeight + 0.5 && card.left >= 0 && card.right <= globalThis.innerWidth + 0.5
+        inside: card.top >= 0 && card.bottom <= globalThis.innerHeight + 0.5 && card.left >= 0 && card.right <= globalThis.innerWidth + 0.5,
+        // Fitting by collapsing is not fitting: the card holds its head and records.
+        height: card.height,
+        recordsInside: dialog.querySelector('.turn-pr-records').getBoundingClientRect().top < card.bottom
       };
     });
     assert.equal(sheet.title, 'Cliffside');
@@ -169,6 +172,7 @@ async function phoneFlow(browserType, name) {
     assert.equal(sheet.closeColor, 'rgb(255, 123, 84)', `${name}: close is orange`);
     assert.ok(sheet.closeSize.every((size) => size >= 44), `${name}: close is a 44px target`);
     assert.equal(sheet.inside, true, `${name}: the Track sheet fits the viewport`);
+    assert.ok(sheet.height >= 300 && sheet.recordsInside, `${name}: the Track sheet shows its content (${sheet.height}px)`);
     await page.locator('#turnTrackSheet .turn-pr-close').click();
     await page.waitForFunction(() => !document.querySelector('#turnTrackSheet').open);
     assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('roadbook-sheet-button')), true,
