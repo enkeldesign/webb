@@ -70,8 +70,24 @@ async function run(browserType, name) {
     await page.waitForSelector('.lot-showroom');
     await page.locator('.lot-race').click();
     await page.waitForSelector('#controls:not([hidden])', { timeout: 60000 });
-    // A saved rival shows SPECTATE; show it so the row carries its widest set.
-    await page.evaluate(() => { document.querySelector('.spectate-button').hidden = false; });
+    // A saved rival shows SPECTATE; show it so the row carries its widest set. The
+    // fixture entry opens a dialog that returns focus to its own trigger on close,
+    // like the audio panel.
+    await page.evaluate(() => {
+      document.querySelector('.spectate-button').hidden = false;
+      const trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'utility race-menu-fixture-button';
+      trigger.textContent = 'Fixture';
+      trigger.hidden = true;
+      const dialog = document.createElement('dialog');
+      dialog.className = 'race-menu-fixture-dialog';
+      dialog.innerHTML = '<button type="button">Close</button>';
+      document.body.appendChild(dialog);
+      trigger.addEventListener('click', () => dialog.showModal());
+      dialog.addEventListener('close', () => trigger.focus());
+      document.querySelector('.utility-group').appendChild(trigger);
+    });
     await settle(page);
 
     const wide = await row(page);
@@ -79,6 +95,7 @@ async function run(browserType, name) {
     assert.equal(wide.menu, false, `${name}: no ☰ while every button fits`);
     assert.ok(wide.names.includes('spectate-button') && wide.names.includes('m8-race-settings-button'));
 
+    await page.evaluate(() => { document.querySelector('.race-menu-fixture-button').hidden = false; });
     await page.setViewportSize({ width: 568, height: 320 });
     await settle(page);
     await settle(page);
@@ -113,7 +130,18 @@ async function run(browserType, name) {
       `${name}: an entry closes the sheet before opening its own dialog`);
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => !document.querySelector('dialog[open]'));
+    await settle(page);
+    assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('turn-race-menu-button')), true,
+      `${name}: closing an entry's dialog returns focus to ☰, not the entry inside the closed sheet`);
+    await page.locator('.turn-race-menu-button').click();
+    await page.locator('.turn-race-menu .race-menu-fixture-button').click();
+    await page.waitForSelector('.race-menu-fixture-dialog[open]');
+    await page.keyboard.press('Escape');
+    await settle(page);
+    assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('turn-race-menu-button')), true,
+      `${name}: a dialog that refocuses its entry still returns focus to ☰`);
 
+    await page.evaluate(() => { document.querySelector('.race-menu-fixture-button').hidden = true; });
     await page.setViewportSize({ width: 852, height: 393 });
     await settle(page);
     await settle(page);

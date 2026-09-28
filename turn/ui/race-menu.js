@@ -120,9 +120,24 @@ export function installRaceMenu({ documentRef = document, windowRef = window } =
     if (event.target === sheet) close();
   });
   // Entries open their own dialogs or change the race; close the sheet first.
+  let returnToMenu = false;
   list.addEventListener('click', (event) => {
-    if (event.target instanceof Element && event.target.closest('button')) close();
+    if (!(event.target instanceof Element && event.target.closest('button'))) return;
+    returnToMenu = true;
+    close();
   }, { capture: true });
+  // An entry's dialog returns focus to the entry itself, which now sits in the closed
+  // sheet; once that dialog has closed, focus goes to ☰ instead.
+  documentRef.addEventListener('close', (event) => {
+    if (!returnToMenu || event.target === sheet) return;
+    returnToMenu = false;
+    queueMicrotask(() => {
+      const active = documentRef.activeElement;
+      if (!active || active === documentRef.body || sheet.contains(active)) {
+        if (!menuButton.hidden) menuButton.focus({ preventScroll: true });
+      }
+    });
+  }, true);
 
   // Buttons are added and shown or hidden as the race state changes.
   observer.observe(group, { childList: true, attributes: true, subtree: true, attributeFilter: ['hidden', 'data-menu-state'] });
