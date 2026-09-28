@@ -63,7 +63,7 @@ function layout(page) {
   return page.evaluate(() => {
     const home = document.querySelector('.m8-home');
     const dock = document.querySelector('.roadbook-dock').getBoundingClientRect();
-    const visible = (node) => node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden';
+    const visible = (node) => node.getClientRects().length > 0 && globalThis.getComputedStyle(node).visibility !== 'hidden';
     const targets = [...document.querySelectorAll('.roadbook-card, .roadbook-dock button, .turn-app-bar-actions button')].filter(visible);
     const small = targets.filter((node) => {
       const box = node.getBoundingClientRect();
@@ -71,10 +71,10 @@ function layout(page) {
     }).map((node) => node.className);
     const names = [...document.querySelectorAll('.roadbook-card .turn-pr-card-name')];
     return {
-      overflowX: Math.max(home.scrollWidth - home.clientWidth, document.documentElement.scrollWidth - innerWidth),
+      overflowX: Math.max(home.scrollWidth - home.clientWidth, document.documentElement.scrollWidth - globalThis.innerWidth),
       small,
       dock: { top: dock.top, bottom: dock.bottom, height: dock.height },
-      viewport: { width: innerWidth, height: innerHeight },
+      viewport: { width: globalThis.innerWidth, height: globalThis.innerHeight },
       clippedNames: names.filter((node) => node.scrollWidth > node.clientWidth + 1).map((node) => node.textContent),
       art: [...document.querySelectorAll('.roadbook-card .turn-pr-card-art')].filter(visible).length,
       columns: new Set([...document.querySelectorAll('.roadbook-card')].map((node) => Math.round(node.getBoundingClientRect().left))).size,
@@ -157,9 +157,9 @@ async function phoneFlow(browserType, name) {
         description: dialog.querySelector('.turn-pr-detail-description').textContent.length > 0,
         // TURN focuses every dialog's heading as it opens, so it is announced first.
         focus: document.activeElement === dialog.querySelector('#turnTrackSheetTitle'),
-        closeColor: getComputedStyle(close).backgroundColor,
+        closeColor: globalThis.getComputedStyle(close).backgroundColor,
         closeSize: [closeBox.width, closeBox.height],
-        inside: card.top >= 0 && card.bottom <= innerHeight + 0.5 && card.left >= 0 && card.right <= innerWidth + 0.5
+        inside: card.top >= 0 && card.bottom <= globalThis.innerHeight + 0.5 && card.left >= 0 && card.right <= globalThis.innerWidth + 0.5
       };
     });
     assert.equal(sheet.title, 'Cliffside');
