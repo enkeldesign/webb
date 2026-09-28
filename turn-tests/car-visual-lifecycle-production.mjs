@@ -611,8 +611,9 @@ for (const cancelWarmup of [true, false]) {
 // are released, and dispose drops its drag listeners and its WebGL context once.
 const garageEnv = browserHarness();
 const garageRequests = [];
+const { CAR_VIEW } = await import('../turn/garage/car-view.js');
 const garage = await moduleUnderTest('turn/garage/showroom-viewer.js', {
-  ...catalog, ...garageEnv.bindings, disposeCarVisual, recolorCarVisual: models.recolorCarVisual,
+  ...catalog, ...garageEnv.bindings, CAR_VIEW, disposeCarVisual, recolorCarVisual: models.recolorCarVisual,
   recordPerformanceFrame() {},
   createCarVisual: () => { const request = deferred(); garageRequests.push(request); return request.promise; }
 }, ['createShowroomViewer']);

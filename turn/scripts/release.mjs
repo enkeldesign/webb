@@ -359,6 +359,8 @@ function synchronizeUiBaselineTargets(importMap, release) {
     ['/turn/garage/garage-cars.js', []],
     ['/turn/garage/garage-selection.js', []],
     ['/turn/garage/showroom-viewer.js', []],
+    ['/turn/garage/garage-catalog.js', []],
+    ['/turn/garage/car-view.js', []],
     ['/turn/garage/training-car-guide.js', ['?revision=r1']],
     // Modules that request a stylesheet by a release-bound literal URL.
     ['/turn/social/your-turn-share.js', ['?revision=r4-runtime-share-state']],

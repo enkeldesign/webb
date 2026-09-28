@@ -9,11 +9,12 @@ import { garageCarOrder } from '../turn/garage/garage-cars.js';
 
 // GARAGE (garage/garage.js): one featured car at a time in Trophy Road order, the
 // saved car, the current choice and a locked preview kept apart, RACE only for a
-// playable car, back to ROADBOOK with the track kept, and a layout that fits 320px
-// to iPad. Every step here is a real pointer tap on what the player sees.
+// playable car, ALL CARS in a sheet on phones and on the page on iPad, back to
+// ROADBOOK with the track kept, and a layout that fits 320px to iPad. Every step here
+// is a real pointer tap on what the player sees.
 const root = fileURLToPath(new URL('../', import.meta.url));
 const threeRoot = fileURLToPath(new URL('../', import.meta.resolve('three')));
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.PNG': 'image/png' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.PNG': 'image/png', '.webp': 'image/webp' };
 const server = http.createServer(async (request, response) => {
   try {
     let pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
@@ -100,6 +101,8 @@ const garageLayout = (page) => page.evaluate(() => {
   const visible = (node) => !node.hidden && node.getClientRects().length > 0 && globalThis.getComputedStyle(node).visibility !== 'hidden';
   const dock = document.querySelector('.garage-dock').getBoundingClientRect();
   const view = document.querySelector('.garage-view').getBoundingClientRect();
+  const inline = document.querySelector('.garage-catalog-inline');
+  const cards = [...document.querySelectorAll('.garage-catalog-inline .garage-car-card')];
   const targets = [...garage.querySelectorAll('button')].filter(visible);
   return {
     overflowX: Math.max(garage.scrollWidth - garage.clientWidth, document.documentElement.scrollWidth - globalThis.innerWidth),
@@ -111,11 +114,17 @@ const garageLayout = (page) => page.evaluate(() => {
     view: { width: view.width, height: view.height },
     viewport: { width: globalThis.innerWidth, height: globalThis.innerHeight },
     specsOpen: !document.querySelector('#garageSpecs').hidden,
+    catalog: garage.dataset.catalog,
+    allCarsButton: visible(document.querySelector('.garage-all-cars-button')),
+    inlineCards: visible(inline) ? cards.length : 0,
+    inlineColumns: new Set(cards.map((card) => Math.round(card.getBoundingClientRect().left))).size,
     clippedName: document.querySelector('.garage-name').scrollWidth > document.querySelector('.garage-name').clientWidth + 1,
     lastClearsDock: (() => {
       garage.scrollTop = garage.scrollHeight;
-      const details = document.querySelector('.garage-details').getBoundingClientRect();
-      const clear = details.bottom <= document.querySelector('.garage-dock').getBoundingClientRect().top + 1;
+      const last = [document.querySelector('.garage-details'), visible(inline) ? inline : null]
+        .filter(Boolean)
+        .reduce((lowest, node) => Math.max(lowest, node.getBoundingClientRect().bottom), -Infinity);
+      const clear = last <= document.querySelector('.garage-dock').getBoundingClientRect().top + 1;
       garage.scrollTop = 0;
       return clear;
     })()
@@ -208,6 +217,98 @@ async function phoneFlow(browserType, name) {
     const firstLocked = locks.find((car) => car.locked)?.id;
     assert.ok(firstLocked, `${name}: a new profile has locked cars to preview`);
 
+    // ALL CARS: every car in a sheet. A playable card becomes the choice, a locked one
+    // only a preview; the sheet closes on either and focus returns to ALL CARS.
+    const allCarsButton = page.locator('.garage-all-cars-button');
+    assert.equal((await allCarsButton.textContent()).trim(), `ALL CARS · ${order.length}`);
+    await allCarsButton.click();
+    await page.waitForSelector('.garage-all-cars[open]');
+    await page.waitForFunction(() => {
+      const still = document.querySelector('.garage-all-cars .garage-car-still');
+      return still.complete && still.naturalWidth > 0;
+    });
+    const sheet = await page.evaluate(() => {
+      const dialog = document.querySelector('.garage-all-cars');
+      const close = dialog.querySelector('.turn-pr-close');
+      const body = dialog.querySelector('.turn-pr-sheet-body');
+      const cards = [...dialog.querySelectorAll('.garage-car-card')];
+      const box = dialog.querySelector('.turn-pr-sheet-card').getBoundingClientRect();
+      const locked = cards.filter((card) => card.classList.contains('is-locked'));
+      const open = cards.filter((card) => !card.classList.contains('is-locked'));
+      return {
+        focus: document.activeElement === dialog.querySelector('#garageAllCarsTitle'),
+        closeColor: globalThis.getComputedStyle(close).backgroundColor,
+        ids: cards.map((card) => card.dataset.carId),
+        pressed: cards.filter((card) => card.getAttribute('aria-pressed') === 'true').map((card) => card.dataset.carId),
+        selectedState: dialog.querySelector('.garage-car-card.is-selected .garage-car-state').textContent.trim(),
+        openStills: open.every((card) => /\/stills\/[a-z-]+\.webp/.test(card.querySelector('img').src) && !/-outline\.webp/.test(card.querySelector('img').src)),
+        lockedDrawings: locked.length > 0 && locked.every((card) => /-outline\.webp/.test(card.querySelector('img').src)),
+        lockedLabels: locked.every((card) => /, \d+ of \d+\. Locked until \d+ trophies\. Preview\.$/.test(card.getAttribute('aria-label'))),
+        lockedThresholds: locked.every((card) => /^\d+$/.test(card.querySelector('.garage-car-threshold')?.textContent || '')),
+        columns: new Set(cards.slice(0, 4).map((card) => Math.round(card.getBoundingClientRect().left))).size,
+        inside: box.left >= 0 && box.right <= globalThis.innerWidth + 0.5 && box.bottom <= globalThis.innerHeight + 0.5,
+        overflowX: body.scrollWidth - body.clientWidth,
+        small: cards.filter((card) => {
+          const rect = card.getBoundingClientRect();
+          return rect.width < 44 || rect.height < 44;
+        }).length
+      };
+    });
+    assert.deepEqual(sheet, {
+      focus: true,
+      closeColor: 'rgb(255, 123, 84)',
+      ids: order,
+      pressed: [order[0]],
+      selectedState: '✓Selected',
+      openStills: true,
+      lockedDrawings: true,
+      lockedLabels: true,
+      lockedThresholds: true,
+      columns: 2,
+      inside: true,
+      overflowX: 0,
+      small: 0
+    }, `${name}: ALL CARS shows every car in two columns, the choice selected and locked cars as line drawings`);
+
+    const secondCar = order[1];
+    assert.equal(locks.find((car) => car.id === secondCar)?.locked, false);
+    await page.locator(`.garage-all-cars .garage-car-card[data-car-id="${secondCar}"]`).click();
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars').open);
+    state = await garageState(page);
+    assert.deepEqual([state.viewed, state.choice], [secondCar, secondCar], `${name}: a playable card becomes the choice`);
+    const afterChoice = await page.evaluate(() => ({
+      focus: document.activeElement?.classList.contains('garage-all-cars-button'),
+      announced: document.querySelector('.garage-announcer').textContent
+    }));
+    assert.deepEqual(afterChoice, { focus: true, announced: `${carName[secondCar]}, 2 of ${order.length}.` },
+      `${name}: focus returns to ALL CARS and the new car is announced`);
+
+    await allCarsButton.click();
+    await page.waitForSelector('.garage-all-cars[open]');
+    await page.locator(`.garage-all-cars .garage-car-card[data-car-id="${firstLocked}"]`).click();
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars').open);
+    state = await garageState(page);
+    assert.deepEqual([state.viewed, state.choice, state.race, state.leave], [firstLocked, secondCar, null, `Back to ${carName[secondCar]}`],
+      `${name}: a locked card is only a preview`);
+    await allCarsButton.click();
+    await page.waitForSelector('.garage-all-cars[open]');
+    const previewed = await page.evaluate((id) => {
+      const card = document.querySelector(`.garage-all-cars .garage-car-card[data-car-id="${id}"]`);
+      return {
+        previewed: card.classList.contains('is-previewed'),
+        state: card.querySelector('.garage-car-state').textContent.trim(),
+        chosen: document.querySelector('.garage-all-cars .garage-car-card[aria-pressed="true"]').dataset.carId
+      };
+    }, firstLocked);
+    assert.deepEqual(previewed, { previewed: true, state: 'Previewing', chosen: secondCar },
+      `${name}: the sheet marks the preview apart from the choice`);
+    // Escape closes the sheet and changes nothing.
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars').open);
+    assert.equal((await garageState(page)).viewed, firstLocked, `${name}: closing ALL CARS keeps the car on stage`);
+    assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('garage-all-cars-button')), true);
+    await page.locator('.garage-leave-preview').click();
+
     // Saved car → current choice → locked preview → back: the choice, not the saved car.
     const playable = locks.find((car) => !car.locked)?.id || 'classic';
     await page.evaluate((id) => globalThis.__turnGarage.viewCar(id), playable);
@@ -261,6 +362,19 @@ async function unlockedFlow() {
   try {
     const progress = await page.locator('.garage-available').textContent();
     assert.match(progress, new RegExp(`${order.length}\\s*/\\s*${order.length}|${order.length} of ${order.length}`), `All cars available: ${progress}`);
+
+    // 17/17: every card is a coloured still, and the last car can be chosen.
+    await page.locator('.garage-all-cars-button').click();
+    await page.waitForSelector('.garage-all-cars[open]');
+    const unlockedCards = await page.evaluate(() => [...document.querySelectorAll('.garage-all-cars .garage-car-card')]
+      .map((card) => ({ locked: card.classList.contains('is-locked'), drawing: /-outline\.webp/.test(card.querySelector('img').src) })));
+    assert.equal(unlockedCards.length, order.length);
+    assert.ok(unlockedCards.every((card) => !card.locked && !card.drawing), 'With every car unlocked, no card is a line drawing');
+    const lastCar = order[order.length - 1];
+    await page.locator(`.garage-all-cars .garage-car-card[data-car-id="${lastCar}"]`).click();
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars').open);
+    const last = await garageState(page);
+    assert.deepEqual([last.viewed, last.choice, last.race?.label], [lastCar, lastCar, 'RACE'], 'The last car is chosen from ALL CARS');
 
     // A fixed service livery is shown, never repainted.
     await page.evaluate((id) => globalThis.__turnGarage.viewCar(id), fixedLiveryId);
@@ -326,6 +440,42 @@ async function unlockedFlow() {
   }
 }
 
+// The ALL CARS sheet at the current size: columns, bounds and whole names.
+async function sheetFacts(page) {
+  await page.locator('.garage-all-cars-button').click();
+  await page.waitForSelector('.garage-all-cars[open]');
+  const facts = await page.evaluate(() => {
+    const dialog = document.querySelector('.garage-all-cars');
+    const body = dialog.querySelector('.turn-pr-sheet-body');
+    const cards = [...dialog.querySelectorAll('.garage-car-card')];
+    const box = dialog.querySelector('.turn-pr-sheet-card').getBoundingClientRect();
+    return {
+      columns: new Set(cards.slice(0, 6).map((card) => Math.round(card.getBoundingClientRect().left))).size,
+      inside: box.left >= 0 && box.top >= 0 && box.right <= globalThis.innerWidth + 0.5 && box.bottom <= globalThis.innerHeight + 0.5,
+      overflowX: body.scrollWidth - body.clientWidth,
+      clippedNames: cards.map((card) => card.querySelector('.garage-car-name'))
+        .filter((node) => node.scrollWidth > node.clientWidth + 1)
+        .map((node) => node.textContent),
+      // A word wider than its card would break mid-word ("AMBULANC-E").
+      brokenWords: cards.map((card) => card.querySelector('.garage-car-name')).filter((node) => {
+        const style = globalThis.getComputedStyle(node);
+        const probe = document.createElement('span');
+        Object.assign(probe.style, { position: 'absolute', visibility: 'hidden', whiteSpace: 'nowrap', font: style.font, letterSpacing: style.letterSpacing, textTransform: style.textTransform });
+        node.appendChild(probe);
+        const broken = node.textContent.trim().split(/\s+/).some((word) => {
+          probe.textContent = word;
+          return probe.getBoundingClientRect().width > node.clientWidth + 0.5;
+        });
+        probe.remove();
+        return broken;
+      }).map((node) => node.textContent)
+    };
+  });
+  await page.locator('.garage-all-cars .turn-pr-close').click();
+  await page.waitForFunction(() => !document.querySelector('.garage-all-cars').open);
+  return facts;
+}
+
 async function layoutAt(name, size, check) {
   const { browser, page, errors } = await openGarage(chromium, size);
   try {
@@ -347,20 +497,59 @@ try {
   await phoneFlow(chromium, 'Chromium');
   await phoneFlow(webkit, 'WebKit');
   await unlockedFlow();
-  await layoutAt('320x568', { width: 320, height: 568 }, (facts) => {
+  await layoutAt('320x568', { width: 320, height: 568 }, async (facts, page) => {
     assert.equal(facts.specsOpen, false);
+    assert.deepEqual([facts.catalog, facts.allCarsButton], ['sheet', true]);
+    assert.deepEqual(await sheetFacts(page), { columns: 2, inside: true, overflowX: 0, clippedNames: [], brokenWords: [] },
+      '320: ALL CARS keeps two columns and whole names');
   });
-  await layoutAt('852x393 short landscape', { width: 852, height: 393 }, (facts) => {
+  await layoutAt('852x393 short landscape', { width: 852, height: 393 }, async (facts, page) => {
     assert.ok(facts.dock.height <= 80, `short landscape: a one-line dock (${facts.dock.height})`);
+    assert.equal(facts.catalog, 'sheet');
+    const sheet = await sheetFacts(page);
+    assert.ok(sheet.columns >= 3, `short landscape: ALL CARS uses the width (${sheet.columns} columns)`);
+    assert.deepEqual([sheet.inside, sheet.overflowX, sheet.clippedNames, sheet.brokenWords], [true, 0, [], []]);
   });
-  await layoutAt('820x1180 iPad portrait', { width: 820, height: 1180, isMobile: false }, (facts) => {
+  await layoutAt('820x1180 iPad portrait', { width: 820, height: 1180, isMobile: false }, async (facts, page) => {
     assert.equal(facts.specsOpen, true, 'iPad: Specifications start open');
+    assert.deepEqual([facts.catalog, facts.allCarsButton, facts.inlineCards, facts.inlineColumns], ['below', false, order.length, 4],
+      'iPad portrait: ALL CARS sits below the featured car, four across');
+    // A tap on a card below the stage features that car and brings it into view.
+    const target = order[2];
+    await page.locator(`.garage-catalog-inline .garage-car-card[data-car-id="${target}"]`).scrollIntoViewIfNeeded();
+    await page.evaluate(() => { document.querySelector('.garage').scrollTop = document.querySelector('.garage').scrollHeight; });
+    await page.locator(`.garage-catalog-inline .garage-car-card[data-car-id="${target}"]`).click();
+    await page.waitForFunction(() => {
+      const stage = document.querySelector('.garage-stage').getBoundingClientRect();
+      return stage.bottom > 0 && stage.top < globalThis.innerHeight;
+    });
+    const chosen = await page.evaluate(() => ({
+      viewed: globalThis.__turnGarage.getViewedCarId(),
+      focus: document.activeElement?.dataset?.carId,
+      pressed: document.querySelector('.garage-catalog-inline .garage-car-card[aria-pressed="true"]')?.dataset.carId
+    }));
+    assert.deepEqual(chosen, { viewed: target, focus: target, pressed: target }, 'iPad portrait: a card features its car and keeps focus');
   });
   await layoutAt('1180x820 iPad landscape', { width: 1180, height: 820, isMobile: false }, async (facts, page) => {
     assert.equal(facts.specsOpen, true);
-    const beside = await page.evaluate(() => document.querySelector('.garage-details').getBoundingClientRect().left
-      >= document.querySelector('.garage-feature').getBoundingClientRect().right - 1);
-    assert.equal(beside, true, 'iPad landscape: the details sit beside the featured car');
+    assert.deepEqual([facts.catalog, facts.allCarsButton, facts.inlineCards], ['side', false, order.length],
+      'iPad landscape: ALL CARS sits beside the featured car');
+    const beside = await page.evaluate(() => {
+      const catalog = document.querySelector('.garage-catalog-inline').getBoundingClientRect();
+      const feature = document.querySelector('.garage-feature').getBoundingClientRect();
+      const details = document.querySelector('.garage-details').getBoundingClientRect();
+      return { catalogFirst: catalog.right <= feature.left + 1, detailsBeside: details.left >= feature.right - 1 };
+    });
+    assert.deepEqual(beside, { catalogFirst: true, detailsBeside: true }, 'iPad landscape: list, featured car, details');
+    // The featured car stays in view while the list scrolls.
+    const pinned = await page.evaluate(() => {
+      const garage = document.querySelector('.garage');
+      garage.scrollTop = garage.scrollHeight;
+      const stage = document.querySelector('.garage-stage').getBoundingClientRect();
+      const bar = document.querySelector('.garage-bar').getBoundingClientRect();
+      return garage.classList.contains('is-detail-pinned') && stage.top >= bar.bottom - 1 && stage.bottom <= globalThis.innerHeight;
+    });
+    assert.equal(pinned, true, 'iPad landscape: the featured car stays in view at the end of the list');
   });
   console.log('GARAGE features one car at a time, keeps the choice apart from a locked preview, races it and fits 320px to iPad.');
 } finally {

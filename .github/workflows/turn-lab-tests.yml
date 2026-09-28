@@ -181,6 +181,9 @@ jobs:
       - name: Run GARAGE structure regression
         run: node turn-tests/garage-structure-production.mjs
 
+      - name: Run ALL CARS artwork regression
+        run: node turn-tests/garage-car-stills-production.mjs
+
       - name: Run dormant BUILD-A-CAR schema and storage regression
         run: node turn-lab/tests/build-a-car-schema.mjs
 

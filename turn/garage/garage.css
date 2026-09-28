@@ -3,8 +3,11 @@
 
    - Phones: one column. The featured car on its stage with previous/next beside it,
      name and description, PAINT and SHIFT, then the Specifications and perk
-     disclosures. The dock keeps the chosen track and car above RACE.
+     disclosures. ALL CARS opens every car in a sheet. The dock keeps the chosen track
+     and car above RACE.
    - Spacious screens (iPad): the stage beside specifications that are always open.
+     Wide: ALL CARS beside them, the featured car pinned while the list scrolls. Tall:
+     ALL CARS below them.
    - Short landscape: the stage beside the details, a one-line dock. */
 
 .garage {
@@ -103,31 +106,17 @@
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 8px 20px;
+  gap: 12px;
 }
 
-.garage-progress {
-  display: grid;
-  gap: 2px;
-  margin: 0;
+.garage-all-cars-button {
+  flex: none;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
-@media (min-width: 40rem) {
-  .garage-progress {
-    text-align: right;
-  }
-}
-
-.garage-available {
-  font-family: var(--turn-pr-font-mono);
-  font-size: var(--turn-pr-type-meta);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.garage-next {
-  color: var(--turn-pr-muted);
-  font-size: var(--turn-pr-type-spec);
+.garage-all-cars-button[hidden] {
+  display: none;
 }
 
 .garage-layout {
@@ -840,6 +829,296 @@
   }
 }
 
+/* ---------- ALL CARS: one list of every car, in a sheet or on the page ---------- */
+
+.garage-all-cars.turn-pr-sheet {
+  width: min(40rem, calc(100% - (2 * var(--turn-pr-gutter))));
+}
+
+.garage-catalog-panel {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.garage-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.garage-available {
+  font-family: var(--turn-pr-font-mono);
+  font-size: var(--turn-pr-type-meta);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.garage-next {
+  color: var(--turn-pr-muted);
+  font-size: var(--turn-pr-type-spec);
+}
+
+.garage-catalog-hint {
+  margin: 0;
+  color: var(--turn-pr-muted);
+  font-size: var(--turn-pr-type-spec);
+  line-height: 1.35;
+}
+
+.garage-catalog {
+  display: grid;
+  /* Two columns down to a 320px phone; more as the container grows. */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 7rem), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@container (min-width: 40rem) {
+  .garage-catalog {
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  }
+}
+
+.garage-catalog-item {
+  display: flex;
+  min-width: 0;
+}
+
+/* A car card: the car at the showroom's 20° view, then its name, ordinal and state. */
+.garage-car-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: var(--turn-pr-rule);
+  border-radius: var(--turn-pr-radius);
+  background: var(--turn-pr-card);
+  box-shadow: none;
+  color: var(--turn-ink, #08090a);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.garage-car-art {
+  display: block;
+  aspect-ratio: 5 / 3;
+  border-bottom: var(--turn-pr-rule);
+  background: linear-gradient(to bottom, #c7ecff 0 58%, #6f7d88 58% 100%);
+}
+
+.garage-car-still {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.garage-car-card.has-no-still .garage-car-still {
+  visibility: hidden;
+}
+
+.garage-car-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px 10px;
+}
+
+.garage-car-name {
+  min-width: 0;
+  font-family: var(--turn-pr-font-display);
+  font-size: 1.0625rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  overflow-wrap: break-word;
+  text-transform: uppercase;
+}
+
+.garage-car-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 6px;
+  min-height: 1.5rem;
+}
+
+.garage-car-ordinal {
+  padding: 2px 7px;
+  border: 2px solid var(--turn-ink, #08090a);
+  border-radius: 999px;
+  font-family: var(--turn-pr-font-mono);
+  font-size: var(--turn-pr-type-meta);
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.garage-car-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--turn-pr-font-mono);
+  font-size: var(--turn-pr-type-meta);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.garage-car-state .turn-pr-check {
+  font-size: 0.9375rem;
+}
+
+/* The choice RACE starts: the ordinal inverts to Ink and the card lifts. */
+.garage-car-card.is-selected {
+  box-shadow: var(--turn-pr-shadow);
+}
+
+.garage-car-card.is-selected .garage-car-ordinal {
+  background: var(--turn-ink, #08090a);
+  color: var(--turn-paper, #fff8e8);
+}
+
+/* Locked: the real car as an Ink line drawing on Paper, quieter, with its threshold. */
+.garage-car-card.is-locked {
+  border-color: var(--turn-pr-faint);
+  background: transparent;
+}
+
+.garage-car-card.is-locked .garage-car-art {
+  border-color: var(--turn-pr-faint);
+  background: var(--turn-paper, #fff8e8);
+}
+
+.garage-car-card.is-locked .garage-car-still {
+  opacity: 0.78;
+}
+
+.garage-car-card.is-locked :is(.garage-car-name, .garage-car-state) {
+  color: var(--turn-pr-muted);
+}
+
+.garage-car-card.is-locked .garage-car-ordinal {
+  border-color: var(--turn-pr-faint);
+  color: var(--turn-pr-muted);
+}
+
+/* The locked car on stage right now: an Ink dashed edge, for a look that is not a choice. */
+.garage-car-card.is-locked.is-previewed {
+  border-style: dashed;
+  border-color: var(--turn-ink, #08090a);
+}
+
+.garage-car-card.is-previewed .garage-car-state {
+  color: var(--turn-ink, #08090a);
+}
+
+.garage-car-card:focus-visible {
+  outline: 3px solid var(--turn-ink, #08090a);
+  outline-offset: 4px;
+}
+
+@media (hover: hover) {
+  .garage-car-card:hover {
+    border-color: var(--turn-ink, #08090a);
+  }
+}
+
+/* The narrowest cards (a 320px phone) keep every word of the name whole. */
+@container (max-width: 17rem) {
+  .garage-catalog {
+    gap: 10px;
+  }
+
+  .garage-car-name {
+    font-size: 0.875rem;
+    letter-spacing: -0.02em;
+  }
+
+  .garage-car-body {
+    padding: 7px 7px 8px;
+  }
+}
+
+@media (max-width: 22.5rem) {
+  .garage-all-cars .turn-pr-sheet-body {
+    padding-inline: 12px;
+  }
+}
+
+/* On the page (iPad) */
+
+.garage-catalog-inline {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.garage-catalog-inline[hidden] {
+  display: none;
+}
+
+.garage[data-catalog='below'] .garage-catalog-inline {
+  margin-top: 32px;
+}
+
+.garage[data-catalog='side'] .garage-page {
+  display: grid;
+  grid-template-columns: minmax(17rem, 21rem) minmax(0, 1fr);
+  grid-template-areas:
+    'head head'
+    'catalog main';
+  align-items: start;
+  gap: 20px 28px;
+}
+
+.garage[data-catalog='side'] .garage-head {
+  grid-area: head;
+}
+
+.garage[data-catalog='side'] .garage-catalog-inline {
+  grid-area: catalog;
+}
+
+.garage[data-catalog='side'] .garage-layout {
+  grid-area: main;
+}
+
+/* Beside the list, the stage gives up height so the featured car fits between the
+   app bar and the dock and can stay in view while the list scrolls. */
+.garage[data-catalog='side'] .garage-stage {
+  height: clamp(14rem, 36vh, 22rem);
+}
+
+.garage[data-catalog='side'] .garage-feature {
+  gap: 10px;
+}
+
+.garage.is-detail-pinned .garage-layout {
+  position: sticky;
+  top: calc(var(--garage-bar-height, 64px) + 16px);
+}
+
 /* ---------- Spacious screens (iPad) ---------- */
 
 .garage.is-spacious .garage-layout {
@@ -917,6 +1196,15 @@
   .garage-dock .turn-pr-dock-actions > .is-primary {
     flex: none;
     min-width: 11rem;
+  }
+
+  /* ALL CARS uses the width for more columns, in one list (not the Track sheet's two). */
+  .garage-all-cars.turn-pr-sheet {
+    width: min(56rem, calc(100% - (2 * var(--turn-pr-gutter))));
+  }
+
+  .garage-all-cars .turn-pr-sheet-body {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

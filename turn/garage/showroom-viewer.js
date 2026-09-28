@@ -12,10 +12,11 @@ import {
 } from '../vehicle/catalog.js?revision=r250-supercar-finish';
 import { createCarVisual, disposeCarVisual, recolorCarVisual } from '../vehicle/car-models.js?revision=r252-supercar-outward-rims';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
+import { CAR_VIEW } from './car-view.js';
 
 const FRAME_INTERVAL_MS = 1000 / 30;
 // Every car starts 20° off head-on, the view the car cards use too.
-export const SHOWROOM_INITIAL_YAW = THREE.MathUtils.degToRad(200);
+export const SHOWROOM_INITIAL_YAW = THREE.MathUtils.degToRad(CAR_VIEW.yawDegrees);
 const IDLE_SPIN = 0.0022;
 const DRAG_RATE = 0.012;
 
@@ -38,16 +39,16 @@ export function createShowroomViewer(host) {
   renderer.domElement.setAttribute('aria-hidden', 'true');
   host.appendChild(renderer.domElement);
 
-  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 70);
-  camera.position.set(8.6, 4.9, 9.7);
-  camera.lookAt(0, 1.05, 0);
+  const camera = new THREE.PerspectiveCamera(CAR_VIEW.fov, 1, 0.1, 70);
+  camera.position.set(...CAR_VIEW.camera);
+  camera.lookAt(...CAR_VIEW.target);
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x43556c, 3.4));
-  const key = new THREE.DirectionalLight(0xfff2c9, 4.4);
-  key.position.set(-7, 11, 8);
+  scene.add(new THREE.HemisphereLight(CAR_VIEW.hemisphere.sky, CAR_VIEW.hemisphere.ground, CAR_VIEW.hemisphere.intensity));
+  const key = new THREE.DirectionalLight(CAR_VIEW.key.color, CAR_VIEW.key.intensity);
+  key.position.set(...CAR_VIEW.key.position);
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0x8ed8ff, 2.2);
-  rim.position.set(8, 5, -7);
+  const rim = new THREE.DirectionalLight(CAR_VIEW.rim.color, CAR_VIEW.rim.intensity);
+  rim.position.set(...CAR_VIEW.rim.position);
   scene.add(rim);
 
   const platformResources = [];
@@ -79,7 +80,7 @@ export function createShowroomViewer(host) {
   );
 
   const stage = new THREE.Group();
-  stage.position.y = 0.26;
+  stage.position.y = CAR_VIEW.stageHeight;
   scene.add(stage);
 
   let visual = null;
@@ -178,7 +179,7 @@ export function createShowroomViewer(host) {
           carId,
           color: currentColor,
           secondaryColor: currentSecondaryColor,
-          targetLength: 6.5,
+          targetLength: CAR_VIEW.targetLength,
           outline: true
         });
         if (request !== generation || stopped) {
@@ -224,8 +225,10 @@ export function createShowroomViewer(host) {
       camera.updateProjectionMatrix();
       renderer.setSize(Math.round(rect.width), Math.round(rect.height), false);
       const compact = rect.height < 250;
-      camera.position.set(compact ? 9.6 : 8.6, compact ? 5.2 : 4.9, compact ? 10.6 : 9.7);
-      camera.lookAt(0, 1.05, 0);
+      // A short stage steps the camera back so the whole car still fits.
+      if (compact) camera.position.set(9.6, 5.2, 10.6);
+      else camera.position.set(...CAR_VIEW.camera);
+      camera.lookAt(...CAR_VIEW.target);
       renderOnce();
     },
     stop,
