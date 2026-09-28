@@ -393,6 +393,8 @@ export function showGarage({
       order: ORDER,
       carName: (carId) => getCarDefinition(carId).name,
       carLock,
+      // A saved repaint shows on the card, as it does on stage.
+      savedPaint: (carId) => (isPaintUnlocked() ? getSavedLotPaint(carId) : null),
       onChoose: (carId, context) => chooseFromCatalog(carId, context)
     });
     catalogPanel.appendChild(catalog.list);
@@ -599,6 +601,7 @@ export function showGarage({
           }
           saveLotPaint(current.carId, current);
           syncPaintAction();
+          catalog.sync();
         });
         paintPanel.append(swatches, action);
         syncPaintAction();
@@ -707,6 +710,7 @@ export function showGarage({
     function openAllCars() {
       if (catalogPlacement() !== 'sheet' || allCarsSheet.open) return;
       if (!allCarsSheet.open) allCarsSheet.showModal();
+      catalog.setActive(true);
       viewer.pause();
       // Start where the player is: the chosen car's card, or the previewed one.
       const { choice, preview } = selection.state();
@@ -759,6 +763,7 @@ export function showGarage({
       } else {
         closeAllCars();
         if (catalogPanel.parentElement !== catalogInline) catalogInline.appendChild(catalogPanel);
+        catalog.setActive(true);
         // Beside the featured car it leads the reading order; below, it follows.
         if (placement === 'side' && catalogInline.nextElementSibling !== layout) page.insertBefore(catalogInline, layout);
         if (placement === 'below' && layout.nextElementSibling !== catalogInline) layout.after(catalogInline);

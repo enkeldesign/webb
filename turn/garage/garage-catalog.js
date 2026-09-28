@@ -4,13 +4,15 @@
 // showroom's 20° view (scripts/render-car-stills.mjs); a locked car shows the same
 // car as an Ink line drawing, with its lock and trophy threshold.
 //
+// A car the player has repainted and saved wears those colours on its card too,
+// rendered by car-still.js once the list is on screen.
+//
 // Choosing a card goes through GARAGE's selection model: a playable car becomes the
 // choice, a locked car is only previewed.
 
 import { LOCK_ICON, TROPHY_ICON } from '../progression/trophy-road.js';
-
-const STILL_WIDTH = 480;
-const STILL_HEIGHT = 288;
+import { CAR_VIEW } from './car-view.js';
+import { paintedStillUrl, stillUrl } from './car-still.js';
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({
@@ -19,10 +21,7 @@ function escapeHtml(value) {
 }
 
 export function carStillUrl(carId, { outline = false } = {}) {
-  const url = new URL(`../assets/cars/stills/${carId}${outline ? '-outline' : ''}.webp`, import.meta.url);
-  const buildKey = globalThis.__TURN_BUILD__?.cacheKey;
-  if (buildKey) url.searchParams.set('build', buildKey);
-  return url.href;
+  return stillUrl(`${carId}${outline ? '-outline' : ''}.webp`);
 }
 
 export function createGarageCatalog({
@@ -30,8 +29,12 @@ export function createGarageCatalog({
   order,
   carName,
   carLock,
+  savedPaint = () => null,
   onChoose
 }) {
+  // Repainted cards render only once the list is on screen.
+  let active = false;
+  let lastState = null;
   const list = documentRef.createElement('ul');
   list.className = 'garage-catalog';
   list.setAttribute('aria-label', 'All cars');
@@ -39,7 +42,7 @@ export function createGarageCatalog({
     <li class="garage-catalog-item">
       <button class="garage-car-card" type="button" data-car-id="${escapeHtml(carId)}" aria-pressed="false">
         <span class="garage-car-art" aria-hidden="true">
-          <img class="garage-car-still" alt="" width="${STILL_WIDTH}" height="${STILL_HEIGHT}" loading="lazy" decoding="async" draggable="false">
+          <img class="garage-car-still" alt="" width="${CAR_VIEW.still.width}" height="${CAR_VIEW.still.height}" loading="lazy" decoding="async" draggable="false">
         </span>
         <span class="garage-car-body">
           <span class="garage-car-name">${escapeHtml(carName(carId))}</span>
@@ -61,8 +64,40 @@ export function createGarageCatalog({
     card.addEventListener('click', (event) => onChoose(card.dataset.carId, { card, pointer: event.detail > 0 }));
   }
 
+  function setSource(still, source) {
+    if (still.getAttribute('src') !== source) still.setAttribute('src', source);
+  }
+
+  // The factory still, the locked line drawing, or the car in its saved colours.
+  function showArt(card, carId, lock) {
+    const still = card.querySelector('.garage-car-still');
+    const paint = lock ? null : savedPaint(carId);
+    if (!paint) {
+      delete card.dataset.paint;
+      card.classList.remove('is-painting');
+      setSource(still, carStillUrl(carId, { outline: Boolean(lock) }));
+      return;
+    }
+    const key = `${paint.color}|${paint.secondaryColor}`.toLowerCase();
+    if (card.dataset.paint === key) return;
+    // Never show factory colours for a repainted car: its picture waits for the render.
+    if (!still.src.startsWith('blob:')) still.removeAttribute('src');
+    if (!active) return;
+    card.dataset.paint = key;
+    card.classList.add('is-painting');
+    paintedStillUrl({ carId, color: paint.color, secondaryColor: paint.secondaryColor }).then((url) => {
+      if (card.dataset.paint === key) setSource(still, url);
+    }, (error) => {
+      console.warn('TURN: a repainted car card could not render; showing factory colours.', error);
+      if (card.dataset.paint === key) setSource(still, carStillUrl(carId));
+    }).finally(() => {
+      if (card.dataset.paint === key) card.classList.remove('is-painting');
+    });
+  }
+
   // choiceId: the playable car RACE starts. previewId: a locked car being looked at.
-  function sync({ choiceId, previewId }) {
+  function sync({ choiceId, previewId } = lastState || {}) {
+    lastState = { choiceId, previewId };
     order.forEach((carId, index) => {
       const card = cards[index];
       const lock = carLock(carId);
@@ -72,9 +107,7 @@ export function createGarageCatalog({
       card.classList.toggle('is-locked', Boolean(lock));
       card.classList.toggle('is-previewed', previewed);
       card.setAttribute('aria-pressed', String(chosen));
-      const still = card.querySelector('.garage-car-still');
-      const source = carStillUrl(carId, { outline: Boolean(lock) });
-      if (still.getAttribute('src') !== source) still.setAttribute('src', source);
+      showArt(card, carId, lock);
       const state = card.querySelector('.garage-car-state');
       if (lock) {
         state.innerHTML = previewed
@@ -96,5 +129,12 @@ export function createGarageCatalog({
     return cards.find((card) => card.dataset.carId === carId) || null;
   }
 
-  return Object.freeze({ list, sync, cardFor });
+  // The list is on screen (the sheet opened, or it sits on the page).
+  function setActive(next) {
+    if (active === Boolean(next)) return;
+    active = Boolean(next);
+    if (active && lastState) sync(lastState);
+  }
+
+  return Object.freeze({ list, sync, cardFor, setActive });
 }

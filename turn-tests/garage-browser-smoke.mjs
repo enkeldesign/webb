@@ -434,6 +434,58 @@ async function unlockedFlow() {
       race: document.querySelector('.garage-race').getAttribute('aria-label')
     }));
     assert.deepEqual(secret, { name: 'SATAN’S SPORTS CAR', notice: true, race: 'Race Satan’s Sports Car' });
+
+    // Saved colours show on the car's card in ALL CARS; resetting brings back the factory still.
+    await page.evaluate(() => globalThis.__turnGarage.viewCar('van'));
+    await page.waitForSelector('#garagePaintBody');
+    await page.evaluate(() => {
+      const input = document.querySelector('#garagePaintBody');
+      input.value = '#1e8f3e';
+      input.dispatchEvent(new globalThis.Event('input', { bubbles: true }));
+    });
+    await page.locator('.garage-paint-save').click();
+    await page.locator('.garage-all-cars-button').click();
+    await page.waitForSelector('.garage-all-cars[open]');
+    await page.locator('.garage-all-cars .garage-car-card[data-car-id="van"]').scrollIntoViewIfNeeded();
+    await page.waitForFunction(() => {
+      const still = document.querySelector('.garage-all-cars .garage-car-card[data-car-id="van"] .garage-car-still');
+      return still.src.startsWith('blob:') && still.complete && still.naturalWidth > 0;
+    }, null, { timeout: 30000 });
+    const vanCard = await page.evaluate(() => {
+      const still = document.querySelector('.garage-all-cars .garage-car-card[data-car-id="van"] .garage-car-still');
+      const canvas = document.createElement('canvas');
+      canvas.width = still.naturalWidth;
+      canvas.height = still.naturalHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(still, 0, 0);
+      const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+      let green = 0;
+      let orange = 0;
+      for (let index = 0; index < data.length; index += 4) {
+        const [red, greenChannel, blue, alpha] = data.slice(index, index + 4);
+        if (alpha < 200) continue;
+        if (greenChannel > red + 40 && greenChannel > blue + 20) green += 1;
+        if (red > 200 && greenChannel > 90 && greenChannel < 190 && blue < 80) orange += 1;
+      }
+      return {
+        size: [still.naturalWidth, still.naturalHeight],
+        green,
+        orange,
+        others: document.querySelector('.garage-all-cars .garage-car-card[data-car-id="suv"] .garage-car-still').getAttribute('src')
+      };
+    });
+    assert.deepEqual(vanCard.size, [480, 288], 'A repainted card keeps the card size');
+    assert.ok(vanCard.green > 500, `The Van's card wears its saved green (${vanCard.green} green pixels)`);
+    assert.ok(vanCard.orange < 50, `The Van's factory orange is gone from its card (${vanCard.orange})`);
+    assert.match(vanCard.others, /\/stills\/suv\.webp/, 'Cars without saved colours keep their factory still');
+    await page.locator('.garage-all-cars .turn-pr-close').click();
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars').open);
+    await page.locator('.garage-paint-save[data-mode="reset"]').click();
+    await page.locator('.garage-all-cars-button').click();
+    await page.waitForSelector('.garage-all-cars[open]');
+    assert.match(await page.locator('.garage-all-cars .garage-car-card[data-car-id="van"] .garage-car-still').getAttribute('src'), /\/stills\/van\.webp/,
+      'Reset to factory brings back the factory still');
+    await page.keyboard.press('Escape');
     assert.deepEqual(errors, [], 'unlocked: no page errors');
   } finally {
     await browser.close();

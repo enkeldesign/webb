@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 // Renders GARAGE's car card artwork from every catalog car's real 3D model, with the
-// production renderer and the showroom's own 20° view (garage/car-view.js):
+// production renderer and the showroom's own 20° view (garage/car-still.js,
+// garage/car-view.js):
 //
 //   turn/assets/cars/stills/<car>.webp          the car in its factory colours
 //   turn/assets/cars/stills/<car>-outline.webp  the same car as an Ink line drawing,
 //                                               for a locked card
-//   turn/assets/cars/stills/manifest.json       the frame and each car's source hashes
+//   turn/assets/cars/stills/manifest.json       the shared frame and each car's source
+//                                               hashes; GARAGE renders a repainted car
+//                                               into the same frame at runtime
 //
 // Every car shares one frame, so cars keep their relative size and stand on one line.
 // Run it after a car model changes; garage-car-stills-production checks the hashes.
@@ -19,13 +22,14 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { CAR_VIEW } from '../garage/car-view.js';
+
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const turnRoot = path.join(repoRoot, 'turn');
 export const STILLS_DIRECTORY = path.join(turnRoot, 'assets/cars/stills');
 export const STILLS_MANIFEST = path.join(STILLS_DIRECTORY, 'manifest.json');
-// The card's picture, 5:3. Rendered at twice this size and scaled down for clean edges.
-export const STILL_WIDTH = 480;
-export const STILL_HEIGHT = 288;
+export const STILL_WIDTH = CAR_VIEW.still.width;
+export const STILL_HEIGHT = CAR_VIEW.still.height;
 
 const SUPERCAR_SOURCES = [
   'assets/cars/supercar-model-data.js',
@@ -77,16 +81,22 @@ const PAGE = `<!doctype html>
 }}</script></head><body></body></html>`;
 
 // Runs in the browser: every car through the production renderer.
-async function renderInPage({ carIds, width, height }) {
+async function renderInPage({ carIds }) {
   const THREE = await import('three');
-  const { createCarVisual, disposeCarVisual } = await import('/turn/vehicle/car-models.js');
   const { getVehicleDefaultColor, getVehicleDefaultSecondaryColor } = await import('/turn/vehicle/catalog.js');
+  const {
+    createStillCamera,
+    createStillScene,
+    downscaleStill,
+    frameStill,
+    stillVisual
+  } = await import('/turn/garage/car-still.js');
   const { CAR_VIEW } = await import('/turn/garage/car-view.js');
+  const { disposeCarVisual } = await import('/turn/vehicle/car-models.js?revision=r252-supercar-outward-rims');
 
   const INK = [8, 9, 10];
-  const SCALE = 2;
-  const hiWidth = width * SCALE;
-  const hiHeight = height * SCALE;
+  const hiWidth = CAR_VIEW.still.width * CAR_VIEW.still.supersample;
+  const hiHeight = CAR_VIEW.still.height * CAR_VIEW.still.supersample;
   // The reference frame the shared crop is measured in.
   const FULL_WIDTH = 1600;
   const FULL_HEIGHT = 1200;
@@ -95,33 +105,14 @@ async function renderInPage({ carIds, width, height }) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setPixelRatio(1);
   renderer.setClearColor(0x000000, 0);
-
-  const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(CAR_VIEW.hemisphere.sky, CAR_VIEW.hemisphere.ground, CAR_VIEW.hemisphere.intensity));
-  const key = new THREE.DirectionalLight(CAR_VIEW.key.color, CAR_VIEW.key.intensity);
-  key.position.set(...CAR_VIEW.key.position);
-  scene.add(key);
-  const rim = new THREE.DirectionalLight(CAR_VIEW.rim.color, CAR_VIEW.rim.intensity);
-  rim.position.set(...CAR_VIEW.rim.position);
-  scene.add(rim);
-  const stage = new THREE.Group();
-  stage.position.y = CAR_VIEW.stageHeight;
-  stage.rotation.y = THREE.MathUtils.degToRad(CAR_VIEW.yawDegrees);
-  scene.add(stage);
-
-  const camera = new THREE.PerspectiveCamera(CAR_VIEW.fov, FULL_WIDTH / FULL_HEIGHT, 0.1, 70);
-  camera.position.set(...CAR_VIEW.camera);
-  camera.lookAt(...CAR_VIEW.target);
-
-  async function visualFor(carId, outline) {
-    return createCarVisual({
-      carId,
-      color: getVehicleDefaultColor(carId),
-      secondaryColor: getVehicleDefaultSecondaryColor(carId),
-      targetLength: CAR_VIEW.targetLength,
-      outline
-    });
-  }
+  const { scene, stage } = createStillScene();
+  const camera = createStillCamera(FULL_WIDTH, FULL_HEIGHT);
+  const factory = (carId, outline) => stillVisual(
+    carId,
+    getVehicleDefaultColor(carId),
+    getVehicleDefaultSecondaryColor(carId),
+    { outline }
+  );
 
   function alphaBounds(canvas) {
     const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
@@ -143,11 +134,10 @@ async function renderInPage({ carIds, width, height }) {
   }
 
   // 1. One crop for every car: the union of their silhouettes, padded, at 5:3.
-  camera.clearViewOffset();
   renderer.setSize(FULL_WIDTH, FULL_HEIGHT, false);
   const union = { minX: Infinity, minY: Infinity, maxX: -1, maxY: -1 };
   for (const carId of carIds) {
-    const visual = await visualFor(carId, true);
+    const visual = await factory(carId, true);
     stage.add(visual);
     renderer.render(scene, camera);
     const bounds = alphaBounds(renderer.domElement);
@@ -161,38 +151,19 @@ async function renderInPage({ carIds, width, height }) {
   const pad = FULL_WIDTH * 0.02;
   let cropWidth = union.maxX - union.minX + 1 + (2 * pad);
   let cropHeight = union.maxY - union.minY + 1 + (2 * pad);
-  const aspect = width / height;
+  const aspect = CAR_VIEW.still.width / CAR_VIEW.still.height;
   if (cropWidth / cropHeight < aspect) cropWidth = cropHeight * aspect;
   else cropHeight = cropWidth / aspect;
-  const centerX = (union.minX + union.maxX) / 2;
-  const centerY = (union.minY + union.maxY) / 2;
-  const crop = {
-    x: centerX - (cropWidth / 2),
-    y: centerY - (cropHeight / 2),
-    width: cropWidth,
-    height: cropHeight
+  const frame = {
+    fullWidth: FULL_WIDTH,
+    fullHeight: FULL_HEIGHT,
+    x: Math.round((((union.minX + union.maxX) / 2) - (cropWidth / 2)) * 100) / 100,
+    y: Math.round((((union.minY + union.maxY) / 2) - (cropHeight / 2)) * 100) / 100,
+    width: Math.round(cropWidth * 100) / 100,
+    height: Math.round(cropHeight * 100) / 100
   };
-  const zoom = hiWidth / crop.width;
-  camera.setViewOffset(
-    FULL_WIDTH * zoom,
-    FULL_HEIGHT * zoom,
-    crop.x * zoom,
-    crop.y * zoom,
-    hiWidth,
-    hiHeight
-  );
+  frameStill(camera, frame, hiWidth, hiHeight);
   renderer.setSize(hiWidth, hiHeight, false);
-
-  function downscaled(source) {
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext('2d');
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = 'high';
-    context.drawImage(source, 0, 0, width, height);
-    return canvas;
-  }
 
   // 2. The line drawing: data passes into linear render targets, then edges.
   const target = new THREE.WebGLRenderTarget(hiWidth, hiHeight, { type: THREE.UnsignedByteType });
@@ -300,26 +271,26 @@ async function renderInPage({ carIds, width, height }) {
 
   const results = {};
   for (const carId of carIds) {
-    const colour = await visualFor(carId, true);
+    const colour = await factory(carId, true);
     stage.add(colour);
     renderer.setClearColor(0x000000, 0);
     renderer.render(scene, camera);
-    const still = downscaled(renderer.domElement).toDataURL('image/webp', 0.9);
+    const still = downscaleStill(renderer.domElement).toDataURL('image/webp', 0.9);
     stage.remove(colour);
     disposeCarVisual(colour);
 
-    const bare = await visualFor(carId, false);
+    const bare = await factory(carId, false);
     stage.add(bare);
     const normals = readPass(normalMaterial);
     const depths = readPass(depthMaterial);
     stage.remove(bare);
     disposeCarVisual(bare);
-    const outline = downscaled(lineDrawing(normals, depths)).toDataURL('image/webp', 0.9);
+    const outline = downscaleStill(lineDrawing(normals, depths)).toDataURL('image/webp', 0.9);
     results[carId] = { still, outline };
   }
   target.dispose();
   renderer.dispose();
-  return { results, crop };
+  return { results, frame };
 }
 
 async function renderAll() {
@@ -350,7 +321,7 @@ async function renderAll() {
     page.on('pageerror', (error) => console.error('render-car-stills:', error.message));
     await page.goto(`http://127.0.0.1:${server.address().port}/__car-stills__.html`);
     const carIds = CAR_CATALOG.map((car) => car.id);
-    const { results } = await page.evaluate(renderInPage, { carIds, width: STILL_WIDTH, height: STILL_HEIGHT });
+    const { results, frame } = await page.evaluate(renderInPage, { carIds });
     await fs.mkdir(STILLS_DIRECTORY, { recursive: true });
     for (const carId of carIds) {
       for (const [kind, suffix] of [['still', ''], ['outline', '-outline']]) {
@@ -362,6 +333,7 @@ async function renderAll() {
       width: STILL_WIDTH,
       height: STILL_HEIGHT,
       view: 'garage/car-view.js',
+      frame,
       cars: await expectedManifestCars()
     };
     await fs.writeFile(STILLS_MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -376,6 +348,13 @@ export async function checkStills() {
   const manifest = JSON.parse(await fs.readFile(STILLS_MANIFEST, 'utf8'));
   const expected = await expectedManifestCars();
   const problems = [];
+  const frame = manifest.frame;
+  if (!frame || !['fullWidth', 'fullHeight', 'x', 'y', 'width', 'height'].every((key) => Number.isFinite(frame[key]))) {
+    problems.push('manifest.json: no shared frame for runtime repaints');
+  } else if (Math.abs((frame.width / frame.height) - (STILL_WIDTH / STILL_HEIGHT)) > 0.01) {
+    problems.push('manifest.json: the frame does not match the card shape');
+  }
+  if (manifest.width !== STILL_WIDTH || manifest.height !== STILL_HEIGHT) problems.push('manifest.json: not the card size');
   for (const [carId, { sources }] of Object.entries(expected)) {
     const recorded = manifest.cars?.[carId]?.sources;
     if (!recorded) problems.push(`${carId}: no still`);

@@ -1084,7 +1084,7 @@
 
 .garage[data-catalog='side'] .garage-page {
   display: grid;
-  grid-template-columns: minmax(17rem, 21rem) minmax(0, 1fr);
+  grid-template-columns: minmax(16rem, 19rem) minmax(0, 1fr);
   grid-template-areas:
     'head head'
     'catalog main';
@@ -1102,6 +1102,11 @@
 
 .garage[data-catalog='side'] .garage-layout {
   grid-area: main;
+}
+
+/* Beside the list, the featured car keeps the larger share of the width. */
+.garage.is-spacious[data-catalog='side'] .garage-layout {
+  grid-template-columns: minmax(0, 1.3fr) minmax(17rem, 1fr);
 }
 
 /* Beside the list, the stage gives up height so the featured car fits between the
