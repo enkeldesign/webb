@@ -1,12 +1,29 @@
-// Race ☰: when the race row (.utility-group) is wider than the space beside the drive
-// pad (phone landscape with safe areas, SPECTATE shown), its secondary buttons move
-// into a menu sheet and a ☰ takes their place. LEAVE RACE, BLANK SCREEN (a two-tap
-// toggle), ACHIEVEMENTS (it carries a badge) and RESTART LAP stay in the row. Where everything fits, nothing changes.
+// Race ☰: the race row (.utility-group) is always one row of natural-width buttons.
+// When it does not fit beside the drive pad, buttons move into a menu sheet behind ☰,
+// lowest priority first, until the rest fits. Where everything fits, nothing changes.
 // The buttons themselves move, so every module keeps its own listeners and state.
 
 const INSTALL_KEY = '__turnRaceMenu';
 const SHEET_ID = 'turnRaceMenuSheet';
-const KEEP_IN_ROW = '.back-to-lot-button, .turn-screen-blank-control, .turn-race-achievements-button, .back-to-start-button, .turn-race-menu-button';
+// Highest priority first; the last entries move into ☰ first. RESTART LAP (racing)
+// and LEAVE RACE (start) are the one action that is always in the row.
+const PRIORITY = Object.freeze([
+  '.back-to-start-button',
+  '.back-to-lot-button',
+  '.turn-screen-blank-control',
+  '.recalibrate-button',
+  '.turn-race-achievements-button',
+  '.spectate-button',
+  '.m8-race-settings-button',
+  '.audio-settings-button',
+  '.reset-rivals-button'
+]);
+const ALWAYS_IN_ROW = '.back-to-start-button, .back-to-lot-button';
+
+function priorityOf(node) {
+  const index = PRIORITY.findIndex((selector) => node.matches?.(selector));
+  return index === -1 ? PRIORITY.length : index;
+}
 
 export function installRaceMenu({ documentRef = document, windowRef = window } = {}) {
   if (globalThis[INSTALL_KEY]) return globalThis[INSTALL_KEY];
@@ -53,8 +70,13 @@ export function installRaceMenu({ documentRef = document, windowRef = window } =
     group.appendChild(menuButton);
   }
 
+  const shown = (node) => !node.hidden && node.getClientRects().length > 0;
+
+  // One row that fits its box: no overflow and no wrapped second line.
   function fits() {
-    return group.scrollWidth <= group.clientWidth + 1;
+    if (group.scrollWidth > group.clientWidth + 1) return false;
+    const tops = [...group.children].filter(shown).map((node) => node.offsetTop);
+    return tops.every((top) => Math.abs(top - tops[0]) < 2);
   }
 
   function sync() {
@@ -70,10 +92,15 @@ export function installRaceMenu({ documentRef = document, windowRef = window } =
       if (group.clientWidth > 0 && !fits()) {
         collapsed = true;
         menuButton.hidden = false;
-        for (const node of order) {
-          if (node.matches?.(KEEP_IN_ROW)) continue;
+        const movable = order
+          .filter((node) => !node.matches?.(ALWAYS_IN_ROW))
+          .sort((a, b) => priorityOf(b) - priorityOf(a));
+        for (const node of movable) {
+          if (fits()) break;
           list.appendChild(node);
         }
+        // Keep the sheet in row order.
+        for (const node of order) if (node.parentElement === list) list.appendChild(node);
       }
       // Icon-only buttons need a visible name as a menu entry.
       for (const node of list.children) {

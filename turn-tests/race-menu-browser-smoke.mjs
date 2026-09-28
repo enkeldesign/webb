@@ -33,9 +33,13 @@ async function row(page) {
     const group = document.querySelector('.utility-group');
     const box = group.getBoundingClientRect();
     const visible = [...group.children].filter((node) => !node.hidden && node.getClientRects().length);
+    const tops = visible.map((node) => Math.round(node.getBoundingClientRect().top));
     return {
       fits: group.scrollWidth <= group.clientWidth + 1
         && visible.every((node) => { const r = node.getBoundingClientRect(); return r.left >= box.left - 1 && r.right <= box.right + 1; }),
+      rows: new Set(tops).size,
+      sheet: [...document.querySelectorAll('.turn-race-menu > button')].filter((node) => !node.hidden)
+        .map((node) => node.className.split(' ').find((name) => name !== 'utility')),
       menu: !document.querySelector('.turn-race-menu-button').hidden,
       names: visible.map((node) => node.className.split(' ').find((name) => name !== 'utility'))
     };
@@ -103,9 +107,17 @@ async function run(browserType, name) {
     const narrow = await row(page);
     assert.ok(narrow.fits, `${name}: the start row never overflows at 568px (${narrow.names})`);
     assert.equal(narrow.menu, true, `${name}: ☰ appears when the row would overflow`);
-    for (const kept of ['back-to-lot-button', 'turn-screen-blank-control', 'turn-race-achievements-button']) {
+    assert.equal(narrow.rows, 1, `${name}: the start row is never two rows`);
+    for (const kept of ['back-to-lot-button', 'turn-screen-blank-control', 'recalibrate-button']) {
       assert.ok(narrow.names.includes(kept), `${name}: ${kept} stays in the row`);
     }
+    // Erik's priority: LEAVE RACE, blank screen, RECALIBRATE, ACHIEVEMENTS, SPECTATE,
+    // SETTINGS. Nothing in the sheet outranks anything left in the row.
+    const priority = ['back-to-lot-button', 'turn-screen-blank-control', 'recalibrate-button', 'turn-race-achievements-button', 'spectate-button', 'm8-race-settings-button'];
+    const rank = (entry) => { const index = priority.indexOf(entry); return index === -1 ? priority.length : index; };
+    const lowestInRow = Math.max(...narrow.names.filter((entry) => priority.includes(entry)).map(rank));
+    const highestInSheet = Math.min(...narrow.sheet.map(rank));
+    assert.ok(lowestInRow < highestInSheet, `${name}: the row keeps the highest-priority buttons (${narrow.names} | ${narrow.sheet})`);
     assert.ok(!narrow.names.includes('m8-race-settings-button'), `${name}: SETTINGS moves into the sheet`);
 
     await page.locator('.turn-race-menu-button').click();
@@ -121,7 +133,7 @@ async function run(browserType, name) {
     });
     assert.equal(sheet.open, true, `${name}: ☰ opens the race menu sheet`);
     assert.equal(sheet.expanded, 'true');
-    assert.ok(sheet.entries.includes('spectate-button') && sheet.entries.includes('m8-race-settings-button') && sheet.entries.includes('recalibrate-button'),
+    assert.ok(sheet.entries.includes('spectate-button') && sheet.entries.includes('m8-race-settings-button'),
       `${name}: the sheet holds the moved buttons (${sheet.entries})`);
     assert.equal(sheet.small, 0, `${name}: sheet entries are 44px targets inside the viewport`);
 
@@ -146,6 +158,16 @@ async function run(browserType, name) {
       `${name}: a dialog that refocuses its entry still returns focus to ☰`);
 
     await page.evaluate(() => { document.querySelector('.race-menu-fixture-button').hidden = true; });
+    await page.setViewportSize({ width: 393, height: 852 });
+    await settle(page);
+    await settle(page);
+    const portrait = await row(page);
+    assert.ok(portrait.fits && portrait.rows === 1, `${name}: portrait keeps one row (${portrait.names})`);
+    const buttonWidths = await page.evaluate(() => [...document.querySelectorAll('.utility-group > button')]
+      .filter((node) => !node.hidden && node.getClientRects().length)
+      .map((node) => { const clone = node.cloneNode(true); clone.style.cssText = 'position:absolute;visibility:hidden;width:auto;flex:none'; node.parentElement.appendChild(clone); const natural = clone.getBoundingClientRect().width; clone.remove(); return node.getBoundingClientRect().width - natural; }));
+    assert.ok(buttonWidths.every((extra) => extra < 1), `${name}: row buttons keep their natural width (${buttonWidths})`);
+
     await page.setViewportSize({ width: 852, height: 393 });
     await settle(page);
     await settle(page);

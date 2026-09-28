@@ -450,9 +450,9 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
 }
 
 /* ---------- Race ☰ (ui/race-menu.js) ----------
-   Only when the race row does not fit beside the drive pad: the row keeps LEAVE
-   RACE, BLANK SCREEN, ACHIEVEMENTS and RESTART LAP, and ☰ opens the rest in the
-   menu sheet. */
+   Only when the one-row race actions do not fit beside the drive pad: buttons move
+   into the menu sheet lowest priority first (SETTINGS, SPECTATE, ACHIEVEMENTS,
+   RECALIBRATE, BLANK SCREEN), and LEAVE RACE / RESTART LAP always stay. */
 .turn-race-menu-button[hidden] {
   display: none !important;
 }
