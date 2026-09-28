@@ -64,6 +64,12 @@ assert.ok(
   'The iOS viewport-gap compensation loads after the PWA boundary and before the app'
 );
 const viewportGap = await fs.readFile(new URL('../turn/ios-viewport-gap.js', import.meta.url), 'utf8');
+// The device strip test (1.24.7) is finished: no tester probe paints the page at launch.
+assert.doesNotMatch(viewportGap, /turn-strip-probe/, 'The strip-test launch probe is removed');
+// The portrait LANDSCAPE recommendation box is retired (1.24.11); the rotate hint on
+// the track loading screen (ui/race-orientation.js) stays.
+const appModule = await fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8');
+assert.doesNotMatch(appModule, /landscape-notice/, 'The portrait landscape recommendation box is not loaded');
 assert.match(viewportGap, /Math\.abs\(gap - top\) <= INSET_TOLERANCE/,
   'Compensation applies only when the gap matches the top safe-area inset');
 // iOS draws no content in the gap (1.24.5 moved RACE into it and clipped it), so the

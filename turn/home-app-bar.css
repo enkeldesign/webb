@@ -444,24 +444,6 @@ html body .turn-home-sheet .turn-home-sheet-footer .turn-viewport-readout {
   overflow-wrap: anywhere;
 }
 
-html body .turn-home-sheet .turn-home-sheet-footer .turn-strip-probe:not([hidden]) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--turn-type-micro, 11px);
-}
-
-html body .turn-home-sheet .turn-home-sheet-footer .turn-strip-probe button {
-  min-height: 44px;
-  padding: 0 10px;
-  border: 2px solid var(--turn-ink, #08090a);
-  border-radius: 8px;
-  background: var(--turn-surface-page, #fff8e8);
-  font: inherit;
-  font-weight: 900;
-}
-
 html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
   min-height: 44px;
   margin: 0;

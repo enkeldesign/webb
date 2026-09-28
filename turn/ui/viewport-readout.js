@@ -38,24 +38,6 @@ export function formatViewportSnapshot(s) {
   return `VIEWPORT · screen ${s.screen} · inner ${s.inner} · client ${s.client} · visual ${s.visual} · svh/dvh/lvh ${s.svh}/${s.dvh}/${s.lvh} · safe ${s.safeTop}/${s.safeBottom} · repair ${s.repair} · gap ${s.gap}`;
 }
 
-export const STRIP_PROBE_KEY = 'turn-strip-probe-v1';
-const STRIP_PROBE_COLOR = '#ff00ff';
-
-export function applyStripProbe(kind, { documentRef = document, windowRef = window } = {}) {
-  const root = documentRef.documentElement;
-  const theme = documentRef.querySelector('meta[name="theme-color"]');
-  if (kind === 'html') root.style.setProperty('background', STRIP_PROBE_COLOR, 'important');
-  if (kind === 'body') documentRef.body.style.setProperty('background', STRIP_PROBE_COLOR, 'important');
-  if (kind === 'theme' && theme) theme.setAttribute('content', STRIP_PROBE_COLOR);
-  if (kind === 'launch' || kind === 'clear') {
-    try {
-      if (kind === 'launch') windowRef.localStorage.setItem(STRIP_PROBE_KEY, '1');
-      else windowRef.localStorage.removeItem(STRIP_PROBE_KEY);
-    } catch (_) {}
-    windowRef.location.reload();
-  }
-}
-
 export function installViewportReadout({ documentRef = document, windowRef = window } = {}) {
   if (globalThis[INSTALL_KEY]) return globalThis[INSTALL_KEY];
   const sheet = documentRef.querySelector('.turn-home-sheet');
@@ -66,33 +48,14 @@ export function installViewportReadout({ documentRef = document, windowRef = win
   line.className = 'turn-viewport-readout';
   line.hidden = true;
 
-  // Strip probe: which surface does iOS paint into the gap below the app? Each
-  // button turns one candidate magenta; the one that colours the strip names it.
-  const probe = documentRef.createElement('div');
-  probe.className = 'turn-strip-probe';
-  probe.hidden = true;
-  probe.innerHTML = '<span>STRIP TEST</span>' +
-    '<button type="button" data-strip-probe="html">HTML</button>' +
-    '<button type="button" data-strip-probe="body">BODY</button>' +
-    '<button type="button" data-strip-probe="theme">THEME</button>' +
-    '<button type="button" data-strip-probe="launch">AT LAUNCH</button>' +
-    '<button type="button" data-strip-probe="clear">CLEAR</button>';
-  probe.addEventListener('click', (event) => {
-    const target = event.target instanceof Element ? event.target.closest('[data-strip-probe]') : null;
-    if (target) applyStripProbe(target.dataset.stripProbe, { documentRef, windowRef });
-  });
-
   function refresh() {
     if (!globalThis.__turnTelemetry?.isDeveloperDevice?.()) {
       line.hidden = true;
-      probe.hidden = true;
       return;
     }
     line.textContent = formatViewportSnapshot(viewportSnapshot({ documentRef, windowRef }));
     line.hidden = false;
-    probe.hidden = false;
     if (line.parentElement !== footer) footer.appendChild(line);
-    if (probe.parentElement !== footer) footer.appendChild(probe);
   }
 
   // The sheet is a native <dialog>; its open attribute flips when it shows.
