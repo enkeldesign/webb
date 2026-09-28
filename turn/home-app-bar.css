@@ -66,10 +66,11 @@ html body .m8-home.turn-app-bar-layout .m8-home-head {
   background: var(--m8-yellow, #ffbd12);
 }
 
+/* The square profile icon, decorative beside the TURN wordmark (pre-race.css). */
 html body .m8-home.turn-app-bar-layout .m8-home-logo {
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   max-width: none;
   max-height: none;
   filter: none;

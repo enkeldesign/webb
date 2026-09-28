@@ -55,10 +55,17 @@
   background: var(--turn-yellow-600, #ffbd12);
 }
 
+.garage-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
 .garage-logo {
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
   object-fit: cover;
 }

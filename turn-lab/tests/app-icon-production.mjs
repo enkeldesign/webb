@@ -25,10 +25,11 @@ for (const source of [index, nextIndex]) {
   assert.doesNotMatch(source, /favicon-r45|apple-touch-icon-r45|icon-512-r45/);
 }
 
-assert.match(homeSource, /<img class="m8-home-logo" src="\/turn\/TURNicon\.PNG\?icon=\$\{ICON_REVISION\}" alt="TURN">/);
+// The icon is decorative beside the TURN wordmark, which names the game once.
+assert.match(homeSource, /<img class="m8-home-logo" src="\/turn\/TURNicon\.PNG\?icon=\$\{ICON_REVISION\}" alt="">\s*<span class="turn-pr-wordmark m8-home-wordmark">TURN<\/span>/);
 assert.match(homeSource, /ICON_REVISION = '20260803-profile-512'/);
-// The app bar shows the square profile icon at 40px, filling its rounded frame.
-assert.match(appBar, /\.m8-home-logo \{[^}]*width: 40px;[^}]*height: 40px;[^}]*object-fit: cover;/);
+// The app bar shows the square profile icon at 44px, filling its rounded frame.
+assert.match(appBar, /\.m8-home-logo \{[^}]*width: 44px;[^}]*height: 44px;[^}]*object-fit: cover;/);
 
 assert.match(index, new RegExp(`<link rel="manifest" href="\\.\\/site\\.webmanifest\\?build=${release.cacheKey}-icon-20260803-profile-512">`));
 assert.match(nextIndex, new RegExp(`<link rel="manifest" href="\\/turn-next\\/site\\.webmanifest\\?source=${release.cacheKey}-icon-20260803-profile-512-m8\\.5">`));

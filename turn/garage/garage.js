@@ -220,7 +220,10 @@ export function showGarage({
     root.setAttribute('aria-labelledby', 'garageTitle');
     root.innerHTML = `
       <header class="garage-bar">
-        <img class="garage-logo" src="/turn/TURNicon.PNG?icon=20260803-profile-512" alt="TURN">
+        <span class="garage-brand">
+          <img class="garage-logo" src="/turn/TURNicon.PNG?icon=20260803-profile-512" alt="">
+          <span class="turn-pr-wordmark">TURN</span>
+        </span>
         <button class="garage-back" type="button"><span aria-hidden="true">←</span> ${escapeHtml(backLabel)}</button>
       </header>
       <div class="garage-page">

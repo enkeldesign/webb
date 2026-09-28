@@ -87,6 +87,23 @@
   text-transform: uppercase;
 }
 
+/* ---------- Brand ---------- */
+
+/* The game's name beside its icon in the yellow app bar, at display weight, so
+   ROADBOOK and GARAGE never outrank TURN. The icon beside it is decorative. It grows
+   with text until it would crowd the bar. */
+.turn-pr-wordmark {
+  flex: none;
+  color: var(--turn-ink, #08090a);
+  font-family: var(--turn-pr-font-display);
+  font-size: min(2.125rem, 9vw);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 /* ---------- Icons ---------- */
 
 .turn-pr-icon {
