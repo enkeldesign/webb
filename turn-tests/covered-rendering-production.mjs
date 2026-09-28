@@ -5,12 +5,11 @@ import fs from 'node:fs/promises';
 // keyboard input contract in that same run without adding another CI workflow edge.
 await import('./qe-drive-controls-production.mjs');
 
-const [releaseSource, index, app, guard, selector, main, home] = await Promise.all([
+const [releaseSource, index, app, guard, main, home] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/render/covered-rendering.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/ui/track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8')
 ]);
@@ -35,8 +34,8 @@ assert.ok(
 );
 
 assert.match(guard, /THREE\.WebGLRenderer\.prototype/, 'The guard must cover the renderer loop at its shared registration boundary');
-assert.match(guard, /PAUSE_CLASSES[\s\S]*turn-track-select-open[\s\S]*turn-runtime-paused/,
-  'The renderer guard must support both track selection and deliberate modal pauses');
+assert.match(guard, /PAUSE_CLASSES = Object\.freeze\(\[\s*'turn-runtime-paused'\s*\]\)/,
+  'The renderer guard pauses for deliberate modal pauses (the track-select overlay is retired)');
 assert.match(guard, /PAUSE_CLASSES\.some\(\(className\) => document\.body\?\.classList\.contains\(className\)\)/,
   'Covered frames must be detected from the declared pause lifecycle classes');
 assert.match(guard, /MAIN_RENDERER_PAUSE_CLASSES[\s\S]*turn-home-open/,
@@ -60,8 +59,6 @@ assert.match(guard, /Symbol\.for\('turn\.covered-rendering-installed'\)/, 'Insta
 assert.match(guard, /globalThis\.__turnCoveredRendering = diagnostics/, 'Diagnostics must be inspectable without changing gameplay state');
 assert.doesNotMatch(guard, /requestAnimationFrame|setInterval|setTimeout/, 'The guard must not create a second scheduling loop');
 
-assert.match(selector, /document\.body\.classList\.add\('turn-track-select-open'\)/, 'Track selection must announce when it fully covers the race scene');
-assert.match(selector, /document\.body\.classList\.remove\('turn-track-select-open'\)/, 'Closing track selection must resume normal rendering');
 assert.match(home, /document\.body\.classList\.add\('turn-m8-active', 'turn-home-open'\)/,
   'Home must expose the lifecycle class used to stop the covered race world');
 assert.match(home, /document\.body\.classList\.remove\('turn-home-open'\)/,

@@ -159,7 +159,7 @@ for (const token of [
 }
 
 assert.match(semantic, new RegExp(`@import url\\('\\./design-tokens\\.css\\?build=${release.cacheKey}'\\)`));
-assert.match(semantic, /\.install-primary,\s*\.track-select-continue \{[\s\S]*?background: var\(--turn-action-primary\)/);
+assert.match(semantic, /\.install-primary \{[\s\S]*?background: var\(--turn-action-primary\)/);
 const preRace = await fs.readFile(new URL('../turn/pre-race.css', import.meta.url), 'utf8');
 // One elevation scale (design-scale.css): the older shadow tokens and ROADBOOK/GARAGE's
 // primitives resolve to its levels instead of carrying their own pixel values.

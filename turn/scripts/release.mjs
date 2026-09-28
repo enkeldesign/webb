@@ -122,7 +122,9 @@ const RETIRED_MODULE_PATHS = new Set([
   // Renamed for GARAGE in 1.28.1 (shift-setup, shift-gearbox, saved-car-paint).
   '/turn/garage/lot-shift.js',
   '/turn/garage/lot-shift-gearbox.js',
-  '/turn/garage/lot-saved-paint.js'
+  '/turn/garage/lot-saved-paint.js',
+  // ROADBOOK replaced the track-select overlay (1.26.0); retired in 1.28.1.
+  '/turn/ui/track-select.js'
 ]);
 
 function removeRetiredModuleRoutes(importMap) {
@@ -368,6 +370,8 @@ function synchronizeUiBaselineTargets(importMap, release) {
     ['/turn/garage/shift-setup.js', []],
     ['/turn/garage/shift-gearbox.js', []],
     ['/turn/garage/saved-car-paint.js', []],
+    // Lost the retired track-select overlay's entry point in 1.28.1.
+    ['/turn/tracks/track-manager.js', ['?source=20260729-r118-m8']],
     ['/turn/garage/training-car-guide.js', ['?revision=r1']],
     // Modules that request a stylesheet by a release-bound literal URL.
     ['/turn/social/your-turn-share.js', ['?revision=r4-runtime-share-state']],

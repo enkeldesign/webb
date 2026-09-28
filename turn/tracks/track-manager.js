@@ -3,17 +3,14 @@ import { resetRaceToStage } from '../race/game-state.js?build=20260722-r41';
 import { clearRivalsState, loadRivalsState } from '../race/rival-storage.js?build=20260722-r50';
 import {
   DEFAULT_TRACK_ID,
-  loadTrackSelection,
   normalizeTrackId,
   saveTrackSelection
 } from './catalog.js';
 import { getTrackRuntimeEntry } from './registry.js';
-import { showTrackSelect } from '../ui/track-select.js?build=20260722-r51';
 
 let runtime = null;
 let runtimeReadyResolve = null;
 let activeTrackId = DEFAULT_TRACK_ID;
-let chosenThisSession = false;
 let dynamicWorld = null;
 
 const trackStates = new Map();
@@ -26,18 +23,6 @@ else {
   window.addEventListener('turn:runtime-ready', (event) => {
     installRuntime(event.detail || globalThis.__turnRuntime);
   }, { once: true });
-}
-
-export async function chooseTrackBeforeLot() {
-  const currentRuntime = await runtimeReady;
-  const selectedTrackId = await showTrackSelect({
-    initialTrackId: chosenThisSession ? activeTrackId : loadTrackSelection()
-  });
-  if (!selectedTrackId) return null;
-
-  await activateTrack(selectedTrackId, currentRuntime);
-  chosenThisSession = true;
-  return activeTrackId;
 }
 
 export async function activateTrack(trackId, currentRuntime = runtime) {
@@ -115,7 +100,6 @@ function installRuntime(nextRuntime) {
   installTrackAwareRivalReset(runtime);
 
   globalThis.__turnGetTrackId = () => activeTrackId;
-  globalThis.__turnChooseTrack = () => chooseTrackBeforeLot();
   globalThis.__turnIsForgivingSurface = (position) => activeTrackEntry().isForgivingSurface(position);
   globalThis.__turnGetCollisionProfile = () => activeTrackEntry().collisionProfile;
   runtimeReadyResolve(runtime);

@@ -104,6 +104,18 @@
   white-space: nowrap;
 }
 
+/* Below the 320px minimum (zoomed reflow) the bar keeps its controls; the name stays
+   for screen readers. */
+@media (max-width: 19.9375rem) {
+  .turn-pr-wordmark {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
 /* ---------- Icons ---------- */
 
 .turn-pr-icon {

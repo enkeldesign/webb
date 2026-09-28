@@ -5,7 +5,6 @@ const MAX_RENDER_FPS = 60;
 const RENDER_INTERVAL_MS = 1000 / MAX_RENDER_FPS;
 const FRAME_TOLERANCE_MS = 0.6;
 const PAUSE_CLASSES = Object.freeze([
-  'turn-track-select-open',
   'turn-runtime-paused'
 ]);
 const MAIN_RENDERER_PAUSE_CLASSES = Object.freeze([

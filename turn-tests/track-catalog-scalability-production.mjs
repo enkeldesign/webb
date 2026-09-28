@@ -32,7 +32,7 @@ const [
 ] = await Promise.all([
   read('turn/tracks/catalog.js'),
   read('turn/tracks/registry.js'),
-  read('turn/ui/track-select.js'),
+  read('turn/roadbook/roadbook.js'),
   read('turn/stats/stats.js'),
   read('turn/achievements/support-challenges.js'),
   read('turn/achievements/challenge-expansion-r166.js'),
@@ -137,10 +137,10 @@ assert.match(registrySource, /TRACK_CATALOG\.map\(\(definition\) =>/,
 assert.match(registrySource, /has an incomplete runtime contract/,
   'A registered track without a world/runtime contract must fail clearly');
 
-assert.match(selectorSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)\.join\(''\)/,
-  'Track chooser DOM must be generated from catalog contents');
-assert.doesNotMatch(selectorSource, /TRACK_SELECTION_CATALOG\.slice\(\s*0\s*,\s*\d+/,
-  'Track chooser must not cap the number of catalog entries in JavaScript');
+assert.match(selectorSource, /\$\{tracks\.map\(renderCard\)\.join\(''\)\}/,
+  'ROADBOOK generates its track cards from the catalog contents');
+assert.doesNotMatch(selectorSource, /TRACK_CATALOG\.slice\(\s*0\s*,\s*\d+|tracks\.slice\(\s*0\s*,\s*\d+/,
+  'ROADBOOK must not cap the number of catalog entries in JavaScript');
 
 assert.match(statsSource, /import \{ TRACK_DEFINITIONS \} from '\.\.\/tracks\/definitions\.js\?build=\d{8}-r\d+'/);
 assert.match(statsSource, /TRACK_DEFINITIONS\.map\(\(\{ id, name \}\)/,
