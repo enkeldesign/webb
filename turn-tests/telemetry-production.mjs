@@ -48,7 +48,7 @@ assert.match(about, /does not include your name, challenge name, challenge link 
 assert.match(about, /private developer dashboard/i);
 assert.match(about, /anonymous daily aggregate statistics in Cloudflare D1/i);
 assert.match(about, /does not keep raw gameplay-event histories/i);
-assert.match(about, /about-privacy\.css\?revision=r1/);
+assert.match(about, /about-privacy\.css\?build=\d{8}-r\d+/);
 
 assert.match(privacyCss, /\.turn-about-privacy summary[\s\S]*color: inherit[\s\S]*font: inherit/);
 assert.match(privacyCss, /text-decoration: underline/);

@@ -364,6 +364,9 @@ jobs:
       - name: Run full viewport coverage regression
         run: node turn-tests/viewport-coverage-production.mjs
 
+      - name: Run stylesheet cache identity regression
+        run: node turn-tests/stylesheet-cache-identity-production.mjs
+
       - name: Run car source retry regression
         run: node turn-tests/car-source-retry-production.mjs
 
