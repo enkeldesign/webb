@@ -190,7 +190,29 @@ async function responsiveRace(browser, name) {
         const body = await bounds(page, '#turnTrackSheet .turn-pr-sheet-body');
         assert.ok(body.scrollWidth <= body.clientWidth + 1, `${name} ${width}x${height}: the Track sheet reflows`);
         await readability(page, `${name} ${width}x${height} Track sheet`);
-        await page.locator('#turnTrackSheet .turn-pr-close').click();
+        // If the close control cannot take the tap, say where it is drawn and what
+        // is on top of it there instead of only timing out.
+        await page.locator('#turnTrackSheet .turn-pr-close').click({ timeout: 8000 }).catch(async (error) => {
+          const where = await page.evaluate(() => {
+            const box = (node) => {
+              const rect = node?.getBoundingClientRect();
+              return rect && [rect.x, rect.y, rect.width, rect.height].map(Math.round);
+            };
+            const close = document.querySelector('#turnTrackSheet .turn-pr-close');
+            const rect = close.getBoundingClientRect();
+            const top = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+            return {
+              close: box(close),
+              card: box(document.querySelector('#turnTrackSheet .turn-pr-sheet-card')),
+              dialog: box(document.querySelector('#turnTrackSheet')),
+              top: top && `${top.tagName}.${String(top.className)}`,
+              scroll: [globalThis.scrollX, globalThis.scrollY, document.scrollingElement.scrollTop],
+              visualViewport: globalThis.visualViewport && [globalThis.visualViewport.offsetLeft, globalThis.visualViewport.offsetTop,
+                globalThis.visualViewport.width, globalThis.visualViewport.height, globalThis.visualViewport.scale]
+            };
+          });
+          throw new Error(`${name} ${width}x${height}: the Track sheet close cannot take a tap ${JSON.stringify(where)}\n${error.message.split('\n')[0]}`);
+        });
         await page.waitForFunction(() => !document.querySelector('#turnTrackSheet').open);
       }
       assert.equal(await page.locator('.turn-orientation-hint').count(), 0);
