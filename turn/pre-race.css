@@ -25,6 +25,9 @@
   --turn-pr-font-display: system-ui, -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
   --turn-pr-font-body: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
   --turn-pr-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  /* TURN's own face: the rounded black of the title and LOADING (SF Pro Rounded on
+     Apple devices), for the wordmark. */
+  --turn-pr-font-brand: Inter, ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   --turn-pr-type-display: clamp(2rem, 0.9rem + 7vw, 3.5rem);
   --turn-pr-type-sheet: clamp(1.375rem, 0.9rem + 2.4vw, 1.75rem);
@@ -89,16 +92,16 @@
 
 /* ---------- Brand ---------- */
 
-/* The game's name beside its icon in the yellow app bar, at display weight, so
-   ROADBOOK and GARAGE never outrank TURN. The icon beside it is decorative. It grows
-   with text until it would crowd the bar. */
+/* The game's name beside its icon in the yellow app bar, in TURN's own rounded black
+   (as LOADING on the start screen), so ROADBOOK and GARAGE never outrank TURN. The
+   icon beside it is decorative. It grows with text until it would crowd the bar. */
 .turn-pr-wordmark {
   flex: none;
   color: var(--turn-ink, #08090a);
-  font-family: var(--turn-pr-font-display);
-  font-size: min(2.125rem, 9vw);
-  font-weight: 900;
-  letter-spacing: -0.035em;
+  font-family: var(--turn-pr-font-brand);
+  font-size: min(2.25rem, 9.5vw);
+  font-weight: 1000;
+  letter-spacing: -0.07em;
   line-height: 1;
   text-transform: uppercase;
   white-space: nowrap;

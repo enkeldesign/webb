@@ -41,7 +41,12 @@ const release = JSON.parse(releaseSource);
 assert.doesNotMatch(productionIndex, /challenge-mode|challenge-codec|RACE MY GHOST/,
   'The prototype must remain isolated from production TURN');
 assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${escapeRegex(release.version)} · Build ${escapeRegex(release.id)}`));
-assert.match(nextIndex, /"\/turn\/tracks\/track-manager\.js\?build=20260805-r160": "\/turn\/tracks\/track-manager\.js\?source=20260729-r118-m8"/,
+// One Track Manager instance: challenge mode's specifier and the canonical one resolve
+// to the same release-bound URL.
+const nextImports = JSON.parse(nextIndex.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)[1]).imports;
+assert.equal(nextImports['/turn/tracks/track-manager.js?source=20260729-r118-m8'], `/turn/tracks/track-manager.js?build=${release.cacheKey}`,
+  'TURN NEXT routes the canonical Track Manager through the current release');
+assert.equal(nextImports['/turn/tracks/track-manager.js?build=20260805-r160'], nextImports['/turn/tracks/track-manager.js?source=20260729-r118-m8'],
   'Challenge mode must reuse TURN NEXT’s canonical Track Manager singleton');
 assert.match(
   nextIndex,
