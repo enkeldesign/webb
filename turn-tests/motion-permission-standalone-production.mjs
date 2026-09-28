@@ -36,7 +36,7 @@ const environment = {
     body: {
       classList: {
         contains(name) {
-          return name === 'turn-lot-open';
+          return name === 'turn-garage-open';
         }
       }
     }

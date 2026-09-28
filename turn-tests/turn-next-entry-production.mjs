@@ -99,7 +99,7 @@ assert.match(productionApp, /TURN V\$\{release\?\.version/);
 assert.ok(productionApp.indexOf('installTurnPlatform(webPlatform)') < productionApp.indexOf("withBuild('./main.js')"));
 assert.ok(productionApp.indexOf("withBuild('./main.js')") < productionApp.indexOf('installM8HomeNavigation()'));
 assert.match(productionMain, /createRaceSessionOrchestrator/);
-assert.match(productionMain, /openLot: raceSession\.openLotFromRace/);
+assert.match(productionMain, /openGarage: raceSession\.openGarageFromRace/);
 assert.equal(nextMain, productionMain, 'TURN NEXT main must mirror canonical TURN exactly');
 
 assert.match(installGateSource, /globalThis\.__turnLaunchReady = launchReady/);
@@ -182,7 +182,7 @@ assert.match(displayLifecycleBridge, /display\.lockLandscape\(\)/);
 assert.match(homeSource, /installRoadbook\(\{/);
 assert.match(roadbookSource, /tracks\.map\(renderCard\)/);
 assert.match(homeSource, /raceSession\.prepareMotionAccess\(\)/);
-assert.match(homeSource, /runtime\.openLot = leaveRaceForHome/);
+assert.match(homeSource, /runtime\.openGarage = leaveRaceForHome/);
 assert.match(homeCss, /\.m8-home \{[\s\S]*z-index: 1400/);
 assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
 assert.doesNotMatch(fixedLayoutSource, /installM8HomeCardScrollFixes|m8-home-card-scroll-fixes/);

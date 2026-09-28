@@ -393,9 +393,9 @@ async function unlockedFlow() {
     // SHIFT opens its gearbox for a playable car and closes back to GARAGE.
     await page.evaluate(() => globalThis.__turnGarage.viewCar('classic'));
     await page.locator('.garage-shift').click();
-    await page.waitForSelector('.lot-shift-dialog[open]');
-    await page.locator('.lot-shift-cancel').click();
-    await page.waitForFunction(() => !document.querySelector('.lot-shift-dialog').open);
+    await page.waitForSelector('.garage-shift-dialog[open]');
+    await page.locator('.garage-shift-cancel').click();
+    await page.waitForFunction(() => !document.querySelector('.garage-shift-dialog').open);
 
     // Sport trim #666 on the Sports Car is the secret.
     await page.evaluate(() => globalThis.__turnGarage.viewCar('sedan-sports'));

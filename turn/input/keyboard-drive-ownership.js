@@ -38,7 +38,7 @@ export function createKeyboardDriveOwnership({
   function hasBlockingOverlay() {
     if (!documentRef?.body) return true;
     if (documentRef.body.classList?.contains('turn-home-open')) return true;
-    if (documentRef.body.classList?.contains('turn-lot-open')) return true;
+    if (documentRef.body.classList?.contains('turn-garage-open')) return true;
     if (documentRef.body.classList?.contains('turn-spectating')) return true;
     if (documentRef.querySelector?.('dialog[open]')) return true;
     const selector = '[role="dialog"]:not([hidden])';

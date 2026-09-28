@@ -291,49 +291,49 @@ assert.deepEqual(
   'A saved custom rival PAINTJOB must survive the factory migration'
 );
 
-const savedLotPaint = await import(new URL(
-  `../../turn/garage/lot-saved-paint.js?saved-paint-test=${Date.now()}`,
+const savedCarPaint = await import(new URL(
+  `../../turn/garage/saved-car-paint.js?saved-paint-test=${Date.now()}`,
   import.meta.url
 ));
 const futureFactoryPaint = {
   color: catalog.getVehicleDefaultColor('race-future'),
   secondaryColor: catalog.getVehicleDefaultSecondaryColor('race-future')
 };
-assert.equal(savedLotPaint.getSavedLotPaint('race-future'), null,
+assert.equal(savedCarPaint.getSavedCarPaint('race-future'), null,
   'A car without an explicit SAVE must keep its factory thumbnail paint');
-assert.deepEqual(savedLotPaint.resolveLotPaint('race-future'), futureFactoryPaint);
+assert.deepEqual(savedCarPaint.resolveCarPaint('race-future'), futureFactoryPaint);
 assert.deepEqual(
-  savedLotPaint.saveLotPaint('race-future', { color: '#f8f9fa', secondaryColor: '#8ce99a' }),
+  savedCarPaint.saveCarPaint('race-future', { color: '#f8f9fa', secondaryColor: '#8ce99a' }),
   { color: '#f8f9fa', secondaryColor: '#8ce99a' },
   'SAVE must persist both paint channels for one specific car'
 );
 assert.deepEqual(
-  savedLotPaint.resolveLotPaint('race-future'),
+  savedCarPaint.resolveCarPaint('race-future'),
   { color: '#f8f9fa', secondaryColor: '#8ce99a' },
   'The saved paint pair must become the Future Racer thumbnail and selection paint'
 );
-assert.equal(savedLotPaint.getSavedLotPaint('monster-truck'), null,
+assert.equal(savedCarPaint.getSavedCarPaint('monster-truck'), null,
   'Saving Future Racer paint must not bleed into another car');
-assert.deepEqual(savedLotPaint.resetLotPaint('race-future'), futureFactoryPaint,
+assert.deepEqual(savedCarPaint.resetCarPaint('race-future'), futureFactoryPaint,
   'RESET must return the selected car to its current factory paint');
-assert.equal(savedLotPaint.getSavedLotPaint('race-future'), null,
+assert.equal(savedCarPaint.getSavedCarPaint('race-future'), null,
   'RESET must remove the per-car saved override');
 assert.equal(
-  savedLotPaint.saveLotPaint('police', { color: '#123456', secondaryColor: '#654321' }),
+  savedCarPaint.saveCarPaint('police', { color: '#123456', secondaryColor: '#654321' }),
   null,
   'Fixed emergency liveries must never gain player-saved paint'
 );
 
 // GARAGE saves paint per car: SAVE and RESET on the chosen car, factory colours
 // before Paintjob, and a new choice starts from that car's remembered paint.
-assert.match(lot, /const paintFor = \(carId\) => \(isPaintUnlocked\(\) \? resolveLotPaint\(carId\) : factoryPaint\(carId\)\)/,
+assert.match(lot, /const paintFor = \(carId\) => \(isPaintUnlocked\(\) \? resolveCarPaint\(carId\) : factoryPaint\(carId\)\)/,
   'A choice starts from its remembered paint, and from factory paint only while PAINTJOB is locked');
 assert.match(lot, /initial: isPaintUnlocked\(\) \? entry : \{ \.\.\.entry, \.\.\.factoryPaint\(entry\.carId\) \}/,
   'A locked PAINTJOB never races an older saved custom paint');
 assert.match(lot, /action\.textContent = resetMode \? 'Reset to factory' : 'Save colours'/,
   'The paint action must visibly switch between SAVE and RESET');
-assert.match(lot, /saveLotPaint\(current\.carId, current\)/);
-assert.match(lot, /resetLotPaint\(current\.carId\)/);
+assert.match(lot, /saveCarPaint\(current\.carId, current\)/);
+assert.match(lot, /resetCarPaint\(current\.carId\)/);
 assert.match(lot, /action\.dataset\.mode = resetMode \? 'reset' : 'save'/);
 assert.match(lot, /showroom-viewer\.js/);
 const showroomSource = await fs.readFile(new URL('../../turn/garage/showroom-viewer.js', import.meta.url), 'utf8');

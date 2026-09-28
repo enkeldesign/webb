@@ -66,7 +66,7 @@ assert.match(home, /document\.body\.classList\.add\('turn-m8-active', 'turn-home
   'Home must expose the lifecycle class used to stop the covered race world');
 assert.match(home, /document\.body\.classList\.remove\('turn-home-open'\)/,
   'Leaving Home must resume the main renderer before the race setup flow');
-assert.match(main, /if \(document\.body\.classList\.contains\('turn-lot-open'\)\) return 'lot'/, 'The existing Lot pause must remain intact');
+assert.match(main, /if \(document\.body\.classList\.contains\('turn-garage-open'\)\) return 'lot'/, 'The existing Lot pause must remain intact');
 assert.match(main, /if \(installGate && !installGate\.hidden\) return 'install gate'/, 'The existing install-gate pause must remain intact');
 
 console.log(`TURN ${release.id} Home-covered renderer pause, 60fps high-refresh cap and modal pause guard passed.`);

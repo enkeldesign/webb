@@ -25,10 +25,10 @@ function install(runtime) {
   resetButton.insertAdjacentElement('afterend', button);
 
   button.addEventListener('click', async () => {
-    if (button.disabled || typeof runtime.openLot !== 'function') return;
+    if (button.disabled || typeof runtime.openGarage !== 'function') return;
     button.disabled = true;
     try {
-      await runtime.openLot();
+      await runtime.openGarage();
     } finally {
       button.disabled = false;
     }

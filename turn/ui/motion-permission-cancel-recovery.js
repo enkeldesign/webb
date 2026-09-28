@@ -120,7 +120,7 @@ export function installMotionPermissionCancelRecovery({ environment = globalThis
           standaloneDismissals = 0;
           return permission;
         } catch (error) {
-          const lotOpen = documentRef?.body?.classList?.contains?.('turn-lot-open');
+          const lotOpen = documentRef?.body?.classList?.contains?.('turn-garage-open');
 
           if (permissionWasDismissed(error) && lotOpen && standaloneApp) {
             standaloneDismissals += 1;

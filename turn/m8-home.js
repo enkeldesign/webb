@@ -322,14 +322,14 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
 
 // GARAGE's RACE asks for motion access inside the tap itself (iOS only prompts from a
 // user gesture), then lets the tap through.
-function installLotRaceGate({ raceSession, getSteeringMode, onAccessReady }) {
+function installGarageRaceGate({ raceSession, getSteeringMode, onAccessReady }) {
   const raceButton = document.querySelector('.garage-race');
   if (!raceButton) throw new Error('TURN M8 could not find the GARAGE RACE button.');
 
-  let status = document.querySelector('.lot-race-status');
+  let status = document.querySelector('.garage-race-status');
   if (!status) {
     status = document.createElement('p');
-    status.className = 'lot-race-status';
+    status.className = 'garage-race-status';
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
     (raceButton.closest('.turn-pr-dock-inner') || raceButton.parentElement).prepend(status);
@@ -437,7 +437,7 @@ export async function installM8HomeNavigation() {
   }
 
   let garageModule = null;
-  function prepareLotOnce() {
+  function prepareGarageOnce() {
     if (!lotWarmupPromise) {
       const preparation = import('/turn/garage/garage.js').then(async (module) => {
         await module.prepareGarage();
@@ -457,7 +457,7 @@ export async function installM8HomeNavigation() {
     requestAnimationFrame(() => {
       const beginWarmup = () => {
         lotWarmupScheduled = false;
-        void prepareLotOnce().catch((error) => {
+        void prepareGarageOnce().catch((error) => {
           console.warn('TURN: GARAGE could not be prepared in the background.', error);
         });
       };
@@ -514,7 +514,7 @@ export async function installM8HomeNavigation() {
       await waitForHomePaint();
       await Promise.all([
         activateTrack(trackId, runtime),
-        prepareLotOnce()
+        prepareGarageOnce()
       ]);
       hideHome();
       const track = selectedTrack();
@@ -525,7 +525,7 @@ export async function installM8HomeNavigation() {
         trackDifficulty: track.difficulty,
         trackIcon: trackIconMarkup(trackId)
       });
-      const removeRaceGate = installLotRaceGate({
+      const removeRaceGate = installGarageRaceGate({
         raceSession,
         getSteeringMode: loadSteeringMode,
         onAccessReady(access) {
@@ -582,7 +582,7 @@ export async function installM8HomeNavigation() {
   menuObserver?.observe(utilityGroup, { attributes: true, attributeFilter: ['data-menu-state'] });
   window.addEventListener('turn:ui-state-change', syncRaceSettingsVisibility);
 
-  runtime.openLot = leaveRaceForHome;
+  runtime.openGarage = leaveRaceForHome;
   runtime.openHome = leaveRaceForHome;
   document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
   globalThis.__turnNextHome = Object.freeze({

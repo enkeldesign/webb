@@ -384,7 +384,7 @@
   display: none;
 }
 
-/* The SHIFT trigger keeps lot-shift.js's states: locked, active, unavailable. */
+/* The SHIFT trigger keeps shift-setup.js's states: locked, active, unavailable. */
 .garage .garage-shift {
   justify-content: space-between;
 }

@@ -278,7 +278,7 @@ async function enterWorld(session, { runtime, raceSession, home }, view, access)
   globalThis.__turnGetTrackId = () => WORLD_TRACK_ID;
   globalThis.__turnGetCollisionProfile = () => worldData.collisionProfile;
   globalThis.__turnIsForgivingSurface = () => false;
-  runtime.openLot = () => leaveWorld(session, { runtime, raceSession, home }, view);
+  runtime.openGarage = () => leaveWorld(session, { runtime, raceSession, home }, view);
 
   home.hideHome();
   document.body.classList.add('turn-next-world-active');
@@ -304,7 +304,7 @@ async function enterWorld(session, { runtime, raceSession, home }, view, access)
 function captureSnapshot(runtime, home) {
   return Object.freeze({
     trackId: home.getSelectedTrackId?.() || runtime.state.trackId || 'countryside',
-    openLot: runtime.openLot,
+    openGarage: runtime.openGarage,
     getTrackId: globalThis.__turnGetTrackId,
     getCollisionProfile: globalThis.__turnGetCollisionProfile,
     isForgivingSurface: globalThis.__turnIsForgivingSurface
@@ -441,7 +441,7 @@ async function leaveWorld(session, { runtime, raceSession, home }, view) {
     globalThis.__turnGetTrackId = snapshot.getTrackId;
     globalThis.__turnGetCollisionProfile = snapshot.getCollisionProfile;
     globalThis.__turnIsForgivingSurface = snapshot.isForgivingSurface;
-    runtime.openLot = snapshot.openLot;
+    runtime.openGarage = snapshot.openGarage;
     await activateTrack(snapshot.trackId, runtime);
   }
 

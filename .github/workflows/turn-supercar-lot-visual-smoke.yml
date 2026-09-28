@@ -23,7 +23,7 @@ on:
       - 'turn/garage/garage.css'
       - 'turn/garage/showroom-viewer.js'
       - 'turn/pre-race.css'
-      - 'turn/garage/lot-saved-paint.js'
+      - 'turn/garage/saved-car-paint.js'
       - 'turn/progression/trophy-road.js'
       - 'turn/graphics-profile.js'
       - 'turn/three-runtime.js'

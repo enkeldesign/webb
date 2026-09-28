@@ -18,7 +18,7 @@
 
 /* ---------- 3. Dialogs ---------- */
 
-:root body :is(dialog.m8-dialog > .m8-dialog-card, .audio-settings-card, .turn-support-challenge-card, .turn-yourturn-share-card, .turn-motion-denied-card, .lot-shift-dialog-card, .nuke-dialog-card) {
+:root body :is(dialog.m8-dialog > .m8-dialog-card, .audio-settings-card, .turn-support-challenge-card, .turn-yourturn-share-card, .turn-motion-denied-card, .garage-shift-dialog-card, .nuke-dialog-card) {
   border-width: var(--turn-border-dialog);
   border-radius: var(--turn-radius-dialog);
   box-shadow: var(--turn-shadow-dialog);
@@ -49,7 +49,7 @@
    home indicator, rounded only at the top, and never taller than the space below
    the status bar. */
 @media (max-width: 46em) and (orientation: portrait) {
-  :root body :is(dialog.m8-dialog, dialog.audio-settings-dialog, dialog.turn-support-challenge-dialog, dialog.turn-yourturn-share-dialog, dialog.turn-motion-denied-dialog, dialog.lot-shift-dialog, dialog.nuke-dialog)[open] {
+  :root body :is(dialog.m8-dialog, dialog.audio-settings-dialog, dialog.turn-support-challenge-dialog, dialog.turn-yourturn-share-dialog, dialog.turn-motion-denied-dialog, dialog.garage-shift-dialog, dialog.nuke-dialog)[open] {
     inset: auto 0 0;
     width: 100%;
     max-width: none;
@@ -57,7 +57,7 @@
     margin: auto 0 0;
   }
 
-  :root body :is(dialog.m8-dialog > .m8-dialog-card, .audio-settings-card, .turn-support-challenge-card, .turn-yourturn-share-card, .turn-motion-denied-card, .lot-shift-dialog-card, .nuke-dialog-card) {
+  :root body :is(dialog.m8-dialog > .m8-dialog-card, .audio-settings-card, .turn-support-challenge-card, .turn-yourturn-share-card, .turn-motion-denied-card, .garage-shift-dialog-card, .nuke-dialog-card) {
     box-sizing: border-box;
     width: 100%;
     max-width: none;
@@ -70,14 +70,14 @@
   }
 
   /* SHIFT: six levers never fit a phone's width; three per row keep every label
-     whole. (lot-shift.css is scaled, so its own 520px switch only fires below
+     whole. (shift-setup.css is scaled, so its own 520px switch only fires below
      390px.) */
-  :root body .lot-shift-dialog .lot-shift-options {
+  :root body .garage-shift-dialog .garage-shift-options {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     row-gap: 8px;
   }
 
-  :root body .lot-shift-dialog .lot-shift-option-label {
+  :root body .garage-shift-dialog .garage-shift-option-label {
     overflow-wrap: anywhere;
   }
 
@@ -87,7 +87,7 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    :root body :is(dialog.m8-dialog, dialog.audio-settings-dialog, dialog.turn-support-challenge-dialog, dialog.turn-yourturn-share-dialog, dialog.turn-motion-denied-dialog, dialog.lot-shift-dialog, dialog.nuke-dialog)[open] > :first-child {
+    :root body :is(dialog.m8-dialog, dialog.audio-settings-dialog, dialog.turn-support-challenge-dialog, dialog.turn-yourturn-share-dialog, dialog.turn-motion-denied-dialog, dialog.garage-shift-dialog, dialog.nuke-dialog)[open] > :first-child {
       animation: turn-sheet-rise var(--turn-motion-base, 180ms) var(--turn-ease, ease-out);
     }
     @keyframes turn-sheet-rise {

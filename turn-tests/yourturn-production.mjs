@@ -61,7 +61,7 @@ assert.match(appSource, /await import\(withBuild\('\/turn\/main\.js'\)\)/,
 assert.doesNotMatch(appSource, /\/turn\/app\.js|m8-home|installM8HomeNavigation/,
   'YOUR TURN must not bootstrap the full TURN Home application');
 assert.match(appSource, /installHardPauseController/);
-assert.match(appSource, /classList\.add\('turn-lot-open', 'yourturn-runtime-paused'\)/,
+assert.match(appSource, /classList\.add\('turn-garage-open', 'yourturn-runtime-paused'\)/,
   'THE CHALLENGE modal must hard-pause physics and replay movement');
 assert.match(appSource, /installMotionLifecycleBridge/,
   'YOUR TURN must retain TURN’s canonical motion lifecycle instead of replacing it');

@@ -241,7 +241,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       resetButton.textContent = 'Restart Part';
       leaveButton.textContent = 'Leave Training';
       leaveButton.setAttribute('aria-label', 'Leave Drive By Ear 101 and return Home');
-      runtime.openLot = leaveTraining;
+      runtime.openGarage = leaveTraining;
 
       const fullscreenPromise = first ? session.preparedAccess?.fullscreenPromise : Promise.resolve(false);
       await raceSession.startGame(fullscreenPromise || Promise.resolve(false), { announceStart: false });
@@ -509,7 +509,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       await activateTrack(snapshot.trackId, runtime);
       await raceSession.selectVehicle(snapshot.vehicle);
       restorePreferenceStorage(snapshot);
-      runtime.openLot = snapshot.openLot;
+      runtime.openGarage = snapshot.openGarage;
       resetButton.textContent = snapshot.resetLabel;
       leaveButton.textContent = snapshot.leaveLabel;
       if (snapshot.leaveAriaLabel == null) leaveButton.removeAttribute('aria-label');
@@ -560,7 +560,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
         collisionProfile: globalThis.__turnGetCollisionProfile,
         forgivingSurface: globalThis.__turnIsForgivingSurface
       }),
-      openLot: runtime.openLot,
+      openGarage: runtime.openGarage,
       resetLabel: resetButton.textContent,
       leaveLabel: leaveButton.textContent,
       leaveAriaLabel: leaveButton.getAttribute('aria-label')

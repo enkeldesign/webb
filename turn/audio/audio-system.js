@@ -125,7 +125,7 @@ export function installTurnAudio() {
     window.addEventListener('turn:pace-note-silence', stopPaceNoteSources);
   }
 
-  lotOpen = document.body?.classList.contains('turn-lot-open') || false;
+  lotOpen = document.body?.classList.contains('turn-garage-open') || false;
   if (document.body && typeof MutationObserver !== 'undefined') {
     const lotObserver = new MutationObserver(handleLotVisibilityChange);
     lotObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
@@ -965,7 +965,7 @@ function handleLotPointerDown(event) {
 }
 
 function handleLotVisibilityChange() {
-  const nextLotOpen = document.body?.classList.contains('turn-lot-open') || false;
+  const nextLotOpen = document.body?.classList.contains('turn-garage-open') || false;
   if (nextLotOpen && !lotOpen) cue('garage-open');
   lotOpen = nextLotOpen;
 }

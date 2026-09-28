@@ -286,14 +286,14 @@ async function responsiveRace(browser, name) {
       return race.contains(hit);
     }), `${name}: RACE receives taps with the GARAGE tools scrolled under it`);
     // Standalone dialogs (GARAGE SHIFT, reset rivals) are portrait sheets too.
-    for (const dialog of ['.lot-shift-dialog', '.nuke-dialog']) {
+    for (const dialog of ['.garage-shift-dialog', '.nuke-dialog']) {
       await page.$eval(dialog, (node) => node.showModal());
       await settle(page);
       const sheet = await bounds(page, `${dialog} > :first-child`);
       assert.ok(Math.round(sheet.x) === 0 && Math.round(sheet.width) === 393 && Math.round(sheet.bottom) === 852,
         `${dialog} is a portrait bottom sheet`);
-      if (dialog === '.lot-shift-dialog') {
-        assert.equal((await shape('.lot-shift-close'))[0], sheetClose, 'SHIFT closes like every dialog');
+      if (dialog === '.garage-shift-dialog') {
+        assert.equal((await shape('.garage-shift-close'))[0], sheetClose, 'SHIFT closes like every dialog');
       }
       await page.$eval(dialog, (node) => node.close());
     }

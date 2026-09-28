@@ -1339,7 +1339,7 @@ const turnRuntime = {
   lapFrameAt,
   GAME_MODE,
   setGameMode,
-  openLot: raceSession.openLotFromRace,
+  openGarage: raceSession.openGarageFromRace,
   setRacePosition(position, total) {
     globalThis.__turnSetRacePosition?.(position, total);
   },
@@ -1380,7 +1380,7 @@ const HUD_UPDATE_INTERVAL_MS = 1000 / 30;
 let nextHudUpdateAt = 0;
 
 function mainSceneOcclusion() {
-  if (document.body.classList.contains('turn-lot-open')) return 'lot';
+  if (document.body.classList.contains('turn-garage-open')) return 'lot';
   if (installGate && !installGate.hidden) return 'install gate';
   return null;
 }

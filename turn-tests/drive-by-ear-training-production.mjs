@@ -211,7 +211,7 @@ assert.match(training, /setBalance\?\.\(TRAINING_BALANCE\)/);
 assert.match(training, /restorePreferenceStorage\(session\.snapshot\)/);
 assert.match(training, /await activateTrack\(snapshot\.trackId, runtime\)/);
 assert.match(training, /await raceSession\.selectVehicle\(snapshot\.vehicle\)/);
-assert.match(training, /runtime\.openLot = snapshot\.openLot/);
+assert.match(training, /runtime\.openGarage = snapshot\.openGarage/);
 
 assert.match(css, /\.turn-dbe-training-home[\s\S]*white-space: nowrap/);
 assert.match(css, /\.turn-dbe-training-sound-key/);

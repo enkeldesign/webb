@@ -22,7 +22,7 @@ assert.match(renderPaint, /paintToggle\.hidden = Boolean\(preview\)/, 'A locked 
 assert.match(renderPaint, /if \(car\.fixedLivery\) \{[\s\S]*\} else if \(!isPaintUnlocked\(\)\) \{[\s\S]*\} else \{/,
   'Paint is fixed for service liveries, locked before PAINTJOB, editable after');
 assert.match(renderPaint, /Paint unlocks at <strong>/);
-assert.match(garage, /const paintFor = \(carId\) => \(isPaintUnlocked\(\) \? resolveLotPaint\(carId\) : factoryPaint\(carId\)\)/,
+assert.match(garage, /const paintFor = \(carId\) => \(isPaintUnlocked\(\) \? resolveCarPaint\(carId\) : factoryPaint\(carId\)\)/,
   'Factory paint is forced only while PAINTJOB is locked');
 assert.match(garage, /paintToggle\.classList\.toggle\('is-locked', !car\.fixedLivery && !isPaintUnlocked\(\)\)/);
 assert.match(garage, /showTrophyUnlockNotice\(\{ reward: getTrophyRoadReward\(PAINT_REWARD_ID\), itemName: 'Car color' \}\)/,

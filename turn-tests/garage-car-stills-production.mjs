@@ -58,9 +58,9 @@ assert.match(catalogSource, /import \{ paintedStillUrl, stillUrl \} from '\.\/ca
 
 // A saved repaint shows on the card: rendered at runtime into the stills' own frame, by
 // one renderer that works one car at a time and is released when nothing waits.
-assert.match(garageSource, /savedPaint: \(carId\) => \(isPaintUnlocked\(\) \? getSavedLotPaint\(carId\) : null\)/,
+assert.match(garageSource, /savedPaint: \(carId\) => \(isPaintUnlocked\(\) \? getSavedCarPaint\(carId\) : null\)/,
   'Only saved paint, once Paintjob is unlocked, recolours a card');
-assert.match(garageSource, /saveLotPaint\(current\.carId, current\);\s*syncPaintAction\(\);\s*catalog\.sync\(\);/,
+assert.match(garageSource, /saveCarPaint\(current\.carId, current\);\s*syncPaintAction\(\);\s*catalog\.sync\(\);/,
   'Saving colours updates the card straight away');
 assert.match(stillSource, /frameStill\(camera, frame, width, height\)/, 'Repaints use the shared frame');
 assert.match(stillSource, /fetch\(stillUrl\('manifest\.json'\)\)/);

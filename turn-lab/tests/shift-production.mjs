@@ -33,7 +33,7 @@ import {
 import {
   VEHICLE_SHIFT_LEVER_STATES,
   resolveVehicleShiftGearbox
-} from '../../turn/garage/lot-shift-gearbox.js';
+} from '../../turn/garage/shift-gearbox.js';
 import {
   resolveVehicleShiftFeedback
 } from '../../turn/ui/shift-feedback.js';
@@ -362,10 +362,10 @@ assert.equal(advanceShiftTopSpeedMultiplier(1.06, 1.12, 0.01), 1.12,
   'Raising the top-speed cap may apply immediately');
 
 const [lotShift, lotGearbox, lotRuntime, lotStyles, controls, gameplayStyles, driveStyles, workflow] = await Promise.all([
-  fs.readFile(new URL('../../turn/garage/lot-shift.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-shift-gearbox.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/shift-setup.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/shift-gearbox.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/garage.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-shift.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/shift-setup.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/gameplay-v2.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/drive-pad.css', import.meta.url), 'utf8'),
@@ -380,10 +380,10 @@ assert.match(garageCss, /\.garage \.garage-shift\.is-active \{[\s\S]*?background
 assert.match(lotShift, /Move three attribute levers up by 1/);
 assert.match(lotShift, /vehicleShiftAmount\(car\.id, isVehiclePerkUnlocked\(car\.id\)\)/,
   'The Lot gearbox must switch the Sedan magnitude from its independent perk entitlement');
-assert.match(lotShift, /class="lot-shift-options" role="group"/);
+assert.match(lotShift, /class="garage-shift-options" role="group"/);
 assert.match(lotShift, /document\.createElement\('button'\)/,
   'SHIFT attributes must be presented as direct toggle buttons');
-assert.match(lotShift, /class="lot-shift-lever"/);
+assert.match(lotShift, /class="garage-shift-lever"/);
 assert.match(lotShift, /dataset\.leverState/,
   'Each SHIFT button must expose its resolved lever position to the rendered interface');
 assert.match(lotShift, /selectedReceivers/,
@@ -398,26 +398,26 @@ assert.match(lotShift, /It must lose \$\{editingShiftAmount\}/,
   'A tapped maximum lever must explain why its downward move is automatic');
 assert.match(lotShift, /showConstraintFeedback/,
   'Unavailable gearbox levers must produce visible and live-region feedback');
-assert.match(lotStyles, /\.lot-shift-close[\s\S]*?background: var\(--turn-action-navigation, #ff7b54\)/,
+assert.match(lotStyles, /\.garage-shift-close[\s\S]*?background: var\(--turn-action-navigation, #ff7b54\)/,
   'The SHIFT close control must use navigation orange');
-assert.match(lotStyles, /\.lot-shift-cancel \{ background: var\(--turn-action-navigation, #ff7b54\); \}/,
+assert.match(lotStyles, /\.garage-shift-cancel \{ background: var\(--turn-action-navigation, #ff7b54\); \}/,
   'Cancel must use navigation orange');
-assert.match(lotStyles, /\.lot-shift-deactivate \{ margin-right: auto; background: var\(--turn-action-utility, #fff8e8\); \}/,
+assert.match(lotStyles, /\.garage-shift-deactivate \{ margin-right: auto; background: var\(--turn-action-utility, #fff8e8\); \}/,
   'Deactivate must use the secondary paper action');
-assert.match(lotStyles, /\.lot-shift-save \{ background: var\(--turn-action-primary, #ff4fa3\); \}/,
+assert.match(lotStyles, /\.garage-shift-save \{ background: var\(--turn-action-primary, #ff4fa3\); \}/,
   'Save must use primary pink');
-assert.match(lotStyles, /\.lot-shift-dialog::backdrop/);
+assert.match(lotStyles, /\.garage-shift-dialog::backdrop/);
 assert.match(lotStyles, /grid-template-columns: repeat\(6/,
   'The landscape gearbox must keep all six levers in one row');
-assert.match(lotStyles, /\.lot-shift-option\.is-gain \.lot-shift-lever-knob/);
-assert.match(lotStyles, /\.lot-shift-option\.is-loss \.lot-shift-lever-knob/);
+assert.match(lotStyles, /\.garage-shift-option\.is-gain \.garage-shift-lever-knob/);
+assert.match(lotStyles, /\.garage-shift-option\.is-loss \.garage-shift-lever-knob/);
 assert.match(lotStyles, /background: #4dabf7/,
   'Neutral levers must have a distinct blue middle state');
 assert.match(lotStyles, /background: #69db7c/,
   'Upward levers must have a distinct green state');
 assert.match(lotStyles, /background: #ff8787/,
   'Downward levers must have a distinct red state');
-assert.match(lotStyles, /\.lot-shift-option\.has-constraint-feedback/,
+assert.match(lotStyles, /\.garage-shift-option\.has-constraint-feedback/,
   'A fixed lever tap must provide a visual constraint cue');
 assert.match(lotStyles, /prefers-reduced-motion: reduce/);
 

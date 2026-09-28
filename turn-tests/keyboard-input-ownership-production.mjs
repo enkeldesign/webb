@@ -315,7 +315,7 @@ assert.match(qeSource, /createKeyboardDriveOwnership/,
 assert.match(ownershipSource, /dialog\[open\]/);
 assert.match(ownershipSource, /\[role="dialog"\]:not\(\[hidden\]\)/);
 assert.match(ownershipSource, /turn-home-open/);
-assert.match(ownershipSource, /turn-lot-open/);
+assert.match(ownershipSource, /turn-garage-open/);
 assert.match(ownershipSource, /turn-spectating/);
 
 console.log('TURN keyboard driving ownership, native-control protection and held-input release regression passed.');
