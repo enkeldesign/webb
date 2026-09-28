@@ -960,7 +960,7 @@ function hardMute(param, time) {
 }
 
 function handleLotPointerDown(event) {
-  if (!event.target.closest?.('.lot-canvas-host')) return;
+  if (!event.target.closest?.('.lot-canvas-host, .garage-step')) return;
   cue('car-select');
 }
 
@@ -975,11 +975,11 @@ function handleUiPointerDown(event) {
   if (!button) return;
   if (button.closest('.drive-pad') || button.classList.contains('pedal') || button.classList.contains('brake-reverse')) return;
 
-  if (button.matches('#motionButton, #manualButton, .lot-race, .nuke-confirm')) {
+  if (button.matches('#motionButton, #manualButton, .lot-race, .garage-race, .nuke-confirm')) {
     cue('ui-confirm');
     return;
   }
-  if (button.matches('.lot-back, .lot-view-close, .nuke-cancel, .sound-guide-close')) {
+  if (button.matches('.lot-back, .garage-back, .garage-leave-preview, .lot-view-close, .nuke-cancel, .sound-guide-close')) {
     cue('ui-back');
     return;
   }

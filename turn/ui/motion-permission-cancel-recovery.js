@@ -37,6 +37,15 @@ function notifyMotionPermissionBlocked(environment) {
 }
 
 function readCurrentLotSelection(documentRef) {
+  // GARAGE knows its playable choice (never a locked preview).
+  const garageChoice = globalThis.__turnGarage?.getChoice?.();
+  if (garageChoice?.carId) {
+    return {
+      carId: garageChoice.carId,
+      color: garageChoice.color || null,
+      secondaryColor: garageChoice.secondaryColor || null
+    };
+  }
   const selectedCar = documentRef?.querySelector?.('.lot-car-option[aria-checked="true"]');
   const controls = [...(documentRef?.querySelectorAll?.('.lot-color-control') || [])];
   const selection = {

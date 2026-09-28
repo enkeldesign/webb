@@ -367,6 +367,10 @@ function synchronizeUiBaselineTargets(importMap, release) {
     ['/turn/ui/leader-marker-r500.js', ['?revision=r227-night-marker-outline']],
     ['/turn/ui/player-marker-r428.js', ['?revision=r227-night-marker-outline']],
     ['/turn/roadbook/roadbook.js', []],
+    ['/turn/garage/garage.js', []],
+    ['/turn/garage/garage-cars.js', []],
+    ['/turn/garage/garage-selection.js', []],
+    ['/turn/garage/showroom-viewer.js', []],
     // Modules that request a stylesheet by a release-bound literal URL.
     ['/turn/social/your-turn-share.js', ['?revision=r4-runtime-share-state']],
     ['/turn/content/about-turn.js', ['?revision=r1']],
