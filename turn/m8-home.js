@@ -385,8 +385,7 @@ export async function installM8HomeNavigation() {
   home.innerHTML = `
     <div class="m8-home-shell">
       <header class="m8-home-head">
-        <img class="m8-home-logo" src="/turn/TURNicon.PNG?icon=${ICON_REVISION}" alt="">
-        <span class="turn-pr-wordmark m8-home-wordmark">TURN</span>
+        <img class="m8-home-logo turn-pr-app-logo" src="/turn/TURNicon.PNG?icon=${ICON_REVISION}" alt="TURN">
         <div class="m8-home-pitch"></div>
         <span class="m8-home-build">TURN NEXT · M8 · SOURCE 2026.07.29-R118</span>
       </header>

@@ -140,7 +140,8 @@ async function phoneFlow(browserType, name) {
     assert.equal(phone.sheetButton, true);
     await assertLastCardClearsDock(page, `${name} 393`);
     // Keyboard focus moving back up the list keeps the focused card clear of the
-    // sticky app bar (scroll-padding-top), just as the dock clears it below.
+    // sticky app bar and TURN's badge hanging over it (scroll-padding-top), just as the
+    // dock clears it below.
     await page.evaluate(() => {
       const home = document.querySelector('.m8-home');
       home.scrollTop = home.scrollHeight;
@@ -153,10 +154,27 @@ async function phoneFlow(browserType, name) {
     const clearance = await page.evaluate(() => {
       const card = document.activeElement.closest('.roadbook-card')?.getBoundingClientRect();
       const bar = document.querySelector('.m8-home-head').getBoundingClientRect();
-      return card && { track: document.activeElement.dataset.trackId, cardTop: Math.round(card.top), barBottom: Math.round(bar.bottom) };
+      const badge = document.querySelector('.m8-home-head .turn-pr-app-logo').getBoundingClientRect();
+      return card && { track: document.activeElement.dataset.trackId, cardTop: Math.round(card.top), barBottom: Math.round(Math.max(bar.bottom, badge.bottom)) };
     });
     assert.ok(clearance?.track === 'cliffside' && clearance.cardTop >= clearance.barBottom,
-      `${name}: a card focused going back up stays below the app bar (${JSON.stringify(clearance)})`);
+      `${name}: a card focused going back up stays below the app bar and its badge (${JSON.stringify(clearance)})`);
+    // TURN's badge hangs over the bar's rule without growing the bar or taking taps.
+    const badge = await page.evaluate(() => {
+      const logo = document.querySelector('.m8-home-head .turn-pr-app-logo');
+      const bar = document.querySelector('.m8-home-head').getBoundingClientRect();
+      const heading = document.querySelector('.roadbook .turn-pr-display').getBoundingClientRect();
+      const box = logo.getBoundingClientRect();
+      return {
+        alt: logo.alt,
+        overhangs: box.bottom > bar.bottom + 8,
+        clearOfHeading: box.bottom < heading.top,
+        slimBar: bar.height <= 64,
+        passThrough: globalThis.getComputedStyle(logo).pointerEvents === 'none'
+      };
+    });
+    assert.deepEqual(badge, { alt: 'TURN', overhangs: true, clearOfHeading: true, slimBar: true, passThrough: true },
+      `${name}: TURN's badge hangs over the app bar`);
     await page.evaluate(() => { document.querySelector('.m8-home').scrollTop = 0; });
 
     // Selection is never colour alone: the selected card says so.

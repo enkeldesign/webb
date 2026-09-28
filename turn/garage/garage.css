@@ -18,7 +18,7 @@
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scroll-padding-top: calc(var(--turn-app-bar-height, 56px) + 12px);
+  scroll-padding-top: calc(var(--turn-app-bar-height, 56px) + var(--turn-pr-logo-overhang, 28px) + 12px);
   scroll-padding-bottom: calc(var(--garage-dock-height) + 12px);
   background: var(--turn-surface-page, #fff8e8);
   color: var(--turn-ink, #08090a);
@@ -55,21 +55,6 @@
   background: var(--turn-yellow-600, #ffbd12);
 }
 
-.garage-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.garage-logo {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  object-fit: cover;
-}
-
 .garage-back {
   display: inline-flex;
   align-items: center;
@@ -101,7 +86,7 @@
   max-width: var(--turn-pr-max-width);
   margin: 0 auto;
   padding:
-    20px
+    calc(var(--turn-pr-logo-overhang, 28px) + 6px)
     max(var(--turn-pr-gutter), env(safe-area-inset-right))
     calc(var(--garage-dock-height) + 20px)
     max(var(--turn-pr-gutter), env(safe-area-inset-left));
@@ -1155,7 +1140,7 @@
 
 @media (orientation: landscape) and (max-height: 500px) {
   .garage-page {
-    padding-top: 12px;
+    padding-top: calc(var(--turn-pr-logo-overhang, 16px) + 4px);
   }
 
   .garage-head {
