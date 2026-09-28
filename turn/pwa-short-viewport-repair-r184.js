@@ -5,6 +5,8 @@ const AUTO_CONFIRM_MS = 90;
 const INTERACTION_CONFIRM_MS = 40;
 const META_PULSE_MS = 120;
 const VERIFY_MS = 80;
+const STATUS_BAR_TOLERANCE = 4;
+const INEFFECTIVE_KEY = 'turn-viewport-pulse-ineffective-v1';
 const INSTALL_KEY = '__turnShortViewportRepairR184';
 
 function delay(ms) {
@@ -40,8 +42,31 @@ function sampleViewport() {
     visualH: Number(viewport?.height) || 0,
     dvh,
     lvh,
+    top: measureHeight('env(safe-area-inset-top, 0px)'),
     gap: lvh - dvh
   });
+}
+
+// A gap of exactly the status-bar inset is the case the pulse cannot recover (device
+// tests, 1.24.x); ios-viewport-gap.js colours that strip instead.
+function isStatusBarGap(sample) {
+  return sample.top > 0 && Math.abs(sample.gap - sample.top) <= STATUS_BAR_TOLERANCE;
+}
+
+function pulseKnownIneffective() {
+  try {
+    return window.localStorage?.getItem(INEFFECTIVE_KEY) === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
+function rememberPulseIneffective() {
+  try {
+    window.localStorage?.setItem(INEFFECTIVE_KEY, '1');
+  } catch (_) {
+    // Private mode: the in-memory flag still stops repeats this session.
+  }
 }
 
 function hasBadSignature(sample) {
@@ -74,6 +99,7 @@ export function installShortViewportAutoRepair({ home } = {}) {
   let incidentActive = false;
   let autoAttempted = false;
   let interactionAttempted = false;
+  let pulseDisabled = false;
 
   function resetIncident() {
     incidentActive = false;
@@ -97,6 +123,14 @@ export function installShortViewportAutoRepair({ home } = {}) {
 
     const before = observe();
     if (!hasBadSignature(before)) return false;
+    // Every pulse visibly shakes the whole page while iOS relays it out. Skip the
+    // ones that cannot help: the status-bar gap, and any device where a pulse has
+    // already failed.
+    if (pulseDisabled || isStatusBarGap(before) || pulseKnownIneffective()) {
+      pulseDisabled = true;
+      root.dataset.turnViewportRepair = 'skipped';
+      return false;
+    }
 
     repairInFlight = true;
     const original = meta.getAttribute('content') || '';
@@ -123,6 +157,10 @@ export function installShortViewportAutoRepair({ home } = {}) {
         after: Object.freeze({ clientH: after.clientH, dvh: after.dvh, lvh: after.lvh, gap: after.gap })
       });
       if (recovered) resetIncident();
+      else {
+        pulseDisabled = true;
+        rememberPulseIneffective();
+      }
       return recovered;
     } finally {
       meta.setAttribute('content', original);

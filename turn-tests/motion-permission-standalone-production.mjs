@@ -106,6 +106,7 @@ assert.match(dialogSource, /aria-labelledby/);
 assert.match(dialogSource, /aria-describedby/);
 assert.match(dialogCss, /width: min\(390px, calc\(100vw - 24px\)\)/);
 assert.match(dialogCss, /background: #ffd43b/);
-assert.match(dialogCss, /background: #ff4fa3/);
+assert.match(dialogCss, /background: var\(--turn-action-primary, #ff7c9f\)/,
+  'The dialog\'s primary action wears the primary token');
 
 console.log('TURN standalone motion cancellation uses a clear dedicated denial dialog without a reload loop.');
