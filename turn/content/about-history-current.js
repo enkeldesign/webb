@@ -1074,13 +1074,13 @@ Object.freeze({
     Object.freeze(['1.25.1 r316', 'In landscape on phones, the buttons before a race start no longer run off the screen: when they do not fit, SETTINGS, RECALIBRATE, SPECTATE and the rest move into a ☰ menu, and LEAVE RACE, blank screen and ACHIEVEMENTS stay in the row.']),
     Object.freeze(['1.26.0 r321', 'ROADBOOK replaces the Home track list: numbered track cards with each track\'s pictogram and real route, the Track sheet with personal bests, a dock that keeps the chosen track above CHOOSE CAR, and an inline overview on iPad']),
     Object.freeze(['1.27.0 r322', 'GARAGE replaces The Lot: one featured car at a time in Trophy Road order with previous and next, the 3D car 20° off head-on, one short description, Specifications and Perk, native paint, SHIFT, and a RACE dock. A locked car can be looked at but never raced, and Back to your choice returns to the car you picked.']),
-    Object.freeze(['1.28.0 r323', 'ALL CARS: every car as a card with its real 3D model at GARAGE\'s 20° view, and each locked car as a line drawing with its trophy threshold. Choose a car to feature it, or tap a locked one to preview it. On iPad the list stays beside the featured car in landscape and below it in portrait.'])
+    Object.freeze(['1.28.0 r324', 'ALL CARS: every car as a card with its real 3D model at GARAGE\'s 20° view, and each locked car as a line drawing with its trophy threshold. Choose a car to feature it, or tap a locked one to preview it. On iPad the list stays beside the featured car in landscape and below it in portrait. ALL CARS and Track sheet are yellow, like the sheets they open.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.28.0',
-  build: '2026.09.28-r323',
+  build: '2026.09.28-r324',
   note: 'ALL CARS: see every car at once in GARAGE, including locked cars as line drawings, and pick one to feature it.'
 });

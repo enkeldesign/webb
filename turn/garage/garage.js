@@ -229,7 +229,7 @@ export function showGarage({
             <h1 class="turn-pr-display" id="garageTitle" tabindex="-1">GARAGE</h1>
             <p class="turn-pr-lead">Choose your car</p>
           </div>
-          <button class="turn-pr-button is-secondary is-compact garage-all-cars-button" type="button" aria-haspopup="dialog">ALL CARS · ${ORDER.length}</button>
+          <button class="turn-pr-button is-secondary is-compact is-sheet garage-all-cars-button" type="button" aria-haspopup="dialog">ALL CARS · ${ORDER.length}</button>
         </header>
         <div class="garage-layout">
           <section class="garage-feature" aria-labelledby="garageCarName">
