@@ -49,11 +49,13 @@
   text-transform: uppercase;
 }
 
-.turn-pr-display:focus {
+.turn-pr-display:focus,
+.turn-pr-panel-title:focus {
   outline: none;
 }
 
-.turn-pr-display:focus-visible {
+.turn-pr-display:focus-visible,
+.turn-pr-panel-title:focus-visible {
   outline: 3px solid var(--turn-ink, #08090a);
   outline-offset: 4px;
 }

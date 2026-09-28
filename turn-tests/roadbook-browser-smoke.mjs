@@ -258,6 +258,20 @@ try {
     assert.equal(beside, true);
     await page.locator('.roadbook-card[data-track-id="cliffside"]').click();
     assert.equal(await page.locator('#roadbookOverviewTitle').textContent(), 'Cliffside', 'the overview follows the selection');
+    // Growing into the overview with the Track sheet open closes the sheet, and focus
+    // lands on the overview, never on the Track sheet button that just disappeared.
+    await page.setViewportSize({ width: 900, height: 820 });
+    await page.waitForFunction(() => !document.querySelector('.roadbook-sheet-button').hidden);
+    await page.locator('.roadbook-sheet-button').click();
+    await page.waitForSelector('#turnTrackSheet[open]');
+    await page.setViewportSize({ width: 1180, height: 820 });
+    await page.waitForFunction(() => !document.querySelector('#turnTrackSheet').open);
+    const focus = await page.evaluate(() => ({
+      id: document.activeElement?.id,
+      sheetButtonHidden: document.querySelector('.roadbook-sheet-button').hidden
+    }));
+    assert.deepEqual(focus, { id: 'roadbookOverviewTitle', sheetButtonHidden: true },
+      'the sheet hands focus to the overview when the screen grows into it');
   });
   console.log('ROADBOOK lists every track, keeps one clear selection, gates locked tracks and fits 320px to iPad.');
 } finally {

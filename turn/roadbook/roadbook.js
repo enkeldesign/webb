@@ -255,7 +255,7 @@ export function installRoadbook({
       </div>
       <aside class="roadbook-overview turn-pr-panel" aria-labelledby="roadbookOverviewTitle" hidden>
         <header class="turn-pr-panel-head">
-          <h2 class="turn-pr-panel-title" id="roadbookOverviewTitle"></h2>
+          <h2 class="turn-pr-panel-title" id="roadbookOverviewTitle" tabindex="-1"></h2>
         </header>
         <div class="turn-pr-panel-body"></div>
       </aside>
@@ -464,13 +464,19 @@ export function installRoadbook({
   sheet.addEventListener('click', (event) => {
     if (event.target === sheet) closeSheet();
   });
+  // Focus returns to the Track sheet button, or, when the screen has just grown into
+  // the overview (which replaces that button), to the overview's heading.
   sheet.addEventListener('close', () => {
-    if (!documentRef.querySelector('dialog[open]') && !sheetButton.hidden) sheetButton.focus({ preventScroll: true });
+    if (documentRef.querySelector('dialog[open]')) return;
+    if (!sheetButton.hidden) sheetButton.focus({ preventScroll: true });
+    else if (!overview.hidden) overviewTitle.focus({ preventScroll: true });
   });
 
   overviewMedia?.addEventListener?.('change', () => {
-    if (overviewShown()) closeSheet();
+    // Show the overview and hide its button first, so a closing sheet never returns
+    // focus to a control that is about to disappear.
     sync();
+    if (overviewShown()) closeSheet();
   });
   windowRef.addEventListener('turn:trophy-road-updated', sync);
   windowRef.addEventListener('storage', (event) => {
