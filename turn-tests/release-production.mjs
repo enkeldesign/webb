@@ -37,7 +37,7 @@ const [
   fs.readFile(new URL('../turn/install-gate.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/live-steering-setting.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-menu-font-fix.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/pre-race.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/world-art-pass.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/render/world.js', import.meta.url), 'utf8')
 ]);
@@ -59,7 +59,7 @@ assert.match(index, new RegExp(`install-gate\\.js\\?build=${escapeRegExp(release
 assert.match(index, new RegExp(`install-gate\\.css\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
 assert.match(index, new RegExp(`orientation-guard\\.css\\?build=${escapeRegExp(release.cacheKey)}-home-portrait`));
 assert.match(index, new RegExp(`live-steering-setting\\.js\\?build=${escapeRegExp(release.cacheKey)}-live-steering`));
-assert.match(index, new RegExp(`m8-menu-font-fix\\.css\\?build=${escapeRegExp(release.cacheKey)}-menu-font-v3`));
+assert.doesNotMatch(index, /m8-menu-font-fix\.css/);
 assert.match(index, new RegExp(`app\\.js\\?build=${escapeRegExp(release.cacheKey)}-browser-consent`));
 assert.doesNotMatch(index, /ROTATE YOUR DEVICE TO LANDSCAPE/);
 assert.match(index, /responsive\.css\?build=/);
@@ -96,16 +96,8 @@ assert.match(liveSteering, /raceSession\.prepareMotionAccess\(\)/);
 assert.match(liveSteering, /raceSession\.prepareManualAccess\(\)/);
 assert.match(liveSteering, /steering-mode-changed/);
 assert.match(liveSteering, /state\?\.running/);
-assert.match(menuFontCss, /\.m8-home\.m8-home-fixed-layout \.m8-home-main \.m8-track-heading-row h1,/);
-assert.match(menuFontCss, /\.m8-home\.m8-home-fixed-layout \.m8-home-main \.m8-home-menu h2/);
-assert.match(menuFontCss, /font-family: inherit/);
-assert.match(menuFontCss, /font-size: max\(var\(--turn-text-floor, 11px\), clamp\(1\.2375rem, 3\.2vw, 2\.25rem\)\)/);
-assert.match(menuFontCss, /font-style: normal/);
-assert.match(menuFontCss, /font-variant: normal/);
-assert.match(menuFontCss, /font-weight: 950/);
-assert.match(menuFontCss, /font-stretch: normal/);
-assert.match(menuFontCss, /line-height: 0\.95/);
-assert.match(menuFontCss, /letter-spacing: -0\.035em/);
+// The ROADBOOK heading (pre-race.css) keeps the heavy, tight TURN display face.
+assert.match(menuFontCss, /\.turn-pr-display \{[^}]*font-weight: 900;[^}]*letter-spacing: -0\.035em;[^}]*line-height: 0\.95;/);
 
 const attributeBuilds = [...index.matchAll(/(?:href|src)="\.\/[^"?]+\?build=([^"&]+)/g)].map((match) => match[1]);
 assert.ok(attributeBuilds.length >= 15, 'Production entry document must cache-bust its local assets');
@@ -250,7 +242,7 @@ assert.match(nextIndex, new RegExp(`/turn-next/app\\.js\\?source=${escapeRegExp(
 assert.match(nextIndex, new RegExp(`install-gate\\.js\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
 assert.match(nextIndex, new RegExp(`install-gate\\.css\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
 assert.match(nextIndex, new RegExp(`live-steering-setting\\.js\\?build=${escapeRegExp(release.cacheKey)}-live-steering`));
-assert.match(nextIndex, new RegExp(`m8-menu-font-fix\\.css\\?build=${escapeRegExp(release.cacheKey)}-menu-font-v3`));
+assert.doesNotMatch(nextIndex, /m8-menu-font-fix\.css/);
 assert.doesNotMatch(nextIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
 assert.doesNotMatch(nextIndex, /Return to landscape/);
 assert.match(nextApp, /new URL\('\/turn\/app\.js'/);

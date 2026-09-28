@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [app, feedback, css, homeCss, achievementsCss, achievementsView, aboutHistory] = await Promise.all([
+const [app, feedback, css, homeCss, achievementsCss, achievementsView, aboutHistory, appBarCss] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/home-feedback.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/home-feedback-r135.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/view.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/ui/about-history-bootstrap-r165.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/ui/about-history-bootstrap-r165.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/home-app-bar.css', import.meta.url), 'utf8')
 ]);
 
 assert.match(app, /m8-home\.css\?revision=r224-modal-headings/);
@@ -94,9 +95,10 @@ assert.match(feedback, /RAD – Racing Auditory Display/);
 assert.match(feedback, /dialog\.__turnReturnFocus\?\.focus\?\.\(\)/, 'Closing either modal must return focus to its trigger');
 assert.match(feedback, /if \(event\.target === dialog\) closeDialog\(dialog\)/, 'Pressing a dialog backdrop should close it without hijacking content clicks');
 
-assert.match(css, /\.m8-home-fixed-layout \.m8-feedback-button/);
-assert.match(css, /\.m8-home-fixed-layout \.m8-home-meta[\s\S]*grid-column: 3[\s\S]*flex-direction: column/);
-assert.match(css, /\.m8-home-fixed-layout \.m8-about-trigger[\s\S]*font-size: max\(var\(--turn-text-floor, 11px\), clamp\(0\.465rem, 1vw, 0\.615rem\)\)[\s\S]*text-decoration: underline/);
+// GIVE FEEDBACK and ABOUT TURN live in the Home ☰ sheet (home-app-bar.css).
+assert.match(appBarCss, /\.turn-home-sheet \.m8-home-menu > button \{[^}]*min-height: 48px;/);
+assert.match(appBarCss, /\.turn-home-sheet \.turn-home-sheet-footer \.m8-home-meta \{[^}]*display: flex !important;/);
+assert.match(appBarCss, /\.turn-home-sheet \.turn-home-sheet-footer \.m8-about-trigger \{[^}]*min-height: 44px;/);
 assert.match(css, /\.m8-feedback-dialog[\s\S]*width: min\(570px, calc\(100vw - 24px\)\)/);
 assert.match(css, /\.m8-about-dialog[\s\S]*width: min\(495px, calc\(100vw - 24px\)\)/);
 assert.match(css, /\.m8-feedback-dialog \.m8-dialog-head[\s\S]*margin-bottom: clamp\(10\.5px, 2vh, 15px\)/, 'Feedback heading spacing should stay compact');
@@ -119,8 +121,9 @@ assert.match(achievementsCss, /\.turn-achievements-head\s*\{[\s\S]*border-bottom
 assert.match(achievementsView, /achievements\.css\?build=\$\{buildKey\}-r224-modal-headings/);
 assert.match(aboutHistory, /m8-home\.css\?revision=r224-modal-headings/,
   'Install-gate About and History must load the corrected shared heading geometry');
-assert.match(css, /@media \(max-width: 570px\) and \(orientation: portrait\)[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/, 'Four Home menu actions should remain a readable two-by-two grid in portrait');
-assert.match(css, /@media \(max-width: 570px\) and \(orientation: portrait\)[\s\S]*\.m8-home-fixed-layout \.m8-home-meta[\s\S]*display: none/, 'Header metadata must stay out of the compact portrait layout');
+assert.match(appBarCss, /@media \(orientation: landscape\) and \(max-height: 500px\)[\s\S]*\.m8-home-menu \{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/,
+  'Short landscape keeps every Home menu action in view in two columns');
+assert.doesNotMatch(css, /m8-home-fixed-layout/, 'The retired Home sidebar styles stay retired');
 assert.doesNotMatch(`${feedback}\n${css}`, /setInterval|@keyframes|animation:/, 'Feedback and About must add no loop or decorative animation');
 
 console.log('TURN compact Home feedback and About-only attribution regression passed.');

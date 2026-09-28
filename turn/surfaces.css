@@ -18,12 +18,6 @@
 
 /* ---------- 2. Cards ---------- */
 
-/* Track cards keep their border width: their compact height is computed from it. */
-:root body .m8-home .track-card {
-  border-radius: var(--turn-radius-card);
-  box-shadow: var(--turn-shadow-card);
-}
-
 :root body .lot-screen.lot-showroom :is(.lot-card, .lot-viewbox) {
   border-width: var(--turn-border-card);
   border-radius: var(--turn-radius-card);

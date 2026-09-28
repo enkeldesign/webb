@@ -14,6 +14,10 @@ on:
       - 'turn-tests/responsive-browser-smoke.mjs'
       - 'turn-tests/race-menu-browser-smoke.mjs'
       - 'turn/ui/race-menu.js'
+      - 'turn-tests/roadbook-browser-smoke.mjs'
+      - 'turn/roadbook/**'
+      - 'turn/pre-race.css'
+      - 'turn/ui/home-app-bar.js'
       - 'turn/home-app-bar.css'
       - 'turn/responsive.css'
       - 'turn/main.js'
@@ -37,6 +41,10 @@ on:
       - 'turn-tests/responsive-browser-smoke.mjs'
       - 'turn-tests/race-menu-browser-smoke.mjs'
       - 'turn/ui/race-menu.js'
+      - 'turn-tests/roadbook-browser-smoke.mjs'
+      - 'turn/roadbook/**'
+      - 'turn/pre-race.css'
+      - 'turn/ui/home-app-bar.js'
       - 'turn/home-app-bar.css'
       - 'turn/responsive.css'
       - 'turn/main.js'
@@ -56,7 +64,7 @@ permissions:
 jobs:
   support-feedback-browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -90,3 +98,5 @@ jobs:
       - name: Verify the race ☰ keeps the start row inside the viewport
         run: node turn-tests/race-menu-browser-smoke.mjs
 
+      - name: Verify ROADBOOK from 320px to iPad
+        run: node turn-tests/roadbook-browser-smoke.mjs

@@ -2,12 +2,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { HOW_TO_PLAY_DISCLOSURE_IDS } from '../turn/achievements/learning-progress.js';
 
-const [app, guide, css, components, homeReset, resetCss, rivalStorage, trackManager, scorekeeper] = await Promise.all([
+const [app, guide, css, components, homeReset, roadbook, resetCss, rivalStorage, trackManager, scorekeeper] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/how-to-play-guide.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-how-to-play-r126.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/settings-components-r141.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/home-rival-reset.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/roadbook/roadbook.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/rival-reset-context-r127.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/race/rival-storage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
@@ -187,12 +188,16 @@ assert.match(homeReset, /Remove the saved personal rivals and lap records for \$
 assert.match(homeReset, /clearAllRivalsState/);
 assert.match(homeReset, /TRACK_CATALOG\.map\(\(entry\) => entry\.id\)/);
 assert.match(homeReset, /globalThis\.__turnResetRivals\?\.\(\)/, 'The race Settings path must use the existing active-track reset only');
-assert.match(homeReset, /clearTrackCardRecord\(root, track\.id\)/);
+assert.match(homeReset, /new CustomEvent\('turn:rivals-reset', \{\s*detail: \{ scope: 'all-tracks' \}/,
+  'Resetting every track tells Home to reread its records');
 assert.match(homeReset, /Personal rivals reset for \$\{track\.name\}/);
 assert.match(homeReset, /raceResetButton\.textContent = 'RESET RIVALS'/);
 assert.match(homeReset, /Remove the saved personal rivals and lap records for \$\{track\.name\}/);
 assert.match(homeReset, /event\.stopImmediatePropagation\(\)/, 'The contextual handler must replace the old fixed-scope handlers rather than also running them');
-assert.match(homeReset, /delete model\.dataset\.previewKey/, 'Pending BEST thumbnails must not reappear after any reset');
+assert.match(roadbook, /windowRef\.addEventListener\('turn:rivals-reset', refreshRecords\)/,
+  'Home records reread after any reset');
+assert.match(roadbook, /if \(generation !== thumbnailGeneration \|\| !model\.isConnected\) return;/,
+  'Pending record thumbnails must not reappear after any reset');
 assert.doesNotMatch(homeReset, /activateTrack/, 'Resetting rivals must never change tracks behind the player');
 
 assert.match(resetCss, /\.m8-reset-rivals\.is-all-tracks/);

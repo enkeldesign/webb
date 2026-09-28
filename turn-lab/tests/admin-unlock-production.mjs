@@ -193,8 +193,12 @@ assert.deepEqual(
   'The hidden developer rewards profile must not be mistaken for the fresh-install bug'
 );
 
-assert.match(source, /target\.closest\('\.m8-track-bests-toggle'\)\) return 'action:records'/,
-  'Both SHOW RECORDS and HIDE RECORDS count, whatever the remembered records state');
+assert.match(source, /target\.closest\('\.roadbook-sheet-button'\)\) return 'action:records'/,
+  'Each TRACK SHEET tap counts as a records step');
+assert.match(source, /roadbook-sheet \.turn-pr-close'\)\) return ''/,
+  'Closing the Track sheet between taps is navigation and keeps a partial sequence');
+assert.match(source, /target\.closest\('\.roadbook-card\[data-track-id\]'\)/,
+  'Track steps come from ROADBOOK cards, locked or not');
 assert.match(source, /\.m8-feedback-button:not\(\.m8-achievements-button\):not\(\.turn-dbe-training-home\)/,
   'Only GIVE FEEDBACK finishes the sequence, not ACHIEVEMENTS or DBE, which share its styling class');
 assert.match(source, /target\.closest\('\.m8-track-continue'\)\) return 'action:race'/,

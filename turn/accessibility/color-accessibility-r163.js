@@ -2,8 +2,7 @@ import {
   applyColorCuesState,
   describeColorCue,
   loadColorCuesEnabled,
-  saveColorCuesEnabled,
-  trackColorCue
+  saveColorCuesEnabled
 } from './color-cues.js?revision=r163';
 import {
   getVehicleDefaultColor
@@ -68,20 +67,6 @@ function installColorCueSetting() {
   sync();
 }
 
-function installTrackColorCues() {
-  for (const card of document.querySelectorAll('.m8-home .track-card[data-track-id]')) {
-    if (card.querySelector('.track-card-color-cue')) continue;
-    const colorName = trackColorCue(card.dataset.trackId);
-    const summary = card.querySelector('.track-card-summary');
-    if (!colorName || !summary) continue;
-
-    const cue = document.createElement('span');
-    cue.className = 'turn-color-cue track-card-color-cue';
-    cue.textContent = `TRACK COLOR · ${colorName.toUpperCase()}`;
-    summary.append(cue);
-  }
-}
-
 function selectedLotCarId(screen) {
   return screen.querySelector('.lot-car-option[aria-checked="true"]')?.dataset.carId || '';
 }
@@ -143,7 +128,6 @@ function mutationTouchesColorCueUi(mutation) {
   const selector = [
     '.m8-home',
     '.m8-settings-dialog',
-    '.track-card[data-track-id]',
     '.lot-screen',
     '.lot-color-control'
   ].join(',');
@@ -157,7 +141,6 @@ function sync() {
   scheduled = false;
   cleanupLotColorCueBindings();
   installColorCueSetting();
-  installTrackColorCues();
   installLotCarColorCues();
 }
 

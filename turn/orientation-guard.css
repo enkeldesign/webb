@@ -39,56 +39,6 @@ body {
   display: none !important;
 }
 
-.m8-home-fixed-layout .m8-home-head {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-.m8-home-fixed-layout .m8-home-logo {
-  align-self: stretch;
-  object-fit: contain;
-  object-position: left center;
-}
-
-.m8-home-fixed-layout .m8-home-pitch {
-  padding-top: max(6px, env(safe-area-inset-top));
-  padding-bottom: 6px;
-}
-
-.m8-home-fixed-layout .m8-home-build {
-  margin-top: max(6px, env(safe-area-inset-top));
-  margin-bottom: 6px;
-}
-
 body.turn-race-active .rotate-panel {
   display: none !important;
-}
-
-@media (max-height: 420px) and (orientation: landscape) {
-  .m8-home-fixed-layout .m8-home-head {
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-
-  .m8-home-fixed-layout .m8-home-pitch {
-    padding-top: max(3.75px, env(safe-area-inset-top));
-    padding-bottom: 3.75px;
-  }
-
-  .m8-home-fixed-layout .m8-home-build {
-    margin-top: max(3.75px, env(safe-area-inset-top));
-    margin-bottom: 3.75px;
-  }
-}
-
-@media (max-width: 570px) and (orientation: portrait) {
-  .m8-home-fixed-layout .m8-home-head {
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-
-  .m8-home-fixed-layout .m8-home-pitch {
-    padding-top: max(3.75px, env(safe-area-inset-top));
-    padding-bottom: 3.75px;
-  }
 }

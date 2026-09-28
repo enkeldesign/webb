@@ -54,7 +54,7 @@ const [
   fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/trophy-road.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/progression/m8-trophy-gate.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/roadbook/roadbook.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/lot-trophy-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8')
 ]);
@@ -674,9 +674,14 @@ assert.match(workflow, /Run Trophy Road progression regression/);
 assert.match(workflow, /node turn-lab\/tests\/trophy-road-production\.mjs/);
 assert.match(perkWrapper, /export const TROPHY_ROAD_REWARDS/,
   'Every consumer reads the one canonical Trophy Road definition');
-for (const gate of [homeGate, lotGate, paintGate]) {
+for (const gate of [lotGate, paintGate]) {
   assert.match(gate, /from '\.\/trophy-road\.js'/, 'Trophy gates import the canonical Trophy Road module by its bare path');
 }
+// ROADBOOK (the Home track gate) imports the same module through its import-mapped path.
+assert.match(homeGate, /from '\/turn\/progression\/trophy-road\.js'/,
+  'ROADBOOK imports the canonical Trophy Road module instance');
+assert.match(homeGate, /rewardForTrack\(trackId\)[\s\S]*isTrackUnlocked\(trackId\)/,
+  'ROADBOOK derives every track lock from Trophy Road');
 assert.match(paintGate, /reward\(\)\?\.threshold \|\| 800/);
 
 assert.match(perkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/,

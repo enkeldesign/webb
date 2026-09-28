@@ -1,0 +1,173 @@
+/* ROADBOOK: choose your track. Layout only; the parts come from pre-race.css.
+
+   - Phones: one column of track cards, the dock fixed at the foot.
+   - Wider: two columns once a card has room for its name and route.
+   - Large and tall enough (iPad landscape): the grid beside the selected track's
+     overview, which replaces the Track sheet button.
+   - Short landscape: tighter heading and cards, a one-line dock. */
+
+.m8-home .roadbook {
+  display: block;
+  box-sizing: border-box;
+  padding:
+    20px
+    max(var(--turn-pr-gutter), env(safe-area-inset-right))
+    calc(var(--roadbook-dock-height) + 20px)
+    max(var(--turn-pr-gutter), env(safe-area-inset-left));
+  color: var(--turn-ink, #08090a);
+}
+
+/* ROADBOOK measures its dock and keeps this current; the value here covers the first
+   frame. */
+.m8-home:has(.roadbook) {
+  --roadbook-dock-height: 8.5rem;
+  scroll-padding-bottom: calc(var(--roadbook-dock-height) + 12px);
+}
+
+.roadbook-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  max-width: var(--turn-pr-max-width);
+  margin: 0 auto;
+}
+
+.roadbook-tracks {
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.roadbook-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.roadbook-item {
+  min-width: 0;
+  container-type: inline-size;
+}
+
+@container (min-width: 38rem) {
+  .roadbook-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+/* The status line reads to assistive technology; the dock shows the busy state. */
+.m8-home .roadbook .m8-home-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- Overview: large, tall screens ---------- */
+
+.roadbook-overview[hidden] {
+  display: none;
+}
+
+/* Tall portrait: the overview follows the grid, route and records side by side. */
+.roadbook.has-overview .roadbook-overview {
+  box-shadow: var(--turn-pr-shadow);
+}
+
+.roadbook.has-overview .roadbook-overview .turn-pr-panel-body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  column-gap: 20px;
+}
+
+.roadbook.has-overview .roadbook-overview .turn-pr-records {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+}
+
+.roadbook.has-overview .roadbook-overview .turn-pr-detail-route {
+  height: clamp(8rem, 24vh, 12rem);
+}
+
+/* Large landscape: the overview sits beside the grid and stays in view. */
+@media (orientation: landscape) {
+  .roadbook.has-overview .roadbook-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem);
+    align-items: start;
+    gap: 28px;
+  }
+
+  .roadbook.has-overview .roadbook-overview {
+    position: sticky;
+    top: calc(var(--turn-app-bar-height, 56px) + max(8px, env(safe-area-inset-top)) + 24px);
+    max-height: calc(100dvh - var(--turn-app-bar-height, 56px) - max(8px, env(safe-area-inset-top)) - var(--roadbook-dock-height) - 48px);
+  }
+
+  .roadbook.has-overview .roadbook-overview .turn-pr-panel-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .roadbook.has-overview .roadbook-overview .turn-pr-records {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+/* ---------- Short landscape ---------- */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .m8-home .roadbook {
+    padding-top: 14px;
+  }
+
+  .roadbook .turn-pr-page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 14px;
+    margin-bottom: 14px;
+  }
+
+  .roadbook .turn-pr-display {
+    font-size: 2.25rem;
+  }
+
+  .roadbook .turn-pr-lead {
+    margin: 0;
+  }
+
+  .roadbook .turn-pr-card {
+    min-height: 5rem;
+  }
+
+  .roadbook .turn-pr-card-body {
+    gap: 6px;
+    padding: 8px 12px;
+  }
+
+  .roadbook-dock.turn-pr-dock {
+    padding-top: 8px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .roadbook-dock .turn-pr-dock-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .roadbook-dock .turn-pr-button {
+    min-height: 3rem;
+  }
+
+  .roadbook-dock .turn-pr-dock-actions > .is-primary {
+    flex: none;
+    min-width: 13rem;
+  }
+}

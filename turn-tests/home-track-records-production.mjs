@@ -1,199 +1,73 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
+// Home track records live in ROADBOOK's Track sheet (and, on large screens, its
+// overview): TIME, DRIFT and FLOW for the chosen track, locked modes shown as locked,
+// empty records as empty, each record with its car. The former SHOW RECORDS toggle
+// and in-card record rows are retired.
 const [
   home,
+  roadbook,
+  preRaceCss,
   app,
-  fixedLayout,
-  fixedCss,
-  scroll,
-  scrollCss,
-  rowGapCss,
-  scaleCss,
-  trophyGate,
-  screenReader,
   rivalReset,
   productionEntry,
   labEntry
 ] = await Promise.all([
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/roadbook/roadbook.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/pre-race.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home-fixed-layout.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/home-track-row-gap-r200.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-record-car-scale.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/progression/m8-trophy-gate.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/ui/startup-screen-reader-handoff-r529.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/home-rival-reset.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8')
 ]);
 
-assert.match(home, /getBestDriftRecord/);
-assert.match(home, /getBestFlowRecord/);
-assert.match(home, /const TRACK_RECORD_KINDS = Object\.freeze\(\['time', 'drift', 'flow'\]\)/);
-assert.match(home, /renderTrackRecord\('time', 'TIME', 'track-card-best-time'\)/);
-assert.match(home, /renderTrackRecord\('drift', 'DRIFT', 'track-card-best-drift'\)/);
-assert.match(home, /renderTrackRecord\('flow', 'FLOW', 'track-card-best-flow'\)/);
-assert.match(home, /track-card-records" data-track-best="\$\{track\.id\}" hidden/,
-  'Every unlocked card must start with its records block hidden');
+// One source for each record, as before.
+assert.match(roadbook, /import \{ getStoredBestLap \} from '\/turn\/race\/rival-storage\.js\?source=20260729-r118-m8';/);
+assert.match(roadbook, /import \{ getBestDriftRecord \} from '\/turn\/scoring\/drift-records\.js\?revision=r206-home-track-records';/);
+assert.match(roadbook, /import \{ getBestFlowRecord \} from '\/turn\/scoring\/flow-records\.js\?revision=r206-home-track-records';/);
+assert.match(roadbook, /kind: 'time', label: 'TIME', featureId: null, read: getStoredBestLap/);
+assert.match(roadbook, /kind: 'drift', label: 'DRIFT', featureId: 'drift-attack', read: getBestDriftRecord/);
+assert.match(roadbook, /kind: 'flow', label: 'FLOW', featureId: 'flow', read: getBestFlowRecord/);
 
-const recordMarkup = home.slice(
-  home.indexOf('function renderTrackRecord'),
-  home.indexOf('function renderTrackCard')
-);
-assert.doesNotMatch(recordMarkup, /<(?:button|input|details|summary|select|textarea)\b/i,
-  'Record rows inside each track button must remain static and non-interactive');
-assert.equal((home.match(/class="m8-track-bests-toggle"/g) || []).length, 1,
-  'Home must expose one shared record toggle, not one disclosure per track');
-assert.ok(
-  home.indexOf('class="m8-track-bests-toggle"') < home.indexOf('TRACK_SELECTION_CATALOG.map(renderTrackCard)'),
-  'The shared record toggle must remain outside every interactive track card'
-);
-assert.match(home, /aria-controls="m8TrackRail"[\s\S]*aria-expanded="false"/);
-assert.match(home, /trackBestsToggle\.addEventListener\('click', toggleTrackBests\)/);
-assert.match(home, /bestBox\.hidden = !expanded/);
-assert.match(home, /expanded \? 'HIDE RECORDS' : 'SHOW RECORDS'/);
+// Locked scoring modes read as locked with their threshold, never as zero.
+assert.match(roadbook, /const locked = featureId && !isFeatureUnlocked\(featureId\);/);
+assert.match(roadbook, /const record = locked \? null : read\(track\.id\);/,
+  'A locked mode never shows a stored score');
+assert.match(roadbook, /Unlocks at \$\{reward\?\.threshold \?\? ''\} trophies/);
+assert.match(roadbook, /kind === 'time' \? 'No time yet' : 'No score yet'/);
+assert.match(roadbook, /formatRecordTime\(record\.time\)/);
+assert.match(roadbook, /`\$\{minutes\}:\$\{secs\}\.\$\{ms\}`/, 'Times keep the m:ss.mmm format');
 
-const cardMarkup = home.slice(
-  home.indexOf('function renderTrackCard'),
-  home.indexOf('function recordCarName')
-);
-assert.match(cardMarkup, /class="track-card-compact"[\s\S]*class="track-card-preview"/,
-  'Every card must have one explicit compact frame containing the stable summary and map');
-assert.match(cardMarkup, /class="track-card-compact"[\s\S]*class="track-card-best track-card-records"/,
-  'Unlocked records must be a sibling block after the canonical compact frame');
-const unlockedMarkup = cardMarkup.slice(cardMarkup.lastIndexOf('return `'));
-assert.ok(
-  unlockedMarkup.indexOf('class="track-card-compact"') < unlockedMarkup.indexOf('class="track-card-best track-card-records"'),
-  'The unlocked records block must follow, never wrap, the compact frame'
-);
+// Record rows are static text inside a dialog or panel, not controls.
+const detail = roadbook.slice(roadbook.indexOf('function renderDetail'), roadbook.indexOf('let thumbnailGeneration'));
+assert.ok(detail.length > 0);
+assert.doesNotMatch(detail.slice(0, detail.indexOf('turn-pr-detail-actions')), /<(?:button|input|details|summary|select|textarea)\b/i,
+  'Record rows remain static and non-interactive');
+assert.match(detail, /<h3 class="turn-pr-section-title" id="\$\{idPrefix\}RecordsTitle">Personal bests<\/h3>/);
+assert.doesNotMatch(roadbook, /Show all records|All track records/i, 'There is no all-records feature');
 
-assert.match(home, /if \(!record \|\| !model \|\| !renderModels\) return null/,
-  'Compact Home must not request decorative WebGL record thumbnails');
-assert.match(home, /for \(const request of requests\)[\s\S]*await renderBestCarThumbnail\(request\.record\)/,
-  'Expanded record cars must render serially in visible progression order');
-assert.match(home, /generation !== previewGeneration \|\| !trackRecordModelsShouldRender\(root\)/,
-  'Hiding Home or collapsing records must stop the remaining thumbnail queue');
-assert.match(home, /if \(expanded\) refreshTrackRecords\(home, \{ renderModels: true \}\)/,
-  'Showing records may start the queued record-car work');
-assert.match(home, /clearTrackRecordModels\(home\)/,
-  'Collapsing records must invalidate pending model publication');
-assert.doesNotMatch(home, /setInterval|setAnimationLoop/,
-  'The shared record view must add no polling or continuous animation loop');
+// Records refresh when rivals are reset, when a race changes them and when Home shows.
+assert.match(roadbook, /windowRef\.addEventListener\('turn:rivals-reset', refreshRecords\)/);
+assert.match(home, /function showHome\(\{ focus = false \} = \{\}\) \{[\s\S]*roadbook\.refreshRecords\(\);/);
+assert.match(home, /async onRivalsReset\(\) \{[\s\S]*roadbook\.refreshRecords\(\);/);
+assert.doesNotMatch(rivalReset, /data-track-best|track-card-record/, 'Rival reset no longer edits Home record markup');
 
-assert.match(home, /const TRACK_RECORDS_EXPANDED_KEY = 'turn-track-records-expanded-v1'/);
-assert.match(home, /function loadTrackRecordsExpandedPreference\(\)[\s\S]*localStorage\.getItem\(TRACK_RECORDS_EXPANDED_KEY\) === 'true'/,
-  'Home itself must own restoration of the shared record disclosure');
-assert.match(home, /function saveTrackRecordsExpandedPreference\(expanded\)[\s\S]*localStorage\.setItem\(TRACK_RECORDS_EXPANDED_KEY, expanded \? 'true' : 'false'\)/,
-  'Home itself must persist both record disclosure states');
-assert.match(home, /home\.classList\.toggle\('is-showing-track-bests', loadTrackRecordsExpandedPreference\(\)\)/,
-  'The saved disclosure state must be applied before Home is attached');
-assert.match(home, /function setTrackRecordsExpanded\(expanded, \{ persist = false \} = \{\}\)[\s\S]*syncTrackBestVisibility\(\)/,
-  'One Home-owned setter must synchronize class, visible records and accessible state');
-assert.match(home, /setTrackRecordsExpanded\(!trackRecordsAreExpanded\(home\), \{ persist: true \}\)/,
-  'The shared button must persist through the canonical Home setter');
-assert.doesNotMatch(home, /toggle\.click\(|trackBestsToggle\.click\(/,
-  'Restoration must never synthesize a user click');
-
-assert.match(fixedCss, /--m8-track-card-min-block-size: clamp\(90px, calc\(20vh - 9px\), 123px\)/,
-  'The fixed-layout stylesheet remains the stable post-782 baseline');
-assert.match(fixedCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(7\.5px, 1\.4vw, 12px\)[\s\S]*row-gap: clamp\(9\.75px, calc\(1\.4vw - 0\.75px\), 11\.25px\)/,
-  'The fixed-layout baseline must keep independently tunable track column and row gaps');
-
-assert.match(scrollCss, /--m8-track-compact-card-min-block-size: clamp\(81px, calc\(20vh - 18px\), 114px\)/,
-  'The consolidated card component owns the final compact landscape floor');
-assert.match(scrollCss, /--m8-track-compact-card-min-block-size: 72px/,
-  'Short landscape retains the final compact floor that removed the last default overflow');
-assert.match(scrollCss, /container-type: size/,
-  'The track viewport must provide a CSS size container for deterministic compact-row sizing');
-assert.match(scrollCss, /--m8-track-compact-card-block-size: max\([\s\S]*100cqh[\s\S]*2 \* var\(--m8-track-row-gap\)[\s\S]*\/ 3\)/,
-  'Landscape compact row height must be derived in CSS from the actual viewport, not measured in JavaScript');
-assert.match(scrollCss, /--m8-track-compact-card-content-block-size: calc\([\s\S]*--m8-track-compact-card-block-size[\s\S]*--m8-track-card-border-width[\s\S]*--m8-track-card-block-padding/,
-  'Expanded cards must reuse the exact closed-card content frame');
-assert.match(scrollCss, /\.track-card-compact \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(81px, 39%\)[\s\S]*align-content: center/,
-  'Marker, name, difficulty and map must share one canonical compact grid');
-assert.match(scrollCss, /\.is-showing-track-bests \.m8-track-rail \.track-card \{[\s\S]*grid-template-rows: var\(--m8-track-compact-card-content-block-size\) max-content[\s\S]*align-content: start/,
-  'Expanded cards must append records below the unchanged compact frame');
-assert.match(scrollCss, /\.is-showing-track-bests \.m8-track-rail \.track-card-compact \{[\s\S]*height: var\(--m8-track-compact-card-content-block-size\)/,
-  'Opening records must not resize the compact summary frame');
-assert.match(scrollCss, /\.track-card-best \{[\s\S]*grid-template-rows: auto repeat\(3, auto\)[\s\S]*row-gap: var\(--m8-track-row-gap\)[\s\S]*padding-block-end: var\(--m8-track-row-gap\)/,
-  'BEST, TIME, DRIFT and FLOW must use natural height and finish with the same breathing rhythm at the card bottom');
-assert.match(scrollCss, /\.is-showing-track-bests \.m8-track-rail \{[\s\S]*grid-auto-rows: max-content/,
-  'Expanded rail rows must grow to contain FLOW rather than clip it');
-assert.match(scrollCss, /\.track-card-best\[hidden\][\s\S]*display: none !important/);
-assert.match(scrollCss, /\.track-card-record\.is-drift[\s\S]*--turn-blue-300/);
-assert.match(scrollCss, /\.track-card-record\.is-flow[\s\S]*--turn-pink-500/);
-assert.match(scrollCss, /\.track-card-record::before[\s\S]*border: 2px solid var\(--m8-ink\)/,
-  'Record accents need a TURN-ink outline so they remain distinct on every track paper colour');
-assert.match(scrollCss, /padding-left: calc\(var\(--track-record-stripe-width\) \+ var\(--track-record-stripe-gap\)\)/,
-  'Record copy must retain breathing room after the outlined accent stripe');
-assert.match(scrollCss, /\.track-card-record-model\[hidden\][\s\S]*display: none/);
-assert.match(scaleCss, /\.track-card-record[\s\S]*\.track-card-record-model/);
-
-assert.match(scrollCss, /\.m8-track-rail \{[\s\S]*padding-bottom: 7\.5px[\s\S]*column-gap: clamp\(10\.5px, 1\.4vw, 12px\)[\s\S]*row-gap: var\(--m8-track-row-gap\)/,
-  'The compact rail must keep its 10px visual movement reserve without changing card geometry');
-assert.match(scrollCss, /\.m8-track-scroll-viewport:not\(\.has-track-overflow\) \.m8-track-rail \{[\s\S]*grid-auto-rows: var\(--m8-track-compact-card-block-size\)[\s\S]*overflow-y: hidden/,
-  'When all six compact cards fit, the rail must use the full deterministic frame without scrolling');
-assert.match(scrollCss, /@media \(orientation: landscape\)[\s\S]*\.m8-track-rail \{[\s\S]*padding-right: 7\.5px[\s\S]*\.m8-track-scroll-indicator \{[\s\S]*right: -8\.25px/,
-  'Landscape must keep identical card width whether the scroll indicator is visible or not');
-assert.match(scrollCss, /height: clamp\(54px, 11vh, 78px\)/,
-  'The compact preview must stay at the final no-scroll size');
-assert.match(scrollCss, /height: 49\.5px/,
-  'Short landscape must keep its compact preview size');
-assert.match(scrollCss, /not\(\.is-showing-track-bests\) \.m8-track-continue \{[\s\S]*margin-bottom: 5\.25px/,
-  'RACE must reserve its resting shadow depth at the shared compact baseline');
-assert.match(scrollCss, /margin-bottom: 3\.75px/,
-  'Short landscape must preserve the reduced RACE baseline reserve');
-
-assert.ok(rowGapCss.includes('row-gap: clamp(9.75px, calc(1.4vw - 0.75px), 11.25px)'),
-  'The post-782 compatibility stylesheet must preserve the requested row gap');
-assert.ok(rowGapCss.includes('padding: 2.25px 6.75px;'),
-  'The post-782 compatibility stylesheet must preserve 2.25px 6.75px card padding');
-assert.ok(rowGapCss.includes('--m8-track-card-min-block-size: clamp(90px, calc(20vh - 9px), 123px);')
-  && rowGapCss.includes('--m8-track-card-min-block-size: clamp(219px, calc(47vh - 9px), 283.5px);')
-  && rowGapCss.includes('--m8-track-card-min-block-size: 81px;')
-  && rowGapCss.includes('--m8-track-card-min-block-size: 205.5px;'),
-  'The compatibility stylesheet must be restored exactly to its post-782 sizing role');
-assert.doesNotMatch(rowGapCss, /track-card-preview|track-card-best|m8-track-continue|track-scroll-indicator|grid-auto-rows|compact-card/,
-  'The late compatibility stylesheet must not become a second Home layout engine again');
-assert.ok(!rowGapCss.includes('row-gap: 21px'),
-  'No late-loaded rule may restore the old oversized vertical gap');
+// The retired toggle and its remembered state are gone everywhere.
+for (const [label, source] of [['m8-home.js', home], ['roadbook.js', roadbook], ['app.js', app]]) {
+  assert.doesNotMatch(source, /m8-track-bests-toggle|turn-track-records-expanded-v1|is-showing-track-bests/,
+    `${label} must not bring back the SHOW RECORDS toggle`);
+}
+assert.doesNotMatch(app, /m8-record-car-scale|m8-midnight-city-postcard/, 'The retired Home card layers are not loaded');
 for (const entrypoint of [productionEntry, labEntry]) {
-  assert.match(entrypoint, /home-track-row-gap-r200\.css\?build=\d{8}-r\d+/,
-    'Production and TURN LAB keep the post-782 compatibility stylesheet identity');
+  assert.doesNotMatch(entrypoint, /home-track-row-gap-r200\.css|m8-menu-font-fix\.css/,
+    'The retired Home card stylesheets are not linked');
 }
 
-assert.match(scroll, /const FIX_ID = 'track-record-layout-v8'/);
-assert.match(scroll, /m8-home-card-scroll-fixes\.css\?build=\$\{buildKey\}-r218-track-record-breathing/);
-assert.match(scroll, /function compactVisualOverflowAllowance\(rail\)[\s\S]*is-showing-track-bests[\s\S]*getComputedStyle\(rail\)\.paddingBottom/,
-  'Only compact Home may discount the rail padding reserved for shadow and press movement');
-assert.match(scroll, /const meaningfulOverflow = Math\.max\(0, maximum - compactVisualOverflowAllowance\(rail\)\)/);
-assert.match(scroll, /const hasOverflow = meaningfulOverflow > 2/,
-  'The compact scrollbar must respond to real content overflow, not reserved visual overflow');
-assert.match(scroll, /viewport\.classList\.toggle\('has-track-overflow', hasOverflow\)/);
-assert.match(scroll, /rail\.dataset\.scrollMode = hasOverflow \? 'native' : 'static'/);
-assert.match(scroll, /if \(rail\.scrollTop !== 0\) rail\.scrollTop = 0/);
-assert.match(scroll, /indicator\.hidden = !hasOverflow/,
-  'The custom scroll indicator must disappear with the scroll surface');
-assert.doesNotMatch(scroll, /TRACK_RECORDS_EXPANDED_KEY|localStorage|getBoundingClientRect|--m8-track-compact-top-padding|--m8-track-expanded-records-margin/,
-  'The scroll module must remain presentation-only: no disclosure state or runtime geometry reconstruction');
-assert.doesNotMatch(home, /getBoundingClientRect|--m8-track-compact-top-padding|--m8-track-expanded-records-margin/,
-  'Home record disclosure must not depend on measured geometry');
+// Each record accent is paired with its text label.
+assert.match(preRaceCss, /\.turn-pr-record\.is-time \{ --turn-pr-record-accent/);
+assert.match(preRaceCss, /\.turn-pr-record\.is-drift \{ --turn-pr-record-accent/);
+assert.match(preRaceCss, /\.turn-pr-record\.is-flow \{ --turn-pr-record-accent/);
 
-assert.match(home, /dataset\.trackAccessibleLabel = label/);
-assert.match(trophyGate, /entry\.card\.dataset\.trackAccessibleLabel \|\| entry\.originalLabel/,
-  'Unlock synchronization must preserve the current compact or expanded accessible name');
-assert.match(screenReader, /card\.dataset\.trackAccessibleLabel/,
-  'The single-object VoiceOver treatment must use Home’s shared record state');
-assert.match(rivalReset, /\[data-track-record-kind="time"\]/,
-  'Reset Rivals must clear only the time row and leave DRIFT/FLOW records intact');
-
-assert.match(app, /m8-home\.js\?revision=r217-track-record-layout/);
-assert.match(app, /m8-home-fixed-layout\.js\?revision=r218-track-record-breathing/);
-assert.match(app, /m8-record-car-scale\.css\?revision=r206-three-records/);
-assert.match(fixedLayout, /m8-home-card-scroll-fixes\.js\?build=\$\{buildKey\}-r218-track-record-breathing/);
-
-console.log('TURN clean compact/expanded TIME, DRIFT and FLOW track record layout passed.');
+console.log('TURN Home records: TIME, DRIFT and FLOW per track in the Track sheet, locked and empty states explicit.');

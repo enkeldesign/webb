@@ -11,22 +11,6 @@
 :where(*) { touch-action: manipulation; }
 :root body .rotate-panel { display: none !important; }
 :root body .m8-home-shell { max-width: 1440px; margin-inline: auto; }
-:root body .m8-home.m8-home-fixed-layout .m8-track-rail {
-  /* The track-name type grows with the viewport width, so the minimum card grows with
-     it: wide windows get fewer, roomier columns and long one-word names (COUNTRYSIDE,
-     BEACHFRONT) never run under the preview. No column count is assumed. */
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, clamp(230px, 26vw, 350px)), 1fr));
-  grid-auto-rows: minmax(min-content, auto);
-  align-content: start;
-  overflow-y: auto;
-  touch-action: pan-y pinch-zoom;
-}
-:root body .m8-home.m8-home-fixed-layout .m8-track-scroll-viewport {
-  --m8-track-compact-card-block-size: auto;
-  --m8-track-compact-card-content-block-size: auto;
-}
-:root body .m8-home.m8-home-fixed-layout .track-card-compact { min-height: 78px; height: auto; }
-:root body .m8-home.m8-home-fixed-layout .track-card { min-width: 0; }
 :root body .m8-home-menu { touch-action: pan-y pinch-zoom; }
 :root body :is(.m8-dialog, .sound-guide-dialog, .install-guide-card) {
   max-width: calc(100vw - 2 * var(--turn-edge));
@@ -60,24 +44,6 @@
 }
 
 @media (max-width: 46em) {
-  :root body .m8-home.m8-home-fixed-layout { overflow-y: auto; overflow-x: hidden; scroll-padding-block: 12px 84px; }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-shell { display: block; height: auto; min-height: 100%; }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-main {
-    display: flex; flex-direction: column; height: auto; overflow: visible;
-    gap: 24px; padding: 16px var(--turn-edge) max(88px, calc(env(safe-area-inset-bottom) + 80px));
-  }
-  :root body .m8-home.m8-home-fixed-layout .m8-home-tracks { display: block; width: 100%; }
-  :root body .m8-home.m8-home-fixed-layout .m8-track-heading-row { flex-wrap: wrap; gap: 12px; }
-  :root body .m8-home.m8-home-fixed-layout .m8-track-heading-row h1 { font-size: 1.5rem; }
-  :root body .m8-home.m8-home-fixed-layout .m8-track-scroll-viewport { height: auto; overflow: visible; container-type: normal; }
-  :root body .m8-home.m8-home-fixed-layout .m8-track-rail { height: auto; padding: 4px 8px 10px 0; gap: 14px; overflow: visible; }
-  :root body .m8-home.m8-home-fixed-layout .m8-track-scroll-indicator,
-  :root body .m8-home.m8-home-fixed-layout .m8-track-scroll-viewport::before,
-  :root body .m8-home.m8-home-fixed-layout .m8-track-scroll-viewport::after { display: none; }
-  :root body .m8-home.m8-home-fixed-layout .m8-track-bests-toggle {
-    min-height: 44px; height: auto; white-space: normal; font-size: .8rem;
-  }
-  :root body .m8-home.m8-home-fixed-layout .track-card-name { white-space: normal; overflow-wrap: anywhere; }
 
   :root body .install-gate .install-shell { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   :root body .install-gate { overflow-y: auto; padding: 20px var(--turn-edge); }
@@ -265,9 +231,7 @@
    sit at the 3D view's clipped edge, so they grow to the visible minimum. */
 :root body :is(
   .turn-music-home-toggle,
-  .m8-track-bests-toggle,
   .m8-home-menu > button,
-  .m8-track-continue,
   .lot-back,
   .lot-race,
   .lot-perk-button,

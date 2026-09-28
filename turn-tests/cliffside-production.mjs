@@ -101,7 +101,7 @@ const [catalogSource, registrySource, managerSource, worldSource, selectorSource
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/cliffside-world.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/roadbook/roadbook.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(catalogSource, /CLIFFSIDE_CONTROL_POINTS\.map/);
@@ -116,8 +116,10 @@ assert.match(worldSource, /sample\.point\.y \+ ROAD_HEIGHT/);
 assert.match(worldSource, /trackPitch\(sample\)/);
 assert.match(worldSource, /new THREE\.InstancedMesh/);
 assert.doesNotMatch(worldSource, /setAnimationLoop|requestAnimationFrame|setInterval/);
-assert.match(selectorSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
-assert.match(selectorSource, /\.track-card:not\(\[disabled\]\)/);
+// ROADBOOK renders every catalog track, then any placeholders, from the catalog.
+assert.match(selectorSource, /const tracks = TRACK_CATALOG;/);
+assert.match(selectorSource, /tracks\.map\(renderCard\)/);
+assert.match(selectorSource, /placeholders\.map\(/);
 
 console.log(
   `TURN Cliffside passed within the eight-track lineup: radius ${cliffsideRadius.toFixed(2)}, elevation ${minimumElevation.toFixed(1)} to ${maximumElevation.toFixed(1)}.`

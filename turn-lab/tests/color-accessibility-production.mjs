@@ -153,11 +153,11 @@ assert.match(runtimeSource, /attributeFilter: \['aria-checked'\]/,
 assert.doesNotMatch(runtimeSource, /replaceWith|showPicker\(|focusNativeColorInput|input\.click\(/,
   'Color Cues must read native paint state without replacing or proxying the native control');
 assert.match(runtimeSource, /Color cues/);
-assert.match(runtimeSource, /TRACK COLOR ·/);
+// ROADBOOK identifies tracks by name and pictogram; colour is decorative there.
+assert.doesNotMatch(runtimeSource, /TRACK COLOR ·/);
 assert.doesNotMatch(runtimeSource, /setInterval|setAnimationLoop/);
 
 assert.match(cueCssSource, /data-turn-color-cues='on'/);
-assert.match(cueCssSource, /track-card-color-cue/);
 assert.match(cueCssSource, /lot-color-cue/);
 assert.match(cueCssSource, /lot-selected-car-color-cue/,
   'The selected-car cue must remain visible in The Lot even while the paint controls are Trophy Road locked');

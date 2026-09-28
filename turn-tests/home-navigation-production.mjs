@@ -7,9 +7,9 @@ const [
   homeSource,
   homeCss,
   fixedLayoutSource,
-  fixedLayoutCss,
-  cardScrollSource,
-  cardScrollCss,
+  roadbookSource,
+  roadbookCss,
+  preRaceCss,
   orientationGuardCss,
   productionApp,
   productionMain,
@@ -21,9 +21,9 @@ const [
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home-fixed-layout.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/roadbook/roadbook.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/roadbook/roadbook.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/pre-race.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
@@ -49,11 +49,13 @@ assert.equal(nextMain, productionMain, 'TURN NEXT must run the canonical M7 main
 assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
 assert.doesNotMatch(nextApp, /installM8HomeNavigation|installM8HomeFixedLayout|m8-home-card-scroll/);
 
+for (const requiredCopy of ['ROADBOOK', 'Choose your track', 'CHOOSE CAR', 'Track sheet']) {
+  assert.ok(roadbookSource.includes(requiredCopy), `ROADBOOK must contain ${requiredCopy}`);
+}
+assert.doesNotMatch(roadbookSource, /PRE-RACE/, 'ROADBOOK has no eyebrow above its heading');
+
 for (const requiredCopy of [
-  'TILT. DRIFT. FLOW.',
-  'BEAT YOUR BEST.',
   'HOW TO PLAY',
-  'CHOOSE YOUR TRACK',
   'SETTINGS',
   'Drive By Ear™',
   'Device rotation',
@@ -63,8 +65,9 @@ for (const requiredCopy of [
   assert.ok(homeSource.includes(requiredCopy), `M8 Home must contain ${requiredCopy}`);
 }
 
-assert.match(homeSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
-assert.match(homeSource, /aria-pressed="false"/);
+assert.match(roadbookSource, /tracks\.map\(renderCard\)/);
+assert.match(roadbookSource, /aria-pressed="false"/);
+assert.match(homeSource, /installRoadbook\(\{/);
 assert.match(homeSource, /showTheLot\(\{ initialSelection: selectedVehicle\(runtime\) \}\)/);
 assert.match(
   homeSource,
@@ -83,9 +86,10 @@ assert.match(
 );
 assert.match(
   homeSource,
-  /continueButton\.textContent = `PREPARING \$\{trackName\}…`;[\s\S]*continueButton\.setAttribute\('aria-busy', 'true'\);[\s\S]*await waitForHomePaint\(\);/,
+  /roadbook\.setBusy\(`PREPARING \$\{trackName\}…`\);[\s\S]*await waitForHomePaint\(\);/,
   'The selected track action must visibly acknowledge input before expensive setup starts'
 );
+assert.match(roadbookSource, /function setBusy\(label\) \{[\s\S]*chooseButton\.disabled = Boolean\(label\);[\s\S]*setAttribute\('aria-busy', 'true'\)/);
 assert.match(
   homeSource,
   /await Promise\.all\(\[[\s\S]*activateTrack\(trackId, runtime\),[\s\S]*prepareLotOnce\(\)[\s\S]*\]\);/,
@@ -258,77 +262,25 @@ assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
 assert.match(homeCss, /turn-m8-active \.reset-rivals-button/);
 assert.match(homeCss, /prefers-reduced-motion/);
 
-assert.match(fixedLayoutSource, /const LAYOUT_ID = 'fixed-grid-v8-shared-track-bests'/);
-assert.match(fixedLayoutSource, /m8-home-fixed-layout\.css\?build=\$\{buildKey\}-r206-shared-track-bests/);
-assert.match(fixedLayoutSource, /trackBrowser\.append\(headingRow, rail\)/);
-assert.match(fixedLayoutSource, /menu\.append\(settingsButton, howButton, status, raceButton\)/);
-assert.match(fixedLayoutSource, /oldScrollButtons\.hidden = true/);
-assert.match(fixedLayoutSource, /raceButton\.textContent = 'RACE'/);
-assert.match(fixedLayoutSource, /Race on \$\{spokenTrackName\(selectedTrackName\)\}/);
-assert.match(fixedLayoutSource, /new MutationObserver\(syncRaceLabel\)/);
-assert.match(fixedLayoutSource, /\/turn\/m8-home-card-scroll-fixes\.js\?build=\$\{buildKey\}-m8\.9-track-title-alignment/);
-assert.match(fixedLayoutSource, /import\(`\/turn\/m8-home-card-scroll-fixes\.js\?build=\$\{buildKey\}-r217-track-record-layout`\)/);
-assert.match(fixedLayoutSource, /installM8HomeCardScrollFixes\(\)/);
+// Home's layout is ROADBOOK's; the former fixed layout only installs Home's runtime modules.
+assert.match(fixedLayoutSource, /const LAYOUT_ID = 'roadbook'/);
 assert.match(fixedLayoutSource, /turnHomeLayout = LAYOUT_ID/);
+assert.doesNotMatch(fixedLayoutSource, /m8-home-fixed-layout\.css|m8-home-card-scroll-fixes|syncRaceLabel|MutationObserver\(syncRace/,
+  'The retired layout layers stay retired');
 
-assert.match(fixedLayoutCss, /height: 100dvh/);
-assert.match(fixedLayoutCss, /\.m8-home\.m8-home-fixed-layout[\s\S]*overflow: hidden/);
-assert.match(fixedLayoutCss, /grid-template-columns: minmax\(0, 1fr\) clamp\(142\.5px, 21vw, 210px\)/);
-assert.match(fixedLayoutCss, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-assert.match(fixedLayoutCss, /overflow-x: hidden/);
-assert.match(fixedLayoutCss, /overflow-y: auto/);
-assert.match(fixedLayoutCss, /-webkit-overflow-scrolling: touch/);
-assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-menu[\s\S]*border-left: 0/);
-assert.doesNotMatch(fixedLayoutCss, /border-left:\s*[45]px solid/);
-assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-status[\s\S]*margin: auto 0 7\.5px/);
-assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-track-continue[\s\S]*background: var\(--m8-pink\)/);
-assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding: 0 max\(22px, env\(safe-area-inset-right\)\) 0 0/);
-assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-logo[\s\S]*width: auto[\s\S]*height: 100%[\s\S]*aspect-ratio: 1[\s\S]*object-fit: contain[\s\S]*object-position: left center/);
-assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-logo[\s\S]*box-sizing: border-box[\s\S]*box-shadow: 3\.75px 0 0 var\(--m8-ink\)/);
-assert.doesNotMatch(fixedLayoutCss, /border-inline-end: 5px solid var\(--m8-ink\)/);
-assert.doesNotMatch(fixedLayoutCss, /object-fit: cover/);
-assert.doesNotMatch(fixedLayoutCss, /padding-block: 3\.75px/);
-assert.match(fixedLayoutCss, /@media \(max-height: 420px\) and \(orientation: landscape\)[\s\S]*\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding-block: 0/);
-assert.match(fixedLayoutCss, /@media \(max-height: 420px\) and \(orientation: landscape\)[\s\S]*\.m8-home-fixed-layout \.m8-home-menu[\s\S]*border-left: 0/);
-assert.match(fixedLayoutCss, /@media \(max-width: 570px\) and \(orientation: portrait\)[\s\S]*\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding: 0 9px 0 0/);
-assert.match(fixedLayoutCss, /prefers-reduced-motion/);
-
-assert.match(cardScrollSource, /const FIX_ID = 'track-record-layout-v7'/);
-assert.match(cardScrollSource, /m8-home-card-scroll-fixes\.css\?build=\$\{buildKey\}-r217-track-record-layout/);
-assert.match(cardScrollSource, /m8-track-scroll-indicator/);
-assert.match(cardScrollSource, /ResizeObserver/);
-assert.match(cardScrollSource, /rail\.style\.scrollSnapType = 'none'/);
-assert.match(cardScrollSource, /rail\.dataset\.scrollMode = 'native'/);
-assert.match(cardScrollSource, /turnHomeCardScrollFixes = FIX_ID/);
-assert.doesNotMatch(cardScrollSource, /pointerdown|pointermove|setPointerCapture|releasePointerCapture/);
-assert.doesNotMatch(cardScrollSource, /preventDefault\(\)|stopImmediatePropagation\(\)|startInertia|velocity/);
-assert.doesNotMatch(cardScrollSource, /localStorage|getBoundingClientRect|TRACK_RECORDS_EXPANDED_KEY/,
-  'The scroll module must stay presentation-only');
-
-assert.match(cardScrollCss, /\.m8-track-scroll-viewport/);
-assert.match(cardScrollCss, /\.m8-track-scroll-indicator/);
-assert.match(cardScrollCss, /\.m8-track-scroll-thumb/);
-assert.match(cardScrollCss, /touch-action: pan-y pinch-zoom/);
-assert.match(cardScrollCss, /-webkit-overflow-scrolling: touch/);
-assert.match(cardScrollCss, /scroll-snap-type: none !important/);
-assert.match(cardScrollCss, /overscroll-behavior-y: contain/);
-assert.doesNotMatch(cardScrollCss, /touch-action: none|cursor: grab|cursor: grabbing|is-drag-scrolling/);
-assert.match(cardScrollCss, /\.track-card-compact[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(81px, 39%\)/);
-assert.match(cardScrollCss, /\.track-card-summary[\s\S]*display: contents/);
-assert.match(cardScrollCss, /\.track-card-choice[\s\S]*grid-row: 1[\s\S]*align-items: center/);
-assert.match(cardScrollCss, /\.track-card-choice-marker[\s\S]*margin-top: 0/);
-assert.match(cardScrollCss, /\.track-card-difficulty[\s\S]*grid-row: 2/);
-assert.match(cardScrollCss, /\.track-card-preview[\s\S]*grid-row: 1 \/ 3/);
-assert.match(cardScrollCss, /\.track-card-best[\s\S]*grid-row: 2[\s\S]*repeat\(3, auto\)/);
-assert.match(cardScrollCss, /\.track-card-record-model[\s\S]*justify-self: end/);
-assert.match(cardScrollCss, /\.track-card-name[\s\S]*font-size: max\(var\(--turn-text-floor, 11px\), clamp\(0\.792rem, 1\.86vw, 1\.242rem\)\)[\s\S]*text-overflow: clip[\s\S]*white-space: normal/);
-assert.match(cardScrollCss, /@media \(max-height: 420px\) and \(orientation: landscape\)[\s\S]*\.track-card-name[\s\S]*font-size: max\(var\(--turn-text-floor, 11px\), clamp\(0\.72rem, 1\.704vw, 0\.972rem\)\)/);
-assert.doesNotMatch(cardScrollCss, /\.track-card-name[\s\S]{0,240}text-overflow: ellipsis/);
+// ROADBOOK scrolls as one page under the sticky app bar, with room for the dock.
+assert.match(roadbookCss, /calc\(var\(--roadbook-dock-height\) \+ 20px\)/);
+assert.match(roadbookCss, /scroll-padding-bottom: calc\(var\(--roadbook-dock-height\) \+ 12px\)/);
+assert.match(roadbookSource, /new ResizeObserver\(syncDockSpace\)\.observe\(dock\)/,
+  'The dock space follows the dock at any text size');
+assert.match(roadbookCss, /@container \(min-width: 38rem\)[\s\S]*repeat\(2, minmax\(0, 1fr\)\)/);
+assert.match(preRaceCss, /\.turn-pr-card-name \{[^}]*overflow-wrap: break-word;/, 'Names wrap rather than clip');
+assert.doesNotMatch(preRaceCss, /text-overflow: ellipsis/, 'Nothing in the pre-race primitives truncates');
+assert.match(preRaceCss, /@container \(max-width: 20rem\)[\s\S]*\.turn-pr-card-art \{\s*display: none;/,
+  'At 320px the route gives way before the name');
+assert.doesNotMatch(`${roadbookCss}\n${preRaceCss}`, /100lvh|100vh/, 'Layout uses the usable viewport, never the physical screen');
 
 assert.match(orientationGuardCss, /#intro[\s\S]*display: none !important/);
-assert.match(orientationGuardCss, /\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding-top: 0/);
-assert.match(orientationGuardCss, /\.m8-home-fixed-layout \.m8-home-logo[\s\S]*object-fit: contain/);
-assert.match(orientationGuardCss, /object-position: left center/);
 assert.doesNotMatch(orientationGuardCss, /100lvh/);
 
 assert.match(orchestrator, /async function prepareMotionAccess\(\)/);

@@ -10,7 +10,7 @@ on:
       - 'turn/achievements/challenge-expansion-r166.js'
       - 'turn/progression/trophy-road.js'
       - 'turn/progression/trophy-road-r157.css'
-      - 'turn/progression/m8-trophy-gate.js'
+      - 'turn/roadbook/roadbook.js'
       - 'turn/progression/lot-trophy-gate.js'
       - 'turn/progression/lot-paint-reward.js'
       - 'turn-lab/tests/chromatic-camouflage-production.mjs'
@@ -24,7 +24,7 @@ on:
       - 'turn/achievements/challenge-expansion-r166.js'
       - 'turn/progression/trophy-road.js'
       - 'turn/progression/trophy-road-r157.css'
-      - 'turn/progression/m8-trophy-gate.js'
+      - 'turn/roadbook/roadbook.js'
       - 'turn/progression/lot-trophy-gate.js'
       - 'turn/progression/lot-paint-reward.js'
       - 'turn-lab/tests/chromatic-camouflage-production.mjs'
@@ -55,7 +55,7 @@ jobs:
           node --check turn/achievements/chromatic-camouflage-r183.js
           node --check turn/achievements/challenge-expansion-r166.js
           node --check turn/progression/trophy-road.js
-          node --check turn/progression/m8-trophy-gate.js
+          node --check turn/roadbook/roadbook.js
           node --check turn/progression/lot-trophy-gate.js
           node --check turn/progression/lot-paint-reward.js
           node --check turn-lab/tests/chromatic-camouflage-production.mjs

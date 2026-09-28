@@ -19,13 +19,6 @@ html:has(.m8-home.turn-app-bar-layout:not([hidden])) {
 
 /* ---------- App bar ---------- */
 
-/* Anything scrolled into view (focus, find, a script) lands below the sticky bar
-   and above the docked RACE, never under either. */
-:root body .m8-home.m8-home-fixed-layout.turn-app-bar-layout {
-  scroll-padding-top: calc(var(--turn-app-bar-height) + max(8px, env(safe-area-inset-top)) + 12px);
-  scroll-padding-bottom: calc(var(--turn-dock-space) + 12px);
-}
-
 html body .m8-home.turn-app-bar-layout .m8-home-shell {
   grid-template-rows: auto minmax(0, 1fr);
 }
@@ -54,6 +47,8 @@ html body .m8-home.turn-app-bar-layout .m8-home-logo {
   width: 40px;
   height: 40px;
   max-width: none;
+  max-height: none;
+  filter: none;
   margin: 0;
   border-radius: 10px;
   box-shadow: none;
@@ -66,6 +61,7 @@ html body .m8-home.turn-app-bar-layout .m8-home-pitch {
   display: flex;
   flex: 1 1 auto;
   align-items: center;
+  gap: 8px;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -170,51 +166,6 @@ html body .m8-home.turn-app-bar-layout .turn-home-menu-icon i {
   height: 3px;
   border-radius: 2px;
   background: currentColor;
-}
-
-/* ---------- Page heading ---------- */
-
-html body .m8-home.turn-app-bar-layout .turn-home-tagline {
-  flex: 1 0 100%;
-  order: 1;
-  margin: -4px 0 4px;
-  font-size: var(--turn-type-small, 13px);
-  font-weight: var(--turn-weight-label, 800);
-  line-height: var(--turn-leading-title, 1.1);
-  letter-spacing: var(--turn-tracking-micro, 0.04em);
-}
-
-html body .m8-home.turn-app-bar-layout .turn-home-tagline br {
-  display: none;
-}
-
-html body .m8-home.turn-app-bar-layout .m8-track-heading-row {
-  flex-wrap: wrap;
-  column-gap: 16px;
-}
-
-html body .m8-home.turn-app-bar-layout .m8-track-heading-row > .m8-track-bests-toggle {
-  order: 2;
-}
-
-@media (orientation: landscape) and (max-height: 500px) {
-  html body .m8-home.turn-app-bar-layout .turn-home-tagline {
-    display: none;
-  }
-}
-
-/* ---------- Page body: the track list gets the full width ---------- */
-
-html body .m8-home.turn-app-bar-layout .m8-home-main {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-@media (min-width: 46.0625em), (orientation: landscape) {
-  /* The rail scrolls on its own in landscape; its last cards scroll clear of RACE. */
-  html body .m8-home.turn-app-bar-layout .m8-track-rail {
-    padding-bottom: var(--turn-dock-space);
-    scroll-padding-bottom: var(--turn-dock-space);
-  }
 }
 
 /* ---------- Menu sheet ---------- */
@@ -447,6 +398,55 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
   min-height: 44px;
   margin: 0;
   padding: 0 4px;
+}
+
+/* Every menu entry is a utility: Paper, stepping back from the page's forward action
+   (Drive By Ear 101 included, whose own stylesheet colours it for other places). */
+html body .turn-home-sheet .m8-home-menu > button {
+  background: var(--turn-action-utility, #fff8e8) !important;
+}
+
+/* MUSIC and ABOUT TURN read as quiet text controls in the footer, not buttons. */
+html body .turn-home-sheet .turn-home-sheet-footer :is(.turn-music-home-toggle, .m8-about-trigger) {
+  min-height: 44px;
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--turn-ink, #08090a);
+  font-weight: 900;
+  line-height: 1;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .turn-music-home-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 950;
+  letter-spacing: 0.035em;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .turn-music-home-toggle > span:first-child {
+  margin-right: 0.14em;
+  font-size: 1.35em;
+  letter-spacing: -0.2em;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
+  border-radius: 3px;
+  font-size: var(--turn-type-micro, 11px);
+  letter-spacing: 0.025em;
+  line-height: 1.1;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer :is(.turn-music-home-toggle, .m8-about-trigger):focus-visible {
+  outline: 3px solid var(--turn-ink, #08090a);
+  outline-offset: 2px;
 }
 
 /* ---------- Race ☰ (ui/race-menu.js) ----------

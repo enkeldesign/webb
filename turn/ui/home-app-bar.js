@@ -19,10 +19,9 @@ export function installHomeAppBar({ documentRef = document } = {}) {
   if (globalThis[INSTALL_KEY]) return globalThis[INSTALL_KEY];
   const home = documentRef.querySelector('.m8-home');
   const header = home?.querySelector('.m8-home-head');
-  const main = home?.querySelector('.m8-home-main');
+  const main = home?.querySelector('.roadbook');
   const menu = home?.querySelector('.m8-home-menu');
-  const headingRow = home?.querySelector('.m8-track-heading-row');
-  if (!home || !header || !main || !menu || !headingRow) return null;
+  if (!home || !header || !main || !menu) return null;
 
   // The bar's right-hand actions.
   const actions = documentRef.createElement('div');
@@ -59,13 +58,8 @@ export function installHomeAppBar({ documentRef = document } = {}) {
   const title = menu.querySelector('#m8MenuTitle');
   sheetHead.append(title || documentRef.createTextNode('MENU'), closeButton);
 
-  const tagline = documentRef.createElement('p');
-  tagline.className = 'turn-home-tagline';
-
   function place() {
-    // RACE and the status line stay on the page; the dock styles RACE.
-    const race = home.querySelector('.m8-track-continue');
-    relocate(race, main);
+    // The status line stays on the page, where ROADBOOK's busy and error states read.
     relocate(home.querySelector('.m8-home-status'), main);
     // ACHIEVEMENTS carries a badge, so it stays one tap away in the bar.
     const achievements = home.querySelector('.m8-achievements-button');
@@ -74,13 +68,6 @@ export function installHomeAppBar({ documentRef = document } = {}) {
     const music = home.querySelector('.turn-music-home-toggle');
     if (music && footer.firstElementChild !== music) footer.prepend(music);
     relocate(home.querySelector('.m8-home-meta'), footer);
-    // The tagline reads under the page heading instead of crowding the bar.
-    const pitchText = header.querySelector('.m8-home-pitch > p');
-    if (pitchText) {
-      tagline.innerHTML = pitchText.innerHTML.replace(/<br\s*\/?>/gi, ' ');
-      pitchText.remove();
-    }
-    relocate(tagline, headingRow, headingRow.querySelector('.m8-track-bests-toggle'));
   }
 
   function open() {
