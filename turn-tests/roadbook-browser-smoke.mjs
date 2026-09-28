@@ -159,7 +159,13 @@ async function phoneFlow(browserType, name) {
     });
     assert.ok(clearance?.track === 'cliffside' && clearance.cardTop >= clearance.barBottom,
       `${name}: a card focused going back up stays below the app bar and its badge (${JSON.stringify(clearance)})`);
-    // TURN's badge hangs over the bar's rule without growing the bar or taking taps.
+    // TURN's badge hangs over the bar's rule without growing the bar or taking taps,
+    // and clears the heading at the top of the page (measured there, not wherever the
+    // keyboard pass above left the scroll).
+    await page.evaluate(() => new Promise((resolve) => {
+      document.querySelector('.m8-home').scrollTop = 0;
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    }));
     const badge = await page.evaluate(() => {
       const logo = document.querySelector('.m8-home-head .turn-pr-app-logo');
       const bar = document.querySelector('.m8-home-head').getBoundingClientRect();
@@ -170,12 +176,13 @@ async function phoneFlow(browserType, name) {
         overhangs: box.bottom > bar.bottom + 8,
         clearOfHeading: box.bottom < heading.top,
         slimBar: bar.height <= 64,
-        passThrough: globalThis.getComputedStyle(logo).pointerEvents === 'none'
+        passThrough: globalThis.getComputedStyle(logo).pointerEvents === 'none',
+        at: { scrollTop: document.querySelector('.m8-home').scrollTop, barBottom: bar.bottom, badgeBottom: box.bottom, headingTop: heading.top }
       };
     });
-    assert.deepEqual(badge, { alt: 'TURN', overhangs: true, clearOfHeading: true, slimBar: true, passThrough: true },
-      `${name}: TURN's badge hangs over the app bar`);
-    await page.evaluate(() => { document.querySelector('.m8-home').scrollTop = 0; });
+    const { at, ...badgeFacts } = badge;
+    assert.deepEqual(badgeFacts, { alt: 'TURN', overhangs: true, clearOfHeading: true, slimBar: true, passThrough: true },
+      `${name}: TURN's badge hangs over the app bar (${JSON.stringify(at)})`);
 
     // Selection is never colour alone: the selected card says so.
     await page.locator('.roadbook-card[data-track-id="cliffside"]').click();
