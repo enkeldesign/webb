@@ -21,6 +21,8 @@
    frame. */
 .m8-home:has(.roadbook) {
   --roadbook-dock-height: 8.5rem;
+  /* Keyboard focus keeps a track clear of the sticky app bar above and the dock below. */
+  scroll-padding-top: calc(var(--turn-app-bar-height, 56px) + max(8px, env(safe-area-inset-top)) + 12px);
   scroll-padding-bottom: calc(var(--roadbook-dock-height) + 12px);
 }
 

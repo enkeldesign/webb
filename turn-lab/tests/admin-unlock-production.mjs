@@ -193,8 +193,8 @@ assert.deepEqual(
   'The hidden developer rewards profile must not be mistaken for the fresh-install bug'
 );
 
-assert.match(source, /target\.closest\('\.roadbook-sheet-button'\)\) return 'action:records'/,
-  'Each TRACK SHEET tap counts as a records step');
+assert.match(source, /target\.closest\('\.roadbook-sheet-button, \.roadbook-overview \.turn-pr-detail-route'\)\) return 'action:records'/,
+  'Each TRACK SHEET tap, or overview route tap where the overview replaces it, counts as a records step');
 assert.match(source, /roadbook-sheet \.turn-pr-close'\)\) return ''/,
   'Closing the Track sheet between taps is navigation and keeps a partial sequence');
 assert.match(source, /target\.closest\('\.roadbook-card\[data-track-id\]'\)/,
