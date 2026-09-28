@@ -46,8 +46,10 @@
   style.textContent = `
     /* Loading: the artwork's 145deg cyan-to-green gradient has no single bottom
        colour, so it resolves into its own green end over its last 120px, and the
-       strip continues in that green. (Layers repeat install-gate.css.) */
-    html.${CLASS}:has(.install-gate.turn-startup-loading:not([hidden])) body {
+       strip continues in that green. (Layers repeat install-gate.css.) The class
+       alone marks loading: in the installed app the gate keeps its hidden
+       attribute while app.js shows it, and Home opens underneath before it ends. */
+    html.${CLASS}:has(.install-gate.turn-startup-loading) body {
       background: #8ce99a !important;
     }
     html.${CLASS} .install-gate.turn-startup-loading {
