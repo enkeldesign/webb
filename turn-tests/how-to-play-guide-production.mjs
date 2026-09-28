@@ -35,8 +35,8 @@ assert.ok(
 
 assert.match(guide, /GUIDE_VERSION = 'r263-how-to-play-copy'/);
 assert.match(guide, /updateTrackAndCarCopy\(dialog\)/);
-assert.match(guide, /Choose a track, then pick your car in <strong>THE LOT<\/strong> before racing/);
-assert.match(guide, /Use <strong>SHOW RECORDS<\/strong> to compare your saved TIME, DRIFT and FLOW records/);
+assert.match(guide, /Choose a track, then pick your car in <strong>GARAGE<\/strong> before racing/);
+assert.match(guide, /Open the <strong>Track sheet<\/strong> to compare your saved TIME, DRIFT and FLOW records/);
 assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE<\/strong>/);
 assert.match(guide, /BRAKE stops at zero without reversing/);
 assert.match(guide, /slide outward into <strong>REVERSE<\/strong>/);
@@ -54,7 +54,7 @@ assert.match(guide, /<strong>SPEND<\/strong><span>Slide to BOOST\. OVERCHARGE bu
 assert.match(guide, /Uncaught OVERCHARGE leaks\. At its peak, it starts leaking even while you keep using DRIFT/);
 
 assert.match(guide, /title: 'SHIFT'/);
-assert.match(guide, /normal attributes and the alternate setup you configured in <strong>THE LOT<\/strong>/);
+assert.match(guide, /normal attributes and the alternate setup you configured in <strong>GARAGE<\/strong>/);
 assert.match(guide, /redistributes attribute points between the two setups/);
 assert.doesNotMatch(guide, /does not add free power/,
   'SHIFT help should explain the mechanic positively rather than defend against an unstated misconception');

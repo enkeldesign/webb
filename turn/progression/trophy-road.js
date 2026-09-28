@@ -119,7 +119,7 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     type: 'feature',
     featureId: 'vehicle-paint',
     icon: 'paint',
-    description: 'Unlock body and secondary paint controls in The Lot. Every vehicle keeps its own distinctive factory colour until then.'
+    description: 'Unlock body and secondary paint controls in GARAGE. Every vehicle keeps its own distinctive factory colour until then.'
   }),
   Object.freeze({
     id: 'future-racer',

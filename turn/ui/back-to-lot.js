@@ -19,8 +19,8 @@ function install(runtime) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'utility back-to-lot-button';
-  button.textContent = 'Back to Lot';
-  button.setAttribute('aria-label', 'Back to The Lot and choose another car');
+  button.textContent = 'Leave Race';
+  button.setAttribute('aria-label', 'Leave the race and choose another track');
 
   resetButton.insertAdjacentElement('afterend', button);
 

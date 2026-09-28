@@ -117,7 +117,8 @@ assert.match(menu, /event\.stopImmediatePropagation\(\)/);
 assert.match(menu, /globalThis\.__turnResetRivals\?\.\(\)/);
 assert.match(controls, /Reset Rivals/);
 assert.match(controls, /globalThis\.__turnResetRivals/);
-assert.match(backToLot, /Back to Lot/);
+assert.match(backToLot, /button\.textContent = 'Leave Race'/,
+  'The button is labelled for where it goes (ROADBOOK) from its first frame');
 assert.match(main, /globalThis\.__turnResetRivals = resetRivals/);
 
 assert.match(menu, /closest\('\.chip'\)/);

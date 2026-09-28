@@ -207,7 +207,13 @@ assert.ok(
 
 // GARAGE replaces The Lot: app.js installs no Lot runtime; main.js and ROADBOOK open GARAGE.
 assert.doesNotMatch(app, /lot-layout-r60|sports-sedan-easter-egg|installLotEnhancementRuntime|lot-enhancement-runtime/);
-assert.match(main, /const \{ prepareGarage, showGarage \} = await import\('\/turn\/garage\/garage\.js'\)/);
+assert.match(main, /const \[\{ prepareGarage, showGarage \}, \{ TRACK_CATALOG \}, \{ trackIconMarkup \}\] = await Promise\.all\(\[\s*import\('\/turn\/garage\/garage\.js'\)/);
+// Changing car mid-race (TURN NEXT keeps this route) shows the current track in the
+// dock, and Back returns to the race.
+assert.match(main, /const track = TRACK_CATALOG\.find\(\(entry\) => entry\.id === state\.trackId\)/);
+assert.match(main, /backLabel: options\.entry === 'race' \? 'RACE' : 'BACK'/);
+const orchestrator = await fs.readFile(path.join(turnDir, 'race/session-orchestrator.js'), 'utf8');
+assert.match(orchestrator, /initialSelection: selectedVehicle\(state\),\s*entry: 'race'/);
 assert.match(home, /import\('\/turn\/garage\/garage\.js'\)/);
 assert.match(garage, /export function prepareGarage\(/);
 assert.match(garage, /export function showGarage\(/);

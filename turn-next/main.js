@@ -852,12 +852,26 @@ function handleMotion(event) {
   lastMotionOrientation = orientation;
 }
 
-// The race session's own setup route (the intro's motion/manual buttons) opens GARAGE,
-// as Home does.
-async function showGarageSetup(options) {
-  const { prepareGarage, showGarage } = await import('/turn/garage/garage.js');
+// The race session's own setup routes (the intro's motion/manual buttons, and changing
+// car during a race) open GARAGE, as Home does, on the current track. Back returns to
+// where the player came from.
+async function showGarageSetup(options = {}) {
+  const [{ prepareGarage, showGarage }, { TRACK_CATALOG }, { trackIconMarkup }] = await Promise.all([
+    import('/turn/garage/garage.js'),
+    import('/turn/tracks/catalog.js?source=20260729-r118-m8'),
+    import('/turn/ui/track-icons.js')
+  ]);
   await prepareGarage();
-  return showGarage(options);
+  if (options.trackName) return showGarage(options);
+  const track = TRACK_CATALOG.find((entry) => entry.id === state.trackId) || TRACK_CATALOG[0];
+  return showGarage({
+    ...options,
+    trackId: track.id,
+    trackName: track.name,
+    trackDifficulty: track.difficulty,
+    trackIcon: trackIconMarkup(track.id),
+    backLabel: options.entry === 'race' ? 'RACE' : 'BACK'
+  });
 }
 
 const raceSession = createRaceSessionOrchestrator({
