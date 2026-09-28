@@ -9,6 +9,18 @@ const [home, garage, viewer] = await Promise.all([
   fs.readFile(new URL('../turn/garage/showroom-viewer.js', import.meta.url), 'utf8')
 ]);
 
+// --- Module identity ------------------------------------------------------------------
+// GARAGE's own modules take their identity from the release (import maps), never from a
+// new manual revision= query.
+for (const module of ['training-car-guide', 'showroom-viewer', 'garage-cars', 'garage-selection']) {
+  assert.match(garage, new RegExp(`from '\\./${module}\\.js';`), `${module}.js is imported by its release-bound path`);
+}
+const importMaps = await Promise.all(['../turn/index.html', '../turn-next/index.html', '../yourturn/index.html']
+  .map((entry) => fs.readFile(new URL(entry, import.meta.url), 'utf8')));
+for (const entry of importMaps) {
+  assert.match(entry, /"\/turn\/garage\/training-car-guide\.js": "\/turn\/garage\/training-car-guide\.js\?build=/);
+}
+
 // --- ROADBOOK → GARAGE ---------------------------------------------------------------
 assert.match(home, /import\('\/turn\/garage\/garage\.js'\)\.then\(async \(module\) => \{\s*await module\.prepareGarage\(\);/,
   'ROADBOOK warms GARAGE and its stylesheets before CHOOSE CAR');

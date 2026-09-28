@@ -41,7 +41,7 @@ import {
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
 import { getSavedLotPaint, lotPaintMatches, resetLotPaint, resolveLotPaint, saveLotPaint } from './lot-saved-paint.js?revision=r246-lot-saved-paint';
-import { hasTriedTrainingCar, installTrainingCarGuide, TRAINING_CAR_ID } from './training-car-guide.js?revision=r2-garage';
+import { hasTriedTrainingCar, installTrainingCarGuide, TRAINING_CAR_ID } from './training-car-guide.js';
 import { createShiftSetup } from './lot-shift.js?revision=r243-mountain-1300';
 import { createShowroomViewer } from './showroom-viewer.js';
 import { GARAGE_STARTER_CAR_ID, garageCarDescription, garageCarOrder } from './garage-cars.js';
