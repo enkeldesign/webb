@@ -132,10 +132,10 @@
   :root {
     --turn-race-pad-width: clamp(138px, 43vw, 210px);
     --turn-race-pad-height: clamp(180px, 24dvh, 228px);
-    --turn-race-footer: 56px;
+    /* One 44px action row, then clear air before the drive pad. */
+    --turn-race-footer: 68px;
     --turn-race-bottom: max(var(--turn-race-footer), calc(env(safe-area-inset-bottom) + var(--turn-race-footer)));
   }
-  :root:has(.utility-group[data-menu-state="staged"]) { --turn-race-footer: 104px; }
   :root body .topbar { gap: 10px; }
   /* A fixed grid, never content-sized: SPEED · LAP · POSITION, then TIME · BEST.
      Digits are tabular, so a changing value never moves a chip. Without rivals the
@@ -161,9 +161,11 @@
   :root body .manual-steer-knob { width: 54px; }
   :root body .controls .utility-group {
     position: fixed; inset: auto var(--turn-edge) max(8px, env(safe-area-inset-bottom));
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; transform: none;
+    display: flex; flex-wrap: nowrap; justify-content: flex-start; gap: 6px; transform: none;
   }
-  :root body .utility-group .utility { flex: 1 1 auto; min-height: 44px; max-width: 220px; padding: 6px 8px; white-space: normal; font-size: max(var(--turn-text-floor), .66rem); }
+  /* One row, never two: buttons keep their natural width; what does not fit moves
+     into the race ☰ (ui/race-menu.js). */
+  :root body .utility-group .utility { flex: 0 0 auto; min-height: 44px; padding: 6px 10px; white-space: nowrap; font-size: max(var(--turn-text-floor), .66rem); }
   /* BOOST sits directly above the drive pad, next to the BOOST zone it reports on,
      instead of in the gap between the pad and the menu row. */
   /* It stays centred on its own left edge (translateX(-50%)), like everywhere else,
@@ -411,8 +413,11 @@
    beside the drive pad it scrolls sideways instead, and BOOST keeps clear air
    above it. */
 @media (orientation: landscape) {
-  :root body .utility-group .utility { flex-shrink: 0; }
-  :root body .controls .utility-group { min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  :root body .utility-group .utility { flex: 0 0 auto; }
+  :root body .controls .utility-group { min-width: 0; overflow-x: auto; scrollbar-width: none; justify-content: flex-start; }
+  :root.turn-left-handed-controls body .controls .utility-group { justify-content: flex-end; }
+  /* Clear air between the action row and the drive pad. */
+  :root body .controls { column-gap: 24px; }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   :root body .boost-hud { bottom: calc(max(8px, env(safe-area-inset-bottom)) + var(--turn-target-min) + 20px); }

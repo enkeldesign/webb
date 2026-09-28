@@ -448,3 +448,114 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
   margin: 0;
   padding: 0 4px;
 }
+
+/* ---------- Race ☰ (ui/race-menu.js) ----------
+   Only when the one-row race actions do not fit beside the drive pad: buttons move
+   into the menu sheet lowest priority first (SETTINGS, SPECTATE, ACHIEVEMENTS,
+   RECALIBRATE, BLANK SCREEN), and LEAVE RACE / RESTART LAP always stay. */
+.turn-race-menu-button[hidden] {
+  display: none !important;
+}
+
+.utility-group .turn-race-menu-button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  min-width: 44px;
+  padding-inline: 12px;
+}
+
+.turn-race-menu-icon {
+  display: grid;
+  gap: 4px;
+  width: 20px;
+}
+
+.turn-race-menu-icon i {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.turn-race-sheet .turn-race-menu {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 20px max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+html body .turn-race-sheet .turn-race-menu > button {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 48px;
+  margin: 0;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: 14px;
+  background: var(--turn-paper, #fff8e8);
+  color: var(--turn-ink, #08090a);
+  box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: normal;
+  transform: none;
+}
+
+html body .turn-race-sheet .turn-race-menu > button[hidden] {
+  display: none;
+}
+
+html body .turn-race-sheet .turn-race-menu > .spectate-button {
+  background: var(--turn-blue-300, #38d9ff);
+}
+
+html body .turn-race-sheet .turn-race-menu > button svg {
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+html body .turn-race-sheet .turn-race-menu > button[data-race-menu-label]::after {
+  content: attr(data-race-menu-label);
+}
+
+html body .turn-race-sheet .turn-race-menu > button:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+}
+
+html body .turn-race-sheet .turn-race-menu > button:focus-visible {
+  outline: 4px solid var(--turn-ink, #08090a);
+  outline-offset: 3px;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .turn-race-sheet {
+    width: min(520px, calc(100vw - 32px));
+  }
+
+  .turn-race-sheet .turn-race-menu {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 10px;
+    padding-block: 14px;
+  }
+}
