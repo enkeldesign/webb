@@ -1076,13 +1076,13 @@ Object.freeze({
     Object.freeze(['1.27.0 r322', 'GARAGE replaces The Lot: one featured car at a time in Trophy Road order with previous and next, the 3D car 20° off head-on, one short description, Specifications and Perk, native paint, SHIFT, and a RACE dock. A locked car can be looked at but never raced, and Back to your choice returns to the car you picked.']),
     Object.freeze(['1.28.0 r324', 'ALL CARS: every car as a card with its real 3D model at GARAGE\'s 20° view, and each locked car as a line drawing with its trophy threshold. Choose a car to feature it, or tap a locked one to preview it. On iPad the list stays beside the featured car in landscape and below it in portrait. ALL CARS and Track sheet are yellow, like the sheets they open.']),
     Object.freeze(['1.28.1 r328', 'Hardening for ROADBOOK and GARAGE: at 200% text the dock wraps instead of squeezing the track name and joins the end of the page rather than covering it, headings stay on screen and long labels wrap. TURN\'s framed badge from the start screen now hangs over the yellow app bar, so the game\'s name holds its own against ROADBOOK and GARAGE. Every hard shadow now comes from one scale, the screen-reader skip links on Home are full-size targets, LEAVE RACE tells screen readers it returns to ROADBOOK, and the old track-select overlay ROADBOOK replaced is gone.']),
-    Object.freeze(['1.28.2 r329', 'Race and GARAGE fixes: the buttons on the race start row keep their whole shadow instead of being clipped. In portrait, DRIFT and FLOW give LAST and BEST a line each, so a four- or five-digit record fits, down to 320px wide phones. PAINT, Specifications and Perk in GARAGE scroll their panel into view when opened, clear of the app bar and the RACE dock.'])
+    Object.freeze(['1.28.2 r330', 'Race and GARAGE fixes: the buttons on the race start row keep their whole shadow instead of being clipped. In portrait, DRIFT and FLOW give LAST and BEST a line each, so a four- or five-digit record fits, down to 320px wide phones. PAINT, Specifications and Perk in GARAGE scroll their panel into view when opened, clear of the app bar and the RACE dock.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.28.2',
-  build: '2026.09.28-r329',
+  build: '2026.09.28-r330',
   note: 'The race start row keeps its shadows, DRIFT and FLOW fit their records in portrait, and GARAGE panels open into view.'
 });
