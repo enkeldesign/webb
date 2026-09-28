@@ -13,7 +13,7 @@
   content: "";
   position: absolute;
   z-index: 0;
-  inset: 0 0 clamp(7px, 1.1vh, 11px);
+  inset: 0 0 clamp(5.25px, 1.1vh, 8.25px);
   background:
     linear-gradient(
       90deg,
@@ -28,7 +28,7 @@
       transparent 73% 82%,
       #ff4fa3 82% 94%,
       transparent 94%
-    ) 50% 54% / 94% 3px no-repeat,
+    ) 50% 54% / 94% 2.25px no-repeat,
     linear-gradient(
       90deg,
       transparent 0 11%,
@@ -40,7 +40,7 @@
       transparent 63% 71%,
       #ffd36c 71% 82%,
       transparent 82%
-    ) 50% 70% / 90% 3px no-repeat,
+    ) 50% 70% / 90% 2.25px no-repeat,
     linear-gradient(180deg, transparent 0 76%, rgb(93 228 255 / 0.14) 76% 79%, transparent 79% 100%),
     linear-gradient(#141a35 0 0) 2% 100% / 12% 48% no-repeat,
     linear-gradient(#0f162d 0 0) 16% 100% / 14% 68% no-repeat,
@@ -53,8 +53,8 @@
 
 .track-card-midnight-city .track-card-preview svg {
   filter:
-    drop-shadow(0 0 5px rgb(157 124 255 / 0.42))
-    drop-shadow(2px 3px 0 rgb(8 9 10 / 0.28));
+    drop-shadow(0 0 3.75px rgb(157 124 255 / 0.42))
+    drop-shadow(1.5px 2.25px 0 rgb(8 9 10 / 0.28));
 }
 
 .track-card-midnight-city .track-preview-road {
@@ -63,6 +63,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .track-card-midnight-city .track-card-preview svg {
-    filter: drop-shadow(2px 3px 0 rgb(8 9 10 / 0.28));
+    filter: drop-shadow(1.5px 2.25px 0 rgb(8 9 10 / 0.28));
   }
 }

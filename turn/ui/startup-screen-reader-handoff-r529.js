@@ -439,30 +439,30 @@
         position: fixed;
         z-index: 100000;
         top: 0;
-        left: max(8px, env(safe-area-inset-left));
+        left: max(6px, env(safe-area-inset-left));
         display: flex;
-        gap: 8px;
-        padding: 8px;
+        gap: 6px;
+        padding: 6px;
         transform: translateY(-140%);
         transition: transform 80ms linear;
       }
       .turn-sr-skip-links:focus-within { transform: translateY(0); }
       .turn-sr-skip-links a {
         display: inline-block;
-        padding: 10px 12px;
-        border: 3px solid #08090a;
-        border-radius: 8px;
+        padding: 7.5px 9px;
+        border: 2.25px solid #08090a;
+        border-radius: 6px;
         background: #fff8e8;
         color: #08090a;
-        font: 900 14px/1.1 system-ui, sans-serif;
+        font: 900 max(var(--turn-text-floor, 11px), 10.5px)/1.1 system-ui, sans-serif;
         text-decoration: underline;
       }
       .turn-sr-onboarding-target {
         position: fixed;
-        width: 1px;
-        height: 1px;
+        width: 0.75px;
+        height: 0.75px;
         padding: 0;
-        margin: -1px;
+        margin: -0.75px;
         overflow: hidden;
         clip-path: inset(50%);
         white-space: nowrap;

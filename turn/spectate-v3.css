@@ -6,10 +6,10 @@
   position: absolute;
   z-index: 120;
   left: 50%;
-  bottom: max(18px, env(safe-area-inset-bottom));
+  bottom: max(13.5px, env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 7.5px;
   transform: translateX(-50%) rotate(-1deg);
   pointer-events: auto;
 }
@@ -17,24 +17,24 @@
 .spectate-bar button,
 .spectate-following {
   border: 3px solid var(--ink);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--paper);
   color: var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
 }
 
 .spectate-bar button {
-  min-height: 52px;
-  padding: 8px 14px;
+  min-height: 39px;
+  padding: 6px 10.5px;
   font: inherit;
   text-transform: uppercase;
 }
 
 .spectate-close {
-  width: 52px;
+  width: 39px;
   padding: 0 !important;
   background: var(--pink) !important;
-  font-size: 1.45rem !important;
+  font-size: max(var(--turn-text-floor, 11px), 1.0875rem) !important;
   line-height: 1;
 }
 
@@ -43,8 +43,8 @@
 }
 
 .spectate-following {
-  min-width: clamp(190px, 34vw, 370px);
-  padding: 8px 16px 10px;
+  min-width: clamp(142.5px, 34vw, 277.5px);
+  padding: 6px 12px 7.5px;
   text-align: center;
 }
 
@@ -57,13 +57,13 @@
 }
 
 .spectate-following strong {
-  font-size: clamp(0.86rem, 2.1vw, 1.2rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.645rem, 2.1vw, 0.9rem));
   line-height: 1.05;
 }
 
 .spectate-following b {
-  margin-top: 4px;
-  font-size: clamp(1rem, 2.6vw, 1.5rem);
+  margin-top: 3px;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.75rem, 2.6vw, 1.125rem));
   line-height: 1;
   letter-spacing: -0.035em;
 }
@@ -78,32 +78,32 @@
   opacity: 0 !important;
 }
 
-@media (max-height: 430px) {
+@media (max-height: 322.5px) {
   .spectate-bar {
-    bottom: 8px;
-    gap: 7px;
+    bottom: 6px;
+    gap: 5.25px;
   }
 
   .spectate-bar button {
-    min-height: 46px;
-    padding: 6px 10px;
+    min-height: 34.5px;
+    padding: 4.5px 7.5px;
   }
 
   .spectate-close {
-    width: 46px;
+    width: 34.5px;
   }
 
   .spectate-following {
-    min-width: clamp(165px, 31vw, 295px);
-    padding: 6px 10px 8px;
+    min-width: clamp(123.75px, 31vw, 221.25px);
+    padding: 4.5px 7.5px 6px;
   }
 
   .spectate-following strong {
-    font-size: 0.8rem;
+    font-size: max(var(--turn-text-floor, 11px), 0.6rem);
   }
 
   .spectate-following b {
-    margin-top: 2px;
-    font-size: 1rem;
+    margin-top: 1.5px;
+    font-size: max(var(--turn-text-floor, 11px), 0.75rem);
   }
 }

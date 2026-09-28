@@ -1,6 +1,5 @@
 /* TURN action dock: the one forward action on a screen (Home RACE, The Lot's RACE
-   THIS CAR) looks and works the same everywhere (real CSS pixels: linked with
-   data-turn-responsive, so the 0.75 UI baseline never rewrites it).
+   THIS CAR) looks and works the same everywhere.
 
    - Portrait phones: full width on a Paper bar with an Ink rule that runs into the
      bottom safe area; the page keeps room to scroll past it.

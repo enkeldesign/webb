@@ -77,28 +77,28 @@
   --turn-social-racer-5: var(--turn-orange-100);
 
   /* Geometry. */
-  --turn-border-micro: 2px;
-  --turn-border-compact: 3px;
-  --turn-border-default: 4px;
-  --turn-border-heavy: 6px;
-  --turn-radius-micro: 8px;
-  --turn-radius-compact: 12px;
-  --turn-radius-default: 18px;
-  --turn-radius-hero: 28px;
-  --turn-radius-pill: 999px;
+  --turn-border-micro: 1.5px;
+  --turn-border-compact: 2.25px;
+  --turn-border-default: 3px;
+  --turn-border-heavy: 4.5px;
+  --turn-radius-micro: 6px;
+  --turn-radius-compact: 9px;
+  --turn-radius-default: 13.5px;
+  --turn-radius-hero: 21px;
+  --turn-radius-pill: 749.25px;
   --turn-radius-circle: 50%;
-  --turn-shadow-compact: 3px 3px 0 var(--turn-ink);
-  --turn-shadow-default: 7px 7px 0 var(--turn-ink);
-  --turn-shadow-hero: 12px 12px 0 var(--turn-ink);
+  --turn-shadow-compact: 2.25px 2.25px 0 var(--turn-ink);
+  --turn-shadow-default: 5.25px 5.25px 0 var(--turn-ink);
+  --turn-shadow-hero: 9px 9px 0 var(--turn-ink);
 
   /* Spacing. */
-  --turn-space-1: 4px;
-  --turn-space-2: 8px;
-  --turn-space-3: 12px;
-  --turn-space-4: 16px;
-  --turn-space-6: 24px;
-  --turn-space-8: 32px;
-  --turn-space-12: 48px;
+  --turn-space-1: 3px;
+  --turn-space-2: 6px;
+  --turn-space-3: 9px;
+  --turn-space-4: 12px;
+  --turn-space-6: 18px;
+  --turn-space-8: 24px;
+  --turn-space-12: 36px;
 
   /* Backwards-compatible production aliases. */
   --ink: var(--turn-ink);

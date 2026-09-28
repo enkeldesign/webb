@@ -1069,13 +1069,14 @@ Object.freeze({
     Object.freeze(['1.24.8 r311', 'Trophy Road: an earned reward shows a large, faint check behind its icon and trophy number instead of a ring on top of them, so the number stays readable on phones and earned never looks like locked.']),
     Object.freeze(['1.24.9 r312', 'On iPhones where the installed app leaves a strip along the bottom, the strip now takes the colour of the screen above it: Paper under Home and The Lot, Ink during a race, and green while loading. The tester strip test showed iOS takes that colour from the page body.']),
     Object.freeze(['1.24.10 r313', 'The iPhone bottom strip is now green for the whole loading screen. It stayed cyan in 1.24.9 because the loading screen keeps a hidden flag while it shows in the installed app.']),
-    Object.freeze(['1.24.11 r314', 'Removes the portrait LANDSCAPE ORIENTATION RECOMMENDED box from Home and The Lot; the rotate hint on the track loading screen stays. Also removes the tester STRIP TEST buttons now that the iPhone bottom strip matches every screen.'])
+    Object.freeze(['1.24.11 r314', 'Removes the portrait LANDSCAPE ORIENTATION RECOMMENDED box from Home and The Lot; the rotate hint on the track loading screen stays. Also removes the tester STRIP TEST buttons now that the iPhone bottom strip matches every screen.']),
+    Object.freeze(['1.25.0 r315', 'TURN\'s interface is now authored at its real size: the 75% runtime rewriter that resized every stylesheet on launch is retired, with every value written at the size it already rendered. Nothing should look different.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.24.11',
-  build: '2026.09.28-r314',
-  note: 'TURN 1.24.11 retires the portrait landscape box and the strip test.'
+  version: '1.25.0',
+  build: '2026.09.28-r315',
+  note: 'TURN 1.25.0 authors the interface at its real size.'
 });

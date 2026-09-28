@@ -25,10 +25,10 @@ html.turn-standalone .install-gate,
 }
 
 .install-shell {
-  width: min(920px, 96vw);
+  width: min(690px, 96vw);
   display: grid;
-  grid-template-columns: minmax(180px, 0.75fr) minmax(320px, 1.25fr);
-  gap: clamp(20px, 5vw, 54px);
+  grid-template-columns: minmax(135px, 0.75fr) minmax(240px, 1.25fr);
+  gap: clamp(15px, 5vw, 40.5px);
   align-items: center;
 }
 
@@ -38,55 +38,55 @@ html.turn-standalone .install-gate,
 }
 
 .install-icon {
-  width: min(34vw, 260px);
+  width: min(34vw, 195px);
   aspect-ratio: 1;
   border: 6px solid var(--ink);
   border-radius: 24%;
   background: var(--paper);
-  box-shadow: 12px 12px 0 var(--ink);
+  box-shadow: 9px 9px 0 var(--ink);
   transform: rotate(-3deg);
 }
 
 .install-card {
-  padding: clamp(22px, 4vw, 42px);
+  padding: clamp(16.5px, 4vw, 31.5px);
   border: 5px solid var(--ink);
-  border-radius: 28px;
+  border-radius: 21px;
   background: rgb(255 248 232 / 0.96);
-  box-shadow: 12px 12px 0 var(--ink);
+  box-shadow: 9px 9px 0 var(--ink);
 }
 
 .install-kicker {
   display: inline-block;
-  margin-bottom: 10px;
-  padding: 6px 10px;
+  margin-bottom: 7.5px;
+  padding: 4.5px 7.5px;
   border: 3px solid var(--ink);
-  border-radius: 999px;
+  border-radius: 749.25px;
   background: var(--yellow);
-  font-size: 0.7rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.525rem);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .install-card h1 {
-  font-size: clamp(3.7rem, 10vw, 7rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(2.775rem, 10vw, 5.25rem));
 }
 
 .install-copy {
-  max-width: 34rem;
-  margin: 18px 0 24px;
-  font-size: clamp(1rem, 2.3vw, 1.28rem);
+  max-width: 25.5rem;
+  margin: 13.5px 0 18px;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.75rem, 2.3vw, 0.96rem));
   line-height: 1.25;
 }
 
 .install-actions {
   display: grid;
-  gap: 10px;
+  gap: 7.5px;
 }
 
 .install-actions button {
-  min-height: 58px;
-  padding: 12px 18px;
-  font-size: clamp(0.85rem, 2vw, 1rem);
+  min-height: 43.5px;
+  padding: 9px 13.5px;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.6375rem, 2vw, 0.75rem));
 }
 
 .install-primary {
@@ -109,8 +109,8 @@ html.turn-standalone .install-gate,
 
 .install-note {
   min-height: 1.3em;
-  margin: 13px 0 0;
-  font-size: 0.72rem;
+  margin: 9.75px 0 0;
+  font-size: max(var(--turn-text-floor, 11px), 0.54rem);
   line-height: 1.35;
   opacity: 0.65;
 }
@@ -128,7 +128,7 @@ html.turn-standalone .install-gate,
     max(18px, calc(env(safe-area-inset-bottom) + 12px))
     max(18px, env(safe-area-inset-left));
   background: rgb(8 9 10 / 0.42);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(6px);
 }
 
 .install-guide[hidden] {
@@ -136,56 +136,56 @@ html.turn-standalone .install-gate,
 }
 
 .install-guide-card {
-  width: min(560px, 96vw);
+  width: min(420px, 96vw);
   max-height: 100%;
   box-sizing: border-box;
   overflow: auto;
   overscroll-behavior: contain;
-  padding: 22px;
+  padding: 16.5px;
   border: 5px solid var(--ink);
-  border-radius: 26px;
+  border-radius: 19.5px;
   background: var(--paper);
   color: var(--ink);
-  box-shadow: 10px 10px 0 var(--ink);
+  box-shadow: 7.5px 7.5px 0 var(--ink);
 }
 
 .install-guide-head {
   display: flex;
   justify-content: space-between;
-  gap: 14px;
+  gap: 10.5px;
   align-items: flex-start;
 }
 
 .install-guide h2 {
   margin: 0;
-  font-size: clamp(1.5rem, 5vw, 2.4rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(1.125rem, 5vw, 1.8rem));
   line-height: 0.95;
 }
 
 .install-close {
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
+  width: 31.5px;
+  height: 31.5px;
+  flex: 0 0 31.5px;
   padding: 0;
   border-radius: 50%;
   background: var(--cyan);
-  box-shadow: 3px 3px 0 var(--ink);
+  box-shadow: 2.25px 2.25px 0 var(--ink);
 }
 
 .install-steps {
   display: grid;
-  gap: 12px;
-  margin: 20px 0 8px;
+  gap: 9px;
+  margin: 15px 0 6px;
 }
 
 .install-step {
   display: grid;
-  grid-template-columns: 48px 1fr;
-  gap: 12px;
+  grid-template-columns: 36px 1fr;
+  gap: 9px;
   align-items: center;
-  padding: 10px 12px;
+  padding: 7.5px 9px;
   border: 3px solid var(--ink);
-  border-radius: 15px;
+  border-radius: 11.25px;
   background: white;
 }
 
@@ -197,12 +197,12 @@ html.turn-standalone .install-gate,
 .share-symbol {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 33px;
+  height: 33px;
   border: 3px solid var(--ink);
-  border-radius: 12px;
+  border-radius: 9px;
   background: var(--yellow);
-  font-size: 1.15rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.8625rem);
 }
 
 .share-symbol {
@@ -212,44 +212,44 @@ html.turn-standalone .install-gate,
 
 .share-symbol::before {
   content: "↑";
-  font-size: 1.7rem;
+  font-size: max(var(--turn-text-floor, 11px), 1.275rem);
   line-height: 1;
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 
 .share-symbol::after {
   content: "";
   position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 7px;
-  height: 15px;
+  left: 7.5px;
+  right: 7.5px;
+  bottom: 5.25px;
+  height: 11.25px;
   border: 3px solid var(--ink);
   border-top: 0;
-  border-radius: 0 0 5px 5px;
+  border-radius: 0 0 3.75px 3.75px;
 }
 
 .install-step strong {
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 1.5px;
 }
 
 .install-step span {
-  font-size: 0.78rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.585rem);
   line-height: 1.25;
   opacity: 0.72;
 }
 
 .install-copy-address {
   display: block;
-  min-height: 44px;
-  margin-top: 10px;
-  padding: 8px 12px;
-  border-width: 3px;
-  border-radius: 10px;
+  min-height: 33px;
+  margin-top: 7.5px;
+  padding: 6px 9px;
+  border-width: 2.25px;
+  border-radius: 7.5px;
   background: var(--cyan);
-  box-shadow: 3px 3px 0 var(--ink);
-  font-size: 0.78rem;
+  box-shadow: 2.25px 2.25px 0 var(--ink);
+  font-size: max(var(--turn-text-floor, 11px), 0.585rem);
 }
 
 .install-copy-address[data-copied="true"] {
@@ -258,8 +258,8 @@ html.turn-standalone .install-gate,
 
 .install-address-fallback {
   display: grid;
-  gap: 4px;
-  margin-top: 10px;
+  gap: 3px;
+  margin-top: 7.5px;
 }
 
 .install-address-fallback[hidden] {
@@ -269,8 +269,8 @@ html.turn-standalone .install-gate,
 .install-address-fallback > span,
 .install-copy-status {
   display: block;
-  margin-top: 7px;
-  font-size: 0.7rem;
+  margin-top: 5.25px;
+  font-size: max(var(--turn-text-floor, 11px), 0.525rem);
   line-height: 1.3;
   opacity: 0.78;
 }
@@ -278,13 +278,13 @@ html.turn-standalone .install-gate,
 .install-address-fallback input {
   width: 100%;
   box-sizing: border-box;
-  padding: 8px 9px;
+  padding: 6px 6.75px;
   border: 2px solid var(--ink);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--paper);
   color: var(--ink);
   font: inherit;
-  font-size: 0.72rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.54rem);
 }
 
 .install-copy-status:empty {
@@ -298,11 +298,11 @@ html.turn-standalone .install-gate,
   }
 
   .install-icon {
-    width: min(32vw, 150px);
+    width: min(32vw, 112.5px);
   }
 
   .install-card {
-    max-width: 560px;
+    max-width: 420px;
   }
 
   .install-copy {
@@ -311,33 +311,33 @@ html.turn-standalone .install-gate,
   }
 }
 
-@media (max-height: 500px) and (orientation: landscape) {
+@media (max-height: 375px) and (orientation: landscape) {
   .install-shell {
-    grid-template-columns: 150px minmax(360px, 1fr);
-    gap: 26px;
+    grid-template-columns: 112.5px minmax(270px, 1fr);
+    gap: 19.5px;
   }
 
   .install-icon {
-    width: 138px;
-    border-width: 4px;
-    box-shadow: 7px 7px 0 var(--ink);
+    width: 103.5px;
+    border-width: 3px;
+    box-shadow: 5.25px 5.25px 0 var(--ink);
   }
 
   .install-card {
-    padding: 18px 22px;
+    padding: 13.5px 16.5px;
   }
 
   .install-card h1 {
-    font-size: 3.7rem;
+    font-size: max(var(--turn-text-floor, 11px), 2.775rem);
   }
 
   .install-copy {
-    margin: 9px 0 13px;
-    font-size: 0.92rem;
+    margin: 6.75px 0 9.75px;
+    font-size: max(var(--turn-text-floor, 11px), 0.69rem);
   }
 
   .install-actions button {
-    min-height: 44px;
-    padding: 7px 12px;
+    min-height: 33px;
+    padding: 5.25px 9px;
   }
 }

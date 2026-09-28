@@ -22,15 +22,15 @@ function installStructureStyle() {
       position: fixed;
       z-index: 7;
       right: auto;
-      bottom: calc(var(--lot-picker-height, 122px) + 12px);
-      left: max(26px, calc(env(safe-area-inset-left) + 26px));
+      bottom: calc(var(--lot-picker-height, 91.5px) + 9px);
+      left: max(19.5px, calc(env(safe-area-inset-left) + 19.5px));
     }
 
-    @media (max-height: 520px) {
+    @media (max-height: 390px) {
       .lot-showroom.lot-screen-reader-structured .lot-colors,
       .lot-showroom.lot-screen-reader-structured .lot-colors.is-paint-locked {
-        bottom: calc(var(--lot-picker-height, 102px) + 8px);
-        left: max(22px, calc(env(safe-area-inset-left) + 22px));
+        bottom: calc(var(--lot-picker-height, 76.5px) + 6px);
+        left: max(16.5px, calc(env(safe-area-inset-left) + 16.5px));
       }
     }
   `;

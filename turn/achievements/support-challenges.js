@@ -387,19 +387,19 @@ function installStyles() {
     .m8-home-fixed-layout .m8-home-pitch {
       display: flex;
       align-items: center;
-      gap: clamp(10px, 1.5vw, 18px);
+      gap: clamp(7.5px, 1.5vw, 13.5px);
     }
     .turn-support-challenge-trigger {
       position: relative;
       flex: 0 0 auto;
-      width: clamp(42px, 5vw, 54px);
-      height: clamp(42px, 5vw, 54px);
-      padding: 8px;
+      width: clamp(31.5px, 5vw, 40.5px);
+      height: clamp(31.5px, 5vw, 40.5px);
+      padding: 6px;
       border: 4px solid var(--turn-ink, #08090a);
       border-radius: 50%;
       background: var(--turn-yellow-500, #ffd43b);
       color: var(--turn-ink, #08090a);
-      box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
+      box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
       cursor: pointer;
     }
     .turn-support-challenge-trigger svg {
@@ -412,87 +412,87 @@ function installStyles() {
       stroke-linecap: round;
       stroke-linejoin: round;
     }
-    .turn-support-challenge-trigger:hover { transform: translateY(-2px); }
+    .turn-support-challenge-trigger:hover { transform: translateY(-1.5px); }
     .turn-support-challenge-trigger:active {
-      transform: translate(3px, 3px);
-      box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+      transform: translate(2.25px, 2.25px);
+      box-shadow: 0.75px 0.75px 0 var(--turn-ink, #08090a);
     }
     .turn-support-challenge-trigger:focus-visible,
     .turn-support-challenge-dialog button:focus-visible {
       outline: 5px solid var(--turn-blue-500, #38d9ff);
-      outline-offset: 4px;
+      outline-offset: 3px;
     }
     .turn-support-challenge-mark {
       position: absolute;
-      top: -9px;
-      right: -9px;
+      top: -6.75px;
+      right: -6.75px;
       display: grid;
       place-items: center;
-      min-width: 22px;
-      height: 22px;
-      padding: 0 4px;
+      min-width: 16.5px;
+      height: 16.5px;
+      padding: 0 3px;
       border: 3px solid var(--turn-ink, #08090a);
-      border-radius: 999px;
+      border-radius: 749.25px;
       background: var(--turn-pink-500, #ff4fa3);
       color: var(--turn-ink, #08090a);
-      font-size: 12px;
+      font-size: max(var(--turn-text-floor, 11px), 9px);
       font-weight: 950;
       line-height: 1;
     }
     .turn-support-challenge-dialog {
-      width: min(520px, calc(100vw - 28px));
-      max-height: calc(100dvh - 28px);
+      width: min(390px, calc(100vw - 21px));
+      max-height: calc(100dvh - 21px);
       padding: 0;
       border: 5px solid var(--turn-ink, #08090a);
-      border-radius: 16px;
+      border-radius: 12px;
       background: var(--turn-paper, #fff8e8);
       color: var(--turn-ink, #08090a);
-      box-shadow: 10px 10px 0 var(--turn-ink, #08090a);
+      box-shadow: 7.5px 7.5px 0 var(--turn-ink, #08090a);
     }
     .turn-support-challenge-dialog::backdrop { background: rgb(8 9 10 / .65); }
-    .turn-support-challenge-card { padding: clamp(20px, 4vw, 32px); }
+    .turn-support-challenge-card { padding: clamp(15px, 4vw, 24px); }
     .turn-support-challenge-topline {
       display: flex;
       justify-content: space-between;
-      gap: 14px;
+      gap: 10.5px;
       align-items: start;
-      margin-bottom: 14px;
-      font-size: .76rem;
+      margin-bottom: 10.5px;
+      font-size: max(var(--turn-text-floor, 11px), 0.57rem);
       font-weight: 950;
       letter-spacing: .08em;
     }
     .turn-support-challenge-topline b {
-      padding: 5px 8px;
-      border: 3px solid currentColor;
-      border-radius: 999px;
+      padding: 3.75px 6px;
+      border: 2.25px solid currentColor;
+      border-radius: 749.25px;
       background: var(--turn-yellow-500, #ffd43b);
       white-space: nowrap;
     }
     .turn-support-challenge-dialog h2 {
-      margin: 0 0 6px;
-      font-size: clamp(1.65rem, 5vw, 2.5rem);
+      margin: 0 0 4.5px;
+      font-size: max(var(--turn-text-floor, 11px), clamp(1.2375rem, 5vw, 1.875rem));
       line-height: .95;
     }
     .turn-support-challenge-objective {
-      margin: 16px 0 8px;
-      font-size: 1.08rem;
+      margin: 12px 0 6px;
+      font-size: max(var(--turn-text-floor, 11px), 0.81rem);
       font-weight: 850;
     }
     .turn-support-challenge-explanation { margin: 0; }
     .turn-support-challenge-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 24px;
+      gap: 7.5px;
+      margin-top: 18px;
     }
     .turn-support-challenge-actions button {
-      min-height: 48px;
-      padding: 8px 16px;
+      min-height: 36px;
+      padding: 6px 12px;
       border: 4px solid var(--turn-ink, #08090a);
-      border-radius: 999px;
+      border-radius: 749.25px;
       background: var(--turn-green-500, #8ce99a);
       color: var(--turn-ink, #08090a);
-      box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
+      box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
       font: inherit;
       font-weight: 950;
       cursor: pointer;
@@ -503,18 +503,18 @@ function installStyles() {
       position: fixed;
       z-index: 12000;
       left: 50%;
-      bottom: max(22px, env(safe-area-inset-bottom));
-      transform: translate(-50%, 18px);
+      bottom: max(16.5px, env(safe-area-inset-bottom));
+      transform: translate(-50%, 13.5px);
       display: grid;
-      gap: 2px;
-      min-width: min(360px, calc(100vw - 28px));
-      max-width: calc(100vw - 28px);
-      padding: 12px 16px;
+      gap: 1.5px;
+      min-width: min(270px, calc(100vw - 21px));
+      max-width: calc(100vw - 21px);
+      padding: 9px 12px;
       border: 4px solid var(--turn-ink, #08090a);
-      border-radius: 12px;
+      border-radius: 9px;
       background: var(--turn-yellow-500, #ffd43b);
       color: var(--turn-ink, #08090a);
-      box-shadow: 7px 7px 0 var(--turn-ink, #08090a);
+      box-shadow: 5.25px 5.25px 0 var(--turn-ink, #08090a);
       opacity: 0;
       pointer-events: none;
       transition: opacity .18s ease, transform .18s ease;
@@ -524,11 +524,11 @@ function installStyles() {
       transform: translate(-50%, 0);
     }
     .turn-support-bonus-toast span {
-      font-size: .68rem;
+      font-size: max(var(--turn-text-floor, 11px), 0.51rem);
       font-weight: 950;
       letter-spacing: .09em;
     }
-    .turn-support-bonus-toast strong { font-size: 1.05rem; }
+    .turn-support-bonus-toast strong { font-size: max(var(--turn-text-floor, 11px), 0.7875rem); }
     @media (prefers-reduced-motion: reduce) {
       .turn-support-challenge-trigger,
       .turn-support-bonus-toast { transition: none; }

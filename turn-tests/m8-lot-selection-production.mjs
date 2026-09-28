@@ -138,7 +138,7 @@ assert.match(
 );
 assert.match(
   showroomCss,
-  /\.lot-showroom \.lot-viewbox-with-paint \.lot-colors\.is-paint-locked[\s\S]*bottom: 12px;[\s\S]*left: 12px;/,
+  /\.lot-showroom \.lot-viewbox-with-paint \.lot-colors\.is-paint-locked[\s\S]*bottom: 9px;[\s\S]*left: 9px;/,
   'Locked PAINTJOB must retain the compact floating-control styling'
 );
 assert.match(showroomCss, /\.lot-showroom \.lot-color-control input\[type='color'\]/,
@@ -247,7 +247,7 @@ assert.match(screenReaderPass, /lot-color-name'\)\?\.setAttribute\('aria-hidden'
   'Hidden visual colour labels must not be read separately from their native colour input');
 assert.match(screenReaderPass, /input\.setAttribute\('aria-label', `\$\{label\} color\. \$\{cue\}\.`\)/,
   'Each native colour input must expose one concise label including the non-visual colour cue');
-assert.match(screenReaderPass, /bottom: calc\(var\(--lot-picker-height, 122px\) \+ 12px\)/,
+assert.match(screenReaderPass, /bottom: calc\(var\(--lot-picker-height, 91\.5px\) \+ 9px\)/,
   'Moving the colour controls semantically must preserve their floating position over the 3D view');
 
 console.log('TURN M8 Lot keeps proportional 3D thumbnails, one perk disclosure, a visibly labelled COLOR control with unlock info, and the H1/H2/H3/H2 screen-reader structure.');

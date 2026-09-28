@@ -14,58 +14,58 @@ function installBottomActionStyles() {
       focus and VoiceOver wiring keeps working unchanged.
     */
     .lot-side {
-      top: max(12px, env(safe-area-inset-top));
+      top: max(9px, env(safe-area-inset-top));
     }
 
     .lot-card-actions {
       position: fixed;
       z-index: 6;
-      right: calc(var(--lot-rail-width) + max(28px, env(safe-area-inset-right)));
-      bottom: max(24px, env(safe-area-inset-bottom));
-      width: clamp(160px, 20vw, 240px);
+      right: calc(var(--lot-rail-width) + max(21px, env(safe-area-inset-right)));
+      bottom: max(18px, env(safe-area-inset-bottom));
+      width: clamp(120px, 20vw, 180px);
       margin: 0;
       padding: 0;
       background: transparent;
     }
 
     .lot-race {
-      min-height: 56px;
+      min-height: 42px;
     }
 
     .lot-back {
       top: auto;
       right: auto;
-      left: max(24px, env(safe-area-inset-left));
-      bottom: max(24px, env(safe-area-inset-bottom));
+      left: max(18px, env(safe-area-inset-left));
+      bottom: max(18px, env(safe-area-inset-bottom));
       width: auto;
       height: auto;
-      min-width: 144px;
-      min-height: 56px;
-      padding: 8px 18px;
-      border-radius: 999px;
-      font-size: 0.8rem;
+      min-width: 108px;
+      min-height: 42px;
+      padding: 6px 13.5px;
+      border-radius: 749.25px;
+      font-size: max(var(--turn-text-floor, 11px), 0.6rem);
       letter-spacing: 0.04em;
     }
 
-    @media (max-height: 520px) {
+    @media (max-height: 390px) {
       .lot-side {
-        top: max(10px, env(safe-area-inset-top));
+        top: max(7.5px, env(safe-area-inset-top));
       }
 
       .lot-card-actions {
-        right: calc(var(--lot-rail-width) + max(18px, env(safe-area-inset-right)));
-        bottom: max(18px, env(safe-area-inset-bottom));
+        right: calc(var(--lot-rail-width) + max(13.5px, env(safe-area-inset-right)));
+        bottom: max(13.5px, env(safe-area-inset-bottom));
       }
 
       .lot-back {
-        left: max(18px, env(safe-area-inset-left));
-        bottom: max(18px, env(safe-area-inset-bottom));
+        left: max(13.5px, env(safe-area-inset-left));
+        bottom: max(13.5px, env(safe-area-inset-bottom));
       }
     }
 
-    @media (max-height: 430px) {
+    @media (max-height: 322.5px) {
       .lot-card-actions {
-        width: clamp(140px, 20vw, 210px);
+        width: clamp(105px, 20vw, 157.5px);
       }
     }
   `;

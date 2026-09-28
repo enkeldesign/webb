@@ -334,6 +334,27 @@ function synchronizeKeyboardDrivingTargets(importMap, release) {
   }
 }
 
+// Modules whose injected styles moved to real CSS pixels in 1.25.0: every legacy
+// specifier resolves to one release-bound URL.
+function synchronizeUiBaselineTargets(importMap, release) {
+  const imports = importMap.imports ||= {};
+  for (const [pathname, suffixes] of [
+    ['/turn/garage/lot-card-scroll-boundary.js', ['?revision=r216-meter-density']],
+    ['/turn/garage/lot-layout-r60.js', ['?build=20260729-r116&revision=r213-attributes-typography']],
+    ['/turn/garage/lot-perk-icon.js', []],
+    ['/turn/garage/lot-screen-reader-r202.js', ['?revision=r202-heading-structure']],
+    ['/turn/scoring/scorekeeper-records.js', []],
+    ['/turn/tracks/airport-emergency-r496.js', ['?revision=r497-depth-fire']],
+    ['/turn/ui/minor-ux-polish-r229.js', ['?revision=r229-discoverability-cues']],
+    ['/turn/ui/leader-marker-r500.js', ['?revision=r227-night-marker-outline']],
+    ['/turn/ui/player-marker-r428.js', ['?revision=r227-night-marker-outline']]
+  ]) {
+    const target = `${pathname}?build=${release.cacheKey}`;
+    imports[pathname] = target;
+    for (const suffix of suffixes) imports[`${pathname}${suffix}`] = target;
+  }
+}
+
 function synchronizeResponsiveTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   for (const pathname of ['/turn/ui/track-intro.js', '/turn/ui/race-orientation.js']) {
@@ -537,6 +558,7 @@ function renderSharedResourceImports(source, release) {
     synchronizeKeyboardDrivingTargets(importMap, release);
     synchronizeSettingsUiTargets(importMap, release);
     synchronizeResponsiveTargets(importMap, release);
+    synchronizeUiBaselineTargets(importMap, release);
     synchronizeDriveByEarTrainingTargets(importMap, release);
     synchronizePerkFeedbackTargets(importMap, release);
     synchronizeGraphicsRuntimeTarget(importMap, release);
@@ -578,6 +600,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeKeyboardDrivingTargets(importMap, release);
   synchronizeSettingsUiTargets(importMap, release);
   synchronizeResponsiveTargets(importMap, release);
+  synchronizeUiBaselineTargets(importMap, release);
   synchronizeDriveByEarTrainingTargets(importMap, release);
   synchronizePerkFeedbackTargets(importMap, release);
   synchronizeGraphicsRuntimeTarget(importMap, release);

@@ -104,8 +104,8 @@ function installStyles() {
       left: 0;
       top: 0;
       z-index: 4;
-      width: clamp(${LEADER_MARKER_SIZE_MIN_PX}px, 3.2vh, ${LEADER_MARKER_SIZE_MAX_PX}px);
-      height: clamp(${LEADER_MARKER_SIZE_MIN_PX}px, 3.2vh, ${LEADER_MARKER_SIZE_MAX_PX}px);
+      width: clamp(9px, 3.2vh, 12.75px);
+      height: clamp(9px, 3.2vh, 12.75px);
       pointer-events: none;
       transform-origin: 50% 50%;
       will-change: left, top, transform;
@@ -125,7 +125,7 @@ function installStyles() {
     .turn-leader-marker path {
       fill: var(--turn-leader-marker-color, ${FALLBACK_MARKER_COLOR});
       stroke: var(--turn-leader-marker-outline, ${DARK_MARKER_OUTLINE});
-      stroke-width: 2.5px;
+      stroke-width: 1.875px;
       stroke-linejoin: round;
       vector-effect: non-scaling-stroke;
     }

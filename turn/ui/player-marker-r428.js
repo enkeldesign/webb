@@ -46,14 +46,14 @@ function installStyles() {
   style.id = 'turn-player-marker-r428-styles';
   style.textContent = `
     .turn-player-marker {
-      width: clamp(${MARKER_SIZE_MIN_PX}px, 4.5vh, ${MARKER_SIZE_MAX_PX}px);
-      height: clamp(${MARKER_SIZE_MIN_PX}px, 4.5vh, ${MARKER_SIZE_MAX_PX}px);
+      width: clamp(12.75px, 4.5vh, 17.25px);
+      height: clamp(12.75px, 4.5vh, 17.25px);
     }
 
     .turn-player-marker path {
       fill: var(--turn-player-marker-color, ${FALLBACK_MARKER_COLOR});
       stroke: var(--turn-player-marker-outline, ${DARK_MARKER_OUTLINE});
-      stroke-width: 2.5px;
+      stroke-width: 1.875px;
       vector-effect: non-scaling-stroke;
     }
   `;

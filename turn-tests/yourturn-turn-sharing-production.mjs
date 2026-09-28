@@ -115,7 +115,7 @@ assert.match(trackShareRule, /left: 42%;[\s\S]*top: 50%/,
   'Browsers without CSS anchor positioning must still keep SHARE in the TIME-record area');
 assert.doesNotMatch(trackShareRule, /right:|bottom:/,
   'The Home SHARE control must not retain the old bottom-right corner placement');
-assert.match(shareCss, /position-anchor: --turn-yourturn-time-copy;[\s\S]*left: calc\(anchor\(right\) \+ clamp\(10px, 1vw, 14px\)\);[\s\S]*top: anchor\(center\)/,
+assert.match(shareCss, /position-anchor: --turn-yourturn-time-copy;[\s\S]*left: calc\(anchor\(right\) \+ clamp\(7\.5px, 1vw, 10\.5px\)\);[\s\S]*top: anchor\(center\)/,
   'Supporting browsers must place SHARE directly beside the TIME record');
 
 assert.match(profileSource, /turn-social-racer-id-v1/);

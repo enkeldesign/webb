@@ -1,8 +1,6 @@
 /* TURN design tokens, layer 3: rendered size, type and motion.
-   Real CSS pixels. Linked with data-turn-responsive, so it is exempt from the 0.75
-   UI baseline that rewrites the older stylesheets (design-tokens.css geometry
-   included). var() values are never rewritten, so these tokens render at their
-   stated size wherever they are used, in scaled or unscaled sheets alike.
+   Real CSS pixels: every TURN stylesheet is authored at its rendered size (the
+   runtime 0.75 rewriter was retired in 1.25.0).
    Principle: dense, not tiny. No text below --turn-text-floor; no touch target
    below --turn-target-min. */
 :root {
@@ -59,4 +57,10 @@
     --turn-motion-fast: 0ms;
     --turn-motion-base: 0ms;
   }
+}
+
+/* iOS Safari zooms the page into a focused text field set below 16px. Text entry
+   renders at 16px or larger (checkboxes, radios, ranges and buttons are not text). */
+:where(input:not([type="button"], [type="checkbox"], [type="color"], [type="file"], [type="hidden"], [type="image"], [type="radio"], [type="range"], [type="reset"], [type="submit"]), select, textarea) {
+  font-size: max(16px, 1em) !important;
 }

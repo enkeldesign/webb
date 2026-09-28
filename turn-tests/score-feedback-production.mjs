@@ -377,9 +377,9 @@ assert.match(source, /driftGaugeProgress > 0 \|\| driftComboHeld/,
   'DRIFT gauge persistence is keyed to fill or a live x2+ combo');
 assert.match(source, /flowGaugeProgress > 0 \|\| flowComboHeld/,
   'FLOW uses the same combo-held gauge rule');
-assert.match(css, /--score-feedback-paper-height: 104px/,
+assert.match(css, /--score-feedback-paper-height: 78px/,
   'Each scoring paper row has a stable gameplay height');
-assert.match(css, /--score-feedback-gauge-height: calc\(var\(--score-feedback-paper-height\) - 14px\)/,
+assert.match(css, /--score-feedback-gauge-height: calc\(var\(--score-feedback-paper-height\) - 10\.5px\)/,
   'The attached gauge fills nearly the full stable scoring-row height');
 assert.match(css, /top: var\(--score-feedback-gauge-inset-y\)/,
   'The attached gauge keeps equal optical insets inside its scoring row');

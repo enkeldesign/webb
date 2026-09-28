@@ -13,10 +13,10 @@ function installStyles() {
 
     .lot-perk-disclosure .lot-perk-icon {
       display: grid;
-      flex: 0 0 46px;
-      width: 46px;
-      height: 47px;
-      margin-top: 1px;
+      flex: 0 0 34.5px;
+      width: 34.5px;
+      height: 35.25px;
+      margin-top: 0.75px;
       color: var(--ink, #08090a);
       place-items: center;
     }
@@ -36,11 +36,11 @@ function installStyles() {
       margin-left: auto;
     }
 
-    @media (max-height: 520px) {
+    @media (max-height: 390px) {
       .lot-perk-disclosure .lot-perk-icon {
-        flex-basis: 40px;
-        width: 40px;
-        height: 41px;
+        flex-basis: 30px;
+        width: 30px;
+        height: 30.75px;
       }
     }
   `;

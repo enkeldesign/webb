@@ -85,7 +85,7 @@ assert.match(homeReplaySource, /turn:support-home-feedback-ended/,
   'Home reward replay must resume after support feedback ends');
 assert.doesNotMatch(homeReplaySource, /new MutationObserver/,
   'Home reward replay must use explicit presentation and Home lifecycle events rather than DOM observation');
-assert.match(feedbackSource, /border-radius:\s*999px/,
+assert.match(feedbackSource, /border-radius:\s*749\.25px/,
   'Challenge success feedback must use the compact pill presentation');
 assert.match(feedbackSource, /turn-graduated-pill/,
   'LEARNER CAR GRADUATED feedback must reuse the thin compact pill geometry');

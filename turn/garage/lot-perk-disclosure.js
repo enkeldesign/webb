@@ -17,7 +17,7 @@ function installStyles() {
     .lot-showroom .lot-car-title {
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .lot-showroom .lot-car-title strong {
@@ -30,15 +30,15 @@ function installStyles() {
       grid-column: 2;
       grid-row: 1;
       min-width: 0;
-      min-height: 38px;
-      margin: 0 3px 3px 0;
-      padding: 5px 13px;
+      min-height: 28.5px;
+      margin: 0 2.25px 2.25px 0;
+      padding: 3.75px 9.75px;
       border: 2.5px solid var(--ink, #08090a);
-      border-radius: 999px;
+      border-radius: 749.25px;
       background: var(--turn-action-information, #38d9ff);
-      box-shadow: 4px 4px 0 var(--ink, #08090a);
+      box-shadow: 3px 3px 0 var(--ink, #08090a);
       color: var(--ink, #08090a);
-      font-size: clamp(.58rem, 1.05vw, .72rem);
+      font-size: max(var(--turn-text-floor, 11px), clamp(0.435rem, 1.05vw, 0.54rem));
       font-weight: 950;
       letter-spacing: .07em;
       line-height: 1;
@@ -85,27 +85,27 @@ function installStyles() {
     .lot-perk-disclosure:focus-visible,
     .lot-perk-disclosure .lot-perk-close:focus-visible {
       outline: 3px solid var(--cyan, #38d9ff);
-      outline-offset: 3px;
+      outline-offset: 2.25px;
     }
 
     .lot-perk-disclosure {
       position: fixed;
       z-index: 40;
       inset: auto;
-      top: var(--lot-perk-popover-top, 12px);
-      left: var(--lot-perk-popover-left, 12px);
+      top: var(--lot-perk-popover-top, 9px);
+      left: var(--lot-perk-popover-left, 9px);
       box-sizing: border-box;
-      width: min(300px, calc(100vw - 24px));
-      max-height: min(230px, calc(100vh - 24px));
-      max-height: min(230px, calc(100dvh - 24px));
+      width: min(225px, calc(100vw - 18px));
+      max-height: min(172.5px, calc(100vh - 18px));
+      max-height: min(172.5px, calc(100dvh - 18px));
       margin: 0 !important;
-      padding: 11px 12px 12px;
+      padding: 8.25px 9px 9px;
       overflow: auto;
       overscroll-behavior: contain;
       border: 3px solid var(--ink, #08090a);
-      border-radius: 15px;
+      border-radius: 11.25px;
       background: var(--paper, #fff8e8);
-      box-shadow: 7px 7px 0 var(--ink, #08090a);
+      box-shadow: 5.25px 5.25px 0 var(--ink, #08090a);
       color: var(--ink, #08090a);
     }
 
@@ -114,7 +114,7 @@ function installStyles() {
       min-width: 0;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 10px;
+      gap: 7.5px;
     }
 
     .lot-perk-disclosure .lot-perk-heading {
@@ -123,64 +123,64 @@ function installStyles() {
 
     .lot-perk-disclosure .lot-perk-eyebrow {
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
       color: #a20f5d;
-      font-size: .48rem;
+      font-size: max(var(--turn-text-floor, 11px), 0.36rem);
       font-weight: 950;
       letter-spacing: .1em;
     }
 
     .lot-perk-disclosure .lot-perk-title {
       display: block;
-      font-size: clamp(.78rem, 1.7vw, 1.05rem);
+      font-size: max(var(--turn-text-floor, 11px), clamp(0.585rem, 1.7vw, 0.7875rem));
       font-weight: 950;
       line-height: 1.05;
       overflow-wrap: anywhere;
     }
 
     .lot-perk-disclosure .lot-perk-close {
-      flex: 0 0 34px;
-      width: 34px;
-      height: 34px;
+      flex: 0 0 25.5px;
+      width: 25.5px;
+      height: 25.5px;
       min-height: 0;
-      padding: 0 0 3px;
+      padding: 0 0 2.25px;
       border: 2px solid var(--ink, #08090a);
       border-radius: 50%;
       background: var(--pink, #ff4fa3);
-      box-shadow: 3px 3px 0 var(--ink, #08090a);
+      box-shadow: 2.25px 2.25px 0 var(--ink, #08090a);
       color: var(--ink, #08090a);
-      font: 950 1.2rem/1 system-ui, sans-serif;
+      font: 950 max(var(--turn-text-floor, 11px), 0.9rem)/1 system-ui, sans-serif;
     }
 
     .lot-showroom .lot-perk-disclosure .lot-perk-copy {
-      margin: 9px 0 0;
+      margin: 6.75px 0 0;
       color: var(--ink, #08090a);
       font-family: system-ui, sans-serif;
-      font-size: clamp(.7rem, 1.35vw, .86rem);
+      font-size: max(var(--turn-text-floor, 11px), clamp(0.525rem, 1.35vw, 0.645rem));
       font-weight: 750;
       line-height: 1.3;
     }
 
-    @media (max-height: 520px) {
+    @media (max-height: 390px) {
       .lot-showroom .lot-perk-button {
-        min-height: 34px;
-        margin-right: 2px;
-        padding: 4px 11px;
-        font-size: clamp(.54rem, 1vw, .64rem);
+        min-height: 25.5px;
+        margin-right: 1.5px;
+        padding: 3px 8.25px;
+        font-size: max(var(--turn-text-floor, 11px), clamp(0.405rem, 1vw, 0.48rem));
       }
 
       .lot-perk-disclosure {
-        width: min(280px, calc(100vw - 20px));
-        max-height: calc(100vh - 20px);
-        max-height: calc(100dvh - 20px);
-        padding: 9px 10px 10px;
-        border-radius: 13px;
-        box-shadow: 5px 5px 0 var(--ink, #08090a);
+        width: min(210px, calc(100vw - 15px));
+        max-height: calc(100vh - 15px);
+        max-height: calc(100dvh - 15px);
+        padding: 6.75px 7.5px 7.5px;
+        border-radius: 9.75px;
+        box-shadow: 3.75px 3.75px 0 var(--ink, #08090a);
       }
 
       .lot-showroom .lot-perk-disclosure .lot-perk-copy {
-        margin-top: 7px;
-        font-size: clamp(.66rem, 1.28vw, .8rem);
+        margin-top: 5.25px;
+        font-size: max(var(--turn-text-floor, 11px), clamp(0.495rem, 1.28vw, 0.6rem));
       }
     }
 

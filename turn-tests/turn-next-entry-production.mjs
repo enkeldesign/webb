@@ -147,7 +147,7 @@ assert.match(liveSteeringSource, /saveSteeringMode\(activeMode\)/);
 assert.match(menuFontCss, /\.m8-home\.m8-home-fixed-layout \.m8-home-main \.m8-track-heading-row h1,/);
 assert.match(menuFontCss, /\.m8-home\.m8-home-fixed-layout \.m8-home-main \.m8-home-menu h2/);
 assert.match(menuFontCss, /font-family: inherit/);
-assert.match(menuFontCss, /font-size: clamp\(1\.65rem, 3\.2vw, 3rem\)/);
+assert.match(menuFontCss, /font-size: max\(var\(--turn-text-floor, 11px\), clamp\(1\.2375rem, 3\.2vw, 2\.25rem\)\)/);
 assert.match(menuFontCss, /font-style: normal/);
 assert.match(menuFontCss, /font-variant: normal/);
 assert.match(menuFontCss, /font-weight: 950/);

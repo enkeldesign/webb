@@ -550,7 +550,7 @@ function installStyles() {
   style.id = HOME_STYLE_ID;
   style.textContent = `
     .m8-home.m8-home-fixed-layout .m8-home-head {
-      grid-template-columns: clamp(84px, 10vw, 126px) minmax(180px, 1fr) auto auto !important;
+      grid-template-columns: clamp(63px, 10vw, 94.5px) minmax(135px, 1fr) auto auto !important;
     }
 
     .m8-home.m8-home-fixed-layout .turn-music-home-toggle {
@@ -562,17 +562,17 @@ function installStyles() {
       align-items: center;
       justify-content: center;
       gap: .38em;
-      min-width: 112px;
-      min-height: 44px;
+      min-width: 84px;
+      min-height: 33px;
       margin: 0;
-      padding: 6px 10px;
+      padding: 4.5px 7.5px;
       border: 0;
-      border-radius: 8px;
+      border-radius: 6px;
       background: transparent;
       color: var(--m8-ink, #08090a);
       box-shadow: none;
       font: inherit;
-      font-size: clamp(.72rem, 1.15vw, .98rem);
+      font-size: max(var(--turn-text-floor, 11px), clamp(0.54rem, 1.15vw, 0.735rem));
       font-weight: 950;
       line-height: 1;
       letter-spacing: .035em;
@@ -587,13 +587,13 @@ function installStyles() {
 
     .m8-home.m8-home-fixed-layout .turn-music-home-toggle:hover {
       text-decoration: underline;
-      text-decoration-thickness: 2px;
+      text-decoration-thickness: 1.5px;
       text-underline-offset: .2em;
     }
 
     .m8-home.m8-home-fixed-layout .turn-music-home-toggle:focus-visible {
       outline: 4px solid var(--m8-blue, #66c7e8);
-      outline-offset: 2px;
+      outline-offset: 1.5px;
     }
 
     .m8-home.m8-home-fixed-layout .m8-home-build,
@@ -603,8 +603,8 @@ function installStyles() {
 
     .m8-music-volume-row {
       display: grid;
-      gap: 3px;
-      margin-top: 16px;
+      gap: 2.25px;
+      margin-top: 12px;
     }
 
     .m8-music-volume-row small {
@@ -613,21 +613,21 @@ function installStyles() {
 
     #m8MusicVolume {
       width: 100%;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     .m8-music-volume-labels {
       display: flex;
       justify-content: space-between;
-      gap: 12px;
-      margin-top: 2px;
-      font-size: .75rem;
+      gap: 9px;
+      margin-top: 1.5px;
+      font-size: max(var(--turn-text-floor, 11px), 0.5625rem);
       font-weight: 850;
     }
 
     #m8MusicVolumeValue {
       display: block;
-      margin-top: 4px;
+      margin-top: 3px;
       font-weight: 950;
     }
 
@@ -636,18 +636,18 @@ function installStyles() {
       z-index: 2147483001;
       display: grid;
       place-items: center;
-      width: 50px;
-      height: 50px;
-      min-width: 50px;
-      min-height: 50px;
+      width: 37.5px;
+      height: 37.5px;
+      min-width: 37.5px;
+      min-height: 37.5px;
       margin: 0;
-      padding: 4px;
-      border: 3px solid #08090a;
-      border-radius: 12px;
+      padding: 3px;
+      border: 2.25px solid #08090a;
+      border-radius: 9px;
       background: #ff7b54;
       color: #08090a;
-      box-shadow: 5px 5px 0 #08090a;
-      font: 950 1.25rem/1 system-ui, sans-serif;
+      box-shadow: 3.75px 3.75px 0 #08090a;
+      font: 950 max(var(--turn-text-floor, 11px), 0.9375rem)/1 system-ui, sans-serif;
       touch-action: manipulation;
     }
 
@@ -656,43 +656,43 @@ function installStyles() {
     }
 
     .turn-music-blank-toggle:focus-visible {
-      outline: 4px solid #ffd43b;
-      outline-offset: 4px;
+      outline: 3px solid #ffd43b;
+      outline-offset: 3px;
     }
 
-    @media (max-height: 560px) and (orientation: landscape) {
+    @media (max-height: 420px) and (orientation: landscape) {
       .m8-home.m8-home-fixed-layout .m8-home-head {
-        grid-template-columns: clamp(68px, 10vw, 84px) minmax(150px, 1fr) auto auto !important;
+        grid-template-columns: clamp(51px, 10vw, 63px) minmax(112.5px, 1fr) auto auto !important;
       }
       .m8-home.m8-home-fixed-layout .turn-music-home-toggle {
-        min-width: 96px;
-        min-height: 40px;
-        padding: 4px 7px;
-        font-size: .72rem;
+        min-width: 72px;
+        min-height: 30px;
+        padding: 3px 5.25px;
+        font-size: max(var(--turn-text-floor, 11px), 0.54rem);
       }
     }
 
-    @media (max-height: 430px) {
+    @media (max-height: 322.5px) {
       .turn-music-blank-toggle {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
-        padding: 3px;
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+        padding: 2.25px;
       }
     }
 
-    @media (max-width: 760px) and (orientation: portrait) {
+    @media (max-width: 570px) and (orientation: portrait) {
       .m8-home.m8-home-fixed-layout .m8-home-head {
-        grid-template-columns: 82px minmax(0, 1fr) auto !important;
+        grid-template-columns: 61.5px minmax(0, 1fr) auto !important;
       }
       .m8-home.m8-home-fixed-layout .turn-music-home-toggle {
         grid-column: 3;
-        min-width: 48px;
-        max-width: 92px;
-        min-height: 44px;
-        padding-inline: 5px;
-        font-size: .64rem;
+        min-width: 36px;
+        max-width: 69px;
+        min-height: 33px;
+        padding-inline: 3.75px;
+        font-size: max(var(--turn-text-floor, 11px), 0.48rem);
       }
       .m8-home.m8-home-fixed-layout .m8-home-build,
       .m8-home.m8-home-fixed-layout .m8-home-meta {

@@ -40,7 +40,7 @@ function installHudStyle() {
     .turn-mayday-info-plate,
     .turn-achievement-toast.${TOAST_CLASS} {
       top: auto !important;
-      bottom: calc(clamp(92px, 20vh, 150px) + 38px);
+      bottom: calc(clamp(69px, 20vh, 112.5px) + 28.5px);
       background: var(--turn-action-danger, #ff6b6b) !important;
       color: var(--turn-ink, #08090a);
     }
@@ -50,11 +50,11 @@ function installHudStyle() {
     .turn-achievement-toast.${TOAST_CLASS}.is-visible {
       transform: translate(-50%, 0);
     }
-    @media (max-height: 430px) {
+    @media (max-height: 322.5px) {
       .turn-mayday-info-plate,
       .turn-achievement-toast.${TOAST_CLASS} {
         top: auto !important;
-        bottom: 106px;
+        bottom: 79.5px;
       }
     }
   `;

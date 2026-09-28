@@ -1,5 +1,4 @@
-/* TURN buttons: one shape (real CSS pixels: linked with data-turn-responsive, so the
-   0.75 UI baseline never rewrites it). Tokens live in design-scale.css.
+/* TURN buttons: one shape. Tokens live in design-scale.css.
 
    - Action buttons are rounded rectangles: --turn-radius-control, a 3px Ink border,
      --turn-shadow-control and at least --turn-target-min tall. The primary action

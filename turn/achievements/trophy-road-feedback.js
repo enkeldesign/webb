@@ -64,12 +64,12 @@ function ensureFilterStyles() {
   style.textContent = `
     .turn-achievements-filters {
       display: grid;
-      gap: 9px;
+      gap: 6.75px;
     }
     .turn-achievements-filter-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 9px;
+      gap: 6.75px;
       align-items: center;
     }
   `;

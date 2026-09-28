@@ -228,11 +228,11 @@ assert.match(layout, /aria-label', 'What do the attributes mean\?'/);
 assert.doesNotMatch(layout, /MutationObserver|setAnimationLoop|requestAnimationFrame/);
 
 assert.match(layoutCss, /\.lot-a11y-only \{[\s\S]*clip-path: inset\(50%\)/);
-assert.match(layoutCss, /--lot-paint-rail-height: 54px/);
-assert.match(layoutCss, /min-height: clamp\(150px, 28vh, 230px\)/);
+assert.match(layoutCss, /--lot-paint-rail-height: 40\.5px/);
+assert.match(layoutCss, /min-height: clamp\(112\.5px, 28vh, 172\.5px\)/);
 assert.match(
   layoutCss,
-  /\.lot-side \{[\s\S]*--lot-viewbox-min-height: clamp\(150px, 28vh, 230px\);[\s\S]*--lot-side-gap: 10px/,
+  /\.lot-side \{[\s\S]*--lot-viewbox-min-height: clamp\(112\.5px, 28vh, 172\.5px\);[\s\S]*--lot-side-gap: 7\.5px/,
   'The details card must derive its viewport budget from the protected 3D preview and rail gap'
 );
 assert.match(
@@ -247,41 +247,41 @@ assert.match(
 );
 assert.match(
   layoutCss,
-  /\.lot-card-actions \{[\s\S]*margin: 1px -6px -3px;[\s\S]*padding: 0 6px 3px;[\s\S]*background: transparent;/,
+  /\.lot-card-actions \{[\s\S]*margin: 0\.75px -4\.5px -2\.25px;[\s\S]*padding: 0 4\.5px 2\.25px;[\s\S]*background: transparent;/,
   'The sticky Race This Car shell must stay close to the button instead of masking stats with a broad opaque band'
 );
 assert.match(
   layoutCss,
-  /@media \(max-height: 520px\)[\s\S]*--lot-viewbox-min-height: 140px;[\s\S]*--lot-side-gap: 7px/,
+  /@media \(max-height: 390px\)[\s\S]*--lot-viewbox-min-height: 105px;[\s\S]*--lot-side-gap: 5\.25px/,
   'Short tablet landscapes must keep the card budget aligned with the compact viewer and gap'
 );
 assert.match(
   layoutCss,
-  /@media \(max-height: 430px\)[\s\S]*--lot-viewbox-min-height: 120px;[\s\S]*--lot-side-gap: 7px/,
+  /@media \(max-height: 322\.5px\)[\s\S]*--lot-viewbox-min-height: 90px;[\s\S]*--lot-side-gap: 5\.25px/,
   'Short iPhone landscapes must keep the card budget aligned with the compact viewer and gap'
 );
 assert.match(layoutCss, /\.lot-viewbox-with-paint \.lot-colors \{[\s\S]*border-top: 3px solid var\(--ink\)/);
 assert.doesNotMatch(layoutCss, /\.lot-color-input|\.lot-color-preset/);
 assert.match(layoutCss, /\.lot-race \{[\s\S]*background: var\(--pink\)/);
-assert.match(layoutCss, /@media \(max-height: 520px\)/);
-assert.match(layoutCss, /@media \(max-height: 430px\)/);
+assert.match(layoutCss, /@media \(max-height: 390px\)/);
+assert.match(layoutCss, /@media \(max-height: 322\.5px\)/);
 
 assert.match(
   infoTypography,
   /\.lot-showroom \.lot-car-description\.lot-a11y-only\s*\{[\s\S]*display: block !important;/,
   'Short landscape layouts must keep the visually hidden description in the accessibility tree'
 );
-assert.match(infoTypography, /flex: 1 1 88px;[\s\S]*grid-template-rows: repeat\(6, minmax\(13px, 34px\)\);[\s\S]*align-content: space-between;[\s\S]*min-height: 88px;/,
+assert.match(infoTypography, /flex: 1 1 66px;[\s\S]*grid-template-rows: repeat\(6, minmax\(9\.75px, 25\.5px\)\);[\s\S]*align-content: space-between;[\s\S]*min-height: 66px;/,
   'All six attribute rows must stay readable while yielding enough height to avoid inner scrolling');
-assert.match(infoTypography, /height: clamp\(13px, 2\.7vh, 18px\)/,
+assert.match(infoTypography, /height: clamp\(9\.75px, 2\.7vh, 13\.5px\)/,
   'Meter segments must remain substantially larger than the old 7px bars');
 assert.match(infoTypography, /border: 2px solid var\(--lot-stat-accent\)/,
   'Attribute category outlines must stay thin enough to preserve the dark meter fill');
-assert.match(infoTypography, /outline: 0\.5px solid #000/,
+assert.match(infoTypography, /outline: 0\.375px solid #000/,
   'Attribute meters must gain a 0.5px black outer edge');
-assert.match(infoTypography, /outline-offset: -0\.5px/,
+assert.match(infoTypography, /outline-offset: -0\.375px/,
   'The black edge must sit inside the existing meter footprint rather than increase its size');
-assert.match(infoPanel, /\.lot-showroom \.lot-card-actions\s*\{[\s\S]*padding: 2px 0 0;/,
+assert.match(infoPanel, /\.lot-showroom \.lot-card-actions\s*\{[\s\S]*padding: 1\.5px 0 0;/,
   'The race action must sit close to the last attribute row');
 assert.match(infoTypography, /--lot-stat-accent: var\(--turn-control-gas, #8ce99a\)/);
 assert.match(infoTypography, /--lot-stat-accent: var\(--turn-control-drift, #38d9ff\)/);
@@ -318,13 +318,13 @@ const [showroomLayoutCss, showroomCleanupCss, lotWrapper] = await Promise.all([
   fs.readFile(new URL('../../turn/garage/lot-showroom-cleanup-r201.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8')
 ]);
-assert.match(showroomLayoutCss, /\.lot-showroom \{[\s\S]*--lot-header-height: 76px;[\s\S]*--lot-picker-height: 122px;/,
+assert.match(showroomLayoutCss, /\.lot-showroom \{[\s\S]*--lot-header-height: 57px;[\s\S]*--lot-picker-height: 91\.5px;/,
   'Phone landscape must retain the compact pre-#957 Lot proportions');
-assert.match(showroomLayoutCss, /@media \(min-height: 600px\) \{[\s\S]*--lot-header-height: 104px;[\s\S]*--lot-picker-height: 150px;/,
+assert.match(showroomLayoutCss, /@media \(min-height: 450px\) \{[\s\S]*--lot-header-height: 78px;[\s\S]*--lot-picker-height: 112\.5px;/,
   'Tablet-height Lot layouts must opt into the roomier #957 header and carousel');
-assert.match(showroomLayoutCss, /left: max\(104px, calc\(env\(safe-area-inset-left\) \+ 90px\)\);/,
+assert.match(showroomLayoutCss, /left: max\(78px, calc\(env\(safe-area-inset-left\) \+ 67\.5px\)\);/,
   'Normal and tablet Lot headers must keep a clear gap after the Back button');
-assert.match(showroomLayoutCss, /@media \(max-height: 520px\)[\s\S]*left: max\(90px, calc\(env\(safe-area-inset-left\) \+ 81px\)\);/,
+assert.match(showroomLayoutCss, /@media \(max-height: 390px\)[\s\S]*left: max\(67\.5px, calc\(env\(safe-area-inset-left\) \+ 60\.75px\)\);/,
   'Short phone landscape must keep the same deliberate Back-to-heading separation');
 assert.match(showroomCleanupCss, /--lot-content-bottom: 0px;/,
   'The Lot must not reserve an extra cyan gutter below the usable showroom viewport');

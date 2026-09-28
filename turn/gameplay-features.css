@@ -17,21 +17,21 @@
   top: 10%;
   left: 50%;
   transform: translateX(-50%);
-  font-size: clamp(0.52rem, 1.25vw, 0.72rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.39rem, 1.25vw, 0.54rem));
   letter-spacing: 0.08em;
   pointer-events: none;
 }
 
 .gas.is-boosting {
   box-shadow:
-    7px 9px 0 var(--ink),
-    0 0 0 5px rgb(255 90 95 / 0.3);
+    5.25px 6.75px 0 var(--ink),
+    0 0 0 3.75px rgb(255 90 95 / 0.3);
 }
 
 .nuke-ghosts-button {
-  width: 46px;
-  min-width: 46px;
-  padding: 5px;
+  width: 34.5px;
+  min-width: 34.5px;
+  padding: 3.75px;
   display: grid;
   place-items: center;
   background: #ff7b54;
@@ -40,17 +40,17 @@
 .mushroom-cloud-icon {
   position: relative;
   display: block;
-  width: 29px;
-  height: 28px;
+  width: 21.75px;
+  height: 21px;
 }
 
 .mushroom-cloud-icon::before {
   content: "";
   position: absolute;
-  left: 2px;
-  right: 2px;
-  top: 2px;
-  height: 13px;
+  left: 1.5px;
+  right: 1.5px;
+  top: 1.5px;
+  height: 9.75px;
   border: 3px solid var(--ink);
   border-radius: 50% 50% 42% 42%;
   background: var(--yellow);
@@ -59,30 +59,30 @@
 .mushroom-cloud-icon::after {
   content: "";
   position: absolute;
-  left: 9px;
-  bottom: 2px;
-  width: 11px;
-  height: 15px;
+  left: 6.75px;
+  bottom: 1.5px;
+  width: 8.25px;
+  height: 11.25px;
   border: 3px solid var(--ink);
   border-top: 0;
-  border-radius: 2px 2px 7px 7px;
+  border-radius: 1.5px 1.5px 5.25px 5.25px;
   background: var(--paper);
 }
 
 .mushroom-cloud-icon i {
   position: absolute;
   z-index: 2;
-  left: 5px;
-  right: 5px;
+  left: 3.75px;
+  right: 3.75px;
   bottom: 0;
-  height: 6px;
+  height: 4.5px;
   border: 3px solid var(--ink);
-  border-radius: 999px;
+  border-radius: 749.25px;
   background: #ff7b54;
 }
 
 .nuke-dialog {
-  width: min(520px, calc(100vw - 36px));
+  width: min(390px, calc(100vw - 27px));
   padding: 0;
   border: 0;
   background: transparent;
@@ -91,23 +91,23 @@
 
 .nuke-dialog::backdrop {
   background: rgb(8 9 10 / 0.72);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(3px);
 }
 
 .nuke-dialog-card {
-  padding: 28px;
+  padding: 21px;
   border: 5px solid var(--ink);
-  border-radius: 28px;
+  border-radius: 21px;
   background: var(--paper);
-  box-shadow: 11px 11px 0 var(--ink);
+  box-shadow: 8.25px 8.25px 0 var(--ink);
   text-align: center;
   transform: rotate(-1deg);
 }
 
 .nuke-dialog-icon {
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 12px;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 9px;
   display: grid;
   place-items: center;
   border: 4px solid var(--ink);
@@ -121,24 +121,24 @@
 
 .nuke-dialog h2 {
   margin: 0;
-  font-size: clamp(1.7rem, 6vw, 3rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(1.275rem, 6vw, 2.25rem));
   line-height: 0.95;
 }
 
 .nuke-dialog p {
-  margin: 16px 0 22px;
-  font-size: clamp(0.9rem, 2.2vw, 1.15rem);
+  margin: 12px 0 16.5px;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.675rem, 2.2vw, 0.8625rem));
 }
 
 .nuke-dialog-actions {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 9px;
 }
 
 .nuke-dialog-actions button {
-  min-height: 50px;
-  padding: 10px 16px;
+  min-height: 37.5px;
+  padding: 7.5px 12px;
   text-transform: uppercase;
 }
 
@@ -164,13 +164,13 @@
   position: absolute;
   left: 50%;
   top: 55%;
-  width: 40px;
-  height: 40px;
-  border: 12px solid #fff4b8;
+  width: 30px;
+  height: 30px;
+  border: 9px solid #fff4b8;
   border-radius: 50%;
   box-shadow:
-    0 0 0 8px #ff9f1c,
-    0 0 0 15px var(--ink);
+    0 0 0 6px #ff9f1c,
+    0 0 0 11.25px var(--ink);
   transform: translate(-50%, -50%) scale(0.1);
   animation: turn-nuke-wave 1050ms 150ms cubic-bezier(.1,.7,.2,1) forwards;
 }
@@ -179,8 +179,8 @@
   position: absolute;
   left: 50%;
   bottom: 7%;
-  width: 230px;
-  height: 300px;
+  width: 172.5px;
+  height: 225px;
   transform: translateX(-50%) scale(0.05);
   transform-origin: 50% 100%;
   animation: turn-nuke-cloud 1250ms 170ms cubic-bezier(.12,.8,.2,1) forwards;
@@ -196,28 +196,28 @@
 }
 
 .nuke-cap {
-  left: 8px;
-  right: 8px;
-  top: 15px;
-  height: 125px;
+  left: 6px;
+  right: 6px;
+  top: 11.25px;
+  height: 93.75px;
   border-radius: 50% 50% 40% 40%;
-  box-shadow: inset 0 24px 0 #ffe066;
+  box-shadow: inset 0 18px 0 #ffe066;
 }
 
 .nuke-stem {
-  left: 82px;
-  top: 115px;
-  width: 68px;
-  height: 135px;
-  border-radius: 18px 18px 32px 32px;
+  left: 61.5px;
+  top: 86.25px;
+  width: 51px;
+  height: 101.25px;
+  border-radius: 13.5px 13.5px 24px 24px;
   background: #ff7b54;
 }
 
 .nuke-base {
-  left: 34px;
-  right: 34px;
-  bottom: 10px;
-  height: 64px;
+  left: 25.5px;
+  right: 25.5px;
+  bottom: 7.5px;
+  height: 48px;
   border-radius: 50%;
   background: #ff5a5f;
 }
@@ -242,24 +242,24 @@
   0% { opacity: 0; transform: translateX(-50%) scale(0.05); }
   18% { opacity: 1; }
   72% { opacity: 1; transform: translateX(-50%) scale(1); }
-  100% { opacity: 0; transform: translateX(-50%) translateY(-42px) scale(1.18); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-31.5px) scale(1.18); }
 }
 
 @keyframes turn-nuke-shake {
   0%, 100% { translate: 0 0; }
-  15% { translate: -8px 4px; }
-  30% { translate: 7px -5px; }
-  45% { translate: -5px -4px; }
-  60% { translate: 6px 5px; }
-  75% { translate: -3px 2px; }
+  15% { translate: -6px 3px; }
+  30% { translate: 5.25px -3.75px; }
+  45% { translate: -3.75px -3px; }
+  60% { translate: 4.5px 3.75px; }
+  75% { translate: -2.25px 1.5px; }
 }
 
-@media (max-height: 430px) {
+@media (max-height: 322.5px) {
   .nuke-ghosts-button {
-    width: 42px;
-    min-width: 42px;
-    height: 38px;
-    min-height: 38px;
+    width: 31.5px;
+    min-width: 31.5px;
+    height: 28.5px;
+    min-height: 28.5px;
   }
 
   .mushroom-cloud-icon {
@@ -267,6 +267,6 @@
   }
 
   .nuke-dialog-card {
-    padding: 20px;
+    padding: 15px;
   }
 }

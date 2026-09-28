@@ -5,14 +5,14 @@
 
 .m8-how-dialog .m8-dialog-card {
   overscroll-behavior-y: contain;
-  scroll-padding-block-end: max(32px, env(safe-area-inset-bottom));
+  scroll-padding-block-end: max(24px, env(safe-area-inset-bottom));
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
 }
 
 .m8-guide-wide > div {
   min-width: 0;
-  font-size: 1rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
 }
 
 .m8-guide-grid section.m8-guide-card-shell {
@@ -28,9 +28,9 @@
 .m8-guide-card-disclosure {
   width: 100%;
   border: 4px solid var(--m8-ink);
-  border-radius: 20px;
+  border-radius: 15px;
   background: white;
-  box-shadow: 5px 5px 0 var(--m8-ink);
+  box-shadow: 3.75px 3.75px 0 var(--m8-ink);
   box-sizing: border-box;
   overflow: hidden;
   overflow: clip;
@@ -40,9 +40,9 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 13px;
-  min-height: 70px;
-  padding: 13px 16px;
+  gap: 9.75px;
+  min-height: 52.5px;
+  padding: 9.75px 12px;
   color: var(--m8-ink);
   background: white;
   cursor: pointer;
@@ -62,12 +62,12 @@
   content: "+";
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 21px;
+  height: 21px;
   border: 2px solid var(--m8-ink);
   border-radius: 50%;
   background: var(--m8-cream);
-  font-size: 1.3rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.975rem);
   font-weight: 950;
   line-height: 1;
 }
@@ -78,28 +78,28 @@
 
 .m8-guide-card-disclosure > summary:focus-visible {
   outline: 5px solid var(--m8-pink);
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 
 .m8-guide-card-number {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 31.5px;
+  height: 31.5px;
   border-radius: 50%;
   background: var(--m8-yellow);
-  font-size: 1.3rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.975rem);
 }
 
 .m8-guide-card-title {
   min-width: 0;
-  font-size: 1.12rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.84rem);
   font-weight: 950;
   line-height: 1.15;
 }
 
 .m8-guide-card-panel {
-  padding: 14px 16px 16px;
+  padding: 10.5px 12px 12px;
   background: rgb(255 255 255 / 0.5);
   overflow-anchor: none;
 }
@@ -112,15 +112,15 @@
 .m8-dbe-guide,
 .m8-guide-disclosure {
   width: 100%;
-  margin-top: 14px;
+  margin-top: 10.5px;
   border: 3px solid var(--m8-ink);
-  border-radius: 16px;
+  border-radius: 12px;
   background: rgb(255 255 255 / 0.86);
-  box-shadow: 4px 4px 0 var(--m8-ink);
+  box-shadow: 3px 3px 0 var(--m8-ink);
   box-sizing: border-box;
   overflow: hidden;
   overflow: clip;
-  font-size: 1rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
   line-height: 1.42;
 }
 
@@ -129,16 +129,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 54px;
-  padding: 11px 14px;
+  gap: 12px;
+  min-height: 40.5px;
+  padding: 8.25px 10.5px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 9px;
   color: var(--m8-ink);
   background: var(--m8-yellow);
   cursor: pointer;
   list-style: none;
-  font-size: 1rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
   font-weight: 950;
   line-height: 1.2;
   box-sizing: border-box;
@@ -147,7 +147,7 @@
 .m8-dbe-guide[open] > summary,
 .m8-guide-disclosure[open] > summary {
   border-bottom: 3px solid var(--m8-ink);
-  border-radius: 12px 12px 0 0;
+  border-radius: 9px 9px 0 0;
 }
 
 .m8-dbe-guide > summary::-webkit-details-marker,
@@ -161,12 +161,12 @@
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 21px;
+  height: 21px;
   border: 2px solid var(--m8-ink);
   border-radius: 50%;
   background: var(--m8-cream);
-  font-size: 1.3rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.975rem);
   line-height: 1;
 }
 
@@ -178,7 +178,7 @@
 .m8-dbe-guide > summary:focus-visible,
 .m8-guide-disclosure > summary:focus-visible {
   outline: 5px solid var(--m8-pink);
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 
 .m8-dbe-guide-panel,
@@ -189,16 +189,16 @@
 }
 
 .m8-overcharge-guide {
-  margin-top: 12px;
+  margin-top: 9px;
 }
 
 .m8-overcharge-guide .m8-guide-disclosure-panel {
-  padding: 12px;
+  padding: 9px;
 }
 
 .m8-overcharge-steps {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -206,10 +206,10 @@
 
 .m8-overcharge-steps li {
   display: grid;
-  grid-template-columns: 5.4rem minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: 4.05rem minmax(0, 1fr);
+  gap: 6px;
   align-items: start;
-  font-size: 1rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
   line-height: 1.35;
 }
 
@@ -219,26 +219,26 @@
 }
 
 .m8-overcharge-leak {
-  margin: 11px 0 0;
-  padding-top: 10px;
+  margin: 8.25px 0 0;
+  padding-top: 7.5px;
   border-top: 2px solid var(--m8-ink);
-  font-size: 1rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
   line-height: 1.38;
 }
 
 .m8-dbe-guide-content {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 9px;
   width: 100%;
   margin: 0;
-  font-size: 1rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
   box-sizing: border-box;
 }
 
 .m8-dbe-guide-content p,
 .m8-dbe-guide-content li {
-  font-size: 1rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
 }
 
 .m8-dbe-guide-intro,
@@ -248,41 +248,41 @@
 }
 
 .m8-dbe-guide-intro {
-  padding: 0 2px;
+  padding: 0 1.5px;
   font-weight: 800;
 }
 
 .m8-dbe-guide-basics,
 .m8-dbe-guide-section {
   min-width: 0;
-  padding: 13px 14px;
+  padding: 9.75px 10.5px;
   border: 2px solid var(--m8-ink);
-  border-radius: 14px;
+  border-radius: 10.5px;
   background: rgb(255 255 255 / 0.82);
   box-sizing: border-box;
 }
 
 .m8-dbe-guide-screen-reader {
-  scroll-margin-block-end: max(32px, env(safe-area-inset-bottom));
+  scroll-margin-block-end: max(24px, env(safe-area-inset-bottom));
 }
 
 .m8-dbe-guide-content h4 {
-  margin: 0 0 6px;
-  font-size: 1rem;
+  margin: 0 0 4.5px;
+  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
   line-height: 1.15;
 }
 
 .m8-dbe-guide-content ul {
   margin: 0;
-  padding-left: 1.25rem;
+  padding-left: 0.9375rem;
   line-height: 1.4;
 }
 
 .m8-dbe-guide-content li + li {
-  margin-top: 5px;
+  margin-top: 3.75px;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 540px) {
   .m8-dbe-guide-content {
     grid-template-columns: 1fr;
   }
@@ -294,14 +294,14 @@
   }
 }
 
-@media (max-height: 560px) and (orientation: landscape) {
+@media (max-height: 420px) and (orientation: landscape) {
   .m8-guide-card-disclosure > summary {
-    min-height: 60px;
-    padding: 9px 12px;
+    min-height: 45px;
+    padding: 6.75px 9px;
   }
 
   .m8-guide-card-panel {
-    padding: 10px 12px 12px;
+    padding: 7.5px 9px 9px;
   }
 
   .m8-dbe-guide-panel,
@@ -310,11 +310,11 @@
   }
 
   .m8-dbe-guide-content {
-    gap: 10px;
+    gap: 7.5px;
   }
 
   .m8-dbe-guide-basics,
   .m8-dbe-guide-section {
-    padding: 10px 12px;
+    padding: 7.5px 9px;
   }
 }

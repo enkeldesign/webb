@@ -130,20 +130,20 @@ assert.match(
   /:root\.turn-left-handed-controls \.utility-group \{[\s\S]*grid-column: 2;[\s\S]*align-self: end;[\s\S]*justify-self: end;[\s\S]*transform: none;/,
   'The left-handed menu bar must occupy the bottom-right slot beneath on-screen steering'
 );
-assert.match(manualCss, /bottom: max\(68px, calc\(env\(safe-area-inset-bottom\) \+ 56px\)\)/,
+assert.match(manualCss, /bottom: max\(51px, calc\(env\(safe-area-inset-bottom\) \+ 42px\)\)/,
   'The on-screen steering pad must reserve the bottom strip for the menu bar');
 assert.match(
   driveCss,
-  /@media \(max-width: 700px\) and \(max-height: 430px\)[\s\S]*turn-left-handed-controls \.utility-group\[data-menu-state="staged"\][\s\S]*gap: 5px/,
+  /@media \(max-width: 525px\) and \(max-height: 322\.5px\)[\s\S]*turn-left-handed-controls \.utility-group\[data-menu-state="staged"\][\s\S]*gap: 3\.75px/,
   'The left-handed menu must preserve separation from the drive pad on narrow landscape screens'
 );
 assert.doesNotMatch(driveCss, /turn-left-handed-controls[\s\S]{0,100}row-reverse/,
   'The handedness policy must not reverse the complete race UI');
-assert.match(driveCss, /:root\.turn-left-handed-controls \.drive-lock-bubble \{[\s\S]*left: calc\(100% - 4px\)/,
+assert.match(driveCss, /:root\.turn-left-handed-controls \.drive-lock-bubble \{[\s\S]*left: calc\(100% - 3px\)/,
   'Left-handed LOCK must sit outside the right edge');
 assert.match(driveCss, /:root\.turn-left-handed-controls \.drive-boost-zone \{[\s\S]*border-right:/);
 assert.match(driveCss, /:root\.turn-left-handed-controls \.drive-drift-zone \{[\s\S]*border-left:/);
-assert.match(manualCss, /:root\.turn-left-handed-controls \.manual-steer \{[\s\S]*right: max\(22px, env\(safe-area-inset-right\)\)/,
+assert.match(manualCss, /:root\.turn-left-handed-controls \.manual-steer \{[\s\S]*right: max\(16\.5px, env\(safe-area-inset-right\)\)/,
   'On-screen steering must move to the right without reversing its steering values');
 assert.match(guide, /slide outward past it into/);
 assert.doesNotMatch(guide, /slide farther left into/);
@@ -173,7 +173,7 @@ assert.match(
 );
 assert.match(
   peripheralCss,
-  /\.score-feedback-row \{[\s\S]*min-height: 52px;[\s\S]*flex: 0 1 var\(--score-feedback-paper-height\);/,
+  /\.score-feedback-row \{[\s\S]*min-height: 39px;[\s\S]*flex: 0 1 var\(--score-feedback-paper-height\);/,
   'DRIFT and FLOW rows must shrink together before they can reach steering'
 );
 assert.match(
@@ -188,17 +188,17 @@ assert.match(
 );
 assert.match(
   peripheralCss,
-  /\.score-feedback\[data-score-layout="dual"\] \.score-feedback-callout \{[\s\S]*top: 0;[\s\S]*left: calc\(100% \+ var\(--score-feedback-gauge-width\) \+ 9px\);/,
+  /\.score-feedback\[data-score-layout="dual"\] \.score-feedback-callout \{[\s\S]*top: 0;[\s\S]*left: calc\(100% \+ var\(--score-feedback-gauge-width\) \+ 6\.75px\);/,
   'Worst-case score callouts must use the inboard slot instead of dropping into steering'
 );
 assert.match(
   peripheralCss,
-  /@media \(max-height: 560px\) and \(orientation: landscape\)[\s\S]*--turn-peripheral-manual-height: clamp\(96px, 14vw, 126px\);/,
+  /@media \(max-height: 420px\) and \(orientation: landscape\)[\s\S]*--turn-peripheral-manual-height: clamp\(72px, 14vw, 94\.5px\);/,
   'Short landscape layouts must reduce the steering and score footprint together'
 );
 assert.match(
   peripheralCss,
-  /@media \(max-height: 360px\) and \(orientation: landscape\)[\s\S]*--turn-peripheral-stats-height: 48px;[\s\S]*--turn-peripheral-manual-height: 82px;/,
+  /@media \(max-height: 270px\) and \(orientation: landscape\)[\s\S]*--turn-peripheral-stats-height: 36px;[\s\S]*--turn-peripheral-manual-height: 61\.5px;/,
   'Very short landscape layouts must compact stats and steering before overlap'
 );
 assert.match(peripheralCss, /env\(safe-area-inset-left\)/);
@@ -206,7 +206,7 @@ assert.match(peripheralCss, /env\(safe-area-inset-right\)/);
 assert.match(peripheralCss, /env\(safe-area-inset-top\)/);
 assert.match(peripheralCss, /env\(safe-area-inset-bottom\)/);
 
-const peripheralStylesheet = /peripheral-hud-r261\.css\?revision=r261-mirrored-periphery/;
+const peripheralStylesheet = /peripheral-hud-r261\.css\?build=\d{8}-r\d+/;
 for (const [deployment, markup] of [
   ['TURN', turnIndex],
   ['TURN NEXT', nextIndex],

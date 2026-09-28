@@ -44,19 +44,19 @@ function ensureScorekeeperStyle(documentRef) {
   style.id = SCOREKEEPER_STYLE_ID;
   style.textContent = `
 .score-feedback {
-  --score-feedback-paper-width: clamp(148px, 18.5vw, 198px);
-  --score-feedback-paper-height: 112px;
-  --score-feedback-gauge-width: clamp(44px, 5.5vw, 58px);
+  --score-feedback-paper-width: clamp(111px, 18.5vw, 148.5px);
+  --score-feedback-paper-height: 84px;
+  --score-feedback-gauge-width: clamp(33px, 5.5vw, 43.5px);
 }
 
 .score-feedback-state {
   grid-template-rows: auto 1fr auto auto;
-  padding: 8px 10px 9px;
+  padding: 6px 7.5px 6.75px;
   border-width: var(--turn-border-default, 4px);
 }
 
 .score-feedback-values strong {
-  font-size: clamp(1.22rem, 3vw, 1.78rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.915rem, 3vw, 1.335rem));
 }
 
 .score-feedback-footer {
@@ -64,7 +64,7 @@ function ensureScorekeeperStyle(documentRef) {
 }
 
 .score-feedback-footer .score-feedback-lap {
-  font-size: clamp(.60rem, 1.35vw, .76rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.45rem, 1.35vw, 0.57rem));
   letter-spacing: .04em;
 }
 
@@ -73,12 +73,12 @@ function ensureScorekeeperStyle(documentRef) {
   min-width: 0;
   align-items: baseline;
   justify-content: space-between;
-  gap: 6px;
-  margin-top: 3px;
+  gap: 4.5px;
+  margin-top: 2.25px;
 }
 
 .score-feedback-history .score-feedback-lap {
-  font-size: clamp(.48rem, 1.05vw, .61rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.36rem, 1.05vw, 0.4575rem));
   letter-spacing: .055em;
 }
 
@@ -86,31 +86,31 @@ function ensureScorekeeperStyle(documentRef) {
   margin-left: auto;
 }
 
-@media (max-height: 430px) {
+@media (max-height: 322.5px) {
   .score-feedback {
-    --score-feedback-paper-width: 138px;
-    --score-feedback-paper-height: 96px;
-    --score-feedback-gauge-width: 42px;
+    --score-feedback-paper-width: 103.5px;
+    --score-feedback-paper-height: 72px;
+    --score-feedback-gauge-width: 31.5px;
   }
 
   .score-feedback-state {
-    padding: 6px 8px 7px;
+    padding: 4.5px 6px 5.25px;
   }
 
   .score-feedback-values strong {
-    font-size: 1.18rem;
+    font-size: max(var(--turn-text-floor, 11px), 0.885rem);
   }
 
   .score-feedback-footer .score-feedback-lap {
-    font-size: .56rem;
+    font-size: max(var(--turn-text-floor, 11px), 0.42rem);
   }
 
   .score-feedback-history {
-    margin-top: 2px;
+    margin-top: 1.5px;
   }
 
   .score-feedback-history .score-feedback-lap {
-    font-size: .46rem;
+    font-size: max(var(--turn-text-floor, 11px), 0.345rem);
   }
 }
 `;

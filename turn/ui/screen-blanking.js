@@ -52,14 +52,14 @@ function installStyles() {
 
     .turn-screen-blank-control {
       display: grid;
-      flex: 0 0 50px;
-      width: 50px;
-      min-width: 50px;
-      min-height: 50px;
-      padding: 4px;
+      flex: 0 0 37.5px;
+      width: 37.5px;
+      min-width: 37.5px;
+      min-height: 37.5px;
+      padding: 3px;
       place-items: center;
       align-self: stretch;
-      border-radius: 12px;
+      border-radius: 9px;
       background: var(--paper, #fffdf6);
       color: #08090a;
       touch-action: manipulation;
@@ -67,25 +67,25 @@ function installStyles() {
     }
 
     .utility-group[data-menu-state="staged"] .turn-screen-blank-control {
-      padding: 4px;
+      padding: 3px;
     }
 
     .turn-screen-blank-control[data-state="active"] {
       position: fixed;
-      left: var(--turn-screen-blank-left, 16px);
+      left: var(--turn-screen-blank-left, 12px);
       top: var(--turn-screen-blank-top, auto);
       z-index: 2147483001;
-      width: var(--turn-screen-blank-width, 50px);
-      min-width: var(--turn-screen-blank-width, 50px);
-      height: var(--turn-screen-blank-height, 50px);
-      min-height: var(--turn-screen-blank-height, 50px);
+      width: var(--turn-screen-blank-width, 37.5px);
+      min-width: var(--turn-screen-blank-width, 37.5px);
+      height: var(--turn-screen-blank-height, 37.5px);
+      min-height: var(--turn-screen-blank-height, 37.5px);
       margin: 0;
       padding: var(--turn-screen-blank-padding, 4px);
       align-self: auto;
       border-width: var(--turn-screen-blank-border-width, 3px);
       border-radius: var(--turn-screen-blank-radius, 12px);
       background: #ff7b54;
-      box-shadow: var(--turn-screen-blank-shadow, 5px 5px 0 #08090a);
+      box-shadow: var(--turn-screen-blank-shadow, 3.75px 3.75px 0 #08090a);
     }
 
     .turn-screen-blank-control svg {
@@ -104,47 +104,47 @@ function installStyles() {
     }
 
     .turn-screen-blank-control:focus-visible {
-      outline: 4px solid #ffd43b;
-      outline-offset: 4px;
+      outline: 3px solid #ffd43b;
+      outline-offset: 3px;
     }
 
     .turn-screen-blank-toast {
       position: fixed;
       left: 50%;
-      top: max(16px, calc(env(safe-area-inset-top) + 10px));
+      top: max(12px, calc(env(safe-area-inset-top) + 7.5px));
       z-index: 2147483002;
-      width: min(620px, calc(100vw - 32px));
-      padding: 10px 14px;
-      border: 3px solid #08090a;
-      border-radius: 14px;
+      width: min(465px, calc(100vw - 24px));
+      padding: 7.5px 10.5px;
+      border: 2.25px solid #08090a;
+      border-radius: 10.5px;
       background: var(--paper, #fffdf6);
       color: #08090a;
-      box-shadow: 5px 5px 0 #08090a;
+      box-shadow: 3.75px 3.75px 0 #08090a;
       transform: translateX(-50%);
       text-align: center;
-      font-size: clamp(0.72rem, 1.7vw, 0.92rem);
+      font-size: max(var(--turn-text-floor, 11px), clamp(0.54rem, 1.7vw, 0.69rem));
       line-height: 1.25;
       pointer-events: none;
     }
 
-    @media (max-height: 430px) {
+    @media (max-height: 322.5px) {
       .turn-screen-blank-control {
-        flex-basis: 40px;
-        width: 40px;
-        min-width: 40px;
-        min-height: 40px;
-        padding: 3px;
+        flex-basis: 30px;
+        width: 30px;
+        min-width: 30px;
+        min-height: 30px;
+        padding: 2.25px;
       }
 
       .utility-group[data-menu-state="staged"] .turn-screen-blank-control {
-        padding: 3px;
+        padding: 2.25px;
       }
 
       .turn-screen-blank-toast {
-        top: max(10px, calc(env(safe-area-inset-top) + 6px));
-        width: min(700px, calc(100vw - 20px));
-        padding: 7px 11px;
-        font-size: 0.7rem;
+        top: max(7.5px, calc(env(safe-area-inset-top) + 4.5px));
+        width: min(525px, calc(100vw - 15px));
+        padding: 5.25px 8.25px;
+        font-size: max(var(--turn-text-floor, 11px), 0.525rem);
       }
     }
   `;

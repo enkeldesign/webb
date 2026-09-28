@@ -21,7 +21,7 @@ function installStyles() {
 
     .turn-trophy-road-highlights > [role="button"]:focus-visible {
       outline: 4px solid var(--turn-focus-ring, #ffd43b);
-      outline-offset: 2px;
+      outline-offset: 1.5px;
     }
 
     .turn-achievements-dialog .turn-trophy-road-detail-close,

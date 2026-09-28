@@ -149,7 +149,7 @@ function ensurePresentationStyles() {
 
     .drive-shift-bubble[data-flow-shift="great"] span {
       gap: .28em;
-      font-size: clamp(.54rem, 1.36vw, .75rem);
+      font-size: max(var(--turn-text-floor, 11px), clamp(0.405rem, 1.36vw, 0.5625rem));
     }
 
     .drive-shift-bubble[data-flow-shift="great"] .flow-shift-copy {
@@ -179,9 +179,9 @@ function ensurePresentationStyles() {
     .drive-shift-bubble i {
       flex: 0 0 auto;
       width: 0;
-      height: .56rem;
+      height: 0.42rem;
       overflow: hidden;
-      border-radius: 999px;
+      border-radius: 749.25px;
       background: currentColor;
       font-size: 0;
       line-height: 0;
@@ -191,7 +191,7 @@ function ensurePresentationStyles() {
        player action. Suppress the dot for that carried state; the next deliberate
        SHIFT toggle clears carried, making the dot appear as immediate feedback. */
     .drive-stack.is-shift-active .drive-shift-bubble:not([data-flow-shift="carried"]) i {
-      width: .56rem;
+      width: 0.42rem;
       opacity: 1;
     }
 
@@ -206,14 +206,14 @@ function ensurePresentationStyles() {
     }
 
     .drive-shift-bubble.is-flow-shift-bump {
-      --turn-flow-shift-bump-x: -7px;
-      --turn-flow-shift-rebound-x: 2px;
+      --turn-flow-shift-bump-x: -5.25px;
+      --turn-flow-shift-rebound-x: 1.5px;
       animation: turn-flow-shift-bump 260ms cubic-bezier(.2,.88,.25,1);
     }
 
     :root.turn-left-handed-controls .drive-shift-bubble.is-flow-shift-bump {
-      --turn-flow-shift-bump-x: 7px;
-      --turn-flow-shift-rebound-x: -2px;
+      --turn-flow-shift-bump-x: 5.25px;
+      --turn-flow-shift-rebound-x: -1.5px;
     }
 
     @keyframes turn-flow-shift-bump {
@@ -231,7 +231,7 @@ function ensurePresentationStyles() {
     @media (forced-colors: active) {
       .drive-stack.is-shift-active .drive-shift-bubble i {
         box-sizing: border-box;
-        border: 2px solid ButtonText;
+        border: 1.5px solid ButtonText;
         background: ButtonText;
       }
     }

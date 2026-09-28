@@ -1,18 +1,18 @@
 .manual-steer {
   --manual-steer-left: 50%;
   position: absolute;
-  left: max(22px, env(safe-area-inset-left));
+  left: max(16.5px, env(safe-area-inset-left));
   right: auto;
   top: auto;
-  bottom: max(68px, calc(env(safe-area-inset-bottom) + 56px));
+  bottom: max(51px, calc(env(safe-area-inset-bottom) + 42px));
   z-index: 18;
-  width: clamp(150px, 21vw, 220px);
-  height: clamp(102px, 15vw, 150px);
+  width: clamp(112.5px, 21vw, 165px);
+  height: clamp(76.5px, 15vw, 112.5px);
   overflow: hidden;
   border: 5px solid var(--ink);
-  border-radius: 30px;
+  border-radius: 22.5px;
   background: var(--yellow);
-  box-shadow: 7px 7px 0 var(--ink);
+  box-shadow: 5.25px 5.25px 0 var(--ink);
   touch-action: none;
   cursor: ew-resize;
 }
@@ -23,7 +23,7 @@
   top: 50%;
   z-index: 1;
   color: var(--ink);
-  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(1.65rem, 5vw, 3rem));
   font-weight: 1000;
   line-height: 1;
   transform: translateY(-54%);
@@ -45,12 +45,12 @@
   left: var(--manual-steer-left);
   top: 50%;
   z-index: 2;
-  width: clamp(66px, 9.5vw, 96px);
+  width: clamp(49.5px, 9.5vw, 72px);
   aspect-ratio: 1;
   border: 5px solid var(--ink);
   border-radius: 50%;
   background: var(--cyan);
-  box-shadow: 5px 7px 0 rgb(8 9 10 / 0.35);
+  box-shadow: 3.75px 5.25px 0 rgb(8 9 10 / 0.35);
   transform: translate(-50%, -50%);
   transition: left 110ms cubic-bezier(0.2, 0.9, 0.25, 1.15), box-shadow 100ms ease;
   pointer-events: none;
@@ -58,7 +58,7 @@
 
 .manual-steer.is-steering .manual-steer-knob {
   transition: none;
-  box-shadow: 2px 3px 0 rgb(8 9 10 / 0.35);
+  box-shadow: 1.5px 2.25px 0 rgb(8 9 10 / 0.35);
 }
 
 .manual-steer-knob::after {
@@ -75,19 +75,19 @@
 }
 
 :root.turn-left-handed-controls .manual-steer {
-  right: max(22px, env(safe-area-inset-right));
+  right: max(16.5px, env(safe-area-inset-right));
   left: auto;
 }
 
-@media (max-height: 430px) {
+@media (max-height: 322.5px) {
   .manual-steer {
-    bottom: max(58px, calc(env(safe-area-inset-bottom) + 50px));
-    width: clamp(145px, 20vw, 190px);
-    height: clamp(96px, 14vw, 126px);
-    border-radius: 26px;
+    bottom: max(43.5px, calc(env(safe-area-inset-bottom) + 37.5px));
+    width: clamp(108.75px, 20vw, 142.5px);
+    height: clamp(72px, 14vw, 94.5px);
+    border-radius: 19.5px;
   }
 
   .manual-steer-knob {
-    width: clamp(62px, 8.5vw, 82px);
+    width: clamp(46.5px, 8.5vw, 61.5px);
   }
 }
