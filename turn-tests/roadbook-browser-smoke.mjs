@@ -203,9 +203,9 @@ async function phoneFlow(browserType, name) {
     // CHOOSE CAR continues with the chosen playable track; back returns to it.
     await page.locator('.roadbook-card[data-track-id="cliffside"]').click();
     await page.locator('.m8-track-continue').click();
-    await page.waitForSelector('.lot-showroom', { timeout: 60000 });
+    await page.waitForSelector('.garage', { timeout: 60000 });
     assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.trackId), 'cliffside', `${name}: GARAGE opens on the chosen track`);
-    await page.locator('.lot-back').click();
+    await page.locator('.garage-back').click();
     await page.waitForFunction(() => !document.querySelector('.m8-home').hidden);
     assert.equal(await page.evaluate(() => document.querySelector('.roadbook-card.is-selected')?.dataset.trackId), 'cliffside',
       `${name}: back from the car screen keeps the chosen track`);

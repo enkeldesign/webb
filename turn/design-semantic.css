@@ -1,4 +1,4 @@
-@import url('./design-tokens.css?build=20260928-r317');
+@import url('./design-tokens.css?build=20260928-r318');
 
 /*
   Normative production roles.
@@ -9,8 +9,7 @@
 /* Main forward flow: one colour and one shape (the shared rounded-rectangle
    control radius from design-scale.css). */
 .install-primary,
-.track-select-continue,
-.lot-race {
+.track-select-continue {
   border-radius: var(--turn-radius-control, 12px) !important;
   background: var(--turn-action-primary) !important;
 }
@@ -28,9 +27,6 @@
 /* Close, leave and back always communicate navigation or context change. */
 .install-close,
 .track-select-close,
-.lot-back,
-.lot-view-close,
-.lot-stats-dialog-close,
 .spectate-close,
 .sound-guide-close,
 .m8-dialog-head > button,

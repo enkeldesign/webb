@@ -36,36 +36,17 @@ function notifyMotionPermissionBlocked(environment) {
   }
 }
 
-function readCurrentLotSelection(documentRef) {
-  // GARAGE knows its playable choice (never a locked preview).
-  const garageChoice = globalThis.__turnGarage?.getChoice?.();
-  if (garageChoice?.carId) {
-    return {
-      carId: garageChoice.carId,
-      color: garageChoice.color || null,
-      secondaryColor: garageChoice.secondaryColor || null
-    };
-  }
-  const selectedCar = documentRef?.querySelector?.('.lot-car-option[aria-checked="true"]');
-  const controls = [...(documentRef?.querySelectorAll?.('.lot-color-control') || [])];
-  const selection = {
-    carId: selectedCar?.dataset?.carId || null,
-    color: null,
-    secondaryColor: null
+// GARAGE knows its playable choice, never a locked preview.
+function readGarageChoice(environment) {
+  const choice = environment.__turnGarage?.getChoice?.();
+  return {
+    carId: choice?.carId || null,
+    color: choice?.color || null,
+    secondaryColor: choice?.secondaryColor || null
   };
-
-  for (const control of controls) {
-    const input = control.querySelector?.('.lot-color-input');
-    const label = String(control.dataset?.paintLabel || '').toLowerCase();
-    if (!input?.value) continue;
-    if (label === 'body') selection.color = input.value;
-    else if (!selection.secondaryColor) selection.secondaryColor = input.value;
-  }
-
-  return selection;
 }
 
-function saveRetryState(environment, documentRef) {
+function saveRetryState(environment) {
   const storage = environment.sessionStorage;
   if (!storage?.setItem) return false;
 
@@ -73,7 +54,7 @@ function saveRetryState(environment, documentRef) {
   const state = {
     savedAt: Date.now(),
     trackId: home?.getSelectedTrackId?.() || environment.__turnGetTrackId?.() || null,
-    selection: readCurrentLotSelection(documentRef)
+    selection: readGarageChoice(environment)
   };
 
   try {
@@ -150,7 +131,7 @@ export function installMotionPermissionCancelRecovery({ environment = globalThis
           if (
             permissionWasDismissed(error)
             && lotOpen
-            && saveRetryState(environment, documentRef)
+            && saveRetryState(environment)
             && reload(environment)
           ) {
             return waitForever();

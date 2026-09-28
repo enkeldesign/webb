@@ -75,7 +75,7 @@ const [
   fs.readFile(new URL('../../turn/render/world.js', import.meta.url), 'utf8'),
   readMidnightCityLayer('r11'),
   fs.readFile(new URL('../../turn/tracks/harbor-hidden-face-r89.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/vehicle/sports-sedan-easter-egg.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/garage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),

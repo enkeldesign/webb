@@ -22,19 +22,7 @@ import {
   resolveVehicleShiftGearbox
 } from './lot-shift-gearbox.js?revision=r232-double-shift';
 
-const activeShiftSetups = new WeakMap();
 let dialogSerial = 0;
-
-function findLotScreen(root) {
-  if (root?.matches?.('.lot-screen')) return root;
-  return root?.querySelector?.('.lot-screen') || null;
-}
-
-function selectedCarId(carPicker) {
-  return carPicker?.querySelector?.('.lot-car-option[aria-checked="true"]')?.dataset.carId
-    || carPicker?.querySelector?.('.lot-car-option[tabindex="0"]')?.dataset.carId
-    || '';
-}
 
 function focusWithoutScroll(element) {
   if (!element) return;
@@ -399,35 +387,4 @@ export function createShiftSetup({
   };
 
   return Object.freeze({ trigger, dialog, sync: syncTrigger, open: openDialog, release });
-}
-
-export function installLotShift(root = document.body) {
-  const screen = findLotScreen(root);
-  if (!screen?.classList.contains('lot-showroom')) return () => {};
-
-  const existing = activeShiftSetups.get(screen);
-  if (existing) return existing.release;
-
-  const attributesRow = screen.querySelector('.lot-attributes-row');
-  const carPicker = screen.querySelector('.lot-car-picker');
-  if (!attributesRow || !carPicker) return () => {};
-
-  const setup = createShiftSetup({
-    triggerHost: attributesRow,
-    dialogHost: screen,
-    getCarId: () => selectedCarId(carPicker)
-  });
-  const selectionObserver = new MutationObserver(setup.sync);
-  selectionObserver.observe(carPicker, {
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['aria-checked']
-  });
-  const release = () => {
-    selectionObserver.disconnect();
-    setup.release();
-    activeShiftSetups.delete(screen);
-  };
-  activeShiftSetups.set(screen, { release });
-  return release;
 }

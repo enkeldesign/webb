@@ -364,7 +364,7 @@ assert.equal(advanceShiftTopSpeedMultiplier(1.06, 1.12, 0.01), 1.12,
 const [lotShift, lotGearbox, lotRuntime, lotStyles, controls, gameplayStyles, driveStyles, workflow] = await Promise.all([
   fs.readFile(new URL('../../turn/garage/lot-shift.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-shift-gearbox.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/garage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-shift.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/gameplay-v2.css', import.meta.url), 'utf8'),
@@ -372,7 +372,11 @@ const [lotShift, lotGearbox, lotRuntime, lotStyles, controls, gameplayStyles, dr
   fs.readFile(new URL('../../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8')
 ]);
 
-assert.match(lotRuntime, /installLotShift/);
+assert.match(lotRuntime, /createShiftSetup\(\{[\s\S]*?getCarId: \(\) => \(selection\.state\(\)\.preview \? '' : selection\.state\(\)\.choice\.carId\)/,
+  'GARAGE offers SHIFT for the playable choice only, never for a locked preview');
+const garageCss = await fs.readFile(new URL('../../turn/garage/garage.css', import.meta.url), 'utf8');
+assert.match(garageCss, /\.garage \.garage-shift\.is-active \{[\s\S]*?background: var\(--turn-control-gas, #8ce99a\)/,
+  'An active SHIFT setup wears GAS green in GARAGE');
 assert.match(lotShift, /Move three attribute levers up by 1/);
 assert.match(lotShift, /vehicleShiftAmount\(car\.id, isVehiclePerkUnlocked\(car\.id\)\)/,
   'The Lot gearbox must switch the Sedan magnitude from its independent perk entitlement');
@@ -394,11 +398,6 @@ assert.match(lotShift, /It must lose \$\{editingShiftAmount\}/,
   'A tapped maximum lever must explain why its downward move is automatic');
 assert.match(lotShift, /showConstraintFeedback/,
   'Unavailable gearbox levers must produce visible and live-region feedback');
-assert.match(lotStyles, /\.lot-shift-trigger\.is-active/);
-assert.match(lotStyles, /background: var\(--turn-control-gas, #8ce99a\)/,
-  'Activate SHIFT must use the semantic GAS green');
-assert.match(lotStyles, /color-mix\(in srgb, var\(--turn-control-gas, #8ce99a\) 72%, var\(--turn-ink, #08090a\)\)/,
-  'Edit SHIFT must use a darker semantic GAS green');
 assert.match(lotStyles, /\.lot-shift-close[\s\S]*?background: var\(--turn-action-navigation, #ff7b54\)/,
   'The SHIFT close control must use navigation orange');
 assert.match(lotStyles, /\.lot-shift-cancel \{ background: var\(--turn-action-navigation, #ff7b54\); \}/,

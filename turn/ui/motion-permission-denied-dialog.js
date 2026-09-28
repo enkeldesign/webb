@@ -55,7 +55,7 @@ export function installMotionPermissionDeniedDialog({ environment = globalThis }
 
   function show() {
     const currentDialog = ensureDialog();
-    currentDialog.__turnReturnFocus = documentRef.querySelector('.garage-race, .lot-race') || documentRef.activeElement;
+    currentDialog.__turnReturnFocus = documentRef.querySelector('.garage-race') || documentRef.activeElement;
 
     if (typeof currentDialog.showModal === 'function') {
       if (!currentDialog.open) currentDialog.showModal();

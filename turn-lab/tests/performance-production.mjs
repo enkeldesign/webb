@@ -146,7 +146,7 @@ const [
   fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/render/camera.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/showroom-viewer.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/trophy-road-showcase.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/performance-monitor.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/performance-profile.js', import.meta.url), 'utf8'),
@@ -219,20 +219,19 @@ assert.match(spectate, /turn:ui-state-change/);
 assert.match(hud, /function setText\(/);
 assert.doesNotMatch(physics, /getForward\(\)\.clone\(\)/);
 assert.doesNotMatch(camera, /state\.position\.clone\(\)/);
+// GARAGE's one live 3D view (garage/showroom-viewer.js).
 assert.doesNotMatch(lot, /root\.scale\.lerp\(new THREE\.Vector3/);
 assert.match(lot, /recordPerformanceFrame/);
-assert.match(lot, /LOT_FRAME_INTERVAL_MS = 1000 \/ 30/,
-  'The two-renderer Lot surface must not render at 60/120 Hz');
-assert.match(lot, /now - lastRenderAt < LOT_FRAME_INTERVAL_MS/);
+assert.match(lot, /FRAME_INTERVAL_MS = 1000 \/ 30/,
+  'The GARAGE showroom must not render at 60/120 Hz');
+assert.match(lot, /now - lastRenderAt < FRAME_INTERVAL_MS/);
 assert.match(lot, /rendererPixelRatio\(1\.5\)/,
-  'Both Lot renderers must inherit the production touch DPR cap');
+  'The GARAGE renderer must inherit the production touch DPR cap');
 assert.match(lot, /renderer\.forceContextLoss\?\.\(\)/,
-  'Closing The Lot must release its WebGL context instead of accumulating contexts across visits');
-assert.match(lot, /function disposeVisualMaterials\(/,
-  'Repeated 3D viewer swaps must release cloned materials');
-assert.doesNotMatch(lot, /geometry\.dispose/,
-  'The Lot must not dispose shared cached vehicle geometries while releasing per-view materials');
-assert.doesNotMatch(lot, /GLTFLoader|InstancedMesh|installBrickScenery/, 'The clean Lot must not spend asset or draw-call budget on decorative wall scenery');
+  'Closing GARAGE must release its WebGL context instead of accumulating contexts across visits');
+assert.match(lot, /disposeCarVisual\(visual\)/,
+  'Swapping cars releases the previous car through the shared car-visual owner');
+assert.doesNotMatch(lot, /GLTFLoader|InstancedMesh|installBrickScenery/, 'GARAGE must not spend asset or draw-call budget on decorative scenery');
 assert.match(trophyShowcase, /SHOWCASE_FRAME_INTERVAL_MS = 1000 \/ 30/,
   'Trophy Road decorative 3D models must stay at 30 fps');
 assert.match(trophyShowcase, /now - lastRenderAt < SHOWCASE_FRAME_INTERVAL_MS/);

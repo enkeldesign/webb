@@ -11,8 +11,7 @@ on:
       - 'turn/progression/trophy-road.js'
       - 'turn/progression/trophy-road-r157.css'
       - 'turn/roadbook/roadbook.js'
-      - 'turn/progression/lot-trophy-gate.js'
-      - 'turn/progression/lot-paint-reward.js'
+      - 'turn/garage/garage.js'
       - 'turn-lab/tests/chromatic-camouflage-production.mjs'
       - '.github/workflows/turn-chromatic-camouflage.yml'
   push:
@@ -25,8 +24,7 @@ on:
       - 'turn/progression/trophy-road.js'
       - 'turn/progression/trophy-road-r157.css'
       - 'turn/roadbook/roadbook.js'
-      - 'turn/progression/lot-trophy-gate.js'
-      - 'turn/progression/lot-paint-reward.js'
+      - 'turn/garage/garage.js'
       - 'turn-lab/tests/chromatic-camouflage-production.mjs'
       - '.github/workflows/turn-chromatic-camouflage.yml'
 
@@ -56,8 +54,7 @@ jobs:
           node --check turn/achievements/challenge-expansion-r166.js
           node --check turn/progression/trophy-road.js
           node --check turn/roadbook/roadbook.js
-          node --check turn/progression/lot-trophy-gate.js
-          node --check turn/progression/lot-paint-reward.js
+          node --check turn/garage/garage.js
           node --check turn-lab/tests/chromatic-camouflage-production.mjs
 
       - name: Run production achievement progression regression

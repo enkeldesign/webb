@@ -14,7 +14,7 @@ const [
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/emergency-livery-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-vehicle-copy.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/garage/garage-cars.js', import.meta.url), 'utf8')
 ]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 const rally = catalog.getCarDefinition('toy-racer');
@@ -63,7 +63,7 @@ assert.match(emergencyModelsSource, /from '\.\/car-models\.js'/,
   'The emergency bridge must use the canonical car factory');
 assert.doesNotMatch(emergencyModelsSource, /BoxGeometry|applyFixedEmergencyLivery|installSecondaryAccent/);
 
-assert.match(lotVehicleCopySource, /'toy-racer': 'A grey-and-gold competition car/);
-assert.match(lotVehicleCopySource, /high rear wing and rally-bred trim/);
+// GARAGE shows the one approved description for the Rally Racer.
+assert.match(lotVehicleCopySource, /'toy-racer': 'Fast, twitchy and hard to hold\./);
 
 console.log('TURN Rally Racer former-Sport-Sedan grey-and-gold surface reward passed.');

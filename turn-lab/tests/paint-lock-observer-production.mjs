@@ -1,228 +1,69 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import { GARAGE_CAR_ORDER } from '../../turn/garage/garage-cars.js';
+import { rewardForVehicle } from '../../turn/progression/trophy-road.js';
 
-const [
-  lotGate,
-  paintGate,
-  paintCss,
-  showroomCleanupCss,
-  pwaSwatches,
-  showroom,
-  lotRuntime,
-  lotWrapper,
-  perkPresentation,
-  app,
-  index,
-  releaseSource
-] = await Promise.all([
-  fs.readFile(new URL('../../turn/progression/lot-trophy-gate.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/progression/trophy-road-r157.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-showroom-cleanup-r201.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-pwa-color-swatch.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
+// GARAGE paint: one explicit state model (fixed, editable, locked), the standalone
+// PWA-safe native swatch, no DOM observers, the Trophy Road car order and the cache
+// bridges installed PWAs still rely on.
+const [garage, garageCss, index, releaseSource] = await Promise.all([
+  fs.readFile(new URL('../../turn/garage/garage.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/garage.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8')
 ]);
-
 const release = JSON.parse(releaseSource);
-const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1] || '';
-assert.ok(importMapText, 'TURN production entry must expose an import map');
-const importMap = JSON.parse(importMapText);
-const imports = importMap.imports || {};
-const catalogImport = paintGate.match(/import\s*\{([\s\S]*?)\}\s*from '\.\.\/vehicle\/catalog\.js[^']*';/)?.[1] || '';
-assert.ok(catalogImport, 'The paint gate must import its vehicle-catalog helpers explicitly');
-assert.match(catalogImport, /\bgetVehicleDefaultColor\b/);
-assert.match(catalogImport, /\bgetVehicleDefaultSecondaryColor\b/,
-  'The paint gate must import the secondary factory-color helper it calls');
-const syncBody = paintGate.match(/function sync\(\) \{([\s\S]*?)\n  \}\n\n  const observer/)?.[1] || '';
-assert.ok(syncBody, 'The paint gate must expose a bounded synchronization function');
+const imports = JSON.parse(index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1] || '{}').imports || {};
 
-// --- Stable COLOR baseline and explicit state model ---------------------------
-assert.match(paintGate, /function selectedCarIsLocked\(screen\)/,
-  'CAR lock state must remain modeled independently from paint state');
-assert.match(syncBody, /const carLocked = selectedCarIsLocked\(screen\)/);
-assert.match(syncBody, /const freeColor = Boolean\(car && !car\.fixedLivery\)/,
-  'Vehicle free/fixed color must remain an explicit state dimension');
-assert.match(syncBody, /const paintLocked = Boolean\(freeColor && !paintUnlocked\)/,
-  'PAINTJOB lock must depend on paintability and PAINTJOB only, never car lock');
-assert.doesNotMatch(syncBody.match(/const paintLocked[^\n]*/)?.[0] || '', /carLocked/);
-assert.match(syncBody, /colors\.dataset\.vehicleColorMode = car\?\.fixedLivery \? 'fixed' : 'free'/);
-assert.match(syncBody, /colors\.dataset\.paintState = car\?\.fixedLivery \? 'fixed' : \(paintUnlocked \? 'editable' : 'locked'\)/);
-assert.match(syncBody, /colors\.dataset\.carState = carLocked \? 'locked' : 'unlocked'/);
-assert.match(syncBody, /colors\.hidden = false/,
-  'The COLOR component must remain visible for every selected vehicle state');
-assert.match(syncBody, /colors\.removeAttribute\('aria-hidden'\)/);
+// --- Explicit paint state model ------------------------------------------------
+const renderPaint = garage.match(/function renderPaint\(\) \{[\s\S]*?\n    \}\n/)?.[0] || '';
+assert.ok(renderPaint, 'GARAGE owns one bounded paint renderer');
+assert.match(renderPaint, /paintToggle\.hidden = Boolean\(preview\)/, 'A locked preview has no paint');
+assert.match(renderPaint, /if \(car\.fixedLivery\) \{[\s\S]*\} else if \(!isPaintUnlocked\(\)\) \{[\s\S]*\} else \{/,
+  'Paint is fixed for service liveries, locked before PAINTJOB, editable after');
+assert.match(renderPaint, /Paint unlocks at <strong>/);
+assert.match(garage, /const paintFor = \(carId\) => \(isPaintUnlocked\(\) \? resolveLotPaint\(carId\) : factoryPaint\(carId\)\)/,
+  'Factory paint is forced only while PAINTJOB is locked');
+assert.match(garage, /paintToggle\.classList\.toggle\('is-locked', !car\.fixedLivery && !isPaintUnlocked\(\)\)/);
+assert.match(garage, /showTrophyUnlockNotice\(\{ reward: getTrophyRoadReward\(PAINT_REWARD_ID\), itemName: 'Car color' \}\)/,
+  'A locked PAINT explains its Trophy Road reward');
 
-assert.match(paintGate, /label\.className = 'lot-color-visible-label'/);
-assert.match(paintGate, /label\.textContent = 'COLOR'/);
-assert.match(paintGate, /function ensureFixedColorDisplay\(car\)/,
-  'Fixed-livery vehicles must receive the same permanent COLOR slot');
-assert.match(paintGate, /swatch\.className = 'lot-fixed-color-display'/);
-assert.match(paintGate, /getVehicleDefaultSecondaryColor\(car\.id\)/,
-  'Emergency liveries must retain their canonical secondary color');
-assert.match(paintGate, /swatch\.classList\.toggle\('is-two-tone'/);
-
-// --- Standalone-iOS/PWA-safe editable swatch ---------------------------------
-assert.match(pwaSwatches, /function ensureSwatchFace\(control\)/,
-  'A dedicated runtime must own the visible editable swatch face');
-assert.match(pwaSwatches, /face = document\.createElement\('label'\)/,
-  'The visible swatch must be a label linked to the real native color input');
-assert.match(pwaSwatches, /face\.className = 'lot-turn-color-swatch-face'/);
-assert.match(pwaSwatches, /face\.htmlFor = input\.id/,
-  'Tapping the TURN-owned face must activate the real input without overlaying it');
-assert.match(pwaSwatches, /face\.style\.setProperty\('--lot-color-swatch', input\.value\)/,
-  'The visible swatch must always mirror the native input value');
-assert.match(pwaSwatches, /colors\.addEventListener\('input', handleInput\)/,
-  'Changing paint must update the linked swatch immediately');
-assert.match(pwaSwatches, /observer\.observe\(colors, \{ childList: true \}\)/,
-  'The swatch runtime may watch direct control replacement but not its own descendants');
-assert.doesNotMatch(pwaSwatches, /observer\.observe\(colors, \{[^}]*subtree:\s*true/);
-
-assert.match(
-  showroomCleanupCss,
-  /\.lot-showroom \.lot-turn-color-swatch-face\s*\{[\s\S]*background: var\(--lot-color-swatch/,
-  'TURN must paint the visible color square itself'
-);
-const clippedInputRule = showroomCleanupCss.match(
-  /\.lot-showroom \.lot-color-control\.has-turn-color-swatch input\[type='color'\]\s*\{([\s\S]*?)\n\}/
-)?.[1] || '';
-assert.ok(clippedInputRule, 'The editable native color input must have a PWA-safe visual rule');
-assert.match(clippedInputRule, /width: 0\.75px !important/);
-assert.match(clippedInputRule, /height: 0\.75px !important/);
-assert.match(clippedInputRule, /clip-path: inset\(50%\) !important/,
-  'The native input must be visually clipped instead of composited over the swatch');
-assert.match(clippedInputRule, /opacity: 0 !important/);
-assert.doesNotMatch(clippedInputRule, /inset:\s*0|width:\s*100%|height:\s*100%/,
+// --- Standalone-iOS/PWA-safe editable swatch -----------------------------------
+assert.match(garage, /<span class="garage-swatch-face" aria-hidden="true"><\/span>/,
+  'TURN paints a visible swatch face inside the label of the real input');
+assert.match(garage, /face\.style\.setProperty\('--garage-swatch', input\.value\)/,
+  'The visible swatch always mirrors the native input value');
+assert.match(garageCss, /\.garage-swatch-face \{[\s\S]*background: var\(--garage-swatch/);
+const clippedInput = garageCss.match(/\.garage-swatch input\[type='color'\] \{([\s\S]*?)\n\}/)?.[1] || '';
+assert.match(clippedInput, /width: 0\.75px;[\s\S]*height: 0\.75px;[\s\S]*clip-path: inset\(50%\);[\s\S]*opacity: 0;/,
+  'The native input is visually clipped instead of composited over the swatch');
+assert.doesNotMatch(clippedInput, /inset:\s*0|width:\s*100%|height:\s*100%/,
   'Standalone WebKit must never receive a full-size transparent native control over the visible face');
-assert.match(
-  showroomCleanupCss,
-  /\.lot-showroom \.lot-color-control\.has-turn-color-swatch:focus-within \.lot-turn-color-swatch-face[\s\S]*outline:/,
-  'Keyboard/screen-reader focus must still get a visible focus treatment'
-);
-assert.match(showroomCleanupCss, /\.lot-showroom \.lot-color-control\[hidden\][\s\S]*display: none !important/);
 
-// The existing paint state model still owns the value and state, not the PWA face.
-assert.match(paintGate, /function applyNativeSwatchFace\(control\)/);
-assert.match(paintGate, /control\.style\.setProperty\('--lot-color-swatch', input\.value\)/);
-assert.match(syncBody, /if \(freeColor && !paintUnlocked\) forceFactoryPaint\(carId\)/,
-  'Factory paint may be forced only while PAINTJOB is locked');
-assert.doesNotMatch(syncBody, /changedCar/,
-  'Changing cars after PAINTJOB unlock must preserve the per-car saved paint selected by the showroom');
-assert.match(syncBody, /control\.hidden = paintLocked/);
-assert.match(syncBody, /input\.disabled = paintLocked/);
-assert.match(syncBody, /if \(paintLocked\) ensureLockButton\(carId\);[\s\S]*else removeLockPresentation\(\)/);
+// --- No observers, no faux controls -----------------------------------------------
+assert.doesNotMatch(garage, /MutationObserver/, 'GARAGE renders its own state instead of observing the DOM');
+assert.doesNotMatch(garage, /paintPanel\.addEventListener\(['"]click['"]/,
+  'The paint panel must not become a faux click-control ancestor of the native inputs');
+assert.doesNotMatch(garage, /paintPanel\.setAttribute\('role', 'button'\)|paintPanel\.tabIndex\s*=/);
 
-// --- COLOR CUES remains in one stable swatch-side slot ------------------------
-assert.match(paintGate, /function ensureVisualColorCue\(car\)/);
-assert.match(paintGate, /cue\.className = 'turn-color-cue lot-color-cue lot-paint-color-cue'/,
-  'The cue must continue to obey the global COLOR CUES on/off state');
-assert.match(paintGate, /cue\.textContent = `CAR COLOR · \$\{colorCueDescription\(car\)\}`/);
-assert.match(syncBody, /ensureVisualColorCue\(car\)/);
-assert.match(
-  showroomCleanupCss,
-  /\.lot-showroom \.lot-colors,[\s\S]*min-height: 40\.5px;[\s\S]*gap: 5\.25px/,
-  'Cue on/off and fixed/free color states must share one aligned COLOR geometry'
-);
-assert.match(
-  showroomCleanupCss,
-  /\.lot-showroom \.lot-paint-color-cue\s*\{[\s\S]*font-size: max\(var\(--turn-text-floor, 11px\), clamp\(0\.42rem, 1\.08vw, 0\.54rem\)\)/,
-  'The swatch-side COLOR CUE must stay large enough to read'
-);
+// --- Trophy Road order ---------------------------------------------------------------
+const thresholds = GARAGE_CAR_ORDER.map((carId) => rewardForVehicle(carId)?.threshold ?? 0);
+assert.deepEqual(thresholds, [...thresholds].sort((a, b) => a - b),
+  'GARAGE and its keyboard/VoiceOver order follow Trophy Road: every reward car after the starting cars');
+assert.ok(thresholds.filter((threshold) => threshold === 0).length >= 2, 'GARAGE starts with the standard cars');
 
-// --- Observer safety -----------------------------------------------------------
-assert.match(paintGate, /observer\.observe\(picker,/);
-assert.doesNotMatch(paintGate, /observer\.observe\(screen,/);
-assert.match(paintGate, /attributeFilter: \['aria-checked', 'class'\]/);
-assert.match(paintGate, /controlObserver\.observe\(colors, \{ childList: true \}\)/);
-assert.doesNotMatch(paintGate, /controlObserver\.observe\(colors, \{[^}]*subtree:\s*true/);
-assert.match(paintGate, /try \{[\s\S]*\} finally \{[\s\S]*syncing = false/);
-assert.doesNotMatch(paintGate, /colors\.addEventListener\(['"]click['"]/,
-  'The COLOR group must not become a faux click-control ancestor');
-assert.doesNotMatch(paintGate, /colors\.setAttribute\('role', 'button'\)|colors\.tabIndex\s*=/);
-
-// --- Carousel entitlement boundary --------------------------------------------
-const orderMatch = showroom.match(/export const LOT_CAR_ORDER = Object\.freeze\(\[([\s\S]*?)\]\);/);
-assert.ok(orderMatch, 'The showroom must expose one canonical car order');
-const order = [...orderMatch[1].matchAll(/'([^']+)'/g)].map((match) => match[1]);
-const lockedTail = [
-  'race',
-  'vintage-racer',
-  'race-future',
-  'firetruck',
-  'ambulance',
-  'police',
-  'monster-truck',
-  'toy-racer',
-  'supercar'
-];
-assert.deepEqual(order.slice(order.indexOf('race')), lockedTail,
-  'The horizontal Lot and its keyboard/VoiceOver order must put every reward car after the standard starting cars');
-
-// --- Fresh module identities for already-installed PWAs -----------------------
-assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r246-lot-saved-paint/,
-  'The app-level enhancement runtime must load the saved-paint-aware PAINTJOB gate');
-assert.match(lotWrapper, /lot-enhancement-runtime\.js\?revision=r246-lot-saved-paint/,
-  'The showroom wrapper must bypass the cached enhancement runtime for per-car paint');
-assert.match(lotWrapper, /lot-pwa-color-swatch\.js\?revision=r206-pwa-color/);
-assert.match(lotWrapper, /import\('\.\/lot-showroom-experiment\.js\?revision=r252-supercar-outward-rims'\)/,
-  'The wrapper must load the corrected Supercar showroom under a fresh URL');
-assert.match(lotWrapper, /lot-saved-paint\.css\?revision=r246-lot-saved-paint/,
-  'The SAVE/RESET action must load with the same fresh showroom revision');
-assert.match(lotWrapper, /SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r206-polish'/);
-assert.match(lotWrapper, /lot-showroom-cleanup-r201\.css\?revision=r206-pwa-color/);
-assert.match(index, /\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r164-post-soak&build=20260826-r184"\s*:\s*"\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r243-mountain-1300/,
-  'Old installed app runtime URLs must retain their existing bridge');
-assert.equal(imports['/turn/m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r200&build=20260818-r175'],
-  `/turn/m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r206-pwa-color&build=${release.cacheKey}`,
-  'The existing Home bridge must preserve PWA color support and advance its build identity');
-assert.equal(imports['/turn/garage/lot-track-select.js?revision=r200-production-candidate'],
-  `/turn/garage/lot-track-select.js?revision=r252-supercar-outward-rims&build=${release.cacheKey}`,
-  'Existing Home callers must cross the current build boundary into the corrected Supercar wrapper');
-assert.match(
-  index,
-  new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click[^\"]*-pwa-color-r206`),
-  'The top-level app script must still enter the bridged module graph'
-);
-
-// The installed PWA previously allowed these nested Lot dependencies to keep old
-// HTTP/module-cache snapshots. All selected-car consumers must now converge on one
-// fresh vehicle-catalog module, and the state/showroom modules themselves get fresh
-// identities without requiring a reinstall or clearing site data.
-const canonicalLotCatalog = `/turn/vehicle/catalog.js?build=${release.cacheKey}`;
-assert.equal(
-  imports['/turn/progression/lot-paint-reward.js?revision=r206-pwa-color'],
-  `/turn/progression/lot-paint-reward.js?build=${release.cacheKey}`,
-  'Installed PWAs must refetch the COLOR state module with current Trophy Road thresholds'
-);
-assert.equal(
-  imports['/turn/garage/lot-showroom-experiment.js?revision=r206-race-before-locks'],
-  `/turn/garage/lot-showroom-experiment.js?revision=r259-swift-lot-ui-base&build=${release.cacheKey}`,
-  'Installed PWAs must retain the previous showroom specifier as a bridge to the current resource-safe renderer'
-);
+// --- Fresh module identities for already-installed PWAs ----------------------------
+const canonicalCatalog = `/turn/vehicle/catalog.js?build=${release.cacheKey}`;
 for (const staleCatalogSpecifier of [
   '/turn/vehicle/catalog.js?build=20260804-r157-factory-colors',
   '/turn/vehicle/catalog.js?build=20260720-r20&revision=r588-canonical-attributes',
-  '/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish'
+  '/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish',
+  '/turn/vehicle/catalog.js?revision=r250-supercar-finish'
 ]) {
-  assert.equal(
-    imports[staleCatalogSpecifier],
-    canonicalLotCatalog,
-    `${staleCatalogSpecifier} must resolve to the same fresh Lot vehicle catalog`
-  );
+  assert.equal(imports[staleCatalogSpecifier], canonicalCatalog,
+    `${staleCatalogSpecifier} must resolve to the one fresh vehicle catalog`);
 }
+assert.ok(!Object.keys(imports).some((specifier) => /lot-(paint-reward|trophy-gate|enhancement-runtime|showroom-experiment|track-select|pwa-color-swatch)/.test(specifier)),
+  'The retired Lot modules are no longer routed');
 
-// Established Trophy Road and perk contracts remain intact.
-assert.match(paintCss, /\.lot-colors\.is-paint-locked[\s\S]*min-height: 40\.5px/);
-assert.match(lotGate, /function dismissVisibleUnlockNotice\(\)/);
-assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
-assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r217-stable-perk-slot/);
-assert.match(perkPresentation, /getCarDefinition\(vehicleId\)\?\.perk/);
-assert.doesNotMatch(perkPresentation, /observer\.observe\(screen,/);
-assert.match(app, /trophy-road-r157\.css\?revision=r244-reward-toast-guide/);
-
-console.log('TURN Lot PWA swatch compositing, saved per-car paint, reward-car catalog coherence, state matrix, cue geometry, cache bridge, car order and observer safety regressions passed.');
+console.log('GARAGE paint state model, PWA-safe native swatch, observer-free rendering, Trophy Road order and catalog cache bridges passed.');

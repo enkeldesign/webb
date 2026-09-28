@@ -39,30 +39,33 @@ try {
     waitUntil: 'domcontentloaded',
     timeout: 90_000
   });
-  assert.equal(response?.ok(), true, 'Supercar Lot visual page must load successfully');
+  assert.equal(response?.ok(), true, 'Supercar GARAGE visual page must load successfully');
   await page.waitForFunction(
     () => globalThis.__supercarLotVisualReady === true || Boolean(globalThis.__supercarLotVisualFailure),
     null,
     { timeout: 70_000 }
   );
   visualFailure = await page.evaluate(() => globalThis.__supercarLotVisualFailure || null);
-  assert.equal(visualFailure, null, `Supercar Lot visual bootstrap failed: ${visualFailure}`);
+  assert.equal(visualFailure, null, `Supercar GARAGE visual bootstrap failed: ${visualFailure}`);
   metrics = await page.evaluate(() => globalThis.__supercarLotVisualMetrics);
 
-  const canvas = page.locator('.lot-view-host canvas');
+  const canvas = page.locator('.garage-view canvas');
+  // GARAGE paints through native colour inputs; set them as the picker would.
+  const paint = (selector, value) => page.locator(selector).evaluate((input, next) => {
+    input.value = next;
+    input.dispatchEvent(new globalThis.Event('input', { bubbles: true }));
+  }, value);
   const factory = await canvas.screenshot({ path: path.join(outputDir, 'factory-yellow-rims.png') });
   factoryPixels = countPixels(factory, ({ r, g, b }) => r > 135 && g > 85 && b < 95);
   factoryBrightNeutralPixels = countPixels(factory, brightNeutralPixel);
 
-  const rimInput = page.getByLabel('Rims colour');
-  await rimInput.fill('#ff00ff');
+  await paint('#garagePaintSecondary', '#ff00ff');
   await page.waitForTimeout(250);
   const custom = await canvas.screenshot({ path: path.join(outputDir, 'custom-magenta-rims.png') });
   customPixels = countPixels(custom, ({ r, g, b }) => r > 125 && g < 105 && b > 115);
 
-  await rimInput.fill('#ffbb00');
-  const bodyInput = page.getByLabel('Body colour');
-  await bodyInput.fill('#ffffff');
+  await paint('#garagePaintSecondary', '#ffbb00');
+  await paint('#garagePaintBody', '#ffffff');
   await page.waitForTimeout(250);
   const whiteBody = await canvas.screenshot({ path: path.join(outputDir, 'custom-white-body.png') });
   whiteBodyPixels = countPixels(whiteBody, brightNeutralPixel);
@@ -93,11 +96,11 @@ assert.equal(metrics?.selected, 'Supercar');
 assert.equal(metrics?.bodyColor, '#000000');
 assert.equal(metrics?.rimColor, '#ffbb00');
 assert.ok(metrics.canvasWidth >= 400 && metrics.canvasHeight >= 200,
-  'The test must inspect the real large Lot canvas rather than a static thumbnail');
+  'The test must inspect the real GARAGE canvas rather than a static thumbnail');
 assert.equal(browserErrors.length, 0,
-  `Browser-rendered Supercar Lot produced errors:\n${browserErrors.join('\n')}`);
+  `Browser-rendered Supercar GARAGE produced errors:\n${browserErrors.join('\n')}`);
 assert.ok(factoryPixels >= 20,
-  `Factory Lot preview must expose visible TURN-yellow pixels, found ${factoryPixels}`);
+  `Factory GARAGE preview must expose visible TURN-yellow pixels, found ${factoryPixels}`);
 assert.ok(customPixels >= 20,
   `Changing the actual Rims picker must expose visible magenta rim pixels, found ${customPixels}`);
 assert.ok(
@@ -106,7 +109,7 @@ assert.ok(
     + `factory had ${factoryBrightNeutralPixels} bright neutral pixels and white had ${whiteBodyPixels}`
 );
 
-console.log('TURN Supercar Kenney rims and direct TURN-like body paint passed in the actual Lot 3D preview.');
+console.log('TURN Supercar Kenney rims and direct TURN-like body paint passed in the actual GARAGE 3D preview.');
 
 function brightNeutralPixel({ r, g, b }) {
   return r > 175 && g > 175 && b > 175 && Math.max(r, g, b) - Math.min(r, g, b) < 24;

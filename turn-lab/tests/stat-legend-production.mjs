@@ -17,24 +17,16 @@ assert.match(
 const [
   index,
   releaseSource,
-  wrapper,
-  enhancementRuntime,
-  legendModule,
-  legendCss,
-  lotCss,
-  lotSource,
+  garageSource,
+  garageCss,
   physicsSource,
   achievementsEntry,
   homeRewardReplay
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-stat-legend.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-stat-legend.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-r10.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/garage.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/garage.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/home-reward-replay-r225.js', import.meta.url), 'utf8')
@@ -45,12 +37,6 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 
-assert.match(index, new RegExp(`lot-stat-legend\\.css\\?build=${release.cacheKey}`), 'Production must load the stat-legend styling through the current release');
-assert.equal(
-  imports['./garage/lot-r10.js?build=20260720-r19'],
-  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r252-supercar-outward-rims`,
-  'Production must publish the optimized native HTML Lot wrapper through the current release'
-);
 assert.equal(
   imports['./vehicle/physics.js?build=20260720-r19'],
   `./vehicle/physics.js?build=${release.cacheKey}&revision=r233-graduated`,
@@ -61,41 +47,25 @@ assert.equal(
   `/turn/vehicle/catalog.js?build=${release.cacheKey}`,
   'Production must publish fresh shared stat definitions through the canonical vehicle catalog'
 );
-assert.match(wrapper, /const lotResult = showOriginalLot\(options\)/, 'The verified Lot must mount synchronously before enhancement');
-assert.ok(
-  wrapper.indexOf('showOriginalLot(options)') < wrapper.indexOf('enhanceLotNow()'),
-  'Enhancement must connect to the already-created synchronous Lot DOM'
-);
-assert.match(enhancementRuntime, /installLotStatLegend\(scope\)/, 'Every Lot route must mount the shared stat legend');
-assert.match(enhancementRuntime, /lot-stat-legend\.js\?revision=r225-18-point-budget/,
-  'The revised attribute explanation must load under a fresh module identity');
-assert.ok(
-  enhancementRuntime.indexOf('installLotStatLegend(scope)') < enhancementRuntime.indexOf('installLotLayout(scope)'),
-  'The legend trigger must exist before the compact layout turns it into an info icon'
-);
-assert.match(legendModule, /VEHICLE_STAT_LEGEND/, 'The in-game legend must use the shared source of truth');
-assert.match(legendModule, /aria-modal/, 'The legend must open as an accessible modal');
-assert.match(legendModule, /WHAT DO THE STATS MEAN\?/, 'The legend trigger must be discoverable before the compact layout turns it into an info icon');
-assert.match(legendModule, /Every car always has 18 attribute points in total\./,
-  'The attribute modal must explain the fixed 18-point budget shared by every car');
-assert.match(legendModule, /What changes is how those 18 points are distributed\./,
-  'The attribute modal must explain that car identity comes from point distribution');
-assert.doesNotMatch(
-  legendModule,
-  /GAS is fastest|DRIFT turns harder|BOOST is a limited burst/,
-  'The yellow attribute summary must stay focused on the shared 18-point budget rather than repeat control behavior'
-);
-assert.doesNotMatch(legendModule, /mountObserver|subtree: true/, 'The legend module must not observe the whole game DOM');
-assert.match(legendModule, /statsObserver\.observe\(stats, \{ childList: true \}\)/, 'Only actual car-stat replacement must trigger relabelling');
-assert.match(legendModule, /label\.textContent !== definition\.label/, 'Relabelling must not rewrite unchanged labels');
-assert.match(legendModule, /trigger\.remove\(\)/, 'Legend cleanup must remove its injected trigger');
-assert.match(legendModule, /dialog\.remove\(\)/, 'Legend cleanup must remove its injected dialog');
-assert.match(legendCss, /\.lot-stats-dialog\[hidden\]/, 'The closed legend must stay out of layout and interaction');
-assert.match(lotCss, /\.lot-stat b \{[\s\S]*background: #fff;/, 'Empty stat cells must be white');
-assert.match(lotCss, /\.lot-stat:nth-child\(1\) b\.is-full,[\s\S]*nth-child\(2\)[\s\S]*--turn-control-gas/, 'Top speed and acceleration must use the GAS green');
-assert.match(lotCss, /\.lot-stat:nth-child\(3\) b\.is-full,[\s\S]*nth-child\(4\)[\s\S]*--turn-control-drift/, 'Control and drift must use the DRIFT blue');
-assert.match(lotCss, /\.lot-stat:nth-child\(5\) b\.is-full,[\s\S]*nth-child\(6\)[\s\S]*--turn-control-boost/, 'Boost power and boost tank must use the BOOST yellow');
-assert.match(lotSource, /\['ACCELERATION', vehicleStats\.acceleration\]/, 'The Lot renderer must expose the full agreed attribute name');
+
+// GARAGE Specifications: the shared legend's names and explanations beside each meter,
+// read to assistive technology, with the 18-point budget stated once.
+assert.match(garageSource, /VEHICLE_STAT_LEGEND\.map\(\(\{ key, label, description \}\) =>/,
+  'GARAGE uses the shared legend as its source of truth');
+assert.match(garageSource, /aria-label="\$\{escapeHtml\(titleCase\(label\)\)\}: \$\{value\} out of 5\.\$\{shiftCopy\} \$\{escapeHtml\(description\)\}"/,
+  'Each attribute is announced with its value and what it means');
+assert.match(garageSource, /<small class="garage-spec-help" aria-hidden="true">\$\{escapeHtml\(description\)\}<\/small>/,
+  'Each attribute shows what it means beside its meter');
+assert.match(garageSource, /Every car has 18 attribute points in total\. What changes is how they are shared out\./,
+  'Specifications explain the fixed 18-point budget shared by every car');
+assert.doesNotMatch(garageSource, /GAS is fastest|DRIFT turns harder|BOOST is a limited burst/);
+assert.match(garageCss, /\.garage-spec-meter i \{[\s\S]*?background: var\(--turn-pr-card\)/, 'Empty stat cells stay light');
+assert.match(garageCss, /\[data-stat='speed'\], \[data-stat='acceleration'\]\) \.garage-spec-meter i\.is-full \{\s*background: var\(--turn-control-gas/,
+  'Top speed and acceleration use the GAS green');
+assert.match(garageCss, /\[data-stat='control'\], \[data-stat='drift'\]\) \.garage-spec-meter i\.is-full \{\s*background: var\(--turn-control-drift/,
+  'Control and drift use the DRIFT blue');
+assert.match(garageCss, /\[data-stat='boostPower'\], \[data-stat='boostDuration'\]\) \.garage-spec-meter i\.is-full \{\s*background: var\(--turn-control-boost/,
+  'Boost power and boost tank use the BOOST yellow');
 assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/, 'Production physics must apply the DRIFT penalty to the active speed limit');
 assert.match(physicsSource, /3\.2 \* driftStabilityMultiplier/, 'The DRIFT stat must improve recovery from a slide');
 assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier/, 'The DRIFT stat must improve lateral stability while the control is held');
@@ -125,4 +95,4 @@ assert.match(homeRewardReplay, /turn:support-home-feedback-started/,
 assert.match(homeRewardReplay, /turn:support-home-feedback-ended/,
   'Home reward replay must resume only after support completion feedback is finished');
 
-console.log(`TURN ${release.id} route-independent vehicle stat legend and persistent Home reward reminder passed.`);
+console.log(`TURN ${release.id} GARAGE vehicle stat legend and persistent Home reward reminder passed.`);

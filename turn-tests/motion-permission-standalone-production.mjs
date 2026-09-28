@@ -73,7 +73,7 @@ assert.equal(recovery.route, 'standalone-motion-denial-recovery');
 await assert.rejects(
   () => DeniedMotionEvent.requestPermission(),
   (error) => error.message === 'Motion permission was not granted.',
-  'The first cancelled prompt stays silent in The Lot'
+  'The first cancelled prompt stays silent in GARAGE'
 );
 assert.equal(reloads, 0, 'The installed iOS app must not enter a reload loop after cancellation');
 assert.equal(dispatchedEvents.length, 0, 'The first cancellation must not display explanatory UI');
@@ -81,9 +81,9 @@ assert.equal(dispatchedEvents.length, 0, 'The first cancellation must not displa
 await assert.rejects(
   () => DeniedMotionEvent.requestPermission(),
   (error) => error.message === 'Motion permission was not granted.',
-  'The repeated platform denial stays silent in the cramped Lot status area'
+  'The repeated platform denial stays silent in the GARAGE dock status'
 );
-assert.equal(reloads, 0, 'Repeated attempts must keep the player in The Lot');
+assert.equal(reloads, 0, 'Repeated attempts must keep the player in GARAGE');
 assert.equal(storage.size, 0, 'Standalone recovery must not save a route that triggers another reload');
 assert.equal(dispatchedEvents.length, 1, 'The repeated denial must open one dedicated explanation');
 assert.equal(dispatchedEvents[0].type, 'turn:motion-permission-blocked');
@@ -101,7 +101,7 @@ assert.match(dialogSource, /MOTION ACCESS DENIED/);
 assert.match(dialogSource, /You denied motion access\./);
 assert.match(dialogSource, /Close and reopen TURN to try again, or use on-screen steering in Settings\./);
 assert.match(dialogSource, /showModal\(\)/, 'The explanation must be presented as a modal rather than inserted into car information');
-assert.match(dialogSource, /documentRef\.querySelector\('\.lot-race'\)/, 'Closing the dialog returns focus to Race This Car');
+assert.match(dialogSource, /documentRef\.querySelector\('\.garage-race'\)/, 'Closing the dialog returns focus to RACE in GARAGE');
 assert.match(dialogSource, /aria-labelledby/);
 assert.match(dialogSource, /aria-describedby/);
 assert.match(dialogCss, /width: min\(390px, calc\(100vw - 24px\)\)/);

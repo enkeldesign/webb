@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { playerMarkerOutlineColor } from './player-marker-r428.js?revision=r227-night-marker-outline';
 
 const STYLE_ID = 'turn-minor-ux-polish-r229-styles';
-const PERK_ATTENTION_STORAGE_KEY = 'turn-perk-first-encounter-seen-v1';
 const FALLBACK_MARKER_COLOR = '#38d9ff';
 const FALLBACK_ROOF_HEIGHT = 1.8;
 const MARKER_GAP_PX = 20;
@@ -12,7 +11,6 @@ const FIXED_LIVERY_MARKER_COLORS = Object.freeze({
   ambulance: '#f8f9fa'
 });
 
-let perkAttentionSeenThisSession = false;
 
 function installStyles() {
   if (document.getElementById(STYLE_ID)) return;
@@ -40,96 +38,11 @@ function installStyles() {
       pointer-events: none;
     }
 
-    .lot-showroom .lot-perk-button.turn-first-perk-attention {
-      animation: turn-first-perk-attention 620ms cubic-bezier(.2,.85,.25,1.15) 2;
-      transform-origin: 50% 50%;
-    }
-
-    @keyframes turn-first-perk-attention {
-      0%, 100% { transform: rotate(0deg) scale(1); }
-      25% { transform: rotate(-4deg) scale(1.08); }
-      50% { transform: rotate(4deg) scale(1.08); }
-      75% { transform: rotate(-2deg) scale(1.04); }
-    }
-
     .turn-spectate-player-marker {
       z-index: 22;
     }
-
-    @media (prefers-reduced-motion: reduce) {
-      .lot-showroom .lot-perk-button.turn-first-perk-attention {
-        animation: none;
-        outline: 5px solid var(--turn-action-warning, #ffd43b);
-        outline-offset: 3px;
-      }
-    }
   `;
   document.head.appendChild(style);
-}
-
-function perkAttentionWasSeen() {
-  if (perkAttentionSeenThisSession) return true;
-  try {
-    return globalThis.localStorage?.getItem(PERK_ATTENTION_STORAGE_KEY) === '1';
-  } catch (_) {
-    return false;
-  }
-}
-
-function markPerkAttentionSeen() {
-  perkAttentionSeenThisSession = true;
-  try {
-    globalThis.localStorage?.setItem(PERK_ATTENTION_STORAGE_KEY, '1');
-  } catch (_) {}
-}
-
-function installFirstPerkAttention() {
-  if (perkAttentionWasSeen() || typeof MutationObserver !== 'function') return null;
-
-  let queued = false;
-  let observer = null;
-
-  function findAvailablePerkButton() {
-    return document.querySelector(
-      '.lot-showroom .lot-perk-button:not(.is-layout-placeholder):not(:disabled)'
-    );
-  }
-
-  function showAttention(trigger) {
-    if (!trigger || perkAttentionWasSeen()) return false;
-    markPerkAttentionSeen();
-    observer?.disconnect();
-    requestAnimationFrame(() => {
-      if (!trigger.isConnected) return;
-      trigger.classList.add('turn-first-perk-attention');
-      const clear = () => trigger.classList.remove('turn-first-perk-attention');
-      trigger.addEventListener('animationend', clear, { once: true });
-      globalThis.setTimeout?.(clear, 1700);
-    });
-    return true;
-  }
-
-  function check() {
-    queued = false;
-    const trigger = findAvailablePerkButton();
-    if (trigger) showAttention(trigger);
-  }
-
-  function queueCheck() {
-    if (queued || perkAttentionWasSeen()) return;
-    queued = true;
-    queueMicrotask(check);
-  }
-
-  observer = new MutationObserver(queueCheck);
-  observer.observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class', 'disabled']
-  });
-  check();
-  return observer;
 }
 
 function createSpectateMarker() {
@@ -305,13 +218,11 @@ function installSpectateMarkerWhenReady() {
 
 function bootstrap() {
   installStyles();
-  installFirstPerkAttention();
   installSpectateMarkerWhenReady();
 }
 
 if (typeof document !== 'undefined' && typeof window !== 'undefined') bootstrap();
 
 export {
-  PERK_ATTENTION_STORAGE_KEY,
   spectatedMarkerColor
 };

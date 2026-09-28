@@ -16,7 +16,6 @@ import { recordReplayFrame, replayFrameAt } from '/turn/race/replay-system.js';
 import { RIVAL_LIMIT, loadRivalsState, scheduleRivalsStateSave } from '/turn/race/rival-storage.js?build=20260720-r19';
 import { createTrackSpatialIndex } from '/turn/race/track-spatial-index.js?build=20260720-r19';
 import { trackPitch, trackSampleAtProgress, trackSurfaceY } from '/turn/tracks/elevation.js?build=20260725-r67';
-import { showTheLot } from '/turn/garage/lot-r10.js?build=20260720-r19';
 import {
   DEFAULT_VEHICLE_SECONDARY_COLOR,
   getCarDefinition,
@@ -853,11 +852,19 @@ function handleMotion(event) {
   lastMotionOrientation = orientation;
 }
 
+// The race session's own setup route (the intro's motion/manual buttons) opens GARAGE,
+// as Home does.
+async function showGarageSetup(options) {
+  const { prepareGarage, showGarage } = await import('/turn/garage/garage.js');
+  await prepareGarage();
+  return showGarage(options);
+}
+
 const raceSession = createRaceSessionOrchestrator({
   state,
   elements: { intro, hud, controls, manualSteer, status },
   environment: globalThis,
-  showRaceSetup: showTheLot,
+  showRaceSetup: showGarageSetup,
   applyVehicleSelection,
   prepareRaceStartState,
   publishUiState,

@@ -1,4 +1,4 @@
-@import url('../design-semantic.css?build=20260928-r317');
+@import url('../design-semantic.css?build=20260928-r318');
 
 /* Give the road the complete summary width. Totals stay in their own header row. */
 .turn-achievements-dialog .turn-achievements-summary {
@@ -391,7 +391,6 @@
 .turn-trophy-road-detail-icon svg,
 .turn-achievements-trophy-total svg,
 .turn-trophy-reward-toast .turn-achievement-toast-icon svg,
-.lot-race-lock-icon svg,
 .turn-track-lock-icon svg,
 .turn-unlock-notice-icon svg {
   width: 100%;
@@ -769,37 +768,6 @@
 
 .turn-track-lock-icon[hidden] {
   display: none;
-}
-
-/* Locked vehicles remain inspectable. Only racing is disabled. */
-.lot-car-option.is-trophy-locked {
-  position: relative;
-}
-
-.lot-car-option.is-trophy-locked::after {
-  content: ' 🔒 ' attr(data-trophy-lock-label);
-  font-size: .82em;
-  font-weight: 950;
-}
-
-.lot-race.is-trophy-locked {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7.5px;
-}
-
-.lot-race-lock-icon {
-  display: inline-grid;
-  width: 18.75px;
-  height: 18.75px;
-  place-items: center;
-}
-
-.lot-race:disabled {
-  cursor: not-allowed;
-  filter: grayscale(.2);
-  opacity: .65;
 }
 
 /* One compact unlock explanation is shared by tracks and vehicles. */

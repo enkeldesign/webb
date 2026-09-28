@@ -640,7 +640,8 @@ async function inspectRaceContours(page, outputDir, browser, expectClean = true)
 
   await page.evaluate(async () => {
     const THREE = await import('three');
-    const { showTheLot } = await import('/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims');
+    const { prepareGarage, showGarage } = await import('/turn/garage/garage.js');
+    await prepareGarage();
     const contexts = [], scenes = new Map();
     const originalContext = globalThis.HTMLCanvasElement.prototype.getContext;
     const originalUpdate = THREE.Object3D.prototype.updateMatrixWorld;
@@ -679,17 +680,19 @@ async function inspectRaceContours(page, outputDir, browser, expectClean = true)
       globalThis.HTMLCanvasElement.prototype.getContext = originalContext;
       THREE.Object3D.prototype.updateMatrixWorld = originalUpdate;
     };
-    showTheLot({ initialSelection: { carId: 'sedan', color: '#ffd43b' } }).then(() => {
+    showGarage({ initialSelection: { carId: 'sedan', color: '#ffd43b' }, trackId: 'countryside', trackName: 'Countryside' }).then(() => {
       probe.handoff = snapshot();
       probe.resolved = true;
       globalThis.__turnRuntime.state.running = true;
     });
   });
   await page.waitForFunction(() => globalThis.__contourLotProbe.snapshot().contours > 0
-    && document.querySelector('.lot-loading')?.classList.contains('is-done'), null, { timeout: 90000 });
-  await page.locator('.lot-view-host canvas').screenshot({ path: `${outputDir}/contours-${browser}-lot.png` });
-  // This resource probe opens The Lot directly while Home remains mounted.
-  await page.locator('.lot-race').evaluate((button) => button.click());
+    && document.querySelector('.garage') && !document.querySelector('.garage').classList.contains('is-loading'), null, { timeout: 90000 });
+  await page.locator('.garage-view canvas').screenshot({ path: `${outputDir}/contours-${browser}-lot.png` });
+  // This resource probe opens GARAGE directly while Home remains mounted. RACE ignores
+  // taps in GARAGE's first moments.
+  await page.waitForTimeout(700);
+  await page.locator('.garage-race').evaluate((button) => button.click());
   await page.waitForFunction(() => globalThis.__contourLotProbe.resolved);
   const lot = await page.evaluate(async () => {
     const probe = globalThis.__contourLotProbe;
@@ -705,9 +708,9 @@ async function inspectRaceContours(page, outputDir, browser, expectClean = true)
     return result;
   });
   await fs.writeFile(`${outputDir}/contours-${browser}-lot.json`, JSON.stringify(lot, null, 2));
-  assert.ok(lot.handoff.contours > 0, 'The Lot keeps its existing contour treatment');
-  assert.equal(lot.handoff.liveContexts, 0, 'All Lot GPU contexts are released before racing receives the selection');
-  assert.equal(lot.duringRace.liveContexts, 0, 'The Lot retains no live GPU context during racing');
-  assert.equal(lot.duringRace.draws, lot.handoff.draws, 'The Lot performs no GPU draws during racing');
-  assert.equal(lot.duringRace.updates, lot.handoff.updates, 'The Lot performs no scene updates during racing');
+  assert.ok(lot.handoff.contours > 0, 'GARAGE keeps the car contour treatment');
+  assert.equal(lot.handoff.liveContexts, 0, 'The GARAGE GPU context is released before racing receives the selection');
+  assert.equal(lot.duringRace.liveContexts, 0, 'GARAGE retains no live GPU context during racing');
+  assert.equal(lot.duringRace.draws, lot.handoff.draws, 'GARAGE performs no GPU draws during racing');
+  assert.equal(lot.duringRace.updates, lot.handoff.updates, 'GARAGE performs no scene updates during racing');
 }

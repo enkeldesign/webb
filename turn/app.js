@@ -196,10 +196,6 @@ document.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';
 
 installStylesheet('./r104-polish.css', 'data-turn-r104-polish');
 installStylesheet('./steering-limit-warning.css', 'data-turn-steering-limit-warning');
-installStylesheet(
-  './garage/lot-layout-r60.css?revision=r121-viewer-r122-fit-r128-super-sedan-notice-r129-race-button-fit',
-  'data-turn-lot-layout-r121'
-);
 // Historical stylesheet bundle marker retained for the Trophy Road regression contract:
 // trophy-road-r157.css?revision=r157-paint-monster
 installStylesheet(
@@ -285,26 +281,10 @@ installLapResultToast();
 const { installRivalOnboarding } = await import(withBuild('./ui/rival-onboarding.js'));
 installRivalOnboarding();
 
-// Historical regression marker for the established Super Sedan notice bundle:
-// sports-sedan-easter-egg.js?revision=r128-unlock-notice
-const { installSportsSedanEasterEggUi } = await import(
-  withBuild('./vehicle/sports-sedan-easter-egg.js?revision=r157-hidden-achievements')
-);
-installSportsSedanEasterEggUi();
-
 const { installHarborHiddenFaceOrientation } = await import(
   withBuild('./tracks/harbor-hidden-face-r89.js?revision=r157-hidden-achievements')
 );
 installHarborHiddenFaceOrientation();
-
-// Historical regression markers for established Trophy Road Lot enhancement bundles:
-// lot-enhancement-runtime.js?revision=r121&trophy-road=r154
-// lot-enhancement-runtime.js?revision=r121&trophy-road=r157
-// lot-enhancement-runtime.js?revision=r163-native-picker-parent-click
-const { installLotEnhancementRuntime } = await import(
-  withBuild('./garage/lot-enhancement-runtime.js?revision=r164-post-soak')
-);
-installLotEnhancementRuntime();
 
 await import(withBuild('./input/analog-gas.js'));
 await import(withBuild('./ui/gameplay-controls.js?revision=r255-flow-shift-accessibility'));

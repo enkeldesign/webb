@@ -86,17 +86,8 @@ assert.match(
 );
 assert.match(turnControls, /background: var\(--turn-action-warning, #ffd43b\)/,
   'The available NEW filter dot must use TURN warning yellow');
-assert.match(minorUx, /PERK_ATTENTION_STORAGE_KEY = 'turn-perk-first-encounter-seen-v1'/,
-  'The PERK attention cue must be a persisted first-encounter behavior');
-assert.match(
-  minorUx,
-  /\.lot-showroom \.lot-perk-button:not\(\.is-layout-placeholder\):not\(:disabled\)/,
-  'PERK attention must wait until the player actually encounters an available perk'
-);
-assert.match(minorUx, /turn-first-perk-attention/,
-  'The first available PERK button must receive the attention animation class');
-assert.match(minorUx, /prefers-reduced-motion: reduce/,
-  'PERK attention must have a reduced-motion treatment');
+assert.doesNotMatch(minorUx, /turn-first-perk-attention|PERK_ATTENTION_STORAGE_KEY/,
+  'GARAGE shows each perk in its own disclosure, so the first-encounter PERK animation is retired');
 assert.match(minorUx, /className = 'turn-player-marker turn-spectate-player-marker'/,
   'Spectate must reuse the established player-marker visual language');
 assert.match(minorUx, /globalThis\.__turnGetSpectateV3State\?\.\(\)/,

@@ -68,21 +68,16 @@ for (const requiredCopy of [
 assert.match(roadbookSource, /tracks\.map\(renderCard\)/);
 assert.match(roadbookSource, /aria-pressed="false"/);
 assert.match(homeSource, /installRoadbook\(\{/);
-assert.match(homeSource, /showTheLot\(\{ initialSelection: selectedVehicle\(runtime\) \}\)/);
+assert.match(homeSource, /garageModule\.showGarage\(\{\s*initialSelection: selectedVehicle\(runtime\),/);
 assert.match(
   homeSource,
-  /prepareEnhancedLot, showEnhancedLot as showTheLot/,
-  'Home must use the prepared car-only showroom entry without invoking a second track chooser'
-);
-assert.match(
-  homeSource,
-  /function prepareLotOnce\(\) \{[\s\S]*const preparation = prepareEnhancedLot\(\)[\s\S]*lotWarmupPromise = preparation/,
-  'Home must reuse one showroom warmup across idle preparation and the explicit transition'
+  /function prepareLotOnce\(\) \{[\s\S]*const preparation = import\('\/turn\/garage\/garage\.js'\)[\s\S]*lotWarmupPromise = preparation/,
+  'Home must reuse one GARAGE warmup across idle preparation and the explicit transition'
 );
 assert.match(
   homeSource,
   /function scheduleEnhancedLotWarmup\(\)[\s\S]*requestIdleCallback[\s\S]*setTimeout\(beginWarmup, 600\)/,
-  'Home should prepare The Lot after its first paint, with an idle callback and a Safari fallback'
+  'Home should prepare GARAGE after its first paint, with an idle callback and a Safari fallback'
 );
 assert.match(
   homeSource,
@@ -106,8 +101,8 @@ assert.match(
   /await Promise\.all\(\[\s*raceSession\.selectVehicle\(selection\),\s*showTrackIntro\(trackId\)\s*\]\);/,
   'Race-car preparation should run behind the existing track intro instead of extending the wait'
 );
-assert.ok(homeSource.indexOf('activateTrack(trackId, runtime)') < homeSource.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })'));
-assert.ok(homeSource.indexOf('prepareLotOnce()') < homeSource.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })'));
+assert.ok(homeSource.indexOf('activateTrack(trackId, runtime)') < homeSource.indexOf('garageModule.showGarage({'));
+assert.ok(homeSource.indexOf('prepareLotOnce()') < homeSource.indexOf('garageModule.showGarage({'));
 assert.ok(homeSource.indexOf('raceSession.selectVehicle(selection)') < homeSource.indexOf('showTrackIntro(trackId)'));
 assert.ok(homeSource.indexOf('showTrackIntro(trackId)') < homeSource.indexOf('raceSession.startGame(pendingAccess?.fullscreenPromise)'));
 assert.match(homeSource, /runtime\.openLot = leaveRaceForHome/);
@@ -143,11 +138,11 @@ assert.match(productionApp, /installMotionPermissionCancelRecovery/);
 assert.match(productionApp, /motion-permission-cancel-recovery\.js\?revision=r132-fresh-document/);
 assert.match(productionApp, /motionPermissionCancelRecovery\.resume\(home, globalThis\.__turnRuntime\)/);
 assert.match(retrySource, /turn-motion-permission-retry-v2/);
-assert.match(retrySource, /\.lot-car-option\[aria-checked="true"\]/);
-assert.match(retrySource, /\.lot-color-control/);
+assert.match(retrySource, /environment\.__turnGarage\?\.getChoice\?\.\(\)/,
+  'The retry keeps GARAGE’s playable choice, never a locked preview');
 assert.match(
   retrySource,
-  /permissionWasDismissed\(error\)[\s\S]*saveRetryState\(environment, documentRef\)[\s\S]*reload\(environment\)[\s\S]*return waitForever\(\)/,
+  /permissionWasDismissed\(error\)[\s\S]*saveRetryState\(environment\)[\s\S]*reload\(environment\)[\s\S]*return waitForever\(\)/,
   'A cancelled iOS permission prompt must reload into a fresh document instead of silently swallowing every later denial'
 );
 assert.match(
@@ -155,7 +150,7 @@ assert.match(
   /runtime\.state\.vehicleId[\s\S]*runtime\.state\.vehicleColor[\s\S]*runtime\.state\.vehicleSecondaryColor/,
   'The selected car and paint must survive the fresh-document retry'
 );
-assert.match(retrySource, /void home\.continueToTrack\(\)/, 'The retry must return the player directly to The Lot');
+assert.match(retrySource, /void home\.continueToTrack\(\)/, 'The retry must return the player directly to GARAGE');
 assert.doesNotMatch(retrySource, /textContent|aria-live/, 'The fresh-document recovery must not add permission-denied UI copy');
 
 const retryValues = new Map();
@@ -180,31 +175,13 @@ Object.defineProperty(DismissedMotionEvent, 'requestPermission', {
 });
 
 let reloads = 0;
-const bodyPaint = {
-  dataset: { paintLabel: 'Body' },
-  querySelector() {
-    return { value: '#123456' };
-  }
-};
-const spoilerPaint = {
-  dataset: { paintLabel: 'Spoiler' },
-  querySelector() {
-    return { value: '#654321' };
-  }
-};
 const dismissedEnvironment = {
   DeviceMotionEvent: DismissedMotionEvent,
   document: {
-    body: { classList: { contains: (name) => name === 'turn-lot-open' } },
-    querySelector(selector) {
-      if (selector === '.lot-car-option[aria-checked="true"]') {
-        return { dataset: { carId: 'sedan-sports' } };
-      }
-      return null;
-    },
-    querySelectorAll(selector) {
-      return selector === '.lot-color-control' ? [bodyPaint, spoilerPaint] : [];
-    }
+    body: { classList: { contains: (name) => name === 'turn-lot-open' } }
+  },
+  __turnGarage: {
+    getChoice: () => ({ carId: 'sedan-sports', color: '#123456', secondaryColor: '#654321' })
   },
   sessionStorage: retryStorage,
   location: {
@@ -252,7 +229,7 @@ assert.equal(freshRecovery.resume({
     return Promise.resolve(true);
   }
 }, resumedRuntime), true);
-assert.equal(continued, 1, 'The fresh document must reopen The Lot automatically');
+assert.equal(continued, 1, 'The fresh document must reopen GARAGE automatically');
 assert.equal(resumedRuntime.state.vehicleId, 'sedan-sports');
 assert.equal(resumedRuntime.state.vehicleColor, '#123456');
 assert.equal(resumedRuntime.state.vehicleSecondaryColor, '#654321');

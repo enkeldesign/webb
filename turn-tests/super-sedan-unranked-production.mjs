@@ -12,7 +12,7 @@ const [runtimeSource, chromaticSource, productionIndex, labIndex, easterEggUi, s
   fs.readFile(new URL('../turn/achievements/chromatic-camouflage-r183.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/vehicle/sports-sedan-easter-egg.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/garage/garage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/secret-catalog.js', import.meta.url), 'utf8')
 ]);
 
@@ -25,10 +25,12 @@ assert.equal(isSportsSedanEasterEgg({
   carId: 'sedan-sports',
   secondaryColor: '#f8f9fa'
 }), false, 'The ordinary Sports Car must remain ranked');
-assert.match(easterEggUi, /displayedName = unlocked \? 'SATAN’S SPORTS CAR' : car\.name/);
-assert.match(easterEggUi, /SATAN’S SPORTS CAR unlocked\. Sport trim color code #666/);
-assert.match(easterEggUi, /dataset\.paintLabel === car\.secondaryPaint\?\.label/,
-  'The hidden state must follow the current semantic secondary-paint control instead of a retired SPOILER label');
+// GARAGE names the secret car and explains it; the state follows the current choice's paint.
+assert.match(easterEggUi, /const SECRET_NAME = 'SATAN’S SPORTS CAR'/);
+assert.match(easterEggUi, /displayName = secretActive \? SECRET_NAME : car\.name/);
+assert.match(easterEggUi, /Sport trim <strong>color code #666<\/strong> maxes every attribute/);
+assert.match(easterEggUi, /isSportsSedanEasterEgg\(selection\.state\(\)\.choice\)/,
+  'The hidden state must follow the chosen car and its secondary paint');
 assert.match(secretCatalog, /title: 'SATAN’S SPORTS CAR'/);
 assert.match(secretCatalog, /Unlock SATAN’S SPORTS CAR by setting the Sports Car sport trim to color code #666/);
 

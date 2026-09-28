@@ -22,7 +22,6 @@ export default [
   },
   {
     files: [
-      'turn-next/m8-home.js',
       'turn-next/world-data.js',
       'turn-next/world-mode.js',
       'turn/input/motion.js',

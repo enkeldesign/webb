@@ -41,7 +41,7 @@ import {
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
 import { getSavedLotPaint, lotPaintMatches, resetLotPaint, resolveLotPaint, saveLotPaint } from './lot-saved-paint.js?revision=r246-lot-saved-paint';
-import { hasTriedTrainingCar, installTrainingCarGuide, TRAINING_CAR_ID } from './training-car-guide.js?revision=r1';
+import { hasTriedTrainingCar, installTrainingCarGuide, TRAINING_CAR_ID } from './training-car-guide.js?revision=r2-garage';
 import { createShiftSetup } from './lot-shift.js?revision=r243-mountain-1300';
 import { createShowroomViewer } from './showroom-viewer.js';
 import { GARAGE_STARTER_CAR_ID, garageCarDescription, garageCarOrder } from './garage-cars.js';
@@ -134,7 +134,7 @@ function statRows(stats, shift) {
       : change < 0 ? '<span class="garage-shift-mark is-loss" aria-hidden="true">▼</span>' : '';
     const shiftCopy = change ? ` SHIFT ${change > 0 ? 'adds' : 'removes'} ${Math.abs(change)}.` : '';
     return `
-      <li class="garage-spec" aria-label="${escapeHtml(titleCase(label))}: ${value} out of 5.${shiftCopy}">
+      <li class="garage-spec" data-stat="${key}" aria-label="${escapeHtml(titleCase(label))}: ${value} out of 5.${shiftCopy} ${escapeHtml(description)}">
         <span class="garage-spec-label" aria-hidden="true">${escapeHtml(titleCase(label))}${marker}</span>
         <span class="garage-spec-meter" aria-hidden="true">${Array.from({ length: 5 }, (_, index) => `<i class="${index < value ? 'is-full' : ''}"></i>`).join('')}</span>
         <span class="garage-spec-value" aria-hidden="true">${value}/5</span>
@@ -166,13 +166,20 @@ export function showGarage({
   documentRef.getElementById(ROOT_ID)?.remove();
 
   return new Promise((resolve) => {
+    // Before Paintjob every car wears its factory colours, whatever an older save says.
+    const factoryPaint = (carId) => ({
+      color: getVehicleDefaultColor(carId),
+      secondaryColor: getVehicleDefaultSecondaryColor(carId)
+    });
+    const paintFor = (carId) => (isPaintUnlocked() ? resolveLotPaint(carId) : factoryPaint(carId));
     const saved = normalizeVehicleSelection(initialSelection || undefined);
+    const entry = sessionChoice && !carLock(sessionChoice.carId) ? sessionChoice : saved;
     const selection = createGarageSelection({
       order: ORDER,
-      initial: sessionChoice && !carLock(sessionChoice.carId) ? sessionChoice : saved,
+      initial: isPaintUnlocked() ? entry : { ...entry, ...factoryPaint(entry.carId) },
       fallbackCarId: GARAGE_STARTER_CAR_ID,
       isLocked: (carId) => Boolean(carLock(carId)),
-      paintFor: (carId) => resolveLotPaint(carId)
+      paintFor
     });
     const openedAt = globalThis.performance?.now?.() ?? Date.now();
     const beginner = !hasTriedTrainingCar();
@@ -203,6 +210,7 @@ export function showGarage({
               <span class="garage-ordinal"></span>
               <div class="garage-view" aria-hidden="true"></div>
               <p class="garage-view-state" role="status"></p>
+              <p class="garage-announcer garage-visually-hidden" role="status" aria-live="polite"></p>
               <button class="garage-step is-previous" type="button" aria-label="Previous car"><span aria-hidden="true">‹</span></button>
               <button class="garage-step is-next" type="button" aria-label="Next car"><span aria-hidden="true">›</span></button>
               <div class="garage-rotate">
@@ -213,6 +221,7 @@ export function showGarage({
             <div class="garage-identity">
               <h2 class="garage-name" id="garageCarName"></h2>
               <p class="garage-description"></p>
+              <span class="turn-color-cue garage-color-cue"></span>
               <p class="garage-lock-note" hidden></p>
               <section class="garage-secret" role="status" aria-live="polite" hidden>
                 <span class="turn-pr-chip garage-secret-chip">SECRET UNLOCKED</span>
@@ -222,7 +231,7 @@ export function showGarage({
             <div class="garage-tools">
               <button class="turn-pr-button is-secondary is-compact garage-paint-toggle" type="button" aria-expanded="false" aria-controls="garagePaint">PAINT</button>
             </div>
-            <div class="garage-paint" id="garagePaint" hidden></div>
+            <div class="garage-paint" id="garagePaint" role="group" aria-label="Car paint" hidden></div>
           </section>
           <div class="garage-details">
             <section class="garage-disclosure garage-specs" data-disclosure="specs">
@@ -284,8 +293,10 @@ export function showGarage({
     const ordinalBadge = $('.garage-ordinal');
     const viewHost = $('.garage-view');
     const viewState = $('.garage-view-state');
+    const announcer = $('.garage-announcer');
     const name = $('.garage-name');
     const description = $('.garage-description');
+    const colorCue = $('.garage-color-cue');
     const lockNote = $('.garage-lock-note');
     const secret = $('.garage-secret');
     const tools = $('.garage-tools');
@@ -328,9 +339,7 @@ export function showGarage({
 
     function effectiveSelection() {
       const { choice, preview } = selection.state();
-      return preview
-        ? { carId: preview, color: resolveLotPaint(preview).color, secondaryColor: resolveLotPaint(preview).secondaryColor }
-        : choice;
+      return preview ? { carId: preview, ...paintFor(preview) } : choice;
     }
 
     function syncProgress() {
@@ -370,6 +379,9 @@ export function showGarage({
       const displayName = secretActive ? SECRET_NAME : car.name;
       name.innerHTML = `${lock ? `<span class="turn-pr-lock-icon garage-name-lock" aria-hidden="true">${LOCK_ICON}</span>` : ''}${escapeHtml(displayName)}${car.id === TRAINING_CAR_ID && beginner ? ' <span class="turn-pr-chip is-easy garage-beginner">Beginner-friendly</span>' : ''}`;
       description.textContent = garageCarDescription(car.id);
+      // Color Cues names the body colour: the choice's paint, or a preview's factory colour.
+      const bodyColor = lock ? getVehicleDefaultColor(car.id) : selection.state().choice.color;
+      colorCue.textContent = `CAR COLOR · ${describeColorCue(bodyColor).toUpperCase()}`;
       const index = ORDER.indexOf(car.id);
       ordinalBadge.textContent = `${ordinal(index)} / ${ORDER.length}`;
       if (lock) {
@@ -404,11 +416,16 @@ export function showGarage({
       perkCopy.innerHTML = `${escapeHtml(presented.description)}${unlocked ? '' : `<br><span class="garage-perk-lock">Unlocks at ${reward.threshold} trophies on Trophy Road.</span>`}`;
     }
 
+    // A real HTML colour input with an explicit label: the whole row is its label, so
+    // the platform picker opens natively for touch, keyboard and VoiceOver. TURN paints
+    // the visible face; the input is clipped, never a full-size transparent layer over
+    // the face (standalone WebKit mis-composites that).
     function colorControl(label, value, secondary) {
       const control = documentRef.createElement('label');
       control.className = 'garage-swatch';
+      control.htmlFor = `garagePaint${secondary ? 'Secondary' : 'Body'}`;
       control.innerHTML = `
-        <input class="garage-swatch-input" type="color" value="${escapeHtml(value)}" aria-label="${escapeHtml(label)} colour">
+        <input id="${control.htmlFor}" type="color" value="${escapeHtml(value)}">
         <span class="garage-swatch-face" aria-hidden="true"></span>
         <span class="garage-swatch-copy">
           <span class="garage-swatch-label">${escapeHtml(label)}</span>
@@ -419,7 +436,7 @@ export function showGarage({
       const face = control.querySelector('.garage-swatch-face');
       const syncName = () => {
         colorName.textContent = titleCase(describeColorCue(input.value));
-        face.style.background = input.value;
+        face.style.setProperty('--garage-swatch', input.value);
       };
       input.addEventListener('input', () => {
         syncName();
@@ -589,6 +606,10 @@ export function showGarage({
       renderPaint();
       render();
       navigatorVibrate(12);
+      // Previous/next keep focus, so say which car is now on stage.
+      const car = viewedCar();
+      const lock = carLock(car.id);
+      announcer.textContent = `${car.name}, ${ORDER.indexOf(car.id) + 1} of ${ORDER.length}${lock ? `. Locked until ${lock.threshold} trophies` : ''}.`;
     }
 
     function navigatorVibrate(pattern) {
@@ -603,6 +624,7 @@ export function showGarage({
       windowRef.removeEventListener('turn:trophy-road-updated', handleProgress);
       windowRef.removeEventListener('turn:shift-profile-change', handleShiftChange);
       windowRef.removeEventListener('storage', handleStorage);
+      documentRef.removeEventListener('keydown', leavePreviewByKey);
       spaciousMedia?.removeEventListener?.('change', syncDisclosures);
       resizeObserver?.disconnect();
       shift.release();
@@ -680,7 +702,8 @@ export function showGarage({
         leavePreviewButton.click();
       }
     };
-    root.addEventListener('keydown', leavePreviewByKey);
+    // On the document: hiding RACE for a preview can leave focus on the page itself.
+    documentRef.addEventListener('keydown', leavePreviewByKey);
     raceButton.addEventListener('click', race);
     backButton.addEventListener('click', () => finish(null));
     shift.dialog.addEventListener('close', () => viewer.resume());

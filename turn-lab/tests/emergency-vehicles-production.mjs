@@ -47,9 +47,8 @@ assert.match(mayday?.description || '', /30 seconds/);
 const [
   carModels,
   emergencyLiveries,
-  lot,
-  lotCss,
-  lotTrackSelect,
+  garage,
+  garageCss,
   controls,
   audio,
   maydayAudio,
@@ -66,9 +65,8 @@ const [
 ] = await Promise.all([
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'vehicle/emergency-livery-models.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-r10.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-r10.css'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'garage/garage.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'garage/garage.css'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/gameplay-controls.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'audio/audio-system.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'audio/mayday-audio-r493.js'), 'utf8'),
@@ -107,14 +105,14 @@ assert.doesNotMatch(emergencyLiveries, /applyFixedEmergencyLivery|turnEmergencyL
   'Emergency liveries must not add recolour geometry or procedural panels');
 assert.doesNotMatch(emergencyLiveries, /turnEmergencyLightRig|PointLight|AdditiveBlending/);
 
-assert.match(lot, /if \(car\.fixedLivery\)[\s\S]*colors\.replaceChildren\(\)[\s\S]*colors\.setAttribute\('aria-hidden', 'true'\)/,
-  'The Lot renderer itself must leave fixed-livery paint empty and non-interactive');
-assert.doesNotMatch(lot, /SERVICE LIVERY|lot-fixed-livery/,
-  'Fixed-livery vehicles should not need a placeholder control that another script removes');
-assert.doesNotMatch(lotCss, /\.lot-fixed-livery/,
-  'There should be no dead fixed-livery placeholder styling');
-assert.doesNotMatch(lotTrackSelect, /installFixedLiveryUiGuard|lot-fixed-livery-ui/,
-  'The route wrapper must not install a fixed-livery DOM observer');
+// GARAGE says a fixed livery is fixed, with no colour inputs to change it.
+assert.match(garage, /if \(car\.fixedLivery\) \{[\s\S]*?garage-paint-fixed[\s\S]*?wears its fixed service livery[\s\S]*?\} else if/,
+  'GARAGE shows fixed liveries as fixed, without paint controls');
+assert.doesNotMatch(garage.match(/if \(car\.fixedLivery\) \{[\s\S]*?\} else if/)[0], /type="color"|colorControl/,
+  'A fixed livery offers no colour inputs');
+assert.match(garageCss, /\.garage-fixed-swatch/);
+assert.doesNotMatch(garage, /installFixedLiveryUiGuard|MutationObserver/,
+  'GARAGE must not need a fixed-livery DOM observer');
 assert.doesNotMatch(index, /syncFixedLiveryRail|emergencyVehicleNames/,
   'Production index must not contain another fixed-livery DOM observer');
 

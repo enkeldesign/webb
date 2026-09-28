@@ -13,8 +13,7 @@ import {
 const [
   spectate,
   steeringWarning,
-  lotPerk,
-  lotRuntime,
+  garageSource,
   trophyWrapper,
   app,
   productionIndex,
@@ -22,8 +21,7 @@ const [
 ] = await Promise.all([
   fs.readFile(new URL('../turn/ui/spectate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/steering-limit-warning.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/garage/garage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/progression/trophy-road.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
@@ -158,8 +156,8 @@ assert.equal(
   'unchanged',
   'Other vehicle perk copy must remain untouched'
 );
-assert.match(lotPerk, /vehiclePerkPresentation\(vehicleId, getCarDefinition\(vehicleId\)\?\.perk\)/);
-assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r217-stable-perk-slot/);
+assert.match(garageSource, /vehiclePerkPresentation\(car\.id, car\.perk\)/,
+  'GARAGE presents each perk through the shared perk copy');
 assert.match(trophyWrapper, /export const TROPHY_ROAD_REWARDS/,
   'Every consumer reads the one canonical Trophy Road reward catalog');
 
@@ -176,7 +174,7 @@ for (const index of [productionIndex, labIndex]) {
 }
 
 assert.match(app, /steering-limit-warning\.js\?revision=r164-post-soak/);
-assert.match(app, /lot-enhancement-runtime\.js\?revision=r164-post-soak/);
+assert.doesNotMatch(app, /lot-enhancement-runtime/, 'The Lot enhancement runtime is retired with The Lot');
 assert.match(app, /spectate\.js\?revision=r164-elevation-aware/);
 
 console.log('TURN post-optimisation soak fixes and isolated iPad steering profile passed.');

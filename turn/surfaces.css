@@ -16,14 +16,6 @@
   box-shadow: var(--turn-shadow-control);
 }
 
-/* ---------- 2. Cards ---------- */
-
-:root body .lot-screen.lot-showroom :is(.lot-card, .lot-viewbox) {
-  border-width: var(--turn-border-card);
-  border-radius: var(--turn-radius-card);
-  box-shadow: var(--turn-shadow-card);
-}
-
 /* ---------- 3. Dialogs ---------- */
 
 :root body :is(dialog.m8-dialog > .m8-dialog-card, .audio-settings-card, .turn-support-challenge-card, .turn-yourturn-share-card, .turn-motion-denied-card, .lot-shift-dialog-card, .nuke-dialog-card) {

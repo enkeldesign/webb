@@ -16,6 +16,8 @@ on:
       - 'turn/ui/race-menu.js'
       - 'turn-tests/roadbook-browser-smoke.mjs'
       - 'turn/roadbook/**'
+      - 'turn-tests/garage-browser-smoke.mjs'
+      - 'turn/garage/**'
       - 'turn/pre-race.css'
       - 'turn/ui/home-app-bar.js'
       - 'turn/home-app-bar.css'
@@ -43,6 +45,8 @@ on:
       - 'turn/ui/race-menu.js'
       - 'turn-tests/roadbook-browser-smoke.mjs'
       - 'turn/roadbook/**'
+      - 'turn-tests/garage-browser-smoke.mjs'
+      - 'turn/garage/**'
       - 'turn/pre-race.css'
       - 'turn/ui/home-app-bar.js'
       - 'turn/home-app-bar.css'
@@ -100,3 +104,6 @@ jobs:
 
       - name: Verify ROADBOOK from 320px to iPad
         run: node turn-tests/roadbook-browser-smoke.mjs
+
+      - name: Verify GARAGE from 320px to iPad
+        run: node turn-tests/garage-browser-smoke.mjs

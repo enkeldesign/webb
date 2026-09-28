@@ -19,16 +19,11 @@ on:
       - 'turn/styles.css'
       - 'turn/rival-onboarding.css'
       - 'turn/ui/rival-onboarding.js'
-      - 'turn/garage/lot-info-panel-r212.css'
-      - 'turn/garage/lot-info-typography-r213.css'
-      - 'turn/garage/lot-layout-r60.css'
-      - 'turn/garage/lot-r10.css'
+      - 'turn/garage/garage.js'
+      - 'turn/garage/garage.css'
+      - 'turn/garage/showroom-viewer.js'
+      - 'turn/pre-race.css'
       - 'turn/garage/lot-saved-paint.js'
-      - 'turn/garage/lot-saved-paint.css'
-      - 'turn/garage/lot-showroom-experiment.js'
-      - 'turn/garage/lot-showroom-cleanup-r201.css'
-      - 'turn/garage/lot-showroom-experiment.css'
-      - 'turn/garage/lot-thumbnail-composition-r211.css'
       - 'turn/progression/trophy-road.js'
       - 'turn/graphics-profile.js'
       - 'turn/three-runtime.js'
@@ -88,7 +83,7 @@ jobs:
       - name: Validate LOW GRAPHICS in Chromium and WebKit
         run: node turn-tests/low-graphics-browser-smoke.mjs
 
-      - name: Render and validate the actual Lot preview
+      - name: Render and validate the actual GARAGE preview
         run: node turn-tests/supercar-lot-visual-smoke.mjs
 
       - name: Validate CHASE YOUR BEST custom paint pixels
