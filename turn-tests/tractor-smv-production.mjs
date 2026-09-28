@@ -8,17 +8,15 @@ import {
 import { shiftedVehicleStats } from '../turn/vehicle/shift-profile.js';
 
 const catalogSource = await fs.readFile(new URL('../turn/vehicle/catalog.js', import.meta.url), 'utf8');
-const lotSource = await fs.readFile(new URL('../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8');
-const trophyOrderSource = await fs.readFile(new URL('../turn/garage/lot-trophy-order.js', import.meta.url), 'utf8');
+const garageCarsSource = await fs.readFile(new URL('../turn/garage/garage-cars.js', import.meta.url), 'utf8');
 const physicsSource = await fs.readFile(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8');
 
 assert.match(catalogSource, /\['tractor', 'Tractor', 'car', \{ speed: 1, acceleration: 1, control: 5, drift: 1, boostPower: 5, boostDuration: 5 \}/);
 assert.match(catalogSource, /tractor: Object\.freeze\(\{[\s\S]*title: 'SMV'[\s\S]*blank screen and non-visual driving practice/);
 assert.match(catalogSource, /tractor: Object\.freeze\(\{ fallback: '#4f7f36' \}\)/);
 assert.match(catalogSource, /tractor: Object\.freeze\(\{ fallback: '#666000' \}\)/);
-assert.match(lotSource, /'classic',[\s\S]*'tractor',[\s\S]*'truck'/);
-assert.match(trophyOrderSource, /'classic',[\s\S]*'tractor',[\s\S]*'truck'/,
-  'The enhanced Trophy Road order must keep Learner Car first and Tractor second');
+assert.match(garageCarsSource, /GARAGE_CAR_ORDER = Object\.freeze\(\[\s*'classic',\s*'tractor',/,
+  'GARAGE follows Trophy Road: Learner Car first and Tractor second');
 
 assert.deepEqual(SMV_SPEED_LIMITS_KMH, { drift: 40, gas: 60, boost: 80 });
 assert.deepEqual(SMV_SHIFT_SPEED_LIMITS_KMH, { drift: 50, gas: 70, boost: 90 });

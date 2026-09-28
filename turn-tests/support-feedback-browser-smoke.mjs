@@ -133,17 +133,17 @@ for (const [name, browserType] of [['Chromium', chromium], ['WebKit', webkit]]) 
       let track = '';
       let car = '';
       document.querySelector('.roadbook-card').addEventListener('click', (event) => { track = event.currentTarget.dataset.trackId; });
+      // GARAGE stand-in: the challenge asks the open GARAGE to feature its recommended car.
+      const garageRoot = document.createElement('section');
       document.querySelector('.m8-track-continue').addEventListener('click', () => {
-        const lot = document.createElement('section');
-        lot.className = 'lot-screen';
-        lot.innerHTML = '<button class="lot-car-option" data-car-id="sedan-sports">SPORTS CAR</button>';
-        lot.querySelector('button').addEventListener('click', (event) => { car = event.currentTarget.dataset.carId; });
-        document.body.appendChild(lot);
+        document.body.appendChild(garageRoot);
+        globalThis.__turnGarage = { root: garageRoot, viewCar: (carId) => { car = carId; } };
       });
       globalThis.__turnSupportChallenges.trigger.click();
       document.querySelector('[data-support-start]').click();
       await Promise.resolve();
-      document.querySelector('.lot-screen').remove();
+      garageRoot.remove();
+      delete globalThis.__turnGarage;
       return { track, car };
     });
     assert.deepEqual(routing, { track: 'countryside', car: 'sedan-sports' }, 'START CHALLENGE selects its track and recommended owned car');

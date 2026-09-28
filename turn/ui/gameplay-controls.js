@@ -181,7 +181,7 @@ function installGameplayUi() {
   shiftBubble.className = 'drive-shift-bubble';
   shiftBubble.disabled = true;
   shiftBubble.setAttribute('aria-pressed', 'false');
-  shiftBubble.setAttribute('aria-label', 'SHIFT unavailable. Configure SHIFT in The Lot.');
+  shiftBubble.setAttribute('aria-label', 'SHIFT unavailable. Configure SHIFT in GARAGE.');
   shiftBubble.innerHTML = '<span>SHIFT<i aria-hidden="true">●</i></span>';
 
   const shiftStatus = document.createElement('div');
@@ -334,7 +334,7 @@ function installGameplayUi() {
     shiftBubble.setAttribute(
       'aria-label',
       !shiftAvailable
-        ? 'SHIFT unavailable. Configure SHIFT in The Lot.'
+        ? 'SHIFT unavailable. Configure SHIFT in GARAGE.'
         : shiftActive
           ? 'SHIFT active. Activate to return to standard attributes.'
           : 'SHIFT ready. Activate alternate attributes.'

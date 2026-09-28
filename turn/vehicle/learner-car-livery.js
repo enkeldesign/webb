@@ -181,7 +181,7 @@ function getLearnerSignFaceTexture() {
   for (let y = 0; y < size; y += 1) {
     for (let x = 0; x < size; x += 1) {
       const edge = x < border || x >= size - border || y < border || y >= size - border;
-      // The roof sign is tiny in the Lot and during racing, so use a deliberately
+      // The roof sign is tiny in GARAGE and during racing, so use a deliberately
       // broad, almost sign-painter-weight L. It occupies most of the short face and
       // remains recognizable after perspective reduction on a phone display.
       const stem = x >= 44 && x <= 69 && y >= 21 && y <= 103;
@@ -199,7 +199,7 @@ function getLearnerSignFaceTexture() {
   signFaceTexture.name = 'learner-car-yellow-black-l';
   signFaceTexture.colorSpace = THREE.SRGBColorSpace;
   // Avoid mipmap averaging turning the already-small black L into a grey smudge in
-  // The Lot. The learner sign is intentionally graphic/pixel-crisp at this scale.
+  // GARAGE. The learner sign is intentionally graphic/pixel-crisp at this scale.
   signFaceTexture.magFilter = THREE.NearestFilter;
   signFaceTexture.minFilter = THREE.NearestFilter;
   signFaceTexture.generateMipmaps = false;

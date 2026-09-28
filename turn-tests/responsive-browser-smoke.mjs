@@ -41,18 +41,18 @@ async function readability(page, label) {
   const { text, targets } = await page.evaluate(() => {
     // Content scrolled under the full-width portrait action dock is off screen until
     // the page scrolls, like content below the fold.
-    const dock = [...document.querySelectorAll('.roadbook-dock, .lot-race')]
+    const dock = [...document.querySelectorAll('.roadbook-dock, .garage-dock')]
       .map((node) => node.getBoundingClientRect())
       .find((rect) => rect.width >= globalThis.innerWidth * 0.8);
     const foldTop = dock ? dock.top - 12 : globalThis.innerHeight;
     const visible = (el) => {
       const rect = el.getBoundingClientRect();
       const style = globalThis.getComputedStyle(el);
-      const insideDock = Boolean(el.closest('.roadbook-dock, .lot-race'));
+      const insideDock = Boolean(el.closest('.roadbook-dock, .garage-dock'));
       return rect.width > 1 && rect.height > 1 && style.visibility !== 'hidden'
         && rect.bottom > 0 && rect.top < globalThis.innerHeight && rect.right > 0 && rect.left < globalThis.innerWidth
         && (insideDock || (rect.top + rect.height / 2) < foldTop)
-        && !el.closest('[aria-hidden="true"], [hidden], .lot-a11y-only, .visually-hidden, .sr-only');
+        && !el.closest('[aria-hidden="true"], [hidden], .garage-visually-hidden, .visually-hidden, .sr-only');
     };
     const text = [...document.querySelectorAll('body *')]
       .filter((el) => [...el.childNodes].some((node) => node.nodeType === 3 && node.textContent.trim()) && visible(el))
@@ -254,32 +254,32 @@ async function responsiveRace(browser, name) {
       await page.locator(`${dialog} [data-dialog-close]`).click();
       await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
     }
-    // CHOOSE CAR and The Lot's RACE THIS CAR are both the forward action at the foot
-    // of the screen, in the primary colour. (GARAGE moves onto the shared dock next.)
+    // CHOOSE CAR and GARAGE's RACE are both the forward action at the foot of the
+    // screen, in the primary colour.
     const dockStyle = async (selector) => (await page.mouse.move(1, 1), page.locator(selector).evaluate((node) => {
       const rect = node.getBoundingClientRect();
       return { bottomGap: Math.round(globalThis.innerHeight - rect.bottom), background: globalThis.getComputedStyle(node).backgroundColor };
     }));
     const homeDock = await dockStyle('.m8-track-continue');
     await page.locator('.m8-track-continue').click();
-    await page.waitForSelector('.lot-showroom');
+    await page.waitForSelector('.garage');
     await settle(page);
-    const lotDock = await dockStyle('.lot-race');
-    assert.equal(lotDock.background, homeDock.background, `${name}: RACE THIS CAR uses Home's primary colour`);
+    const lotDock = await dockStyle('.garage-race');
+    assert.equal(lotDock.background, homeDock.background, `${name}: RACE uses ROADBOOK's primary colour`);
     assert.ok(homeDock.bottomGap <= 24 && lotDock.bottomGap <= 24, `${name}: both forward actions sit at the foot (${JSON.stringify([homeDock, lotDock])})`);
-    // Nothing in the Lot card paints over the dock: with COLOR scrolled under it, a tap
-    // on RACE THIS CAR still reaches the button.
+    // Nothing in GARAGE paints over the dock: with the tools scrolled under it, a tap
+    // on RACE still reaches the button.
     assert.ok(await page.evaluate(() => {
-      const screen = document.querySelector('.lot-screen');
-      const colors = document.querySelector('.lot-colors');
-      const race = document.querySelector('.lot-race');
+      const screen = document.querySelector('.garage');
+      const tools = document.querySelector('.garage-tools');
+      const race = document.querySelector('.garage-race');
       const dock = race.getBoundingClientRect();
-      screen.scrollTop += colors.getBoundingClientRect().top - dock.top;
+      screen.scrollTop += tools.getBoundingClientRect().top - dock.top;
       const hit = document.elementFromPoint(dock.x + dock.width / 2, dock.y + dock.height / 2);
       screen.scrollTop = 0;
       return race.contains(hit);
-    }), `${name}: RACE THIS CAR receives taps with COLOR scrolled under it`);
-    // Standalone dialogs (Lot SHIFT, reset rivals) are portrait sheets too.
+    }), `${name}: RACE receives taps with the GARAGE tools scrolled under it`);
+    // Standalone dialogs (GARAGE SHIFT, reset rivals) are portrait sheets too.
     for (const dialog of ['.lot-shift-dialog', '.nuke-dialog']) {
       await page.$eval(dialog, (node) => node.showModal());
       await settle(page);
@@ -294,15 +294,13 @@ async function responsiveRace(browser, name) {
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height });
       await settle(page);
-      const lot = await bounds(page, '.lot-screen');
-      assert.ok(lot.scrollWidth <= lot.clientWidth + 1, `${name} ${width}: Lot reflows`);
-      await readability(page, `${name} ${width}x${height} Lot`);
-      if (width > 736) assert.ok((await bounds(page, '.lot-side')).height <= 481, 'Large-screen preview stays bounded');
-      await page.locator('.lot-race').scrollIntoViewIfNeeded();
-      within(await bounds(page, '.lot-race'), width, height, 'Lot RACE action');
+      const lot = await bounds(page, '.garage');
+      assert.ok(lot.scrollWidth <= lot.clientWidth + 1, `${name} ${width}: GARAGE reflows`);
+      await readability(page, `${name} ${width}x${height} GARAGE`);
+      within(await bounds(page, '.garage-race'), width, height, 'GARAGE RACE action');
     }
     await page.setViewportSize({ width: 393, height: 852 });
-    await page.locator('.lot-race').click();
+    await page.locator('.garage-race').click();
     await page.waitForSelector('.turn-orientation-hint');
     assert.match(await page.locator('.turn-orientation-hint').textContent(), /Portrait\/upright orientation is fully supported/);
     await page.waitForSelector('#controls:not([hidden])');
@@ -383,7 +381,7 @@ async function responsiveRace(browser, name) {
     assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.touchGas), false);
     assert.deepEqual(await page.evaluate(() => globalThis.orientationLocks), [], 'Racing never requests an orientation lock');
     assert.deepEqual(errors, [], 'No new browser runtime errors');
-    console.log(`${name}: ${sizes.length} viewport families, larger catalog, 200% text, Lot, mirrored race HUD, keyboard and standalone window passed.`);
+    console.log(`${name}: ${sizes.length} viewport families, larger catalog, 200% text, GARAGE, mirrored race HUD, keyboard and standalone window passed.`);
   } finally {
     await context.close();
   }

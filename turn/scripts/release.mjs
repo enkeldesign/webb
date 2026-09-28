@@ -14,8 +14,6 @@ const RACING_MUSIC_SPECIFIER_PATTERN = /^\/turn\/audio\/racing-music-v2\.js\?bui
 const AUDIO_PREFERENCES_SPECIFIER_PATTERN = /^\/turn\/audio\/audio-preferences\.js\?build=\d{8}-r\d+$/;
 const COVERED_RENDERING_SPECIFIER_PATTERN = /^\/turn\/render\/covered-rendering\.js\?build=\d{8}-r\d+$/;
 const RIVAL_ONBOARDING_SPECIFIER_PATTERN = /^\/turn\/ui\/rival-onboarding\.js\?build=\d{8}-r\d+$/;
-const LOT_ENHANCEMENT_SPECIFIER_PATTERN = /^\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r164-post-soak&build=\d{8}-r\d+$/;
-const KNOWN_INSTALLED_LOT_SPECIFIER = '/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=20260826-r184';
 const SESSION_ORCHESTRATOR_SPECIFIER = '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
 const RIVAL_STORAGE_PATH = '/turn/race/rival-storage.js';
 const RIVAL_STORAGE_REVISION = 'r224-finish-line-summary';
@@ -99,6 +97,39 @@ function synchronizeReleaseBoundSpecifier(importMap, release, pattern, currentSp
   importMap.imports = synchronizedImports;
 }
 
+// Modules GARAGE retired (1.27.0): The Lot and its enhancement layers. Every import
+// map route to or from them is removed, so no entry page can load a stale copy.
+const RETIRED_MODULE_PATHS = new Set([
+  '/turn/garage/lot-r10.js',
+  '/turn/garage/lot-track-select.js',
+  '/turn/garage/lot-enhancement-runtime.js',
+  '/turn/garage/lot-showroom-experiment.js',
+  '/turn/garage/lot-showroom-track-icon.js',
+  '/turn/garage/lot-layout-r60.js',
+  '/turn/garage/lot-card-scroll-boundary.js',
+  '/turn/garage/lot-accessibility-r118.js',
+  '/turn/garage/lot-screen-reader-r202.js',
+  '/turn/garage/lot-selection-bay.js',
+  '/turn/garage/lot-stat-legend.js',
+  '/turn/garage/lot-perk-disclosure.js',
+  '/turn/garage/lot-perk-icon.js',
+  '/turn/garage/lot-pwa-color-swatch.js',
+  '/turn/garage/lot-vehicle-copy.js',
+  '/turn/garage/lot-trophy-order.js',
+  '/turn/progression/lot-trophy-gate.js',
+  '/turn/progression/lot-paint-reward.js',
+  '/turn/vehicle/sports-sedan-easter-egg.js'
+]);
+
+function removeRetiredModuleRoutes(importMap) {
+  const imports = importMap.imports || {};
+  for (const [specifier, target] of Object.entries(imports)) {
+    const keyPath = new URL(specifier, 'https://enkel.design/turn/').pathname;
+    const targetPath = typeof target === 'string' ? new URL(target, 'https://enkel.design/turn/').pathname : '';
+    if (RETIRED_MODULE_PATHS.has(keyPath) || RETIRED_MODULE_PATHS.has(targetPath)) delete imports[specifier];
+  }
+}
+
 function synchronizeReleaseBoundImportTarget(importMap, release, specifier) {
   const sourceTarget = importMap.imports?.[specifier];
   if (typeof sourceTarget !== 'string') return;
@@ -106,41 +137,6 @@ function synchronizeReleaseBoundImportTarget(importMap, release, specifier) {
   const targetUrl = new URL(sourceTarget, 'https://enkel.design/turn/');
   targetUrl.searchParams.set('build', release.cacheKey);
   importMap.imports[specifier] = `${targetUrl.pathname}${targetUrl.search}`;
-}
-
-function synchronizeLotEnhancementSpecifiers(importMap, release) {
-  const imports = importMap.imports || {};
-  const currentSpecifier = `/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=${release.cacheKey}`;
-  const sourceSpecifier = Object.keys(imports).find((specifier) =>
-    LOT_ENHANCEMENT_SPECIFIER_PATTERN.test(specifier) && specifier !== KNOWN_INSTALLED_LOT_SPECIFIER
-  ) || Object.keys(imports).find((specifier) => LOT_ENHANCEMENT_SPECIFIER_PATTERN.test(specifier));
-  if (!sourceSpecifier) return;
-
-  const sourceTarget = imports[sourceSpecifier];
-  const targetUrl = new URL(sourceTarget, 'https://enkel.design');
-  targetUrl.searchParams.set('build', release.cacheKey);
-  const currentTarget = `${targetUrl.pathname}${targetUrl.search}`;
-
-  const synchronizedImports = {};
-  let inserted = false;
-  for (const [specifier, target] of Object.entries(imports)) {
-    if (!LOT_ENHANCEMENT_SPECIFIER_PATTERN.test(specifier)) {
-      synchronizedImports[specifier] = target;
-      continue;
-    }
-    if (inserted) continue;
-
-    // r184 shipped a Lot runtime URL that installed PWAs can still request from
-    // their module cache. Keep that one known compatibility route while the
-    // canonical current-build route advances normally. This is intentionally
-    // narrow rather than a general revision-history system.
-    if (KNOWN_INSTALLED_LOT_SPECIFIER !== currentSpecifier) {
-      synchronizedImports[KNOWN_INSTALLED_LOT_SPECIFIER] = currentTarget;
-    }
-    synchronizedImports[currentSpecifier] = currentTarget;
-    inserted = true;
-  }
-  importMap.imports = synchronizedImports;
 }
 
 function synchronizeRivalStorageTargets(importMap, release) {
@@ -192,7 +188,6 @@ function synchronizeVisualResourceTargets(importMap, release) {
     '/turn/vehicle/learner-car-livery.js': ['r223-training-car-taxi', '?revision=r223-training-car-taxi'],
     '/turn/vehicle/supercar-kenney-wheels.js': ['r253-supercar-release', '?revision=r253-supercar-release'],
     '/turn/ui/track-best-car.js': ['r253-supercar-release', '?revision=r253-supercar-release'],
-    '/turn/garage/lot-showroom-experiment.js': ['r259-swift-lot-ui-base', '?revision=r259-swift-lot-ui-base'],
     '/turn/achievements/trophy-road-showcase.js': ['r253-supercar-release', '?revision=r253-supercar-release']
   };
   const imports = importMap.imports ||= {};
@@ -290,10 +285,7 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
     // Consumers of the canonical catalog and Trophy Road modules (#989): their
     // historical revision URLs follow the release build so edits always reach players.
     '/turn/achievements/night-shift.js': ['?revision=r146-achievement-expansion'],
-    '/turn/garage/lot-perk-disclosure.js': ['?revision=r243-mountain-1300'],
-    '/turn/garage/lot-shift.js': ['?revision=r243-mountain-1300'],
-    '/turn/progression/lot-paint-reward.js': ['?revision=r246-lot-saved-paint'],
-    '/turn/progression/lot-trophy-gate.js': ['?revision=r243-mountain-1300']
+    '/turn/garage/lot-shift.js': ['?revision=r243-mountain-1300']
   };
   for (const [pathname, suffixes] of Object.entries(releaseOwnedModules)) {
     const target = `${pathname}?build=${release.cacheKey}`;
@@ -357,16 +349,17 @@ function synchronizeKeyboardDrivingTargets(importMap, release) {
 function synchronizeUiBaselineTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   for (const [pathname, suffixes] of [
-    ['/turn/garage/lot-card-scroll-boundary.js', ['?revision=r216-meter-density']],
-    ['/turn/garage/lot-layout-r60.js', ['?build=20260729-r116&revision=r213-attributes-typography']],
-    ['/turn/garage/lot-perk-icon.js', []],
-    ['/turn/garage/lot-screen-reader-r202.js', ['?revision=r202-heading-structure']],
     ['/turn/scoring/scorekeeper-records.js', []],
     ['/turn/tracks/airport-emergency-r496.js', ['?revision=r497-depth-fire']],
     ['/turn/ui/minor-ux-polish-r229.js', ['?revision=r229-discoverability-cues']],
     ['/turn/ui/leader-marker-r500.js', ['?revision=r227-night-marker-outline']],
     ['/turn/ui/player-marker-r428.js', ['?revision=r227-night-marker-outline']],
     ['/turn/roadbook/roadbook.js', []],
+    ['/turn/garage/garage.js', []],
+    ['/turn/garage/garage-cars.js', []],
+    ['/turn/garage/garage-selection.js', []],
+    ['/turn/garage/showroom-viewer.js', []],
+    ['/turn/garage/training-car-guide.js', ['?revision=r1']],
     // Modules that request a stylesheet by a release-bound literal URL.
     ['/turn/social/your-turn-share.js', ['?revision=r4-runtime-share-state']],
     ['/turn/content/about-turn.js', ['?revision=r1']],
@@ -520,7 +513,6 @@ function synchronizeLowGraphicsProducerTargets(importMap, release) {
 function synchronizeProjectedShadowTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   const paths = new Set([
-    "/turn/garage/lot-r10.js",
     "/turn/graphics-profile.js",
     "/turn/main.js",
     "/turn/performance-monitor.js",
@@ -595,6 +587,7 @@ function renderSharedResourceImports(source, release) {
     synchronizeProjectedShadowTargets(importMap, release);
     synchronizeNightSkyTargets(importMap, release);
     synchronizeTrackWorldTargets(importMap, release);
+    removeRetiredModuleRoutes(importMap);
     return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
   });
 }
@@ -619,7 +612,6 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
     RIVAL_ONBOARDING_SPECIFIER_PATTERN,
     `/turn/ui/rival-onboarding.js?build=${release.cacheKey}`
   );
-  synchronizeLotEnhancementSpecifiers(importMap, release);
   synchronizeRivalStorageTargets(importMap, release);
   synchronizeScoreStoreTargets(importMap, release);
   synchronizeVisualResourceTargets(importMap, release);
@@ -643,9 +635,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   for (const [specifier, target] of Object.entries(importMap.imports || {})) {
     if (typeof target !== 'string' || !target.startsWith('/turn/')) continue;
     const pathname = new URL(target, 'https://enkel.design').pathname;
-    if (pathname === '/turn/garage/lot-enhancement-runtime.js'
-      || pathname === '/turn/garage/lot-track-select.js'
-      || pathname === '/turn/m8-home.js') {
+    if (pathname === '/turn/m8-home.js') {
       synchronizeReleaseBoundImportTarget(importMap, release, specifier);
     }
   }
@@ -690,6 +680,7 @@ export function renderReleaseIndex(source, release) {
         url.searchParams.set('build', release.cacheKey);
         importMap.imports[specifier] = `.${url.pathname.slice('/turn'.length)}${url.search}`;
       }
+      removeRetiredModuleRoutes(importMap);
       return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
     }
   );

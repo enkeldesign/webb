@@ -413,6 +413,7 @@ class Element {
     this.listeners.get(type).add(listener);
   }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
+  setAttribute() {}
   appendChild(child) { child.remove?.(); this.children.push(child); child.parentElement = this; }
   replaceChildren(...children) {
     for (const child of [...this.children]) child.remove();
@@ -606,23 +607,25 @@ for (const cancelWarmup of [true, false]) {
   assert.equal(renderer.disposals + renderer.contextLosses, 0, 'Preview cleanup never destroys the race renderer');
 }
 
-const lotEnv = browserHarness();
-const lotRequests = [];
-const lot = await moduleUnderTest('turn/garage/lot-showroom-experiment.js', {
-  ...catalog, ...lotEnv.bindings, disposeCarVisual, recolorCarVisual: models.recolorCarVisual,
+// GARAGE's showroom: only the latest requested car stays; late loads after dispose
+// are released, and dispose drops its drag listeners and its WebGL context once.
+const garageEnv = browserHarness();
+const garageRequests = [];
+const garage = await moduleUnderTest('turn/garage/showroom-viewer.js', {
+  ...catalog, ...garageEnv.bindings, disposeCarVisual, recolorCarVisual: models.recolorCarVisual,
   recordPerformanceFrame() {},
-  createCarVisual: () => { const request = deferred(); lotRequests.push(request); return request.promise; }
-}, ['createViewer', 'createThumbnailRenderer']);
+  createCarVisual: () => { const request = deferred(); garageRequests.push(request); return request.promise; }
+}, ['createShowroomViewer']);
 const viewerHost = new Element();
-const viewer = lot.createViewer(viewerHost);
+const viewer = garage.createShowroomViewer(viewerHost);
 const oldShow = viewer.show('sedan', '#111111', '#abcdef');
 const newShow = viewer.show('sedan', '#222222', '#fedcba');
 const displayed = ownedVisual();
-lotRequests[1].resolve(displayed);
-await newShow;
+garageRequests[1].resolve(displayed);
+assert.equal(await newShow, true);
 const oldShowVisual = ownedVisual();
-lotRequests[0].resolve(oldShowVisual);
-await oldShow;
+garageRequests[0].resolve(oldShowVisual);
+assert.equal(await oldShow, false, 'A superseded car never reaches the platform');
 assertReleased(visualResources.get(oldShowVisual));
 assert.equal(displayed.userData.turnCarColor, '#222222');
 const lateShow = viewer.show('classic', '#333333', '#fedcba');
@@ -630,37 +633,13 @@ viewer.stop();
 viewer.dispose();
 viewer.dispose();
 const lateShowVisual = ownedVisual();
-lotRequests[2].resolve(lateShowVisual);
-await lateShow;
+garageRequests[2].resolve(lateShowVisual);
+assert.equal(await lateShow, false);
 assertReleased(visualResources.get(lateShowVisual));
 assertReleased(visualResources.get(displayed));
 assert.equal([...viewerHost.listeners.values()].reduce((total, listeners) => total + listeners.size, 0), 0,
-  'Disposed Lot viewers release their drag listeners');
-lotEnv.assertStopped();
-
-for (const cancelBeforeLoad of [true, false]) {
-  const thumbnails = lot.createThumbnailRenderer();
-  const canvas = new Element();
-  const button = new Element();
-  button.querySelector = () => canvas;
-  const car = catalog.getCarDefinition('classic');
-  const task = thumbnails.renderOne(car, button, { color: '#123456', secondaryColor: '#abcdef' });
-  await settle();
-  if (cancelBeforeLoad) thumbnails.cancel();
-  const visual = ownedVisual();
-  lotRequests.at(-1).resolve(visual);
-  await settle();
-  if (!cancelBeforeLoad) assert.equal(lotEnv.idles.size, 1);
-  thumbnails.cancel();
-  thumbnails.cancel();
-  await task;
-  assertReleased(visualResources.get(visual));
-  lotEnv.assertStopped();
-}
-const observerThumbnails = lot.createThumbnailRenderer();
-observerThumbnails.observeVisible([catalog.getCarDefinition('classic')], new Map([['classic', new Element()]]), () => ({}), new Element());
-observerThumbnails.cancel();
-lotEnv.assertStopped();
+  'A disposed GARAGE viewer releases its drag listeners');
+garageEnv.assertStopped();
 
 const trophyEnv = browserHarness();
 const trophyRequests = [];

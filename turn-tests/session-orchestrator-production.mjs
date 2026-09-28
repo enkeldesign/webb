@@ -249,7 +249,7 @@ const productionApp = await fs.readFile(new URL('../turn/app.js', import.meta.ur
 const nextApp = await fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8');
 
 assert.match(productionMain, /createRaceSessionOrchestrator/);
-assert.match(productionMain, /showRaceSetup: showTheLot/);
+assert.match(productionMain, /showRaceSetup: showGarageSetup/);
 assert.match(productionMain, /motionButton\.addEventListener\('click', raceSession\.requestMotion\)/);
 assert.match(productionMain, /manualButton\.addEventListener\('click', raceSession\.useManualMode\)/);
 assert.match(productionMain, /openLot: raceSession\.openLotFromRace/);

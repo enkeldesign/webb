@@ -55,8 +55,8 @@ assert.doesNotMatch(
 );
 assert.match(feedbackSource, /\[data-support-start\]/,
   'START CHALLENGE must arm the recommended vehicle before the existing track navigation runs');
-assert.match(feedbackSource, /\.lot-car-option\[data-car-id=/,
-  'The recommended owned car must be selected in The Lot');
+assert.match(feedbackSource, /garage\.viewCar\(vehicleId\)/,
+  'The recommended car must be featured in GARAGE');
 assert.match(feedbackSource, /turn-support-home-toast/,
   'Challenge completion must replay as a compact success toast on Home');
 assert.match(feedbackSource, /turn-support-completion-indicator/,

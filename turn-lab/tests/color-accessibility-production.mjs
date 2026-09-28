@@ -16,8 +16,6 @@ const [
   cueCssSource,
   lotSource,
   lotCssSource,
-  layoutSource,
-  paintGateSource,
   stylesSource,
   drivePadCssSource,
   manualSteeringCssSource,
@@ -29,10 +27,8 @@ const [
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/accessibility/color-accessibility-r163.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/accessibility/color-cues-r163.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-r10.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-layout-r60.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/garage.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/garage.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/styles.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/drive-pad.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/manual-steering.css', import.meta.url), 'utf8'),
@@ -73,9 +69,8 @@ assert.ok(
   'Production entry point must display the current release source of truth'
 );
 assert.ok(indexSource.includes(`styles.css?build=${release.cacheKey}-native-html`));
-assert.ok(indexSource.includes(`garage/lot-r10.css?build=${release.cacheKey}-native-html`));
-assert.ok(indexSource.includes(`garage/lot-layout-r60.css?build=${release.cacheKey}-native-html`));
-assert.ok(indexSource.includes(`lot-track-select.js?build=${release.cacheKey}&revision=r252-supercar-outward-rims`));
+assert.doesNotMatch(indexSource, /lot-r10\.css|lot-layout-r60\.css|lot-track-select\.js/,
+  'The Lot is retired; GARAGE loads its own styles when it opens');
 assert.ok(
   indexSource.includes(`app.js?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click`),
   'The device must receive the native-picker ancestry experiment under a fresh release module URL'
@@ -83,30 +78,31 @@ assert.ok(
 assert.doesNotMatch(indexSource, /named-color-fallback|native-color-input-r163\.css/,
   'Production must not load fallback or corrective paint layers');
 
-assert.match(lotSource, /input\.type = 'color'/,
-  'Vehicle paint must start with a real HTML color input');
-assert.match(lotSource, /inputLabel\.htmlFor = input\.id/,
+// GARAGE paint: a real HTML colour input with an explicit label, left unstyled.
+assert.match(lotSource, /<input id="\$\{control\.htmlFor\}" type="color" value="\$\{escapeHtml\(value\)\}">/,
+  'Vehicle paint must be a real HTML color input');
+assert.match(lotSource, /control\.htmlFor = `garagePaint/,
   'The native color input must have a real explicit label');
 assert.match(lotSource, /input\.addEventListener\('input'/,
   'Progressive enhancement must listen to the native input rather than replace activation');
-assert.match(lotSource, /cue\.textContent = `COLOR · \$\{describeColorCue\(input\.value\)\.toUpperCase\(\)\}`/,
-  'Color Cues may progressively add TURN’s broad semantic name');
-assert.doesNotMatch(lotSource, /NAMED_COLOR_PRESETS|lot-color-preset|BY NAME|document\.createElement\('select'\)/,
+assert.match(lotSource, /colorName\.textContent = titleCase\(describeColorCue\(input\.value\)\)/,
+  'Each paint control names its colour in words');
+assert.doesNotMatch(lotSource, /NAMED_COLOR_PRESETS|color-preset|BY NAME|createElement\('select'\)/,
   'The rejected named-color fallback must be gone');
-assert.doesNotMatch(lotSource, /lot-color-trigger|lot-color-native|showPicker\(|\.click\(\)|focusNativeColorInput|isIOSFamily|label\.click\(/,
+assert.doesNotMatch(lotSource, /showPicker\(|input\.click\(\)|focusNativeColorInput|isIOSFamily|label\.click\(/,
   'TURN must not proxy or synthesize native picker activation');
-assert.doesNotMatch(lotSource, /input\.className|input\.classList|input\.setAttribute\('aria-|input\.tabIndex/,
+assert.doesNotMatch(lotSource, /input\.className|input\.classList|input\.setAttribute\('aria-|input\.tabIndex|type="color"[^>]*(class|aria-)/,
   'The color input itself must not be restyled or have its accessibility semantics rewritten');
-
-assert.match(lotSource, /<section class="lot-viewbox lot-viewbox-with-paint">[\s\S]*<div class="lot-colors" aria-label="Choose car paint colours"><\/div>[\s\S]*<\/section>/,
+assert.match(lotSource, /<div class="garage-paint" id="garagePaint" role="group" aria-label="Car paint" hidden><\/div>/,
   'Paint controls must be created in their final semantic DOM location');
-assert.match(lotSource, /lot-viewbox-head" aria-hidden="true"/);
-assert.match(lotSource, /lot-view-host" aria-hidden="true"/);
-assert.doesNotMatch(layoutSource, /appendChild\(colors\)|removeAttribute\('aria-hidden'\)|lot-view-close|lot-view-open/,
-  'The layout enhancer must not relocate paint or repair parent accessibility after render');
-
-assert.doesNotMatch(lotCssSource, /\.lot-color-input|\.lot-color-preset|input\[type=['"]?color/,
-  'TURN CSS must leave the native color input appearance untouched');
+assert.match(lotSource, /<div class="garage-view" aria-hidden="true"><\/div>/);
+const clippedInput = lotCssSource.match(/\.garage-swatch input\[type='color'\] \{([\s\S]*?)\n\}/)?.[1] || '';
+assert.match(clippedInput, /width: 0\.75px;[\s\S]*height: 0\.75px;[\s\S]*clip-path: inset\(50%\);[\s\S]*opacity: 0;/,
+  'The native input is visually clipped; TURN paints the visible face (r206 standalone-PWA contract)');
+assert.doesNotMatch(clippedInput, /inset:\s*0|width:\s*100%|height:\s*100%/,
+  'Standalone WebKit must never receive a full-size transparent native control over the visible face');
+assert.match(lotCssSource, /\.garage-swatch:focus-within \.garage-swatch-face[\s\S]*outline:/,
+  'Keyboard and screen-reader focus still shows on the face');
 
 const universalBlock = stylesSource.match(/\*\s*\{[\s\S]*?\}/)?.[0] || '';
 const htmlBodyBlock = stylesSource.match(/html,\s*\nbody\s*\{[\s\S]*?\}/)?.[0] || '';
@@ -132,36 +128,29 @@ assert.doesNotMatch(audioSource, /document\.addEventListener\(['"]change['"]/,
   'Generic UI audio must not delegate native form changes through document');
 assert.match(audioSource, /document\.addEventListener\('pointerdown', handleUiPointerDown/,
   'Nonessential pointer UI sounds may remain on the physical pointer path');
-assert.doesNotMatch(paintGateSource, /colors\.addEventListener\(['"]click['"]/,
-  'The paint group itself must not be a click-listener ancestor of its native color inputs');
-assert.doesNotMatch(paintGateSource, /colors\.setAttribute\('role', 'button'\)|colors\.tabIndex\s*=/,
-  'Unlocked native paint must not inherit faux-button semantics from the Trophy Road lock');
-assert.match(paintGateSource, /button\.className = 'lot-paint-lock-button'/,
-  'When paint is locked, its explanation belongs on a separate real button');
-assert.match(paintGateSource, /button\.addEventListener\('click', showLockedPaintInfo\)/,
-  'The lock button may own its own click listener without becoming an ancestor of the color input');
+assert.doesNotMatch(lotSource, /paintPanel\.addEventListener\(['"]click['"]/,
+  'The paint panel itself must not be a click-listener ancestor of its native color inputs');
+assert.match(lotSource, /<button class="turn-pr-button is-secondary is-compact garage-paint-toggle" type="button" aria-expanded="false" aria-controls="garagePaint">PAINT<\/button>/,
+  'The paint lock explanation belongs to a separate real button, never an ancestor of the input');
 
-assert.match(runtimeSource, /getVehicleDefaultColor/,
-  'The selected-car cue must have a factory-colour fallback before Paintjob is unlocked');
-assert.match(runtimeSource, /lot-selected-car-color-cue/,
-  'The Lot must expose a selected-car colour cue independently of paint controls');
-assert.match(runtimeSource, /CAR COLOR ·/);
-assert.match(runtimeSource, /input\[type="color"\]/,
-  'Once Paintjob is available, the selected-car cue may read the current native paint value');
-assert.match(runtimeSource, /attributeFilter: \['aria-checked'\]/,
-  'Car colour cues must update for mouse, touch, keyboard and 3D car selection');
-assert.doesNotMatch(runtimeSource, /replaceWith|showPicker\(|focusNativeColorInput|input\.click\(/,
-  'Color Cues must read native paint state without replacing or proxying the native control');
+// Color Cues: GARAGE names the car's body colour before Paintjob, from the factory colour.
+assert.match(lotSource, /<span class="turn-color-cue garage-color-cue"><\/span>/,
+  'GARAGE must expose a car colour cue independently of paint controls');
+assert.match(lotSource, /const bodyColor = lock \? getVehicleDefaultColor\(car\.id\) : selection\.state\(\)\.choice\.color;/,
+  'The car cue follows the chosen paint, and the factory colour for a preview');
+assert.match(lotSource, /CAR COLOR · \$\{describeColorCue\(bodyColor\)\.toUpperCase\(\)\}/);
+assert.match(lotCssSource, /\.garage-color-cue::before[\s\S]*repeating-linear-gradient/,
+  'The car cue carries a pattern, not colour alone');
+assert.doesNotMatch(runtimeSource, /lot-|MutationObserver\(scheduleSync\)/,
+  'The Color Cues runtime no longer scans for The Lot');
 assert.match(runtimeSource, /Color cues/);
 // ROADBOOK identifies tracks by name and pictogram; colour is decorative there.
 assert.doesNotMatch(runtimeSource, /TRACK COLOR ·/);
 assert.doesNotMatch(runtimeSource, /setInterval|setAnimationLoop/);
 
 assert.match(cueCssSource, /data-turn-color-cues='on'/);
-assert.match(cueCssSource, /lot-color-cue/);
-assert.match(cueCssSource, /lot-selected-car-color-cue/,
-  'The selected-car cue must remain visible in The Lot even while the paint controls are Trophy Road locked');
-assert.match(cueCssSource, /repeating-linear-gradient/);
+assert.match(cueCssSource, /html\[data-turn-color-cues='on'\] \.turn-color-cue \{\s*display: inline-flex;/,
+  'Every colour cue, GARAGE included, appears only while Color cues is on');
 
 assert.match(historySource, /native HTML color input/i);
 assert.doesNotMatch(historySource, /native paint activation bridge|assistive-technology bridge/i,

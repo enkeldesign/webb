@@ -42,12 +42,6 @@ const crossDeploymentCompatibilityRoutes = Object.freeze({
   '/turn/ui/shift-feedback.js?revision=r253-supercar-release': '/turn/ui/shift-feedback.js?revision=r255-flow-shift-accessibility'
 });
 
-function productionPresentationRoutes() {
-  return Object.freeze({
-    '/turn/garage/lot-showroom-experiment.js?revision=r252-supercar-outward-rims': '/turn/garage/lot-showroom-track-icon.js?revision=r2-swift-lot-ui'
-  });
-}
-
 const requiredActiveModules = Object.freeze([
   'turn/app.js',
   'turn/main.js',
@@ -69,7 +63,8 @@ const requiredActiveModules = Object.freeze([
   'turn/achievements/trophy-road-feedback.js',
   'turn/achievements/trophy-road-showcase.js',
   'turn/progression/trophy-road.js',
-  'turn/garage/lot-showroom-track-icon.js',
+  'turn/garage/garage.js',
+  'turn/garage/showroom-viewer.js',
   'turn/assets/cars/supercar-model-data.js'
 ]);
 
@@ -345,7 +340,6 @@ const yourTurnImportMap = parseImportMap(yourTurnDocument);
 assert.deepEqual(labImportMap, headGraph.importMap, 'TURN LAB must use the exact production import map');
 assertRouteTargets(headGraph.importMap, criticalReleaseTargets, 'Production TURN');
 assertRouteTargets(headGraph.importMap, crossDeploymentCompatibilityRoutes, 'Production TURN');
-assertRouteTargets(headGraph.importMap, productionPresentationRoutes(), 'Production TURN');
 assertRouteTargets(nextImportMap, criticalReleaseTargets, 'TURN NEXT');
 assertRouteTargets(nextImportMap, crossDeploymentCompatibilityRoutes, 'TURN NEXT');
 assertRouteTargets(yourTurnImportMap, criticalReleaseTargets, 'YOUR TURN');
@@ -507,7 +501,7 @@ for (const dependency of [
   'turn/ui/rival-onboarding.js',
   'turn/rival-onboarding.css',
   'turn/garage/lot-saved-paint.js',
-  'turn/garage/lot-showroom-experiment.css',
+  'turn/garage/garage.css',
   'turn/progression/trophy-road.js'
 ]) {
   assert.ok(supercarWorkflow.includes(`- '${dependency}'`),

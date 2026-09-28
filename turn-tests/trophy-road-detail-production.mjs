@@ -38,7 +38,8 @@ const [
   labIndex,
   homeRewardReplay,
   trophyRoadPerksFacade,
-  lotTrackIconWrapper,
+  garageSource,
+  homeSource,
   ...trackIconSources
 ] = await Promise.all([
   fs.readFile(new URL('../turn/achievements/view.js', import.meta.url), 'utf8'),
@@ -49,7 +50,8 @@ const [
   fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/home-reward-replay-r225.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/progression/trophy-road.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/garage/lot-showroom-track-icon.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/garage/garage.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   ...TRACK_IDS.map((trackId) => fs.readFile(
     new URL(`../turn/assets/trophy-road/${trackId}.svg`, import.meta.url),
     'utf8'
@@ -167,8 +169,6 @@ for (const document of [productionIndex, labIndex]) {
   }
   assert.ok(!Object.keys(imports).some((specifier) => /\/(achievements\/catalog|progression\/trophy-road)\.js\?revision=/.test(specifier)),
     'No revision alias may route achievements or Trophy Road consumers to a second module instance');
-  assert.match(document, /"\/turn\/garage\/lot-showroom-experiment\.js\?revision=r252-supercar-outward-rims": "\/turn\/garage\/lot-showroom-track-icon\.js\?revision=r2-swift-lot-ui"/,
-    'The current Lot showroom must route through the chosen-track icon wrapper');
 }
 for (const [name, source] of [['Home reward replay', homeRewardReplay], ['Reward-detail rehydration', feedback]]) {
   assert.match(source, /from '\.\.\/progression\/trophy-road\.js'/,
@@ -176,12 +176,10 @@ for (const [name, source] of [['Home reward replay', homeRewardReplay], ['Reward
 }
 assert.match(trophyRoadPerksFacade, /TRACK_ICON_MARKUP\[trackId\]/,
   'Trophy Road itself owns the authored track icon presentation');
-assert.match(lotTrackIconWrapper, /__turnNextHome\?\.getSelectedTrackId\?\.\(\)/,
-  'The Lot track pictogram must mirror Home selection instead of owning duplicate state');
-assert.match(lotTrackIconWrapper, /gridTemplateColumns = 'auto auto'/,
-  'The Lot header must reserve real layout space for the chosen-track pictogram');
-assert.match(lotTrackIconWrapper, /aria-hidden', 'true'/,
-  'The chosen-track Lot pictogram must remain decorative');
+assert.match(homeSource, /trackIcon: trackIconMarkup\(trackId\)/,
+  'GARAGE receives the chosen track pictogram from ROADBOOK instead of owning duplicate state');
+assert.match(garageSource, /<span class="turn-pr-icon" aria-hidden="true">\$\{trackIcon\}<\/span>/,
+  'The chosen-track pictogram in the GARAGE dock stays decorative beside the track name');
 
 assert.match(view, /data-trophy-road-detail-layer hidden/);
 assert.match(view, /role="dialog"[\s\S]*aria-modal="true"[\s\S]*aria-labelledby="turnTrophyRoadDetailTitle"/,
@@ -250,4 +248,4 @@ for (const reward of vehicleRewards) {
 assert.match(showcase, /supercar:\s*Object\.freeze\(\[[\s\S]*carId: 'supercar'/,
   'The 2300 SUPERCAR reward must load the actual Supercar vehicle model rather than stop at its line-art icon');
 
-console.log('TURN Trophy Road anchored reward modal, shared track icons, chosen-track Lot cue and complete vehicle showcase coverage passed.');
+console.log('TURN Trophy Road anchored reward modal, shared track icons, chosen-track GARAGE cue and complete vehicle showcase coverage passed.');

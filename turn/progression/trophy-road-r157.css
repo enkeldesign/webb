@@ -1,4 +1,4 @@
-@import url('./trophy-road.css?build=20260928-r321');
+@import url('./trophy-road.css?build=20260928-r322');
 
 /* Trophy Road locked/unlocked states use the primitive TURN palette directly. */
 :root {
@@ -213,138 +213,10 @@
   background: var(--turn-orange-500, #ff7b54);
 }
 
-.lot-selected-car-lock {
-  display: inline-grid;
-  width: .9em;
-  height: .9em;
-  margin-right: .18em;
-  place-items: center;
-  vertical-align: -.08em;
-}
-
-.lot-selected-car-lock svg,
-.lot-paint-lock svg {
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.lot-colors.is-paint-locked {
-  min-height: 40.5px;
-  display: grid;
-  place-items: center;
-  color: var(--turn-ink, #08090a);
-}
-
-/* The locked state remains the paint rail below the 3D preview. A more general
-   lock rule must never restore normal flow and cover the viewer. */
-.lot-viewbox-with-paint .lot-colors.is-paint-locked {
-  position: absolute;
-  z-index: 4;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  box-sizing: border-box;
-  min-height: var(--lot-paint-rail-height, 40.5px);
-  margin: 0;
-  padding: 5.25px 7.5px 5.25px 10.5px;
-  border: 0;
-  border-top: 3px solid var(--turn-ink, #08090a);
-  border-radius: 0;
-  background: var(--turn-surface-raised, #fffdf6);
-  box-shadow: none;
-}
-
-.lot-paint-lock-button {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 7.5px;
-  align-items: center;
-  width: 100%;
-  min-height: 27px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.lot-paint-lock-button:focus-visible {
-  outline: 4px solid var(--turn-action-information, #38d9ff);
-  outline-offset: 1.5px;
-}
-
-.lot-paint-lock-copy {
-  display: block;
-  min-width: 0;
-  overflow: hidden;
-  font-size: max(var(--turn-text-floor, 11px), clamp(0.54rem, 1.7vw, 0.75rem));
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.lot-paint-lock-copy strong {
-  display: block;
-  overflow: hidden;
-  font-size: 1em;
-  font-weight: 900;
-  text-overflow: ellipsis;
-}
-
-.lot-paint-lock {
-  display: grid;
-  width: 27px;
-  height: 27px;
-  box-sizing: border-box;
-  padding: 5.25px;
-  place-items: center;
-  border: 2px solid var(--turn-ink, #08090a);
-  border-radius: 7.5px;
-  background: var(--lot-paint-lock-background, var(--turn-action-warning, #ffd43b));
-  box-shadow: 2.25px 2.25px 0 var(--turn-ink, #08090a);
-  color: var(--lot-paint-lock-foreground, var(--turn-ink, #08090a));
-  pointer-events: none;
-}
-
 .turn-achievement-card.is-hidden-achievement .turn-achievement-icon {
   background: var(--turn-muted, #d6d0c2);
 }
 
 .turn-achievement-card.is-hidden-achievement .turn-achievement-copy p {
   font-style: italic;
-}
-
-@media (max-height: 322.5px) and (orientation: landscape) {
-  .lot-colors.is-paint-locked {
-    min-height: 33px;
-  }
-
-  .lot-viewbox-with-paint .lot-colors.is-paint-locked {
-    min-height: var(--lot-paint-rail-height, 35.25px);
-    padding: 3.75px 5.25px 3.75px 7.5px;
-  }
-
-  .lot-paint-lock-button {
-    min-height: 22.5px;
-  }
-
-  .lot-paint-lock-copy {
-    font-size: max(var(--turn-text-floor, 11px), 0.51rem);
-  }
-
-  .lot-paint-lock {
-    width: 22.5px;
-    height: 22.5px;
-    padding: 3.75px;
-    border-radius: 6px;
-    box-shadow: 1.5px 1.5px 0 var(--turn-ink, #08090a);
-  }
 }

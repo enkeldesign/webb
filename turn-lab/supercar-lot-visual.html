@@ -3,17 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TURN Supercar Lot visual regression</title>
+  <title>TURN Supercar GARAGE visual regression</title>
   <link rel="stylesheet" href="/turn/design-tokens.css">
   <link rel="stylesheet" href="/turn/styles.css">
-  <link rel="stylesheet" href="/turn/garage/lot-r10.css">
-  <link rel="stylesheet" href="/turn/garage/lot-showroom-experiment.css">
-  <link rel="stylesheet" href="/turn/garage/lot-showroom-cleanup-r201.css">
-  <link rel="stylesheet" href="/turn/garage/lot-thumbnail-composition-r211.css">
-  <link rel="stylesheet" href="/turn/garage/lot-info-panel-r212.css">
-  <link rel="stylesheet" href="/turn/garage/lot-info-typography-r213.css">
-  <link rel="stylesheet" href="/turn/garage/lot-layout-r60.css">
-  <link rel="stylesheet" href="/turn/garage/lot-saved-paint.css">
+  <link rel="stylesheet" href="/turn/pre-race.css">
   <script>
     globalThis.__TURN_BUILD__ = Object.freeze({
       version: '1.17.8',
@@ -37,36 +30,42 @@
 </head>
 <body>
   <script type="module">
-    import { showTheLot } from '/turn/garage/lot-showroom-experiment.js?revision=r253-supercar-release';
+    import { unlockRewardsForTesting } from '/turn/testing/admin-unlock-sequence.js';
+    import { prepareGarage, showGarage } from '/turn/garage/garage.js';
 
     globalThis.__supercarLotVisualReady = false;
     globalThis.__supercarLotVisualFailure = null;
-    void showTheLot({
+    // The Supercar and Paintjob are Trophy Road rewards: unlock them for this page.
+    unlockRewardsForTesting();
+    await prepareGarage();
+    void showGarage({
       initialSelection: {
         carId: 'supercar',
         color: '#000000',
         secondaryColor: '#ffbb00'
-      }
+      },
+      trackId: 'countryside',
+      trackName: 'Countryside'
     });
+    document.querySelector('.garage-paint-toggle')?.click();
 
     const startedAt = performance.now();
     const timer = globalThis.setInterval(() => {
-      const loading = document.querySelector('.lot-loading');
-      const canvas = document.querySelector('.lot-view-host canvas');
-      const selected = document.querySelector('.lot-car-title strong')?.textContent?.trim();
-      if (loading?.classList.contains('is-done') && canvas?.width > 0 && canvas?.height > 0) {
+      const garage = document.querySelector('.garage');
+      const canvas = document.querySelector('.garage-view canvas');
+      if (garage && !garage.classList.contains('is-loading') && canvas?.width > 0 && canvas?.height > 0) {
         globalThis.clearInterval(timer);
         globalThis.__supercarLotVisualMetrics = Object.freeze({
-          selected,
+          selected: document.querySelector('.garage-name')?.textContent?.trim(),
           canvasWidth: canvas.width,
           canvasHeight: canvas.height,
-          bodyColor: document.querySelector('input[aria-label="Body colour"]')?.value || '',
-          rimColor: document.querySelector('input[aria-label="Rims colour"]')?.value || ''
+          bodyColor: document.querySelector('#garagePaintBody')?.value || '',
+          rimColor: document.querySelector('#garagePaintSecondary')?.value || ''
         });
         globalThis.__supercarLotVisualReady = true;
       } else if (performance.now() - startedAt > 60000) {
         globalThis.clearInterval(timer);
-        globalThis.__supercarLotVisualFailure = 'Timed out waiting for the Supercar Lot preview.';
+        globalThis.__supercarLotVisualFailure = 'Timed out waiting for the Supercar GARAGE preview.';
       }
     }, 50);
   </script>

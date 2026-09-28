@@ -130,8 +130,8 @@ jobs:
       - name: Run car visual ownership and preview lifecycle regression
         run: node turn-tests/car-visual-lifecycle-production.mjs
 
-      - name: Run Lot preparation failure recovery regression
-        run: node turn-tests/lot-preparation-retry-production.mjs
+      - name: Run GARAGE preparation failure recovery regression
+        run: node turn-tests/garage-preparation-retry-production.mjs
 
       - name: Run multi-track and Airport regression
         run: node turn-lab/tests/multi-track-production.mjs
@@ -175,11 +175,11 @@ jobs:
       - name: Run production garage regression
         run: node turn-lab/tests/garage-production.mjs
 
-      - name: Run M8 Lot selection entry regression
-        run: node turn-tests/m8-lot-selection-production.mjs
+      - name: Run GARAGE selection model regression
+        run: node turn-tests/garage-selection-production.mjs
 
-      - name: Run compact Lot layout regression
-        run: node turn-lab/tests/lot-layout-production.mjs
+      - name: Run GARAGE structure regression
+        run: node turn-tests/garage-structure-production.mjs
 
       - name: Run dormant BUILD-A-CAR schema and storage regression
         run: node turn-lab/tests/build-a-car-schema.mjs
@@ -297,9 +297,6 @@ jobs:
 
       - name: Run Lot paint observer freeze regression
         run: node turn-lab/tests/paint-lock-observer-production.mjs
-
-      - name: Run Lot PWA COLOR scroll-boundary regression
-        run: node turn-lab/tests/lot-pwa-color-scroll-boundary.mjs
 
       - name: Run production sound foundation regression
         run: node turn-lab/tests/audio-foundation-production.mjs

@@ -4,9 +4,9 @@ import {
   normalizeTrackId
 } from '/turn/tracks/catalog.js?source=20260729-r118-m8';
 import { activateTrack } from '/turn/tracks/track-manager.js?source=20260729-r118-m8';
-import { prepareEnhancedLot, showEnhancedLot as showTheLot } from '/turn/garage/lot-track-select.js?revision=r200-production-candidate';
 import { showTrackIntro } from '/turn/ui/track-intro.js?source=20260729-r118-m8';
 import { installRoadbook } from '/turn/roadbook/roadbook.js';
+import { trackIconMarkup } from '/turn/ui/track-icons.js';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';
 import {
   CONTROL_HANDEDNESS,
@@ -320,9 +320,11 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
   return { dialog, sync };
 }
 
+// GARAGE's RACE asks for motion access inside the tap itself (iOS only prompts from a
+// user gesture), then lets the tap through.
 function installLotRaceGate({ raceSession, getSteeringMode, onAccessReady }) {
-  const raceButton = document.querySelector('.lot-race');
-  if (!raceButton) throw new Error('TURN M8 could not find the Race This Car button.');
+  const raceButton = document.querySelector('.garage-race');
+  if (!raceButton) throw new Error('TURN M8 could not find the GARAGE RACE button.');
 
   let status = document.querySelector('.lot-race-status');
   if (!status) {
@@ -330,10 +332,12 @@ function installLotRaceGate({ raceSession, getSteeringMode, onAccessReady }) {
     status.className = 'lot-race-status';
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
-    raceButton.insertAdjacentElement('beforebegin', status);
+    (raceButton.closest('.turn-pr-dock-inner') || raceButton.parentElement).prepend(status);
   }
 
   const gate = async (event) => {
+    // A locked preview is not a race; GARAGE explains the lock itself.
+    if (raceButton.getAttribute('aria-disabled') === 'true') return;
     event.preventDefault();
     event.stopImmediatePropagation();
     raceButton.disabled = true;
@@ -432,9 +436,13 @@ export async function installM8HomeNavigation() {
     return TRACK_CATALOG.find((track) => track.id === selectedTrackId) || TRACK_CATALOG[0];
   }
 
+  let garageModule = null;
   function prepareLotOnce() {
     if (!lotWarmupPromise) {
-      const preparation = prepareEnhancedLot().catch((error) => {
+      const preparation = import('/turn/garage/garage.js').then(async (module) => {
+        await module.prepareGarage();
+        garageModule = module;
+      }).catch((error) => {
         if (lotWarmupPromise === preparation) lotWarmupPromise = null;
         throw error;
       });
@@ -450,7 +458,7 @@ export async function installM8HomeNavigation() {
       const beginWarmup = () => {
         lotWarmupScheduled = false;
         void prepareLotOnce().catch((error) => {
-          console.warn('TURN: The Lot could not be prepared in the background.', error);
+          console.warn('TURN: GARAGE could not be prepared in the background.', error);
         });
       };
 
@@ -494,7 +502,7 @@ export async function installM8HomeNavigation() {
     if (setupPending) return false;
     const trackId = selectedTrackId;
     const trackName = selectedTrack().name.toUpperCase();
-    const setupMessage = `PREPARING ${trackName} AND THE LOT…`;
+    const setupMessage = `PREPARING ${trackName} AND GARAGE…`;
     setupPending = true;
     roadbook.setBusy(`PREPARING ${trackName}…`);
     homeStatus.textContent = setupMessage;
@@ -509,7 +517,14 @@ export async function installM8HomeNavigation() {
         prepareLotOnce()
       ]);
       hideHome();
-      const lotPromise = showTheLot({ initialSelection: selectedVehicle(runtime) });
+      const track = selectedTrack();
+      const lotPromise = garageModule.showGarage({
+        initialSelection: selectedVehicle(runtime),
+        trackId,
+        trackName: track.name,
+        trackDifficulty: track.difficulty,
+        trackIcon: trackIconMarkup(trackId)
+      });
       const removeRaceGate = installLotRaceGate({
         raceSession,
         getSteeringMode: loadSteeringMode,

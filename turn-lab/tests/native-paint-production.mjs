@@ -157,8 +157,8 @@ assert.equal(hatchbackMeshNames.includes('spoiler'), false, 'Hatchback must not 
 const [index, releaseSource, lot, css, carModels, semanticFinish, main, lapSystem, rivalStorage] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-r10.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/garage.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/garage.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
@@ -172,13 +172,21 @@ const rivalStorageModule = await import(new URL(
 
 const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
-assert.match(lot, /input\.type = 'color'/, 'The Lot must use the browser or OS colour picker');
-assert.match(lot, /inputLabel\.htmlFor = input\.id/, 'The native input must have an explicit HTML label');
+assert.match(lot, /type="color"/, 'GARAGE must use the browser or OS colour picker');
+assert.match(lot, /control\.htmlFor = `garagePaint/, 'The native input must have an explicit HTML label');
 assert.match(lot, /input\.addEventListener\('input'/, 'Native picker changes must preview immediately');
-assert.doesNotMatch(lot, /CAR_PALETTE|makeColorButton|NAMED_COLOR_PRESETS|lot-color-preset/, 'Production must not add a custom or fallback palette');
+assert.match(lot, /viewer\.recolor\(choice\.color, choice\.secondaryColor\)/, 'The showroom car repaints as the picker moves');
+assert.doesNotMatch(lot, /CAR_PALETTE|makeColorButton|NAMED_COLOR_PRESETS|color-preset/, 'Production must not add a custom or fallback palette');
 assert.doesNotMatch(lot, /input\.className|input\.classList|input\.setAttribute\('aria-/, 'The native color input must remain semantically and visually native');
-assert.doesNotMatch(css, /\.lot-color-input|input\[type=['"]?color/, 'TURN must not style the native color input itself');
-assert.doesNotMatch(css, /\.lot-color\[aria-pressed=/, 'The retired custom swatch state must be removed');
+const clippedInput = css.match(/\.garage-swatch input\[type='color'\] \{([\s\S]*?)\n\}/)?.[1] || '';
+assert.match(clippedInput, /width: 0\.75px;[\s\S]*height: 0\.75px;[\s\S]*clip-path: inset\(50%\);[\s\S]*opacity: 0;/,
+  'The native input is visually clipped; TURN paints the visible face (r206 standalone-PWA contract)');
+assert.doesNotMatch(clippedInput, /inset:\s*0|width:\s*100%|height:\s*100%/,
+  'Standalone WebKit must never receive a full-size transparent native control over the visible face');
+assert.match(css, /\.garage-swatch:focus-within \.garage-swatch-face[\s\S]*outline:/,
+  'Keyboard and screen-reader focus still shows on the face');
+assert.match(lot, /if \(car\.secondaryPaint\) swatches\.append\(colorControl\(car\.secondaryPaint\.label, choice\.secondaryColor, true\)\)/,
+  'Each car offers its own semantic secondary paint, labelled by the catalog');
 assert.match(carModels, /turnSecondaryPaintMaterials/);
 assert.match(carModels, /turnSemanticPaintRecords/);
 assert.match(carModels, /recolorSemanticCarFinish/);
@@ -316,44 +324,26 @@ assert.equal(
   'Fixed emergency liveries must never gain player-saved paint'
 );
 
-const [showroomSource, paintGateSource, wrapperSource, enhancementSource, savedPaintCss] = await Promise.all([
-  fs.readFile(new URL('../../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-saved-paint.css', import.meta.url), 'utf8')
-]);
-assert.match(showroomSource, /const thumbnailPaint = resolveLotPaint\(car\.id\)/,
-  'Thumbnail loading fallbacks must start from saved paint instead of factory paint');
-assert.match(showroomSource, /thumbnailRenderer\.observeVisible\(LOT_CARS, carButtons, resolveLotPaint, carPicker\)/,
-  'Each visibility-driven 3D thumbnail batch must render its remembered per-car paint pair');
-assert.match(showroomSource, /thumbnailRenderer\.renderOne\(car, button, paint\)/,
-  'SAVE and RESET must refresh only the affected thumbnail');
-assert.match(showroomSource, /className = 'lot-paint-save-action'/);
-assert.match(showroomSource, /button\.textContent = resetMode \? 'RESET' : 'SAVE'/,
+// GARAGE saves paint per car: SAVE and RESET on the chosen car, factory colours
+// before Paintjob, and a new choice starts from that car's remembered paint.
+assert.match(lot, /const paintFor = \(carId\) => \(isPaintUnlocked\(\) \? resolveLotPaint\(carId\) : factoryPaint\(carId\)\)/,
+  'A choice starts from its remembered paint, and from factory paint only while PAINTJOB is locked');
+assert.match(lot, /initial: isPaintUnlocked\(\) \? entry : \{ \.\.\.entry, \.\.\.factoryPaint\(entry\.carId\) \}/,
+  'A locked PAINTJOB never races an older saved custom paint');
+assert.match(lot, /action\.textContent = resetMode \? 'Reset to factory' : 'Save colours'/,
   'The paint action must visibly switch between SAVE and RESET');
-assert.match(showroomSource, /saveLotPaint\(selectedCarId, selectedPaint\(\)\)/);
-assert.match(showroomSource, /resetLotPaint\(selectedCarId\)/);
-assert.match(showroomSource, /let pending = Promise\.resolve\(\)/,
-  'Single-thumbnail refreshes must serialize behind visible-card work rather than open concurrent WebGL contexts');
+assert.match(lot, /saveLotPaint\(current\.carId, current\)/);
+assert.match(lot, /resetLotPaint\(current\.carId\)/);
+assert.match(lot, /action\.dataset\.mode = resetMode \? 'reset' : 'save'/);
+assert.match(lot, /showroom-viewer\.js/);
+const showroomSource = await fs.readFile(new URL('../../turn/garage/showroom-viewer.js', import.meta.url), 'utf8');
 assert.match(showroomSource, /car-models\.js\?revision=r252-supercar-outward-rims/,
-  'The Lot must cross a fresh cache boundary into the corrected Supercar model factory');
-assert.match(paintGateSource, /if \(freeColor && !paintUnlocked\) forceFactoryPaint\(carId\)/,
-  'The paint gate may force factory paint only while PAINTJOB is locked');
-assert.doesNotMatch(paintGateSource, /!paintUnlocked \|\| changedCar/,
-  'Changing cars after PAINTJOB unlock must not erase a remembered paint pair');
-assert.match(wrapperSource, /lot-enhancement-runtime\.js\?revision=r246-lot-saved-paint/);
-assert.match(wrapperSource, /import\('\.\/lot-showroom-experiment\.js\?revision=r252-supercar-outward-rims'\)/);
-assert.match(wrapperSource, /lot-saved-paint\.css\?revision=r246-lot-saved-paint/);
-assert.match(enhancementSource, /lot-paint-reward\.js\?revision=r246-lot-saved-paint/);
-assert.match(savedPaintCss, /\.lot-paint-save-action\[data-mode='reset'\]/,
-  'RESET must have a distinct paper treatment while SAVE remains the cyan action');
+  'GARAGE must use the corrected Supercar model factory');
 const imports = JSON.parse(index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)[1]).imports;
-assert.equal(imports['/turn/garage/lot-track-select.js?revision=r200-production-candidate'],
-  `/turn/garage/lot-track-select.js?revision=r252-supercar-outward-rims&build=${release.cacheKey}`,
-  'Production must route existing Home callers through the corrected Supercar wrapper with the current build identity');
+assert.ok(!Object.keys(imports).some((specifier) => /lot-track-select|lot-showroom-experiment/.test(specifier)),
+  'The retired Lot modules are no longer routed');
 
-console.log(`TURN ${release.id} Hatchback, Rally Racer, native secondary paint and saved Lot paint passed.`);
+console.log(`TURN ${release.id} Hatchback, Rally Racer, native secondary paint and saved GARAGE paint passed.`);
 
 function readGlbJson(buffer, label) {
   assert.equal(buffer.toString('utf8', 0, 4), 'glTF');

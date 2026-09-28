@@ -139,28 +139,18 @@ const relativeBridge = JSON.parse(renderReleaseIndex(relativeBridgeFixture, futu
 assert.equal(relativeBridge['./achievements/runtime.js?revision=r164-long-session-robustness'],
   `/turn/achievements/runtime.js?revision=r244-reward-toast-guide&build=${futureRelease.cacheKey}`,
   'Synchronizing a relative achievement alias must preserve its /turn/ document base');
-assert.equal(
-  futureImports['/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=20260827-r185'],
-  '/turn/garage/lot-enhancement-runtime.js?revision=r243-mountain-1300&build=20260827-r185',
-  'A future release must keep the prewarmed Lot runtime on the current color-migration module graph'
-);
-assert.equal(
-  futureImports['/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=20260826-r184'],
-  '/turn/garage/lot-enhancement-runtime.js?revision=r243-mountain-1300&build=20260827-r185',
-  'The one known r184 installed-PWA Lot URL must remain a narrow compatibility bridge to the current release'
-);
+assert.ok(!Object.entries(futureImports).some(([specifier, target]) => /\/garage\/lot-(?:r10|track-select|enhancement-runtime|showroom-experiment)\.js/.test(`${specifier} ${target}`)),
+  'The Lot is retired: a release routes none of its modules, so no installed PWA can reach it');
 const visualResourcePaths = new Set([
   '/turn/main.js', '/turn/vehicle/car-models.js', '/turn/vehicle/car-visual-resources.js',
   '/turn/vehicle/emergency-livery-models.js', '/turn/vehicle/learner-car-livery.js',
   '/turn/vehicle/supercar-kenney-wheels.js', '/turn/ui/track-best-car.js',
-  '/turn/garage/lot-showroom-experiment.js', '/turn/achievements/trophy-road-showcase.js'
+  '/turn/garage/garage.js', '/turn/garage/showroom-viewer.js', '/turn/achievements/trophy-road-showcase.js'
 ]);
 for (const [specifier, target] of Object.entries(futureImports)) {
   if (!target.startsWith('/turn/')) continue;
   const url = new URL(target, 'https://enkel.design');
-  if (url.pathname === '/turn/garage/lot-enhancement-runtime.js'
-    || url.pathname === '/turn/progression/trophy-road.js'
-    || url.pathname === '/turn/garage/lot-track-select.js'
+  if (url.pathname === '/turn/progression/trophy-road.js'
     || url.pathname === '/turn/m8-home.js'
     || url.pathname === '/turn/achievements/runtime.js'
     || visualResourcePaths.has(url.pathname)

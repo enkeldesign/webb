@@ -168,17 +168,9 @@ const [
   rivalStorage,
   controls,
   carModels,
-  lotWrapper,
-  lotEnhancementRuntime,
-  lotPerkDisclosure,
-  lotLayout,
-  lotLayoutCss,
-  lotAccessibility,
-  lotTrophyGate,
-  originalLot,
+  garage,
   trackIntro,
-  trackIntroCss,
-  easterEggUi
+  trackIntroCss
 ] = await Promise.all([
   fs.readFile(path.join(turnDir, 'index.html'), 'utf8'),
   fs.readFile(path.join(turnDir, 'release.json'), 'utf8'),
@@ -190,17 +182,9 @@ const [
   fs.readFile(path.join(turnDir, 'race/rival-storage.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/gameplay-controls.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-enhancement-runtime.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-perk-disclosure.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-layout-r60.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-layout-r60.css'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-accessibility-r118.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'progression/lot-trophy-gate.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-r10.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'garage/garage.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/track-intro.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'track-intro.css'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'vehicle/sports-sedan-easter-egg.js'), 'utf8')
+  fs.readFile(path.join(turnDir, 'track-intro.css'), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -212,95 +196,37 @@ const vehicleCatalogTarget = `/turn/vehicle/catalog.js?build=${release.cacheKey}
 const carModelBridgeTarget = `/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=${release.cacheKey}`;
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
-assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}-native-html`));
+assert.doesNotMatch(index, /lot-r10\.css|lot-layout-r60\.css|lot-stat-legend\.css/, 'The Lot stylesheets are retired');
 assert.match(index, new RegExp(`\\.\\/track-intro\\.css\\?build=${release.cacheKey}`));
 assert.match(index, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-browser-consent(?:-[^"]+)?"`));
-assert.equal(
-  imports['./garage/lot-r10.js?build=20260720-r19'],
-  `${releaseTarget('./garage/lot-track-select.js')}&revision=r252-supercar-outward-rims`
-);
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('/turn/ui/track-intro.js'));
 assert.ok(
   imports['./race/lap-system.js?build=20260720-r19']?.startsWith(releaseTarget('./race/lap-system-r86.js')),
   'Production must route lap completion through the current Super Sedan policy'
 );
 
-assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit-r128-super-sedan-notice/);
-assert.match(app, /sports-sedan-easter-egg\.js\?revision=r128-unlock-notice/);
-assert.match(app, /installLotEnhancementRuntime/);
-assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r154/);
-assert.ok(app.indexOf('installLotEnhancementRuntime()') < app.indexOf("withBuild('./main.js')"));
-
-assert.match(lotWrapper, /showOriginalLot/);
-assert.match(lotWrapper, /lot-r10\.js\?build=20260809-r163-native-html/);
-assert.match(lotWrapper, /export async function showEnhancedLot/);
-assert.match(lotWrapper, /enhanceLotNow\(\)/);
-assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/);
-assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/);
-assert.doesNotMatch(lotWrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
-assert.match(originalLot, /export function showTheLot/);
-assert.match(originalLot, /input\.type = 'color'/);
-assert.doesNotMatch(originalLot, /NAMED_COLOR_PRESETS|lot-color-preset|showPicker\(|label\.click\(/);
-
-assert.match(lotEnhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks'/);
-assert.match(lotEnhancementRuntime, /TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks'/);
-assert.match(lotEnhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-vintage-rally-perks/);
-assert.match(lotEnhancementRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
-assert.match(lotEnhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
-assert.match(lotEnhancementRuntime, /gateLotNow\(scope\)/);
-assert.match(lotEnhancementRuntime, /installLotPerkDisclosure\(scope\)/);
-assert.match(lotEnhancementRuntime, /installLotStatLegend\(scope\)/);
-assert.match(lotEnhancementRuntime, /installLotLayout\(scope\)/);
-assert.match(lotEnhancementRuntime, /installLotAccessibility\(scope\)/);
-assert.match(lotEnhancementRuntime, /lot-vehicle-copy\.js\?revision=r223-training-car-taxi/);
-assert.ok(
-  lotEnhancementRuntime.indexOf('gateLotNow(scope)') < lotEnhancementRuntime.indexOf('installLotAccessibility(scope)'),
-  'Trophy locks must be included in the accessible car names before the accessibility enhancer runs'
-);
-assert.match(lotEnhancementRuntime, /new MutationObserver\(sync\)/);
-assert.match(lotEnhancementRuntime, /screen\.dataset\.lotEnhancements = ENHANCEMENT_ID/);
-assert.match(lotPerkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/);
-assert.doesNotMatch(lotPerkDisclosure, /rewardForVehicle\(/,
-  'Independent perk entitlements must never route through the vehicle lock lookup');
-assert.match(lotPerkDisclosure, /rewardForVehiclePerk\(vehicleId\)/,
-  'The Lot must look up only the selected car’s independent perk entitlement');
-assert.match(lotPerkDisclosure, /isVehiclePerkUnlocked\(vehicleId\)/,
-  'The Lot must disclose the selected perk’s live locked or unlocked state');
-assert.match(lotPerkDisclosure, /className = 'lot-perk-button is-layout-placeholder'/);
-assert.match(lotPerkDisclosure, /trigger\.textContent = 'PERK'/);
-assert.match(lotPerkDisclosure, /aria-haspopup', 'dialog'/);
-assert.match(lotPerkDisclosure, /aria-expanded', 'false'/);
-assert.match(lotPerkDisclosure, /setAttribute\('popover', 'auto'\)/);
-assert.match(lotPerkDisclosure, /trigger\.classList\.toggle\('is-layout-placeholder', !available\)/);
-assert.match(lotPerkDisclosure, /trigger\.disabled = !available/);
-assert.doesNotMatch(lotPerkDisclosure, /trigger\.hidden = !perkText/);
-assert.match(lotPerkDisclosure, /copy\.textContent = perkReward && !perkUnlocked[\s\S]*: perkDescription/);
-assert.doesNotMatch(lotPerkDisclosure, /innerHTML\s*=/);
-assert.match(lotTrophyGate, /trophy-road\.js\?revision=r164-vintage-rally-perks/);
-assert.match(lotTrophyGate, /FALLBACK_VEHICLE_ID = 'classic'/);
-assert.match(lotTrophyGate, /raceButton\.disabled = locked/);
-assert.match(lotTrophyGate, /lot-selected-car-lock/);
-assert.match(lotTrophyGate, /showTrophyUnlockNotice/);
-assert.doesNotMatch(lotTrophyGate, /colors\.hidden|carPicker\.hidden/);
-
-assert.match(originalLot, /<section class="lot-viewbox lot-viewbox-with-paint">[\s\S]*<div class="lot-colors" aria-label="Choose car paint colours"><\/div>[\s\S]*<\/section>/);
-assert.doesNotMatch(lotLayout, /appendChild\(colors\)|removeAttribute\('aria-hidden'\)|lot-view-close|lot-view-open/);
-assert.match(lotLayout, /attributesHeading\.replaceChildren\(document\.createTextNode\('ATTRIBUTES'\)\)/);
-assert.match(lotLayoutCss, /\.lot-viewbox-with-paint[\s\S]*flex: 1 1 auto/);
-assert.match(lotLayoutCss, /min-height: clamp\(112\.5px, 28vh, 172\.5px\)/);
-assert.match(lotLayoutCss, /--lot-paint-rail-height: 40\.5px/);
-assert.match(lotLayoutCss, /\.lot-viewbox-with-paint \.lot-view-host[\s\S]*inset: 0 0 var\(--lot-paint-rail-height\)/);
-assert.doesNotMatch(lotLayoutCss, /\.lot-color-input|\.lot-color-preset/);
-assert.match(lotLayoutCss, /\.lot-secret-notice \{[\s\S]*background: #d9f5c2[\s\S]*border: 3px solid var\(--ink\)/);
-assert.match(lotLayoutCss, /\.lot-secret-notice\[hidden\][\s\S]*display: none/);
-assert.match(lotLayoutCss, /\.lot-secret-notice-chip[\s\S]*background: var\(--yellow\)/);
-assert.match(lotAccessibility, /lot-selected-car-summary/);
-assert.match(lotAccessibility, /Choose car/);
-assert.match(lotAccessibility, /Choose car colour/);
-assert.match(lotAccessibility, /Car information/);
+// GARAGE replaces The Lot: app.js installs no Lot runtime; main.js and ROADBOOK open GARAGE.
+assert.doesNotMatch(app, /lot-layout-r60|sports-sedan-easter-egg|installLotEnhancementRuntime|lot-enhancement-runtime/);
+assert.match(main, /const \[\{ prepareGarage, showGarage \}, \{ TRACK_CATALOG \}, \{ trackIconMarkup \}\] = await Promise\.all\(\[\s*import\('\/turn\/garage\/garage\.js'\)/);
+// Changing car mid-race (TURN NEXT keeps this route) shows the current track in the
+// dock, and Back returns to the race.
+assert.match(main, /const track = TRACK_CATALOG\.find\(\(entry\) => entry\.id === state\.trackId\)/);
+assert.match(main, /backLabel: options\.entry === 'race' \? 'RACE' : 'BACK'/);
+const orchestrator = await fs.readFile(path.join(turnDir, 'race/session-orchestrator.js'), 'utf8');
+assert.match(orchestrator, /initialSelection: selectedVehicle\(state\),\s*entry: 'race'/);
+assert.match(home, /import\('\/turn\/garage\/garage\.js'\)/);
+assert.match(garage, /export function prepareGarage\(/);
+assert.match(garage, /export function showGarage\(/);
+assert.match(garage, /createGarageSelection\(/, 'GARAGE keeps the saved car, the choice and a locked preview apart');
+assert.match(garage, /const reward = rewardForVehicle\(carId\);/, 'Car locks come from Trophy Road');
+assert.match(garage, /showTrophyUnlockNotice\(\{ reward: carLock\(car\.id\), itemName: car\.name \}\)/,
+  'RACE on a locked car explains its Trophy Road reward');
+assert.match(garage, /rewardForVehiclePerk\(car\.id\)/, 'A perk has its own entitlement, separate from the car');
+assert.match(garage, /type="color"/);
+assert.doesNotMatch(garage, /NAMED_COLOR_PRESETS|color-preset|showPicker\(|label\.click\(/);
 
 assert.match(home, /activateTrack\(trackId, runtime\)/);
-assert.match(home, /showTheLot\(\{ initialSelection: selectedVehicle\(runtime\) \}\)/);
+assert.match(home, /garageModule\.showGarage\(\{\s*initialSelection: selectedVehicle\(runtime\),/);
 assert.match(home, /raceSession\.selectVehicle\(selection\)/);
 assert.match(home, /showTrackIntro\(trackId\)/);
 assert.match(home, /raceSession\.startGame\(pendingAccess\?\.fullscreenPromise\)/);
@@ -308,8 +234,8 @@ assert.match(
   home,
   /await Promise\.all\(\[\s*raceSession\.selectVehicle\(selection\),\s*showTrackIntro\(trackId\)\s*\]\);/
 );
-assert.ok(home.indexOf('activateTrack(trackId, runtime)') < home.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })'));
-assert.ok(home.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })') < home.indexOf('raceSession.selectVehicle(selection)'));
+assert.ok(home.indexOf('activateTrack(trackId, runtime)') < home.indexOf('garageModule.showGarage({'));
+assert.ok(home.indexOf('garageModule.showGarage({') < home.indexOf('raceSession.selectVehicle(selection)'));
 assert.ok(home.indexOf('raceSession.selectVehicle(selection)') < home.indexOf('showTrackIntro(trackId)'));
 assert.ok(home.indexOf('showTrackIntro(trackId)') < home.indexOf('raceSession.startGame(pendingAccess?.fullscreenPromise)'));
 assert.doesNotMatch(home, /chooseTrackBeforeLot/);
@@ -321,7 +247,7 @@ assert.match(trackIntro, /aria-live', 'polite'/);
 assert.match(trackIntroCss, /pointer-events: none/);
 assert.match(trackIntroCss, /prefers-reduced-motion: reduce/);
 assert.match(main, /camera\.position\.set\(0, 110, 215\)/);
-assert.match(main, /showRaceSetup: showTheLot/);
+assert.match(main, /showRaceSetup: showGarageSetup/);
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/);
 assert.match(main, /vehicleTuning: state\.vehicleTuning/);
 assert.doesNotMatch(main, /wayne-wu\/webgpu-crowd-simulation/);
@@ -330,7 +256,6 @@ assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], vehicleCatalogT
 assert.equal(imports['./vehicle/catalog.js?build=20260720-r20'], vehicleCatalogTarget);
 assert.equal(imports['./vehicle/car-models.js?build=20260720-r19'], carModelBridgeTarget);
 assert.equal(imports['./vehicle/car-models.js?build=20260720-r22'], carModelBridgeTarget);
-assert.match(app, /installSportsSedanEasterEggUi\(\)/);
 assert.match(lapSystem, /carId: paint\.carId/);
 assert.match(lapSystem, /carColor: paint\.color/);
 assert.match(lapSystem, /carSecondaryColor: paint\.secondaryColor/);
@@ -356,18 +281,14 @@ assert.match(catalogSource, /title: 'DRIFTAGE'/);
 assert.match(catalogSource, /title: 'TWITCHY TURNY'/);
 assert.match(catalogSource, /title: 'SMV'/);
 assert.match(carModels, /loadCarSource\(car\.id\)/);
-assert.match(easterEggUi, /getEffectiveVehicleStats/);
-assert.match(easterEggUi, /isSportsSedanEasterEgg/);
-assert.match(easterEggUi, /\.lot-car-option\[aria-checked="true"\]/, 'The enhancer must identify the selected car independently of the renamed visible heading');
-assert.match(easterEggUi, /input\[type="color"\]/);
-assert.match(easterEggUi, /displayedName = unlocked \? 'Super Sedan' : car\.name/);
-assert.match(easterEggUi, /Race the \$\{displayedName\}/, 'The race button must expose the temporary Super Sedan name');
-assert.match(easterEggUi, /SECRET UNLOCKED/);
-assert.match(easterEggUi, /color code #666/);
-assert.match(easterEggUi, /Lap results with this secret car are not saved/);
-assert.match(easterEggUi, /Super Sedan unlocked\. Spoiler color code #666/);
-assert.match(easterEggUi, /notice\.setAttribute\('role', 'status'\)/);
-assert.match(easterEggUi, /notice\.setAttribute\('aria-live', 'polite'\)/);
-assert.match(easterEggUi, /card\.insertBefore\(notice, actions \|\| null\)/, 'The explanation must sit immediately before RACE THIS CAR');
+// The secret Sports Car: maxed stats, named, explained beside RACE, never ranked.
+assert.match(garage, /getEffectiveVehicleStats\(effectiveSelection\(\)\)/);
+assert.match(garage, /isSportsSedanEasterEgg\(selection\.state\(\)\.choice\)/);
+assert.match(garage, /SECRET UNLOCKED/);
+assert.match(garage, /color code #666/);
+assert.match(garage, /Lap results with this secret car are not saved/);
+assert.match(garage, /<section class="garage-secret" role="status" aria-live="polite" hidden>/);
+assert.match(garage, /raceButton\.setAttribute\('aria-label', `Race \$\{titleCase\(displayName\)\}`\)/,
+  'RACE names the secret car too');
 
-console.log(`TURN ${release.id} enhanced Lot route, Vintage/Rally Trophy Road gating, car-owned perks, native paint and garage setup passed.`);
+console.log(`TURN ${release.id} GARAGE route, Vintage/Rally Trophy Road gating, car-owned perks, native paint and garage setup passed.`);

@@ -20,7 +20,7 @@ const [
   trackRegistry,
   trackManager
 ] = await Promise.all([
-  fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/garage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/view.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/store.js', import.meta.url), 'utf8'),
@@ -39,16 +39,12 @@ const [
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8')
 ]);
 
-// CHROMATIC CAMOUFLAGE matches the primary/body paint only. The visible Color Cue must
-// therefore describe that same signal rather than mixing in bumpers, trim or fixed livery.
-assert.match(paintReward, /function colorCueDescription\(car\)[\s\S]*describeColorCue\(bodyColorValue\(car\.id\)\)/);
-const colorCueFunction = paintReward.match(/  function colorCueDescription\(car\) \{[\s\S]*?\n  \}/)?.[0] || '';
-assert.ok(colorCueFunction, 'Lot paint gate must keep a dedicated Color Cue description function');
-assert.doesNotMatch(
-  colorCueFunction,
-  /secondary|fixedLivery|secondaryPaint/,
-  'Lot Color Cue must communicate only the primary car color used by CHROMATIC CAMOUFLAGE'
-);
+// CHROMATIC CAMOUFLAGE matches the primary/body paint only. GARAGE names each paint
+// swatch by its own colour, so the Body swatch describes exactly that signal and the
+// trim swatch never blends into it.
+assert.match(paintReward, /colorName\.textContent = titleCase\(describeColorCue\(input\.value\)\)/);
+assert.match(paintReward, /swatches\.append\(colorControl\('Body', choice\.color, false\)\)/,
+  'The Body swatch describes the primary car colour used by CHROMATIC CAMOUFLAGE');
 
 // Achievement state changes happen while racing. Updating counters may invalidate the dialog,
 // but rebuilding every card and Trophy Road marker while the dialog is closed is forbidden.

@@ -41,7 +41,7 @@ function updateTrackAndCarCopy(dialog) {
   const paragraph = section?.querySelector('p');
   if (!paragraph) return;
 
-  paragraph.innerHTML = 'Choose a track, then pick your car in <strong>THE LOT</strong> before racing. Use <strong>SHOW RECORDS</strong> to compare your saved TIME, DRIFT and FLOW records. TURN races you against recordings of your own fastest laps, not computer drivers.';
+  paragraph.innerHTML = 'Choose a track, then pick your car in <strong>GARAGE</strong> before racing. Open the <strong>Track sheet</strong> to compare your saved TIME, DRIFT and FLOW records. TURN races you against recordings of your own fastest laps, not computer drivers.';
 }
 
 function updateDriveControlCopy(dialog) {
@@ -99,7 +99,7 @@ function installShiftAndScoringSections(dialog) {
     id: 'shift',
     number: '5',
     title: 'SHIFT',
-    copy: '<strong>SHIFT</strong> swaps between your car’s normal attributes and the alternate setup you configured in <strong>THE LOT</strong>. It redistributes attribute points between the two setups. During a race, slide from GAS into SHIFT to swap setup, then SHIFT again to return. Trade for what you need next: for example more DRIFT or CONTROL into a slide, or more acceleration and BOOST performance on the exit.'
+    copy: '<strong>SHIFT</strong> swaps between your car’s normal attributes and the alternate setup you configured in <strong>GARAGE</strong>. It redistributes attribute points between the two setups. During a race, slide from GAS into SHIFT to swap setup, then SHIFT again to return. Trade for what you need next: for example more DRIFT or CONTROL into a slide, or more acceleration and BOOST performance on the exit.'
   });
   const drift = makeGuideSection(dialog, {
     id: 'drift-points',

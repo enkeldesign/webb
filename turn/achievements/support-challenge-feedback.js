@@ -256,17 +256,14 @@ export function showCompactRacePill(label, { tone = 'blue', duration = 1800 } = 
   return true;
 }
 
-function recommendedLotButton(vehicleId) {
-  if (!vehicleId) return null;
-  return document.querySelector(`.lot-screen .lot-car-option[data-car-id="${vehicleId}"]:not([disabled])`);
-}
-
+// A challenge's recommended car takes precedence over the car GARAGE would otherwise
+// open on, once GARAGE is showing.
 function selectRecommendedLotCar(vehicleId) {
   if (!vehicleId) return false;
   const select = () => {
-    const button = recommendedLotButton(vehicleId);
-    if (!button) return false;
-    button.click();
+    const garage = globalThis.__turnGarage;
+    if (!garage?.root?.isConnected) return false;
+    garage.viewCar(vehicleId);
     return true;
   };
   if (select()) return true;

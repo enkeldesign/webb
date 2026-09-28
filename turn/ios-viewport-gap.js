@@ -4,7 +4,7 @@
 // app in the body's background colour. The viewport meta pulse in
 // pwa-short-viewport-repair-r184.js does not recover this case, and iOS draws no
 // page content in the strip, so it takes the colour of the screen above it:
-// Paper under Home and The Lot (their docks are Paper), Ink under a race, and
+// Paper under ROADBOOK and GARAGE (their docks are Paper), Ink under a race, and
 // the loading artwork's green end while loading.
 (() => {
   const root = document.documentElement;

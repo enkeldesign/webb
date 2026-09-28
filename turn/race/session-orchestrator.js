@@ -235,7 +235,8 @@ export function createRaceSessionOrchestrator({
     publish('lot-open');
 
     const selection = await chooseSetup({
-      initialSelection: selectedVehicle(state)
+      initialSelection: selectedVehicle(state),
+      entry: 'race'
     });
 
     if (!selection) {

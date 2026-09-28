@@ -71,8 +71,10 @@ async function run(browserType, name) {
     await page.goto(`${origin}/turn/`);
     await page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
     await page.locator('.m8-track-continue').click();
-    await page.waitForSelector('.lot-showroom');
-    await page.locator('.lot-race').click();
+    await page.waitForSelector('.garage');
+    // RACE ignores taps in GARAGE's first moments (a double-tap that opened it).
+    await page.waitForTimeout(700);
+    await page.locator('.garage-race').click();
     await page.waitForSelector('#controls:not([hidden])', { timeout: 60000 });
     // A saved rival shows SPECTATE; show it so the row carries its widest set. The
     // fixture entry opens a dialog that returns focus to its own trigger on close,

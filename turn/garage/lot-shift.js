@@ -22,19 +22,7 @@ import {
   resolveVehicleShiftGearbox
 } from './lot-shift-gearbox.js?revision=r232-double-shift';
 
-const activeShiftSetups = new WeakMap();
 let dialogSerial = 0;
-
-function findLotScreen(root) {
-  if (root?.matches?.('.lot-screen')) return root;
-  return root?.querySelector?.('.lot-screen') || null;
-}
-
-function selectedCarId(carPicker) {
-  return carPicker?.querySelector?.('.lot-car-option[aria-checked="true"]')?.dataset.carId
-    || carPicker?.querySelector?.('.lot-car-option[tabindex="0"]')?.dataset.carId
-    || '';
-}
 
 function focusWithoutScroll(element) {
   if (!element) return;
@@ -53,17 +41,15 @@ function announceProfileChange(vehicleId, profile) {
   }));
 }
 
-export function installLotShift(root = document.body) {
-  const screen = findLotScreen(root);
-  if (!screen?.classList.contains('lot-showroom')) return () => {};
-
-  const existing = activeShiftSetups.get(screen);
-  if (existing) return existing.release;
-
-  const attributesRow = screen.querySelector('.lot-attributes-row');
-  const carPicker = screen.querySelector('.lot-car-picker');
-  if (!attributesRow || !carPicker) return () => {};
-
+// SHIFT setup for one car at a time: a trigger that shows its state and the gearbox
+// dialog. The caller places the trigger, says which car is shown and calls sync()
+// when that changes.
+export function createShiftSetup({
+  triggerHost,
+  dialogHost,
+  getCarId,
+  triggerClassName = 'lot-shift-trigger'
+}) {
   dialogSerial += 1;
   const dialogId = `turn-lot-shift-dialog-${dialogSerial}`;
   const titleId = `${dialogId}-title`;
@@ -71,11 +57,11 @@ export function installLotShift(root = document.body) {
 
   const trigger = document.createElement('button');
   trigger.type = 'button';
-  trigger.className = 'lot-shift-trigger';
+  trigger.className = triggerClassName;
   trigger.setAttribute('aria-haspopup', 'dialog');
   trigger.setAttribute('aria-controls', dialogId);
   trigger.innerHTML = '<span>ACTIVATE SHIFT</span><i aria-hidden="true">●</i>';
-  attributesRow.appendChild(trigger);
+  triggerHost.appendChild(trigger);
 
   const dialog = document.createElement('dialog');
   dialog.className = 'lot-shift-dialog';
@@ -97,7 +83,7 @@ export function installLotShift(root = document.body) {
         <button type="button" class="lot-shift-save" disabled>ACTIVATE SHIFT</button>
       </div>
     </section>`;
-  screen.appendChild(dialog);
+  dialogHost.appendChild(dialog);
 
   const triggerLabel = trigger.querySelector('span');
   const title = dialog.querySelector('h2');
@@ -123,7 +109,7 @@ export function installLotShift(root = document.body) {
   }
 
   function selectedDefinition() {
-    const carId = selectedCarId(carPicker);
+    const carId = getCarId();
     return carId ? getCarDefinition(carId) : null;
   }
 
@@ -380,12 +366,6 @@ export function installLotShift(root = document.body) {
   dialog.addEventListener('click', handleDialogClick);
   dialog.addEventListener('cancel', handleDialogCancel);
 
-  const selectionObserver = new MutationObserver(syncTrigger);
-  selectionObserver.observe(carPicker, {
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['aria-checked']
-  });
   globalThis.addEventListener?.('turn:trophy-road-updated', syncTrigger);
   globalThis.addEventListener?.('turn:shift-profile-change', syncTrigger);
   syncTrigger();
@@ -396,7 +376,6 @@ export function installLotShift(root = document.body) {
     released = true;
     window.clearTimeout(constraintFeedbackTimer);
     constraintFeedbackOption?.classList.remove('has-constraint-feedback');
-    selectionObserver.disconnect();
     globalThis.removeEventListener?.('turn:trophy-road-updated', syncTrigger);
     globalThis.removeEventListener?.('turn:shift-profile-change', syncTrigger);
     trigger.removeEventListener('click', openDialog);
@@ -405,9 +384,7 @@ export function installLotShift(root = document.body) {
     if (dialog.open && typeof dialog.close === 'function') dialog.close();
     dialog.remove();
     trigger.remove();
-    activeShiftSetups.delete(screen);
   };
 
-  activeShiftSetups.set(screen, { release });
-  return release;
+  return Object.freeze({ trigger, dialog, sync: syncTrigger, open: openDialog, release });
 }

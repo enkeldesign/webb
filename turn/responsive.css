@@ -23,25 +23,7 @@
 :root body :is(.m8-dialog-head, .sound-guide-head) h2 { min-width: 0; }
 :root body .track-intro-name { white-space: normal; overflow-wrap: anywhere; }
 
-/* Bound the showroom's composition on roomy windows. */
-:root body .lot-showroom .lot-side {
-  max-width: 1180px;
-  max-height: 480px;
-  margin-inline: auto;
-}
-:root body .lot-showroom .lot-car-picker-shell { padding-inline: max(var(--turn-edge), calc((100vw - 1200px) / 2)); }
-:root body .lot-showroom .lot-view-host { touch-action: pan-y pinch-zoom; }
-:root body .lot-showroom.lot-screen-reader-structured .lot-colors {
-  bottom: max(12px, calc(100dvh - var(--lot-header-height) - var(--lot-picker-height) - 480px + 12px)) !important;
-  left: max(26px, calc((100vw - 1180px) / 2 + 12px));
-}
-
 /* Reflow when track browser + menu (or preview + attributes) cannot fit. */
-/* The Lot attribute labels: at the 11px text floor ACCELERATION needs 96px, so the
-   label column is 98px wherever the stat rows are side by side. */
-:root body .lot-showroom .lot-stat {
-  grid-template-columns: 98px minmax(0, 1fr);
-}
 
 @media (max-width: 46em) {
 
@@ -50,45 +32,6 @@
   :root body .install-icon { max-height: 26dvh; width: auto; max-width: 100%; }
   :root body .install-card { min-width: 0; }
   :root body :is(.m8-settings-grid, .m8-guide-grid, .turn-achievements-grid) { grid-template-columns: minmax(0, 1fr); }
-
-  :root body .lot-screen.lot-showroom {
-    display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto auto;
-    align-content: start; gap: 16px; overflow-y: auto; overflow-x: hidden;
-    padding: max(12px, env(safe-area-inset-top)) var(--turn-edge) max(20px, env(safe-area-inset-bottom));
-  }
-  :root body .lot-showroom .lot-back { position: static; grid-column: 1; grid-row: 1; align-self: start; min-height: 44px; }
-  :root body .lot-showroom .lot-heading { position: static; grid-column: 2; grid-row: 1; height: auto; flex-wrap: wrap; gap: 10px; }
-  :root body .lot-showroom .lot-heading h1 { font-size: 2rem; line-height: 1; }
-  :root body .lot-showroom .lot-progress-summary { flex-basis: 100%; max-width: 340px; }
-  :root body .lot-showroom .lot-car-picker-shell {
-    position: relative; inset: auto; grid-column: 1 / -1; grid-row: 2;
-    height: 118px; padding: 8px 4px; min-width: 0; width: 100%; border: 0;
-  }
-  :root body .lot-showroom .lot-car-picker { touch-action: pan-x pinch-zoom; }
-  :root body .lot-showroom .lot-side {
-    position: static; grid-column: 1 / -1; grid-row: 3;
-    grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto;
-    width: 100%; max-height: none; gap: 16px;
-  }
-  :root body .lot-showroom .lot-viewbox { height: clamp(190px, 32dvh, 320px); min-height: 0; }
-  :root body .lot-showroom .lot-card {
-    display: flex; flex-direction: column; height: auto; min-height: 0; max-height: none; overflow: visible;
-  }
-  :root body .lot-showroom.lot-screen-reader-structured .lot-card .lot-colors {
-    position: static !important; width: 100%; max-width: none; margin-block: 12px;
-  }
-  :root body .lot-showroom .lot-card-info-scroll { flex: none; overflow: visible; }
-  :root body .lot-showroom .lot-stats { flex: none; height: auto; grid-template-rows: none; grid-auto-rows: minmax(22px, auto); gap: 6px; }
-  :root body .lot-showroom .lot-stat { grid-template-columns: minmax(98px, .65fr) minmax(0, 1fr); }
-  :root body .lot-showroom .lot-stat > span { font-size: max(var(--turn-text-floor), .68rem); line-height: 1.2; white-space: normal; }
-  :root body .lot-showroom .lot-card-actions { position: static; margin-top: 12px; }
-  /* The page scrolls under the status bar; keep the clock and battery on the Lot's
-     sky rather than over its content. */
-  :root body .lot-screen.lot-showroom::after {
-    content: ""; position: fixed; z-index: 20; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
-    background: #8ed8ff; pointer-events: none;
-  }
-  :root body .lot-showroom .lot-race { min-height: 48px; height: auto; white-space: normal; }
 }
 
 /* Portrait: two lower corner readouts, upward intensity, clear centre of road.
@@ -227,80 +170,21 @@
 
 /* Touch targets: every control reaches --turn-target-min in every orientation
    (WCAG 2.5.5). Text buttons grow to the minimum height; small icon controls keep
-   their visual size and gain a transparent hit area instead. The Lot's car arrows
-   sit at the 3D view's clipped edge, so they grow to the visible minimum. */
-:root body :is(
-  .turn-music-home-toggle,
-  .m8-home-menu > button,
-  .lot-back,
-  .lot-race,
-  .lot-perk-button,
-  .lot-shift-trigger,
-  .lot-paint-save-action,
-  .lot-paint-lock-button,
-  .utility-group .utility
-) {
+   their visual size and gain a transparent hit area instead. GARAGE's step and
+   rotate buttons are 44px targets in their own right. */
+:root body :is(.turn-music-home-toggle, .m8-home-menu > button, .lot-shift-trigger, .utility-group .utility) {
   min-height: var(--turn-target-min);
 }
 :root body .utility-group .utility {
   min-width: var(--turn-target-min);
 }
-:root body .lot-showroom .lot-cycle {
-  min-width: var(--turn-target-min);
-  min-height: var(--turn-target-min);
-}
-:root body :is(.lot-stats-help, .m8-about-trigger) {
+:root body :is(.m8-about-trigger) {
   position: relative;
 }
-:root body :is(.lot-stats-help, .m8-about-trigger)::after {
+:root body :is(.m8-about-trigger)::after {
   content: "";
   position: absolute;
   inset: min(0px, calc((100% - var(--turn-target-min)) / 2));
-}
-
-/* The Lot on short landscape phones: with 11px captions the header band only fits
-   THE LOT itself, so the decorative subtitle stays for assistive technology only.
-   The heading clears the fixed-width BACK, the trophy summary widens instead of
-   truncating, and stat labels get a column that fits ACCELERATION at the floor. */
-@media (orientation: landscape) and (max-height: 430px) {
-  :root body .lot-showroom .lot-back {
-    width: 76px;
-    min-width: 0;
-    padding-inline: 8px;
-  }
-  :root body .lot-showroom .lot-heading {
-    top: max(5px, env(safe-area-inset-top));
-    left: calc(max(9px, env(safe-area-inset-left)) + 86px);
-    height: var(--turn-target-min);
-  }
-  :root body .lot-showroom .lot-heading h1 {
-    line-height: 1;
-  }
-  :root body .lot-showroom .lot-heading p {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-  :root body .lot-showroom .lot-progress-summary {
-    flex: 0 1 auto;
-    max-width: 52%;
-  }
-  :root body .lot-showroom :is(.lot-car-option, .lot-car-option:focus-visible) {
-    width: 112px;
-    min-width: 112px;
-  }
-}
-
-/* Lot progress summary: at the text floor the "N TROPHIES TO NEXT CAR" line is longer
-   than the summary pill on mid-size tablets, so it wraps instead of truncating. */
-:root body .lot-showroom .lot-progress-summary small {
-  overflow: visible;
-  line-height: 1.15;
-  text-overflow: clip;
-  white-space: normal;
 }
 
 /* Trophy Road tiles: at the 11px floor a tile cannot also carry the reward name and

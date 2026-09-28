@@ -38,12 +38,9 @@ const [
   feedback,
   app,
   workflow,
-  perkDisclosure,
-  enhancementRuntime,
+  garage,
   perkWrapper,
-  homeGate,
-  lotGate,
-  paintGate
+  homeGate
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/progression/trophy-road.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/trophy-road-r157.css', import.meta.url), 'utf8'),
@@ -51,12 +48,9 @@ const [
   fs.readFile(new URL('../../turn/achievements/trophy-road-feedback.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/garage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/trophy-road.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/roadbook/roadbook.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/progression/lot-trophy-gate.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/roadbook/roadbook.js', import.meta.url), 'utf8')
 ]);
 
 function createMemoryStorage(initial = {}) {
@@ -674,36 +668,30 @@ assert.match(workflow, /Run Trophy Road progression regression/);
 assert.match(workflow, /node turn-lab\/tests\/trophy-road-production\.mjs/);
 assert.match(perkWrapper, /export const TROPHY_ROAD_REWARDS/,
   'Every consumer reads the one canonical Trophy Road definition');
-for (const gate of [lotGate, paintGate]) {
-  assert.match(gate, /from '\.\/trophy-road\.js'/, 'Trophy gates import the canonical Trophy Road module by its bare path');
-}
+assert.match(garage, /\} from '\.\.\/progression\/trophy-road\.js';/,
+  'GARAGE imports the canonical Trophy Road module by its bare, import-mapped path');
 // ROADBOOK (the Home track gate) imports the same module through its import-mapped path.
 assert.match(homeGate, /from '\/turn\/progression\/trophy-road\.js'/,
   'ROADBOOK imports the canonical Trophy Road module instance');
 assert.match(homeGate, /rewardForTrack\(trackId\)[\s\S]*isTrackUnlocked\(trackId\)/,
   'ROADBOOK derives every track lock from Trophy Road');
-assert.match(paintGate, /reward\(\)\?\.threshold \|\| 800/);
+assert.match(garage, /Paint unlocks at <strong>\$\{reward\?\.threshold \|\| 800\}<\/strong> trophies/);
+assert.match(garage, /const reward = rewardForVehicle\(carId\);\s*return reward && !isVehicleUnlocked\(carId\) \? reward : null;/,
+  'GARAGE derives every car lock from Trophy Road');
 
-assert.match(perkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/,
-  'The Lot must keep perk identity and copy on the selected car definition');
-assert.match(perkDisclosure, /rewardForVehiclePerk\(vehicleId\)/,
-  'The Lot must look up the independent entitlement without treating the car as locked');
-assert.match(perkDisclosure, /isVehiclePerkUnlocked\(vehicleId\)/);
-assert.match(perkDisclosure, /Unlocks at \$\{perkReward\.threshold\} trophies/);
-assert.match(perkDisclosure, /className = 'lot-perk-copy'/);
-assert.match(perkDisclosure, /className = 'lot-perk-button is-layout-placeholder'/);
-assert.match(perkDisclosure, /trigger\.classList\.toggle\('is-layout-placeholder', !available\)/,
-  'Only cars that own a perk may expose an interactive PERK action');
-assert.match(perkDisclosure, /trigger\.disabled = !available/,
-  'The reserved PERK footprint must remain inert for cars without perks');
-assert.match(perkDisclosure, /trigger\.setAttribute\('aria-expanded', String\(nextOpen\)\)/,
-  'The PERK action must expose its popover state');
-assert.match(perkDisclosure, /popover\.setAttribute\('role', 'dialog'\)/,
-  'Named perk information must open as a labelled popover dialog');
-assert.match(perkDisclosure, /title\.textContent = perkTitle/);
-assert.match(perkDisclosure, /copy\.textContent = perkReward && !perkUnlocked/);
-assert.match(perkDisclosure, /turn:trophy-road-updated/,
-  'An open Lot must refresh when a perk entitlement changes');
+// GARAGE's Perk disclosure: identity and copy from the car, the entitlement looked up
+// on its own (a locked perk never locks the car), and a refresh when Trophy Road moves.
+assert.match(garage, /vehiclePerkPresentation\(car\.id, car\.perk\)/,
+  'GARAGE must keep perk identity and copy on the viewed car definition');
+assert.match(garage, /rewardForVehiclePerk\(car\.id\)/,
+  'GARAGE must look up the independent entitlement without treating the car as locked');
+assert.match(garage, /isVehiclePerkUnlocked\(car\.id\)/);
+assert.match(garage, /Unlocks at \$\{reward\.threshold\} trophies on Trophy Road/);
+assert.match(garage, /perk\.hidden = !presented/, 'Cars without a perk show no Perk disclosure');
+assert.match(garage, /aria-controls="garagePerk"/, 'The Perk disclosure exposes what it opens');
+assert.match(garage, /setAttribute\('aria-expanded', String\(open\)\)/);
+assert.match(garage, /addEventListener\('turn:trophy-road-updated', handleProgress\)/,
+  'An open GARAGE must refresh when a perk entitlement changes');
 assert.match(roadStyles, /data-trophy-reward-type="vehicle-perk"/);
 assert.match(roadStyles, /data-trophy-reward-type="feature"/);
 assert.match(roadStyles, /data-trophy-reward-type="scoring-system"/);
@@ -711,8 +699,4 @@ assert.match(roadStyles, /--turn-reward-feature-locked/);
 assert.match(roadStyles, /--turn-reward-feature-unlocked/);
 assert.match(roadStyles, /--turn-reward-scoring-locked/);
 assert.match(roadStyles, /--turn-reward-scoring-unlocked/);
-assert.match(enhancementRuntime, /installLotPerkDisclosure/);
-assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r243-mountain-1300/);
-assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r243-mountain-1300/);
-
 console.log('TURN Trophy Road 2300 Supercar, FLOW SHIFT, reward order and perk presentation regression passed.');

@@ -24,13 +24,8 @@ function installStyles() {
       outline-offset: 1.5px;
     }
 
-    .turn-achievements-dialog .turn-trophy-road-detail-close,
-    .lot-showroom .lot-perk-disclosure .lot-perk-close {
+    .turn-achievements-dialog .turn-trophy-road-detail-close {
       background: var(--turn-action-navigation, #ff7b54);
-    }
-
-    .lot-showroom .lot-car-title .lot-perk-button.turn-perk-selection-wiggle {
-      animation-duration: 600ms;
     }
   `;
   document.head.appendChild(style);

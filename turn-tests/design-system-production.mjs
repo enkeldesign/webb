@@ -159,7 +159,10 @@ for (const token of [
 }
 
 assert.match(semantic, new RegExp(`@import url\\('\\./design-tokens\\.css\\?build=${release.cacheKey}'\\)`));
-assert.match(semantic, /\.install-primary,[\s\S]*\.track-select-continue,[\s\S]*\.lot-race/);
+assert.match(semantic, /\.install-primary,\s*\.track-select-continue \{[\s\S]*?background: var\(--turn-action-primary\)/);
+const preRace = await fs.readFile(new URL('../turn/pre-race.css', import.meta.url), 'utf8');
+assert.match(preRace, /\.turn-pr-button\.is-primary \{[\s\S]*?background: var\(--turn-action-primary/,
+  'ROADBOOK and GARAGE carry the main forward action in the same primary colour');
 assert.match(semantic, /\.drive-drift-zone,[\s\S]*var\(--turn-control-drift\)/);
 assert.match(semantic, /\.drive-pad \.drive-gas-zone,[\s\S]*var\(--turn-control-gas\)/);
 assert.match(semantic, /\.drive-pad \.drive-brake-zone,[\s\S]*var\(--turn-control-brake\)/);
