@@ -45,7 +45,7 @@ function validateParityEntry(current, release) {
   assert.match(current, new RegExp(`install-gate\\.css\\?build=${release.cacheKey}-social-browser`));
   assert.match(current, new RegExp(`orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait`));
   assert.match(current, new RegExp(`live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering`));
-  assert.match(current, new RegExp(`m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font`));
+  assert.doesNotMatch(current, /m8-menu-font-fix\.css/, 'The retired Home heading font patch stays retired');
   assert.match(current, /id="installGate"/);
   assert.doesNotMatch(current, /ROTATE YOUR DEVICE TO LANDSCAPE/);
   assert.match(current, /responsive\.css\?build=/);
