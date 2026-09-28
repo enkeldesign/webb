@@ -1,6 +1,6 @@
 import { assertTrackConfigCoverage } from '../tracks/definitions.js';
 
-// Authored track pictograms shared by Achievements, Trophy Road and The Lot.
+// Authored track pictograms shared by Achievements, Trophy Road, ROADBOOK and GARAGE.
 // The SVG files stay as the canonical artwork; these mask instances let every
 // surface inherit its existing currentColor without duplicating path geometry.
 

@@ -3,7 +3,7 @@
 
    1. Readout  — HUD chips, minimap, cards inside a dialog:
       --turn-radius-control, 3px border, --turn-shadow-control.
-   2. Card     — track cards, The Lot's panels, toasts:
+   2. Card     — track cards, GARAGE's panels, toasts:
       --turn-radius-card, --turn-border-card, --turn-shadow-card.
    3. Dialog   — every modal: --turn-radius-dialog, --turn-border-dialog,
       --turn-shadow-dialog. On portrait phones dialogs are bottom sheets. */

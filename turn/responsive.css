@@ -170,8 +170,8 @@
 
 /* Touch targets: every control reaches --turn-target-min in every orientation
    (WCAG 2.5.5). Text buttons grow to the minimum height; small icon controls keep
-   their visual size and gain a transparent hit area instead. The Lot's car arrows
-   sit at the 3D view's clipped edge, so they grow to the visible minimum. */
+   their visual size and gain a transparent hit area instead. GARAGE's step and
+   rotate buttons are 44px targets in their own right. */
 :root body :is(.turn-music-home-toggle, .m8-home-menu > button, .lot-shift-trigger, .utility-group .utility) {
   min-height: var(--turn-target-min);
 }
