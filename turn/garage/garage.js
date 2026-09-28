@@ -444,6 +444,14 @@ export function showGarage({
       panel.hidden = !open;
     }
 
+    // A panel opened below the fold scrolls into view, clear of the app bar and the
+    // RACE dock (the page's scroll padding), instead of opening out of sight.
+    function revealPanel(panel) {
+      if (panel.hidden) return;
+      const reduced = windowRef.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      panel.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
+    }
+
     function syncDisclosures() {
       const spacious = Boolean(spaciousMedia?.matches);
       root.classList.toggle('is-spacious', spacious);
@@ -846,8 +854,14 @@ export function showGarage({
         step(1);
       }
     });
-    specsToggle.addEventListener('click', () => setDisclosure('specs', specsToggle, specsPanel, specsPanel.hidden));
-    perkToggle.addEventListener('click', () => setDisclosure('perk', perkToggle, perkPanel, perkPanel.hidden));
+    specsToggle.addEventListener('click', () => {
+      setDisclosure('specs', specsToggle, specsPanel, specsPanel.hidden);
+      revealPanel(specsPanel);
+    });
+    perkToggle.addEventListener('click', () => {
+      setDisclosure('perk', perkToggle, perkPanel, perkPanel.hidden);
+      revealPanel(perkPanel);
+    });
     paintToggle.addEventListener('click', () => {
       const car = getCarDefinition(selection.state().choice.carId);
       if (!car.fixedLivery && !isPaintUnlocked() && paintPanel.hidden) {
@@ -856,6 +870,7 @@ export function showGarage({
       disclosureState.paint = paintPanel.hidden;
       paintPanel.hidden = !disclosureState.paint;
       paintToggle.setAttribute('aria-expanded', String(disclosureState.paint));
+      revealPanel(paintPanel);
     });
     leavePreviewButton.addEventListener('click', () => {
       selection.leavePreview();

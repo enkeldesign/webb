@@ -87,12 +87,17 @@
   :root.turn-left-handed-controls body .boost-hud { left: calc(var(--turn-edge) + (var(--turn-race-pad-width) / 2)); }
   :root body #scoreFeedback {
     top: auto; bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 54px);
-    left: var(--turn-edge); right: var(--turn-edge); width: auto; height: 74px;
+    left: var(--turn-edge); right: var(--turn-edge); width: auto; height: var(--turn-score-panel-height);
     display: flex; flex-direction: row; justify-content: space-between;
-    --score-feedback-paper-height: 74px;
+    --turn-score-panel-height: 92px;
+    --score-feedback-paper-height: var(--turn-score-panel-height);
   }
   :root.turn-left-handed-controls body #scoreFeedback { flex-direction: row-reverse; }
-  :root body .score-feedback-row { flex: 0 0 min(32%, 180px); width: min(32%, 180px); height: 74px; margin: 0; }
+  :root body .score-feedback-row { flex: 0 0 min(32%, 180px); width: min(32%, 180px); height: var(--turn-score-panel-height); margin: 0; }
+  /* A third of a phone is too narrow for LAST and BEST side by side once a record
+     has four digits, so each gets its own line and the panel is tall enough for both. */
+  :root body .score-feedback-history { flex-direction: column; align-items: flex-start; gap: 3px; }
+  :root body .score-feedback-history .score-feedback-best { margin-left: 0; }
   :root body .score-feedback-state { padding: 7px; height: 100%; }
   :root body .score-feedback-heading, :root body .score-feedback-lap { font-size: max(var(--turn-text-floor), .5rem); }
   :root body .score-feedback-values strong { font-size: clamp(.9rem, 4vw, 1.25rem); }
@@ -124,11 +129,16 @@
      of the drive pad. */
   :root body .utility-group .utility { padding-inline: 6px; white-space: nowrap; }
   :root body .manual-steer::before, :root body .manual-steer::after { font-size: 1.5rem; }
+  /* DRIFT COMBO and a five-digit BEST need about 114px at the 11px text floor; a
+     third of a 320px phone is 97px. The panels keep that minimum, with tighter
+     spacing, and still leave the car its lane between them. */
+  :root body .score-feedback-row { flex-basis: max(32%, 114px); width: max(32%, 114px); }
+  :root body .score-feedback-state { padding: 6px 5px; }
+  :root body :is(.score-feedback-heading, .score-feedback-lap, .score-feedback-history .score-feedback-lap) { letter-spacing: .03em; }
 }
 @media (max-height: 38em) and (orientation: portrait) {
   :root { --turn-race-pad-height: 168px; }
-  :root body #scoreFeedback { height: 62px; }
-  :root body .score-feedback-row { height: 62px; }
+  :root body #scoreFeedback { --turn-score-panel-height: 84px; }
 }
 @media (max-height: 24em) {
   :root body .m8-dialog-card { padding: 12px; }
@@ -151,7 +161,7 @@
 @media (max-width: 19em), (max-height: 30em) and (orientation: portrait) {
   :root { --turn-race-pad-width: 120px; --turn-race-pad-height: 128px; }
   :root:has(.utility-group[data-menu-state]) { --turn-race-footer: 56px; }
-  :root body .controls .utility-group { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; pointer-events: auto; padding-bottom: 3px; }
+  :root body .controls .utility-group { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; pointer-events: auto; padding: 0 3px 3px 0; margin: 0 -3px -3px 0; }
   :root body .utility-group .utility { flex: 0 0 auto; }
   :root body .drive-stack { --drift-lock-bubble-width: 30px; --shift-bubble-width: 30px; --reverse-bubble-width: 30px; }
   :root body .manual-steer { height: 76px; width: calc(100vw - 2 * var(--turn-edge) - var(--turn-race-pad-width) - 36px); }
@@ -165,7 +175,8 @@
   :root body .score-feedback-state { padding: 3px 5px; }
   :root body .score-feedback-values strong { font-size: .9rem; }
   :root body #scoreFeedback .score-feedback-gauge-shell { height: 8px; }
-  :root body .score-feedback-footer { display: none; }
+  /* Score and COMBO only: the LAP footer and the LAST/BEST records give way here. */
+  :root body :is(.score-feedback-footer, .score-feedback-history) { display: none; }
 }
 
 /* Touch targets: every control reaches --turn-target-min in every orientation
@@ -259,10 +270,11 @@
 
 /* Landscape race: utility labels never truncate. If a row ever outgrows the space
    beside the drive pad it scrolls sideways instead, and BOOST keeps clear air
-   above it. */
+   above it. A scrolling row clips at its padding edge, so the row carries room for
+   the buttons' 3px control shadow (padding) without moving them (margin). */
 @media (orientation: landscape) {
   :root body .utility-group .utility { flex: 0 0 auto; }
-  :root body .controls .utility-group { min-width: 0; overflow-x: auto; scrollbar-width: none; justify-content: flex-start; }
+  :root body .controls .utility-group { min-width: 0; overflow-x: auto; scrollbar-width: none; justify-content: flex-start; padding: 0 3px 3px 0; margin: 0 -3px -3px 0; }
   :root.turn-left-handed-controls body .controls .utility-group { justify-content: flex-end; }
   /* Clear air between the action row and the drive pad. */
   :root body .controls { column-gap: 24px; }

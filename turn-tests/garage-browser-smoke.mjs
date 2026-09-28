@@ -513,6 +513,32 @@ async function unlockedFlow() {
     await page.waitForFunction(() => document.querySelector('.garage-all-cars .garage-car-card[data-car-id="van"] .garage-car-still').src.startsWith('blob:'),
       null, { timeout: 30000 });
     await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars').open);
+
+    // Short landscape: PAINT opens below the fold and scrolls its panel into view,
+    // clear of the app bar and the RACE dock.
+    await page.setViewportSize({ width: 852, height: 393 });
+    await page.evaluate(() => {
+      globalThis.__turnGarage.viewCar('classic');
+      const toggle = document.querySelector('.garage-paint-toggle');
+      if (toggle.getAttribute('aria-expanded') === 'true') toggle.click();
+      document.querySelector('.garage').scrollTop = 0;
+      globalThis.scrollTo(0, 0);
+    });
+    await page.locator('.garage-paint-toggle').click();
+    await page.waitForFunction(() => {
+      const save = document.querySelector('.garage-paint-save')?.getBoundingClientRect();
+      const dock = document.querySelector('.garage-dock').getBoundingClientRect();
+      return save && save.bottom <= dock.top + 1;
+    }, null, { timeout: 5000 }).catch(() => {});
+    const reveal = await page.evaluate(() => {
+      const panel = document.querySelector('.garage-paint').getBoundingClientRect();
+      const save = document.querySelector('.garage-paint-save').getBoundingClientRect();
+      const dock = document.querySelector('.garage-dock').getBoundingClientRect();
+      const bar = document.querySelector('.garage .turn-app-bar, .garage-head')?.getBoundingClientRect();
+      return { saveAboveDock: save.bottom <= dock.top + 1, belowBar: !bar || panel.top >= bar.bottom - 1, at: { panelTop: panel.top, saveBottom: save.bottom, dockTop: dock.top, barBottom: bar?.bottom } };
+    });
+    assert.ok(reveal.saveAboveDock && reveal.belowBar, `852x393: PAINT scrolls its panel into view above the dock (${JSON.stringify(reveal.at)})`);
     assert.deepEqual(errors, [], 'unlocked: no page errors');
   } finally {
     await browser.close();

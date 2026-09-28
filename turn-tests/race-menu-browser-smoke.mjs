@@ -41,7 +41,12 @@ async function row(page) {
       sheet: [...document.querySelectorAll('.turn-race-menu > button')].filter((node) => !node.hidden)
         .map((node) => node.className.split(' ').find((name) => name !== 'utility')),
       menu: !document.querySelector('.turn-race-menu-button').hidden,
-      names: visible.map((node) => node.className.split(' ').find((name) => name !== 'utility'))
+      names: visible.map((node) => node.className.split(' ').find((name) => name !== 'utility')),
+      // A scrolling row clips at its padding edge: the 3px control shadow must fit inside it.
+      shadowRoom: visible.every((node) => {
+        const r = node.getBoundingClientRect();
+        return r.bottom + 3 <= box.top + group.clientTop + group.clientHeight + 0.5 && r.right + 3 <= box.left + group.clientLeft + group.clientWidth + 0.5;
+      })
     };
   });
 }
@@ -100,6 +105,7 @@ async function run(browserType, name) {
     const wide = await row(page);
     assert.ok(wide.fits, `${name}: the start row fits at 852px`);
     assert.equal(wide.menu, false, `${name}: no ☰ while every button fits`);
+    assert.ok(wide.shadowRoom, `${name}: the row keeps room for its buttons' shadows`);
     assert.ok(wide.names.includes('spectate-button') && wide.names.includes('m8-race-settings-button'));
 
     await page.evaluate(() => { document.querySelector('.race-menu-fixture-button').hidden = false; });
