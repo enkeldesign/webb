@@ -83,6 +83,7 @@ async function run(browserType, name) {
       const dialog = document.createElement('dialog');
       dialog.className = 'race-menu-fixture-dialog';
       dialog.innerHTML = '<button type="button">Close</button>';
+      dialog.querySelector('button').addEventListener('click', () => dialog.close());
       document.body.appendChild(dialog);
       trigger.addEventListener('click', () => dialog.showModal());
       dialog.addEventListener('close', () => trigger.focus());
@@ -128,15 +129,18 @@ async function run(browserType, name) {
     await page.waitForSelector('.m8-settings-dialog[open]');
     assert.equal(await page.evaluate(() => document.querySelector('#turnRaceMenuSheet').open), false,
       `${name}: an entry closes the sheet before opening its own dialog`);
-    await page.keyboard.press('Escape');
-    await page.waitForFunction(() => !document.querySelector('dialog[open]'));
+    await page.locator('.m8-settings-dialog[open] [data-dialog-close]').click();
+    await page.waitForFunction(() => !document.querySelector('.m8-settings-dialog[open]'));
+    assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map((node) => node.className || node.id)), [],
+      `${name}: no dialog stays open after SETTINGS closes`);
     await settle(page);
     assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('turn-race-menu-button')), true,
       `${name}: closing an entry's dialog returns focus to ☰, not the entry inside the closed sheet`);
     await page.locator('.turn-race-menu-button').click();
     await page.locator('.turn-race-menu .race-menu-fixture-button').click();
     await page.waitForSelector('.race-menu-fixture-dialog[open]');
-    await page.keyboard.press('Escape');
+    await page.locator('.race-menu-fixture-dialog[open] button').click();
+    await page.waitForFunction(() => !document.querySelector('.race-menu-fixture-dialog[open]'));
     await settle(page);
     assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('turn-race-menu-button')), true,
       `${name}: a dialog that refocuses its entry still returns focus to ☰`);
