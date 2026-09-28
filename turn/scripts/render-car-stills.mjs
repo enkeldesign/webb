@@ -42,11 +42,19 @@ const SUPERCAR_SOURCES = [
   'assets/cars/training-car.glb'
 ];
 
+// Kenney packs colour their models from a palette texture. The table is read from the
+// source text: the finish module imports Three, and this check runs without packages.
+async function kenneyPalettes() {
+  const source = await fs.readFile(path.join(turnRoot, 'vehicle/semantic-car-finish.js'), 'utf8');
+  const table = source.match(/const KENNEY_PALETTE_BY_PACK = Object\.freeze\(\{([\s\S]*?)\}\);/)?.[1];
+  if (!table) throw new Error('render-car-stills: KENNEY_PALETTE_BY_PACK not found in semantic-car-finish.js');
+  return Object.fromEntries([...table.matchAll(/([\w-]+):\s*'([^']+)'/g)].map(([, pack, file]) => [pack, file]));
+}
+
 // The files that decide how a car looks: its model and, for Kenney packs, the palette.
-export async function carStillSources(car) {
-  const { getKenneyPaletteAsset } = await import(pathToFileURL(path.join(turnRoot, 'vehicle/semantic-car-finish.js')).href);
+export async function carStillSources(car, palettes = null) {
   const files = car.id === 'supercar' ? [...SUPERCAR_SOURCES] : [car.asset.replace(/^\.\//, '')];
-  const palette = getKenneyPaletteAsset(car.pack);
+  const palette = (palettes || await kenneyPalettes())[car.pack];
   if (palette) files.push(palette.replace(/^\.\//, ''));
   const hashes = {};
   for (const file of files) {
@@ -58,8 +66,9 @@ export async function carStillSources(car) {
 
 export async function expectedManifestCars() {
   const { CAR_CATALOG } = await import(pathToFileURL(path.join(turnRoot, 'vehicle/catalog.js')).href);
+  const palettes = await kenneyPalettes();
   const cars = {};
-  for (const car of CAR_CATALOG) cars[car.id] = { sources: await carStillSources(car) };
+  for (const car of CAR_CATALOG) cars[car.id] = { sources: await carStillSources(car, palettes) };
   return cars;
 }
 
