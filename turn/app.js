@@ -400,6 +400,8 @@ installStylesheet('./controls.css', 'data-turn-controls');
 installStylesheet('./surfaces.css', 'data-turn-surfaces');
 const { installHomeAppBar } = await import(withBuild('./ui/home-app-bar.js'));
 installHomeAppBar();
+const { installRaceMenu } = await import(withBuild('./ui/race-menu.js'));
+installRaceMenu();
 const { installToastRegion } = await import(withBuild('./ui/toast-region.js'));
 installToastRegion();
 const { installViewportReadout } = await import(withBuild('./ui/viewport-readout.js'));

@@ -1,0 +1,142 @@
+// Race ☰: when the race row (.utility-group) is wider than the space beside the drive
+// pad (phone landscape with safe areas, SPECTATE shown), its secondary buttons move
+// into a menu sheet and a ☰ takes their place. LEAVE RACE, BLANK SCREEN (a two-tap
+// toggle), ACHIEVEMENTS (it carries a badge) and RESTART LAP stay in the row. Where everything fits, nothing changes.
+// The buttons themselves move, so every module keeps its own listeners and state.
+
+const INSTALL_KEY = '__turnRaceMenu';
+const SHEET_ID = 'turnRaceMenuSheet';
+const KEEP_IN_ROW = '.back-to-lot-button, .turn-screen-blank-control, .turn-race-achievements-button, .back-to-start-button, .turn-race-menu-button';
+
+export function installRaceMenu({ documentRef = document, windowRef = window } = {}) {
+  if (globalThis[INSTALL_KEY]) return globalThis[INSTALL_KEY];
+  const group = documentRef.querySelector('.utility-group');
+  if (!group) return null;
+
+  const menuButton = documentRef.createElement('button');
+  menuButton.type = 'button';
+  menuButton.className = 'utility turn-race-menu-button';
+  menuButton.hidden = true;
+  menuButton.setAttribute('aria-haspopup', 'dialog');
+  menuButton.setAttribute('aria-controls', SHEET_ID);
+  menuButton.setAttribute('aria-expanded', 'false');
+  menuButton.setAttribute('aria-label', 'More race actions');
+  menuButton.innerHTML = '<span class="turn-race-menu-icon" aria-hidden="true"><i></i><i></i><i></i></span>';
+
+  const sheet = documentRef.createElement('dialog');
+  sheet.id = SHEET_ID;
+  sheet.className = 'turn-home-sheet turn-race-sheet';
+  sheet.setAttribute('aria-labelledby', 'turnRaceMenuTitle');
+  sheet.innerHTML = `
+    <div class="turn-home-sheet-head">
+      <h2 id="turnRaceMenuTitle">MENU</h2>
+      <button class="turn-home-sheet-close" type="button" aria-label="Close menu"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="turn-race-menu"></div>`;
+  const list = sheet.querySelector('.turn-race-menu');
+  const closeButton = sheet.querySelector('.turn-home-sheet-close');
+  documentRef.body.appendChild(sheet);
+
+  // Every button that ever lived in the row, in row order.
+  let order = [];
+  let syncing = false;
+  let frame = 0;
+  const observer = new MutationObserver(schedule);
+
+  function rememberOrder() {
+    const current = [...group.children, ...list.children].filter((node) => node !== menuButton);
+    order = [...order.filter((node) => current.includes(node)), ...current.filter((node) => !order.includes(node))];
+  }
+
+  function restoreRow() {
+    for (const node of order) group.appendChild(node);
+    group.appendChild(menuButton);
+  }
+
+  function fits() {
+    return group.scrollWidth <= group.clientWidth + 1;
+  }
+
+  function sync() {
+    frame = 0;
+    if (syncing) return;
+    syncing = true;
+    const focused = documentRef.activeElement;
+    try {
+      rememberOrder();
+      restoreRow();
+      menuButton.hidden = true;
+      let collapsed = false;
+      if (group.clientWidth > 0 && !fits()) {
+        collapsed = true;
+        menuButton.hidden = false;
+        for (const node of order) {
+          if (node.matches?.(KEEP_IN_ROW)) continue;
+          list.appendChild(node);
+        }
+      }
+      // Icon-only buttons need a visible name as a menu entry.
+      for (const node of list.children) {
+        if (!node.textContent.trim() && node.getAttribute('aria-label')) {
+          node.dataset.raceMenuLabel = node.getAttribute('aria-label');
+        }
+      }
+      group.classList.toggle('is-race-menu-collapsed', collapsed);
+      if (!collapsed && sheet.open) sheet.close();
+    } finally {
+      // Moving a node blurs it; keep focus where the player left it.
+      if (focused && focused !== documentRef.activeElement && focused.isConnected && !focused.hidden) {
+        focused.focus({ preventScroll: true });
+      }
+      // Discard the records of this module's own moves.
+      observer.takeRecords();
+      syncing = false;
+    }
+  }
+
+  function schedule() {
+    if (syncing || frame) return;
+    frame = windowRef.requestAnimationFrame(sync);
+  }
+
+  function open() {
+    if (sheet.open) return;
+    sheet.showModal();
+    menuButton.setAttribute('aria-expanded', 'true');
+    ([...list.children].find((node) => !node.hidden && node.getClientRects().length) || closeButton).focus();
+  }
+
+  function close() {
+    if (sheet.open) sheet.close();
+  }
+
+  menuButton.addEventListener('click', open);
+  closeButton.addEventListener('click', close);
+  sheet.addEventListener('close', () => {
+    menuButton.setAttribute('aria-expanded', 'false');
+    if (!documentRef.querySelector('dialog[open]') && !menuButton.hidden) menuButton.focus({ preventScroll: true });
+  });
+  sheet.addEventListener('click', (event) => {
+    if (event.target === sheet) close();
+  });
+  // Entries open their own dialogs or change the race; close the sheet first.
+  list.addEventListener('click', (event) => {
+    if (event.target instanceof Element && event.target.closest('button')) close();
+  }, { capture: true });
+
+  // Buttons are added and shown or hidden as the race state changes.
+  observer.observe(group, { childList: true, attributes: true, subtree: true, attributeFilter: ['hidden', 'data-menu-state'] });
+  observer.observe(list, { childList: true, attributes: true, subtree: true, attributeFilter: ['hidden', 'aria-label'] });
+  new ResizeObserver(schedule).observe(group);
+  windowRef.addEventListener('resize', schedule, { passive: true });
+  windowRef.addEventListener('orientationchange', schedule, { passive: true });
+  windowRef.addEventListener('turn:ui-state-change', () => {
+    close();
+    schedule();
+  });
+  sync();
+
+  const api = Object.freeze({ open, close, sync, sheet, menuButton });
+  globalThis[INSTALL_KEY] = api;
+  return api;
+}

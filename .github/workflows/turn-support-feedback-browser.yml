@@ -12,6 +12,9 @@ on:
       - 'turn/scripts/release.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
       - 'turn-tests/responsive-browser-smoke.mjs'
+      - 'turn-tests/race-menu-browser-smoke.mjs'
+      - 'turn/ui/race-menu.js'
+      - 'turn/home-app-bar.css'
       - 'turn/responsive.css'
       - 'turn/main.js'
       - 'turn/index.html'
@@ -32,6 +35,9 @@ on:
       - 'turn/scripts/release.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
       - 'turn-tests/responsive-browser-smoke.mjs'
+      - 'turn-tests/race-menu-browser-smoke.mjs'
+      - 'turn/ui/race-menu.js'
+      - 'turn/home-app-bar.css'
       - 'turn/responsive.css'
       - 'turn/main.js'
       - 'turn/index.html'
@@ -80,4 +86,7 @@ jobs:
 
       - name: Verify responsive layouts and orientation in Chromium and WebKit
         run: node turn-tests/responsive-browser-smoke.mjs
+
+      - name: Verify the race ☰ keeps the start row inside the viewport
+        run: node turn-tests/race-menu-browser-smoke.mjs
 
