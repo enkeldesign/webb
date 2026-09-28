@@ -87,9 +87,10 @@
   --turn-radius-hero: 21px;
   --turn-radius-pill: 749.25px;
   --turn-radius-circle: 50%;
-  --turn-shadow-compact: 2.25px 2.25px 0 var(--turn-ink);
-  --turn-shadow-default: 5.25px 5.25px 0 var(--turn-ink);
-  --turn-shadow-hero: 9px 9px 0 var(--turn-ink);
+  /* Elevation lives in design-scale.css; these older names map onto its levels. */
+  --turn-shadow-compact: var(--turn-shadow-control, 3px 3px 0 var(--turn-ink));
+  --turn-shadow-default: var(--turn-shadow-card, 6px 6px 0 var(--turn-ink));
+  --turn-shadow-hero: var(--turn-shadow-dialog, 8px 8px 0 var(--turn-ink));
 
   /* Spacing. */
   --turn-space-1: 3px;

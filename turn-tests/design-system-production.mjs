@@ -161,6 +161,18 @@ for (const token of [
 assert.match(semantic, new RegExp(`@import url\\('\\./design-tokens\\.css\\?build=${release.cacheKey}'\\)`));
 assert.match(semantic, /\.install-primary,\s*\.track-select-continue \{[\s\S]*?background: var\(--turn-action-primary\)/);
 const preRace = await fs.readFile(new URL('../turn/pre-race.css', import.meta.url), 'utf8');
+// One elevation scale (design-scale.css): the older shadow tokens and ROADBOOK/GARAGE's
+// primitives resolve to its levels instead of carrying their own pixel values.
+for (const level of ['press', 'control', 'action', 'card', 'dialog']) {
+  assert.match(scale, new RegExp(`--turn-shadow-${level}: \\d+px \\d+px 0 var\\(--turn-ink`), `design-scale.css defines the ${level} elevation`);
+}
+assert.match(tokens, /--turn-shadow-compact: var\(--turn-shadow-control,/);
+assert.match(tokens, /--turn-shadow-default: var\(--turn-shadow-card,/);
+assert.match(tokens, /--turn-shadow-hero: var\(--turn-shadow-dialog,/);
+for (const [name, level] of [['shadow', 'card'], ['shadow-action', 'action'], ['shadow-press', 'press'], ['shadow-sheet', 'dialog']]) {
+  assert.match(preRace, new RegExp(`--turn-pr-${name}: var\\(--turn-shadow-${level},`), `ROADBOOK/GARAGE ${name} uses the ${level} elevation`);
+}
+assert.doesNotMatch(preRace.replace(/--turn-pr-shadow[^;]*;/g, ''), /box-shadow: \d/, 'pre-race.css writes no literal hard shadow');
 assert.match(preRace, /\.turn-pr-button\.is-primary \{[\s\S]*?background: var\(--turn-action-primary/,
   'ROADBOOK and GARAGE carry the main forward action in the same primary colour');
 assert.match(semantic, /\.drive-drift-zone,[\s\S]*var\(--turn-control-drift\)/);

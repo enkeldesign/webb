@@ -160,12 +160,18 @@ async function responsiveRace(browser, name) {
       const home = await bounds(page, '.m8-home');
       assert.ok(home.scrollWidth <= home.clientWidth + 1, `${name} ${width}: Home reflows horizontally`);
       await readability(page, `${name} ${width}x${height} Home`);
-      // Every orientation: one slim app bar (logo, ACHIEVEMENTS, menu) and a docked CHOOSE CAR.
+      // Every orientation: one slim app bar (logo, ACHIEVEMENTS, menu) and CHOOSE CAR in
+      // reach: docked, or, on a window too short for a fixed dock (reflow at 240x360),
+      // at the end of the page.
       const head = await bounds(page, '.m8-home-head');
       assert.ok(head.height <= 64, `${name} ${width}x${height}: the app bar is ${head.height}px`);
-      for (const control of ['.turn-home-menu-button', '.turn-app-bar-actions .m8-achievements-button', '.m8-track-continue']) {
+      for (const control of ['.turn-home-menu-button', '.turn-app-bar-actions .m8-achievements-button']) {
         within(await bounds(page, control), width, height, `${name} ${width}x${height} ${control}`);
       }
+      const dockFixed = await page.evaluate(() => globalThis.getComputedStyle(document.querySelector('.roadbook-dock')).position === 'fixed');
+      if (!dockFixed) await page.evaluate(() => { const home = document.querySelector('.m8-home'); home.scrollTop = home.scrollHeight; });
+      within(await bounds(page, '.m8-track-continue'), width, height, `${name} ${width}x${height} .m8-track-continue`);
+      if (!dockFixed) await page.evaluate(() => { document.querySelector('.m8-home').scrollTop = 0; });
       if (width >= 320 && width <= 736 && height > width) {
         // Portrait phones: the last track card scrolls clear of the dock.
         const clear = await page.evaluate(() => {
@@ -297,7 +303,11 @@ async function responsiveRace(browser, name) {
       const lot = await bounds(page, '.garage');
       assert.ok(lot.scrollWidth <= lot.clientWidth + 1, `${name} ${width}: GARAGE reflows`);
       await readability(page, `${name} ${width}x${height} GARAGE`);
+      // Docked, or at the end of the page when the window is too short for a fixed dock.
+      const dockFixed = await page.evaluate(() => globalThis.getComputedStyle(document.querySelector('.garage-dock')).position === 'fixed');
+      if (!dockFixed) await page.evaluate(() => { const garage = document.querySelector('.garage'); garage.scrollTop = garage.scrollHeight; });
       within(await bounds(page, '.garage-race'), width, height, 'GARAGE RACE action');
+      if (!dockFixed) await page.evaluate(() => { document.querySelector('.garage').scrollTop = 0; });
     }
     await page.setViewportSize({ width: 393, height: 852 });
     await page.locator('.garage-race').click();

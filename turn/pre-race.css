@@ -12,8 +12,12 @@
   --turn-pr-rule: 3px solid var(--turn-ink, #08090a);
   --turn-pr-radius: 14px;
   --turn-pr-radius-sheet: 20px;
-  --turn-pr-shadow: 5px 5px 0 var(--turn-ink, #08090a);
-  --turn-pr-shadow-action: 4px 4px 0 var(--turn-ink, #08090a);
+  /* Hard shadows come from design-scale.css: only the selected card (card level),
+     the primary action (action level) and a sheet (dialog level) carry one. */
+  --turn-pr-shadow: var(--turn-shadow-card, 6px 6px 0 var(--turn-ink, #08090a));
+  --turn-pr-shadow-action: var(--turn-shadow-action, 4px 4px 0 var(--turn-ink, #08090a));
+  --turn-pr-shadow-press: var(--turn-shadow-press, 1px 1px 0 var(--turn-ink, #08090a));
+  --turn-pr-shadow-sheet: var(--turn-shadow-dialog, 8px 8px 0 var(--turn-ink, #08090a));
   --turn-pr-gutter: 16px;
   --turn-pr-max-width: 72.5rem;
   --turn-pr-target: 44px;
@@ -446,7 +450,7 @@
 
 .turn-pr-button.is-primary:active:not(:disabled) {
   transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+  box-shadow: var(--turn-pr-shadow-press);
 }
 
 /* A locked choice keeps its place and explains itself instead of continuing. */
@@ -706,7 +710,7 @@
      dialog's max-height is reached. */
   flex: 0 1 auto;
   min-height: 0;
-  box-shadow: 8px 8px 0 var(--turn-ink, #08090a);
+  box-shadow: var(--turn-pr-shadow-sheet);
 }
 
 /* ---------- Track detail (Track sheet and overview) ---------- */
