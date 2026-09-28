@@ -59,7 +59,7 @@ const primitivePalette = new Map([
   ['--turn-blue-300', '#68c8f2'],
   ['--turn-blue-200', '#8ed8ff'],
   ['--turn-blue-100', '#bdeeff'],
-  ['--turn-pink-500', '#ff4fa3'],
+  ['--turn-pink-500', '#ff7c9f'],
   ['--turn-pink-200', '#ff8caf'],
   ['--turn-pink-100', '#ffd1e6'],
   ['--turn-red-500', '#ff6b6b'],
@@ -242,7 +242,7 @@ for (const [token, value] of [['--turn-text-floor', '11px'], ['--turn-type-micro
 assert.match(scale, /prefers-reduced-motion: reduce[\s\S]*--turn-motion-base: 0ms/);
 assert.match(tokens, /@media \(color-gamut: p3\) \{\s*@supports \(color: color\(display-p3 1 1 1\)\)/,
   'P3 accents apply only on wide-gamut displays that parse display-p3, with sRGB as the fallback');
-assert.match(tokens, /--turn-pink-500: #ff4fa3;[\s\S]*--turn-pink-500: color\(display-p3 /,
+assert.match(tokens, /--turn-pink-500: #ff7c9f;[\s\S]*--turn-pink-500: color\(display-p3 0\.935 0\.515 0\.624\)/,
   'The sRGB accent is declared first and remains the default');
 assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-scale"[\s\S]*no text below 11px/);
 console.log('TURN current product-language design system, palette, gameplay, progression and dialog reference passed.');

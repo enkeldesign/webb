@@ -43,6 +43,10 @@ assert.match(garage, /<h3 class="garage-disclosure-head">[\s\S]*?Specifications/
 assert.match(garage, /<h3 class="garage-disclosure-head">[\s\S]*?garage-perk-chip">PERK/, 'The perk is an H3 disclosure');
 assert.match(garage, /<div class="garage-view" aria-hidden="true"><\/div>/, 'The 3D view is decorative');
 assert.match(garage, /aria-label="Previous car"/);
+// The icons show the direction the car turns on screen; the -45° button turns it
+// clockwise seen from above the stage.
+assert.match(garage, /data-rotate="-45" aria-label="Turn the car left"><span aria-hidden="true">↻<\/span>/);
+assert.match(garage, /data-rotate="45" aria-label="Turn the car right"><span aria-hidden="true">↺<\/span>/);
 assert.match(garage, /aria-label="Next car"/);
 assert.match(garage, /announcer\.textContent = `\$\{car\.name\}, \$\{ORDER\.indexOf\(car\.id\) \+ 1\} of \$\{ORDER\.length\}\$\{lock \? `\. Locked until \$\{lock\.threshold\} trophies` : ''\}\.`;/,
   'Previous/next keep focus and announce the car, its position and any lock');

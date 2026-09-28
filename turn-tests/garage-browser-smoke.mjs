@@ -168,6 +168,23 @@ async function phoneFlow(browserType, name) {
       label: document.querySelector('.garage-setup-label').textContent.trim()
     }));
     assert.deepEqual(specs, { expanded: 'true', rows: 6, label: 'Stock' }, `${name}: Specifications open on a tap`);
+    // Clean by default: explanations appear only when asked for, and stay on.
+    const explanations = () => page.evaluate(() => ({
+      checked: document.querySelector('#garageSpecExplain').checked,
+      help: document.querySelectorAll('.garage-spec-help').length,
+      note: !document.querySelector('.garage-spec-note').hidden,
+      announced: /without boost/.test(document.querySelector('.garage-spec[data-stat="speed"]').getAttribute('aria-label'))
+    }));
+    assert.deepEqual(await explanations(), { checked: false, help: 0, note: false, announced: false },
+      `${name}: Specifications start without explanations`);
+    await page.locator('.garage-spec-explain').click();
+    assert.deepEqual(await explanations(), { checked: true, help: 6, note: true, announced: true },
+      `${name}: Show explanations adds each attribute's meaning and the 18-point note`);
+    await page.locator('.garage-step.is-next').click();
+    await page.locator('.garage-step.is-previous').click();
+    assert.equal((await explanations()).help, 6, `${name}: explanations stay on while browsing cars`);
+    await page.locator('.garage-spec-explain').click();
+    assert.equal((await explanations()).help, 0);
 
     // Walking the order: each car is viewed; locked ones are previews with no RACE.
     const locks = [];

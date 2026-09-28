@@ -694,6 +694,50 @@
   line-height: 1.35;
 }
 
+/* Explanations are opt-in: a native checkbox under the heading, drawn like the Settings
+   checkboxes (settings-components-r141.css). */
+.garage-spec-explain {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--turn-pr-target);
+  margin: 0 0 6px;
+  color: var(--turn-pr-muted);
+  font-size: var(--turn-pr-type-spec);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.garage-spec-explain input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: none;
+  width: 22.5px;
+  height: 22.5px;
+  margin: 0;
+  border: 4px solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-micro, 4px);
+  background-color: var(--turn-form-control-idle, #fff8e8);
+  background-position: center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.garage-spec-explain input[type='checkbox']:checked {
+  background-color: var(--turn-form-control-selected);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12.5 9.5 18 20 6.5' fill='none' stroke='%2308090a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 15.75px 15.75px;
+}
+
+.garage-spec-explain input[type='checkbox']:focus-visible {
+  outline: 5px solid var(--turn-form-control-focus);
+  outline-offset: 3px;
+}
+
+.garage-spec-note[hidden] {
+  display: none;
+}
+
 .garage-spec-note,
 .garage-shift-note {
   margin: 14px 0 0;

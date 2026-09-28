@@ -48,14 +48,20 @@ assert.equal(
   'Production must publish fresh shared stat definitions through the canonical vehicle catalog'
 );
 
-// GARAGE Specifications: the shared legend's names and explanations beside each meter,
-// read to assistive technology, with the 18-point budget stated once.
+// GARAGE Specifications: the shared legend's names beside each meter; what each means,
+// and the 18-point budget, appear (and are announced) once the player turns on
+// Show explanations, which starts unchecked and is remembered.
 assert.match(garageSource, /VEHICLE_STAT_LEGEND\.map\(\(\{ key, label, description \}\) =>/,
   'GARAGE uses the shared legend as its source of truth');
-assert.match(garageSource, /aria-label="\$\{escapeHtml\(titleCase\(label\)\)\}: \$\{value\} out of 5\.\$\{shiftCopy\} \$\{escapeHtml\(description\)\}"/,
-  'Each attribute is announced with its value and what it means');
-assert.match(garageSource, /<small class="garage-spec-help" aria-hidden="true">\$\{escapeHtml\(description\)\}<\/small>/,
-  'Each attribute shows what it means beside its meter');
+assert.match(garageSource, /aria-label="\$\{escapeHtml\(titleCase\(label\)\)\}: \$\{value\} out of 5\.\$\{shiftCopy\}\$\{explained \? ` \$\{escapeHtml\(description\)\}` : ''\}"/,
+  'Each attribute is announced with its value, and what it means when explanations are on');
+assert.match(garageSource, /\$\{explained \? `<small class="garage-spec-help" aria-hidden="true">\$\{escapeHtml\(description\)\}<\/small>` : ''\}/,
+  'Each attribute shows what it means beside its meter when explanations are on');
+assert.match(garageSource, /<label class="garage-spec-explain">\s*<input type="checkbox" id="garageSpecExplain">\s*<span>Show explanations<\/span>/,
+  'Show explanations is a native, labelled checkbox under the Specifications heading');
+assert.match(garageSource, /EXPLANATIONS_STORAGE_KEY = 'turn-garage-explanations-v1'/);
+assert.match(garageSource, /getItem\(EXPLANATIONS_STORAGE_KEY\) === '1'/, 'Explanations start off');
+assert.match(garageSource, /specNote\.hidden = !explained/, 'The 18-point note is an explanation too');
 assert.match(garageSource, /Every car has 18 attribute points in total\. What changes is how they are shared out\./,
   'Specifications explain the fixed 18-point budget shared by every car');
 assert.doesNotMatch(garageSource, /GAS is fastest|DRIFT turns harder|BOOST is a limited burst/);

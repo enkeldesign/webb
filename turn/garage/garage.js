@@ -126,7 +126,27 @@ export function prepareGarage() {
   return stylesPromise;
 }
 
-function statRows(stats, shift) {
+// Specifications stay clean by default: what each attribute means, and the 18-point
+// budget, show only when the player asks for explanations. The choice is remembered.
+const EXPLANATIONS_STORAGE_KEY = 'turn-garage-explanations-v1';
+
+function loadExplanationsShown() {
+  try {
+    return globalThis.localStorage?.getItem(EXPLANATIONS_STORAGE_KEY) === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
+function saveExplanationsShown(shown) {
+  try {
+    globalThis.localStorage?.setItem(EXPLANATIONS_STORAGE_KEY, shown ? '1' : '0');
+  } catch (_) {
+    // Private mode: the choice lasts while GARAGE is open.
+  }
+}
+
+function statRows(stats, shift, explained) {
   return VEHICLE_STAT_LEGEND.map(({ key, label, description }) => {
     const value = Number(stats[key]) || 0;
     const change = shift?.[key] || 0;
@@ -134,11 +154,11 @@ function statRows(stats, shift) {
       : change < 0 ? '<span class="garage-shift-mark is-loss" aria-hidden="true">▼</span>' : '';
     const shiftCopy = change ? ` SHIFT ${change > 0 ? 'adds' : 'removes'} ${Math.abs(change)}.` : '';
     return `
-      <li class="garage-spec" data-stat="${key}" aria-label="${escapeHtml(titleCase(label))}: ${value} out of 5.${shiftCopy} ${escapeHtml(description)}">
+      <li class="garage-spec" data-stat="${key}" aria-label="${escapeHtml(titleCase(label))}: ${value} out of 5.${shiftCopy}${explained ? ` ${escapeHtml(description)}` : ''}">
         <span class="garage-spec-label" aria-hidden="true">${escapeHtml(titleCase(label))}${marker}</span>
         <span class="garage-spec-meter" aria-hidden="true">${Array.from({ length: 5 }, (_, index) => `<i class="${index < value ? 'is-full' : ''}"></i>`).join('')}</span>
         <span class="garage-spec-value" aria-hidden="true">${value}/5</span>
-        <small class="garage-spec-help" aria-hidden="true">${escapeHtml(description)}</small>
+        ${explained ? `<small class="garage-spec-help" aria-hidden="true">${escapeHtml(description)}</small>` : ''}
       </li>`;
   }).join('');
 }
@@ -214,8 +234,8 @@ export function showGarage({
               <button class="garage-step is-previous" type="button" aria-label="Previous car"><span aria-hidden="true">‹</span></button>
               <button class="garage-step is-next" type="button" aria-label="Next car"><span aria-hidden="true">›</span></button>
               <div class="garage-rotate">
-                <button class="garage-rotate-button" type="button" data-rotate="-45" aria-label="Turn the car left"><span aria-hidden="true">↺</span></button>
-                <button class="garage-rotate-button" type="button" data-rotate="45" aria-label="Turn the car right"><span aria-hidden="true">↻</span></button>
+                <button class="garage-rotate-button" type="button" data-rotate="-45" aria-label="Turn the car left"><span aria-hidden="true">↻</span></button>
+                <button class="garage-rotate-button" type="button" data-rotate="45" aria-label="Turn the car right"><span aria-hidden="true">↺</span></button>
               </div>
             </div>
             <div class="garage-identity">
@@ -243,8 +263,12 @@ export function showGarage({
                 </button>
               </h3>
               <div class="garage-disclosure-panel" id="garageSpecs" hidden>
+                <label class="garage-spec-explain">
+                  <input type="checkbox" id="garageSpecExplain">
+                  <span>Show explanations</span>
+                </label>
                 <ul class="garage-spec-list"></ul>
-                <p class="garage-spec-note">Every car has 18 attribute points in total. What changes is how they are shared out.</p>
+                <p class="garage-spec-note" hidden>Every car has 18 attribute points in total. What changes is how they are shared out.</p>
                 <p class="garage-shift-note" hidden><span aria-hidden="true">▲▼</span> Your SHIFT setup. Switch it on during a race.</p>
               </div>
             </section>
@@ -308,6 +332,10 @@ export function showGarage({
     const setupLabel = $('.garage-setup-label');
     const specList = $('.garage-spec-list');
     const shiftNote = $('.garage-shift-note');
+    const explainToggle = $('#garageSpecExplain');
+    const specNote = $('.garage-spec-note');
+    let explained = loadExplanationsShown();
+    explainToggle.checked = explained;
     const perk = $('.garage-perk');
     const perkToggle = perk.querySelector('.garage-disclosure-toggle');
     const perkPanel = perk.querySelector('.garage-disclosure-panel');
@@ -399,7 +427,8 @@ export function showGarage({
       const stock = STAT_KEYS.every((key) => Number(stats[key]) === Number(car.stats[key]));
       setupLabel.textContent = stock ? 'Stock' : 'Current setup';
       const changes = selection.state().preview || secretActive ? null : shiftChanges(car);
-      specList.innerHTML = statRows(stats, changes);
+      specList.innerHTML = statRows(stats, changes, explained);
+      specNote.hidden = !explained;
       shiftNote.hidden = !changes;
     }
 
@@ -667,6 +696,11 @@ export function showGarage({
 
     root.querySelector('.garage-step.is-previous').addEventListener('click', () => step(-1));
     root.querySelector('.garage-step.is-next').addEventListener('click', () => step(1));
+    explainToggle.addEventListener('change', () => {
+      explained = explainToggle.checked;
+      saveExplanationsShown(explained);
+      render({ viewer: false });
+    });
     for (const button of root.querySelectorAll('.garage-rotate-button')) {
       button.addEventListener('click', () => viewer.rotateBy(Number(button.dataset.rotate)));
     }
