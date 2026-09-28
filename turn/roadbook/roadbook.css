@@ -173,3 +173,11 @@
     min-width: 13rem;
   }
 }
+
+/* Very large text: the dock has joined the end of the page (pre-race.css), inside the
+   page's own gutters, so it drops its own. */
+@media (orientation: portrait) and (max-height: 30rem), (orientation: landscape) and (max-height: 19rem) {
+  .roadbook-dock.turn-pr-dock {
+    padding-inline: 0;
+  }
+}

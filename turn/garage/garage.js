@@ -901,7 +901,9 @@ export function showGarage({
     // fits between the app bar and the dock.
     const syncDockSpace = () => {
       const height = dock.getBoundingClientRect().height;
-      if (height > 0) root.style.setProperty('--garage-dock-height', `${Math.ceil(height)}px`);
+      // A dock that has joined the page (very large text) needs no room kept for it.
+      const fixed = windowRef.getComputedStyle(dock).position === 'fixed';
+      if (height > 0) root.style.setProperty('--garage-dock-height', fixed ? `${Math.ceil(height)}px` : '0px');
       const barHeight = bar.getBoundingClientRect().height;
       root.style.setProperty('--garage-bar-height', `${Math.ceil(barHeight)}px`);
       const room = root.clientHeight - barHeight - height - 24;

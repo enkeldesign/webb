@@ -42,7 +42,8 @@
   margin: 0;
   color: var(--turn-ink, #08090a);
   font-family: var(--turn-pr-font-display);
-  font-size: var(--turn-pr-type-display);
+  /* Enlarged text grows the heading until it would outgrow the screen. */
+  font-size: min(var(--turn-pr-type-display), 14vw);
   font-weight: 900;
   letter-spacing: -0.035em;
   line-height: 0.95;
@@ -418,8 +419,17 @@
 }
 
 .turn-pr-button-arrow {
+  flex: none;
   font-size: 1.375rem;
   line-height: 1;
+}
+
+/* A label that no longer fits (enlarged text, narrow phone) wraps instead of pushing
+   the arrow off the button. */
+.turn-pr-button.is-primary .turn-pr-button-label {
+  min-width: 0;
+  white-space: normal;
+  text-align: left;
 }
 
 .turn-pr-button.is-compact {
@@ -560,19 +570,19 @@
 }
 
 /* Phones in portrait: the secondary action joins the context line, so the primary
-   action keeps its full label at the full width. */
+   action keeps its full label at the full width. When enlarged text leaves the
+   context too little room, the secondary action wraps below it instead of squeezing
+   the track name. */
 @media (max-width: 26.25rem) {
   .turn-pr-dock-inner {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "context secondary"
-      "primary primary";
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    column-gap: 12px;
+    gap: 8px 12px;
   }
 
   .turn-pr-dock-context {
-    grid-area: context;
+    flex: 1 1 9rem;
   }
 
   .turn-pr-dock-actions {
@@ -580,14 +590,24 @@
   }
 
   .turn-pr-dock-actions > .is-secondary {
-    grid-area: secondary;
+    flex: none;
     min-height: var(--turn-pr-target);
     padding: 0 12px;
     font-size: 0.9375rem;
   }
 
   .turn-pr-dock-actions > .is-primary {
-    grid-area: primary;
+    flex: 1 1 100%;
+  }
+}
+
+/* Very large text (or a very short window): a fixed dock would cover much of the
+   screen, so it joins the end of the page instead. The screens measure the dock's
+   position and stop reserving room for it. */
+@media (orientation: portrait) and (max-height: 30rem), (orientation: landscape) and (max-height: 19rem) {
+  .turn-pr-dock {
+    position: static;
+    margin-top: 24px;
   }
 }
 

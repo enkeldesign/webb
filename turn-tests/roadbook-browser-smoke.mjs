@@ -32,10 +32,17 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 const trackIds = TRACK_DEFINITIONS.map((track) => track.id);
 assert.deepEqual(Object.keys(TRACK_ICON_ASSETS).sort(), [...trackIds].sort(), 'Every track has a canonical pictogram');
 
-async function openHome(browserType, { width, height, isMobile = true }) {
+// textSize: the browser's own text size setting (Chromium), as a player who enlarges
+// text sets it; unlike a root font-size override it moves rem media queries too.
+async function openHome(browserType, { width, height, isMobile = true, textSize = 0 }) {
   const browser = await browserType.launch();
   const context = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: browserType !== webkit && isMobile, reducedMotion: 'reduce' });
   const page = await context.newPage();
+  if (textSize) {
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Page.enable');
+    await cdp.send('Page.setFontSizes', { fontSizes: { standard: textSize, fixed: Math.round(textSize * 0.8) } });
+  }
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => {
@@ -79,7 +86,12 @@ function layout(page) {
       art: [...document.querySelectorAll('.roadbook-card .turn-pr-card-art')].filter(visible).length,
       columns: new Set([...document.querySelectorAll('.roadbook-card')].map((node) => Math.round(node.getBoundingClientRect().left))).size,
       overview: !document.querySelector('.roadbook-overview').hidden,
-      sheetButton: visible(document.querySelector('.roadbook-sheet-button'))
+      sheetButton: visible(document.querySelector('.roadbook-sheet-button')),
+      dockFixed: globalThis.getComputedStyle(document.querySelector('.roadbook-dock')).position === 'fixed',
+      title: (() => {
+        const title = document.querySelector('.roadbook .turn-pr-display');
+        return title.getBoundingClientRect().right <= globalThis.innerWidth + 0.5;
+      })()
     };
   });
 }
@@ -283,7 +295,22 @@ async function layoutAt(browserType, name, size, check) {
     assert.ok(facts.overflowX <= 0, `${name}: no sideways scroll (${facts.overflowX})`);
     assert.deepEqual(facts.small, [], `${name}: every target is at least 44px`);
     assert.deepEqual(facts.clippedNames, [], `${name}: track names wrap instead of clipping`);
-    assert.ok(facts.dock.bottom <= facts.viewport.height + 0.5, `${name}: the dock stays inside the viewport`);
+    assert.equal(facts.title, true, `${name}: the heading fits the screen`);
+    if (facts.dockFixed) {
+      assert.ok(facts.dock.bottom <= facts.viewport.height + 0.5, `${name}: the dock stays inside the viewport`);
+    } else {
+      // Joined the page: at its end, CHOOSE CAR is in view and whole.
+      const end = await page.evaluate(() => {
+        const home = document.querySelector('.m8-home');
+        home.scrollTop = home.scrollHeight;
+        const button = document.querySelector('.m8-track-continue').getBoundingClientRect();
+        const arrow = document.querySelector('.m8-track-continue .turn-pr-button-arrow').getBoundingClientRect();
+        const result = { inView: button.bottom <= globalThis.innerHeight + 0.5 && button.top >= 0, arrowInside: arrow.right <= button.right };
+        home.scrollTop = 0;
+        return result;
+      });
+      assert.deepEqual(end, { inView: true, arrowInside: true }, `${name}: at the end of the page CHOOSE CAR is in view and whole`);
+    }
     await assertLastCardClearsDock(page, name);
     await check(facts, page);
     assert.deepEqual(errors, [], `${name}: no page errors`);
@@ -298,6 +325,24 @@ try {
   await layoutAt(chromium, '320x568', { width: 320, height: 568 }, (facts) => {
     assert.equal(facts.art, 0, '320px: the route gives way before the names do');
     assert.equal(facts.columns, 1);
+  });
+  await layoutAt(chromium, '320x568 200% text', { width: 320, height: 568, textSize: 32 }, async (facts, page) => {
+    assert.equal(facts.dockFixed, false, '200% text: the dock joins the end of the page instead of covering it');
+    // The track name in the dock keeps whole words.
+    const dockName = await page.evaluate(() => {
+      const name = document.querySelector('.roadbook-dock .turn-pr-dock-name');
+      return name.getBoundingClientRect().height < 2.5 * parseFloat(globalThis.getComputedStyle(name).fontSize);
+    });
+    assert.equal(dockName, true, '200% text: the dock names the track on one line');
+    await page.locator('.roadbook-sheet-button').click();
+    await page.waitForSelector('#turnTrackSheet[open]');
+    const sheet = await page.evaluate(() => {
+      const body = document.querySelector('#turnTrackSheet .turn-pr-sheet-body');
+      const card = document.querySelector('#turnTrackSheet .turn-pr-sheet-card').getBoundingClientRect();
+      return { overflowX: body.scrollWidth - body.clientWidth, inside: card.right <= globalThis.innerWidth + 0.5 && card.bottom <= globalThis.innerHeight + 0.5 };
+    });
+    assert.deepEqual(sheet, { overflowX: 0, inside: true }, '200% text: the Track sheet reflows inside the screen');
+    await page.locator('#turnTrackSheet .turn-pr-close').click();
   });
   await layoutAt(chromium, '852x393 short landscape', { width: 852, height: 393 }, (facts) => {
     assert.equal(facts.columns, 2, 'short landscape: two columns');

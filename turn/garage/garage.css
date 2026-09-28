@@ -801,17 +801,15 @@
 /* Phones: the dock's actions share one row (pre-race.css would lift a secondary
    action into the context line). */
 @media (max-width: 26.25rem) {
-  .garage-dock .turn-pr-dock-inner {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: none;
-  }
-
-  .garage-dock :is(.turn-pr-dock-context, .turn-pr-dock-actions > *) {
-    grid-area: auto;
+  .garage-dock .turn-pr-dock-context {
+    flex: 1 1 100%;
   }
 
   .garage-dock .turn-pr-dock-actions {
     display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
   .garage-dock .turn-pr-dock-actions > .is-primary {

@@ -36,10 +36,17 @@ const carName = Object.fromEntries(CAR_CATALOG.map((car) => [car.id, car.name]))
 const fixedLiveryId = CAR_CATALOG.find((car) => car.fixedLivery)?.id;
 assert.ok(fixedLiveryId, 'The catalog has an emergency car with a fixed livery');
 
-async function openGarage(browserType, { width, height, isMobile = true, unlocked = false }) {
+// textSize: the browser's own text size setting (Chromium); it moves rem media queries
+// too, as a player's enlarged text does.
+async function openGarage(browserType, { width, height, isMobile = true, unlocked = false, textSize = 0 }) {
   const browser = await browserType.launch();
   const context = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: browserType !== webkit && isMobile, reducedMotion: 'reduce' });
   const page = await context.newPage();
+  if (textSize) {
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Page.enable');
+    await cdp.send('Page.setFontSizes', { fontSizes: { standard: textSize, fixed: Math.round(textSize * 0.8) } });
+  }
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => {
@@ -114,6 +121,7 @@ const garageLayout = (page) => page.evaluate(() => {
     view: { width: view.width, height: view.height },
     viewport: { width: globalThis.innerWidth, height: globalThis.innerHeight },
     specsOpen: !document.querySelector('#garageSpecs').hidden,
+    dockFixed: globalThis.getComputedStyle(document.querySelector('.garage-dock')).position === 'fixed',
     catalog: garage.dataset.catalog,
     allCarsButton: visible(document.querySelector('.garage-all-cars-button')),
     inlineCards: visible(inline) ? cards.length : 0,
@@ -553,7 +561,19 @@ async function layoutAt(name, size, check) {
     const facts = await garageLayout(page);
     assert.ok(facts.overflowX <= 0, `${name}: no sideways scroll (${facts.overflowX})`);
     assert.deepEqual(facts.small, [], `${name}: every target is at least 44px`);
-    assert.ok(facts.dock.bottom <= facts.viewport.height + 0.5, `${name}: the dock stays inside the viewport`);
+    if (facts.dockFixed) {
+      assert.ok(facts.dock.bottom <= facts.viewport.height + 0.5, `${name}: the dock stays inside the viewport`);
+    } else {
+      const end = await page.evaluate(() => {
+        const garage = document.querySelector('.garage');
+        garage.scrollTop = garage.scrollHeight;
+        const race = document.querySelector('.garage-race').getBoundingClientRect();
+        const result = race.bottom <= globalThis.innerHeight + 0.5 && race.top >= 0;
+        garage.scrollTop = 0;
+        return result;
+      });
+      assert.equal(end, true, `${name}: at the end of the page RACE is in view`);
+    }
     assert.equal(facts.clippedName, false, `${name}: the car name wraps instead of clipping`);
     assert.equal(facts.lastClearsDock, true, `${name}: the details scroll clear of the dock`);
     assert.ok(facts.view.width > 0 && facts.view.height > 0, `${name}: the car is on stage`);
@@ -573,6 +593,16 @@ try {
     assert.deepEqual([facts.catalog, facts.allCarsButton], ['sheet', true]);
     assert.deepEqual(await sheetFacts(page), { columns: 2, inside: true, overflowX: 0, clippedNames: [], brokenWords: [] },
       '320: ALL CARS keeps two columns and whole names');
+  });
+  await layoutAt('393x852 200% text', { width: 393, height: 852, textSize: 32 }, async (facts, page) => {
+    assert.equal(facts.dockFixed, false, '200% text: the dock joins the end of the page');
+    assert.equal(facts.catalog, 'sheet');
+    const sheet = await sheetFacts(page);
+    assert.deepEqual([sheet.inside, sheet.overflowX, sheet.clippedNames, sheet.brokenWords], [true, 0, [], []],
+      '200% text: ALL CARS reflows with whole names');
+  });
+  await layoutAt('1180x820 iPad landscape, 200% text', { width: 1180, height: 820, isMobile: false, textSize: 32 }, (facts) => {
+    assert.equal(facts.catalog, 'sheet', 'iPad at 200% text: ALL CARS moves into its sheet rather than squeezing three columns');
   });
   await layoutAt('852x393 short landscape', { width: 852, height: 393 }, async (facts, page) => {
     assert.ok(facts.dock.height <= 80, `short landscape: a one-line dock (${facts.dock.height})`);
