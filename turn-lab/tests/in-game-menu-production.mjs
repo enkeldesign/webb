@@ -55,7 +55,7 @@ assert.doesNotMatch(menu, /backToStartButton\.setAttribute\('aria-label'/,
   'The runtime must not late-mutate the Restart Lap accessible name');
 assert.match(menu, /backToStartButton\.classList\.add\('back-to-start-button'\)/);
 assert.match(menu, /backToLotButton\.textContent = 'Leave Race'/);
-assert.match(menu, /Leave the race and choose another track/);
+assert.match(menu, /backToLotButton\.setAttribute\('aria-label', 'Leave Race and return to ROADBOOK'\)/);
 assert.match(menu, /inGameMenuVisibilityFor\(runtime\.state\.mode\)/);
 assert.doesNotMatch(menu, /state\.speed/);
 assert.match(menu, /backToStartButton\.hidden = !visibility\.backToStart/);

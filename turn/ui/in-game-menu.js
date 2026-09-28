@@ -258,7 +258,7 @@ function install(runtime) {
   backToStartButton.classList.add('back-to-start-button');
 
   backToLotButton.textContent = 'Leave Race';
-  backToLotButton.setAttribute('aria-label', 'Leave the race and choose another track');
+  backToLotButton.setAttribute('aria-label', 'Leave Race and return to ROADBOOK');
 
   recalibrateButton.textContent = 'Recalibrate';
   recalibrateButton.setAttribute('aria-label', 'Recalibrate steering and tilt controls');

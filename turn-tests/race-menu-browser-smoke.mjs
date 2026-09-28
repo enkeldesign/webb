@@ -176,6 +176,22 @@ async function run(browserType, name) {
     const restored = await row(page);
     assert.ok(restored.fits && !restored.menu && restored.names.includes('m8-race-settings-button'),
       `${name}: widening restores the full row`);
+
+    // LEAVE RACE is named for where it goes: its name starts with what it shows,
+    // and it lands on ROADBOOK with the heading focused.
+    const leave = await page.evaluate(() => {
+      const button = document.querySelector('.back-to-lot-button');
+      return { text: button.textContent.trim(), label: button.getAttribute('aria-label') };
+    });
+    assert.ok(leave.label.startsWith(leave.text) && leave.label.includes('ROADBOOK'),
+      `${name}: LEAVE RACE's accessible name says it returns to ROADBOOK (${leave.label})`);
+    await page.locator('.back-to-lot-button').click();
+    await page.waitForFunction(() => document.activeElement?.id === 'm8HomeTitle');
+    assert.deepEqual(await page.evaluate(() => ({
+      heading: document.activeElement.textContent.trim(),
+      garage: document.body.classList.contains('turn-garage-open'),
+      controls: document.querySelector('#controls').hidden
+    })), { heading: 'ROADBOOK', garage: false, controls: true }, `${name}: LEAVE RACE ends the race on ROADBOOK`);
     assert.deepEqual(errors, [], `${name}: no page errors`);
   } finally {
     await browser.close();

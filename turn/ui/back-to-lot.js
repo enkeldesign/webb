@@ -20,7 +20,7 @@ function install(runtime) {
   button.type = 'button';
   button.className = 'utility back-to-lot-button';
   button.textContent = 'Leave Race';
-  button.setAttribute('aria-label', 'Leave the race and choose another track');
+  button.setAttribute('aria-label', 'Leave Race and return to ROADBOOK');
 
   resetButton.insertAdjacentElement('afterend', button);
 
