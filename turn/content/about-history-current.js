@@ -1072,14 +1072,14 @@ Object.freeze({
     Object.freeze(['1.24.11 r314', 'Removes the portrait LANDSCAPE ORIENTATION RECOMMENDED box from Home and The Lot; the rotate hint on the track loading screen stays. Also removes the tester STRIP TEST buttons now that the iPhone bottom strip matches every screen.']),
     Object.freeze(['1.25.0 r315', 'TURN\'s interface is now authored at its real size: the 75% runtime rewriter that resized every stylesheet on launch is retired, with every value written at the size it already rendered. Nothing should look different.']),
     Object.freeze(['1.25.1 r316', 'In landscape on phones, the buttons before a race start no longer run off the screen: when they do not fit, SETTINGS, RECALIBRATE, SPECTATE and the rest move into a ☰ menu, and LEAVE RACE, blank screen and ACHIEVEMENTS stay in the row.']),
-    Object.freeze(['1.26.0 r317', 'ROADBOOK replaces the Home track list: numbered track cards with each track\'s pictogram and real route, the Track sheet with personal bests, a dock that keeps the chosen track above CHOOSE CAR, and an inline overview on iPad']),
-    Object.freeze(['1.27.0 r318', 'GARAGE replaces The Lot: one featured car at a time in Trophy Road order with previous and next, the 3D car 20° off head-on, one short description, Specifications and Perk, native paint, SHIFT, and a RACE dock. A locked car can be looked at but never raced, and Back to your choice returns to the car you picked.'])
+    Object.freeze(['1.26.0 r318', 'ROADBOOK replaces the Home track list: numbered track cards with each track\'s pictogram and real route, the Track sheet with personal bests, a dock that keeps the chosen track above CHOOSE CAR, and an inline overview on iPad']),
+    Object.freeze(['1.27.0 r319', 'GARAGE replaces The Lot: one featured car at a time in Trophy Road order with previous and next, the 3D car 20° off head-on, one short description, Specifications and Perk, native paint, SHIFT, and a RACE dock. A locked car can be looked at but never raced, and Back to your choice returns to the car you picked.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.27.0',
-  build: '2026.09.28-r318',
+  build: '2026.09.28-r319',
   note: 'GARAGE replaces The Lot: browse one car at a time, look at locked cars without losing your choice, and race from the dock.'
 });
