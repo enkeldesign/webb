@@ -37,10 +37,10 @@ export function installYourTurnNonVisualIntro({
   }
 
   function pauseRaceForDialog() {
-    pausedForDialog = !document.body.classList.contains('turn-lot-open');
+    pausedForDialog = !document.body.classList.contains('turn-garage-open');
     if (!pausedForDialog) return;
     pausedAt = performance.now();
-    document.body.classList.add('turn-lot-open', 'yourturn-runtime-paused', 'yourturn-nonvisual-info-open');
+    document.body.classList.add('turn-garage-open', 'yourturn-runtime-paused', 'yourturn-nonvisual-info-open');
     globalThis.__turnAudio?.silence?.();
   }
 
@@ -53,7 +53,7 @@ export function installYourTurnNonVisualIntro({
       state.lapStartedAt += pausedFor;
     }
     if (state) state.lastFrame = now;
-    document.body.classList.remove('turn-lot-open', 'yourturn-runtime-paused', 'yourturn-nonvisual-info-open');
+    document.body.classList.remove('turn-garage-open', 'yourturn-runtime-paused', 'yourturn-nonvisual-info-open');
     pausedForDialog = false;
     pausedAt = 0;
   }

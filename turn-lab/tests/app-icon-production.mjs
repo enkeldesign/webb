@@ -25,10 +25,13 @@ for (const source of [index, nextIndex]) {
   assert.doesNotMatch(source, /favicon-r45|apple-touch-icon-r45|icon-512-r45/);
 }
 
-assert.match(homeSource, /<img class="m8-home-logo" src="\/turn\/TURNicon\.PNG\?icon=\$\{ICON_REVISION\}" alt="TURN">/);
+// The app bar carries TURN's badge: the start screen's framed icon.
+assert.match(homeSource, /<img class="m8-home-logo turn-pr-app-logo" src="\/turn\/TURNicon\.PNG\?icon=\$\{ICON_REVISION\}" alt="TURN">/);
 assert.match(homeSource, /ICON_REVISION = '20260803-profile-512'/);
-// The app bar shows the square profile icon at 40px, filling its rounded frame.
-assert.match(appBar, /\.m8-home-logo \{[^}]*width: 40px;[^}]*height: 40px;[^}]*object-fit: cover;/);
+// Framed and tilted like the start screen's icon, hanging over the bar's rule.
+const preRace = fs.readFileSync(new URL('../../turn/pre-race.css', import.meta.url), 'utf8');
+assert.match(preRace, /html body \.turn-pr-app-logo \{[^}]*width: var\(--turn-pr-logo-size\);[^}]*border: 3px solid[^}]*border-radius: 24%;[^}]*object-fit: cover;[^}]*transform: rotate\(-3deg\);[^}]*pointer-events: none;/);
+assert.doesNotMatch(appBar, /\.m8-home-logo \{[^}]*width: \d+px/, 'The app bar leaves the logo size to the badge');
 
 assert.match(index, new RegExp(`<link rel="manifest" href="\\.\\/site\\.webmanifest\\?build=${release.cacheKey}-icon-20260803-profile-512">`));
 assert.match(nextIndex, new RegExp(`<link rel="manifest" href="\\/turn-next\\/site\\.webmanifest\\?source=${release.cacheKey}-icon-20260803-profile-512-m8\\.5">`));

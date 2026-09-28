@@ -90,7 +90,7 @@ function homeHarness({ failImports = 1, failStyles = 0 } = {}) {
     showGarage: () => Promise.resolve(null)
   };
   const prepare = vm.runInNewContext(
-    `let lotWarmupPromise = null;\n${homePreparation}\n({ prepareLotOnce, module: () => garageModule });`,
+    `let lotWarmupPromise = null;\n${homePreparation}\n({ prepareGarageOnce, module: () => garageModule });`,
     {
       Promise,
       importModule(specifier) {
@@ -104,20 +104,20 @@ function homeHarness({ failImports = 1, failStyles = 0 } = {}) {
 }
 
 const home = homeHarness();
-const background = home.prepare.prepareLotOnce();
-assert.equal(home.prepare.prepareLotOnce(), background, 'Background and interactive preparation share one pending attempt');
+const background = home.prepare.prepareGarageOnce();
+assert.equal(home.prepare.prepareGarageOnce(), background, 'Background and interactive preparation share one pending attempt');
 await assert.rejects(background, /Transient import failure/);
 assert.equal(home.prepare.module(), null, 'A failed preparation never exposes a half-ready GARAGE');
-const homeRetry = home.prepare.prepareLotOnce();
+const homeRetry = home.prepare.prepareGarageOnce();
 assert.notEqual(homeRetry, background, 'A rejected Home preparation must not poison the next CHOOSE CAR');
 await homeRetry;
 assert.equal(home.prepare.module(), home.module);
-assert.equal(home.prepare.prepareLotOnce(), homeRetry, 'Successful preparation remains cached');
+assert.equal(home.prepare.prepareGarageOnce(), homeRetry, 'Successful preparation remains cached');
 assert.equal(home.imports, 2);
 
 const styled = homeHarness({ failImports: 0, failStyles: 1 });
-await assert.rejects(styled.prepare.prepareLotOnce(), /Transient stylesheet failure/);
-await styled.prepare.prepareLotOnce();
+await assert.rejects(styled.prepare.prepareGarageOnce(), /Transient stylesheet failure/);
+await styled.prepare.prepareGarageOnce();
 assert.equal(styled.styles, 2, 'A stylesheet failure is retried by the next attempt');
 assert.equal(styled.prepare.module(), styled.module);
 

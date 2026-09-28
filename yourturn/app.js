@@ -334,7 +334,7 @@ function installHardPauseController() {
     // The canonical TURN loop already has a hard occlusion path for The Lot.
     // YOUR TURN has no Lot UI, so reusing that class gives us a tested frame-level
     // stop: no physics, replay movement or rendering advances behind our modal.
-    document.body.classList.add('turn-lot-open', 'yourturn-runtime-paused');
+    document.body.classList.add('turn-garage-open', 'yourturn-runtime-paused');
     globalThis.__turnAudio?.silence?.();
   }
 
@@ -350,7 +350,7 @@ function installHardPauseController() {
     }
     if (state) state.lastFrame = now;
 
-    document.body.classList.remove('turn-lot-open', 'yourturn-runtime-paused');
+    document.body.classList.remove('turn-garage-open', 'yourturn-runtime-paused');
     paused = false;
     pausedAt = 0;
   }

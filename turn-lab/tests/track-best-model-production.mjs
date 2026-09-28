@@ -31,9 +31,7 @@ const [
   index,
   releaseSource,
   app,
-  selector,
   renderer,
-  trackSelectCss,
   preRaceCss,
   hud,
   driftRuntime,
@@ -43,9 +41,7 @@ const [
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/track-best-car.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/track-select.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/pre-race.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/hud.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/scoring/drift-attack-runtime.js', import.meta.url), 'utf8'),
@@ -54,18 +50,11 @@ const [
 ]);
 
 const release = JSON.parse(releaseSource);
-const layerStart = trackSelectCss.indexOf('/* ==== Layer r61 ');
-assert.ok(layerStart >= 0, 'track-select.css must keep its r61 record-car layer');
-const layerEnd = trackSelectCss.indexOf('/* ==== Layer ', layerStart + 1);
-const css = trackSelectCss.slice(layerStart, layerEnd < 0 ? undefined : layerEnd);
 const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (path) => `${path}?build=${release.cacheKey}`;
-const bestLayoutBlock = css.match(/\.track-card-best \{[\s\S]*?\n\}/)?.[0] || '';
 
-assert.match(index, new RegExp(`track-select\\.css\\?build=${release.cacheKey}`), 'Production must load the record-car thumbnail layout through the current release');
-assert.equal(imports['./ui/track-select.js?build=20260722-r51'], releaseTarget('./ui/track-select.js'), 'Production must publish the enhanced selector');
 const rivalStorageTarget = new URL(
   imports['./race/rival-storage.js?build=20260722-r50'] || '',
   'https://enkel.design/turn/'
@@ -73,28 +62,22 @@ const rivalStorageTarget = new URL(
 assert.equal(
   rivalStorageTarget.pathname,
   '/turn/race/rival-storage.js',
-  'The selector must receive the paint-aware ranked record summary module'
+  'Home must receive the paint-aware ranked record summary module'
 );
 assert.equal(
   rivalStorageTarget.searchParams.get('build'),
   release.cacheKey,
-  'The selector record summary module must use the current release identity'
+  'The record summary module must use the current release identity'
 );
 assert.equal(
   rivalStorageTarget.searchParams.get('revision'),
   'r224-finish-line-summary',
-  'The selector record summary module must keep the finish-line summary contract'
+  'The record summary module must keep the finish-line summary contract'
 );
 
-assert.match(selector, /track-card-best-model/, 'Every playable Best row must reserve a model thumbnail');
-assert.match(selector, /renderBestCarThumbnail\(bestLap\)/, 'Best rows must request the stored record car');
-assert.match(selector, /track-best-car\.js\?revision=r253-supercar-release/, 'The selector must refresh the complete SUPERCAR-aware renderer');
-assert.match(selector, /bestLap\.carColor/, 'The thumbnail identity must include the stored body paint');
-assert.match(selector, /bestLap\.carSecondaryColor/, 'The thumbnail identity must include stored secondary paint');
-assert.match(selector, /aria-hidden="true"/, 'The decorative model must not duplicate the readable car name');
-assert.match(selector, /model\.hidden = false/, 'The model must appear only after its render succeeds');
-assert.match(selector, /for \(const track of TRACK_CATALOG\)/, 'Locked placeholder slots must never request a record thumbnail');
-
+// ROADBOOK (the Track sheet and iPad overview) is where record cars appear now; the
+// track-select overlay that first showed them is retired.
+assert.doesNotMatch(index, /track-select/, 'The retired track-select overlay is not loaded');
 assert.match(renderer, /getVehicleDefaultColor\(car\.id\)/,
   'Legacy score records without paint must fall back to that car’s body default, not TURN’s global yellow');
 assert.match(renderer, /getVehicleDefaultSecondaryColor\(car\.id\)/,
@@ -170,15 +153,6 @@ assert.deepEqual(getBestDriftRecord('countryside', legacyPaintStorage), {
   carId: 'classic',
   hitAt: 1
 }, 'Paint-aware record normalization must keep pre-paint DRIFT saves readable');
-
-assert.match(bestLayoutBlock, /grid-template-columns: max-content max-content;/, 'BEST copy and car must use content-sized columns');
-assert.match(bestLayoutBlock, /justify-content: start;/, 'The BEST cluster must remain left anchored');
-assert.match(bestLayoutBlock, /width: fit-content;/, 'The BEST cluster must not stretch across the summary area');
-assert.doesNotMatch(bestLayoutBlock, /1fr/, 'The BEST layout must not use a flexible column that pushes the car away from the record copy');
-assert.match(css, /\.track-card-best-model \{[\s\S]*justify-self: start;[\s\S]*width: clamp\(90px, 10\.5vw, 130\.5px\)[\s\S]*height: clamp\(56\.25px, 8\.5vw, 82\.5px\)[\s\S]*object-fit: contain/, 'The base stored-vehicle layout must retain its proportions');
-assert.match(css, /@media \(max-height: 457\.5px\) and \(orientation: landscape\)/, 'Short landscape devices must retain a fitted record-car treatment');
-assert.match(css, /\.track-card-coming-soon \{[\s\S]*grid-template-columns: minmax\(0, 1fr\)[\s\S]*width: 100%/, 'The locked card must not reserve an empty car column');
-assert.match(css, /\.track-card-best-model\[hidden\] \{[\s\S]*display: none;/, 'No-time cards must remove the decorative model from layout');
 
 // Home personal bests (ROADBOOK Track sheet and overview) show each record's car.
 assert.match(roadbook, /renderBestCarThumbnail\(record\)/, 'Each Home record must request its stored record car');

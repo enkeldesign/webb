@@ -500,7 +500,7 @@ for (const dependency of [
   'turn/vehicle/wide-gamut.js',
   'turn/ui/rival-onboarding.js',
   'turn/rival-onboarding.css',
-  'turn/garage/lot-saved-paint.js',
+  'turn/garage/saved-car-paint.js',
   'turn/garage/garage.css',
   'turn/progression/trophy-road.js'
 ]) {

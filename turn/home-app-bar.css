@@ -66,18 +66,7 @@ html body .m8-home.turn-app-bar-layout .m8-home-head {
   background: var(--m8-yellow, #ffbd12);
 }
 
-html body .m8-home.turn-app-bar-layout .m8-home-logo {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  max-width: none;
-  max-height: none;
-  filter: none;
-  margin: 0;
-  border-radius: 10px;
-  box-shadow: none;
-  object-fit: cover;
-}
+/* The logo is TURN's badge (pre-race.css .turn-pr-app-logo), hanging over the rule. */
 
 /* The pitch keeps its slot for the support challenge trigger; its tagline moves
    under the page heading. */

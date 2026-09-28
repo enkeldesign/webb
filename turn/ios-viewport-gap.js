@@ -47,7 +47,7 @@
     html.${CLASS}:has(body.turn-race-active) body {
       background: #08090a !important;
     }
-    html.${CLASS}:has(body:is(.turn-home-open, .turn-lot-open)) body {
+    html.${CLASS}:has(body:is(.turn-home-open, .turn-garage-open)) body {
       background: var(--turn-modal-paper, var(--turn-surface-page, #fff8e8)) !important;
     }
   `;

@@ -15,7 +15,7 @@ assert.deepEqual(inGameMenuVisibilityFor(GAME_MODE.STAGED), { menuState: IN_GAME
 assert.deepEqual(inGameMenuVisibilityFor(GAME_MODE.RACING), { menuState: IN_GAME_MENU_STATE.RACING, backToStart: true, startActions: false });
 assert.deepEqual(inGameMenuVisibilityFor(GAME_MODE.SPECTATING), { menuState: IN_GAME_MENU_STATE.HIDDEN, backToStart: false, startActions: false });
 
-const [index, releaseSource, app, menu, controls, backToLot, main, menuCss, polishCss, spectate, trackSelect] = await Promise.all([
+const [index, releaseSource, app, menu, controls, backToLot, main, menuCss, polishCss, spectate] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
@@ -25,8 +25,7 @@ const [index, releaseSource, app, menu, controls, backToLot, main, menuCss, poli
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/in-game-menu.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/r104-polish.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/track-select.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -56,7 +55,7 @@ assert.doesNotMatch(menu, /backToStartButton\.setAttribute\('aria-label'/,
   'The runtime must not late-mutate the Restart Lap accessible name');
 assert.match(menu, /backToStartButton\.classList\.add\('back-to-start-button'\)/);
 assert.match(menu, /backToLotButton\.textContent = 'Leave Race'/);
-assert.match(menu, /Leave the race and choose another track/);
+assert.match(menu, /backToLotButton\.setAttribute\('aria-label', 'Leave Race and return to ROADBOOK'\)/);
 assert.match(menu, /inGameMenuVisibilityFor\(runtime\.state\.mode\)/);
 assert.doesNotMatch(menu, /state\.speed/);
 assert.match(menu, /backToStartButton\.hidden = !visibility\.backToStart/);
@@ -136,8 +135,6 @@ assert.match(spectate, /class="spectate-rank"/);
 assert.match(spectate, /rankEl\.textContent = current\.rank \? `\$\{current\.rank\}\.` : ''/);
 assert.match(spectate, /spectateButton\.hidden = !current\.available/);
 
-assert.match(trackSelect, /--selected-track-accent/);
-assert.match(trackSelect, /track\?\.accent \|\| '#8ce99a'/);
 assert.match(menuCss, /\.utility-group\[data-menu-state="staged"\]/);
 assert.match(menuCss, /\.utility-group\[data-menu-state="racing"\] \.back-to-start-button/);
 assert.match(menuCss, /\.back-to-start-button\.is-lap-invalid \{\s*background: #ff6b6b;/s);
@@ -150,7 +147,7 @@ assert.match(polishCss, /\.audio-guide-content/);
 assert.match(polishCss, /\.audio-guide-basics/);
 assert.match(polishCss, /\.audio-guide-section/);
 assert.match(polishCss, /\.audio-guide-card\[open\] \{\s*grid-column: 1 \/ -1;/s, 'The expanded guide must use the full compact landscape dialog width');
-assert.match(polishCss, /\.track-select-continue \{\s*background: var\(--selected-track-accent/s);
+assert.doesNotMatch(polishCss, /track-select/, 'The retired track-select overlay leaves no styles behind');
 assert.match(polishCss, /\.boost-hud\.is-racing > span \{\s*display: none;/s);
 assert.match(polishCss, /\.spectate-rank/);
 

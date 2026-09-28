@@ -77,7 +77,7 @@ assert.match(viewportGap, /Math\.abs\(gap - top\) <= INSET_TOLERANCE/,
 assert.doesNotMatch(viewportGap, /height: 100lvh|translateZ|dialog\[open\]/,
   'Content never moves into the gap, where iOS does not draw it');
 // iOS takes the strip colour from body, not html (1.24.7 device strip test).
-assert.match(viewportGap, /:has\(body:is\(\.turn-home-open, \.turn-lot-open\)\) body \{[\s\S]*?turn-surface-page/,
+assert.match(viewportGap, /:has\(body:is\(\.turn-home-open, \.turn-garage-open\)\) body \{[\s\S]*?turn-surface-page/,
   'The strip under Home and The Lot is Paper, set on body');
 assert.match(viewportGap, /:has\(body\.turn-race-active\) body \{[\s\S]*?#08090a/,
   'The strip under a race is Ink, set on body');

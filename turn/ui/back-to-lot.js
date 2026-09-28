@@ -20,15 +20,15 @@ function install(runtime) {
   button.type = 'button';
   button.className = 'utility back-to-lot-button';
   button.textContent = 'Leave Race';
-  button.setAttribute('aria-label', 'Leave the race and choose another track');
+  button.setAttribute('aria-label', 'Leave Race and return to ROADBOOK');
 
   resetButton.insertAdjacentElement('afterend', button);
 
   button.addEventListener('click', async () => {
-    if (button.disabled || typeof runtime.openLot !== 'function') return;
+    if (button.disabled || typeof runtime.openGarage !== 'function') return;
     button.disabled = true;
     try {
-      await runtime.openLot();
+      await runtime.openGarage();
     } finally {
       button.disabled = false;
     }

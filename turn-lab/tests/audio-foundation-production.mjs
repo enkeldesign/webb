@@ -165,7 +165,7 @@ assert.doesNotMatch(audio, /fetch\(|new Audio\(/);
 assert.match(controls, /function updateAudio\(now, boosting\)/);
 assert.match(controls, /globalThis\.__turnAudio\?\.update\(/);
 assert.match(controls, /runtimeState\?\.mode === runtime\?\.GAME_MODE\?\.SPECTATING/);
-assert.match(controls, /document\.body\.classList\.contains\('turn-lot-open'\)/);
+assert.match(controls, /document\.body\.classList\.contains\('turn-garage-open'\)/);
 assert.match(controls, /driftAmount: runtimeState\?\.driftAmount \|\| 0/);
 assert.match(controls, /boostActive: boosting/);
 assert.match(controls, /nearestRivalDistance: nearestRivalDistance\(runtime, active\)/);

@@ -978,7 +978,7 @@ function installGameplayUi() {
     const spectating = runtimeState?.mode === runtime?.GAME_MODE?.SPECTATING;
     const active = Boolean(runtimeState?.running) &&
       !document.hidden &&
-      !document.body.classList.contains('turn-lot-open') &&
+      !document.body.classList.contains('turn-garage-open') &&
       !spectating;
     const tuningTopSpeed = Number(runtimeState?.vehicleEffectiveTuning?.topSpeedMultiplier)
       || Number(runtimeState?.vehicleTuning?.topSpeedMultiplier)

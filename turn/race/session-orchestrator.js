@@ -220,8 +220,8 @@ export function createRaceSessionOrchestrator({
     return chooseRaceSetupAndStart(access.fullscreenPromise);
   }
 
-  async function openLotFromRace() {
-    if (!state.running || documentRef?.body?.classList?.contains?.('turn-lot-open')) return false;
+  async function openGarageFromRace() {
+    if (!state.running || documentRef?.body?.classList?.contains?.('turn-garage-open')) return false;
 
     stopSpectating();
     const wasRunning = state.running;
@@ -277,7 +277,7 @@ export function createRaceSessionOrchestrator({
     useManualMode,
     chooseRaceSetupAndStart,
     selectVehicle,
-    openLotFromRace,
+    openGarageFromRace,
     leaveRace,
     startGame,
     getPhase: () => phase

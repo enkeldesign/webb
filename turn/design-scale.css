@@ -33,10 +33,13 @@
      the round orange close is the one dismiss shape. */
   --turn-radius-control: 12px;
   --turn-border-control: 3px;
+  --turn-shadow-press: 1px 1px 0 var(--turn-ink, #08090a);        /* a primary action while pressed */
   --turn-shadow-control: 3px 3px 0 var(--turn-ink, #08090a);
   --turn-shadow-action: 4px 4px 0 var(--turn-ink, #08090a);
 
-  /* Surfaces: three elevation levels. Readouts (HUD chips, cards inside a dialog)
+  /* Surfaces: three elevation levels. Every hard shadow in TURN is one of press,
+     control, action, card or dialog; the older design-tokens.css shadow names are
+     aliases of these. Readouts (HUD chips, cards inside a dialog)
      share the control radius, border and shadow; cards and panels sit above them;
      dialogs sit above everything. */
   --turn-radius-card: 18px;

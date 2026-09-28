@@ -20,7 +20,7 @@ import {
 import {
   VEHICLE_SHIFT_LEVER_STATES,
   resolveVehicleShiftGearbox
-} from './lot-shift-gearbox.js?revision=r232-double-shift';
+} from './shift-gearbox.js';
 
 let dialogSerial = 0;
 
@@ -48,10 +48,10 @@ export function createShiftSetup({
   triggerHost,
   dialogHost,
   getCarId,
-  triggerClassName = 'lot-shift-trigger'
+  triggerClassName = 'garage-shift-trigger'
 }) {
   dialogSerial += 1;
-  const dialogId = `turn-lot-shift-dialog-${dialogSerial}`;
+  const dialogId = `turn-garage-shift-dialog-${dialogSerial}`;
   const titleId = `${dialogId}-title`;
   const descriptionId = `${dialogId}-description`;
 
@@ -64,35 +64,35 @@ export function createShiftSetup({
   triggerHost.appendChild(trigger);
 
   const dialog = document.createElement('dialog');
-  dialog.className = 'lot-shift-dialog';
+  dialog.className = 'garage-shift-dialog';
   dialog.id = dialogId;
   dialog.setAttribute('aria-labelledby', titleId);
   dialog.setAttribute('aria-describedby', descriptionId);
   dialog.innerHTML = `
-    <section class="lot-shift-dialog-card">
-      <header class="lot-shift-dialog-head">
+    <section class="garage-shift-dialog-card">
+      <header class="garage-shift-dialog-head">
         <div><span>ALTERNATE SETUP</span><h2 id="${titleId}">SHIFT</h2></div>
-        <button type="button" class="lot-shift-close" aria-label="Close SHIFT setup">×</button>
+        <button type="button" class="garage-shift-close" aria-label="Close SHIFT setup">×</button>
       </header>
-      <p id="${descriptionId}" class="lot-shift-description">Move three attribute levers up by 1. The other three move down by 1 automatically. Attributes at 1 must move up; attributes at 5 must move down. During a race, slide from GAS into SHIFT to switch on or off.</p>
-      <div class="lot-shift-options" role="group" aria-label="SHIFT attribute gearbox. Choose three attributes to gain one point."></div>
-      <p class="lot-shift-status" role="status" aria-live="polite"></p>
-      <div class="lot-shift-actions">
-        <button type="button" class="lot-shift-cancel">CANCEL</button>
-        <button type="button" class="lot-shift-deactivate">DEACTIVATE SHIFT</button>
-        <button type="button" class="lot-shift-save" disabled>ACTIVATE SHIFT</button>
+      <p id="${descriptionId}" class="garage-shift-description">Move three attribute levers up by 1. The other three move down by 1 automatically. Attributes at 1 must move up; attributes at 5 must move down. During a race, slide from GAS into SHIFT to switch on or off.</p>
+      <div class="garage-shift-options" role="group" aria-label="SHIFT attribute gearbox. Choose three attributes to gain one point."></div>
+      <p class="garage-shift-status" role="status" aria-live="polite"></p>
+      <div class="garage-shift-actions">
+        <button type="button" class="garage-shift-cancel">CANCEL</button>
+        <button type="button" class="garage-shift-deactivate">DEACTIVATE SHIFT</button>
+        <button type="button" class="garage-shift-save" disabled>ACTIVATE SHIFT</button>
       </div>
     </section>`;
   dialogHost.appendChild(dialog);
 
   const triggerLabel = trigger.querySelector('span');
   const title = dialog.querySelector('h2');
-  const options = dialog.querySelector('.lot-shift-options');
-  const status = dialog.querySelector('.lot-shift-status');
-  const closeButton = dialog.querySelector('.lot-shift-close');
-  const cancelButton = dialog.querySelector('.lot-shift-cancel');
-  const deactivateButton = dialog.querySelector('.lot-shift-deactivate');
-  const saveButton = dialog.querySelector('.lot-shift-save');
+  const options = dialog.querySelector('.garage-shift-options');
+  const status = dialog.querySelector('.garage-shift-status');
+  const closeButton = dialog.querySelector('.garage-shift-close');
+  const cancelButton = dialog.querySelector('.garage-shift-cancel');
+  const deactivateButton = dialog.querySelector('.garage-shift-deactivate');
+  const saveButton = dialog.querySelector('.garage-shift-save');
   const reward = rewardForFeature(VEHICLE_SHIFT_FEATURE_ID);
   let editingVehicleId = '';
   let editingStats = null;
@@ -159,13 +159,13 @@ export function createShiftSetup({
   function makeOption(field) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'lot-shift-option';
+    button.className = 'garage-shift-option';
     button.dataset.shiftStat = field.key;
     button.innerHTML = `
-      <strong class="lot-shift-option-label">${field.label}</strong>
-      <span class="lot-shift-lever" aria-hidden="true">
-        <i class="lot-shift-lever-track"></i>
-        <span class="lot-shift-lever-knob"><span data-shift-value></span></span>
+      <strong class="garage-shift-option-label">${field.label}</strong>
+      <span class="garage-shift-lever" aria-hidden="true">
+        <i class="garage-shift-lever-track"></i>
+        <span class="garage-shift-lever-knob"><span data-shift-value></span></span>
       </span>`;
     button.addEventListener('click', handleOptionClick);
     return button;
@@ -200,7 +200,7 @@ export function createShiftSetup({
     selectedReceivers = new Set(gearbox.selectedReceivers);
     options.classList.toggle('is-complete', gearbox.complete);
 
-    for (const option of options.querySelectorAll('.lot-shift-option')) {
+    for (const option of options.querySelectorAll('.garage-shift-option')) {
       const key = option.dataset.shiftStat;
       const lever = gearbox.levers.find((candidate) => candidate.key === key);
       if (!lever) continue;
@@ -295,7 +295,7 @@ export function createShiftSetup({
         : requiredVehicleShiftReceivers(car.stats, editingShiftAmount)
     );
     const points = `${editingShiftAmount} ${editingShiftAmount === 1 ? 'point' : 'points'}`;
-    dialog.querySelector('.lot-shift-description').textContent =
+    dialog.querySelector('.garage-shift-description').textContent =
       `Move three attribute levers up by ${points}. The other three move down by ${points} automatically. Attributes that cannot move down must move up; attributes that cannot move up must move down. During a race, slide from GAS into SHIFT to switch on or off.`;
     options.setAttribute(
       'aria-label',

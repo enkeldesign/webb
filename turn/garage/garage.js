@@ -45,9 +45,9 @@ import {
 } from '../progression/trophy-road.js';
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
-import { getSavedLotPaint, lotPaintMatches, resetLotPaint, resolveLotPaint, saveLotPaint } from './lot-saved-paint.js?revision=r246-lot-saved-paint';
+import { getSavedCarPaint, carPaintMatches, resetCarPaint, resolveCarPaint, saveCarPaint } from './saved-car-paint.js';
 import { hasTriedTrainingCar, installTrainingCarGuide, TRAINING_CAR_ID } from './training-car-guide.js';
-import { createShiftSetup } from './lot-shift.js?revision=r243-mountain-1300';
+import { createShiftSetup } from './shift-setup.js';
 import { createShowroomViewer } from './showroom-viewer.js';
 import { createGarageCatalog } from './garage-catalog.js';
 import { GARAGE_STARTER_CAR_ID, garageCarDescription, garageCarOrder } from './garage-cars.js';
@@ -127,7 +127,7 @@ export function prepareGarage() {
   if (!stylesPromise) {
     stylesPromise = Promise.all([
       prepareStylesheet('turn-garage-styles', './garage.css'),
-      prepareStylesheet('turn-garage-shift-styles', './lot-shift.css?revision=r229-shift-feedback')
+      prepareStylesheet('turn-garage-shift-styles', './shift-setup.css')
     ]).catch((error) => {
       stylesPromise = null;
       throw error;
@@ -201,7 +201,7 @@ export function showGarage({
       color: getVehicleDefaultColor(carId),
       secondaryColor: getVehicleDefaultSecondaryColor(carId)
     });
-    const paintFor = (carId) => (isPaintUnlocked() ? resolveLotPaint(carId) : factoryPaint(carId));
+    const paintFor = (carId) => (isPaintUnlocked() ? resolveCarPaint(carId) : factoryPaint(carId));
     const saved = normalizeVehicleSelection(initialSelection || undefined);
     const entry = sessionChoice && !carLock(sessionChoice.carId) ? sessionChoice : saved;
     const selection = createGarageSelection({
@@ -220,7 +220,7 @@ export function showGarage({
     root.setAttribute('aria-labelledby', 'garageTitle');
     root.innerHTML = `
       <header class="garage-bar">
-        <img class="garage-logo" src="/turn/TURNicon.PNG?icon=20260803-profile-512" alt="TURN">
+        <img class="garage-logo turn-pr-app-logo" src="/turn/TURNicon.PNG?icon=20260803-profile-512" alt="TURN">
         <button class="garage-back" type="button"><span aria-hidden="true">←</span> ${escapeHtml(backLabel)}</button>
       </header>
       <div class="garage-page">
@@ -316,7 +316,7 @@ export function showGarage({
               ${trackDifficulty ? `<span class="turn-pr-dock-detail">${escapeHtml(trackDifficulty)}</span>` : ''}
             </span>
             <span class="garage-dock-car"></span>
-            <span class="lot-race-status garage-race-status" role="status" aria-live="polite"></span>
+            <span class="garage-race-status" role="status" aria-live="polite"></span>
           </div>
           <div class="turn-pr-dock-actions">
             <button class="turn-pr-button is-secondary garage-leave-preview" type="button" hidden></button>
@@ -327,7 +327,7 @@ export function showGarage({
         </div>
       </div>`;
     documentRef.body.appendChild(root);
-    documentRef.body.classList.add('turn-lot-open');
+    documentRef.body.classList.add('turn-garage-open');
 
     const $ = (selector) => root.querySelector(selector);
     const title = $('#garageTitle');
@@ -394,7 +394,7 @@ export function showGarage({
       carName: (carId) => getCarDefinition(carId).name,
       carLock,
       // A saved repaint shows on the card, as it does on stage.
-      savedPaint: (carId) => (isPaintUnlocked() ? getSavedLotPaint(carId) : null),
+      savedPaint: (carId) => (isPaintUnlocked() ? getSavedCarPaint(carId) : null),
       onChoose: (carId, context) => chooseFromCatalog(carId, context)
     });
     catalogPanel.appendChild(catalog.list);
@@ -539,16 +539,16 @@ export function showGarage({
       if (!action) return;
       const { choice } = selection.state();
       const car = getCarDefinition(choice.carId);
-      const savedPaint = getSavedLotPaint(choice.carId);
+      const savedPaint = getSavedCarPaint(choice.carId);
       const factory = {
         color: getVehicleDefaultColor(choice.carId),
         secondaryColor: getVehicleDefaultSecondaryColor(choice.carId)
       };
-      const matchesSaved = Boolean(savedPaint && lotPaintMatches(choice, savedPaint));
-      const resetMode = Boolean(savedPaint && (matchesSaved || lotPaintMatches(choice, factory)));
+      const matchesSaved = Boolean(savedPaint && carPaintMatches(choice, savedPaint));
+      const resetMode = Boolean(savedPaint && (matchesSaved || carPaintMatches(choice, factory)));
       action.dataset.mode = resetMode ? 'reset' : 'save';
       action.textContent = resetMode ? 'Reset to factory' : 'Save colours';
-      action.disabled = !resetMode && !savedPaint && lotPaintMatches(choice, factory);
+      action.disabled = !resetMode && !savedPaint && carPaintMatches(choice, factory);
       action.setAttribute('aria-label', resetMode
         ? `Reset ${car.name} colours to factory colours`
         : `Save ${car.name} colours for GARAGE`);
@@ -591,7 +591,7 @@ export function showGarage({
         action.addEventListener('click', () => {
           const current = selection.state().choice;
           if (action.dataset.mode === 'reset') {
-            const factory = resetLotPaint(current.carId);
+            const factory = resetCarPaint(current.carId);
             selection.paint(factory);
             sessionChoice = selection.state().choice;
             viewer.recolor(factory.color, factory.secondaryColor);
@@ -599,7 +599,7 @@ export function showGarage({
             render({ viewer: false });
             return;
           }
-          saveLotPaint(current.carId, current);
+          saveCarPaint(current.carId, current);
           syncPaintAction();
           catalog.sync();
         });
@@ -792,7 +792,7 @@ export function showGarage({
       shift.release();
       viewer.stop();
       root.remove();
-      documentRef.body.classList.remove('turn-lot-open');
+      documentRef.body.classList.remove('turn-garage-open');
       viewer.dispose();
       if (globalThis.__turnGarage === api) delete globalThis.__turnGarage;
       if (result) sessionChoice = null;
@@ -901,7 +901,9 @@ export function showGarage({
     // fits between the app bar and the dock.
     const syncDockSpace = () => {
       const height = dock.getBoundingClientRect().height;
-      if (height > 0) root.style.setProperty('--garage-dock-height', `${Math.ceil(height)}px`);
+      // A dock that has joined the page (very large text) needs no room kept for it.
+      const fixed = windowRef.getComputedStyle(dock).position === 'fixed';
+      if (height > 0) root.style.setProperty('--garage-dock-height', fixed ? `${Math.ceil(height)}px` : '0px');
       const barHeight = bar.getBoundingClientRect().height;
       root.style.setProperty('--garage-bar-height', `${Math.ceil(barHeight)}px`);
       const room = root.clientHeight - barHeight - height - 24;

@@ -71,7 +71,7 @@ assert.match(homeSource, /installRoadbook\(\{/);
 assert.match(homeSource, /garageModule\.showGarage\(\{\s*initialSelection: selectedVehicle\(runtime\),/);
 assert.match(
   homeSource,
-  /function prepareLotOnce\(\) \{[\s\S]*const preparation = import\('\/turn\/garage\/garage\.js'\)[\s\S]*lotWarmupPromise = preparation/,
+  /function prepareGarageOnce\(\) \{[\s\S]*const preparation = import\('\/turn\/garage\/garage\.js'\)[\s\S]*lotWarmupPromise = preparation/,
   'Home must reuse one GARAGE warmup across idle preparation and the explicit transition'
 );
 assert.match(
@@ -87,7 +87,7 @@ assert.match(
 assert.match(roadbookSource, /function setBusy\(label\) \{[\s\S]*chooseButton\.disabled = Boolean\(label\);[\s\S]*setAttribute\('aria-busy', 'true'\)/);
 assert.match(
   homeSource,
-  /await Promise\.all\(\[[\s\S]*activateTrack\(trackId, runtime\),[\s\S]*prepareLotOnce\(\)[\s\S]*\]\);/,
+  /await Promise\.all\(\[[\s\S]*activateTrack\(trackId, runtime\),[\s\S]*prepareGarageOnce\(\)[\s\S]*\]\);/,
   'Track activation and the reused showroom warmup should share the same transition window'
 );
 assert.doesNotMatch(homeSource, /chooseTrackBeforeLot/);
@@ -102,17 +102,17 @@ assert.match(
   'Race-car preparation should run behind the existing track intro instead of extending the wait'
 );
 assert.ok(homeSource.indexOf('activateTrack(trackId, runtime)') < homeSource.indexOf('garageModule.showGarage({'));
-assert.ok(homeSource.indexOf('prepareLotOnce()') < homeSource.indexOf('garageModule.showGarage({'));
+assert.ok(homeSource.indexOf('prepareGarageOnce()') < homeSource.indexOf('garageModule.showGarage({'));
 assert.ok(homeSource.indexOf('raceSession.selectVehicle(selection)') < homeSource.indexOf('showTrackIntro(trackId)'));
 assert.ok(homeSource.indexOf('showTrackIntro(trackId)') < homeSource.indexOf('raceSession.startGame(pendingAccess?.fullscreenPromise)'));
-assert.match(homeSource, /runtime\.openLot = leaveRaceForHome/);
+assert.match(homeSource, /runtime\.openGarage = leaveRaceForHome/);
 assert.match(homeSource, /showHome\(\{ focus: true \}\)/);
 assert.match(homeSource, /turn:home-shown/, 'Home navigation must publish an explicit shown lifecycle event for queued feedback');
 assert.match(homeSource, /turn-steering-mode-v1/);
 assert.match(homeSource, /saveDriveByEarEnabled/);
 assert.match(homeSource, /__turnResetRivals/);
 
-const lotRaceGateStart = homeSource.indexOf('function installLotRaceGate');
+const lotRaceGateStart = homeSource.indexOf('function installGarageRaceGate');
 const lotRaceGateEnd = homeSource.indexOf('export async function installM8HomeNavigation');
 assert.ok(lotRaceGateStart >= 0 && lotRaceGateEnd > lotRaceGateStart, 'Home must keep a dedicated Race This Car access gate');
 const lotRaceGateSource = homeSource.slice(lotRaceGateStart, lotRaceGateEnd);
@@ -178,7 +178,7 @@ let reloads = 0;
 const dismissedEnvironment = {
   DeviceMotionEvent: DismissedMotionEvent,
   document: {
-    body: { classList: { contains: (name) => name === 'turn-lot-open' } }
+    body: { classList: { contains: (name) => name === 'turn-garage-open' } }
   },
   __turnGarage: {
     getChoice: () => ({ carId: 'sedan-sports', color: '#123456', secondaryColor: '#654321' })

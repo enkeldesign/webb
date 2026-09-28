@@ -118,7 +118,13 @@ const RETIRED_MODULE_PATHS = new Set([
   '/turn/garage/lot-trophy-order.js',
   '/turn/progression/lot-trophy-gate.js',
   '/turn/progression/lot-paint-reward.js',
-  '/turn/vehicle/sports-sedan-easter-egg.js'
+  '/turn/vehicle/sports-sedan-easter-egg.js',
+  // Renamed for GARAGE in 1.28.1 (shift-setup, shift-gearbox, saved-car-paint).
+  '/turn/garage/lot-shift.js',
+  '/turn/garage/lot-shift-gearbox.js',
+  '/turn/garage/lot-saved-paint.js',
+  // ROADBOOK replaced the track-select overlay (1.26.0); retired in 1.28.1.
+  '/turn/ui/track-select.js'
 ]);
 
 function removeRetiredModuleRoutes(importMap) {
@@ -284,8 +290,7 @@ function synchronizeAchievementProgressionTargets(importMap, release) {
     '/turn/achievements/home-reward-replay-r225.js': ['', '?revision=r244-reward-toast-guide'],
     // Consumers of the canonical catalog and Trophy Road modules (#989): their
     // historical revision URLs follow the release build so edits always reach players.
-    '/turn/achievements/night-shift.js': ['?revision=r146-achievement-expansion'],
-    '/turn/garage/lot-shift.js': ['?revision=r243-mountain-1300']
+    '/turn/achievements/night-shift.js': ['?revision=r146-achievement-expansion']
   };
   for (const [pathname, suffixes] of Object.entries(releaseOwnedModules)) {
     const target = `${pathname}?build=${release.cacheKey}`;
@@ -362,6 +367,11 @@ function synchronizeUiBaselineTargets(importMap, release) {
     ['/turn/garage/garage-catalog.js', []],
     ['/turn/garage/car-view.js', []],
     ['/turn/garage/car-still.js', []],
+    ['/turn/garage/shift-setup.js', []],
+    ['/turn/garage/shift-gearbox.js', []],
+    ['/turn/garage/saved-car-paint.js', []],
+    // Lost the retired track-select overlay's entry point in 1.28.1.
+    ['/turn/tracks/track-manager.js', ['?source=20260729-r118-m8']],
     ['/turn/garage/training-car-guide.js', ['?revision=r1']],
     // Modules that request a stylesheet by a release-bound literal URL.
     ['/turn/social/your-turn-share.js', ['?revision=r4-runtime-share-state']],

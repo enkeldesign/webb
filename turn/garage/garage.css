@@ -18,7 +18,7 @@
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scroll-padding-top: calc(var(--turn-app-bar-height, 56px) + 12px);
+  scroll-padding-top: calc(var(--turn-app-bar-height, 56px) + var(--turn-pr-logo-overhang, 28px) + 12px);
   scroll-padding-bottom: calc(var(--garage-dock-height) + 12px);
   background: var(--turn-surface-page, #fff8e8);
   color: var(--turn-ink, #08090a);
@@ -55,14 +55,6 @@
   background: var(--turn-yellow-600, #ffbd12);
 }
 
-.garage-logo {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  object-fit: cover;
-}
-
 .garage-back {
   display: inline-flex;
   align-items: center;
@@ -94,7 +86,7 @@
   max-width: var(--turn-pr-max-width);
   margin: 0 auto;
   padding:
-    20px
+    calc(var(--turn-pr-logo-overhang, 28px) + 6px)
     max(var(--turn-pr-gutter), env(safe-area-inset-right))
     calc(var(--garage-dock-height) + 20px)
     max(var(--turn-pr-gutter), env(safe-area-inset-left));
@@ -384,7 +376,7 @@
   display: none;
 }
 
-/* The SHIFT trigger keeps lot-shift.js's states: locked, active, unavailable. */
+/* The SHIFT trigger keeps shift-setup.js's states: locked, active, unavailable. */
 .garage .garage-shift {
   justify-content: space-between;
 }
@@ -801,17 +793,15 @@
 /* Phones: the dock's actions share one row (pre-race.css would lift a secondary
    action into the context line). */
 @media (max-width: 26.25rem) {
-  .garage-dock .turn-pr-dock-inner {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: none;
-  }
-
-  .garage-dock :is(.turn-pr-dock-context, .turn-pr-dock-actions > *) {
-    grid-area: auto;
+  .garage-dock .turn-pr-dock-context {
+    flex: 1 1 100%;
   }
 
   .garage-dock .turn-pr-dock-actions {
     display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
   .garage-dock .turn-pr-dock-actions > .is-primary {
@@ -1150,7 +1140,7 @@
 
 @media (orientation: landscape) and (max-height: 500px) {
   .garage-page {
-    padding-top: 12px;
+    padding-top: calc(var(--turn-pr-logo-overhang, 16px) + 4px);
   }
 
   .garage-head {

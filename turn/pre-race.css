@@ -12,8 +12,12 @@
   --turn-pr-rule: 3px solid var(--turn-ink, #08090a);
   --turn-pr-radius: 14px;
   --turn-pr-radius-sheet: 20px;
-  --turn-pr-shadow: 5px 5px 0 var(--turn-ink, #08090a);
-  --turn-pr-shadow-action: 4px 4px 0 var(--turn-ink, #08090a);
+  /* Hard shadows come from design-scale.css: only the selected card (card level),
+     the primary action (action level) and a sheet (dialog level) carry one. */
+  --turn-pr-shadow: var(--turn-shadow-card, 6px 6px 0 var(--turn-ink, #08090a));
+  --turn-pr-shadow-action: var(--turn-shadow-action, 4px 4px 0 var(--turn-ink, #08090a));
+  --turn-pr-shadow-press: var(--turn-shadow-press, 1px 1px 0 var(--turn-ink, #08090a));
+  --turn-pr-shadow-sheet: var(--turn-shadow-dialog, 8px 8px 0 var(--turn-ink, #08090a));
   --turn-pr-gutter: 16px;
   --turn-pr-max-width: 72.5rem;
   --turn-pr-target: 44px;
@@ -42,7 +46,8 @@
   margin: 0;
   color: var(--turn-ink, #08090a);
   font-family: var(--turn-pr-font-display);
-  font-size: var(--turn-pr-type-display);
+  /* Enlarged text grows the heading until it would outgrow the screen. */
+  font-size: min(var(--turn-pr-type-display), 14vw);
   font-weight: 900;
   letter-spacing: -0.035em;
   line-height: 0.95;
@@ -80,6 +85,46 @@
   letter-spacing: 0.1em;
   line-height: 1.3;
   text-transform: uppercase;
+}
+
+/* ---------- Brand ---------- */
+
+/* TURN's badge: the start screen's framed, tilted icon, hanging over the app bar's
+   rule. Its negative margin keeps the bar slim; taps pass through the overhang to the
+   page, and the pages keep focused content clear of it (--turn-pr-logo-overhang). */
+:root {
+  --turn-pr-logo-size: 72px;
+  --turn-pr-logo-overhang: 28px;
+}
+
+html body .turn-pr-app-logo {
+  flex: none;
+  position: relative;
+  z-index: 1;
+  width: var(--turn-pr-logo-size);
+  height: var(--turn-pr-logo-size);
+  max-width: none;
+  max-height: none;
+  /* Top-aligned in the bar's 44px control row; the rest hangs below the rule. */
+  align-self: flex-start;
+  margin: 0 0 calc(var(--turn-pr-target, 44px) - var(--turn-pr-logo-size));
+  box-sizing: border-box;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: 24%;
+  background: var(--turn-paper, #fff8e8);
+  box-shadow: var(--turn-shadow-control, 3px 3px 0 var(--turn-ink, #08090a));
+  filter: none;
+  object-fit: cover;
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+
+/* Short landscape: a smaller badge that still breaks the rule. */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root {
+    --turn-pr-logo-size: 64px;
+    --turn-pr-logo-overhang: 20px;
+  }
 }
 
 /* ---------- Icons ---------- */
@@ -418,8 +463,17 @@
 }
 
 .turn-pr-button-arrow {
+  flex: none;
   font-size: 1.375rem;
   line-height: 1;
+}
+
+/* A label that no longer fits (enlarged text, narrow phone) wraps instead of pushing
+   the arrow off the button. */
+.turn-pr-button.is-primary .turn-pr-button-label {
+  min-width: 0;
+  white-space: normal;
+  text-align: left;
 }
 
 .turn-pr-button.is-compact {
@@ -436,7 +490,7 @@
 
 .turn-pr-button.is-primary:active:not(:disabled) {
   transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+  box-shadow: var(--turn-pr-shadow-press);
 }
 
 /* A locked choice keeps its place and explains itself instead of continuing. */
@@ -560,19 +614,19 @@
 }
 
 /* Phones in portrait: the secondary action joins the context line, so the primary
-   action keeps its full label at the full width. */
+   action keeps its full label at the full width. When enlarged text leaves the
+   context too little room, the secondary action wraps below it instead of squeezing
+   the track name. */
 @media (max-width: 26.25rem) {
   .turn-pr-dock-inner {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "context secondary"
-      "primary primary";
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    column-gap: 12px;
+    gap: 8px 12px;
   }
 
   .turn-pr-dock-context {
-    grid-area: context;
+    flex: 1 1 9rem;
   }
 
   .turn-pr-dock-actions {
@@ -580,14 +634,24 @@
   }
 
   .turn-pr-dock-actions > .is-secondary {
-    grid-area: secondary;
+    flex: none;
     min-height: var(--turn-pr-target);
     padding: 0 12px;
     font-size: 0.9375rem;
   }
 
   .turn-pr-dock-actions > .is-primary {
-    grid-area: primary;
+    flex: 1 1 100%;
+  }
+}
+
+/* Very large text (or a very short window): a fixed dock would cover much of the
+   screen, so it joins the end of the page instead. The screens measure the dock's
+   position and stop reserving room for it. */
+@media (orientation: portrait) and (max-height: 30rem), (orientation: landscape) and (max-height: 19rem) {
+  .turn-pr-dock {
+    position: static;
+    margin-top: 24px;
   }
 }
 
@@ -686,7 +750,7 @@
      dialog's max-height is reached. */
   flex: 0 1 auto;
   min-height: 0;
-  box-shadow: 8px 8px 0 var(--turn-ink, #08090a);
+  box-shadow: var(--turn-pr-shadow-sheet);
 }
 
 /* ---------- Track detail (Track sheet and overview) ---------- */

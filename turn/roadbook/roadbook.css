@@ -10,7 +10,7 @@
   display: block;
   box-sizing: border-box;
   padding:
-    20px
+    calc(var(--turn-pr-logo-overhang, 28px) + 6px)
     max(var(--turn-pr-gutter), env(safe-area-inset-right))
     calc(var(--roadbook-dock-height) + 20px)
     max(var(--turn-pr-gutter), env(safe-area-inset-left));
@@ -22,7 +22,7 @@
 .m8-home:has(.roadbook) {
   --roadbook-dock-height: 8.5rem;
   /* Keyboard focus keeps a track clear of the sticky app bar above and the dock below. */
-  scroll-padding-top: calc(var(--turn-app-bar-height, 56px) + max(8px, env(safe-area-inset-top)) + 12px);
+  scroll-padding-top: calc(var(--turn-app-bar-height, 56px) + max(8px, env(safe-area-inset-top)) + var(--turn-pr-logo-overhang, 28px) + 12px);
   scroll-padding-bottom: calc(var(--roadbook-dock-height) + 12px);
 }
 
@@ -125,7 +125,7 @@
 
 @media (orientation: landscape) and (max-height: 500px) {
   .m8-home .roadbook {
-    padding-top: 14px;
+    padding-top: calc(var(--turn-pr-logo-overhang, 16px) + 4px);
   }
 
   .roadbook .turn-pr-page-head {
@@ -171,5 +171,13 @@
   .roadbook-dock .turn-pr-dock-actions > .is-primary {
     flex: none;
     min-width: 13rem;
+  }
+}
+
+/* Very large text: the dock has joined the end of the page (pre-race.css), inside the
+   page's own gutters, so it drops its own. */
+@media (orientation: portrait) and (max-height: 30rem), (orientation: landscape) and (max-height: 19rem) {
+  .roadbook-dock.turn-pr-dock {
+    padding-inline: 0;
   }
 }

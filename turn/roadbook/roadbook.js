@@ -492,11 +492,14 @@ export function installRoadbook({
   // The page keeps room to scroll its last card clear of the dock, whatever height
   // the dock takes at the current text size.
   const dock = root.querySelector('.roadbook-dock');
+  // A dock that has joined the page (very large text) needs no room kept for it.
   const syncDockSpace = () => {
     const height = dock.getBoundingClientRect().height;
-    if (height > 0) home.style.setProperty('--roadbook-dock-height', `${Math.ceil(height)}px`);
+    const fixed = windowRef.getComputedStyle(dock).position === 'fixed';
+    if (height > 0) home.style.setProperty('--roadbook-dock-height', fixed ? `${Math.ceil(height)}px` : '0px');
   };
   if (typeof ResizeObserver === 'function') new ResizeObserver(syncDockSpace).observe(dock);
+  windowRef.addEventListener('resize', syncDockSpace);
   sync();
   syncDockSpace();
 

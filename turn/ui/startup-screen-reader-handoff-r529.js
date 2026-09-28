@@ -448,13 +448,16 @@
       }
       .turn-sr-skip-links:focus-within { transform: translateY(0); }
       .turn-sr-skip-links a {
-        display: inline-block;
-        padding: 7.5px 9px;
-        border: 2.25px solid #08090a;
-        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 0 12px;
+        box-sizing: border-box;
+        border: 2px solid #08090a;
+        border-radius: 8px;
         background: #fff8e8;
         color: #08090a;
-        font: 900 max(var(--turn-text-floor, 11px), 10.5px)/1.1 system-ui, sans-serif;
+        font: 900 0.9375rem/1.1 system-ui, sans-serif;
         text-decoration: underline;
       }
       .turn-sr-onboarding-target {

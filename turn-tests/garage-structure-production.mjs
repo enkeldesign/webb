@@ -24,11 +24,11 @@ for (const entry of importMaps) {
 // --- ROADBOOK → GARAGE ---------------------------------------------------------------
 assert.match(home, /import\('\/turn\/garage\/garage\.js'\)\.then\(async \(module\) => \{\s*await module\.prepareGarage\(\);/,
   'ROADBOOK warms GARAGE and its stylesheets before CHOOSE CAR');
-assert.match(home, /await Promise\.all\(\[[\s\S]*activateTrack\(trackId, runtime\),[\s\S]*prepareLotOnce\(\)[\s\S]*\]\);/,
+assert.match(home, /await Promise\.all\(\[[\s\S]*activateTrack\(trackId, runtime\),[\s\S]*prepareGarageOnce\(\)[\s\S]*\]\);/,
   'GARAGE prepares in parallel with track activation');
-assert.ok(home.indexOf('prepareLotOnce()\n      ]);') < home.indexOf('garageModule.showGarage({'),
+assert.ok(home.indexOf('prepareGarageOnce()\n      ]);') < home.indexOf('garageModule.showGarage({'),
   'GARAGE is prepared before it opens');
-assert.ok(home.indexOf('garageModule.showGarage({') < home.indexOf('const removeRaceGate = installLotRaceGate'),
+assert.ok(home.indexOf('garageModule.showGarage({') < home.indexOf('const removeRaceGate = installGarageRaceGate'),
   'GARAGE mounts RACE synchronously, before the motion-access gate looks for it');
 assert.match(home, /if \(!selection\) \{\s*showHome\(\{ focus: true \}\);/, 'Back returns to ROADBOOK, focused');
 
