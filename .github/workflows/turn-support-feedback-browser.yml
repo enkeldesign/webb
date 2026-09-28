@@ -12,9 +12,6 @@ on:
       - 'turn/scripts/release.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
       - 'turn-tests/responsive-browser-smoke.mjs'
-      - 'turn-tests/landscape-notice-browser-smoke.mjs'
-      - 'turn/ui/landscape-notice.js'
-      - 'turn/landscape-notice.css'
       - 'turn/responsive.css'
       - 'turn/main.js'
       - 'turn/index.html'
@@ -35,9 +32,6 @@ on:
       - 'turn/scripts/release.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
       - 'turn-tests/responsive-browser-smoke.mjs'
-      - 'turn-tests/landscape-notice-browser-smoke.mjs'
-      - 'turn/ui/landscape-notice.js'
-      - 'turn/landscape-notice.css'
       - 'turn/responsive.css'
       - 'turn/main.js'
       - 'turn/index.html'
@@ -87,5 +81,3 @@ jobs:
       - name: Verify responsive layouts and orientation in Chromium and WebKit
         run: node turn-tests/responsive-browser-smoke.mjs
 
-      - name: Verify the portrait landscape notice in Chromium and WebKit
-        run: node turn-tests/landscape-notice-browser-smoke.mjs
