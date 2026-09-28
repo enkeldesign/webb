@@ -187,6 +187,10 @@ async function responsiveRace(browser, name) {
         await settle(page);
         const sheet = await bounds(page, '#turnTrackSheet .turn-pr-sheet-card');
         within(sheet, width, height, `${name} ${width}x${height} Track sheet`);
+        // A sheet that fits because it collapsed is not a sheet: it shows its content.
+        const head = await bounds(page, '#turnTrackSheet .turn-pr-sheet-head');
+        assert.ok(sheet.height >= Math.min(240, height - 48) && head.bottom <= sheet.bottom + 0.5,
+          `${name} ${width}x${height}: the Track sheet shows its content (${JSON.stringify({ sheet: sheet.height, head: head.bottom })})`);
         const body = await bounds(page, '#turnTrackSheet .turn-pr-sheet-body');
         assert.ok(body.scrollWidth <= body.clientWidth + 1, `${name} ${width}x${height}: the Track sheet reflows`);
         await readability(page, `${name} ${width}x${height} Track sheet`);
