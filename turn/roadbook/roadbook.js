@@ -473,10 +473,13 @@ export function installRoadbook({
   });
 
   overviewMedia?.addEventListener?.('change', () => {
+    // Focus inside the overview must survive the overview disappearing.
+    const focusInOverview = overview.contains(documentRef.activeElement);
     // Show the overview and hide its button first, so a closing sheet never returns
     // focus to a control that is about to disappear.
     sync();
     if (overviewShown()) closeSheet();
+    else if (focusInOverview) sheetButton.focus({ preventScroll: true });
   });
   windowRef.addEventListener('turn:trophy-road-updated', sync);
   windowRef.addEventListener('storage', (event) => {

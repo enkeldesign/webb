@@ -48,7 +48,7 @@
       background: #08090a !important;
     }
     html.${CLASS}:has(body:is(.turn-home-open, .turn-lot-open)) body {
-      background: var(--turn-surface-page, #fff8e8) !important;
+      background: var(--turn-modal-paper, var(--turn-surface-page, #fff8e8)) !important;
     }
   `;
   document.head.appendChild(style);

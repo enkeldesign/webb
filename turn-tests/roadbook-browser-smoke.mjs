@@ -127,6 +127,25 @@ async function phoneFlow(browserType, name) {
     assert.equal(phone.overview, false, `${name}: phones use the Track sheet, not the overview`);
     assert.equal(phone.sheetButton, true);
     await assertLastCardClearsDock(page, `${name} 393`);
+    // Keyboard focus moving back up the list keeps the focused card clear of the
+    // sticky app bar (scroll-padding-top), just as the dock clears it below.
+    await page.evaluate(() => {
+      const home = document.querySelector('.m8-home');
+      home.scrollTop = home.scrollHeight;
+    });
+    await page.locator('.roadbook-card').last().focus();
+    for (let step = 0; step < 20; step += 1) {
+      await page.keyboard.press('Shift+Tab');
+      if (await page.evaluate(() => document.activeElement?.dataset?.trackId === 'cliffside')) break;
+    }
+    const clearance = await page.evaluate(() => {
+      const card = document.activeElement.closest('.roadbook-card')?.getBoundingClientRect();
+      const bar = document.querySelector('.m8-home-head').getBoundingClientRect();
+      return card && { track: document.activeElement.dataset.trackId, cardTop: Math.round(card.top), barBottom: Math.round(bar.bottom) };
+    });
+    assert.ok(clearance?.track === 'cliffside' && clearance.cardTop >= clearance.barBottom,
+      `${name}: a card focused going back up stays below the app bar (${JSON.stringify(clearance)})`);
+    await page.evaluate(() => { document.querySelector('.m8-home').scrollTop = 0; });
 
     // Selection is never colour alone: the selected card says so.
     await page.locator('.roadbook-card[data-track-id="cliffside"]').click();
@@ -158,6 +177,16 @@ async function phoneFlow(browserType, name) {
         // TURN focuses every dialog's heading as it opens, so it is announced first.
         focus: document.activeElement === dialog.querySelector('#turnTrackSheetTitle'),
         closeColor: globalThis.getComputedStyle(close).backgroundColor,
+        // The strip outside the viewport (painted by ios-viewport-gap.js) takes
+        // --turn-modal-paper, so it dims with the backdrop.
+        canvas: (() => {
+          const probe = document.createElement('i');
+          probe.style.background = 'var(--turn-modal-paper, rgb(255, 248, 232))';
+          document.body.append(probe);
+          const color = globalThis.getComputedStyle(probe).backgroundColor;
+          probe.remove();
+          return color;
+        })(),
         closeSize: [closeBox.width, closeBox.height],
         inside: card.top >= 0 && card.bottom <= globalThis.innerHeight + 0.5 && card.left >= 0 && card.right <= globalThis.innerWidth + 0.5,
         // Fitting by collapsing is not fitting: the card holds its head and records.
@@ -170,11 +199,17 @@ async function phoneFlow(browserType, name) {
     assert.ok(sheet.route && sheet.pictogram && sheet.description);
     assert.equal(sheet.focus, true, `${name}: the Track sheet opens on its heading`);
     assert.equal(sheet.closeColor, 'rgb(255, 123, 84)', `${name}: close is orange`);
+    const channels = (color) => (color.match(/[\d.]+/g) || []).slice(0, 3).map(Number).map((value) => value <= 1 && /srgb/.test(color) ? value * 255 : value);
+    const [red, green, blue] = channels(sheet.canvas);
+    assert.ok(Math.abs(red - 119) <= 3 && Math.abs(green - 117) <= 3 && Math.abs(blue - 110) <= 3,
+      `${name}: with the Track sheet open, the strip is Paper under the backdrop (${sheet.canvas})`);
     assert.ok(sheet.closeSize.every((size) => size >= 44), `${name}: close is a 44px target`);
     assert.equal(sheet.inside, true, `${name}: the Track sheet fits the viewport`);
     assert.ok(sheet.height >= 300 && sheet.recordsInside, `${name}: the Track sheet shows its content (${sheet.height}px)`);
     await page.locator('#turnTrackSheet .turn-pr-close').click();
     await page.waitForFunction(() => !document.querySelector('#turnTrackSheet').open);
+    assert.equal(await page.evaluate(() => globalThis.getComputedStyle(document.documentElement).getPropertyValue('--turn-modal-paper')), '',
+      `${name}: closing the sheet returns the strip to Paper`);
     assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('roadbook-sheet-button')), true,
       `${name}: closing the Track sheet returns focus to its button`);
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.getSelectedTrackId()), 'cliffside', `${name}: the Track sheet keeps the selection`);
@@ -219,6 +254,28 @@ async function phoneFlow(browserType, name) {
   }
 }
 
+// The tester unlock sequence stays reachable with visible controls: where the overview
+// replaces the Track sheet button, its route takes the four records taps, then GIVE
+// FEEDBACK from the ☰ sheet.
+async function unlockWithVisibleControls(page, name) {
+  for (const trackId of ['countryside', 'cliffside', 'countryside', 'cliffside']) {
+    await page.locator(`.roadbook-card[data-track-id="${trackId}"]`).click();
+  }
+  const records = await page.locator('.roadbook-sheet-button').isVisible()
+    ? page.locator('.roadbook-sheet-button')
+    : page.locator('.roadbook-overview .turn-pr-detail-route');
+  for (let tap = 0; tap < 4; tap += 1) {
+    await records.click();
+    if (await page.locator('#turnTrackSheet[open]').count()) {
+      await page.locator('#turnTrackSheet .turn-pr-close').click();
+    }
+  }
+  await page.locator('.turn-home-menu-button').click();
+  await page.locator('.m8-home-menu .m8-feedback-button:not(.m8-achievements-button):not(.turn-dbe-training-home)').click();
+  await page.waitForFunction(() => localStorage.getItem('turn-admin-unlock-v1') !== null, null, { timeout: 10000 })
+    .catch(() => { throw new Error(`${name}: the tester unlock sequence cannot be completed with the visible controls`); });
+}
+
 async function layoutAt(browserType, name, size, check) {
   const { browser, page, errors } = await openHome(browserType, size);
   try {
@@ -246,7 +303,8 @@ try {
     assert.equal(facts.columns, 2, 'short landscape: two columns');
     assert.ok(facts.dock.height <= 80, `short landscape: a one-line dock (${facts.dock.height})`);
   });
-  await layoutAt(chromium, '820x1180 iPad portrait', { width: 820, height: 1180, isMobile: false }, (facts) => {
+  await layoutAt(chromium, '820x1180 iPad portrait', { width: 820, height: 1180, isMobile: false }, async (facts, page) => {
+    await unlockWithVisibleControls(page, '820x1180 iPad portrait');
     assert.equal(facts.columns, 2);
     assert.equal(facts.overview, true, 'iPad portrait: the overview follows the grid');
     assert.equal(facts.sheetButton, false, 'the overview replaces the Track sheet button');
@@ -276,6 +334,15 @@ try {
     }));
     assert.deepEqual(focus, { id: 'roadbookOverviewTitle', sheetButtonHidden: true },
       'the sheet hands focus to the overview when the screen grows into it');
+    // Shrinking back hides the overview; focus moves to the Track sheet button that
+    // replaces it, never to <body>.
+    await page.setViewportSize({ width: 900, height: 820 });
+    await page.waitForFunction(() => document.querySelector('.roadbook-overview').hidden);
+    assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('roadbook-sheet-button')), true,
+      'the overview hands focus to the Track sheet button when the screen shrinks out of it');
+    await page.setViewportSize({ width: 1180, height: 820 });
+    await page.waitForFunction(() => !document.querySelector('.roadbook-overview').hidden);
+    await unlockWithVisibleControls(page, '1180x820 iPad landscape');
   });
   console.log('ROADBOOK lists every track, keeps one clear selection, gates locked tracks and fits 320px to iPad.');
 } finally {

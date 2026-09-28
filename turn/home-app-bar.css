@@ -17,6 +17,30 @@ html:has(.m8-home.turn-app-bar-layout:not([hidden])) {
   background: var(--turn-surface-page, #fff8e8);
 }
 
+/* A modal dims the canvas too, so the strip outside the viewport matches the Paper
+   under the dialog's backdrop instead of staying bright: Paper mixed with Ink at the
+   open dialog's backdrop opacity (0.72 unless listed). ios-viewport-gap.js paints the
+   standalone strip with the same colour. */
+html:has(dialog:modal) {
+  --turn-modal-paper: color-mix(in srgb, var(--turn-surface-page, #fff8e8) 28%, var(--turn-ink, #08090a));
+}
+
+html:has(dialog.m8-dialog:modal) {
+  --turn-modal-paper: color-mix(in srgb, var(--turn-surface-page, #fff8e8) 38%, var(--turn-ink, #08090a));
+}
+
+html:has(dialog.turn-yourturn-share-dialog:modal) {
+  --turn-modal-paper: color-mix(in srgb, var(--turn-surface-page, #fff8e8) 42%, var(--turn-ink, #08090a));
+}
+
+html:has(:is(dialog.turn-pr-sheet, dialog.turn-home-sheet):modal) {
+  --turn-modal-paper: color-mix(in srgb, var(--turn-surface-page, #fff8e8) 45%, var(--turn-ink, #08090a));
+}
+
+html:has(.m8-home.turn-app-bar-layout:not([hidden])):has(dialog:modal) {
+  background: var(--turn-modal-paper);
+}
+
 /* ---------- App bar ---------- */
 
 html body .m8-home.turn-app-bar-layout .m8-home-shell {

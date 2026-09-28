@@ -187,7 +187,8 @@ const FEEDBACK_TRIGGER = '.m8-home-menu .m8-feedback-button:not(.m8-achievements
 function homeTokenFromClick(target) {
   const track = target.closest('.roadbook-card[data-track-id]');
   if (track) return `track:${track.dataset.trackId || ''}`;
-  if (target.closest('.roadbook-sheet-button')) return 'action:records';
+  // The Track sheet button, or on spacious iPads the overview's route that replaces it.
+  if (target.closest('.roadbook-sheet-button, .roadbook-overview .turn-pr-detail-route')) return 'action:records';
   if (target.closest(FEEDBACK_TRIGGER)) return 'action:feedback';
   if (target.closest('.m8-track-continue')) return 'action:race';
   // Opening or closing the menu sheet is navigation, not a step: GIVE FEEDBACK lives
