@@ -755,6 +755,7 @@ export function showGarage({
         ? 'Choose a car. Locked cars can be previewed.'
         : 'Tap a locked car to preview it.';
       if (placement === 'sheet') {
+        if (!allCarsSheet.open) catalog.setActive(false);
         if (catalogPanel.parentElement !== allCarsBody) {
           const focusInCatalog = catalogPanel.contains(documentRef.activeElement);
           allCarsBody.appendChild(catalogPanel);
@@ -889,6 +890,8 @@ export function showGarage({
     });
     allCarsSheet.addEventListener('close', () => {
       if (disposed) return;
+      // A hidden list renders no repainted cards; it catches up when it opens again.
+      if (catalogPlacement() === 'sheet') catalog.setActive(false);
       viewer.resume();
       if (!allCarsButton.hidden && !documentRef.querySelector('dialog[open]')) allCarsButton.focus({ preventScroll: true });
     });

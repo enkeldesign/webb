@@ -13,6 +13,13 @@ import {
 // from its current model (render-car-stills.mjs records each model's hash), at one
 // size, from the view the live showroom starts on.
 const problems = await checkStills();
+// The renderer, catalog and every livery/wheel/finish module are part of each still.
+const { rendererSources } = await import('../turn/scripts/render-car-stills.mjs');
+const renderer = Object.keys(await rendererSources());
+for (const file of ['garage/car-still.js', 'garage/car-view.js', 'vehicle/car-models.js', 'vehicle/catalog.js',
+  'vehicle/semantic-car-finish.js', 'vehicle/learner-car-livery.js', 'vehicle/supercar-kenney-wheels.js']) {
+  assert.ok(renderer.includes(file), `A change to ${file} requires re-rendering the stills`);
+}
 assert.deepEqual(problems, [], `Car stills are out of date; run node turn/scripts/render-car-stills.mjs:\n${problems.join('\n')}`);
 
 // A WebP's canvas size: VP8X carries it directly (alpha pictures always use VP8X).
@@ -61,5 +68,7 @@ assert.equal((stillSource.match(/new THREE\.WebGLRenderer/g) || []).length, 1, '
 assert.match(stillSource, /function releaseStudio\(\) \{\s*if \(!studio \|\| pending\) return;\s*studio\.renderer\.dispose\(\);\s*studio\.renderer\.forceContextLoss\?\.\(\);/,
   'The repaint renderer is released once nothing waits');
 assert.match(catalogSource, /if \(!active\) return;/, 'Repaints render only once ALL CARS is on screen');
+assert.match(garageSource, /if \(catalogPlacement\(\) === 'sheet'\) catalog\.setActive\(false\);/,
+  'Closing the sheet stops repaint rendering until it opens again');
 
 console.log(`ALL CARS has a ${STILL_WIDTH}×${STILL_HEIGHT} still and line drawing for all ${CAR_CATALOG.length} cars, current with their models.`);

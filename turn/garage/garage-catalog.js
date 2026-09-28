@@ -80,8 +80,9 @@ export function createGarageCatalog({
     }
     const key = `${paint.color}|${paint.secondaryColor}`.toLowerCase();
     if (card.dataset.paint === key) return;
-    // Never show factory colours for a repainted car: its picture waits for the render.
-    if (!still.src.startsWith('blob:')) still.removeAttribute('src');
+    // Never show factory or older colours for a repainted car: it waits for the render.
+    still.removeAttribute('src');
+    delete card.dataset.paint;
     if (!active) return;
     card.dataset.paint = key;
     card.classList.add('is-painting');

@@ -64,6 +64,28 @@ export async function carStillSources(car, palettes = null) {
   return hashes;
 }
 
+// The code and data every still depends on: car-still.js and everything it imports
+// from TURN (the renderer, catalog colours and scale, finishes, liveries, wheels,
+// procedural parts), found by following static imports. Any change means re-rendering.
+export async function rendererSources() {
+  const hashes = {};
+  const pending = ['garage/car-still.js'];
+  while (pending.length) {
+    const file = pending.shift();
+    if (hashes[file]) continue;
+    const bytes = await fs.readFile(path.join(turnRoot, file));
+    hashes[file] = createHash('sha256').update(bytes).digest('hex').slice(0, 16);
+    const source = bytes.toString('utf8');
+    for (const [, specifier] of source.matchAll(/(?:^|\n)\s*(?:import|export)\s[^;]*?from\s+'([^']+)'/g)) {
+      let resolved = null;
+      if (specifier.startsWith('/turn/')) resolved = specifier.slice('/turn/'.length);
+      else if (specifier.startsWith('.')) resolved = path.posix.normalize(path.posix.join(path.posix.dirname(file), specifier));
+      if (resolved) pending.push(resolved.replace(/[?#].*$/, ''));
+    }
+  }
+  return Object.fromEntries(Object.entries(hashes).sort(([left], [right]) => left.localeCompare(right)));
+}
+
 export async function expectedManifestCars() {
   const { CAR_CATALOG } = await import(pathToFileURL(path.join(turnRoot, 'vehicle/catalog.js')).href);
   const palettes = await kenneyPalettes();
@@ -343,6 +365,7 @@ async function renderAll() {
       height: STILL_HEIGHT,
       view: 'garage/car-view.js',
       frame,
+      renderer: await rendererSources(),
       cars: await expectedManifestCars()
     };
     await fs.writeFile(STILLS_MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -364,6 +387,13 @@ export async function checkStills() {
     problems.push('manifest.json: the frame does not match the card shape');
   }
   if (manifest.width !== STILL_WIDTH || manifest.height !== STILL_HEIGHT) problems.push('manifest.json: not the card size');
+  const renderer = await rendererSources();
+  for (const [file, hash] of Object.entries(renderer)) {
+    if (manifest.renderer?.[file] !== hash) problems.push(`${file}: changed since the stills were rendered`);
+  }
+  for (const file of Object.keys(manifest.renderer || {})) {
+    if (!renderer[file]) problems.push(`${file}: no longer renders the stills`);
+  }
   for (const [carId, { sources }] of Object.entries(expected)) {
     const recorded = manifest.cars?.[carId]?.sources;
     if (!recorded) problems.push(`${carId}: no still`);

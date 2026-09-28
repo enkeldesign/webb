@@ -486,6 +486,25 @@ async function unlockedFlow() {
     assert.match(await page.locator('.garage-all-cars .garage-car-card[data-car-id="van"] .garage-car-still').getAttribute('src'), /\/stills\/van\.webp/,
       'Reset to factory brings back the factory still');
     await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars').open);
+    // Behind a closed sheet, a new save renders nothing; the card catches up on opening.
+    await page.evaluate(() => {
+      const input = document.querySelector('#garagePaintBody');
+      input.value = '#2050d0';
+      input.dispatchEvent(new globalThis.Event('input', { bubbles: true }));
+    });
+    await page.locator('.garage-paint-save').click();
+    await page.waitForTimeout(400);
+    const hidden = await page.evaluate(() => {
+      const card = document.querySelector('.garage-all-cars .garage-car-card[data-car-id="van"]');
+      return { src: card.querySelector('.garage-car-still').getAttribute('src'), painting: card.classList.contains('is-painting') };
+    });
+    assert.deepEqual(hidden, { src: null, painting: false }, 'A closed ALL CARS sheet starts no repaint render');
+    await page.locator('.garage-all-cars-button').click();
+    await page.waitForSelector('.garage-all-cars[open]');
+    await page.waitForFunction(() => document.querySelector('.garage-all-cars .garage-car-card[data-car-id="van"] .garage-car-still').src.startsWith('blob:'),
+      null, { timeout: 30000 });
+    await page.keyboard.press('Escape');
     assert.deepEqual(errors, [], 'unlocked: no page errors');
   } finally {
     await browser.close();
