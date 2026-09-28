@@ -6,15 +6,15 @@
 }
 
 .m8-home-fixed-layout .m8-home-shell {
-  grid-template-rows: clamp(82px, 15vh, 126px) minmax(0, 1fr);
+  grid-template-rows: clamp(61.5px, 15vh, 94.5px) minmax(0, 1fr);
   height: 100%;
   min-height: 0;
 }
 
 .m8-home-fixed-layout .m8-home-head {
-  grid-template-columns: clamp(84px, 10vw, 126px) minmax(180px, 1fr) auto;
+  grid-template-columns: clamp(63px, 10vw, 94.5px) minmax(135px, 1fr) auto;
   grid-template-rows: minmax(0, 1fr);
-  column-gap: clamp(18px, 2.5vw, 34px);
+  column-gap: clamp(13.5px, 2.5vw, 25.5px);
   min-height: 0;
   padding: 0 max(22px, env(safe-area-inset-right)) 0 0;
   border-bottom: 5px solid var(--m8-ink);
@@ -33,7 +33,7 @@
   aspect-ratio: 1;
   object-fit: contain;
   object-position: left center;
-  box-shadow: 5px 0 0 var(--m8-ink);
+  box-shadow: 3.75px 0 0 var(--m8-ink);
   filter: none;
 }
 
@@ -46,7 +46,7 @@
 .m8-home-fixed-layout .m8-home-pitch p {
   margin: 0;
   max-width: 15ch;
-  font-size: clamp(1.12rem, 2.25vw, 2rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.84rem, 2.25vw, 1.5rem));
   line-height: 0.95;
   letter-spacing: -0.035em;
 }
@@ -55,23 +55,23 @@
   align-self: center;
   justify-self: end;
   margin-block: max(8px, env(safe-area-inset-top)) 8px;
-  padding: 6px 10px;
+  padding: 4.5px 7.5px;
   background: transparent;
-  font-size: clamp(0.62rem, 1vw, 0.82rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.465rem, 1vw, 0.615rem));
 }
 
 .m8-home-fixed-layout .m8-home-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(190px, 21vw, 280px);
+  grid-template-columns: minmax(0, 1fr) clamp(142.5px, 21vw, 210px);
   grid-template-rows: minmax(0, 1fr);
-  gap: clamp(14px, 2vw, 26px);
+  gap: clamp(10.5px, 2vw, 19.5px);
   min-height: 0;
   overflow: hidden;
   padding: clamp(14px, 2.2vh, 24px) max(20px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
 }
 
 .m8-home-fixed-layout .m8-home-tracks {
-  --m8-track-card-min-block-size: clamp(120px, calc(20vh - 12px), 164px);
+  --m8-track-card-min-block-size: clamp(90px, calc(20vh - 9px), 123px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
@@ -79,32 +79,32 @@
 }
 
 .m8-home-fixed-layout.is-showing-track-bests .m8-home-tracks {
-  --m8-track-card-min-block-size: clamp(292px, calc(47vh - 12px), 378px);
+  --m8-track-card-min-block-size: clamp(219px, calc(47vh - 9px), 283.5px);
 }
 
 .m8-home-fixed-layout .m8-track-heading-row {
-  margin: 0 0 clamp(10px, 1.8vh, 18px);
+  margin: 0 0 clamp(7.5px, 1.8vh, 13.5px);
 }
 
 .m8-home-fixed-layout .m8-track-heading-row h1 {
   min-width: 0;
   padding: 0;
   background: transparent;
-  font-size: clamp(1.65rem, 3.2vw, 3rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(1.2375rem, 3.2vw, 2.25rem));
   letter-spacing: -0.035em;
 }
 
 .m8-home-fixed-layout .m8-track-bests-toggle {
   flex: 0 0 auto;
-  min-width: clamp(132px, 15vw, 188px);
-  padding: 8px clamp(14px, 1.8vw, 24px);
+  min-width: clamp(99px, 15vw, 141px);
+  padding: 6px clamp(10.5px, 1.8vw, 18px);
   border: 4px solid var(--m8-ink);
-  border-radius: 999px;
+  border-radius: 749.25px;
   color: var(--m8-ink);
   background: var(--turn-green-200, #d9f5c2);
-  box-shadow: 6px 6px 0 var(--m8-ink);
+  box-shadow: 4.5px 4.5px 0 var(--m8-ink);
   font: inherit;
-  font-size: clamp(0.76rem, 1.25vw, 1rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.57rem, 1.25vw, 0.75rem));
   font-weight: 950;
   line-height: 1;
   letter-spacing: 0.04em;
@@ -116,17 +116,17 @@
 }
 
 .m8-home-fixed-layout .m8-track-bests-toggle:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1.5px);
 }
 
 .m8-home-fixed-layout .m8-track-bests-toggle:active {
-  transform: translate(4px, 4px);
-  box-shadow: 2px 2px 0 var(--m8-ink);
+  transform: translate(3px, 3px);
+  box-shadow: 1.5px 1.5px 0 var(--m8-ink);
 }
 
 .m8-home-fixed-layout .m8-track-bests-toggle:focus-visible {
   outline: 5px solid var(--turn-blue-500, #38d9ff);
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 
 .m8-home-fixed-layout .m8-track-scroll-buttons {
@@ -138,14 +138,14 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-auto-rows: minmax(var(--m8-track-card-min-block-size), auto);
   align-content: start;
-  column-gap: clamp(10px, 1.4vw, 16px);
-  row-gap: clamp(13px, calc(1.4vw - 1px), 15px);
+  column-gap: clamp(7.5px, 1.4vw, 12px);
+  row-gap: clamp(9.75px, calc(1.4vw - 0.75px), 11.25px);
   min-width: 0;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 3px 14px 14px 3px;
-  scroll-padding-block: 3px 14px;
+  padding: 2.25px 10.5px 10.5px 2.25px;
+  scroll-padding-block: 2.25px 10.5px;
   scroll-snap-type: y proximity;
   overscroll-behavior-block: contain;
   scrollbar-color: var(--m8-yellow) var(--m8-ink);
@@ -154,18 +154,18 @@
 }
 
 .m8-home-fixed-layout .m8-track-rail::-webkit-scrollbar {
-  width: 14px;
+  width: 10.5px;
 }
 
 .m8-home-fixed-layout .m8-track-rail::-webkit-scrollbar-track {
   border: 3px solid var(--m8-ink);
-  border-radius: 999px;
+  border-radius: 749.25px;
   background: var(--m8-cream);
 }
 
 .m8-home-fixed-layout .m8-track-rail::-webkit-scrollbar-thumb {
   border: 3px solid var(--m8-ink);
-  border-radius: 999px;
+  border-radius: 749.25px;
   background: var(--m8-yellow);
 }
 
@@ -178,17 +178,17 @@
 }
 
 .m8-home-fixed-layout .m8-track-rail .track-card-preview {
-  min-height: 76px;
-  height: clamp(86px, 14vh, 140px);
+  min-height: 57px;
+  height: clamp(64.5px, 14vh, 105px);
 }
 
 .m8-home-fixed-layout .m8-track-rail .track-card-summary {
-  grid-template-columns: minmax(0, 1fr) minmax(96px, auto);
+  grid-template-columns: minmax(0, 1fr) minmax(72px, auto);
 }
 
 .m8-home-fixed-layout .m8-track-rail .track-card-best-model {
-  width: clamp(42px, 4.5vw, 68px);
-  height: 40px;
+  width: clamp(31.5px, 4.5vw, 51px);
+  height: 30px;
 }
 
 .m8-home-fixed-layout .m8-home-menu {
@@ -196,13 +196,13 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  padding-left: clamp(14px, 2vw, 24px);
+  padding-left: clamp(10.5px, 2vw, 18px);
   border-left: 0;
 }
 
 .m8-home-fixed-layout .m8-home-menu h2 {
-  margin: 0 0 clamp(14px, 2.2vh, 24px);
-  font-size: clamp(1.45rem, 2.8vw, 2.6rem);
+  margin: 0 0 clamp(10.5px, 2.2vh, 18px);
+  font-size: max(var(--turn-text-floor, 11px), clamp(1.0875rem, 2.8vw, 1.95rem));
   line-height: 1;
   letter-spacing: -0.025em;
 }
@@ -214,11 +214,11 @@
   width: 100%;
   min-width: 0;
   margin: 0;
-  padding: clamp(9px, 1.5vh, 14px) 12px;
+  padding: clamp(6.75px, 1.5vh, 10.5px) 9px;
   border: 4px solid var(--m8-ink);
-  border-radius: 999px;
-  box-shadow: 7px 7px 0 var(--m8-ink);
-  font-size: clamp(0.9rem, 1.65vw, 1.3rem);
+  border-radius: 749.25px;
+  box-shadow: 5.25px 5.25px 0 var(--m8-ink);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.675rem, 1.65vw, 0.975rem));
   line-height: 1;
   letter-spacing: 0.025em;
   text-align: center;
@@ -228,14 +228,14 @@
 .m8-home-fixed-layout .m8-how-button {
   align-self: auto;
   display: block;
-  margin-bottom: clamp(16px, 2.5vh, 26px);
+  margin-bottom: clamp(12px, 2.5vh, 19.5px);
   background: #ffd85c;
 }
 
 .m8-home-fixed-layout .m8-home-status {
   min-height: 2.6em;
-  margin: auto 0 10px;
-  font-size: 0.78rem;
+  margin: auto 0 7.5px;
+  font-size: max(var(--turn-text-floor, 11px), 0.585rem);
   line-height: 1.3;
   text-align: left;
 }
@@ -243,38 +243,38 @@
 .m8-home-fixed-layout .m8-track-continue {
   flex: 0 0 auto;
   background: var(--m8-pink);
-  font-size: clamp(1.05rem, 1.9vw, 1.45rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.7875rem, 1.9vw, 1.0875rem));
   letter-spacing: 0.08em;
 }
 
 .m8-home-fixed-layout .m8-track-continue:hover,
 .m8-home-fixed-layout .m8-home-settings:hover,
 .m8-home-fixed-layout .m8-how-button:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1.5px);
 }
 
 .m8-home-fixed-layout .m8-track-continue:active,
 .m8-home-fixed-layout .m8-home-settings:active,
 .m8-home-fixed-layout .m8-how-button:active {
-  transform: translate(6px, 6px);
-  box-shadow: 1px 1px 0 var(--m8-ink);
+  transform: translate(4.5px, 4.5px);
+  box-shadow: 0.75px 0.75px 0 var(--m8-ink);
 }
 
-@media (max-height: 560px) and (orientation: landscape) {
+@media (max-height: 420px) and (orientation: landscape) {
   .m8-home-fixed-layout .m8-home-tracks {
-    --m8-track-card-min-block-size: 108px;
+    --m8-track-card-min-block-size: 81px;
   }
 
   .m8-home-fixed-layout.is-showing-track-bests .m8-home-tracks {
-    --m8-track-card-min-block-size: 274px;
+    --m8-track-card-min-block-size: 205.5px;
   }
 
   .m8-home-fixed-layout .m8-home-shell {
-    grid-template-rows: clamp(68px, 18vh, 84px) minmax(0, 1fr);
+    grid-template-rows: clamp(51px, 18vh, 63px) minmax(0, 1fr);
   }
 
   .m8-home-fixed-layout .m8-home-head {
-    grid-template-columns: clamp(68px, 10vw, 84px) minmax(150px, 1fr) auto;
+    grid-template-columns: clamp(51px, 10vw, 63px) minmax(112.5px, 1fr) auto;
     padding-block: 0;
   }
 
@@ -291,89 +291,89 @@
   }
 
   .m8-home-fixed-layout .m8-home-pitch p {
-    font-size: clamp(0.95rem, 2.1vw, 1.35rem);
+    font-size: max(var(--turn-text-floor, 11px), clamp(0.7125rem, 2.1vw, 1.0125rem));
   }
 
   .m8-home-fixed-layout .m8-home-main {
-    grid-template-columns: minmax(0, 1fr) clamp(150px, 20vw, 205px);
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) clamp(112.5px, 20vw, 153.75px);
+    gap: 9px;
     padding: 9px max(14px, env(safe-area-inset-right)) max(9px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
   }
 
   .m8-home-fixed-layout .m8-track-heading-row {
-    margin-bottom: 7px;
+    margin-bottom: 5.25px;
   }
 
   .m8-home-fixed-layout .m8-track-heading-row h1 {
-    font-size: clamp(1.25rem, 3vw, 1.8rem);
+    font-size: max(var(--turn-text-floor, 11px), clamp(0.9375rem, 3vw, 1.35rem));
   }
 
   .m8-home-fixed-layout .m8-track-bests-toggle {
-    min-width: 112px;
-    padding: 6px 12px;
-    border-width: 3px;
-    box-shadow: 4px 4px 0 var(--m8-ink);
-    font-size: 0.68rem;
+    min-width: 84px;
+    padding: 4.5px 9px;
+    border-width: 2.25px;
+    box-shadow: 3px 3px 0 var(--m8-ink);
+    font-size: max(var(--turn-text-floor, 11px), 0.51rem);
   }
 
   .m8-home-fixed-layout .m8-track-rail {
-    column-gap: 9px;
-    row-gap: 13px;
+    column-gap: 6.75px;
+    row-gap: 9.75px;
   }
 
   .m8-home-fixed-layout .m8-track-rail .track-card {
     min-height: var(--m8-track-card-min-block-size);
-    padding: 3px 9px;
-    gap: 5px;
+    padding: 2.25px 6.75px;
+    gap: 3.75px;
   }
 
   .m8-home-fixed-layout .m8-track-rail .track-card-preview {
-    height: 76px;
+    height: 57px;
   }
 
   .m8-home-fixed-layout .m8-home-menu {
-    padding-left: 12px;
+    padding-left: 9px;
     border-left: 0;
   }
 
   .m8-home-fixed-layout .m8-home-menu h2 {
-    margin-bottom: 10px;
-    font-size: 1.35rem;
+    margin-bottom: 7.5px;
+    font-size: max(var(--turn-text-floor, 11px), 1.0125rem);
   }
 
   .m8-home-fixed-layout .m8-home-settings,
   .m8-home-fixed-layout .m8-how-button,
   .m8-home-fixed-layout .m8-track-continue {
-    padding-block: 8px;
-    border-width: 3px;
-    box-shadow: 5px 5px 0 var(--m8-ink);
-    font-size: 0.82rem;
+    padding-block: 6px;
+    border-width: 2.25px;
+    box-shadow: 3.75px 3.75px 0 var(--m8-ink);
+    font-size: max(var(--turn-text-floor, 11px), 0.615rem);
   }
 
   .m8-home-fixed-layout .m8-home-settings,
   .m8-home-fixed-layout .m8-how-button {
-    margin-bottom: 13px;
+    margin-bottom: 9.75px;
   }
 
   .m8-home-fixed-layout .m8-home-status {
     min-height: 1.3em;
-    margin-bottom: 6px;
-    font-size: 0.66rem;
+    margin-bottom: 4.5px;
+    font-size: max(var(--turn-text-floor, 11px), 0.495rem);
   }
 }
 
-@media (max-width: 760px) and (orientation: portrait) {
+@media (max-width: 570px) and (orientation: portrait) {
   .m8-home.m8-home-fixed-layout {
     overflow: hidden;
   }
 
   .m8-home-fixed-layout .m8-home-shell {
-    grid-template-rows: 92px minmax(0, 1fr);
+    grid-template-rows: 69px minmax(0, 1fr);
   }
 
   .m8-home-fixed-layout .m8-home-head {
-    grid-template-columns: 82px minmax(0, 1fr);
-    padding: 0 12px 0 0;
+    grid-template-columns: 61.5px minmax(0, 1fr);
+    padding: 0 9px 0 0;
   }
 
   .m8-home-fixed-layout .m8-home-logo {
@@ -391,32 +391,32 @@
   .m8-home-fixed-layout .m8-home-main {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) auto;
-    gap: 10px;
-    padding: 12px;
+    gap: 7.5px;
+    padding: 9px;
   }
 
   .m8-home-fixed-layout .m8-home-tracks {
-    --m8-track-card-min-block-size: 142px;
+    --m8-track-card-min-block-size: 106.5px;
   }
 
   .m8-home-fixed-layout.is-showing-track-bests .m8-home-tracks {
-    --m8-track-card-min-block-size: 310px;
+    --m8-track-card-min-block-size: 232.5px;
   }
 
   .m8-home-fixed-layout .m8-track-heading-row {
-    gap: 10px;
+    gap: 7.5px;
   }
 
   .m8-home-fixed-layout .m8-track-heading-row h1 {
-    font-size: clamp(1.25rem, 7vw, 2rem);
+    font-size: max(var(--turn-text-floor, 11px), clamp(0.9375rem, 7vw, 1.5rem));
   }
 
   .m8-home-fixed-layout .m8-track-bests-toggle {
-    min-width: 108px;
-    padding: 7px 10px;
-    border-width: 3px;
-    box-shadow: 4px 4px 0 var(--m8-ink);
-    font-size: 0.66rem;
+    min-width: 81px;
+    padding: 5.25px 7.5px;
+    border-width: 2.25px;
+    box-shadow: 3px 3px 0 var(--m8-ink);
+    font-size: max(var(--turn-text-floor, 11px), 0.495rem);
   }
 
   .m8-home-fixed-layout .m8-track-rail {
@@ -426,8 +426,8 @@
   .m8-home-fixed-layout .m8-home-menu {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    padding: 10px 0 0;
+    gap: 6px;
+    padding: 7.5px 0 0;
     border-top: 4px solid var(--m8-ink);
     border-left: 0;
   }
@@ -435,10 +435,10 @@
   .m8-home-fixed-layout .m8-home-menu h2,
   .m8-home-fixed-layout .m8-home-status {
     position: absolute;
-    width: 1px;
-    height: 1px;
+    width: 0.75px;
+    height: 0.75px;
     padding: 0;
-    margin: -1px;
+    margin: -0.75px;
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
@@ -449,8 +449,8 @@
   .m8-home-fixed-layout .m8-how-button,
   .m8-home-fixed-layout .m8-track-continue {
     margin: 0;
-    padding: 10px 5px;
-    font-size: 0.72rem;
+    padding: 7.5px 3.75px;
+    font-size: max(var(--turn-text-floor, 11px), 0.54rem);
   }
 }
 

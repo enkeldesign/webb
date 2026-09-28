@@ -1,4 +1,4 @@
-@import url('./design-tokens.css?revision=r162-social-sharing');
+@import url('./design-tokens.css?build=20260928-r315');
 
 /*
   Normative production roles.
@@ -114,7 +114,7 @@
 .drive-pad[data-drive-zone="gas"] .drive-gas-zone,
 .drive-drift-zone.is-active,
 .drive-brake-zone.is-active {
-  box-shadow: inset 0 0 0 6px rgb(255 248 232 / 0.78);
+  box-shadow: inset 0 0 0 4.5px rgb(255 248 232 / 0.78);
 }
 
 .drive-pad[data-drive-zone="gas"] .drive-gas-zone {
@@ -131,8 +131,8 @@
 
 .drive-pad.is-boosting {
   box-shadow:
-    7px 8px 0 var(--turn-ink),
-    0 0 0 5px rgb(255 212 59 / 0.32) !important;
+    5.25px 6px 0 var(--turn-ink),
+    0 0 0 3.75px rgb(255 212 59 / 0.32) !important;
 }
 
 .boost-hud i {

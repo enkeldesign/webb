@@ -191,7 +191,7 @@ assert.match(airportEmergency, /renderScene\.onBeforeRender = function airportEm
 
 assert.match(airportEmergency, /PATIENT ON BOARD · MEDICAL BAY · 30 SECONDS/);
 assert.doesNotMatch(airportEmergency, /FOLLOW THE SIRENS/);
-assert.match(airportEmergency, /\.turn-mayday-info-plate[\s\S]*top: max\(16px, calc\(env\(safe-area-inset-top\) \+ 10px\)\)[\s\S]*border: 3px solid #08090a[\s\S]*box-shadow: 5px 5px 0 #08090a/,
+assert.match(airportEmergency, /\.turn-mayday-info-plate[\s\S]*top: max\(12px, calc\(env\(safe-area-inset-top\) \+ 7\.5px\)\)[\s\S]*border: 2\.25px solid #08090a[\s\S]*box-shadow: 3\.75px 3\.75px 0 #08090a/,
   'The base MAYDAY info plate should retain the established card treatment');
 assert.match(airportEmergency, /new THREE\.BoxGeometry\(10\.4, 6\.4, 0\.65\)/,
   'The terminal H plate should cover the window it occupies');
@@ -239,7 +239,7 @@ assert.match(maydayHud, /mount\.position\.y -= EXTRA_WRECK_PENETRATION_Y/,
   'r496 must apply only the additional depth beyond the r494 baseline');
 assert.match(maydayHud, /var\(--turn-action-danger, #ff6b6b\)/,
   'MAYDAY instructions and unlock toast must use the danger design token');
-assert.match(maydayHud, /bottom: calc\(clamp\(92px, 20vh, 150px\) \+ 38px\)/,
+assert.match(maydayHud, /bottom: calc\(clamp\(69px, 20vh, 112\.5px\) \+ 28\.5px\)/,
   'MAYDAY messages should sit immediately above the boost HUD');
 assert.match(maydayHud, /turn:achievements-updated/);
 assert.match(maydayHud, /unlocked\.includes\('golden-hour'\)/,

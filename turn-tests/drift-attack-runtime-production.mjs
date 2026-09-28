@@ -289,9 +289,9 @@ assert.match(scorekeeperRecordsSource, /setLast\(drift\.last, event\?\.detail\?\
 assert.match(scorekeeperRecordsSource, /setLast\(flow\.last, event\?\.detail\?\.score\)/);
 assert.match(scorekeeperRecordsSource, /clearLastLap\(\)[\s\S]*race-started/,
   'LAST is session context and must clear when a race session is restarted');
-assert.match(scorekeeperRecordsSource, /--score-feedback-paper-width: clamp\(148px, 18\.5vw, 198px\)/,
+assert.match(scorekeeperRecordsSource, /--score-feedback-paper-width: clamp\(111px, 18\.5vw, 148\.5px\)/,
   'The scorekeeper paper should be narrower than the original 226px maximum');
-assert.match(scorekeeperRecordsSource, /font-size: clamp\(1\.22rem, 3vw, 1\.78rem\)/,
+assert.match(scorekeeperRecordsSource, /font-size: max\(var\(--turn-text-floor, 11px\), clamp\(0\.915rem, 3vw, 1\.335rem\)\)/,
   'The live score should be reduced so LAP, LAST and BEST gain hierarchy');
 assert.match(scorekeeperRecordsSource, /turn:drift-lap-result/);
 assert.match(scorekeeperRecordsSource, /turn:flow-lap-result/);

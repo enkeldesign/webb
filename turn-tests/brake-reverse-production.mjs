@@ -167,7 +167,7 @@ assert.match(controls, /reverseBubble\.addEventListener\('keydown'/,
 assert.match(controls, /reverseBubble\.addEventListener\('keyup'/,
   'Keyboard release must release REVERSE');
 
-assert.match(css, /\.controls \.drive-reverse-bubble \{[\s\S]*height: calc\(24% \+ 2\.08px\)/,
+assert.match(css, /\.controls \.drive-reverse-bubble \{[\s\S]*height: calc\(24% \+ 1\.56px\)/,
   'REVERSE must attach to exactly the BRAKE row');
 assert.match(css, /--drive-brake-color: var\(--turn-control-brake, #ff7b54\)/,
   'BRAKE and REVERSE must share the production-safe semantic orange');
@@ -175,7 +175,7 @@ assert.match(css, /\.drive-pad \.drive-brake-zone \{[\s\S]*background: var\(--dr
   'The BRAKE face must use the same colour as its attached REVERSE control');
 assert.match(css, /\.drive-stack\.is-brake-ready \.drive-reverse-bubble[\s\S]*opacity: 1/,
   'Holding BRAKE must reveal REVERSE');
-assert.match(css, /turn-left-handed-controls \.drive-reverse-bubble \{[\s\S]*left: calc\(100% - 4px\)/,
+assert.match(css, /turn-left-handed-controls \.drive-reverse-bubble \{[\s\S]*left: calc\(100% - 3px\)/,
   'REVERSE must mirror with the rest of the handed drive controls');
 assert.match(css, /prefers-reduced-motion: reduce[\s\S]*\.controls \.drive-reverse-bubble/,
   'The fast reveal must still respect reduced motion');

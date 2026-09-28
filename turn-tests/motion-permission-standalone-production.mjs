@@ -104,7 +104,7 @@ assert.match(dialogSource, /showModal\(\)/, 'The explanation must be presented a
 assert.match(dialogSource, /documentRef\.querySelector\('\.lot-race'\)/, 'Closing the dialog returns focus to Race This Car');
 assert.match(dialogSource, /aria-labelledby/);
 assert.match(dialogSource, /aria-describedby/);
-assert.match(dialogCss, /width: min\(520px, calc\(100vw - 32px\)\)/);
+assert.match(dialogCss, /width: min\(390px, calc\(100vw - 24px\)\)/);
 assert.match(dialogCss, /background: #ffd43b/);
 assert.match(dialogCss, /background: #ff4fa3/);
 

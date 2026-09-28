@@ -93,7 +93,7 @@ assert.match(safeZone, /directionalFeedback: true/);
 
 assert.match(warningCss, /turn-steering-limit-edge-left/);
 assert.match(warningCss, /turn-steering-limit-edge-right/);
-assert.match(warningCss, /width: clamp\(34px, 9vw, 75px\)/);
+assert.match(warningCss, /width: clamp\(25\.5px, 9vw, 56\.25px\)/);
 assert.match(warningCss, /transition: none/);
 assert.doesNotMatch(warningCss, /animation|@keyframes|is-flashing/);
 assert.match(warningRuntime, /VISUAL_RELEASE_HOLD_MS = 300/);

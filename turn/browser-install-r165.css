@@ -15,11 +15,11 @@ html.turn-browser:not(.turn-browser-launched) body {
 
 .install-shell {
   box-sizing: border-box;
-  width: min(920px, 100%);
+  width: min(690px, 100%);
   max-width: 100%;
   min-width: 0;
   margin-inline: auto;
-  padding: 0 14px 14px;
+  padding: 0 10.5px 10.5px;
   grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
 }
 
@@ -66,7 +66,7 @@ html.turn-browser:not(.turn-browser-launched) body {
   letter-spacing: inherit;
   line-height: inherit;
   text-decoration: underline;
-  text-decoration-thickness: 2px;
+  text-decoration-thickness: 1.5px;
   text-underline-offset: 0.16em;
   text-transform: inherit;
 }
@@ -82,7 +82,7 @@ html.turn-browser:not(.turn-browser-launched) body {
 
 .install-about-trigger:focus-visible {
   outline: 4px solid var(--turn-form-control-focus, var(--cyan));
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 
 .install-actions {
@@ -90,7 +90,7 @@ html.turn-browser:not(.turn-browser-launched) body {
 }
 
 .install-actions .install-note {
-  margin: 4px auto 0;
+  margin: 3px auto 0;
   max-width: 52ch;
   min-height: 0;
   text-align: center;
@@ -99,7 +99,7 @@ html.turn-browser:not(.turn-browser-launched) body {
 .install-actions .install-secondary {
   justify-self: center;
   width: fit-content;
-  min-height: 44px;
+  min-height: 33px;
   margin-top: 0;
 }
 
@@ -109,7 +109,7 @@ html.turn-browser:not(.turn-browser-launched) body {
 }
 
 .install-guide-card {
-  width: min(560px, 100%);
+  width: min(420px, 100%);
   max-width: 100%;
 }
 
@@ -127,20 +127,20 @@ html.turn-browser:not(.turn-browser-launched) body {
   }
 }
 
-@media (max-height: 500px) and (orientation: landscape) {
+@media (max-height: 375px) and (orientation: landscape) {
   .install-shell {
-    grid-template-columns: minmax(120px, 150px) minmax(0, 1fr);
-    gap: clamp(18px, 3vw, 26px);
+    grid-template-columns: minmax(90px, 112.5px) minmax(0, 1fr);
+    gap: clamp(13.5px, 3vw, 19.5px);
   }
 
   .install-actions .install-note {
-    font-size: 0.68rem;
+    font-size: max(var(--turn-text-floor, 11px), 0.51rem);
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 465px) {
   .install-shell {
-    padding-inline: 8px;
+    padding-inline: 6px;
   }
 
   .install-kicker {

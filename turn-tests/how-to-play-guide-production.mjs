@@ -125,17 +125,17 @@ assert.match(guide, /root\.querySelector\('#dbeGuidePaceNotes'\)/, 'The in-race 
 
 assert.match(css, /\.m8-how-dialog[\s\S]*-webkit-text-size-adjust: 100%[\s\S]*text-size-adjust: 100%/, 'Opening details must not trigger iOS text autosizing');
 assert.match(css, /\.m8-how-dialog \.m8-dialog-card[\s\S]*overscroll-behavior-y: contain/);
-assert.match(css, /scroll-padding-block-end: max\(32px, env\(safe-area-inset-bottom\)\)/);
+assert.match(css, /scroll-padding-block-end: max\(24px, env\(safe-area-inset-bottom\)\)/);
 assert.match(css, /scrollbar-gutter: stable/, 'The dialog width must remain stable when expanded content creates a scrollbar');
 assert.match(css, /\.m8-guide-grid section\.m8-guide-card-shell[\s\S]*background: transparent[\s\S]*box-shadow: none/,
   'Ordinary guide sections become neutral grid shells around the disclosure card');
-assert.match(css, /\.m8-guide-card-disclosure[\s\S]*border: 4px solid var\(--m8-ink\)[\s\S]*border-radius: 20px[\s\S]*box-shadow: 5px 5px 0 var\(--m8-ink\)/);
+assert.match(css, /\.m8-guide-card-disclosure[\s\S]*border: 4px solid var\(--m8-ink\)[\s\S]*border-radius: 15px[\s\S]*box-shadow: 3\.75px 3\.75px 0 var\(--m8-ink\)/);
 assert.match(css, /\.m8-guide-card-disclosure > summary[\s\S]*display: grid[\s\S]*cursor: pointer/);
 assert.match(css, /\.m8-guide-card-disclosure\[open\] > summary[\s\S]*border-bottom: 3px solid/);
 assert.match(css, /\.m8-guide-card-disclosure > summary::after[\s\S]*content: "\+"/);
 assert.match(css, /\.m8-guide-card-disclosure\[open\] > summary::after[\s\S]*content: "−"/);
 assert.match(css, /\.m8-guide-card-panel[\s\S]*overflow-anchor: none/);
-assert.match(css, /\.m8-dbe-guide[\s\S]*border: 3px solid[\s\S]*border-radius: 16px[\s\S]*overflow: clip/, 'The Drive By Ear summary and expanded content must share one containing card');
+assert.match(css, /\.m8-dbe-guide[\s\S]*border: 3px solid[\s\S]*border-radius: 12px[\s\S]*overflow: clip/, 'The Drive By Ear summary and expanded content must share one containing card');
 assert.match(css, /\.m8-guide-disclosure/,
   'The Overcharge lesson must share the native nested disclosure component without masquerading as Drive By Ear');
 assert.match(css, /\.m8-overcharge-steps[\s\S]*display: grid/);
@@ -146,8 +146,8 @@ assert.match(css, /\.m8-dbe-guide\[open\] > summary[\s\S]*border-bottom: 3px sol
 assert.match(css, /summary:focus-visible/);
 assert.match(css, /\.m8-dbe-guide-panel[\s\S]*padding: 14px 14px max\(36px, env\(safe-area-inset-bottom\)\)[\s\S]*overflow-anchor: none/, 'The bottom screen-reader card needs settling room without scroll anchoring');
 assert.match(css, /\.m8-dbe-guide-content[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-assert.match(css, /\.m8-dbe-guide-content p,[\s\S]*font-size: 1rem/, 'Expanded paragraphs keep the same explicit text size');
-assert.match(css, /@media \(max-width: 720px\)[\s\S]*grid-template-columns: 1fr/);
+assert.match(css, /\.m8-dbe-guide-content p,[\s\S]*font-size: max\(var\(--turn-text-floor, 11px\), 0\.75rem\)/, 'Expanded paragraphs keep the same explicit text size');
+assert.match(css, /@media \(max-width: 540px\)[\s\S]*grid-template-columns: 1fr/);
 
 assert.match(components, /\.m8-guide-wide[\s\S]*background: var\(--turn-surface-raised\) !important/);
 assert.match(components, /\.m8-dbe-guide > summary[\s\S]*background: var\(--turn-disclosure-trigger\)/);

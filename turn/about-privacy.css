@@ -1,45 +1,45 @@
 .turn-about-privacy {
-  margin-top: 10px;
+  margin-top: 7.5px;
   color: inherit;
   font: inherit;
 }
 
 .turn-about-privacy summary {
   width: fit-content;
-  padding: 2px 0;
+  padding: 1.5px 0;
   color: inherit;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.6rem);
   font-weight: 900;
   line-height: 1.35;
   text-decoration: underline;
-  text-decoration-thickness: 2px;
+  text-decoration-thickness: 1.5px;
   text-underline-offset: 0.18em;
   cursor: pointer;
 }
 
 .turn-about-privacy summary:focus-visible {
   outline: 4px solid var(--turn-form-control-focus, #38d9ff);
-  outline-offset: 4px;
-  border-radius: 2px;
+  outline-offset: 3px;
+  border-radius: 1.5px;
 }
 
 .turn-about-privacy-copy {
   max-width: 60ch;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .turn-about-privacy-copy p,
 .yourturn-about-copy .turn-about-privacy-copy p {
   margin: 0;
-  font-size: 0.78rem !important;
+  font-size: max(var(--turn-text-floor, 11px), 0.585rem) !important;
   font-weight: 760;
   line-height: 1.42 !important;
 }
 
 .turn-about-privacy-copy p + p,
 .yourturn-about-copy .turn-about-privacy-copy p + p {
-  margin-top: 7px;
+  margin-top: 5.25px;
 }
 
 /* Intentionally keep the native disclosure marker. Privacy is a quiet text/link

@@ -87,15 +87,15 @@ function installStyles() {
       gap: .45em !important;
       width: max-content !important;
       min-width: 0 !important;
-      max-width: min(92vw, 560px) !important;
-      padding: 8px 16px !important;
+      max-width: min(92vw, 420px) !important;
+      padding: 6px 12px !important;
       border: 4px solid var(--turn-ink, #08090a) !important;
-      border-radius: 999px !important;
+      border-radius: 749.25px !important;
       background: var(--turn-green-500, #8ce99a) !important;
-      box-shadow: 5px 5px 0 var(--turn-ink, #08090a) !important;
+      box-shadow: 3.75px 3.75px 0 var(--turn-ink, #08090a) !important;
       line-height: 1 !important;
       white-space: nowrap;
-      transform: translate(-50%, -8px) scale(.96) !important;
+      transform: translate(-50%, -6px) scale(.96) !important;
       transition: opacity .18s ease, transform .22s cubic-bezier(.2,.85,.3,1.18) !important;
     }
     .turn-support-bonus-toast[hidden] { display: none !important; }
@@ -107,7 +107,7 @@ function installStyles() {
     .turn-support-bonus-toast strong {
       display: inline !important;
       margin: 0 !important;
-      font-size: clamp(.66rem, 1.6vw, .86rem) !important;
+      font-size: max(var(--turn-text-floor, 11px), clamp(0.495rem, 1.6vw, 0.645rem)) !important;
       font-weight: 950 !important;
       letter-spacing: .045em !important;
       line-height: 1 !important;
@@ -119,13 +119,13 @@ function installStyles() {
     #message.turn-graduated-pill {
       width: max-content !important;
       min-width: 0 !important;
-      max-width: min(92vw, 560px) !important;
-      padding: 8px 16px !important;
+      max-width: min(92vw, 420px) !important;
+      padding: 6px 12px !important;
       border: 4px solid var(--turn-ink, #08090a) !important;
-      border-radius: 999px !important;
+      border-radius: 749.25px !important;
       background: var(--turn-action-warning, #ffd43b) !important;
-      box-shadow: 5px 5px 0 var(--turn-ink, #08090a) !important;
-      font-size: clamp(.66rem, 1.6vw, .86rem) !important;
+      box-shadow: 3.75px 3.75px 0 var(--turn-ink, #08090a) !important;
+      font-size: max(var(--turn-text-floor, 11px), clamp(0.495rem, 1.6vw, 0.645rem)) !important;
       font-weight: 950 !important;
       letter-spacing: .045em !important;
       line-height: 1 !important;

@@ -185,7 +185,7 @@ assert.doesNotMatch(roadStyles, /overflow-x:\s*auto/,
   'Responsive redistribution must not require horizontal panning');
 assert.doesNotMatch(roadStyles, /minmax\(64px, \.76fr\) repeat\(5/,
   'Low-height landscape must not replace the active 3 / 5 / 7-column composition');
-assert.doesNotMatch(roadStyles, /min-width:\s*540px/,
+assert.doesNotMatch(roadStyles, /^\s*min-width:\s*(?:405|540)px/m,
   'Low-height landscape must remain width-responsive without forced horizontal overflow');
 assert.doesNotMatch(roadStyles, /animation(?:-name)?:/,
   'The static road must not add a continuous presentation animation');
@@ -208,7 +208,7 @@ assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*z-index:
   'Earned rewards show a large faint check watermark behind the card content, never over the threshold');
 assert.match(semanticStyles, /\.turn-trophy-road-marker\.is-unlocked > :is\(\.turn-trophy-road-marker-icon, b\) \{[\s\S]*z-index:\s*1;/,
   'The icon, threshold and name draw over the earned watermark');
-assert.match(semanticStyles, /\.turn-trophy-road-marker-lock \{[\s\S]*top:\s*-10px;[\s\S]*right:\s*-10px;[\s\S]*width:\s*30px;[\s\S]*height:\s*30px;/,
+assert.match(semanticStyles, /\.turn-trophy-road-marker-lock \{[\s\S]*top:\s*-7\.5px;[\s\S]*right:\s*-7\.5px;[\s\S]*width:\s*22\.5px;[\s\S]*height:\s*22\.5px;/,
   'Locked rewards must keep the smaller outside-corner lock silhouette');
 assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*background:\s*transparent/,
   'The earned watermark must let each reward category colour show through');

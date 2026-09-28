@@ -3,7 +3,7 @@
   top: 0;
   bottom: 0;
   z-index: 120;
-  width: clamp(34px, 9vw, 75px);
+  width: clamp(25.5px, 9vw, 56.25px);
   pointer-events: none;
   opacity: var(--turn-limit-opacity, 0);
   transform: scaleX(var(--turn-limit-growth, 0.12));

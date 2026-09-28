@@ -92,8 +92,8 @@ const clippedInputRule = showroomCleanupCss.match(
   /\.lot-showroom \.lot-color-control\.has-turn-color-swatch input\[type='color'\]\s*\{([\s\S]*?)\n\}/
 )?.[1] || '';
 assert.ok(clippedInputRule, 'The editable native color input must have a PWA-safe visual rule');
-assert.match(clippedInputRule, /width: 1px !important/);
-assert.match(clippedInputRule, /height: 1px !important/);
+assert.match(clippedInputRule, /width: 0\.75px !important/);
+assert.match(clippedInputRule, /height: 0\.75px !important/);
 assert.match(clippedInputRule, /clip-path: inset\(50%\) !important/,
   'The native input must be visually clipped instead of composited over the swatch');
 assert.match(clippedInputRule, /opacity: 0 !important/);
@@ -125,12 +125,12 @@ assert.match(paintGate, /cue\.textContent = `CAR COLOR · \$\{colorCueDescriptio
 assert.match(syncBody, /ensureVisualColorCue\(car\)/);
 assert.match(
   showroomCleanupCss,
-  /\.lot-showroom \.lot-colors,[\s\S]*min-height: 54px;[\s\S]*gap: 7px/,
+  /\.lot-showroom \.lot-colors,[\s\S]*min-height: 40\.5px;[\s\S]*gap: 5\.25px/,
   'Cue on/off and fixed/free color states must share one aligned COLOR geometry'
 );
 assert.match(
   showroomCleanupCss,
-  /\.lot-showroom \.lot-paint-color-cue\s*\{[\s\S]*font-size: clamp\(\.56rem, 1\.08vw, \.72rem\)/,
+  /\.lot-showroom \.lot-paint-color-cue\s*\{[\s\S]*font-size: max\(var\(--turn-text-floor, 11px\), clamp\(0\.42rem, 1\.08vw, 0\.54rem\)\)/,
   'The swatch-side COLOR CUE must stay large enough to read'
 );
 
@@ -217,7 +217,7 @@ for (const staleCatalogSpecifier of [
 }
 
 // Established Trophy Road and perk contracts remain intact.
-assert.match(paintCss, /\.lot-colors\.is-paint-locked[\s\S]*min-height: 54px/);
+assert.match(paintCss, /\.lot-colors\.is-paint-locked[\s\S]*min-height: 40\.5px/);
 assert.match(lotGate, /function dismissVisibleUnlockNotice\(\)/);
 assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
 assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r217-stable-perk-slot/);

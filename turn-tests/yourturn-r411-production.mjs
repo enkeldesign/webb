@@ -22,8 +22,8 @@ const [
 
 assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /track-map-r417\.js\?revision=r417/);
-assert.match(yourTurnIndex, /r411\.css\?revision=r411/);
-assert.match(turnIndex, /ui\/r411-race-controls\.js\?revision=r269-race-controls/,
+assert.match(yourTurnIndex, /r411\.css\?build=\d{8}-r\d+/);
+assert.match(turnIndex, /ui\/r411-race-controls\.js\?build=\d{8}-r\d+/,
   'TURN must cache-bust the race-control entry when the active-race controls change');
 
 assert.match(yourTurnMap, /getTrackPreviewPoints/,

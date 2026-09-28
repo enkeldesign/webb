@@ -779,16 +779,16 @@ function installMaydayUiStyle() {
     #${MAP_MARKER_ID} {
       position: absolute;
       z-index: 4;
-      width: clamp(20px, 4.8vh, 29px);
-      height: clamp(20px, 4.8vh, 29px);
+      width: clamp(15px, 4.8vh, 21.75px);
+      height: clamp(15px, 4.8vh, 21.75px);
       transform: translate(-50%, -50%);
       display: grid;
       place-items: center;
       box-sizing: border-box;
-      border: 3px solid #08090a;
+      border: 2.25px solid #08090a;
       border-radius: 50%;
       background: #fff8e8;
-      font: 900 clamp(12px, 2.8vh, 18px)/1 system-ui, sans-serif;
+      font: 900 clamp(max(var(--turn-text-floor, 11px), 9px), 2.8vh, 13.5px)/1 system-ui, sans-serif;
       pointer-events: none;
     }
     #${MAP_MARKER_ID}[hidden] { display: none; }
@@ -797,30 +797,30 @@ function installMaydayUiStyle() {
     .turn-mayday-info-plate {
       position: fixed;
       left: 50%;
-      top: max(16px, calc(env(safe-area-inset-top) + 10px));
+      top: max(12px, calc(env(safe-area-inset-top) + 7.5px));
       z-index: 2147482999;
-      width: min(620px, calc(100vw - 32px));
+      width: min(465px, calc(100vw - 24px));
       margin: 0;
-      padding: 10px 14px;
-      border: 3px solid #08090a;
-      border-radius: 14px;
+      padding: 7.5px 10.5px;
+      border: 2.25px solid #08090a;
+      border-radius: 10.5px;
       background: var(--paper, #fffdf6);
       color: #08090a;
-      box-shadow: 5px 5px 0 #08090a;
+      box-shadow: 3.75px 3.75px 0 #08090a;
       transform: translateX(-50%);
       text-align: center;
-      font-size: clamp(0.72rem, 1.7vw, 0.92rem);
+      font-size: max(var(--turn-text-floor, 11px), clamp(0.54rem, 1.7vw, 0.69rem));
       font-weight: 900;
       line-height: 1.25;
       pointer-events: none;
     }
     .turn-mayday-info-plate[hidden] { display: none; }
-    @media (max-height: 430px) {
+    @media (max-height: 322.5px) {
       .turn-mayday-info-plate {
-        top: max(10px, calc(env(safe-area-inset-top) + 6px));
-        width: min(700px, calc(100vw - 20px));
-        padding: 7px 11px;
-        font-size: 0.7rem;
+        top: max(7.5px, calc(env(safe-area-inset-top) + 4.5px));
+        width: min(525px, calc(100vw - 15px));
+        padding: 5.25px 8.25px;
+        font-size: max(var(--turn-text-floor, 11px), 0.525rem);
       }
     }
   `;

@@ -16,7 +16,7 @@ function installStartupCover() {
         display: grid !important;
       }
       .install-gate.turn-startup-loading .install-shell {
-        grid-template-columns: minmax(150px, .7fr) minmax(280px, 1.3fr);
+        grid-template-columns: minmax(112.5px, .7fr) minmax(210px, 1.3fr);
       }
       .install-gate.turn-startup-loading .install-kicker,
       .install-gate.turn-startup-loading .install-actions,
@@ -24,14 +24,14 @@ function installStartupCover() {
         display: none !important;
       }
       .install-gate.turn-startup-loading .install-copy {
-        margin-bottom: 18px;
+        margin-bottom: 13.5px;
         font-weight: 900;
         letter-spacing: .04em;
         text-transform: uppercase;
       }
       .turn-startup-spinner {
-        width: 42px;
-        height: 42px;
+        width: 31.5px;
+        height: 31.5px;
         box-sizing: border-box;
         border: 6px solid var(--turn-muted, #d6d0c2);
         border-top-color: var(--turn-action-information, #38d9ff);
@@ -398,11 +398,6 @@ installStylesheet('./home-app-bar.css', 'data-turn-home-app-bar');
 installStylesheet('./action-dock.css', 'data-turn-action-dock');
 installStylesheet('./controls.css', 'data-turn-controls');
 installStylesheet('./surfaces.css', 'data-turn-surfaces');
-// Real CSS pixels: exempt the app bar, action dock, controls and surfaces from the
-// 0.75 UI baseline, like responsive.css.
-for (const attribute of ['data-turn-home-app-bar', 'data-turn-action-dock', 'data-turn-controls', 'data-turn-surfaces']) {
-  document.querySelector(`link[${attribute}]`)?.setAttribute('data-turn-responsive', '');
-}
 const { installHomeAppBar } = await import(withBuild('./ui/home-app-bar.js'));
 installHomeAppBar();
 const { installToastRegion } = await import(withBuild('./ui/toast-region.js'));

@@ -5,24 +5,24 @@
 
 /* The brake stays round while gas becomes a large analog pedal. */
 .pedals {
-  padding-top: 10px;
+  padding-top: 7.5px;
   align-items: end;
-  gap: clamp(12px, 1.6vw, 20px);
+  gap: clamp(9px, 1.6vw, 15px);
 }
 
 .gas {
   --gas-level: 0;
-  width: clamp(118px, 15vw, 170px);
-  height: clamp(190px, 42vh, 285px);
-  border-radius: clamp(52px, 7vw, 78px);
+  width: clamp(88.5px, 15vw, 127.5px);
+  height: clamp(142.5px, 42vh, 213.75px);
+  border-radius: clamp(39px, 7vw, 58.5px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 0 14px 28px;
+  padding: 0 10.5px 21px;
   line-height: 1;
   text-align: center;
-  font-size: clamp(0.8rem, 2vw, 1.1rem);
-  transform: translateY(calc(var(--gas-level) * -12px));
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.6rem, 2vw, 0.825rem));
+  transform: translateY(calc(var(--gas-level) * -9px));
   transition:
     transform 120ms cubic-bezier(.2, .8, .2, 1),
     box-shadow 120ms ease;
@@ -31,29 +31,29 @@
 
 .gas.is-dragging {
   transition: none;
-  box-shadow: 7px 9px 0 var(--ink);
+  box-shadow: 5.25px 6.75px 0 var(--ink);
 }
 
 .gas.is-dragging:active,
 .gas.is-dragging.is-down {
-  transform: translateY(calc(var(--gas-level) * -12px));
+  transform: translateY(calc(var(--gas-level) * -9px));
 }
 
-@media (max-height: 430px) {
+@media (max-height: 322.5px) {
   .pedals {
-    padding-top: 4px;
+    padding-top: 3px;
   }
 
   .gas {
-    width: clamp(108px, 14vw, 148px);
-    height: clamp(172px, 46vh, 228px);
-    border-radius: clamp(48px, 6.5vw, 68px);
-    padding-bottom: 22px;
-    transform: translateY(calc(var(--gas-level) * -9px));
+    width: clamp(81px, 14vw, 111px);
+    height: clamp(129px, 46vh, 171px);
+    border-radius: clamp(36px, 6.5vw, 51px);
+    padding-bottom: 16.5px;
+    transform: translateY(calc(var(--gas-level) * -6.75px));
   }
 
   .gas.is-dragging:active,
   .gas.is-dragging.is-down {
-    transform: translateY(calc(var(--gas-level) * -9px));
+    transform: translateY(calc(var(--gas-level) * -6.75px));
   }
 }

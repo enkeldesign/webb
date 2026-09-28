@@ -1,9 +1,9 @@
 .turn-sr-only {
   position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
+  width: 0.75px !important;
+  height: 0.75px !important;
   padding: 0 !important;
-  margin: -1px !important;
+  margin: -0.75px !important;
   overflow: hidden !important;
   clip: rect(0 0 0 0) !important;
   white-space: nowrap !important;
@@ -16,8 +16,8 @@
   bottom: auto;
   z-index: 1;
   min-width: 0;
-  padding: 7px 10px 8px;
-  border-radius: 14px;
+  padding: 5.25px 7.5px 6px;
+  border-radius: 10.5px;
   background: rgb(255 248 232 / 0.9);
   text-align: left;
   transform: none;
@@ -37,20 +37,20 @@
 
 .stats .race-position-hud strong {
   display: block;
-  margin-top: 3px;
-  font-size: clamp(0.95rem, 2.5vw, 1.4rem);
+  margin-top: 2.25px;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.7125rem, 2.5vw, 1.05rem));
   line-height: 1;
   letter-spacing: -0.04em;
 }
 
 .stats .chip:nth-child(2),
 .stats .chip:nth-child(3) {
-  width: clamp(68px, 8vw, 90px);
+  width: clamp(51px, 8vw, 67.5px);
 }
 
 .stats .chip:nth-child(4),
 .stats .chip:nth-child(5) {
-  width: clamp(112px, 13vw, 146px);
+  width: clamp(84px, 13vw, 109.5px);
 }
 
 .stats .race-position-hud.position-pop {
@@ -81,54 +81,54 @@
   }
 }
 
-@media (max-height: 430px) {
+@media (max-height: 322.5px) {
   .stats .chip:nth-child(1) {
-    width: 112px;
+    width: 84px;
   }
 
   .stats .chip:nth-child(2),
   .stats .chip:nth-child(3) {
-    width: 68px;
+    width: 51px;
   }
 
   .stats .chip:nth-child(4),
   .stats .chip:nth-child(5) {
-    width: 112px;
+    width: 84px;
   }
 
   .map-wrap {
-    width: min(20vw, 156px);
+    width: min(20vw, 117px);
   }
 }
 
-@media (max-width: 760px) and (orientation: landscape) {
+@media (max-width: 570px) and (orientation: landscape) {
   .topbar {
-    gap: 8px;
-  }
-
-  .stats {
     gap: 6px;
   }
 
+  .stats {
+    gap: 4.5px;
+  }
+
   .stats .chip:nth-child(1) {
-    width: 108px;
+    width: 81px;
   }
 
   .stats .chip:nth-child(2),
   .stats .chip:nth-child(3) {
-    width: 64px;
+    width: 48px;
   }
 
   .stats .chip:nth-child(4),
   .stats .chip:nth-child(5) {
-    width: 112px;
+    width: 84px;
   }
 
   .stats .race-position-hud span {
-    font-size: 0.5rem;
+    font-size: max(var(--turn-text-floor, 11px), 0.375rem);
   }
 
   .map-wrap {
-    width: min(18vw, 132px);
+    width: min(18vw, 99px);
   }
 }

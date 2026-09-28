@@ -116,7 +116,7 @@ assert.doesNotMatch(trophyRoadFeedback, /newButton\.hidden\s*=/,
   'NEW must stay visible in the filter row even when there is nothing new');
 assert.match(trophyRoadFeedback, /newButton\.disabled = !available/,
   'NEW should remain visible but inert when there are no unseen achievements');
-assert.match(unreadMarkers, /min-height: 34px/,
+assert.match(unreadMarkers, /min-height: 25\.5px/,
   'Achievement filter pills should use the more compact requested height');
 assert.match(unreadMarkers, /achievement\?\.hidden === true/,
   'The Hidden filter must derive from the achievement hidden contract rather than title matching');

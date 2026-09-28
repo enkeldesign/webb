@@ -96,11 +96,11 @@ assert.match(feedback, /if \(event\.target === dialog\) closeDialog\(dialog\)/, 
 
 assert.match(css, /\.m8-home-fixed-layout \.m8-feedback-button/);
 assert.match(css, /\.m8-home-fixed-layout \.m8-home-meta[\s\S]*grid-column: 3[\s\S]*flex-direction: column/);
-assert.match(css, /\.m8-home-fixed-layout \.m8-about-trigger[\s\S]*font-size: clamp\(0\.62rem, 1vw, 0\.82rem\)[\s\S]*text-decoration: underline/);
-assert.match(css, /\.m8-feedback-dialog[\s\S]*width: min\(760px, calc\(100vw - 32px\)\)/);
-assert.match(css, /\.m8-about-dialog[\s\S]*width: min\(660px, calc\(100vw - 32px\)\)/);
-assert.match(css, /\.m8-feedback-dialog \.m8-dialog-head[\s\S]*margin-bottom: clamp\(14px, 2vh, 20px\)/, 'Feedback heading spacing should stay compact');
-assert.match(css, /\.m8-feedback-actions[\s\S]*margin-top: clamp\(16px, 2\.5vh, 22px\)/, 'Feedback actions should remain close to the copy');
+assert.match(css, /\.m8-home-fixed-layout \.m8-about-trigger[\s\S]*font-size: max\(var\(--turn-text-floor, 11px\), clamp\(0\.465rem, 1vw, 0\.615rem\)\)[\s\S]*text-decoration: underline/);
+assert.match(css, /\.m8-feedback-dialog[\s\S]*width: min\(570px, calc\(100vw - 24px\)\)/);
+assert.match(css, /\.m8-about-dialog[\s\S]*width: min\(495px, calc\(100vw - 24px\)\)/);
+assert.match(css, /\.m8-feedback-dialog \.m8-dialog-head[\s\S]*margin-bottom: clamp\(10\.5px, 2vh, 15px\)/, 'Feedback heading spacing should stay compact');
+assert.match(css, /\.m8-feedback-actions[\s\S]*margin-top: clamp\(12px, 2\.5vh, 16\.5px\)/, 'Feedback actions should remain close to the copy');
 assert.match(css, /\.m8-feedback-status[\s\S]*min-height: 0[\s\S]*margin-top: 0 !important/);
 assert.match(css, /\.m8-feedback-status:not\(:empty\)[\s\S]*min-height: 1\.5em/, 'The live region should consume space only when it has a message');
 assert.doesNotMatch(css, /\.m8-feedback-attribution/, 'Removed feedback attribution must leave no stale layout rules');
@@ -108,7 +108,7 @@ assert.match(css, /\.m8-feedback-email[\s\S]*background: var\(--m8-pink\)/);
 assert.match(css, /\.m8-feedback-copy[\s\S]*background: var\(--m8-yellow\)/);
 assert.doesNotMatch(css, /\.m8-dialog-head > div > span/,
   'The shared modal heading fix belongs in the base Home dialog stylesheet');
-assert.match(homeCss, /\.m8-dialog-head > div\s*\{[\s\S]*display: grid[\s\S]*row-gap: 4px/,
+assert.match(homeCss, /\.m8-dialog-head > div\s*\{[\s\S]*display: grid[\s\S]*row-gap: 3px/,
   'Modal eyebrow, title and optional metadata need independent grid rows');
 assert.match(homeCss, /\.m8-dialog-head > div > span\s*\{[\s\S]*min-height: 1\.7em[\s\S]*padding-block: 0\.24em 0\.34em[\s\S]*line-height: 1\.4/,
   'Modal eyebrows need enough paint-box space for iOS Safari font metrics');
@@ -119,8 +119,8 @@ assert.match(achievementsCss, /\.turn-achievements-head\s*\{[\s\S]*border-bottom
 assert.match(achievementsView, /achievements\.css\?build=\$\{buildKey\}-r224-modal-headings/);
 assert.match(aboutHistory, /m8-home\.css\?revision=r224-modal-headings/,
   'Install-gate About and History must load the corrected shared heading geometry');
-assert.match(css, /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/, 'Four Home menu actions should remain a readable two-by-two grid in portrait');
-assert.match(css, /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*\.m8-home-fixed-layout \.m8-home-meta[\s\S]*display: none/, 'Header metadata must stay out of the compact portrait layout');
+assert.match(css, /@media \(max-width: 570px\) and \(orientation: portrait\)[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/, 'Four Home menu actions should remain a readable two-by-two grid in portrait');
+assert.match(css, /@media \(max-width: 570px\) and \(orientation: portrait\)[\s\S]*\.m8-home-fixed-layout \.m8-home-meta[\s\S]*display: none/, 'Header metadata must stay out of the compact portrait layout');
 assert.doesNotMatch(`${feedback}\n${css}`, /setInterval|@keyframes|animation:/, 'Feedback and About must add no loop or decorative animation');
 
 console.log('TURN compact Home feedback and About-only attribution regression passed.');

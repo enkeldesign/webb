@@ -1,4 +1,4 @@
-@import url('./design-semantic.css?revision=r141-form-disclosure');
+@import url('./design-semantic.css?build=20260928-r315');
 
 /*
   Native form controls and disclosures keep their real semantics while sharing
@@ -14,23 +14,23 @@
 .m8-setting-card > h3 {
   display: table;
   width: fit-content;
-  max-width: calc(100% - 24px);
-  padding: 0 8px;
+  max-width: calc(100% - 18px);
+  padding: 0 6px;
   background: var(--turn-surface-raised);
   color: var(--turn-ink);
-  font-size: 1.25rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.9375rem);
   font-weight: 950;
   line-height: 1.1;
 }
 
 .m8-setting-card legend {
-  margin-inline-start: 2px;
+  margin-inline-start: 1.5px;
 }
 
 .m8-setting-card > h3 {
   position: relative;
   z-index: 1;
-  margin: -31px 0 14px 2px;
+  margin: -23.25px 0 10.5px 1.5px;
 }
 
 .m8-steering-setting label,
@@ -43,8 +43,8 @@
   -webkit-appearance: none;
   appearance: none;
   flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
+  width: 22.5px;
+  height: 22.5px;
   margin: 0;
   border: 4px solid var(--turn-ink);
   background-color: var(--turn-form-control-idle);
@@ -71,14 +71,14 @@
 .m8-setting-card input[type='checkbox']:checked {
   background-color: var(--turn-form-control-selected);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12.5 9.5 18 20 6.5' fill='none' stroke='%2308090a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-size: 21px 21px;
+  background-size: 15.75px 15.75px;
 }
 
 .m8-setting-card input[type='radio']:focus-visible,
 .m8-setting-card input[type='checkbox']:focus-visible,
 #m8AudioBalance:focus-visible {
   outline: 5px solid var(--turn-form-control-focus);
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 
 .m8-setting-card input[type='radio']:disabled,
@@ -90,7 +90,7 @@
 #m8AudioBalance {
   -webkit-appearance: none;
   appearance: none;
-  height: 12px;
+  height: 9px;
   border: 3px solid var(--turn-ink);
   border-radius: var(--turn-radius-pill);
   background: var(--turn-form-control-idle);
@@ -99,8 +99,8 @@
 #m8AudioBalance::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 28px;
-  height: 28px;
+  width: 21px;
+  height: 21px;
   border: 4px solid var(--turn-ink);
   border-radius: var(--turn-radius-circle);
   background: var(--turn-form-control-selected);
@@ -109,8 +109,8 @@
 }
 
 #m8AudioBalance::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
+  width: 16.5px;
+  height: 16.5px;
   border: 4px solid var(--turn-ink);
   border-radius: var(--turn-radius-circle);
   background: var(--turn-form-control-selected);
@@ -147,12 +147,12 @@
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border: 3px solid var(--turn-ink);
   border-radius: var(--turn-radius-circle);
   background: var(--turn-disclosure-panel);
-  font-size: 1.35rem;
+  font-size: max(var(--turn-text-floor, 11px), 1.0125rem);
   font-weight: 950;
   line-height: 1;
 }
@@ -173,8 +173,8 @@
   background: var(--turn-disclosure-panel);
 }
 
-@media (max-height: 560px) and (orientation: landscape) {
+@media (max-height: 420px) and (orientation: landscape) {
   .m8-setting-card > h3 {
-    margin-top: -29px;
+    margin-top: -21.75px;
   }
 }

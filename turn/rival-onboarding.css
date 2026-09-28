@@ -5,19 +5,19 @@
   top: 20%;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   pointer-events: none;
   opacity: 0;
-  transform: translate(-50%, 8px) scale(0.97);
+  transform: translate(-50%, 6px) scale(0.97);
   transition: opacity 150ms ease, transform 190ms cubic-bezier(0.2, 0.85, 0.3, 1.16);
 }
 
 .rival-onboarding-model {
-  width: clamp(86px, 11vw, 126px);
-  height: clamp(62px, 8vw, 92px);
+  width: clamp(64.5px, 11vw, 94.5px);
+  height: clamp(46.5px, 8vw, 69px);
   flex: 0 0 auto;
-  margin-right: -8px;
-  filter: drop-shadow(4px 5px 0 rgb(8 9 10 / 0.32));
+  margin-right: -6px;
+  filter: drop-shadow(3px 3.75px 0 rgb(8 9 10 / 0.32));
 }
 
 .rival-onboarding-model canvas {
@@ -27,13 +27,13 @@
 }
 
 .rival-onboarding-copy {
-  padding: 7px 14px;
+  padding: 5.25px 10.5px;
   border: 3px solid var(--ink);
-  border-radius: 999px;
+  border-radius: 749.25px;
   background: var(--rival-onboarding-color, var(--yellow));
   color: var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
-  font-size: clamp(0.75rem, 2vw, 1rem);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.5625rem, 2vw, 0.75rem));
   letter-spacing: 0.02em;
   white-space: nowrap;
   transform: rotate(-2deg);
@@ -46,21 +46,21 @@
 
 .rival-onboarding.is-leaving {
   opacity: 0;
-  transform: translate(-50%, 5px) scale(0.98);
+  transform: translate(-50%, 3.75px) scale(0.98);
 }
 
 .rival-onboarding.is-model-unavailable .rival-onboarding-model {
   display: none;
 }
 
-@media (max-height: 430px) {
+@media (max-height: 322.5px) {
   .rival-onboarding {
     top: 16%;
   }
 
   .rival-onboarding-model {
-    width: 82px;
-    height: 58px;
+    width: 61.5px;
+    height: 43.5px;
   }
 }
 

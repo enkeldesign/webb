@@ -1,6 +1,5 @@
 /* TURN surfaces: three elevation levels, portrait dialog sheets and one toast
-   region (real CSS pixels: linked with data-turn-responsive, so the 0.75 UI
-   baseline never rewrites it). Tokens live in design-scale.css.
+   region. Tokens live in design-scale.css.
 
    1. Readout  — HUD chips, minimap, cards inside a dialog:
       --turn-radius-control, 3px border, --turn-shadow-control.

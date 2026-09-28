@@ -28,15 +28,15 @@ function installStyles() {
       content: "";
       position: absolute;
       z-index: 3;
-      top: -9px;
-      right: -9px;
-      width: 16px;
-      height: 16px;
+      top: -6.75px;
+      right: -6.75px;
+      width: 12px;
+      height: 12px;
       box-sizing: border-box;
       border: 3px solid var(--turn-ink, #08090a);
       border-radius: 50%;
       background: var(--turn-action-warning, #ffd43b);
-      box-shadow: 2px 2px 0 var(--turn-ink, #08090a);
+      box-shadow: 1.5px 1.5px 0 var(--turn-ink, #08090a);
       pointer-events: none;
     }
 
@@ -60,7 +60,7 @@ function installStyles() {
       .lot-showroom .lot-perk-button.turn-first-perk-attention {
         animation: none;
         outline: 5px solid var(--turn-action-warning, #ffd43b);
-        outline-offset: 4px;
+        outline-offset: 3px;
       }
     }
   `;

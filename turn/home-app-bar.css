@@ -1,5 +1,4 @@
-/* TURN Home app bar, menu sheet and RACE dock (real CSS pixels: linked with
-   data-turn-responsive, so the 0.75 UI baseline never rewrites it).
+/* TURN Home app bar, menu sheet and RACE dock.
 
    One composition in every orientation:
    - a slim Yellow bar (logo · support challenge · ACHIEVEMENTS · ☰) that sits below

@@ -1,6 +1,6 @@
 .yourturn-track-map {
-  width: min(320px, 58vw);
-  margin: 0 0 12px;
+  width: min(240px, 58vw);
+  margin: 0 0 9px;
 }
 
 .yourturn-track-map svg {
@@ -42,8 +42,8 @@
 }
 
 .yourturn-settings-dialog {
-  width: min(920px, calc(100vw - 24px));
-  max-height: calc(100dvh - 24px);
+  width: min(690px, calc(100vw - 18px));
+  max-height: calc(100dvh - 18px);
   padding: 0;
   border: 0;
   background: transparent;
@@ -53,56 +53,56 @@
 
 .yourturn-settings-dialog::backdrop {
   background: rgb(8 9 10 / 0.62);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(3.75px);
 }
 
 .yourturn-settings-card {
   box-sizing: border-box;
-  max-height: calc(100dvh - 24px);
+  max-height: calc(100dvh - 18px);
   overflow: auto;
-  padding: clamp(18px, 3vw, 30px);
-  border: 5px solid #08090a;
-  border-radius: 26px;
+  padding: clamp(13.5px, 3vw, 22.5px);
+  border: 3.75px solid #08090a;
+  border-radius: 19.5px;
   background: #fff8e8;
-  box-shadow: 10px 10px 0 #08090a;
+  box-shadow: 7.5px 7.5px 0 #08090a;
 }
 
 .yourturn-settings-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 18px;
+  gap: 13.5px;
+  margin-bottom: 13.5px;
 }
 
 .yourturn-settings-head span {
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 2.25px;
   color: #6b3fa0;
-  font-size: 0.78rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.585rem);
   font-weight: 1000;
   letter-spacing: 0.14em;
 }
 
 .yourturn-settings-head h2 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 4rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(1.5rem, 5vw, 3rem));
   line-height: 0.9;
   letter-spacing: -0.05em;
 }
 
 .yourturn-settings-close {
   flex: 0 0 auto;
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  border: 4px solid #08090a;
+  border: 3px solid #08090a;
   border-radius: 50%;
   background: #ff9b66;
   color: #08090a;
-  box-shadow: 4px 4px 0 #08090a;
+  box-shadow: 3px 3px 0 #08090a;
   font: inherit;
-  font-size: 1.8rem;
+  font-size: max(var(--turn-text-floor, 11px), 1.35rem);
   font-weight: 1000;
   line-height: 1;
 }
@@ -110,23 +110,23 @@
 .yourturn-settings-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 10.5px;
 }
 
 .yourturn-setting-card {
   min-width: 0;
-  padding: 16px;
-  border: 4px solid #08090a;
-  border-radius: 18px;
+  padding: 12px;
+  border: 3px solid #08090a;
+  border-radius: 13.5px;
   background: #fff;
-  box-shadow: 4px 4px 0 #08090a;
+  box-shadow: 3px 3px 0 #08090a;
 }
 
 .yourturn-setting-card legend,
 .yourturn-setting-card > h3 {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   padding: 0;
-  font-size: 1.15rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.8625rem);
   font-weight: 1000;
 }
 
@@ -135,15 +135,15 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 7.5px;
+  margin-top: 7.5px;
   cursor: pointer;
 }
 
 .yourturn-steering-setting input,
 .yourturn-toggle-row input {
-  width: 28px;
-  height: 28px;
+  width: 21px;
+  height: 21px;
   margin: 0;
 }
 
@@ -157,37 +157,37 @@
 .yourturn-toggle-row small,
 .yourturn-balance-row small {
   display: block;
-  margin-top: 2px;
+  margin-top: 1.5px;
   line-height: 1.25;
 }
 
 .yourturn-motion-note,
 .yourturn-settings-status {
-  margin: 10px 0 0;
+  margin: 7.5px 0 0;
   font-weight: 800;
 }
 
 .yourturn-balance-row {
   display: block;
-  margin-top: 12px;
+  margin-top: 9px;
 }
 
 #yourTurnAudioBalance {
   width: 100%;
-  margin-top: 10px;
+  margin-top: 7.5px;
 }
 
 .yourturn-balance-labels {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  font-size: 0.72rem;
+  gap: 9px;
+  font-size: max(var(--turn-text-floor, 11px), 0.54rem);
   font-weight: 850;
 }
 
 #yourTurnAudioBalanceValue {
   display: block;
-  margin-top: 4px;
+  margin-top: 3px;
   font-weight: 900;
 }
 
@@ -197,16 +197,16 @@
 
 .yourturn-settings-close:focus-visible,
 .yourturn-setting-card :focus-visible {
-  outline: 4px solid #38d9ff;
-  outline-offset: 4px;
+  outline: 3px solid #38d9ff;
+  outline-offset: 3px;
 }
 
-@media (max-width: 680px), (max-height: 430px) {
+@media (max-width: 510px), (max-height: 322.5px) {
   .yourturn-settings-list {
     grid-template-columns: 1fr;
   }
 
   .yourturn-settings-card {
-    padding: 15px;
+    padding: 11.25px;
   }
 }

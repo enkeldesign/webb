@@ -304,11 +304,11 @@ assert.match(css, /place-items: center/, 'Drive-zone labels must be vertically a
 assert.match(css, /content: "LEAVE"/, 'Boost lock hint must explain that leaving the Boost zone re-arms it');
 assert.match(css, /\.drive-pad \.drive-brake-zone \{/, 'BRAKE must be styled as an internal drive-pad zone');
 assert.match(css, /\.drive-brake-zone\.is-active/, 'Brake must have visible active feedback');
-assert.match(css, /\.drive-lock-bubble \{[\s\S]*right: calc\(100% - 4px\);[\s\S]*background: #748ffc/,
+assert.match(css, /\.drive-lock-bubble \{[\s\S]*right: calc\(100% - 3px\);[\s\S]*background: #748ffc/,
   'LOCK must be a separate bubble attached outside the left edge of the pad');
 assert.match(css, /\.drive-stack\.is-drift-ready \.drive-lock-bubble \{[\s\S]*opacity: 1;[\s\S]*scaleX\(1\)/,
   'The LOCK bubble must animate quickly into view while DRIFT is held');
-assert.match(css, /\.drive-lock-bubble \{[\s\S]*height: calc\(32% \+ 5\.44px\)/,
+assert.match(css, /\.drive-lock-bubble \{[\s\S]*height: calc\(32% \+ 4\.08px\)/,
   'The LOCK bubble bottom border must share the lower edge of the DRIFT row divider');
 assert.doesNotMatch(css, /drift-lock-row-offset/,
   'LOCK and SHIFT must use the exact grid seams instead of overlapping row offsets');
@@ -318,7 +318,7 @@ assert.match(css, /\.drive-stack\.is-drift-locking \.drive-lock-bubble \{[\s\S]*
   'The bubble must visibly confirm the binary LOCK state in purple');
 assert.match(css, /prefers-reduced-motion: reduce[\s\S]*\.drive-lock-bubble/,
   'The bubble reveal must respect reduced-motion preferences');
-assert.match(gameplayCss, /\.boost-hud i \{[\s\S]*box-shadow: 3px 0 0 var\(--ink\);/, 'Boost charge must have a high-contrast ink edge at the live fill level');
+assert.match(gameplayCss, /\.boost-hud i \{[\s\S]*box-shadow: 2\.25px 0 0 var\(--ink\);/, 'Boost charge must have a high-contrast ink edge at the live fill level');
 assert.match(gameplayCss, /\.boost-hud\.is-drift-charging i \{[\s\S]*linear-gradient\(90deg, #38d9ff, #8ce99a\)/,
   'Ordinary DRIFT recharge must show the Boost gradient from blue to green');
 assert.match(gameplayCss, /\.boost-hud\.is-drift-locking i \{[\s\S]*linear-gradient\(90deg, #8b5cf6, #8ce99a\)/,

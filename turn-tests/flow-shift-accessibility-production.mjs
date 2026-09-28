@@ -441,7 +441,7 @@ try {
   assert.match(style.textContent, /@media \(forced-colors: active\)/);
   assert.match(
     style.textContent,
-    /\.drive-stack\.is-shift-active \.drive-shift-bubble i \{[\s\S]*border: 2px solid ButtonText;[\s\S]*background: ButtonText;/,
+    /\.drive-stack\.is-shift-active \.drive-shift-bubble i \{[\s\S]*border: 1\.5px solid ButtonText;[\s\S]*background: ButtonText;/,
     'The UP-gear dot must retain a system-color outline when forced colors suppress backgrounds'
   );
   assert.match(style.textContent, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none;/,

@@ -1,93 +1,93 @@
 .yourturn-nonvisual-card {
-  width: min(760px, 92vw);
+  width: min(570px, 92vw);
 }
 
 .yourturn-nonvisual-copy {
   display: grid;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 7.5px;
+  margin-bottom: 12px;
 }
 
 .yourturn-nonvisual-copy p,
 .yourturn-dbe-balance p {
   margin: 0;
-  font-size: clamp(0.95rem, 2vw, 1.12rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.7125rem, 2vw, 0.84rem));
   font-weight: 760;
   line-height: 1.35;
 }
 
 .yourturn-dbe-balance {
   display: grid;
-  gap: 10px;
-  margin: 0 0 18px;
-  padding: 14px 16px;
-  border: 4px solid #08090a;
-  border-radius: 16px;
+  gap: 7.5px;
+  margin: 0 0 13.5px;
+  padding: 10.5px 12px;
+  border: 3px solid #08090a;
+  border-radius: 12px;
   background: #fff8e8;
 }
 
 .yourturn-dbe-balance h2 {
   margin: 0;
-  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.75rem, 2.2vw, 1.0125rem));
   line-height: 1;
   letter-spacing: 0.06em;
 }
 
 .yourturn-dbe-balance input[type="range"] {
   width: 100%;
-  min-height: 36px;
+  min-height: 27px;
   accent-color: #6b3fa0;
   touch-action: manipulation;
 }
 
 .yourturn-dbe-balance input[type="range"]:focus-visible {
-  outline: 4px solid #38d9ff;
-  outline-offset: 3px;
+  outline: 3px solid #38d9ff;
+  outline-offset: 2.25px;
 }
 
 .yourturn-dbe-balance-labels {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  font-size: 0.78rem;
+  gap: 12px;
+  font-size: max(var(--turn-text-floor, 11px), 0.585rem);
   font-weight: 900;
 }
 
 .yourturn-dbe-balance output {
   justify-self: center;
   min-width: 9ch;
-  padding: 5px 10px;
-  border: 2px solid #08090a;
-  border-radius: 999px;
+  padding: 3.75px 7.5px;
+  border: 1.5px solid #08090a;
+  border-radius: 749.25px;
   background: #ffd43b;
-  font-size: 0.8rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.6rem);
   font-weight: 900;
   text-align: center;
 }
 
-@media (max-height: 560px) and (orientation: landscape) {
+@media (max-height: 420px) and (orientation: landscape) {
   .yourturn-nonvisual-card {
-    width: min(900px, 94vw);
+    width: min(675px, 94vw);
   }
 
   .yourturn-nonvisual-copy {
-    gap: 6px;
-    margin-bottom: 9px;
+    gap: 4.5px;
+    margin-bottom: 6.75px;
   }
 
   .yourturn-nonvisual-copy p,
   .yourturn-dbe-balance p {
-    font-size: 0.84rem;
+    font-size: max(var(--turn-text-floor, 11px), 0.63rem);
     line-height: 1.25;
   }
 
   .yourturn-dbe-balance {
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.9fr);
+    grid-template-columns: minmax(0, 1fr) minmax(165px, 0.9fr);
     align-items: center;
-    gap: 5px 14px;
-    margin-bottom: 9px;
-    padding: 8px 11px;
-    border-width: 3px;
+    gap: 3.75px 10.5px;
+    margin-bottom: 6.75px;
+    padding: 6px 8.25px;
+    border-width: 2.25px;
   }
 
   .yourturn-dbe-balance h2,

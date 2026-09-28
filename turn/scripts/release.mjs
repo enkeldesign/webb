@@ -19,6 +19,22 @@ const KNOWN_INSTALLED_LOT_SPECIFIER = '/turn/garage/lot-enhancement-runtime.js?r
 const SESSION_ORCHESTRATOR_SPECIFIER = '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
 const RIVAL_STORAGE_PATH = '/turn/race/rival-storage.js';
 const RIVAL_STORAGE_REVISION = 'r224-finish-line-summary';
+// Stylesheets are authored at their rendered size since 1.25.0. A cached copy from
+// an earlier release must never load under the same URL, so every stylesheet URL
+// that is not already build-bound (CSS @import, literal link.href) takes the build.
+const CSS_IMPORT_COMPANIONS = Object.freeze([
+  'turn/design-semantic.css',
+  'turn/install-gate.css',
+  'turn/settings-components-r141.css',
+  'turn/home-feedback-r135.css',
+  'turn/progression/trophy-road-r157.css',
+  'turn/progression/trophy-road.css'
+]);
+const STYLESHEET_LINK_COMPANIONS = Object.freeze([
+  'turn/social/your-turn-share.js',
+  'turn/audio/racing-music-v5.js',
+  'turn/content/about-turn.js'
+]);
 const companionPaths = Object.freeze([
   'turn-next/index.html',
   'turn-next/app.js',
@@ -31,7 +47,9 @@ const companionPaths = Object.freeze([
   'turn/design-dialogs.html',
   'turn/stats/index.html',
   'turn/stats/stats.js',
-  'turn/tracks/registry.js'
+  'turn/tracks/registry.js',
+  ...CSS_IMPORT_COMPANIONS,
+  ...STYLESHEET_LINK_COMPANIONS
 ]);
 
 export async function loadReleaseDefinition() {
@@ -334,6 +352,37 @@ function synchronizeKeyboardDrivingTargets(importMap, release) {
   }
 }
 
+// Modules whose injected styles moved to real CSS pixels in 1.25.0: every legacy
+// specifier resolves to one release-bound URL.
+function synchronizeUiBaselineTargets(importMap, release) {
+  const imports = importMap.imports ||= {};
+  for (const [pathname, suffixes] of [
+    ['/turn/garage/lot-card-scroll-boundary.js', ['?revision=r216-meter-density']],
+    ['/turn/garage/lot-layout-r60.js', ['?build=20260729-r116&revision=r213-attributes-typography']],
+    ['/turn/garage/lot-perk-icon.js', []],
+    ['/turn/garage/lot-screen-reader-r202.js', ['?revision=r202-heading-structure']],
+    ['/turn/scoring/scorekeeper-records.js', []],
+    ['/turn/tracks/airport-emergency-r496.js', ['?revision=r497-depth-fire']],
+    ['/turn/ui/minor-ux-polish-r229.js', ['?revision=r229-discoverability-cues']],
+    ['/turn/ui/leader-marker-r500.js', ['?revision=r227-night-marker-outline']],
+    ['/turn/ui/player-marker-r428.js', ['?revision=r227-night-marker-outline']],
+    // Modules that request a stylesheet by a release-bound literal URL.
+    ['/turn/social/your-turn-share.js', ['?revision=r4-runtime-share-state']],
+    ['/turn/content/about-turn.js', ['?revision=r1']],
+    ['/turn/audio/racing-music-v5.js', ['?revision=r197-audio-mix']]
+  ]) {
+    const target = `${pathname}?build=${release.cacheKey}`;
+    // Existing aliases that route to the module (the racing music entry) follow it.
+    for (const [specifier, existing] of Object.entries(imports)) {
+      if (typeof existing === 'string' && new URL(existing, 'https://enkel.design/turn/').pathname === pathname) {
+        imports[specifier] = target;
+      }
+    }
+    imports[pathname] = target;
+    for (const suffix of suffixes) imports[`${pathname}${suffix}`] = target;
+  }
+}
+
 function synchronizeResponsiveTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   for (const pathname of ['/turn/ui/track-intro.js', '/turn/ui/race-orientation.js']) {
@@ -537,6 +586,7 @@ function renderSharedResourceImports(source, release) {
     synchronizeKeyboardDrivingTargets(importMap, release);
     synchronizeSettingsUiTargets(importMap, release);
     synchronizeResponsiveTargets(importMap, release);
+    synchronizeUiBaselineTargets(importMap, release);
     synchronizeDriveByEarTrainingTargets(importMap, release);
     synchronizePerkFeedbackTargets(importMap, release);
     synchronizeGraphicsRuntimeTarget(importMap, release);
@@ -578,6 +628,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   synchronizeKeyboardDrivingTargets(importMap, release);
   synchronizeSettingsUiTargets(importMap, release);
   synchronizeResponsiveTargets(importMap, release);
+  synchronizeUiBaselineTargets(importMap, release);
   synchronizeDriveByEarTrainingTargets(importMap, release);
   synchronizePerkFeedbackTargets(importMap, release);
   synchronizeGraphicsRuntimeTarget(importMap, release);
@@ -689,7 +740,13 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
   if (repositoryPath === 'turn-next/index.html') return renderSharedResourceImports(renderParityEntry(source, release), release);
   if (repositoryPath === 'turn-next/app.js') return buildTurnNextApp(release);
   if (repositoryPath === 'yourturn/index.html') {
-    return renderSharedResourceImports(source.replace(/((?:href|src)="\/turn\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`), release);
+    return renderSharedResourceImports(source.replace(/((?:href|src)="\/(?:turn|yourturn)\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`), release);
+  }
+  if (CSS_IMPORT_COMPANIONS.includes(repositoryPath)) {
+    return source.replace(/(@import url\('[^'?]+\.css)(?:\?[^']*)?('\))/g, `$1?build=${release.cacheKey}$2`);
+  }
+  if (STYLESHEET_LINK_COMPANIONS.includes(repositoryPath)) {
+    return source.replace(/(\.href = '[^'?]+\.css)(?:\?[^']*)?'/g, `$1?build=${release.cacheKey}'`);
   }
   if (repositoryPath === 'turn/ui/about-history-bootstrap-r165.js') {
     return source.replace(/(about-history-current\.js\?build=)\d{8}-r\d+/, `$1${release.cacheKey}`);

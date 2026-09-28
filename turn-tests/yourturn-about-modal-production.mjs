@@ -7,7 +7,7 @@ const [indexSource, sessionSource, aboutCss] = await Promise.all([
   fs.readFile(new URL('../yourturn/about-links.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(indexSource, /about-links\.css\?revision=r2/,
+assert.match(indexSource, /about-links\.css\?build=\d{8}-r\d+/,
   'YOUR TURN must cache-bust the About modal scrolling fix');
 assert.match(sessionSource, /titleText: 'ABOUT TURN'[\s\S]*className: 'about'[\s\S]*label: 'BACK'[\s\S]*label: 'GET THE GAME'/,
   'ABOUT TURN keeps its explicit About view and accessible footer actions');

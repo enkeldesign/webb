@@ -45,7 +45,7 @@ assert.match(nextEntry, /about-history-bootstrap\.js\?revision=r164-design-navig
 assert.match(bootstrapEntry, /about-history-bootstrap-r165\.js\?revision=r165-browser-about/,
   'The stable About entry must route to the browser-aware implementation');
 
-assert.match(productionEntry, /href="\.\/browser-install-r165\.css\?revision=r165-browser-about"/);
+assert.match(productionEntry, /href="\.\/browser-install-r165\.css\?build=\d{8}-r\d+"/);
 assert.match(productionEntry, /id="installAboutButton"[\s\S]*aria-haspopup="dialog"[\s\S]*>ABOUT TURN<\/button>/);
 assert.match(productionEntry, /id="installTurnButton"[\s\S]*id="installNote"[\s\S]*id="playBrowserButton"/,
   'Install, recommendation and browser-play controls must appear in the requested order');
@@ -107,12 +107,12 @@ assert.doesNotMatch(bootstrap, /setInterval|@keyframes|animation:/,
 
 assert.match(browserInstallCss, /html\.turn-browser:not\(\.turn-browser-launched\)[\s\S]*overflow-x: clip/);
 assert.match(browserInstallCss, /\.install-gate[\s\S]*justify-items: center[\s\S]*overflow-x: clip/);
-assert.match(browserInstallCss, /\.install-shell[\s\S]*width: min\(920px, 100%\)/);
+assert.match(browserInstallCss, /\.install-shell[\s\S]*width: min\(690px, 100%\)/);
 assert.match(browserInstallCss, /\.install-shell[\s\S]*grid-template-columns: minmax\(0, 0\.75fr\) minmax\(0, 1\.25fr\)/);
 assert.match(browserInstallCss, /\.install-art,[\s\S]*\.install-card[\s\S]*min-width: 0/);
-assert.match(browserInstallCss, /\.install-guide-card[\s\S]*width: min\(560px, 100%\)/);
+assert.match(browserInstallCss, /\.install-guide-card[\s\S]*width: min\(420px, 100%\)/);
 assert.match(browserInstallCss, /\.install-about-trigger[\s\S]*text-decoration: underline/);
-assert.match(browserInstallCss, /@media \(max-height: 500px\) and \(orientation: landscape\)[\s\S]*minmax\(0, 1fr\)/);
+assert.match(browserInstallCss, /@media \(max-height: 375px\) and \(orientation: landscape\)[\s\S]*minmax\(0, 1fr\)/);
 
 const historyEntries = (content.match(/period:/g) || []).length;
 const changelogDays = (content.match(/date:/g) || []).length;
@@ -170,7 +170,7 @@ assert.match(dialogCss, /prefers-reduced-motion: reduce/);
 assert.match(historyCss, /\.turn-history-card[\s\S]*overflow: hidden !important/,
   'The reader shell must stay fixed while its body owns scrolling');
 assert.match(historyCss, /\.turn-history-panel[\s\S]*overflow-y: auto/);
-assert.match(historyCss, /\.m8-about-summary[\s\S]*font-size: 0\.8rem !important/,
+assert.match(historyCss, /\.m8-about-summary[\s\S]*font-size: max\(var\(--turn-text-floor, 11px\), 0\.6rem\) !important/,
   'About supporting copy must be compact enough for short landscape viewports');
 assert.match(historyCss, /\.m8-about-actions[\s\S]*grid-template-columns: 1fr/,
   'The sole About action must span the full available width');

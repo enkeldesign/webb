@@ -42,8 +42,8 @@ const songbookSpecifier = '/turn/audio/music/songbook.js?revision=r197-audio-mix
 const productionImports = importMapImports(index);
 const labImports = importMapImports(labIndex);
 const trackerImports = importMapImports(trackerIndex);
-assert.equal(productionImports[musicSpecifier], '/turn/audio/racing-music-v5.js?revision=r197-audio-mix');
-assert.equal(labImports[musicSpecifier], '/turn/audio/racing-music-v5.js?revision=r197-audio-mix');
+assert.equal(productionImports[musicSpecifier], `/turn/audio/racing-music-v5.js?build=${release.cacheKey}`);
+assert.equal(labImports[musicSpecifier], `/turn/audio/racing-music-v5.js?build=${release.cacheKey}`);
 assert.equal(productionImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
 assert.equal(labImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
 assert.equal(productionImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');

@@ -32,7 +32,7 @@ assert.match(boundary, /-webkit-overflow-scrolling:\s*touch/,
 // With description and perk copy removed from visual flow, keep title, ATTRIBUTES and
 // the responsive stat grid packed in a predictable order. Keep the inter-section
 // spacing small enough that all six rows fit before the fixed race action.
-assert.match(boundary, /\.lot-showroom \.lot-card-info-scroll\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*justify-content:\s*flex-start;[\s\S]*gap:\s*clamp\(2px, 0\.5vh, 5px\);/,
+assert.match(boundary, /\.lot-showroom \.lot-card-info-scroll\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*justify-content:\s*flex-start;[\s\S]*gap:\s*clamp\(1\.5px, 0\.5vh, 3\.75px\);/,
   'Car-information sections must stay packed without creating avoidable inner scrolling');
 
 // The wrapper must contain every car-information node, including the hidden popover

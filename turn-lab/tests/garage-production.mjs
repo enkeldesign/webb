@@ -287,8 +287,8 @@ assert.match(originalLot, /<section class="lot-viewbox lot-viewbox-with-paint">[
 assert.doesNotMatch(lotLayout, /appendChild\(colors\)|removeAttribute\('aria-hidden'\)|lot-view-close|lot-view-open/);
 assert.match(lotLayout, /attributesHeading\.replaceChildren\(document\.createTextNode\('ATTRIBUTES'\)\)/);
 assert.match(lotLayoutCss, /\.lot-viewbox-with-paint[\s\S]*flex: 1 1 auto/);
-assert.match(lotLayoutCss, /min-height: clamp\(150px, 28vh, 230px\)/);
-assert.match(lotLayoutCss, /--lot-paint-rail-height: 54px/);
+assert.match(lotLayoutCss, /min-height: clamp\(112\.5px, 28vh, 172\.5px\)/);
+assert.match(lotLayoutCss, /--lot-paint-rail-height: 40\.5px/);
 assert.match(lotLayoutCss, /\.lot-viewbox-with-paint \.lot-view-host[\s\S]*inset: 0 0 var\(--lot-paint-rail-height\)/);
 assert.doesNotMatch(lotLayoutCss, /\.lot-color-input|\.lot-color-preset/);
 assert.match(lotLayoutCss, /\.lot-secret-notice \{[\s\S]*background: #d9f5c2[\s\S]*border: 3px solid var\(--ink\)/);

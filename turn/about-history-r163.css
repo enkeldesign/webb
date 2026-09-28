@@ -1,6 +1,6 @@
 /* ABOUT keeps one prominent full-width History and Changelog action. */
 .m8-about-dialog {
-  --turn-dialog-inline-size: min(660px, calc(100vw - 32px));
+  --turn-dialog-inline-size: min(495px, calc(100vw - 24px));
 }
 
 .m8-about-card {
@@ -17,27 +17,27 @@
 }
 
 .m8-about-content p + p {
-  margin-top: 9px;
+  margin-top: 6.75px;
 }
 
 .m8-about-lead {
-  font-size: clamp(1.02rem, 1.8vw, 1.2rem) !important;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.765rem, 1.8vw, 0.9rem)) !important;
   font-weight: 900;
   line-height: 1.34 !important;
 }
 
 .m8-about-summary,
 .m8-about-credits {
-  font-size: 0.8rem !important;
+  font-size: max(var(--turn-text-floor, 11px), 0.6rem) !important;
   line-height: 1.4 !important;
 }
 
 .m8-about-actions {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 9px;
   align-items: stretch;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .m8-about-history,
@@ -46,14 +46,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 72px;
-  padding: 12px 18px;
+  min-height: 54px;
+  padding: 9px 13.5px;
   border: 4px solid var(--m8-ink);
-  border-radius: 999px;
+  border-radius: 749.25px;
   color: var(--m8-ink);
-  box-shadow: 5px 5px 0 var(--m8-ink);
+  box-shadow: 3.75px 3.75px 0 var(--m8-ink);
   font: inherit;
-  font-size: clamp(1rem, 1.8vw, 1.16rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.75rem, 1.8vw, 0.87rem));
   font-weight: 950;
   line-height: 1.08;
   letter-spacing: 0.02em;
@@ -76,27 +76,27 @@
 
 .m8-about-history:hover,
 .m8-about-design-system:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1.5px);
 }
 
 .m8-about-history:active,
 .m8-about-design-system:active {
-  transform: translate(4px, 4px);
-  box-shadow: 1px 1px 0 var(--m8-ink);
+  transform: translate(3px, 3px);
+  box-shadow: 0.75px 0.75px 0 var(--m8-ink);
 }
 
 .m8-about-content a:not(.m8-about-design-system) {
   color: inherit;
   font-weight: 900;
-  text-decoration-thickness: 2px;
+  text-decoration-thickness: 1.5px;
   text-underline-offset: 0.18em;
 }
 
 .turn-history-dialog {
-  --turn-dialog-inline-size: calc(100vw - 24px);
-  --turn-dialog-block-size: calc(100vh - 24px);
-  --turn-dialog-block-size: calc(100dvh - 24px);
-  --turn-dialog-padding: clamp(14px, 2vw, 24px);
+  --turn-dialog-inline-size: calc(100vw - 18px);
+  --turn-dialog-block-size: calc(100vh - 18px);
+  --turn-dialog-block-size: calc(100dvh - 18px);
+  --turn-dialog-padding: clamp(10.5px, 2vw, 18px);
 }
 
 .turn-history-card {
@@ -105,16 +105,16 @@
 }
 
 .turn-history-head {
-  margin-bottom: 12px !important;
+  margin-bottom: 9px !important;
 }
 
 .turn-history-head h2 {
-  font-size: clamp(1.8rem, 4.7vw, 3.7rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(1.35rem, 4.7vw, 2.775rem));
 }
 
 .turn-history-release {
-  margin: 4px 0 0;
-  font-size: 0.72rem;
+  margin: 3px 0 0;
+  font-size: max(var(--turn-text-floor, 11px), 0.54rem);
   font-weight: 900;
   line-height: 1.3;
 }
@@ -129,22 +129,22 @@
 .turn-history-tabs {
   display: flex;
   flex: 0 0 auto;
-  gap: 8px;
-  padding: 0 4px 10px;
+  gap: 6px;
+  padding: 0 3px 7.5px;
   overflow-x: auto;
   scrollbar-width: thin;
 }
 
 .turn-history-tabs button {
   flex: 0 0 auto;
-  min-height: 44px;
-  padding: 8px 15px;
+  min-height: 33px;
+  padding: 6px 11.25px;
   border: 4px solid var(--m8-ink);
-  border-radius: 999px;
+  border-radius: 749.25px;
   background: var(--m8-cream);
-  box-shadow: 4px 4px 0 var(--m8-ink);
+  box-shadow: 3px 3px 0 var(--m8-ink);
   font: inherit;
-  font-size: clamp(0.74rem, 1.3vw, 0.94rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.555rem, 1.3vw, 0.705rem));
   font-weight: 950;
   letter-spacing: 0.035em;
 }
@@ -154,8 +154,8 @@
 }
 
 .turn-history-tabs button:active {
-  transform: translate(3px, 3px) !important;
-  box-shadow: 1px 1px 0 var(--m8-ink) !important;
+  transform: translate(2.25px, 2.25px) !important;
+  box-shadow: 0.75px 0.75px 0 var(--m8-ink) !important;
 }
 
 .turn-history-panels {
@@ -163,9 +163,9 @@
   min-height: 0;
   overflow: hidden;
   border: 4px solid var(--m8-ink);
-  border-radius: 20px;
+  border-radius: 15px;
   background: rgb(255 255 255 / 0.78);
-  box-shadow: 5px 5px 0 var(--m8-ink);
+  box-shadow: 3.75px 3.75px 0 var(--m8-ink);
 }
 
 .turn-history-panel {
@@ -174,7 +174,7 @@
   overscroll-behavior-y: contain;
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
-  padding: clamp(14px, 2.4vw, 26px);
+  padding: clamp(10.5px, 2.4vw, 19.5px);
 }
 
 .turn-history-panel[hidden] {
@@ -183,8 +183,8 @@
 
 .turn-history-intro {
   max-width: 74ch;
-  margin: 0 0 20px;
-  font-size: clamp(0.88rem, 1.35vw, 1rem);
+  margin: 0 0 15px;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.66rem, 1.35vw, 0.75rem));
   line-height: 1.48;
 }
 
@@ -192,23 +192,23 @@
 .turn-changelog-release {
   position: relative;
   max-width: 82ch;
-  padding: 0 0 22px 22px;
+  padding: 0 0 16.5px 16.5px;
   border-left: 4px solid var(--m8-ink);
 }
 
 .turn-history-entry:last-child,
 .turn-changelog-release:last-child {
-  padding-bottom: 2px;
+  padding-bottom: 1.5px;
 }
 
 .turn-history-entry::before,
 .turn-changelog-release::before {
   content: '';
   position: absolute;
-  top: 3px;
-  left: -10px;
-  width: 14px;
-  height: 14px;
+  top: 2.25px;
+  left: -7.5px;
+  width: 10.5px;
+  height: 10.5px;
   border: 3px solid var(--m8-ink);
   border-radius: 50%;
   background: var(--m8-pink);
@@ -217,8 +217,8 @@
 .turn-history-entry > span,
 .turn-changelog-release > time {
   display: block;
-  margin-bottom: 3px;
-  font-size: 0.68rem;
+  margin-bottom: 2.25px;
+  font-size: max(var(--turn-text-floor, 11px), 0.51rem);
   font-weight: 950;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -226,77 +226,77 @@
 
 .turn-history-entry h3,
 .turn-changelog-release h3 {
-  margin: 0 0 8px;
-  font-size: clamp(1.05rem, 2vw, 1.45rem);
+  margin: 0 0 6px;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.7875rem, 2vw, 1.0875rem));
   line-height: 1.08;
 }
 
 .turn-history-entry p {
   margin: 0;
-  font-size: clamp(0.82rem, 1.2vw, 0.94rem);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.615rem, 1.2vw, 0.705rem));
   line-height: 1.46;
 }
 
 .turn-history-entry p + p {
-  margin-top: 7px;
+  margin-top: 5.25px;
 }
 
 .turn-history-entry ul,
 .turn-changelog-release ul {
-  margin: 10px 0 0;
-  padding-left: 20px;
+  margin: 7.5px 0 0;
+  padding-left: 15px;
 }
 
 .turn-history-entry li,
 .turn-changelog-release li {
-  margin-top: 5px;
-  font-size: clamp(0.79rem, 1.16vw, 0.91rem);
+  margin-top: 3.75px;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.5925rem, 1.16vw, 0.6825rem));
   line-height: 1.38;
 }
 
 .turn-changelog-release h3 {
-  margin-bottom: 5px;
+  margin-bottom: 3.75px;
 }
 
 .turn-changelog-release strong {
   font-weight: 950;
 }
 
-@media (max-height: 560px) and (orientation: landscape) {
+@media (max-height: 420px) and (orientation: landscape) {
   .turn-history-dialog {
-    --turn-dialog-inline-size: calc(100vw - 10px);
-    --turn-dialog-block-size: calc(100vh - 10px);
-    --turn-dialog-block-size: calc(100dvh - 10px);
-    --turn-dialog-padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+    --turn-dialog-inline-size: calc(100vw - 7.5px);
+    --turn-dialog-block-size: calc(100vh - 7.5px);
+    --turn-dialog-block-size: calc(100dvh - 7.5px);
+    --turn-dialog-padding: 9px 12px max(9px, env(safe-area-inset-bottom));
   }
 
   .turn-history-head {
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
   }
 
   .turn-history-tabs {
-    padding-bottom: 7px;
+    padding-bottom: 5.25px;
   }
 
   .turn-history-tabs button {
-    min-height: 38px;
-    padding-block: 6px;
+    min-height: 28.5px;
+    padding-block: 4.5px;
   }
 
   .turn-history-panel {
-    padding: 14px 18px;
+    padding: 10.5px 13.5px;
   }
 }
 
-@media (max-width: 680px) and (orientation: portrait) {
+@media (max-width: 510px) and (orientation: portrait) {
   .m8-about-actions {
     grid-template-columns: 1fr;
   }
 
   .turn-history-dialog {
-    --turn-dialog-inline-size: calc(100vw - 16px);
-    --turn-dialog-block-size: calc(100vh - 16px);
-    --turn-dialog-block-size: calc(100dvh - 16px);
+    --turn-dialog-inline-size: calc(100vw - 12px);
+    --turn-dialog-block-size: calc(100vh - 12px);
+    --turn-dialog-block-size: calc(100dvh - 12px);
   }
 }
 

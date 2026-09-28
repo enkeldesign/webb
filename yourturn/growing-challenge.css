@@ -17,25 +17,25 @@
 .yourturn-racer-summary {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 4px;
+  gap: 5.25px;
+  margin-top: 3px;
 }
 
 .yourturn-racer-summary > span {
   display: inline-flex;
   align-items: baseline;
-  gap: 7px;
-  padding: 6px 9px;
-  border: 3px solid #08090a;
-  border-radius: 999px;
+  gap: 5.25px;
+  padding: 4.5px 6.75px;
+  border: 2.25px solid #08090a;
+  border-radius: 749.25px;
   background: #fff8e8;
-  box-shadow: 3px 3px 0 #08090a;
-  font-size: 0.82rem;
+  box-shadow: 2.25px 2.25px 0 #08090a;
+  font-size: max(var(--turn-text-floor, 11px), 0.615rem);
   line-height: 1;
 }
 
 .yourturn-racer-summary > span[data-leader="true"] {
-  box-shadow: 0 0 0 3px #ffd43b, 3px 3px 0 3px #08090a;
+  box-shadow: 0 0 0 2.25px #ffd43b, 2.25px 2.25px 0 2.25px #08090a;
 }
 
 .yourturn-racer-summary b {
@@ -44,7 +44,7 @@
 }
 
 .yourturn-racer-summary small {
-  font-size: 0.75rem;
+  font-size: max(var(--turn-text-floor, 11px), 0.5625rem);
   font-weight: 850;
 }
 
@@ -60,14 +60,14 @@
   position: absolute;
   top: 0;
   left: 0;
-  max-width: 150px;
-  padding: 4px 8px;
-  border: 2px solid #08090a;
-  border-radius: 999px;
+  max-width: 112.5px;
+  padding: 3px 6px;
+  border: 1.5px solid #08090a;
+  border-radius: 749.25px;
   background: rgb(255 248 232 / 0.94);
   color: #08090a;
-  box-shadow: 2px 2px 0 #08090a;
-  font-size: clamp(0.64rem, 1.3vw, 0.82rem);
+  box-shadow: 1.5px 1.5px 0 #08090a;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.48rem, 1.3vw, 0.615rem));
   font-weight: 900;
   line-height: 1;
   text-transform: uppercase;
@@ -103,7 +103,7 @@
 }
 
 .yourturn-player-label {
-  border-width: 3px;
+  border-width: 2.25px;
   font-weight: 1000;
   letter-spacing: 0.025em;
 }
@@ -130,29 +130,29 @@
   text-transform: uppercase;
 }
 
-@media (max-height: 560px) and (orientation: landscape) {
+@media (max-height: 420px) and (orientation: landscape) {
   .yourturn-racer-summary {
-    gap: 5px;
+    gap: 3.75px;
   }
 
   .yourturn-racer-summary > span {
-    padding: 4px 7px;
-    border-width: 2px;
-    box-shadow: 2px 2px 0 #08090a;
-    font-size: 0.72rem;
+    padding: 3px 5.25px;
+    border-width: 1.5px;
+    box-shadow: 1.5px 1.5px 0 #08090a;
+    font-size: max(var(--turn-text-floor, 11px), 0.54rem);
   }
 
   .yourturn-racer-summary small {
-    font-size: 0.66rem;
+    font-size: max(var(--turn-text-floor, 11px), 0.495rem);
   }
 
   .yourturn-racer-label {
-    padding: 3px 6px;
-    border-width: 2px;
-    font-size: 0.65rem;
+    padding: 2.25px 4.5px;
+    border-width: 1.5px;
+    font-size: max(var(--turn-text-floor, 11px), 0.4875rem);
   }
 
   .yourturn-player-label {
-    border-width: 3px;
+    border-width: 2.25px;
   }
 }

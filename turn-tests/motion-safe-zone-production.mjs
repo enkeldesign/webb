@@ -260,7 +260,7 @@ assert.match(warningRuntime, /VISUAL_ATTACK_TAU_MS = 360/);
 assert.match(warningRuntime, /VISUAL_RELEASE_TAU_MS = 780/);
 assert.match(warningRuntime, /requestAnimationFrame\(animateVisuals\)/);
 assert.doesNotMatch(warningRuntime, /FLASH_DURATION|is-flashing|function flash/);
-assert.match(warningCss, /width: clamp\(34px, 9vw, 75px\)/);
+assert.match(warningCss, /width: clamp\(25\.5px, 9vw, 56\.25px\)/);
 assert.match(warningCss, /linear-gradient\(\s*90deg/);
 assert.match(warningCss, /linear-gradient\(\s*270deg/);
 assert.match(warningCss, /transition: none/);

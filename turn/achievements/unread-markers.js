@@ -28,22 +28,22 @@ function installStyles() {
     .turn-achievement-unread-dot {
       position: absolute;
       z-index: 2;
-      top: -10px;
-      right: -10px;
-      width: 20px;
-      height: 20px;
+      top: -7.5px;
+      right: -7.5px;
+      width: 15px;
+      height: 15px;
       border: 3px solid var(--turn-ink, #08090a);
       border-radius: 50%;
       background: var(--turn-action-warning, #ffd43b);
-      box-shadow: 2px 2px 0 var(--turn-ink, #08090a);
+      box-shadow: 1.5px 1.5px 0 var(--turn-ink, #08090a);
       pointer-events: none;
     }
     .turn-achievement-unread-text {
       position: absolute;
-      width: 1px;
-      height: 1px;
+      width: 0.75px;
+      height: 0.75px;
       padding: 0;
-      margin: -1px;
+      margin: -0.75px;
       overflow: hidden;
       clip: rect(0, 0, 0, 0);
       white-space: nowrap;
@@ -52,20 +52,20 @@ function installStyles() {
     .turn-achievement-meta {
       display: flex !important;
       flex-wrap: wrap;
-      gap: 5px 7px;
+      gap: 3.75px 5.25px;
       align-items: center;
-      margin-bottom: 3px;
+      margin-bottom: 2.25px;
     }
     .turn-achievement-tag {
       display: inline-flex;
       align-items: center;
-      min-height: 22px;
-      padding: 2px 7px;
+      min-height: 16.5px;
+      padding: 1.5px 5.25px;
       border: 2px solid var(--turn-ink, #08090a);
       border-radius: var(--turn-radius-pill, 999px);
       background: var(--turn-surface-page, #fff8e8);
       color: var(--turn-ink, #08090a);
-      font-size: .58rem;
+      font-size: max(var(--turn-text-floor, 11px), 0.435rem);
       font-weight: 950;
       line-height: 1;
       letter-spacing: .08em;
@@ -79,15 +79,15 @@ function installStyles() {
       background: var(--turn-action-warning, #ffd43b);
     }
     .turn-achievement-trophies {
-      font-size: .68rem;
+      font-size: max(var(--turn-text-floor, 11px), 0.51rem);
       font-weight: 950;
       letter-spacing: .11em;
       text-transform: uppercase;
       white-space: nowrap;
     }
     .turn-achievements-filters button {
-      min-height: 34px;
-      padding: 3px 10px;
+      min-height: 25.5px;
+      padding: 2.25px 7.5px;
       line-height: 1;
     }
     .turn-achievements-filters button:disabled {
@@ -96,7 +96,7 @@ function installStyles() {
     }
     .turn-achievement-card:focus {
       outline: 5px solid var(--turn-action-information, #38d9ff);
-      outline-offset: 4px;
+      outline-offset: 3px;
     }
     .turn-achievement-toast:not(.turn-trophy-reward-toast) {
       pointer-events: auto;
@@ -113,7 +113,7 @@ function installStyles() {
     }
     .turn-achievement-toast-open:focus-visible {
       outline: 5px solid var(--turn-action-information, #38d9ff);
-      outline-offset: 4px;
+      outline-offset: 3px;
     }
   `;
   document.head.appendChild(style);

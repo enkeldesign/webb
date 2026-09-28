@@ -47,7 +47,7 @@ for (const mapping of [
 
 assert.match(components, /\.m8-setting-card legend,[\s\S]*\.m8-setting-card > h3/);
 assert.match(components, /background: var\(--turn-surface-raised\)/);
-assert.match(components, /\.m8-setting-card > h3[\s\S]*margin: -31px 0 14px 2px/);
+assert.match(components, /\.m8-setting-card > h3[\s\S]*margin: -23\.25px 0 10\.5px 1\.5px/);
 assert.match(components, /input\[type='radio'\],[\s\S]*input\[type='checkbox'\][\s\S]*appearance: none/);
 assert.match(components, /input\[type='radio'\]:checked[\s\S]*radial-gradient/);
 assert.match(components, /input\[type='checkbox'\]:checked[\s\S]*background-color: var\(--turn-form-control-selected\)/);
@@ -131,13 +131,13 @@ assert.match(
 );
 assert.match(
   settingsLayout,
-  /\.m8-visual-settings \{[\s\S]*display: grid;[\s\S]*gap: 16px;/,
+  /\.m8-visual-settings \{[\s\S]*display: grid;[\s\S]*gap: 12px;/,
   'Interface and Graphics cards must share the visual-settings column'
 );
-assert.match(settingsLayout, /\.m8-interface-settings-content \{[\s\S]*display: grid;[\s\S]*gap: 14px;/);
+assert.match(settingsLayout, /\.m8-interface-settings-content \{[\s\S]*display: grid;[\s\S]*gap: 10\.5px;/);
 assert.match(
   settingsLayout,
-  /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*\.m8-visual-settings \{[\s\S]*display: contents;/,
+  /@media \(max-width: 570px\) and \(orientation: portrait\)[\s\S]*\.m8-visual-settings \{[\s\S]*display: contents;/,
   'The visual-settings wrapper must preserve the one-column portrait flow'
 );
 assert.match(playerMarker, /interfaceSlot\.append\(fieldset\)/,

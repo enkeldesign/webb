@@ -4,7 +4,7 @@
 
 .stats .chip {
   min-width: 0;
-  height: clamp(58px, 8vh, 66px);
+  height: clamp(43.5px, 8vh, 49.5px);
   box-sizing: border-box;
   flex: 0 0 auto;
   overflow: visible;
@@ -18,33 +18,33 @@
 }
 
 .stats .chip:nth-child(1) {
-  width: clamp(124px, 14vw, 150px);
+  width: clamp(93px, 14vw, 112.5px);
 }
 
 .stats .chip:nth-child(2) {
-  width: clamp(78px, 9vw, 98px);
+  width: clamp(58.5px, 9vw, 73.5px);
 }
 
 .stats .chip:nth-child(3),
 .stats .chip:nth-child(4) {
-  width: clamp(122px, 14vw, 152px);
+  width: clamp(91.5px, 14vw, 114px);
 }
 
-@media (max-height: 430px) {
+@media (max-height: 322.5px) {
   .stats .chip {
-    height: 58px;
+    height: 43.5px;
   }
 
   .stats .chip:nth-child(1) {
-    width: 124px;
+    width: 93px;
   }
 
   .stats .chip:nth-child(2) {
-    width: 78px;
+    width: 58.5px;
   }
 
   .stats .chip:nth-child(3),
   .stats .chip:nth-child(4) {
-    width: 126px;
+    width: 94.5px;
   }
 }

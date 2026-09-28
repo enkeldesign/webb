@@ -1,6 +1,5 @@
 /* #905: content-sized menus; a separate portrait race composition.
-   This sheet uses CSS pixels directly (data-turn-responsive), outside the
-   historical 75% authoring scale. Landscape race geometry remains unchanged. */
+   Landscape race geometry remains unchanged. */
 :root {
   --turn-edge: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
 }

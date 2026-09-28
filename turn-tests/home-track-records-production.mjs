@@ -98,14 +98,14 @@ assert.match(home, /setTrackRecordsExpanded\(!trackRecordsAreExpanded\(home\), \
 assert.doesNotMatch(home, /toggle\.click\(|trackBestsToggle\.click\(/,
   'Restoration must never synthesize a user click');
 
-assert.match(fixedCss, /--m8-track-card-min-block-size: clamp\(120px, calc\(20vh - 12px\), 164px\)/,
+assert.match(fixedCss, /--m8-track-card-min-block-size: clamp\(90px, calc\(20vh - 9px\), 123px\)/,
   'The fixed-layout stylesheet remains the stable post-782 baseline');
-assert.match(fixedCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(10px, 1\.4vw, 16px\)[\s\S]*row-gap: clamp\(13px, calc\(1\.4vw - 1px\), 15px\)/,
+assert.match(fixedCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(7\.5px, 1\.4vw, 12px\)[\s\S]*row-gap: clamp\(9\.75px, calc\(1\.4vw - 0\.75px\), 11\.25px\)/,
   'The fixed-layout baseline must keep independently tunable track column and row gaps');
 
-assert.match(scrollCss, /--m8-track-compact-card-min-block-size: clamp\(108px, calc\(20vh - 24px\), 152px\)/,
+assert.match(scrollCss, /--m8-track-compact-card-min-block-size: clamp\(81px, calc\(20vh - 18px\), 114px\)/,
   'The consolidated card component owns the final compact landscape floor');
-assert.match(scrollCss, /--m8-track-compact-card-min-block-size: 96px/,
+assert.match(scrollCss, /--m8-track-compact-card-min-block-size: 72px/,
   'Short landscape retains the final compact floor that removed the last default overflow');
 assert.match(scrollCss, /container-type: size/,
   'The track viewport must provide a CSS size container for deterministic compact-row sizing');
@@ -113,7 +113,7 @@ assert.match(scrollCss, /--m8-track-compact-card-block-size: max\([\s\S]*100cqh[
   'Landscape compact row height must be derived in CSS from the actual viewport, not measured in JavaScript');
 assert.match(scrollCss, /--m8-track-compact-card-content-block-size: calc\([\s\S]*--m8-track-compact-card-block-size[\s\S]*--m8-track-card-border-width[\s\S]*--m8-track-card-block-padding/,
   'Expanded cards must reuse the exact closed-card content frame');
-assert.match(scrollCss, /\.track-card-compact \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(108px, 39%\)[\s\S]*align-content: center/,
+assert.match(scrollCss, /\.track-card-compact \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(81px, 39%\)[\s\S]*align-content: center/,
   'Marker, name, difficulty and map must share one canonical compact grid');
 assert.match(scrollCss, /\.is-showing-track-bests \.m8-track-rail \.track-card \{[\s\S]*grid-template-rows: var\(--m8-track-compact-card-content-block-size\) max-content[\s\S]*align-content: start/,
   'Expanded cards must append records below the unchanged compact frame');
@@ -133,36 +133,36 @@ assert.match(scrollCss, /padding-left: calc\(var\(--track-record-stripe-width\) 
 assert.match(scrollCss, /\.track-card-record-model\[hidden\][\s\S]*display: none/);
 assert.match(scaleCss, /\.track-card-record[\s\S]*\.track-card-record-model/);
 
-assert.match(scrollCss, /\.m8-track-rail \{[\s\S]*padding-bottom: 10px[\s\S]*column-gap: clamp\(14px, 1\.4vw, 16px\)[\s\S]*row-gap: var\(--m8-track-row-gap\)/,
+assert.match(scrollCss, /\.m8-track-rail \{[\s\S]*padding-bottom: 7\.5px[\s\S]*column-gap: clamp\(10\.5px, 1\.4vw, 12px\)[\s\S]*row-gap: var\(--m8-track-row-gap\)/,
   'The compact rail must keep its 10px visual movement reserve without changing card geometry');
 assert.match(scrollCss, /\.m8-track-scroll-viewport:not\(\.has-track-overflow\) \.m8-track-rail \{[\s\S]*grid-auto-rows: var\(--m8-track-compact-card-block-size\)[\s\S]*overflow-y: hidden/,
   'When all six compact cards fit, the rail must use the full deterministic frame without scrolling');
-assert.match(scrollCss, /@media \(orientation: landscape\)[\s\S]*\.m8-track-rail \{[\s\S]*padding-right: 10px[\s\S]*\.m8-track-scroll-indicator \{[\s\S]*right: -11px/,
+assert.match(scrollCss, /@media \(orientation: landscape\)[\s\S]*\.m8-track-rail \{[\s\S]*padding-right: 7\.5px[\s\S]*\.m8-track-scroll-indicator \{[\s\S]*right: -8\.25px/,
   'Landscape must keep identical card width whether the scroll indicator is visible or not');
-assert.match(scrollCss, /height: clamp\(72px, 11vh, 104px\)/,
+assert.match(scrollCss, /height: clamp\(54px, 11vh, 78px\)/,
   'The compact preview must stay at the final no-scroll size');
-assert.match(scrollCss, /height: 66px/,
+assert.match(scrollCss, /height: 49\.5px/,
   'Short landscape must keep its compact preview size');
-assert.match(scrollCss, /not\(\.is-showing-track-bests\) \.m8-track-continue \{[\s\S]*margin-bottom: 7px/,
+assert.match(scrollCss, /not\(\.is-showing-track-bests\) \.m8-track-continue \{[\s\S]*margin-bottom: 5\.25px/,
   'RACE must reserve its resting shadow depth at the shared compact baseline');
-assert.match(scrollCss, /margin-bottom: 5px/,
+assert.match(scrollCss, /margin-bottom: 3\.75px/,
   'Short landscape must preserve the reduced RACE baseline reserve');
 
-assert.ok(rowGapCss.includes('row-gap: clamp(13px, calc(1.4vw - 1px), 15px)'),
+assert.ok(rowGapCss.includes('row-gap: clamp(9.75px, calc(1.4vw - 0.75px), 11.25px)'),
   'The post-782 compatibility stylesheet must preserve the requested row gap');
-assert.ok(rowGapCss.includes('padding: 3px 9px;'),
-  'The post-782 compatibility stylesheet must preserve 3px 9px card padding');
-assert.ok(rowGapCss.includes('--m8-track-card-min-block-size: clamp(120px, calc(20vh - 12px), 164px);')
-  && rowGapCss.includes('--m8-track-card-min-block-size: clamp(292px, calc(47vh - 12px), 378px);')
-  && rowGapCss.includes('--m8-track-card-min-block-size: 108px;')
-  && rowGapCss.includes('--m8-track-card-min-block-size: 274px;'),
+assert.ok(rowGapCss.includes('padding: 2.25px 6.75px;'),
+  'The post-782 compatibility stylesheet must preserve 2.25px 6.75px card padding');
+assert.ok(rowGapCss.includes('--m8-track-card-min-block-size: clamp(90px, calc(20vh - 9px), 123px);')
+  && rowGapCss.includes('--m8-track-card-min-block-size: clamp(219px, calc(47vh - 9px), 283.5px);')
+  && rowGapCss.includes('--m8-track-card-min-block-size: 81px;')
+  && rowGapCss.includes('--m8-track-card-min-block-size: 205.5px;'),
   'The compatibility stylesheet must be restored exactly to its post-782 sizing role');
 assert.doesNotMatch(rowGapCss, /track-card-preview|track-card-best|m8-track-continue|track-scroll-indicator|grid-auto-rows|compact-card/,
   'The late compatibility stylesheet must not become a second Home layout engine again');
-assert.ok(!rowGapCss.includes('row-gap: 28px'),
+assert.ok(!rowGapCss.includes('row-gap: 21px'),
   'No late-loaded rule may restore the old oversized vertical gap');
 for (const entrypoint of [productionEntry, labEntry]) {
-  assert.ok(entrypoint.includes('home-track-row-gap-r200.css?revision=r210-compact-card-padding'),
+  assert.match(entrypoint, /home-track-row-gap-r200\.css\?build=\d{8}-r\d+/,
     'Production and TURN LAB keep the post-782 compatibility stylesheet identity');
 }
 

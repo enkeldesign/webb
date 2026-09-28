@@ -132,7 +132,7 @@ assert.doesNotMatch(
 
 assert.match(
   yourTurnIndex,
-  /\/turn\/design-semantic\.css\?revision=r593-yourturn-parity/,
+  /\/turn\/design-semantic\.css\?build=\d{8}-r\d+/,
   'YOUR TURN must consume TURN’s semantic control colors so BOOST/GAS/DRIFT/BRAKE stay visually current'
 );
 assert.match(

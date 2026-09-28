@@ -342,9 +342,9 @@ assert.match(toastCss, /--lap-result-topbar-clearance:/,
   'The expanded result must clear the top chips rather than cover the forward road');
 assert.match(toastCss, /grid-template-columns:[^;]*repeat\(2,/,
   'LAP, DRIFT and FLOW must use horizontal width when both scores are present');
-assert.match(toastCss, /--lap-result-map-clearance: min\(24vw, 184px\)/,
+assert.match(toastCss, /--lap-result-map-clearance: min\(24vw, 138px\)/,
   'The wide top strip must reserve room for the minimap');
-assert.match(toastCss, /--lap-result-left: max\(12px, env\(safe-area-inset-left\)\)/);
+assert.match(toastCss, /--lap-result-left: max\(9px, env\(safe-area-inset-left\)\)/);
 assert.match(toastCss, /var\(--lap-result-right-clearance\)/,
   'The top result must account for both landscape safe areas as well as the minimap');
 assert.doesNotMatch(toastCss, /top: 22%|translate\(-50%/,
@@ -355,6 +355,6 @@ assert.match(toastCss, /prefers-reduced-motion: reduce/, 'Toast animation must r
 assert.match(onboardingCss, /\.rival-onboarding-model/, 'The onboarding must reserve an adjacent host for the ghost model');
 assert.match(onboardingCss, /\.rival-onboarding-copy/, 'The CHASE YOUR BEST copy must remain a separate pill plate beside the model');
 assert.match(onboardingCss, /background: var\(--rival-onboarding-color, var\(--yellow\)\)/, 'The onboarding plate must expose the rival colour through a CSS custom property');
-assert.match(onboardingCss, /border-radius: 999px/, 'The onboarding must keep the compact pill-plate language of the old READY message');
+assert.match(onboardingCss, /border-radius: 749\.25px/, 'The onboarding must keep the compact pill-plate language of the old READY message');
 
 console.log(`TURN ${release.id} single-pass spoken lap results, persistent LAP VOID HUD and first-rival onboarding passed.`);

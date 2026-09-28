@@ -5,6 +5,7 @@
   const SCALE_ATTRIBUTE = 'data-turn-ui-baseline-scale';
   const NORMALIZED_ATTRIBUTE = 'data-turn-ui-baseline-normalized';
   const ABSOLUTE_LENGTH_UNITS = new Set(['px', 'rem']);
+  const BAKED_SHARED_SHEETS = /\/turn\/design-(?:tokens|semantic)\.css(?:[?#]|$)/;
   const processedSheets = new WeakSet();
   const pendingLinks = new WeakSet();
 
@@ -167,6 +168,9 @@
     if (!sheet || processedSheets.has(sheet)) return;
     // Responsive layouts specify real CSS pixels and accessible target sizes.
     if (sheet.ownerNode?.hasAttribute('data-turn-responsive')) return;
+    // Only the developer pages (stats, music tracker) still load this rewriter. The
+    // shared token sheets are authored at their rendered size since TURN 1.25.0.
+    if (BAKED_SHARED_SHEETS.test(sheet.href || '')) return;
     let rules;
     try {
       rules = sheet.cssRules;

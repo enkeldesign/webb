@@ -156,8 +156,8 @@ function installStyles() {
       left: 0;
       top: 0;
       z-index: 4;
-      width: clamp(34px, 9vh, 46px);
-      height: clamp(34px, 9vh, 46px);
+      width: clamp(25.5px, 9vh, 34.5px);
+      height: clamp(25.5px, 9vh, 34.5px);
       pointer-events: none;
       transform-origin: 50% 50%;
       will-change: left, top, transform;
@@ -188,18 +188,18 @@ function installStyles() {
     .turn-player-marker-options {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 8px;
+      gap: 9px;
+      margin-top: 6px;
     }
 
     .turn-player-marker-options label {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
       align-items: start;
-      gap: 12px;
+      gap: 9px;
       min-width: 0;
-      padding: 10px;
-      border-radius: 14px;
+      padding: 7.5px;
+      border-radius: 10.5px;
       cursor: pointer;
     }
 
@@ -209,7 +209,7 @@ function installStyles() {
     }
 
     .turn-player-marker-options small {
-      margin-top: 2px;
+      margin-top: 1.5px;
       line-height: 1.3;
     }
 
@@ -217,7 +217,7 @@ function installStyles() {
       grid-template-columns: 1fr;
     }
 
-    @media (max-width: 760px) and (orientation: portrait) {
+    @media (max-width: 570px) and (orientation: portrait) {
       .turn-player-marker-options {
         grid-template-columns: 1fr;
       }

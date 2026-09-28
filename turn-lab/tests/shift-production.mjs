@@ -487,9 +487,9 @@ assert.match(driveStyles, /\.drive-shift-bubble span \{[\s\S]*display: inline-fl
   'The vertical SHIFT label must stay centered inside its attached bubble');
 assert.match(driveStyles, /\.controls \.drive-shift-bubble \{[\s\S]*pointer-events: none/,
   'A retracted SHIFT button must not intercept the drive surface through the global control-button rule');
-assert.match(driveStyles, /\.drive-lock-bubble \{[\s\S]*height: calc\(32% \+ 5\.44px\)/,
+assert.match(driveStyles, /\.drive-lock-bubble \{[\s\S]*height: calc\(32% \+ 4\.08px\)/,
   'LOCK must end on the bottom edge of the top-row border');
-assert.match(driveStyles, /\.controls \.drive-shift-bubble \{[\s\S]*top: calc\(32% \+ 1\.44px\)[\s\S]*height: calc\(44% \+ 0\.48px\)/,
+assert.match(driveStyles, /\.controls \.drive-shift-bubble \{[\s\S]*top: calc\(32% \+ 1\.08px\)[\s\S]*height: calc\(44% \+ 0\.36px\)/,
   'SHIFT must share both GAS row borders without entering LOCK or BRAKE');
 assert.doesNotMatch(driveStyles, /drift-lock-row-offset/,
   'LOCK and SHIFT must not use overlapping row expansion offsets');

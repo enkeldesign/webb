@@ -95,7 +95,7 @@ assert.match(setting, /blocked local storage/);
 assert.match(setting, /requestAnimationFrame\(reload\)/);
 assert.match(style, /\.drive-by-ear-card/);
 assert.match(style, /orientation: landscape/);
-assert.match(style, /max-height: 500px/);
+assert.match(style, /max-height: 375px/);
 
 assert.match(menu, /button\.textContent = 'Audio'/);
 assert.match(menu, /id="turnAudioEnabled"/);

@@ -28,8 +28,6 @@
   // The r181 boundary paints it cyan.
   const style = document.createElement('style');
   style.id = 'turn-viewport-gap-style';
-  // Real CSS pixels: the 0.75 UI baseline leaves this sheet alone.
-  style.setAttribute('data-turn-responsive', '');
   style.textContent = `
     /* Loading: the artwork's 145deg cyan-to-green gradient has no single bottom
        colour, so it resolves into its own green end over its last 120px, and the

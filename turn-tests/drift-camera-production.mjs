@@ -332,16 +332,16 @@ assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_TARGET_RESPONSE_
   'The responsive look target must cancel speed-dependent world-space follow lag');
 assert.match(cameraSource, /const targetFov = resolveRaceCameraFov\(\{ speedRatio, speedResponsiveCamera \}\)/,
   'Race camera updates must use the reduced-motion-aware FOV resolver');
-assert.match(gameplayCss, /--boost-hud-downshift: 20px/,
+assert.match(gameplayCss, /--boost-hud-downshift: 15px/,
   'Boost bar must move down by approximately its own racing height');
 assert.match(
   gameplayCss,
-  /bottom: calc\(clamp\(92px, 20vh, 150px\) - var\(--boost-hud-downshift\)\)/,
+  /bottom: calc\(clamp\(69px, 20vh, 112\.5px\) - var\(--boost-hud-downshift\)\)/,
   'Standard-height HUD must apply the independent Boost bar downshift'
 );
 assert.match(
   gameplayCss,
-  /bottom: calc\(74px - var\(--boost-hud-downshift\)\)/,
+  /bottom: calc\(55\.5px - var\(--boost-hud-downshift\)\)/,
   'Short landscape HUD must preserve the same Boost bar downshift'
 );
 
