@@ -75,6 +75,9 @@ assert.match(viewportGap, /:has\(body:is\(\.turn-home-open, \.turn-lot-open\)\) 
   'The strip under Home and The Lot is Paper, set on body');
 assert.match(viewportGap, /:has\(body\.turn-race-active\) body \{[\s\S]*?#08090a/,
   'The strip under a race is Ink, set on body');
+// The loading class alone: standalone iOS shows the gate while it keeps [hidden].
+assert.match(viewportGap, /:has\(\.install-gate\.turn-startup-loading\) body \{[\s\S]*?#8ce99a/,
+  'The strip while loading is the artwork green, set on body');
 assert.match(viewportGap, /install-gate\.turn-startup-loading[\s\S]*linear-gradient\(to bottom, transparent calc\(100% - 120px\), #8ce99a\)/,
   'While loading, the artwork resolves into the green the strip continues in');
 assert.match(nextIndex, /pwa-usable-viewport-r181\.js\?revision=r181-usable-web-layer/);
