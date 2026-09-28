@@ -268,7 +268,7 @@ export function installRoadbook({
           <span class="turn-pr-dock-detail"></span>
         </p>
         <div class="turn-pr-dock-actions">
-          <button class="turn-pr-button is-secondary roadbook-sheet-button" type="button" aria-haspopup="dialog" aria-controls="${SHEET_ID}">Track sheet</button>
+          <button class="turn-pr-button is-secondary is-sheet roadbook-sheet-button" type="button" aria-haspopup="dialog" aria-controls="${SHEET_ID}">Track sheet</button>
           <button class="turn-pr-button is-primary m8-track-continue" type="button" aria-describedby="roadbookDockContext">
             <span class="turn-pr-button-label">CHOOSE CAR</span><span class="turn-pr-button-arrow" aria-hidden="true">→</span>
           </button>

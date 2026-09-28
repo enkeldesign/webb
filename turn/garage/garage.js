@@ -1,6 +1,11 @@
 // GARAGE: choose your car. One owner for the featured car, its specifications, perk,
-// paint and SHIFT entry points, previous/next browsing, the locked-car preview and the
-// RACE dock. Styles: pre-race.css (shared with ROADBOOK) and garage/garage.css.
+// paint and SHIFT entry points, previous/next browsing, ALL CARS, the locked-car
+// preview and the RACE dock. Styles: pre-race.css (shared with ROADBOOK) and
+// garage/garage.css.
+//
+// ALL CARS (garage-catalog.js) is one list of every car. Phones and smaller screens
+// open it in a sheet from the ALL CARS button; a wide iPad keeps it beside the
+// featured car, a tall one below it.
 //
 // showGarage() keeps The Lot's contract: it resolves to the chosen
 // { carId, color, secondaryColor } when the player races, or null when they go back.
@@ -44,6 +49,7 @@ import { getSavedLotPaint, lotPaintMatches, resetLotPaint, resolveLotPaint, save
 import { hasTriedTrainingCar, installTrainingCarGuide, TRAINING_CAR_ID } from './training-car-guide.js';
 import { createShiftSetup } from './lot-shift.js?revision=r243-mountain-1300';
 import { createShowroomViewer } from './showroom-viewer.js';
+import { createGarageCatalog } from './garage-catalog.js';
 import { GARAGE_STARTER_CAR_ID, garageCarDescription, garageCarOrder } from './garage-cars.js';
 import { createGarageSelection } from './garage-selection.js';
 
@@ -54,6 +60,10 @@ const SECRET_NAME = 'SATAN’S SPORTS CAR';
 const STAT_KEYS = VEHICLE_STAT_LEGEND.map((entry) => entry.key);
 // Specifications are always open where the screen has room for them.
 const SPACIOUS_QUERY = '(min-width: 768px) and (min-height: 640px)';
+// Where ALL CARS stays on the page instead of in a sheet: beside the featured car on a
+// wide screen, below it on a tall one. Measured in rem, so larger text keeps the sheet.
+const CATALOG_SIDE_QUERY = '(min-width: 70rem) and (min-height: 43.75rem)';
+const CATALOG_BELOW_QUERY = '(min-width: 48rem) and (min-height: 60rem)';
 
 const ORDER = garageCarOrder(CAR_CATALOG.map((car) => car.id));
 
@@ -219,10 +229,7 @@ export function showGarage({
             <h1 class="turn-pr-display" id="garageTitle" tabindex="-1">GARAGE</h1>
             <p class="turn-pr-lead">Choose your car</p>
           </div>
-          <p class="garage-progress">
-            <strong class="garage-available"></strong>
-            <span class="garage-next"></span>
-          </p>
+          <button class="turn-pr-button is-secondary is-compact is-sheet garage-all-cars-button" type="button" aria-haspopup="dialog">ALL CARS · ${ORDER.length}</button>
         </header>
         <div class="garage-layout">
           <section class="garage-feature" aria-labelledby="garageCarName">
@@ -287,7 +294,19 @@ export function showGarage({
             </section>
           </div>
         </div>
+        <section class="garage-catalog-inline" aria-labelledby="garageCatalogTitle" hidden>
+          <h2 class="turn-pr-section-title garage-catalog-title" id="garageCatalogTitle">ALL CARS · ${ORDER.length}</h2>
+        </section>
       </div>
+      <dialog class="turn-pr-sheet garage-all-cars" aria-labelledby="garageAllCarsTitle">
+        <div class="turn-pr-sheet-card">
+          <header class="turn-pr-sheet-head">
+            <h2 class="turn-pr-sheet-title" id="garageAllCarsTitle" tabindex="-1">ALL CARS · ${ORDER.length}</h2>
+            <button class="turn-pr-close" type="button" aria-label="Close All cars"><span aria-hidden="true">×</span></button>
+          </header>
+          <div class="turn-pr-sheet-body garage-all-cars-body"></div>
+        </div>
+      </dialog>
       <div class="turn-pr-dock garage-dock">
         <div class="turn-pr-dock-inner">
           <div class="turn-pr-dock-context garage-dock-context" id="garageDockContext">
@@ -312,8 +331,6 @@ export function showGarage({
 
     const $ = (selector) => root.querySelector(selector);
     const title = $('#garageTitle');
-    const available = $('.garage-available');
-    const nextUnlock = $('.garage-next');
     const ordinalBadge = $('.garage-ordinal');
     const viewHost = $('.garage-view');
     const viewState = $('.garage-view-state');
@@ -348,7 +365,40 @@ export function showGarage({
     const raceLabel = raceButton.querySelector('.turn-pr-button-label');
     const backButton = $('.garage-back');
     const dock = $('.garage-dock');
+    const page = $('.garage-page');
+    const layout = $('.garage-layout');
+    const bar = $('.garage-bar');
+    const allCarsButton = $('.garage-all-cars-button');
+    const allCarsSheet = $('.garage-all-cars');
+    const allCarsBody = $('.garage-all-cars-body');
+    const allCarsClose = allCarsSheet.querySelector('.turn-pr-close');
+    const catalogInline = $('.garage-catalog-inline');
     const spaciousMedia = windowRef.matchMedia?.(SPACIOUS_QUERY) || null;
+    const catalogSideMedia = windowRef.matchMedia?.(CATALOG_SIDE_QUERY) || null;
+    const catalogBelowMedia = windowRef.matchMedia?.(CATALOG_BELOW_QUERY) || null;
+
+    // One ALL CARS panel: progress, a hint and every car. It moves between the sheet
+    // and the page; it is never in both.
+    const catalogPanel = documentRef.createElement('div');
+    catalogPanel.className = 'garage-catalog-panel';
+    catalogPanel.innerHTML = `
+      <p class="garage-progress">
+        <strong class="garage-available"></strong>
+        <span class="garage-next"></span>
+      </p>
+      <p class="garage-catalog-hint"></p>`;
+    const catalogHint = catalogPanel.querySelector('.garage-catalog-hint');
+    const catalog = createGarageCatalog({
+      documentRef,
+      order: ORDER,
+      carName: (carId) => getCarDefinition(carId).name,
+      carLock,
+      // A saved repaint shows on the card, as it does on stage.
+      savedPaint: (carId) => (isPaintUnlocked() ? getSavedLotPaint(carId) : null),
+      onChoose: (carId, context) => chooseFromCatalog(carId, context)
+    });
+    catalogPanel.appendChild(catalog.list);
+    allCarsBody.appendChild(catalogPanel);
 
     const viewer = createShowroomViewer(viewHost);
     const shift = createShiftSetup({
@@ -371,6 +421,8 @@ export function showGarage({
     }
 
     function syncProgress() {
+      const available = catalogPanel.querySelector('.garage-available');
+      const nextUnlock = catalogPanel.querySelector('.garage-next');
       const locks = ORDER.map(carLock);
       const open = locks.filter((lock) => !lock).length;
       available.textContent = `${open} / ${ORDER.length} AVAILABLE`;
@@ -549,6 +601,7 @@ export function showGarage({
           }
           saveLotPaint(current.carId, current);
           syncPaintAction();
+          catalog.sync();
         });
         paintPanel.append(swatches, action);
         syncPaintAction();
@@ -594,6 +647,7 @@ export function showGarage({
       syncSpecs(car, secretActive);
       syncPerk(car);
       syncDock(car, lock, secretActive);
+      catalog.sync({ choiceId: selection.state().choice.carId, previewId: selection.state().preview });
       shift.sync();
       shift.trigger.hidden = Boolean(lock);
       if (secretActive && !secretSignalled) {
@@ -629,16 +683,92 @@ export function showGarage({
       navigatorVibrate(12);
     }
 
+    // Say which car is now on stage when focus stays where it was.
+    function announceCar() {
+      const car = viewedCar();
+      const lock = carLock(car.id);
+      announcer.textContent = `${car.name}, ${ORDER.indexOf(car.id) + 1} of ${ORDER.length}${lock ? `. Locked until ${lock.threshold} trophies` : ''}.`;
+    }
+
     function step(direction) {
       selection.step(direction);
       sessionChoice = selection.state().choice;
       renderPaint();
       render();
       navigatorVibrate(12);
-      // Previous/next keep focus, so say which car is now on stage.
-      const car = viewedCar();
-      const lock = carLock(car.id);
-      announcer.textContent = `${car.name}, ${ORDER.indexOf(car.id) + 1} of ${ORDER.length}${lock ? `. Locked until ${lock.threshold} trophies` : ''}.`;
+      announceCar();
+    }
+
+    // ---------- ALL CARS ----------
+
+    function catalogPlacement() {
+      if (catalogSideMedia?.matches) return 'side';
+      if (catalogBelowMedia?.matches) return 'below';
+      return 'sheet';
+    }
+
+    function openAllCars() {
+      if (catalogPlacement() !== 'sheet' || allCarsSheet.open) return;
+      if (!allCarsSheet.open) allCarsSheet.showModal();
+      catalog.setActive(true);
+      viewer.pause();
+      // Start where the player is: the chosen car's card, or the previewed one.
+      const { choice, preview } = selection.state();
+      const current = catalog.cardFor(preview || choice.carId);
+      current?.scrollIntoView({ block: 'nearest' });
+      // Like every TURN dialog, the sheet opens on its heading.
+      allCarsSheet.querySelector('.turn-pr-sheet-title').focus({ preventScroll: true });
+    }
+
+    function closeAllCars() {
+      if (allCarsSheet.open) allCarsSheet.close();
+    }
+
+    function chooseFromCatalog(carId, { card, pointer }) {
+      showCar(carId);
+      announceCar();
+      if (allCarsSheet.open) {
+        // The sheet closes on the choice; focus returns to ALL CARS.
+        closeAllCars();
+        return;
+      }
+      // On the page, a card tapped below the featured car brings the car into view.
+      // Keyboard and VoiceOver users keep their place in the list.
+      if (pointer && catalogPlacement() === 'below') {
+        const stage = root.querySelector('.garage-stage');
+        const rect = stage.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > windowRef.innerHeight) {
+          const reduced = windowRef.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+          root.querySelector('.garage-feature').scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
+        }
+      }
+      card.focus({ preventScroll: true });
+    }
+
+    // The panel follows the layout: in the sheet on phones, on the page on iPad.
+    function placeCatalog() {
+      const placement = catalogPlacement();
+      root.dataset.catalog = placement;
+      allCarsButton.hidden = placement !== 'sheet';
+      catalogInline.hidden = placement === 'sheet';
+      catalogHint.textContent = placement === 'sheet'
+        ? 'Choose a car. Locked cars can be previewed.'
+        : 'Tap a locked car to preview it.';
+      if (placement === 'sheet') {
+        if (!allCarsSheet.open) catalog.setActive(false);
+        if (catalogPanel.parentElement !== allCarsBody) {
+          const focusInCatalog = catalogPanel.contains(documentRef.activeElement);
+          allCarsBody.appendChild(catalogPanel);
+          if (focusInCatalog) allCarsButton.focus({ preventScroll: true });
+        }
+      } else {
+        closeAllCars();
+        if (catalogPanel.parentElement !== catalogInline) catalogInline.appendChild(catalogPanel);
+        catalog.setActive(true);
+        // Beside the featured car it leads the reading order; below, it follows.
+        if (placement === 'side' && catalogInline.nextElementSibling !== layout) page.insertBefore(catalogInline, layout);
+        if (placement === 'below' && layout.nextElementSibling !== catalogInline) layout.after(catalogInline);
+      }
     }
 
     function navigatorVibrate(pattern) {
@@ -655,6 +785,9 @@ export function showGarage({
       windowRef.removeEventListener('storage', handleStorage);
       documentRef.removeEventListener('keydown', leavePreviewByKey);
       spaciousMedia?.removeEventListener?.('change', syncDisclosures);
+      catalogSideMedia?.removeEventListener?.('change', placeCatalog);
+      catalogBelowMedia?.removeEventListener?.('change', placeCatalog);
+      closeAllCars();
       resizeObserver?.disconnect();
       shift.release();
       viewer.stop();
@@ -748,16 +881,37 @@ export function showGarage({
     windowRef.addEventListener('turn:shift-profile-change', handleShiftChange);
     windowRef.addEventListener('storage', handleStorage);
     spaciousMedia?.addEventListener?.('change', syncDisclosures);
+    catalogSideMedia?.addEventListener?.('change', placeCatalog);
+    catalogBelowMedia?.addEventListener?.('change', placeCatalog);
+    allCarsButton.addEventListener('click', openAllCars);
+    allCarsClose.addEventListener('click', closeAllCars);
+    allCarsSheet.addEventListener('click', (event) => {
+      if (event.target === allCarsSheet) closeAllCars();
+    });
+    allCarsSheet.addEventListener('close', () => {
+      if (disposed) return;
+      // A hidden list renders no repainted cards; it catches up when it opens again.
+      if (catalogPlacement() === 'sheet') catalog.setActive(false);
+      viewer.resume();
+      if (!allCarsButton.hidden && !documentRef.querySelector('dialog[open]')) allCarsButton.focus({ preventScroll: true });
+    });
 
     // The page keeps room to scroll its last row clear of the dock at any text size.
+    // Beside ALL CARS, the featured car stays in view while the list scrolls, when it
+    // fits between the app bar and the dock.
     const syncDockSpace = () => {
       const height = dock.getBoundingClientRect().height;
       if (height > 0) root.style.setProperty('--garage-dock-height', `${Math.ceil(height)}px`);
+      const barHeight = bar.getBoundingClientRect().height;
+      root.style.setProperty('--garage-bar-height', `${Math.ceil(barHeight)}px`);
+      const room = root.clientHeight - barHeight - height - 24;
+      root.classList.toggle('is-detail-pinned', root.dataset.catalog === 'side' && layout.getBoundingClientRect().height <= room);
       viewer.resize();
     };
     const resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(syncDockSpace) : null;
     resizeObserver?.observe(dock);
     resizeObserver?.observe(viewHost);
+    resizeObserver?.observe(layout);
 
     const api = Object.freeze({
       root,
@@ -765,12 +919,17 @@ export function showGarage({
       getViewedCarId: () => selection.state().viewedCarId,
       viewCar: showCar,
       step,
+      openAllCars,
+      closeAllCars,
+      allCarsSheet,
+      catalogPlacement,
       leavePreview: () => leavePreviewButton.click(),
       raceButton,
       back: () => finish(null)
     });
     globalThis.__turnGarage = api;
 
+    placeCatalog();
     syncProgress();
     syncDisclosures();
     renderPaint();

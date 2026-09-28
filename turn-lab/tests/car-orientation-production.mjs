@@ -241,7 +241,10 @@ assert.match(carModels, /polygonOffsetUnits: 1/);
 assert.match(carModels, /loadEmbeddedSupercarSource\(car\)/,
   'Supercar must keep its lazy embedded model loading path');
 
-assert.match(lot, /targetLength: 6\.5/, 'The GARAGE showroom must keep its compact-safe size');
+// GARAGE's showroom and every car card's still share one view (garage/car-view.js).
+const { CAR_VIEW } = await import('../../turn/garage/car-view.js');
+assert.equal(CAR_VIEW.targetLength, 6.5, 'The GARAGE showroom must keep its compact-safe size');
+assert.match(lot, /targetLength: CAR_VIEW\.targetLength/);
 assert.equal((lot.match(/targetLength:/g) || []).length, 1);
 assert.match(main, /targetLength: 5\.5/, 'Race cars and rivals must use the featured surface size');
 assert.match(trackBestCar, /targetLength: 6\.4/, 'Home record thumbnails must retain their compact-safe size');
@@ -251,7 +254,8 @@ assert.doesNotMatch(
   'Expanded 3D and record-preview target lengths must never receive featured sizing'
 );
 
-assert.match(lot, /SHOWROOM_INITIAL_YAW = THREE\.MathUtils\.degToRad\(200\)/, 'GARAGE must start on the normalized front, 20° off head-on');
+assert.equal(CAR_VIEW.yawDegrees, 200, 'GARAGE must start on the normalized front, 20° off head-on');
+assert.match(lot, /SHOWROOM_INITIAL_YAW = THREE\.MathUtils\.degToRad\(CAR_VIEW\.yawDegrees\)/);
 assert.match(lot, /yaw = SHOWROOM_INITIAL_YAW;\s*renderOnce\(\);/, 'Every newly shown car starts on the same view');
 assert.match(main, /playerCar\.rotation\.y = state\.heading \+ Math\.PI/);
 assert.match(main, /car\.rotation\.y = frame\.h \+ Math\.PI/);

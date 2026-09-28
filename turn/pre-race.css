@@ -460,7 +460,13 @@
   }
 }
 
-/* Orange closes and goes back, everywhere. */
+/* Yellow opens a sheet with the yellow masthead (Track sheet, ALL CARS). */
+.turn-pr-button.is-sheet {
+  background: var(--turn-yellow-600, #ffbd12);
+}
+
+/* Orange closes and goes back, everywhere. Icon-only controls are circles; one with a
+   label (← TRACKS) is the same shape stretched into a pill. */
 .turn-pr-close {
   display: grid;
   flex: none;

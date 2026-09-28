@@ -1,0 +1,136 @@
+{
+  "width": 480,
+  "height": 288,
+  "view": "garage/car-view.js",
+  "frame": {
+    "fullWidth": 1600,
+    "fullHeight": 1200,
+    "x": -91,
+    "y": -32.5,
+    "width": 1655,
+    "height": 993
+  },
+  "renderer": {
+    "garage/car-still.js": "f7c977915ed17040",
+    "garage/car-view.js": "ac1cd63feb9a6c5e",
+    "graphics-profile.js": "a7c5d009c1a2d38e",
+    "vehicle/car-models.js": "3620f2c21393132b",
+    "vehicle/car-visual-resources.js": "34f62a09e6a528d6",
+    "vehicle/catalog.js": "944e6e5036c674e0",
+    "vehicle/learner-car-livery.js": "eba71a56625e6419",
+    "vehicle/semantic-car-finish.js": "f8da44c597b61022",
+    "vehicle/supercar-kenney-wheels.js": "fb7c3d35ffe347bb",
+    "vehicle/tractor-smv-sign.js": "f76fa9ff0c27f5ed",
+    "vehicle/wheel-animation-rig.js": "e70bb11247e300c2",
+    "vehicle/wide-gamut.js": "67db1714a8972cf4"
+  },
+  "cars": {
+    "convertible": {
+      "sources": {
+        "assets/cars/suv.glb": "9df31f6e89e927a8",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "classic": {
+      "sources": {
+        "assets/cars/training-car.glb": "0f7c3ecac85932e2",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "vintage-racer": {
+      "sources": {
+        "assets/cars/vintage-racer.glb": "8528456ca062685d",
+        "assets/cars/palettes/toy-prototype.png": "0d4947d34ff32acf"
+      }
+    },
+    "toy-racer": {
+      "sources": {
+        "assets/cars/sedan-sports.glb": "2889c428ca1dd9c9",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "monster-truck": {
+      "sources": {
+        "assets/cars/monster-truck.glb": "5cab772a63005db8",
+        "assets/cars/palettes/toy-prototype.png": "0d4947d34ff32acf"
+      }
+    },
+    "race-future": {
+      "sources": {
+        "assets/cars/race-future.glb": "869e2a58d2c12de4",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "race": {
+      "sources": {
+        "assets/cars/race.glb": "e1408c4c6e135f5a",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "sedan-sports": {
+      "sources": {
+        "assets/cars/hatchback-sports.glb": "bd5c9d4c3b4bdd25",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "tractor": {
+      "sources": {
+        "assets/cars/tractor.glb": "7a89dd722737ff88",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "sedan": {
+      "sources": {
+        "assets/cars/sedan.glb": "b532ea7d2c59f7f6",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "suv": {
+      "sources": {
+        "assets/cars/suv-luxury.glb": "9e2a79dc050189d4",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "firetruck": {
+      "sources": {
+        "assets/cars/firetruck.glb": "c0c0a22809316536",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "police": {
+      "sources": {
+        "assets/cars/police.glb": "a617b880594f5623",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "ambulance": {
+      "sources": {
+        "assets/cars/ambulance.glb": "9e429e2b6202c0d7",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "truck": {
+      "sources": {
+        "assets/cars/truck.glb": "5e1bc66c343501dd",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "van": {
+      "sources": {
+        "assets/cars/van.glb": "ed4ed56e8e5ed98d",
+        "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "supercar": {
+      "sources": {
+        "assets/cars/supercar-model-data.js": "0bd1415046965e4c",
+        "assets/cars/supercar-data-1.js": "91bfe744b8176088",
+        "assets/cars/supercar-data-2.js": "f699a35548af1a73",
+        "assets/cars/supercar-data-3.js": "c945d65490939510",
+        "assets/cars/supercar-data-4.js": "c3248bc78253ba14",
+        "assets/cars/supercar-data-5.js": "bc3e17dd595b0907",
+        "assets/cars/training-car.glb": "0f7c3ecac85932e2"
+      }
+    }
+  }
+}

@@ -12,7 +12,7 @@ const [home, garage, viewer] = await Promise.all([
 // --- Module identity ------------------------------------------------------------------
 // GARAGE's own modules take their identity from the release (import maps), never from a
 // new manual revision= query.
-for (const module of ['training-car-guide', 'showroom-viewer', 'garage-cars', 'garage-selection']) {
+for (const module of ['training-car-guide', 'showroom-viewer', 'garage-cars', 'garage-selection', 'garage-catalog']) {
   assert.match(garage, new RegExp(`from '\\./${module}\\.js';`), `${module}.js is imported by its release-bound path`);
 }
 const importMaps = await Promise.all(['../turn/index.html', '../turn-next/index.html', '../yourturn/index.html']
