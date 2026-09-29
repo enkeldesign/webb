@@ -197,6 +197,11 @@ async function phoneFlow(browserType, name) {
     await page.locator('.garage-spec-explain').click();
     assert.deepEqual(await explanations(), { checked: true, help: 6, note: true, announced: true },
       `${name}: Show explanations adds each attribute's meaning and the 18-point note`);
+    // Previous/next and ALL CARS are one family: the ways to another car are yellow.
+    const browseColours = await page.evaluate(() => [
+      '.garage-step.is-previous', '.garage-step.is-next', '.garage-all-cars-button'
+    ].map((selector) => globalThis.getComputedStyle(document.querySelector(selector)).backgroundColor));
+    assert.equal(new Set(browseColours).size, 1, `${name}: previous, next and ALL CARS share one colour (${browseColours})`);
     await page.locator('.garage-step.is-next').click();
     await page.locator('.garage-step.is-previous').click();
     assert.equal((await explanations()).help, 6, `${name}: explanations stay on while browsing cars`);

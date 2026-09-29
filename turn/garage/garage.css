@@ -200,7 +200,8 @@
   padding: 0;
   border: var(--turn-pr-rule);
   border-radius: 50%;
-  background: var(--turn-pr-card);
+  /* Yellow, like ALL CARS: every way to another car shares one colour. */
+  background: var(--turn-yellow-600, #ffbd12);
   box-shadow: none;
   color: var(--turn-ink, #08090a);
   font-size: 1.75rem;
