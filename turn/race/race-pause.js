@@ -86,11 +86,13 @@ export function installRacePause({ windowRef = window, documentRef = document } 
     if (!racing()) resume({ ending: true });
   });
 
-  // Leaving the app mid-lap pauses the race; coming back finds it paused.
+  // Leaving the app mid-lap (hidden, or another window taking focus) pauses the race;
+  // coming back finds it paused. main.js asks too, before it would reset the perk.
   documentRef.addEventListener('visibilitychange', () => {
     if (documentRef.hidden) pause(PAUSE_REASON.BACKGROUND);
   });
   windowRef.addEventListener('pagehide', () => pause(PAUSE_REASON.BACKGROUND));
+  windowRef.addEventListener('blur', () => pause(PAUSE_REASON.BACKGROUND));
 
   const api = Object.freeze({
     pause,

@@ -1382,18 +1382,20 @@ function syncSelectedVehiclePerkEntitlement() {
 
 window.addEventListener('turn:trophy-road-updated', syncSelectedVehiclePerkEntitlement);
 window.addEventListener('turn:achievements-ready', syncSelectedVehiclePerkEntitlement);
-// Leaving the app resets the perk, except mid-lap: the race pauses (race-pause.js)
-// and resumes exactly where it stood.
+// Leaving TURN (another app, the lock screen, another window) pauses an active lap
+// (race-pause.js), which then resumes exactly where it stood. Outside a lap there is
+// nothing to pause, and the perk resets as before.
+function pauseOrResetPerk() {
+  if (globalThis.__turnRacePause?.pause('background') !== true) resetVehiclePerkRuntimeState(state);
+}
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && !state.lapActive) resetVehiclePerkRuntimeState(state);
+  if (document.hidden) pauseOrResetPerk();
 });
 window.addEventListener('pagehide', (event) => {
-  if (!state.lapActive) resetVehiclePerkRuntimeState(state);
+  pauseOrResetPerk();
   if (!event.persisted) carShadows.dispose();
 });
-window.addEventListener('blur', () => {
-  if (!state.lapActive) resetVehiclePerkRuntimeState(state);
-});
+window.addEventListener('blur', pauseOrResetPerk);
 window.dispatchEvent(new CustomEvent('turn:runtime-ready', { detail: turnRuntime }));
 publishUiState('runtime-ready');
 

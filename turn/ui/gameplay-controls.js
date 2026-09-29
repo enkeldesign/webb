@@ -923,9 +923,15 @@ function installGameplayUi() {
   window.addEventListener('turn:ui-state-change', (event) => {
     const reason = event.detail?.reason;
     // A pause lets go of the pads, BOOST and DRIFT: after RESUME the player presses again.
+    // A SHIFT outcome still being measured waits, on race time, until RESUME.
     if (reason === 'race-paused') {
       releaseDrive();
       centerManualSteerVisual();
+      window.clearTimeout(shiftOutcomeTimer);
+      shiftOutcomeTimer = 0;
+    }
+    if (reason === 'race-resumed' && shiftOutcomeAttempt && !shiftOutcomeTimer) {
+      shiftOutcomeTimer = window.setTimeout(resolveShiftOutcome, 450);
     }
     if (reason === 'race-reset') refillBoost();
     if (reason === 'lap-started' || reason === 'lap-completed') {

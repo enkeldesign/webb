@@ -11,7 +11,8 @@ import { chromium } from 'playwright';
 //   held controls; the PAUSED dialog is modal and announced;
 // - SETTINGS opens over it without resuming; Escape and back resume from where the
 //   race stood, not one long step later; back during a race pauses;
-// - TURN leaving the screen pauses, and coming back stays paused until RESUME;
+// - TURN leaving the screen or losing focus pauses, and coming back stays paused
+//   until RESUME;
 // - RESTART LAP and LEAVE RACE from PAUSED take their usual paths;
 // - portrait and left-handed layouts keep Ⅱ clear of the other controls, and a phone
 //   turned while paused gets the paused frame drawn again.
@@ -129,6 +130,7 @@ try {
   await page.mouse.down();
   await page.waitForFunction(() => globalThis.__turnBoostActive === true && globalThis.__turnBoostCharge < 0.95, null, { timeout: 10000 });
   await page.evaluate(() => document.querySelector('.turn-race-pause-button').click());
+  const pausedAtMs = Date.now();
   await page.waitForTimeout(120);
   const paused = await race(page);
   assert.equal(paused.paused, true);
@@ -182,19 +184,24 @@ try {
   assert.equal(now.dialog, true);
   assert.equal(now.lap, paused.lap);
 
-  // Escape resumes from the paused moment: no catch-up step, no stuck GAS.
+  // Escape resumes from the paused moment: no catch-up step, no stuck GAS. The lap
+  // advances by no more than the time since RESUME, never by the pause.
+  const pausedForSeconds = (Date.now() - pausedAtMs) / 1000;
+  const resumedAtMs = Date.now();
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
   const resumed = await race(page);
+  const sinceResumeSeconds = (Date.now() - resumedAtMs) / 1000;
   assert.equal(resumed.paused, false, 'Escape resumes');
   assert.equal(resumed.dialog, false);
   assert.equal(resumed.button, true);
   assert.equal(resumed.status, 'Race resumed.');
   assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('turn-race-pause-button')), true,
     'Focus returns to Ⅱ');
-  assert.ok(resumed.lap > paused.lap && resumed.lap - paused.lap < 0.6,
-    `The lap continues from ${paused.lap.toFixed(3)} s (now ${resumed.lap.toFixed(3)} s)`);
-  assert.ok(Math.hypot(resumed.x - paused.x, resumed.z - paused.z) < 40, 'No long physics step after the pause');
+  assert.ok(resumed.lap > paused.lap && resumed.lap - paused.lap <= sinceResumeSeconds + 0.1,
+    `The lap continues from ${paused.lap.toFixed(3)} s (now ${resumed.lap.toFixed(3)} s, ${sinceResumeSeconds.toFixed(2)} s after RESUME, ${pausedForSeconds.toFixed(1)} s paused)`);
+  assert.ok(Math.hypot(resumed.x - paused.x, resumed.z - paused.z) <= paused.speed * (sinceResumeSeconds + 0.1),
+    'No long physics step after the pause');
   assert.equal(resumed.boost, paused.boost, 'BOOST held through the pause does not drain on after RESUME');
   assert.equal(resumed.boosting, false);
   assert.equal(resumed.touchGas, false, 'A key held through the pause does not drive on');
@@ -229,6 +236,12 @@ try {
   assert.equal(now.lap, background.lap);
   await page.locator('.turn-race-pause-resume').click();
   assert.equal((await race(page)).paused, false, 'RESUME continues');
+
+  // Another window taking focus pauses the lap too (its controls were let go anyway).
+  await page.evaluate(() => globalThis.dispatchEvent(new globalThis.Event('blur')));
+  now = await race(page);
+  assert.deepEqual([now.paused, now.reason, now.dialog], [true, 'background', true], 'Losing focus mid-lap pauses');
+  await page.locator('.turn-race-pause-resume').click();
 
   // RESTART LAP from PAUSED takes the usual restart path.
   await page.locator('.turn-race-pause-button').click();
