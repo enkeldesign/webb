@@ -8,7 +8,8 @@ import { chromium } from 'playwright';
 
 // Offline play (#1030): after one online launch, TURN in airplane mode starts, shows
 // ROADBOOK and GARAGE with their car pictures and races, with three.js served from
-// TURN's own origin. A server answering with errors falls back to the stored copies.
+// TURN's own origin. The first download shows its progress and then that TURN is
+// ready to play offline. A server answering with errors falls back to the stored copies.
 // A new release's worker takes over quietly and asks to restart, and one that could
 // not store every file leaves the previous release in charge. TURN NEXT, too.
 // Chromium only: Playwright drives service workers and offline mode there.
@@ -87,9 +88,13 @@ try {
   });
   const ready = () => page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
 
-  // Online: the worker installs and stores the whole release.
+  // Online: the worker installs and stores the whole release, showing how far it has come.
   await page.goto(`${origin}/turn/`);
   await ready();
+  await page.waitForFunction(() => document.querySelector('.turn-offline-progress-text')?.textContent === 'Ready to play offline',
+    null, { timeout: 120000 });
+  assert.equal(await page.locator('.turn-offline-progress [role="progressbar"]').getAttribute('aria-valuenow'), '100',
+    'The first download ends with a full progress bar');
   const offlineStatus = (target = page) => target.evaluate(async () => {
     const offline = globalThis.__turnOffline;
     if (!offline || !globalThis.navigator.serviceWorker.controller) return null;
@@ -173,8 +178,9 @@ try {
   assert.equal(await page.locator('.turn-update-toast').count(), 0, 'No update toast for an incomplete release');
   failingPath = null;
 
-  // Complete, it takes over and asks to restart.
+  // Complete, it takes over and asks to restart. An update downloads without a progress bar.
   assert.equal(await updateOutcome(), 'activated', 'A complete release is installed');
+  assert.equal(await page.locator('.turn-offline-progress').count(), 0, 'An update downloads quietly');
   await page.waitForSelector('.turn-update-toast', { timeout: 120000 });
   assert.equal((await page.locator('.turn-update-toast-text').textContent()).trim(), 'New TURN version ready');
   await Promise.all([page.waitForEvent('load'), page.locator('.turn-update-toast-restart').click()]);

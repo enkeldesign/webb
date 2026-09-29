@@ -51,3 +51,67 @@
   font-size: 1.5rem;
   line-height: 1;
 }
+
+/* The first download for offline play: how far it has come, then that it is done.
+   Informative only: taps go through it to the screen below. */
+.turn-offline-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 16px 12px;
+  border: var(--turn-border-card, 3px) solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-card, 16px);
+  background: var(--turn-surface-page, #fff8e8);
+  box-shadow: var(--turn-shadow-card, 6px 6px 0 #08090a);
+  color: var(--turn-ink, #08090a);
+  pointer-events: none;
+}
+
+.turn-offline-progress-text,
+.turn-offline-progress-value {
+  margin: 0;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.turn-offline-progress-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.turn-offline-progress-bar {
+  grid-column: 1 / -1;
+  height: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 2px solid var(--turn-ink, #08090a);
+  border-radius: 999px;
+  background: var(--turn-surface-page, #fff8e8);
+}
+
+.turn-offline-progress-bar > span {
+  display: block;
+  width: var(--turn-offline-progress, 0%);
+  height: 100%;
+  background: var(--turn-action-information, var(--turn-blue-500, #38d9ff));
+}
+
+.turn-offline-progress.is-ready .turn-offline-progress-bar > span {
+  background: var(--turn-action-success, var(--turn-green-500, #8ce99a));
+}
+
+.turn-offline-progress.is-failed .turn-offline-progress-bar > span {
+  background: var(--turn-action-warning, var(--turn-yellow-400, #ffd43b));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .turn-offline-progress-bar > span {
+    transition: width 200ms ease-out, background-color 200ms ease-out;
+  }
+}
+
+body.turn-race-active .turn-offline-progress {
+  display: none;
+}
