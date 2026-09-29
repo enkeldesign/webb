@@ -71,19 +71,29 @@ function ensureScorekeeperStyle(documentRef) {
 .score-feedback-history {
   display: flex;
   min-width: 0;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 4.5px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.5px;
   margin-top: 2.25px;
 }
 
+/* A row squeezed below the height of its records (DRIFT and FLOW together on the
+ * shortest landscape phones) keeps the live score and LAP, and lets LAST and BEST go. */
+.score-feedback-row {
+  container-type: size;
+}
+
+@container (max-height: 60px) {
+  .score-feedback-history {
+    display: none;
+  }
+}
+
+/* LAST and BEST take a line each, so a five-digit record never runs out of the paper. */
 .score-feedback-history .score-feedback-lap {
   font-size: max(var(--turn-text-floor, 11px), clamp(0.36rem, 1.05vw, 0.4575rem));
   letter-spacing: .055em;
-}
-
-.score-feedback-history .score-feedback-best {
-  margin-left: auto;
+  white-space: nowrap;
 }
 
 @media (max-height: 322.5px) {
@@ -107,6 +117,15 @@ function ensureScorekeeperStyle(documentRef) {
 
   .score-feedback-history {
     margin-top: 1.5px;
+  }
+
+  .score-feedback-heading {
+    letter-spacing: .03em;
+  }
+
+  /* Too short for two lines: BEST stays, LAST is the lap banner's score anyway. */
+  .score-feedback-history .score-feedback-last {
+    display: none;
   }
 
   .score-feedback-history .score-feedback-lap {

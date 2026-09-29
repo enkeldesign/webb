@@ -117,7 +117,8 @@
   :root body #scoreFeedback .score-feedback-callout[data-channel="flow"] { left: auto; right: 4px; }
   :root.turn-left-handed-controls body #scoreFeedback .score-feedback-callout[data-channel="drift"] { left: auto; right: 4px; }
   :root.turn-left-handed-controls body #scoreFeedback .score-feedback-callout[data-channel="flow"] { left: 4px; right: auto; }
-  :root body .lap-result-toast { inset: max(10px, env(safe-area-inset-top)) var(--turn-edge) auto; width: auto; height: auto; min-height: 70px; }
+  :root body .lap-result-toast,
+  :root.turn-left-handed-controls body .lap-result-toast { inset: max(10px, env(safe-area-inset-top)) var(--turn-edge) auto; width: auto; height: auto; min-height: 70px; }
   :root body .message { top: 22%; max-width: calc(100% - 24px); }
 }
 
