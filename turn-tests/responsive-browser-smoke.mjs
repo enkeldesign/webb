@@ -7,7 +7,7 @@ import { chromium, webkit } from 'playwright';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const threeRoot = fileURLToPath(new URL('../', import.meta.resolve('three')));
-const sizes = [[320, 568], [568, 320], [393, 852], [852, 393], [810, 1080], [1080, 810], [1440, 900], [240, 360]];
+const sizes = [[320, 568], [568, 320], [393, 852], [852, 393], [667, 308], [810, 1080], [1080, 810], [1440, 900], [240, 360]];
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml' };
 const server = http.createServer(async (request, response) => {
   try {
