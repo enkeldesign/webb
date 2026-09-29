@@ -444,6 +444,34 @@ export function showGarage({
       panel.hidden = !open;
     }
 
+    // A panel opened below the fold scrolls up into view, clear of the RACE dock
+    // (the page's scroll padding), but never so far that the button that opened it,
+    // and holds focus, passes under the app bar. A panel taller than the space
+    // leaves its button at the top and continues below.
+    function revealPanel(toggle, panel) {
+      if (panel.hidden) return;
+      const scroller = scrollParent(panel);
+      const page = scroller === documentRef.scrollingElement;
+      const style = windowRef.getComputedStyle(scroller);
+      const frame = page ? { top: 0, bottom: windowRef.innerHeight } : scroller.getBoundingClientRect();
+      const top = frame.top + (parseFloat(style.scrollPaddingTop) || 0);
+      const bottom = frame.bottom - (parseFloat(style.scrollPaddingBottom) || 0);
+      const below = panel.getBoundingClientRect().bottom - bottom;
+      const room = toggle.getBoundingClientRect().top - top;
+      const delta = Math.min(below, room);
+      if (delta <= 0) return;
+      const reduced = windowRef.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      scroller.scrollBy({ top: delta, behavior: reduced ? 'auto' : 'smooth' });
+    }
+
+    function scrollParent(node) {
+      for (let element = node.parentElement; element; element = element.parentElement) {
+        const { overflowY } = windowRef.getComputedStyle(element);
+        if (/(auto|scroll)/.test(overflowY) && element.scrollHeight > element.clientHeight) return element;
+      }
+      return documentRef.scrollingElement;
+    }
+
     function syncDisclosures() {
       const spacious = Boolean(spaciousMedia?.matches);
       root.classList.toggle('is-spacious', spacious);
@@ -846,8 +874,14 @@ export function showGarage({
         step(1);
       }
     });
-    specsToggle.addEventListener('click', () => setDisclosure('specs', specsToggle, specsPanel, specsPanel.hidden));
-    perkToggle.addEventListener('click', () => setDisclosure('perk', perkToggle, perkPanel, perkPanel.hidden));
+    specsToggle.addEventListener('click', () => {
+      setDisclosure('specs', specsToggle, specsPanel, specsPanel.hidden);
+      revealPanel(specsToggle, specsPanel);
+    });
+    perkToggle.addEventListener('click', () => {
+      setDisclosure('perk', perkToggle, perkPanel, perkPanel.hidden);
+      revealPanel(perkToggle, perkPanel);
+    });
     paintToggle.addEventListener('click', () => {
       const car = getCarDefinition(selection.state().choice.carId);
       if (!car.fixedLivery && !isPaintUnlocked() && paintPanel.hidden) {
@@ -856,6 +890,7 @@ export function showGarage({
       disclosureState.paint = paintPanel.hidden;
       paintPanel.hidden = !disclosureState.paint;
       paintToggle.setAttribute('aria-expanded', String(disclosureState.paint));
+      revealPanel(paintToggle, paintPanel);
     });
     leavePreviewButton.addEventListener('click', () => {
       selection.leavePreview();

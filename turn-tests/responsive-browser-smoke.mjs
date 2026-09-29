@@ -354,6 +354,25 @@ async function responsiveRace(browser, name) {
             return { x: matrix.a, y: matrix.d };
           });
           assert.ok(Math.abs(scale.x - .65) < .001 && scale.y >= 1 && scale.y <= 1.08, `Portrait fill scales horizontally, as in landscape (${JSON.stringify(scale)})`);
+          // Every line of DRIFT and FLOW, five-digit records included, sits inside its
+          // panel. Text is measured, since it can overflow a line box that fits.
+          const spill = await page.evaluate(() => {
+            for (const value of document.querySelectorAll('.score-feedback-history b')) value.textContent = '12 780';
+            return [...document.querySelectorAll('.score-feedback-state')].flatMap((state) => {
+              const box = state.getBoundingClientRect();
+              const walker = document.createTreeWalker(state, globalThis.NodeFilter.SHOW_TEXT);
+              const out = [];
+              for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+                if (!node.textContent.trim() || !node.parentElement.getClientRects().length) continue;
+                const range = document.createRange();
+                range.selectNodeContents(node);
+                const r = range.getBoundingClientRect();
+                if (r.width && (r.left < box.left - .5 || r.right > box.right + .5 || r.top < box.top - .5 || r.bottom > box.bottom + .5)) out.push(node.textContent.trim());
+              }
+              return out;
+            });
+          });
+          assert.deepEqual(spill, [], `${width}x${height} ${handedness}: DRIFT and FLOW text stays inside its panel`);
         }
       }
       assert.equal(await page.locator('.rotate-panel').count(), 0);

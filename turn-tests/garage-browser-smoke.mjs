@@ -513,6 +513,58 @@ async function unlockedFlow() {
     await page.waitForFunction(() => document.querySelector('.garage-all-cars .garage-car-card[data-car-id="van"] .garage-car-still').src.startsWith('blob:'),
       null, { timeout: 30000 });
     await page.keyboard.press('Escape');
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars').open);
+
+    // Short landscape: PAINT opens below the fold and scrolls its panel into view,
+    // clear of the app bar and the RACE dock.
+    await page.setViewportSize({ width: 852, height: 393 });
+    await page.evaluate(() => {
+      globalThis.__turnGarage.viewCar('classic');
+      const toggle = document.querySelector('.garage-paint-toggle');
+      if (toggle.getAttribute('aria-expanded') === 'true') toggle.click();
+      document.querySelector('.garage').scrollTop = 0;
+      globalThis.scrollTo(0, 0);
+    });
+    await page.locator('.garage-paint-toggle').click();
+    await page.waitForFunction(() => {
+      const save = document.querySelector('.garage-paint-save')?.getBoundingClientRect();
+      const dock = document.querySelector('.garage-dock').getBoundingClientRect();
+      return save && save.bottom <= dock.top + 1;
+    }, null, { timeout: 5000 }).catch(() => {});
+    const reveal = await page.evaluate(() => {
+      const panel = document.querySelector('.garage-paint').getBoundingClientRect();
+      const save = document.querySelector('.garage-paint-save').getBoundingClientRect();
+      const dock = document.querySelector('.garage-dock').getBoundingClientRect();
+      const toggle = document.querySelector('.garage-paint-toggle').getBoundingClientRect();
+      const bar = document.querySelector('.garage-bar').getBoundingClientRect();
+      return { saveAboveDock: save.bottom <= dock.top + 1, toggleBelowBar: toggle.top >= bar.bottom - 1, at: { toggleTop: toggle.top, panelTop: panel.top, saveBottom: save.bottom, dockTop: dock.top, barBottom: bar.bottom } };
+    });
+    assert.ok(reveal.saveAboveDock && reveal.toggleBelowBar, `852x393: PAINT scrolls its panel into view above the dock, its button still below the bar (${JSON.stringify(reveal.at)})`);
+
+    // A panel taller than the space between bar and dock scrolls up only until the
+    // button that opened it (and holds focus) reaches the bar, never under it.
+    const specs = await page.evaluate(async () => {
+      const garage = document.querySelector('.garage');
+      const toggle = document.querySelector('.garage-specs .garage-disclosure-toggle');
+      if (toggle.disabled) return { skipped: true };
+      if (toggle.getAttribute('aria-expanded') === 'true') toggle.click();
+      const paint = document.querySelector('.garage-paint-toggle');
+      if (paint.getAttribute('aria-expanded') === 'true') paint.click();
+      garage.scrollTop = 0;
+      toggle.scrollIntoView({ block: 'end' });
+      garage.scrollTop += 200;
+      const before = garage.scrollTop;
+      toggle.focus();
+      toggle.click();
+      await new Promise((resolve) => globalThis.setTimeout(resolve, 600));
+      const bar = document.querySelector('.garage-bar').getBoundingClientRect();
+      const box = toggle.getBoundingClientRect();
+      const panel = document.querySelector('#garageSpecs').getBoundingClientRect();
+      return { scrolled: garage.scrollTop > before, toggleBelowBar: box.top >= bar.bottom - 1, focused: document.activeElement === toggle, at: { toggleTop: box.top, barBottom: bar.bottom, panelHeight: panel.height } };
+    });
+    if (!specs.skipped) {
+      assert.ok(specs.toggleBelowBar && specs.focused, `852x393: Specifications keeps its focused button below the bar (${JSON.stringify(specs.at)})`);
+    }
     assert.deepEqual(errors, [], 'unlocked: no page errors');
   } finally {
     await browser.close();
