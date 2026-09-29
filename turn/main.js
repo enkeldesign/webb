@@ -13,6 +13,7 @@ import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStag
 import { createRaceSessionOrchestrator } from '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
 import { beginTimedLapState, completeLapState, updateLapProgressState } from '/turn/race/lap-system.js?build=20260720-r19';
 import { recordReplayFrame, replayFrameAt } from '/turn/race/replay-system.js';
+import { raceClockFrozen, raceNow } from '/turn/race/race-clock.js';
 import { RIVAL_LIMIT, loadRivalsState, scheduleRivalsStateSave } from '/turn/race/rival-storage.js?build=20260720-r19';
 import { createTrackSpatialIndex } from '/turn/race/track-spatial-index.js?build=20260720-r19';
 import { trackPitch, trackSampleAtProgress, trackSurfaceY } from '/turn/tracks/elevation.js?build=20260725-r67';
@@ -884,7 +885,8 @@ const raceSession = createRaceSessionOrchestrator({
   publishUiState,
   handleMotion,
   resize,
-  showMessage
+  showMessage,
+  now: () => raceNow()
 });
 globalThis.__turnNextRaceSession = raceSession;
 
@@ -959,6 +961,17 @@ motionButton.addEventListener('click', raceSession.requestMotion);
 manualButton.addEventListener('click', raceSession.useManualMode);
 calibrateButton.addEventListener('click', calibrate);
 resetButton.addEventListener('click', () => resetCar());
+
+// A pause lets go of every held control: after RESUME the player presses again.
+window.addEventListener('turn:ui-state-change', (event) => {
+  if (event.detail?.reason !== 'race-paused') return;
+  pointerSteering = false;
+  keyboardDrivingControls.clear();
+  state.touchGas = false;
+  state.touchBrake = false;
+  state.touchReverse = false;
+  state.manualSteering = 0;
+});
 
 document.addEventListener('selectstart', (event) => event.preventDefault());
 document.addEventListener('contextmenu', (event) => {
@@ -1251,7 +1264,7 @@ function updateSkids() {
 }
 
 
-function updateHud(now = performance.now()) {
+function updateHud(now = raceNow()) {
   updateHudState({
     state,
     speedEl,
@@ -1279,6 +1292,11 @@ function showMessage(text, duration = 1600) {
 }
 
 let resizeFrame = 0;
+// Paused, the loop draws nothing. A viewport change (a rotation) clears the canvas and
+// the viewport modules keep resizing it for a couple of seconds, so for a while after
+// one the paused frame is drawn again.
+const PAUSED_REDRAW_MS = 3000;
+let pausedRedrawUntil = 0;
 function resize() {
   cancelAnimationFrame(resizeFrame);
   resizeFrame = requestAnimationFrame(() => {
@@ -1293,6 +1311,7 @@ function resize() {
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.setSize(width, height);
   });
+  pausedRedrawUntil = performance.now() + PAUSED_REDRAW_MS;
 }
 
 window.addEventListener('resize', resize, { passive: true });
@@ -1363,14 +1382,20 @@ function syncSelectedVehiclePerkEntitlement() {
 
 window.addEventListener('turn:trophy-road-updated', syncSelectedVehiclePerkEntitlement);
 window.addEventListener('turn:achievements-ready', syncSelectedVehiclePerkEntitlement);
+// Leaving TURN (another app, the lock screen, another window) pauses an active lap
+// (race-pause.js), which then resumes exactly where it stood. Outside a lap there is
+// nothing to pause, and the perk resets as before.
+function pauseOrResetPerk() {
+  if (globalThis.__turnRacePause?.pause('background') !== true) resetVehiclePerkRuntimeState(state);
+}
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) resetVehiclePerkRuntimeState(state);
+  if (document.hidden) pauseOrResetPerk();
 });
 window.addEventListener('pagehide', (event) => {
-  resetVehiclePerkRuntimeState(state);
+  pauseOrResetPerk();
   if (!event.persisted) carShadows.dispose();
 });
-window.addEventListener('blur', () => resetVehiclePerkRuntimeState(state));
+window.addEventListener('blur', pauseOrResetPerk);
 window.dispatchEvent(new CustomEvent('turn:runtime-ready', { detail: turnRuntime }));
 publishUiState('runtime-ready');
 
@@ -1385,7 +1410,15 @@ function mainSceneOcclusion() {
   return null;
 }
 
-renderer.setAnimationLoop((now) => {
+// The loop runs on the race clock. While a pause (race-pause.js) holds it, nothing
+// steps and no race time passes; the screen keeps the paused frame (redrawn only after
+// a viewport change).
+renderer.setAnimationLoop((frameTime) => {
+  if (raceClockFrozen()) {
+    if (frameTime < pausedRedrawUntil) renderer.render(scene, camera);
+    return;
+  }
+  const now = raceNow(frameTime);
   globalThis.__turnUpdateGameplayControls?.(now);
 
   const occlusion = mainSceneOcclusion();

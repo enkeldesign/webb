@@ -411,8 +411,10 @@ assert.match(mainSource, /state\.vehiclePerkUnlocked = isVehiclePerkUnlocked\(sa
 assert.match(mainSource, /turn:trophy-road-updated/);
 assert.match(mainSource, /turn:achievements-ready/);
 assert.match(achievementsRuntimeSource, /new CustomEvent\('turn:achievements-ready'/);
-assert.match(mainSource, /visibilitychange[\s\S]*resetVehiclePerkRuntimeState\(state\)/);
-assert.match(mainSource, /pagehide[\s\S]*resetVehiclePerkRuntimeState\(state\)/);
+// Leaving TURN pauses an active lap (the perk waits with it); otherwise the perk resets.
+assert.match(mainSource, /function pauseOrResetPerk\(\) \{\s*if \(globalThis\.__turnRacePause\?\.pause\('background'\) !== true\) resetVehiclePerkRuntimeState\(state\);/);
+assert.match(mainSource, /visibilitychange[\s\S]*pauseOrResetPerk\(\)/);
+assert.match(mainSource, /pagehide[\s\S]*pauseOrResetPerk\(\)/);
 assert.match(gameStateSource, /state\.vehiclePerkProgress = 0/);
 
 console.log('TURN seven gated 1200–2000 Trophy Road vehicle perk behaviors passed.');

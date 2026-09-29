@@ -4,6 +4,7 @@ import {
   preloadCarModels
 } from '../vehicle/car-models.js?build=20260720-r19';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r174-bella-siren-zone';
+import { raceNow } from '../race/race-clock.js';
 import {
   prepareMaydayAudio,
   playMaydayCrashSound,
@@ -360,7 +361,8 @@ export function installAirportEmergency({ world, samples, runtime = globalThis._
       muteMaydayGuides();
       return;
     }
-    const now = performance.now();
+    // Race time: a pause (race/race-pause.js) never eats into the 30-second transfer.
+    const now = raceNow();
     if (crashScene.visible) updateFire(fireRecords, now);
 
     if (session.phase === 'transport' && now > session.transferDeadline) {

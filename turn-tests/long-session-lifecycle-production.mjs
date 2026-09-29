@@ -104,8 +104,8 @@ assert.match(achievementRuntime, /function stopDrivingSampler\(\)/);
 assert.match(achievementRuntime, /function syncDrivingSampler\(\)/);
 assert.match(
   achievementRuntime,
-  /const active = state\?\.running === true \|\| state\?\.lapActive === true/,
-  'Achievement sampling must be scoped to active driving state'
+  /const active = \(state\?\.running === true \|\| state\?\.lapActive === true\)\s*&& globalThis\.__turnRacePause\?\.paused !== true/,
+  'Achievement sampling must be scoped to active, unpaused driving state'
 );
 assert.match(
   achievementRuntime,
@@ -208,6 +208,11 @@ assert.doesNotMatch(
   bellaRescue,
   /function unlockMeowContext\(\) \{\s*ensureMeowContext\(\)/,
   'Bella’s old eager gesture-unlock behavior must not return'
+);
+assert.match(
+  bellaRescue,
+  /function samplingWanted\(\)[\s\S]*globalThis\.__turnRacePause\?\.paused !== true/,
+  'Bella’s meow guides non-visual play like Drive By Ear: a paused race holds it until RESUME'
 );
 assert.match(bellaRescue, /function suspendMeowContext\(\)/);
 assert.match(

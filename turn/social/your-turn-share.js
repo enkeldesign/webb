@@ -3,6 +3,7 @@ import {
   getStoredBestReplayLap,
   hasStoredBestReplayLap
 } from '../race/rival-storage.js?build=20260806-r161';
+import { freezeRaceClock, thawRaceClock } from '../race/race-clock.js';
 import { TRACK_CATALOG, getTrackDefinition } from '../tracks/catalog.js?build=20260806-r161';
 import { getTrackStorageRevision } from '../tracks/definitions.js?build=20260806-r161';
 import { getCarDefinition } from '../vehicle/catalog.js?build=20260806-r161';
@@ -39,7 +40,7 @@ function installStylesheet() {
 
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = '/turn/social/your-turn-share.css?build=20260929-r334';
+  link.href = '/turn/social/your-turn-share.css?build=20260929-r335';
   link.setAttribute('data-turn-yourturn-share', '');
   const ready = new Promise((resolve, reject) => {
     link.addEventListener('load', () => resolve(link), { once: true });
@@ -109,7 +110,6 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   let activeTrackId = '';
   let returnFocus = null;
   let pausedRace = false;
-  let pausedAt = 0;
   let sharing = false;
   let shareButtonsDirty = false;
   const shareStateByTrack = new Map();
@@ -180,26 +180,23 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
     else input.removeAttribute('aria-invalid');
   }
 
+  // The race holds still behind the composer on the race clock (race-clock.js), like a
+  // pause: no race time passes. If the race paused meanwhile (TURN left the screen), the
+  // pause keeps it held when the composer closes.
   function pauseForComposer() {
     pausedRace = currentRaceIsVisible();
     if (!pausedRace) return;
-    pausedAt = performance.now();
+    freezeRaceClock();
     document.body.classList.add('turn-runtime-paused');
     globalThis.__turnAudio?.silence?.();
   }
 
   function resumeAfterComposer() {
     if (!pausedRace) return;
-    const now = performance.now();
-    const pausedFor = Math.max(0, now - pausedAt);
-    const state = runtime?.state;
-    if (state?.lapActive && Number.isFinite(state.lapStartedAt)) {
-      state.lapStartedAt += pausedFor;
-    }
-    if (state) state.lastFrame = now;
-    document.body.classList.remove('turn-runtime-paused');
     pausedRace = false;
-    pausedAt = 0;
+    if (globalThis.__turnRacePause?.paused) return;
+    thawRaceClock();
+    document.body.classList.remove('turn-runtime-paused');
   }
 
   function openComposer(trackId, lap, trigger) {

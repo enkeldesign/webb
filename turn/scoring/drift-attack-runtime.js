@@ -3,6 +3,7 @@ import {
   SCORE_FEEDBACK_EVENT
 } from './score-feedback.js';
 import { createDriftAttackScorer } from './drift-attack.js';
+import { raceNow } from '../race/race-clock.js';
 import {
   getBestDriftRecord,
   saveBestDriftRecord
@@ -257,12 +258,12 @@ export function createDriftAttackRuntime({
   function handleUiState(event) {
     const reason = event?.detail?.reason;
     if (reason === 'race-started' || reason === 'race-reset' || reason === 'track-changed' || reason === 'home-open') {
-      reset(globalThis.performance?.now?.() || 0);
+      reset(raceNow());
     }
   }
 
   const refreshFromProgression = () => refreshEntitlement(
-    globalThis.performance?.now?.() || 0
+    raceNow()
   );
   eventTarget?.addEventListener?.('turn:trophy-road-updated', refreshFromProgression);
   eventTarget?.addEventListener?.('turn:achievements-ready', refreshFromProgression);

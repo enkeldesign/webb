@@ -132,7 +132,8 @@ export function installRaceSpeech() {
       }
     }
 
-    if (!event.detail?.running || reason === 'race-reset') {
+    // A pause drops what was waiting to be said: nothing speaks up late.
+    if (!event.detail?.running || reason === 'race-reset' || reason === 'race-paused') {
       window.clearTimeout(contextTimer);
       contextTimer = 0;
       resetLapPriority();
