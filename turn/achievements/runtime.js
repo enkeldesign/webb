@@ -435,9 +435,11 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     session.lastSampleAt = performance.now();
   }
 
+  // A paused race (race/race-pause.js) samples nothing: no achievement time passes.
   function syncDrivingSampler() {
     const state = runtime?.state;
-    const active = state?.running === true || state?.lapActive === true;
+    const active = (state?.running === true || state?.lapActive === true)
+      && globalThis.__turnRacePause?.paused !== true;
     if (active && document.visibilityState !== 'hidden') startDrivingSampler();
     else stopDrivingSampler();
   }

@@ -1,7 +1,7 @@
 import {
   createKeyboardDriveOwnership,
   installKeyboardDriveOwnershipLossHandlers
-} from './keyboard-drive-ownership.js?build=20260929-r334';
+} from './keyboard-drive-ownership.js?build=20260929-r335';
 
 const STEER_LEFT = 'steer-left';
 const STEER_RIGHT = 'steer-right';
@@ -105,7 +105,8 @@ export function createKeyboardDrivingController({
     }
 
     const keyId = identifier(event);
-    if (!keyId || held.has(keyId)) return;
+    // A repeat of a key that was let go (a pause, lost focus) is not a new press.
+    if (!keyId || held.has(keyId) || event.repeat) return;
     held.set(keyId, action);
     syncHeldState();
   }

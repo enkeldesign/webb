@@ -96,8 +96,8 @@ assert.match(shareSource, /time < previousBest - PB_EPSILON/,
 assert.match(shareSource, /lap-result-yourturn-share/);
 assert.match(shareSource, /turn-runtime-paused/,
   'Opening the composer during a race must hard-pause the runtime');
-assert.match(shareSource, /state\.lapStartedAt \+= pausedFor/,
-  'Time spent composing or sharing must not count against the automatically started next lap');
+assert.match(shareSource, /freezeRaceClock\(\)[\s\S]*thawRaceClock\(\)/,
+  'Time spent composing or sharing must not count against the lap: the race clock holds still');
 assert.match(shareSource, /__turnAudio\?\.silence\?\.\(\)/,
   'A hard-paused share composer must not leave the engine/audio state running behind it');
 assert.match(coveredRendering, /turn-runtime-paused/,

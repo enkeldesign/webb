@@ -5,6 +5,7 @@ import {
   pointerUsesDriftLock,
   resolveDriftBoostRechargeMultiplier
 } from '../input/drift-lock.js?revision=r218-boost-balance';
+import { raceNow } from '../race/race-clock.js';
 import {
   BOOST_OVERCHARGE_PHASE,
   advanceBoostOvercharge,
@@ -255,7 +256,7 @@ function installGameplayUi() {
   let overchargePeakTimer = 0;
   let shiftFeedbackTimer = 0;
   let shiftDetailsAnnouncedThisRace = false;
-  let previousTime = performance.now();
+  let previousTime = raceNow();
   const TOP_ZONE_SHARE = 0.32;
   const BRAKE_ZONE_START = REVERSE_BRAKE_ZONE_START;
   const DEFAULT_BOOST_DRAIN_SECONDS = 2.0;
@@ -351,7 +352,7 @@ function installGameplayUi() {
   function publishShiftState({ announce = true } = {}) {
     const context = shiftContext();
     const feedback = resolveVehicleShiftFeedback(context.profile, shiftActive);
-    const at = globalThis.performance?.now?.() || 0;
+    const at = raceNow();
     const intentional = announce === true && context.runtime?.state?.lapActive === true;
     const gainKeys = [...(feedback?.gainKeys || [])];
     const gainKeySet = new Set(gainKeys);
@@ -420,7 +421,7 @@ function installGameplayUi() {
     shiftOutcomeTimer = 0;
     const attempt = shiftOutcomeAttempt;
     if (!attempt) return;
-    const now = globalThis.performance?.now?.() || attempt.at;
+    const now = raceNow();
     const speed = Math.max(0, Number(globalThis.__turnRuntime?.state?.speed) || 0);
     const elapsed = now - attempt.at;
     const speedGain = Math.max(0, speed - attempt.startSpeed);
@@ -443,7 +444,7 @@ function installGameplayUi() {
 
   function resetScoringOutcomeTracking({ continueBoost = false } = {}) {
     clearShiftOutcome();
-    const now = globalThis.performance?.now?.() || 0;
+    const now = raceNow();
     const runtimeState = globalThis.__turnRuntime?.state;
     const boosting = continueBoost
       && runtimeState?.lapActive === true
@@ -757,7 +758,7 @@ function installGameplayUi() {
         previousZone: previousZone || '',
         lockRequested: nextLockRequested,
         reverseRequested: nextReverseRequested,
-        at: globalThis.performance?.now?.() || 0
+        at: raceNow()
       });
     }
   }
@@ -921,6 +922,11 @@ function installGameplayUi() {
   });
   window.addEventListener('turn:ui-state-change', (event) => {
     const reason = event.detail?.reason;
+    // A pause lets go of the pads, BOOST and DRIFT: after RESUME the player presses again.
+    if (reason === 'race-paused') {
+      releaseDrive();
+      centerManualSteerVisual();
+    }
     if (reason === 'race-reset') refillBoost();
     if (reason === 'lap-started' || reason === 'lap-completed') {
       resetScoringOutcomeTracking({ continueBoost: true });
@@ -1118,7 +1124,9 @@ function installGameplayUi() {
     }
     previousBoostingForOutcome = boosting;
     previousOverchargeCaughtForOutcome = overchargeCaught;
-    updateAudio(now, boosting);
+    // Audio keeps the wall clock it times its own recovery and cues with; race time
+    // stands still during a pause and would hold those back afterwards.
+    updateAudio(performance.now(), boosting);
 
     const locked = boostRequested && boostExhausted;
     const driftCharging = globalThis.__turnDriftHeld && !boosting;

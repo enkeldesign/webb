@@ -1,0 +1,100 @@
+/* PAUSE during a race (ui/race-pause-menu.js): the square Ⅱ beside RESTART LAP and
+   the PAUSED dialog. RESUME is the primary action; LEAVE RACE is the way back, in
+   navigation orange. */
+
+.utility-group .turn-race-pause-button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  box-sizing: border-box;
+  min-width: var(--turn-target-min, 44px);
+  aspect-ratio: 1;
+  padding: 0;
+  background: var(--turn-surface-page, #fff8e8);
+  color: var(--turn-ink, #08090a);
+}
+
+.utility-group .turn-race-pause-button[hidden] {
+  display: none !important;
+}
+
+.turn-race-pause-icon {
+  display: flex;
+  gap: 5px;
+}
+
+.turn-race-pause-icon i {
+  display: block;
+  width: 5px;
+  height: 18px;
+  border-radius: 1.5px;
+  background: currentColor;
+}
+
+.turn-race-pause-dialog .turn-race-pause-actions {
+  display: grid;
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.turn-race-pause-dialog .turn-race-pause-actions button {
+  box-sizing: border-box;
+  min-height: 52px;
+  margin: 0;
+  padding: 10px 18px;
+  border: var(--turn-border-control, 3px) solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-control, 12px);
+  background: var(--turn-surface-page, #fff8e8);
+  color: var(--turn-ink, #08090a);
+  box-shadow: none;
+  font: inherit;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.turn-race-pause-dialog .turn-race-pause-actions .turn-race-pause-resume {
+  min-height: 60px;
+  background: var(--turn-action-primary, var(--turn-pink-500, #ea5da1));
+  box-shadow: var(--turn-shadow-control, 3px 3px 0 #08090a);
+  font-size: 1.15em;
+}
+
+.turn-race-pause-dialog .turn-race-pause-actions .turn-race-pause-leave {
+  background: var(--turn-action-navigation, var(--turn-orange-500, #ff7b54));
+}
+
+.turn-race-pause-dialog .turn-race-pause-actions button:focus-visible {
+  outline: 3px solid var(--turn-ink, #08090a);
+  outline-offset: 3px;
+}
+
+.turn-race-pause-dialog .turn-race-pause-actions .turn-race-pause-resume:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+}
+
+/* A short landscape screen (a phone on its side): RESUME across the top, the other
+   three side by side beneath it, so the whole dialog fits. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .turn-race-pause-dialog {
+    --turn-dialog-inline-size: min(600px, calc(100vw - 24px));
+  }
+
+  .turn-race-pause-dialog .turn-race-pause-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .turn-race-pause-dialog .turn-race-pause-actions .turn-race-pause-resume {
+    grid-column: 1 / -1;
+    min-height: 56px;
+  }
+
+  .turn-race-pause-dialog .turn-race-pause-actions button {
+    min-height: 48px;
+    padding-inline: 10px;
+  }
+}

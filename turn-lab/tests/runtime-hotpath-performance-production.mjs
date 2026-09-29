@@ -202,7 +202,7 @@ for (const [label, runtimeSource] of [
   assert.doesNotMatch(runtimeSource, /\nfunction formatTime\(seconds\)/, `${label} must not contain the retired duplicate HUD time formatter`);
   assert.doesNotMatch(runtimeSource, /\nfunction updateRacePosition\(\)/, `${label} must not contain the retired duplicate race-position calculator`);
 }
-assert.match(mainSource, /function updateHud\(now = performance\.now\(\)\) \{[\s\S]*updateHudState\(\{/,
+assert.match(mainSource, /function updateHud\(now = raceNow\(\)\) \{[\s\S]*updateHudState\(\{/,
   'Canonical TURN must delegate HUD ownership to turn/ui/hud.js');
 
 console.log('TURN runtime hot-path, observer, rival-preview and deferred-loading performance contracts passed.');

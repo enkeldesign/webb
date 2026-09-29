@@ -5,10 +5,11 @@
 
 const INSTALL_KEY = '__turnRaceMenu';
 const SHEET_ID = 'turnRaceMenuSheet';
-// Highest priority first; the last entries move into ☰ first. RESTART LAP (racing)
-// and LEAVE RACE (start) are the one action that is always in the row.
+// Highest priority first; the last entries move into ☰ first. RESTART LAP and PAUSE
+// (racing) and LEAVE RACE (start) always stay in the row.
 const PRIORITY = Object.freeze([
   '.back-to-start-button',
+  '.turn-race-pause-button',
   '.back-to-lot-button',
   '.turn-screen-blank-control',
   '.recalibrate-button',
@@ -18,7 +19,7 @@ const PRIORITY = Object.freeze([
   '.audio-settings-button',
   '.reset-rivals-button'
 ]);
-const ALWAYS_IN_ROW = '.back-to-start-button, .back-to-lot-button';
+const ALWAYS_IN_ROW = '.back-to-start-button, .turn-race-pause-button, .back-to-lot-button';
 
 function priorityOf(node) {
   const index = PRIORITY.findIndex((selector) => node.matches?.(selector));

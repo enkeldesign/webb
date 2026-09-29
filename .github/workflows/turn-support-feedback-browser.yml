@@ -39,6 +39,15 @@ on:
       - 'turn/offline-precache.json'
       - 'turn/vendor/**'
       - 'turn-tests/offline-browser-smoke.mjs'
+      - 'turn/race/race-clock.js'
+      - 'turn/race/race-pause.js'
+      - 'turn/ui/race-pause-menu.js'
+      - 'turn/race-pause.css'
+      - 'turn/main.js'
+      - 'turn/ui/gameplay-controls.js'
+      - 'turn/scoring/flow-runtime.js'
+      - 'turn/scoring/drift-attack-runtime.js'
+      - 'turn-tests/race-pause-browser-smoke.mjs'
       - '.github/workflows/turn-support-feedback-browser.yml'
   push:
     branches:
@@ -80,6 +89,15 @@ on:
       - 'turn/offline-precache.json'
       - 'turn/vendor/**'
       - 'turn-tests/offline-browser-smoke.mjs'
+      - 'turn/race/race-clock.js'
+      - 'turn/race/race-pause.js'
+      - 'turn/ui/race-pause-menu.js'
+      - 'turn/race-pause.css'
+      - 'turn/main.js'
+      - 'turn/ui/gameplay-controls.js'
+      - 'turn/scoring/flow-runtime.js'
+      - 'turn/scoring/drift-attack-runtime.js'
+      - 'turn-tests/race-pause-browser-smoke.mjs'
       - '.github/workflows/turn-support-feedback-browser.yml'
 
 concurrency:
@@ -92,7 +110,7 @@ permissions:
 jobs:
   support-feedback-browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -137,3 +155,6 @@ jobs:
 
       - name: Verify TURN installs for offline play and races in airplane mode
         run: node turn-tests/offline-browser-smoke.mjs
+
+      - name: Verify a race pauses exactly where it stands and resumes from there
+        run: node turn-tests/race-pause-browser-smoke.mjs

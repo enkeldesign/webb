@@ -10,6 +10,7 @@ import {
   getBestFlowRecord,
   saveBestFlowRecord
 } from './flow-records.js?revision=r219-record-paint';
+import { raceNow } from '../race/race-clock.js';
 
 export const FLOW_FEATURE_ID = 'flow';
 export const FLOW_HUD_STORAGE_KEY = 'turn-flow-hud-v1';
@@ -44,7 +45,7 @@ function performanceNow() {
 }
 
 function nowFrom(event) {
-  return finiteNumber(event?.detail?.at, globalThis.performance?.now?.() || 0);
+  return finiteNumber(event?.detail?.at, raceNow());
 }
 
 function hasGain(shift, keys) {
@@ -477,10 +478,22 @@ export function createFlowRuntime({
     return enabled;
   }
 
+  // A pause holds the chain: its window is race time, so it expires after RESUME
+  // with exactly the time it had left, never during the pause.
+  let chainHeld = false;
+
   function handleUiState(event) {
     const reason = event?.detail?.reason;
+    if (reason === 'race-paused') {
+      chainHeld = Boolean(chainTimer);
+      clearChainTimer();
+    } else if (reason === 'race-resumed' || reason === 'race-pause-ended') {
+      if (chainHeld) scheduleChainExpiry(raceNow());
+      chainHeld = false;
+    }
     if (reason === 'race-started' || reason === 'race-reset' || reason === 'track-changed' || reason === 'home-open') {
-      reset(globalThis.performance?.now?.() || 0);
+      chainHeld = false;
+      reset(raceNow());
     }
   }
 
@@ -491,7 +504,7 @@ export function createFlowRuntime({
   eventTarget?.addEventListener?.('turn:boost-outcome', onBoostOutcome);
   eventTarget?.addEventListener?.('turn:overcharge-catch', onOverchargeCatch);
   const refreshFromProgression = () => refreshEntitlement(
-    globalThis.performance?.now?.() || 0
+    raceNow()
   );
   eventTarget?.addEventListener?.('turn:trophy-road-updated', refreshFromProgression);
   eventTarget?.addEventListener?.('turn:achievements-ready', refreshFromProgression);

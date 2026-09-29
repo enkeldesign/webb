@@ -104,8 +104,8 @@ assert.match(achievementRuntime, /function stopDrivingSampler\(\)/);
 assert.match(achievementRuntime, /function syncDrivingSampler\(\)/);
 assert.match(
   achievementRuntime,
-  /const active = state\?\.running === true \|\| state\?\.lapActive === true/,
-  'Achievement sampling must be scoped to active driving state'
+  /const active = \(state\?\.running === true \|\| state\?\.lapActive === true\)\s*&& globalThis\.__turnRacePause\?\.paused !== true/,
+  'Achievement sampling must be scoped to active, unpaused driving state'
 );
 assert.match(
   achievementRuntime,

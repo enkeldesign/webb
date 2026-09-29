@@ -4,7 +4,9 @@
 //   browser history. Android's back gesture, the browser's back button and Safari's
 //   own edge swipe close the top layer instead of leaving TURN. Back works exactly
 //   like Escape (or the layer's own close control), so each layer keeps its own close
-//   path. A race declines back: a stray gesture never ends it.
+//   path. Back during a race pauses it (race/race-pause.js): a stray gesture never
+//   ends it, and back from PAUSED resumes, as its Escape does. At the start line
+//   there is nothing to pause, so back does nothing there.
 // - Edge swipe. The installed iOS app has no system back gesture, so a swipe from the
 //   left edge of GARAGE does it: the screen follows the finger with ROADBOOK beneath,
 //   and a release far or fast enough goes back.
@@ -61,7 +63,9 @@ export function installAppNavigation({ windowRef = globalThis, documentRef = glo
 
   function layers() {
     const stack = [];
-    if (body.classList.contains('turn-race-active')) stack.push({ key: 'race', back: () => false });
+    if (body.classList.contains('turn-race-active')) {
+      stack.push({ key: 'race', back: () => windowRef.__turnRacePause?.pause('player') === true });
+    }
     const screen = garage();
     if (screen) stack.push({ key: screen, back: () => garageBack(screen) });
     for (const dialog of openDialogs()) stack.push({ key: dialog, back: () => dismissDialog(dialog) });
