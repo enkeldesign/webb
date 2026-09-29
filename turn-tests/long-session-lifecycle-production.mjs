@@ -209,6 +209,11 @@ assert.doesNotMatch(
   /function unlockMeowContext\(\) \{\s*ensureMeowContext\(\)/,
   'Bella’s old eager gesture-unlock behavior must not return'
 );
+assert.match(
+  bellaRescue,
+  /function samplingWanted\(\)[\s\S]*globalThis\.__turnRacePause\?\.paused !== true/,
+  'Bella’s meow guides non-visual play like Drive By Ear: a paused race holds it until RESUME'
+);
 assert.match(bellaRescue, /function suspendMeowContext\(\)/);
 assert.match(
   bellaRescue,

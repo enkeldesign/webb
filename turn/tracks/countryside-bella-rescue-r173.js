@@ -297,6 +297,9 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
       && root.userData.turnBellaRescued !== true
       && state?.running === true
       && state?.mode !== 'spectating'
+      // Bella's meow guides a player who races without the screen, like Drive By Ear:
+      // a paused race (race/race-pause.js) holds it until RESUME.
+      && globalThis.__turnRacePause?.paused !== true
       && activeTrackId(runtime) === 'countryside'
       && String(state?.vehicleId || '').toLowerCase() === REQUIRED_VEHICLE_ID
       && document.visibilityState !== 'hidden'
