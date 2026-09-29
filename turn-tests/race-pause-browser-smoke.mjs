@@ -238,9 +238,15 @@ try {
   assert.equal((await race(page)).paused, false, 'RESUME continues');
 
   // Another window taking focus pauses the lap too (its controls were let go anyway).
+  // The car has coasted since GAS was let go; start a fresh lap if that one ended.
+  if ((await race(page)).mode !== 'racing') {
+    await startLap(page);
+    await page.keyboard.up('ArrowUp');
+  }
   await page.evaluate(() => globalThis.dispatchEvent(new globalThis.Event('blur')));
   now = await race(page);
-  assert.deepEqual([now.paused, now.reason, now.dialog], [true, 'background', true], 'Losing focus mid-lap pauses');
+  assert.deepEqual([now.paused, now.reason, now.dialog], [true, 'background', true],
+    `Losing focus mid-lap pauses (mode ${now.mode})`);
   await page.locator('.turn-race-pause-resume').click();
 
   // RESTART LAP from PAUSED takes the usual restart path.
@@ -291,6 +297,8 @@ try {
     assert.equal(fits, true, `${label}: PAUSED fits the screen`);
     if (handedness === 'right') {
       // Turned on its side while paused: the paused frame is drawn again at the new size.
+      // A viewport change just before the pause may still be redrawn (3 s); let it pass.
+      await opened.page.waitForTimeout(3200);
       const renders = await opened.page.evaluate(() => {
         const { renderer } = globalThis.__turnRuntime;
         const render = renderer.render.bind(renderer);
