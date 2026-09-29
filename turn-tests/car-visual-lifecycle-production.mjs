@@ -25,7 +25,7 @@ const graphicsProfile = Object.freeze({
   outlines: true,
   pointLights: !lowGraphics
 });
-assert.ok(entry.includes(`three@0.${THREE.REVISION}.0/build/three.module.js`),
+assert.ok(entry.includes(`/turn/vendor/three-0.${THREE.REVISION}.0/build/three.module.js`),
   'Resource tests must use the same Three version as production');
 
 async function moduleUnderTest(path, bindings, exports, suffix = '') {
@@ -149,6 +149,8 @@ assert.equal(shadowScene.children.length, 0);
 async function checkNoLegacyShadows(directory) {
   for (const entry of await fs.readdir(new URL(`../${directory}`, import.meta.url), { withFileTypes: true })) {
     const pathname = `${directory}/${entry.name}`;
+    // TURN's own code; the vendored three.js library defines these names.
+    if (pathname === 'turn/vendor') continue;
     if (entry.isDirectory()) await checkNoLegacyShadows(pathname);
     else if (entry.name.endsWith('.js')) assert.doesNotMatch(await read(pathname), /\b(?:shadowMap|castShadow|receiveShadow|PCFSoftShadowMap)\b/,
       `${pathname} must not configure real-time shadow maps`);

@@ -104,10 +104,25 @@ function scheduleFlush() {
   }, FLUSH_DELAY_MS);
 }
 
+// Offline, events wait (the newest MAX_OFFLINE_EVENTS) and go when the connection is back.
+const MAX_OFFLINE_EVENTS = 200;
+let waitingForConnection = false;
+
 function flushQueue() {
   window.clearTimeout(flushTimer);
   flushTimer = 0;
   if (!queue.length) return false;
+  if (navigator.onLine === false) {
+    if (queue.length > MAX_OFFLINE_EVENTS) queue.splice(0, queue.length - MAX_OFFLINE_EVENTS);
+    if (!waitingForConnection) {
+      waitingForConnection = true;
+      window.addEventListener('online', () => {
+        waitingForConnection = false;
+        flushQueue();
+      }, { once: true });
+    }
+    return false;
+  }
   const events = queue.splice(0, MAX_BATCH);
   const body = JSON.stringify({ events });
 

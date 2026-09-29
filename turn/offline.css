@@ -1,0 +1,117 @@
+/* Offline play (ui/offline.js): the note that a new release is ready. It sits in the
+   shared toast region, below the status bar, in TURN's card language. */
+
+.turn-update-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 8px 8px 16px;
+  border: var(--turn-border-card, 3px) solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-card, 16px);
+  background: var(--turn-surface-page, #fff8e8);
+  box-shadow: var(--turn-shadow-card, 6px 6px 0 #08090a);
+  color: var(--turn-ink, #08090a);
+  pointer-events: auto;
+}
+
+.turn-update-toast-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.turn-update-toast button {
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-control, 12px);
+  color: var(--turn-ink, #08090a);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.turn-update-toast-restart {
+  padding: 0 14px;
+  background: var(--turn-action-primary, var(--turn-pink-500, #ea5da1));
+  box-shadow: var(--turn-shadow-control, 3px 3px 0 #08090a);
+  letter-spacing: 0.04em;
+}
+
+.turn-update-toast-later {
+  padding: 0;
+  border-radius: 50%;
+  background: var(--turn-action-navigation, var(--turn-orange-500, #ff7b54));
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+/* The first download for offline play: how far it has come, then that it is done.
+   Informative only: taps go through it to the screen below. */
+.turn-offline-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 16px 12px;
+  border: var(--turn-border-card, 3px) solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-card, 16px);
+  background: var(--turn-surface-page, #fff8e8);
+  box-shadow: var(--turn-shadow-card, 6px 6px 0 #08090a);
+  color: var(--turn-ink, #08090a);
+  pointer-events: none;
+}
+
+.turn-offline-progress-text,
+.turn-offline-progress-value {
+  margin: 0;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.turn-offline-progress-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.turn-offline-progress-bar {
+  grid-column: 1 / -1;
+  height: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 2px solid var(--turn-ink, #08090a);
+  border-radius: 999px;
+  background: var(--turn-surface-page, #fff8e8);
+}
+
+.turn-offline-progress-bar > span {
+  display: block;
+  width: var(--turn-offline-progress, 0%);
+  height: 100%;
+  background: var(--turn-action-information, var(--turn-blue-500, #38d9ff));
+}
+
+.turn-offline-progress.is-ready .turn-offline-progress-bar > span {
+  background: var(--turn-action-success, var(--turn-green-500, #8ce99a));
+}
+
+.turn-offline-progress.is-failed .turn-offline-progress-bar > span {
+  background: var(--turn-action-warning, var(--turn-yellow-400, #ffd43b));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .turn-offline-progress-bar > span {
+    transition: width 200ms ease-out, background-color 200ms ease-out;
+  }
+}
+
+body.turn-race-active .turn-offline-progress {
+  display: none;
+}

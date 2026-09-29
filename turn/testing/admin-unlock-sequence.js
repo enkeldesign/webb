@@ -10,7 +10,7 @@ import {
 } from '../achievements/challenge-expansion-r166.js?revision=r166-bella-records';
 import {
   markDeveloperDevice
-} from '../telemetry/client.js?revision=r3-scoring-calibration';
+} from '../telemetry/client.js?revision=r4-offline-hold';
 
 // Home only, on controls every fresh profile can use: COUNTRYSIDE, CLIFFSIDE twice,
 // TRACK SHEET four times, then GIVE FEEDBACK reloads into the test profile. The
