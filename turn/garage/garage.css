@@ -823,14 +823,14 @@
 /* ---------- ALL CARS: one list of every car, in a sheet or on the page ---------- */
 
 .garage-all-cars.turn-pr-sheet {
-  width: min(40rem, calc(100% - (2 * var(--turn-pr-gutter))));
+  width: min(40rem, var(--turn-pr-sheet-room));
 }
 
 .garage-catalog-panel {
   display: grid;
   gap: 12px;
   min-width: 0;
-  container-type: inline-size;
+  container: garage-catalog / inline-size;
 }
 
 .garage-progress {
@@ -863,23 +863,26 @@
 
 .garage-catalog {
   display: grid;
-  /* Two columns down to a 320px phone; more as the container grows. */
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 7rem), 1fr));
+  /* Two columns down to a 320px phone; a third only once each card still fits a
+     whole AMBULANCE (a 430px phone stays at two). */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr));
   gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-@container (min-width: 40rem) {
+@container garage-catalog (min-width: 40rem) {
   .garage-catalog {
     grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
   }
 }
 
+/* Each card is a container too: its own width, not the list's, sizes its name. */
 .garage-catalog-item {
   display: flex;
   min-width: 0;
+  container: garage-card / inline-size;
 }
 
 /* A car card: the car at the showroom's 20° view, then its name, ordinal and state. */
@@ -1034,12 +1037,16 @@
   }
 }
 
-/* The narrowest cards (a 320px phone) keep every word of the name whole. */
-@container (max-width: 17rem) {
+/* A narrow list (a phone up to about 360px) tightens its gaps. */
+@container garage-catalog (max-width: 20rem) {
   .garage-catalog {
     gap: 10px;
   }
+}
 
+/* A narrow card, on a phone or in the iPad list beside the car, keeps every word of
+   its name whole. */
+@container garage-card (max-width: 10rem) {
   .garage-car-name {
     font-size: 0.875rem;
     letter-spacing: -0.02em;
@@ -1196,7 +1203,7 @@
 
   /* ALL CARS uses the width for more columns, in one list (not the Track sheet's two). */
   .garage-all-cars.turn-pr-sheet {
-    width: min(56rem, calc(100% - (2 * var(--turn-pr-gutter))));
+    width: min(56rem, var(--turn-pr-sheet-room));
   }
 
   .garage-all-cars .turn-pr-sheet-body {

@@ -27,6 +27,11 @@ on:
       - 'turn/ui/race-orientation.js'
       - 'turn/ui/track-intro.js'
       - 'turn/orientation-compat.js'
+      - 'turn/ui/app-navigation.js'
+      - 'turn/app-navigation.css'
+      - 'turn/surfaces.css'
+      - 'turn/app.js'
+      - 'turn-tests/app-navigation-browser-smoke.mjs'
       - '.github/workflows/turn-support-feedback-browser.yml'
   push:
     branches:
@@ -56,6 +61,11 @@ on:
       - 'turn/ui/race-orientation.js'
       - 'turn/ui/track-intro.js'
       - 'turn/orientation-compat.js'
+      - 'turn/ui/app-navigation.js'
+      - 'turn/app-navigation.css'
+      - 'turn/surfaces.css'
+      - 'turn/app.js'
+      - 'turn-tests/app-navigation-browser-smoke.mjs'
       - '.github/workflows/turn-support-feedback-browser.yml'
 
 concurrency:
@@ -107,3 +117,6 @@ jobs:
 
       - name: Verify GARAGE from 320px to iPad
         run: node turn-tests/garage-browser-smoke.mjs
+
+      - name: Verify safe areas, back, drag to dismiss and edge swipe
+        run: node turn-tests/app-navigation-browser-smoke.mjs
