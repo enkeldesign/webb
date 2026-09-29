@@ -253,7 +253,20 @@ export function installAppNavigation({ windowRef = globalThis, documentRef = glo
     const samples = [{ ...start, t: performance.now() }];
     const id = touch.identifier;
     const find = (list) => [...list].find((item) => item.identifier === id);
+    // A touch keeps the element it started on even after that element leaves the page
+    // (GARAGE closing under the finger), and its events then stop at that element.
+    const targets = [documentRef];
+    if (touch.target && touch.target !== documentRef && typeof touch.target.addEventListener === 'function') {
+      targets.push(touch.target);
+    }
+    let seen = null;
+    const fresh = (event) => {
+      if (event === seen) return false;
+      seen = event;
+      return true;
+    };
     const move = (event) => {
+      if (!fresh(event)) return;
       const point = find(event.changedTouches);
       if (!point) return;
       samples.push({ x: point.clientX, y: point.clientY, t: performance.now() });
@@ -261,18 +274,22 @@ export function installAppNavigation({ windowRef = globalThis, documentRef = glo
       onMove(event, point.clientX - start.x, point.clientY - start.y);
     };
     const end = (event) => {
-      if (!find(event.changedTouches)) return;
-      documentRef.removeEventListener('touchmove', move, { passive: false });
-      documentRef.removeEventListener('touchend', end);
-      documentRef.removeEventListener('touchcancel', end);
+      if (!fresh(event) || !find(event.changedTouches)) return;
+      for (const target of targets) {
+        target.removeEventListener('touchmove', move, { passive: false });
+        target.removeEventListener('touchend', end);
+        target.removeEventListener('touchcancel', end);
+      }
       const first = samples[0];
       const last = samples[samples.length - 1];
       const elapsed = Math.max(1, last.t - first.t);
       onEnd(event.type === 'touchcancel', { vx: (last.x - first.x) / elapsed, vy: (last.y - first.y) / elapsed });
     };
-    documentRef.addEventListener('touchmove', move, { passive: false });
-    documentRef.addEventListener('touchend', end);
-    documentRef.addEventListener('touchcancel', end);
+    for (const target of targets) {
+      target.addEventListener('touchmove', move, { passive: false });
+      target.addEventListener('touchend', end);
+      target.addEventListener('touchcancel', end);
+    }
   }
 
   // ---------- Drag to dismiss ----------
@@ -408,6 +425,11 @@ export function installAppNavigation({ windowRef = globalThis, documentRef = glo
     const home = documentRef.querySelector('.m8-home');
     const revealHome = Boolean(home?.hidden);
     const homeStyle = revealHome ? { transform: home.style.transform, pointerEvents: home.style.pointerEvents } : null;
+    // ROADBOOK hides again only behind a GARAGE that is still open. The browser's own
+    // back gesture can close GARAGE mid-swipe and cancel the touch (#1036).
+    const hideHome = () => {
+      if (revealHome && home.isConnected && screen.isConnected && garage() === screen) home.hidden = true;
+    };
     let scrim = null;
     let dragging = false;
     let abandoned = false;
@@ -467,7 +489,7 @@ export function installAppNavigation({ windowRef = globalThis, documentRef = glo
         }
         if (scrim) scrim.style.opacity = '0.18';
         settle(screen, 'translate3d(0, 0, 0)', () => {
-          if (revealHome && home.isConnected) home.hidden = true;
+          hideHome();
           cleanUp();
         });
         return;
@@ -480,7 +502,7 @@ export function installAppNavigation({ windowRef = globalThis, documentRef = glo
       settle(screen, `translate3d(${width}px, 0, 0)`, () => {
         const went = garageBack(screen);
         if (went) markLeaving(screen);
-        else if (revealHome && home.isConnected) home.hidden = true;
+        else hideHome();
         cleanUp();
         schedule();
       });

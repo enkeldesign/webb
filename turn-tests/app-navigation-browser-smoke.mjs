@@ -11,7 +11,8 @@ import { chromium, webkit } from 'playwright';
 // - back (Android, the browser, Safari's edge swipe) closes the top layer, never the
 //   app, and a race declines it (Chromium and WebKit);
 // - a bottom sheet drags down to close, a side menu drags right, and GARAGE swipes
-//   back from the left edge in the installed app (real touches in Chromium).
+//   back from the left edge in the installed app (real touches in Chromium), and
+//   ROADBOOK stays when the browser's own back gesture wins that swipe (#1036).
 const root = fileURLToPath(new URL('../', import.meta.url));
 const threeRoot = fileURLToPath(new URL('../', import.meta.resolve('three')));
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.png': 'image/png' };
@@ -270,6 +271,22 @@ async function gestures() {
     await settle(page, 700);
     assert.deepEqual(await state(page), { layers: 1, garage: true, home: false, dialogs: 0 }, 'A short edge swipe stays in GARAGE');
     assert.equal(await page.evaluate(() => document.querySelector('.garage').style.transform), '', 'GARAGE is back in place');
+
+    // #1036: GARAGE closes under the finger (here the browser's back). The swipe still
+    // ends and leaves ROADBOOK on screen and tappable, now and after the next touch.
+    await touch(line([4, 430], [120, 432], 6), { hold: true });
+    await page.evaluate(() => globalThis.history.back());
+    await settle(page, 100);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+    await settle(page, 900);
+    await touch(line([200, 500], [200, 470], 3));
+    await settle(page, 900);
+    assert.deepEqual(await state(page), { layers: 0, garage: false, home: true, dialogs: 0 },
+      'After GARAGE closes mid-swipe, ROADBOOK stays on screen');
+    assert.deepEqual(await page.evaluate(() => {
+      const home = document.querySelector('.m8-home');
+      return { transform: home.style.transform, pointerEvents: home.style.pointerEvents, scrim: Boolean(document.querySelector('.turn-nav-scrim')) };
+    }), { transform: '', pointerEvents: '', scrim: false }, 'After GARAGE closes mid-swipe, ROADBOOK takes taps again');
     assert.deepEqual(errors, [], 'gestures: no page errors');
   } finally {
     await browser.close();
