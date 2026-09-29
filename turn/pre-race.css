@@ -514,7 +514,8 @@ html body .turn-pr-app-logo {
   }
 }
 
-/* Yellow opens a sheet with the yellow masthead (Track sheet, ALL CARS). */
+/* Yellow opens a sheet with the yellow masthead (Track sheet, ALL CARS). In GARAGE the
+   previous/next circles share it: yellow is the way to another car. */
 .turn-pr-button.is-sheet {
   background: var(--turn-yellow-600, #ffbd12);
 }
