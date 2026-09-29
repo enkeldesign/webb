@@ -247,6 +247,14 @@ try {
   now = await race(page);
   assert.deepEqual([now.paused, now.reason, now.dialog], [true, 'background', true],
     `Losing focus mid-lap pauses (mode ${now.mode})`);
+  // RESUME then Ⅱ at once: the first close, which arrives a task later, keeps the new pause.
+  await page.evaluate(() => {
+    document.querySelector('.turn-race-pause-resume').click();
+    document.querySelector('.turn-race-pause-button').click();
+  });
+  await page.waitForTimeout(200);
+  now = await race(page);
+  assert.deepEqual([now.paused, now.dialog], [true, true], 'A pause right after RESUME stays paused');
   await page.locator('.turn-race-pause-resume').click();
 
   // RESTART LAP from PAUSED takes the usual restart path.

@@ -80,9 +80,10 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
   }
 
   // Escape, back, or any other close while still paused resumes. The actions lift the
-  // pause themselves before the dialog's close event arrives.
+  // pause themselves before the dialog's close event arrives. That event comes a task
+  // later: if a new pause has opened PAUSED again by then, it is not this close's.
   dialog.addEventListener('close', () => {
-    if (racePause.paused) resume();
+    if (racePause.paused && !dialog.open) resume();
   });
 
   dialog.addEventListener('click', (event) => {
