@@ -1077,13 +1077,14 @@ Object.freeze({
     Object.freeze(['1.28.0 r324', 'ALL CARS: every car as a card with its real 3D model at GARAGE\'s 20° view, and each locked car as a line drawing with its trophy threshold. Choose a car to feature it, or tap a locked one to preview it. On iPad the list stays beside the featured car in landscape and below it in portrait. ALL CARS and Track sheet are yellow, like the sheets they open.']),
     Object.freeze(['1.28.1 r328', 'Hardening for ROADBOOK and GARAGE: at 200% text the dock wraps instead of squeezing the track name and joins the end of the page rather than covering it, headings stay on screen and long labels wrap. TURN\'s framed badge from the start screen now hangs over the yellow app bar, so the game\'s name holds its own against ROADBOOK and GARAGE. Every hard shadow now comes from one scale, the screen-reader skip links on Home are full-size targets, LEAVE RACE tells screen readers it returns to ROADBOOK, and the old track-select overlay ROADBOOK replaced is gone.']),
     Object.freeze(['1.28.2 r330', 'Race and GARAGE fixes: the buttons on the race start row keep their whole shadow instead of being clipped. In portrait, DRIFT and FLOW give LAST and BEST a line each, so a four- or five-digit record fits, down to 320px wide phones. PAINT, Specifications and Perk in GARAGE scroll their panel into view when opened, clear of the app bar and the RACE dock.']),
-    Object.freeze(['1.28.3 r331', 'GARAGE\'s previous and next buttons are yellow, like ALL CARS, so every way to another car shares one colour.'])
+    Object.freeze(['1.28.3 r331', 'GARAGE\'s previous and next buttons are yellow, like ALL CARS, so every way to another car shares one colour.']),
+    Object.freeze(['1.28.4 r332', 'TURN pink, the colour of RACE and every primary action, is a deeper, warmer pink (#ea5da1).'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.28.3',
-  build: '2026.09.29-r331',
-  note: 'GARAGE\'s previous and next buttons are yellow, like ALL CARS.'
+  version: '1.28.4',
+  build: '2026.09.29-r332',
+  note: 'A deeper TURN pink for RACE and every primary action.'
 });
