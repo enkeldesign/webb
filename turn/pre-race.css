@@ -18,6 +18,8 @@
   --turn-pr-shadow-action: var(--turn-shadow-action, 4px 4px 0 var(--turn-ink, #08090a));
   --turn-pr-shadow-press: var(--turn-shadow-press, 1px 1px 0 var(--turn-ink, #08090a));
   --turn-pr-shadow-sheet: var(--turn-shadow-dialog, 8px 8px 0 var(--turn-ink, #08090a));
+  /* A bottom sheet's hard edge, cast upward (surfaces.css draws the same for dialogs). */
+  --turn-pr-shadow-sheet-edge: 0 -4px 0 var(--turn-ink, #08090a);
   --turn-pr-gutter: 16px;
   --turn-pr-max-width: 72.5rem;
   --turn-pr-target: 44px;
@@ -724,11 +726,20 @@ html body .turn-pr-app-logo {
 }
 
 .turn-pr-sheet {
-  width: min(34rem, calc(100% - (2 * var(--turn-pr-gutter))));
+  /* The room a sheet may use: the viewport less a gutter or the safe area (status
+     bar, Dynamic Island, notch, home indicator), whichever is larger, on each side.
+     The dialog's insets are that frame and margin: auto centres the sheet in it. */
+  --turn-pr-sheet-top: max(var(--turn-pr-gutter), env(safe-area-inset-top));
+  --turn-pr-sheet-right: max(var(--turn-pr-gutter), env(safe-area-inset-right));
+  --turn-pr-sheet-bottom: max(var(--turn-pr-gutter), env(safe-area-inset-bottom));
+  --turn-pr-sheet-left: max(var(--turn-pr-gutter), env(safe-area-inset-left));
+  --turn-pr-sheet-room: calc(100% - var(--turn-pr-sheet-left) - var(--turn-pr-sheet-right));
+  inset: var(--turn-pr-sheet-top) var(--turn-pr-sheet-right) var(--turn-pr-sheet-bottom) var(--turn-pr-sheet-left);
+  width: min(34rem, var(--turn-pr-sheet-room));
   max-width: none;
   /* Viewport units, not percentages: WebKit collapses a percentage max-height chain
      inside a top-layer dialog to the card's border. */
-  max-height: calc(100dvh - (2 * var(--turn-pr-gutter)));
+  max-height: calc(100dvh - var(--turn-pr-sheet-top) - var(--turn-pr-sheet-bottom));
   margin: auto;
   padding: 0;
   border: 0;
@@ -917,10 +928,34 @@ html body .turn-pr-app-logo {
   padding-top: 12px;
 }
 
+/* Portrait phones: a sheet is a bottom sheet, like every other dialog there
+   (surfaces.css): full width, anchored to the bottom, rounded only at the top, clear
+   of the status bar and Dynamic Island, its body padded above the home indicator. */
+@media (max-width: 46em) and (orientation: portrait) {
+  /* dialog…[open] outweighs a sheet's own width (ALL CARS). */
+  dialog.turn-pr-sheet[open] {
+    --turn-pr-sheet-top: max(12px, env(safe-area-inset-top));
+    inset: auto 0 0;
+    width: 100%;
+    max-height: calc(100dvh - var(--turn-pr-sheet-top) - 8px);
+    margin: auto 0 0;
+  }
+
+  .turn-pr-sheet-card {
+    border-bottom-width: 0;
+    border-radius: var(--turn-pr-radius-sheet) var(--turn-pr-radius-sheet) 0 0;
+    box-shadow: var(--turn-pr-shadow-sheet-edge);
+  }
+
+  .turn-pr-sheet-body {
+    padding-bottom: max(16px, calc(env(safe-area-inset-bottom) + 12px));
+  }
+}
+
 /* Short landscape: the sheet uses its width, route and records side by side. */
 @media (orientation: landscape) and (max-height: 500px) {
   .turn-pr-sheet {
-    width: min(48rem, calc(100% - (2 * var(--turn-pr-gutter))));
+    width: min(48rem, var(--turn-pr-sheet-room));
   }
 
   .turn-pr-sheet-head {

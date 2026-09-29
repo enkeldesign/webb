@@ -651,6 +651,11 @@ try {
     assert.deepEqual(await sheetFacts(page), { columns: 2, inside: true, overflowX: 0, clippedNames: [], brokenWords: [] },
       '320: ALL CARS keeps two columns and whole names');
   });
+  // The largest phone: its full-width sheet stays at two columns of whole names.
+  await layoutAt('430x932', { width: 430, height: 932 }, async (facts, page) => {
+    assert.deepEqual(await sheetFacts(page), { columns: 2, inside: true, overflowX: 0, clippedNames: [], brokenWords: [] },
+      '430: ALL CARS keeps two columns and whole names');
+  });
   await layoutAt('393x852 200% text', { width: 393, height: 852, textSize: 32 }, async (facts, page) => {
     assert.equal(facts.dockFixed, false, '200% text: the dock joins the end of the page');
     assert.equal(facts.catalog, 'sheet');
