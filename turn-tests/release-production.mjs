@@ -110,9 +110,10 @@ for (const build of attributeBuilds) {
 }
 
 const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
-assert.ok(importMapText, 'Production must retain the external Three.js import map');
+assert.ok(importMapText, 'Production must retain the Three.js import map');
 const importMap = JSON.parse(importMapText);
-assert.match(importMap.imports['three-native'], /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@/);
+// Three.js is served from TURN's own origin so the installed app works offline.
+assert.match(importMap.imports['three-native'], /^\/turn\/vendor\/three-\d+\.\d+\.\d+\/build\/three\.module\.js$/);
 assert.equal(importMap.imports.three, `/turn/three-runtime.js?build=${release.cacheKey}`,
   'Production Three.js imports must pass through the current-build graphics runtime');
 for (const [specifier, target] of Object.entries(importMap.imports)) {
@@ -128,7 +129,7 @@ const futureRelease = {
 const futureIndex = renderReleaseIndex(index, futureRelease);
 const futureImportMapText = futureIndex.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
 const futureImports = JSON.parse(futureImportMapText).imports;
-assert.match(futureImports['three-native'], /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@/);
+assert.match(futureImports['three-native'], /^\/turn\/vendor\/three-\d+\.\d+\.\d+\/build\/three\.module\.js$/);
 assert.equal(futureImports.three, `/turn/three-runtime.js?build=${futureRelease.cacheKey}`,
   'Future releases must advance the shared graphics runtime identity');
 assert.equal(futureImports['/turn/graphics-profile.js'], `/turn/graphics-profile.js?build=${futureRelease.cacheKey}`,

@@ -253,6 +253,12 @@ function assertLocalImportTargetsExist(importMap, label) {
     const url = new URL(target, productionDocumentUrl);
     const repositoryPath = repositoryPathFromUrl(url);
     assert.ok(repositoryPath, `${label} local import target ${target} must stay inside this repository`);
+    // A prefix route ("three/addons/") names a folder.
+    if (repositoryPath.endsWith('/')) {
+      const folder = await fs.stat(path.join(repositoryRoot, repositoryPath)).catch(() => null);
+      assert.ok(folder?.isDirectory(), `${label} import prefix ${target} must exist at ${repositoryPath}`);
+      return;
+    }
     const source = await currentReader(repositoryPath);
     assert.notEqual(source, null, `${label} import target ${target} must exist at ${repositoryPath}`);
   }));

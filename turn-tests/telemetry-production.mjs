@@ -37,7 +37,7 @@ assert.doesNotMatch(client, /requestAnimationFrame|setInterval|devicemotion|poin
   'Telemetry must remain event-driven and stay out of the racing/rendering loops');
 
 assert.match(about, /installTurnTelemetry\(\)/);
-assert.match(about, /telemetry\/client\.js\?revision=r3-scoring-calibration/);
+assert.match(about, /telemetry\/client\.js\?revision=r4-offline-hold/);
 assert.match(about, /<details class="turn-about-privacy">/);
 assert.match(about, /<summary>PRIVACY &amp; USAGE STATISTICS<\/summary>/);
 assert.match(about, /no analytics cookie and creates no persistent analytics identifier/i);

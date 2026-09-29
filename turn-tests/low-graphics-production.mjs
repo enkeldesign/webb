@@ -56,7 +56,7 @@ assert.match(release.cacheKey, /^\d{8}-r\d+$/, 'LOW GRAPHICS must work with the 
 assert.equal(release.id.replaceAll('.', '').replace('-', '-'), release.cacheKey,
   'LOW GRAPHICS release assertions must follow turn/release.json rather than a historical build.');
 
-assert.match(indexSource, /"three-native": "https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.184\.0\/build\/three\.module\.js"/);
+assert.match(indexSource, /"three-native": "\/turn\/vendor\/three-0\.184\.0\/build\/three\.module\.js"/);
 assert.ok(indexSource.includes(`"three": "/turn/three-runtime.js?build=${release.cacheKey}"`),
   'The shared Three runtime must use the current release identity.');
 assert.ok(indexSource.includes(`"/turn/graphics-profile.js": "/turn/graphics-profile.js?build=${release.cacheKey}"`),

@@ -32,6 +32,13 @@ on:
       - 'turn/surfaces.css'
       - 'turn/app.js'
       - 'turn-tests/app-navigation-browser-smoke.mjs'
+      - 'turn/sw.js'
+      - 'turn-next/sw.js'
+      - 'turn/ui/offline.js'
+      - 'turn/offline.css'
+      - 'turn/offline-precache.json'
+      - 'turn/vendor/**'
+      - 'turn-tests/offline-browser-smoke.mjs'
       - '.github/workflows/turn-support-feedback-browser.yml'
   push:
     branches:
@@ -66,6 +73,13 @@ on:
       - 'turn/surfaces.css'
       - 'turn/app.js'
       - 'turn-tests/app-navigation-browser-smoke.mjs'
+      - 'turn/sw.js'
+      - 'turn-next/sw.js'
+      - 'turn/ui/offline.js'
+      - 'turn/offline.css'
+      - 'turn/offline-precache.json'
+      - 'turn/vendor/**'
+      - 'turn-tests/offline-browser-smoke.mjs'
       - '.github/workflows/turn-support-feedback-browser.yml'
 
 concurrency:
@@ -120,3 +134,6 @@ jobs:
 
       - name: Verify safe areas, back, drag to dismiss and edge swipe
         run: node turn-tests/app-navigation-browser-smoke.mjs
+
+      - name: Verify TURN installs for offline play and races in airplane mode
+        run: node turn-tests/offline-browser-smoke.mjs

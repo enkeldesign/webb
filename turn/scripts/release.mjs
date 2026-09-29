@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderParityEntry } from '../../turn-next/scripts/build-parity-entry.mjs';
 import { buildTurnNextApp } from '../../turn-next/scripts/build-parity-app.mjs';
+import { OFFLINE_ENTRIES, buildPrecacheList, renderPrecacheList } from './offline-precache.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const turnDir = path.resolve(scriptDir, '..');
@@ -46,6 +47,8 @@ const companionPaths = Object.freeze([
   'turn/stats/index.html',
   'turn/stats/stats.js',
   'turn/tracks/registry.js',
+  'turn/sw.js',
+  'turn-next/sw.js',
   ...CSS_IMPORT_COMPANIONS,
   ...STYLESHEET_LINK_COMPANIONS
 ]);
@@ -782,6 +785,13 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
       `$1${release.version}$2${release.id}$3`
     );
   }
+  // The offline worker is named for its release, so each release installs afresh.
+  if (repositoryPath === 'turn/sw.js') {
+    return source.replace(/(const RELEASE = ')\d{8}-r\d+(';)/, `$1${release.cacheKey}$2`);
+  }
+  if (repositoryPath === 'turn-next/sw.js') {
+    return source.replace(/(\/turn\/sw\.js\?build=)\d{8}-r\d+/, `$1${release.cacheKey}`);
+  }
   if (repositoryPath === 'turn/tracks/registry.js') {
     return source
       .replace(
@@ -824,6 +834,19 @@ export async function checkReleaseFiles({ write = false } = {}) {
     } else if (!write) {
       assert.equal(current, rendered,
         `${repositoryPath} is not synchronized with turn/release.json. Run: node turn/scripts/release.mjs --write`);
+    }
+  }
+  // Offline precache lists, from the entry pages as synchronized above.
+  for (const entry of OFFLINE_ENTRIES) {
+    const listPath = path.resolve(turnDir, '..', entry.list);
+    const rendered = renderPrecacheList(release, await buildPrecacheList(entry));
+    const current = await fs.readFile(listPath, 'utf8').catch(() => '');
+    if (write && current !== rendered) {
+      await fs.writeFile(listPath, rendered);
+      changed = true;
+    } else if (!write) {
+      assert.equal(current, rendered,
+        `${entry.list} does not list the files ${entry.entry} loads. Run: node turn/scripts/release.mjs --write`);
     }
   }
   return { release, changed };

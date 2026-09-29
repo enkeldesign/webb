@@ -1079,13 +1079,14 @@ Object.freeze({
     Object.freeze(['1.28.2 r330', 'Race and GARAGE fixes: the buttons on the race start row keep their whole shadow instead of being clipped. In portrait, DRIFT and FLOW give LAST and BEST a line each, so a four- or five-digit record fits, down to 320px wide phones. PAINT, Specifications and Perk in GARAGE scroll their panel into view when opened, clear of the app bar and the RACE dock.']),
     Object.freeze(['1.28.3 r331', 'GARAGE\'s previous and next buttons are yellow, like ALL CARS, so every way to another car shares one colour.']),
     Object.freeze(['1.28.4 r332', 'TURN pink, the colour of RACE and every primary action, is a deeper, warmer pink (#ea5da1).']),
-    Object.freeze(['1.29.0 r333', 'TURN moves like an installed app. Back (Android\'s gesture, the browser\'s back, Safari\'s edge swipe) closes the sheet or screen on top instead of leaving TURN, and never ends a race. In the installed iPhone app, swipe from the left edge of GARAGE to go back to ROADBOOK, which shows beneath as you swipe. Drag a sheet down to close it, or the menu to the right. Track sheet and ALL CARS clear the status bar, Dynamic Island, notch and home indicator, and are bottom sheets on phones like every other dialog. A long press opens no copy or save menu on buttons and pictures, and car names stay whole on every phone and iPad.'])
+    Object.freeze(['1.29.0 r333', 'TURN moves like an installed app. Back (Android\'s gesture, the browser\'s back, Safari\'s edge swipe) closes the sheet or screen on top instead of leaving TURN, and never ends a race. In the installed iPhone app, swipe from the left edge of GARAGE to go back to ROADBOOK, which shows beneath as you swipe. Drag a sheet down to close it, or the menu to the right. Track sheet and ALL CARS clear the status bar, Dynamic Island, notch and home indicator, and are bottom sheets on phones like every other dialog. A long press opens no copy or save menu on buttons and pictures, and car names stay whole on every phone and iPad.']),
+    Object.freeze(['1.30.0 r334', 'TURN plays offline. After one launch with a connection, the installed app keeps the whole game on the device: start it in airplane mode, choose a track and a car, and race. Three.js now comes from TURN itself, and each track\'s scenery is kept once it has loaded. A new version installs quietly and asks to restart, never during a race. Pages that need a connection say so instead of showing an error, and usage statistics wait for the connection.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.29.0',
-  build: '2026.09.29-r333',
-  note: 'TURN moves like an installed app: back closes the top sheet, sheets drag down to close, and GARAGE swipes back from the edge.'
+  version: '1.30.0',
+  build: '2026.09.29-r334',
+  note: 'TURN plays offline: after one launch with a connection, the whole game stays on the device.'
 });

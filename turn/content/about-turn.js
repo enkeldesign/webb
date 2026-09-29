@@ -1,4 +1,4 @@
-import { installTurnTelemetry } from '../telemetry/client.js?revision=r3-scoring-calibration';
+import { installTurnTelemetry } from '../telemetry/client.js?revision=r4-offline-hold';
 
 installTurnTelemetry();
 installSharedAboutStyles();
@@ -7,7 +7,7 @@ function installSharedAboutStyles() {
   if (document.querySelector('link[data-turn-about-privacy]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = '/turn/about-privacy.css?build=20260929-r333';
+  link.href = '/turn/about-privacy.css?build=20260929-r334';
   link.setAttribute('data-turn-about-privacy', '');
   document.head.appendChild(link);
 }
