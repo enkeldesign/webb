@@ -136,8 +136,11 @@ const TROPHY_ROAD_VISUAL_LAYOUTS = Object.freeze(
   }))
 );
 
+// A bend turned a quarter (90° or 270°) swaps its tile's width and height, so the
+// turned tile still covers a cell that is not square (portrait's narrow columns).
 function trophyRoadBend({ row, column, rotation }) {
-  return `<i class="turn-trophy-road-bend" style="--turn-road-row:${row};--turn-road-column:${column};--turn-road-rotation:${rotation}deg"></i>`;
+  const quarter = rotation % 180 !== 0 ? ' is-quarter-turn' : '';
+  return `<i class="turn-trophy-road-bend${quarter}" style="--turn-road-row:${row};--turn-road-column:${column};--turn-road-rotation:${rotation}deg"></i>`;
 }
 
 function trophyRoadScenery(layout) {

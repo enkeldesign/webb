@@ -23,8 +23,10 @@
   );
   left: var(--turn-peripheral-left-edge, max(9px, env(safe-area-inset-left)));
   width: auto;
-  height: var(--turn-peripheral-stats-height, clamp(43.5px, 8vh, 49.5px));
-  min-height: 0;
+  /* As tall as the stats bar beside it, and taller when the lap time needs it (#1037). */
+  height: auto;
+  min-height: var(--turn-peripheral-stats-height, clamp(43.5px, 8vh, 49.5px));
+  align-content: center;
   padding: 4.5px 9px 5.25px;
   transform-origin: left top;
 }

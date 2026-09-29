@@ -220,14 +220,27 @@
 .turn-trophy-road-bend {
   position: relative;
   overflow: hidden;
+  container-type: size;
 }
 
+/* The tile turns about the cell's centre. A cell is square only when the row height
+   matches the column width; on a quarter turn the tile takes the cell's height as its
+   width and its width as its height, so turned it covers the cell exactly and meets
+   its neighbours without gaps at any proportion. */
 .turn-trophy-road-bend::before {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
   background: url('../assets/trophy-road/road-sand-bend.png') center / 100% 100% no-repeat;
   content: '';
-  transform: rotate(var(--turn-road-rotation));
+  transform: translate(-50%, -50%) rotate(var(--turn-road-rotation));
+}
+
+.turn-trophy-road-bend.is-quarter-turn::before {
+  width: 100cqh;
+  height: 100cqw;
 }
 
 .turn-trophy-road-landmark {
