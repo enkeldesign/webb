@@ -57,7 +57,7 @@
   padding: 9px 13.5px;
   border: 3px solid #08090a;
   border-radius: 11.25px;
-  background: var(--turn-action-primary, #ff7c9f);
+  background: var(--turn-action-primary, #ea5da1);
   color: #08090a;
   box-shadow: 3px 3px 0 #08090a;
   font: inherit;
