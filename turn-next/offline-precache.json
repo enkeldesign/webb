@@ -432,6 +432,7 @@
     "/turn/training/stages.js",
     "/turn/training/view.js",
     "/turn/ui/about-history-bootstrap-r165.js",
+    "/turn/ui/about-history-bootstrap.js",
     "/turn/ui/app-navigation.js",
     "/turn/ui/authored-icons.js",
     "/turn/ui/back-to-lot.js",

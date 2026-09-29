@@ -36,6 +36,13 @@ async function exists(repositoryPath) {
   }
 }
 
+// An HTML page resolves its references against its <base href> when it has one
+// (TURN NEXT and TURN LAB use /turn/), else against its own URL.
+function documentBase(html, fileUrl) {
+  const href = html.match(/<base\s[^>]*href=["']([^"']+)["']/i)?.[1];
+  return href ? new URL(href, fileUrl) : fileUrl;
+}
+
 function parseImportMap(html, baseUrl) {
   const source = html.match(/<script type=["']importmap["']>\s*([\s\S]*?)\s*<\/script>/i)?.[1];
   if (!source) return [];
@@ -59,11 +66,12 @@ function resolveSpecifier(specifier, importerUrl, importMap) {
 // Every reference a file can make to another same-origin file, as URLs.
 function references(source, fileUrl, extension, importMap) {
   const found = [];
+  const base = extension === '.html' ? documentBase(source, fileUrl) : fileUrl;
   // A template literal may compute its query (`?build=${buildKey}`) but not its path.
   const add = (specifier) => {
     const pathPart = specifier?.trim().replace(/[?#].*$/, '');
     if (!pathPart || pathPart.includes('${')) return;
-    const url = resolveSpecifier(pathPart, fileUrl, importMap);
+    const url = resolveSpecifier(pathPart, base, importMap);
     if (url) found.push(url);
   };
   if (extension === '.html') {
@@ -109,9 +117,8 @@ async function listFolder(folder) {
 }
 
 export async function buildPrecacheList({ entry }) {
-  const entryUrl = new URL(`/${entry}`.replace(/index\.html$/, ''), ORIGIN);
   const html = await fs.readFile(path.join(repositoryRoot, entry), 'utf8');
-  const importMap = parseImportMap(html, entryUrl);
+  const importMap = parseImportMap(html, documentBase(html, new URL(`/${entry}`, ORIGIN)));
   const files = new Set([entry]);
   const queue = [[entry, new URL(`/${entry}`, ORIGIN)]];
   while (queue.length) {
