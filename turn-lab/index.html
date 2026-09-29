@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- TURN LAB dual-track experiment: DEAD CANYON + BEACHFRONT. Runtime source: production TURN 2026.09.29-r335. -->
+<!-- TURN LAB dual-track experiment: DEAD CANYON + BEACHFRONT. Runtime source: production TURN 2026.09.29-r336. -->
 <html lang="en" data-turn-deployment="lab"><head>
   <base href="/turn/">
   <meta charset="utf-8">
@@ -15,38 +15,38 @@
   <title>TURN LAB</title>
   <script>
     globalThis.__TURN_BUILD__ = Object.freeze({
-      version: '1.31.0',
-      id: '2026.09.29-r335',
-      cacheKey: '20260929-r335'
+      version: '1.31.1',
+      id: '2026.09.29-r336',
+      cacheKey: '20260929-r336'
     });
     globalThis.__TURN_LAB_SOURCE__ = Object.freeze({
-      runtime: 'production TURN 2026.09.29-r335',
+      runtime: 'production TURN 2026.09.29-r336',
       purpose: 'dead-canyon-suburbs'
     });
   </script>
   <link rel="icon" href="/turn/TURNicon.PNG?icon=20260803-profile-512" type="image/png" sizes="512x512">
   <link rel="apple-touch-icon" href="/turn/TURNicon.PNG?icon=20260803-profile-512" sizes="512x512">
   <link rel="manifest" href="/turn-lab/site.webmanifest">
-  <link rel="stylesheet" href="./design-tokens.css?build=20260929-r335">
-  <link rel="stylesheet" href="./design-scale.css?build=20260929-r335" data-turn-responsive>
-  <link rel="stylesheet" href="./styles.css?build=20260929-r335-native-html">
-  <link rel="stylesheet" href="./vertical-drive.css?build=20260929-r335">
-  <link rel="stylesheet" href="./hud-tuning.css?build=20260929-r335">
-  <link rel="stylesheet" href="./install-gate.css?build=20260929-r335-social-browser">
-  <link rel="stylesheet" href="./browser-install-r165.css?build=20260929-r335">
-  <link rel="stylesheet" href="./gameplay-features.css?build=20260929-r335">
-  <link rel="stylesheet" href="./gameplay-v2.css?build=20260929-r335&revision=r217-drift-lock-design">
-  <link rel="stylesheet" href="./position-hud-r83.css?build=20260929-r335">
-  <link rel="stylesheet" href="./drive-pad.css?build=20260929-r335&revision=r217-drift-lock-design">
-  <link rel="stylesheet" href="./in-game-menu.css?build=20260929-r335">
-  <link rel="stylesheet" href="./spectate-v3.css?build=20260929-r335">
-  <link rel="stylesheet" href="./manual-steering.css?build=20260929-r335">
-  <link rel="stylesheet" href="./orientation-guard.css?build=20260929-r335-home-portrait">
-  <link rel="stylesheet" href="./lap-result-toast.css?build=20260929-r335">
-  <link rel="stylesheet" href="./scoring/score-feedback.css?build=20260929-r335">
-  <link rel="stylesheet" href="./peripheral-hud-r261.css?build=20260929-r335">
-  <link rel="stylesheet" href="./hud-feedback-r267.css?build=20260929-r335">
-  <link rel="stylesheet" href="./rival-onboarding.css?build=20260929-r335">
+  <link rel="stylesheet" href="./design-tokens.css?build=20260929-r336">
+  <link rel="stylesheet" href="./design-scale.css?build=20260929-r336" data-turn-responsive>
+  <link rel="stylesheet" href="./styles.css?build=20260929-r336-native-html">
+  <link rel="stylesheet" href="./vertical-drive.css?build=20260929-r336">
+  <link rel="stylesheet" href="./hud-tuning.css?build=20260929-r336">
+  <link rel="stylesheet" href="./install-gate.css?build=20260929-r336-social-browser">
+  <link rel="stylesheet" href="./browser-install-r165.css?build=20260929-r336">
+  <link rel="stylesheet" href="./gameplay-features.css?build=20260929-r336">
+  <link rel="stylesheet" href="./gameplay-v2.css?build=20260929-r336&revision=r217-drift-lock-design">
+  <link rel="stylesheet" href="./position-hud-r83.css?build=20260929-r336">
+  <link rel="stylesheet" href="./drive-pad.css?build=20260929-r336&revision=r217-drift-lock-design">
+  <link rel="stylesheet" href="./in-game-menu.css?build=20260929-r336">
+  <link rel="stylesheet" href="./spectate-v3.css?build=20260929-r336">
+  <link rel="stylesheet" href="./manual-steering.css?build=20260929-r336">
+  <link rel="stylesheet" href="./orientation-guard.css?build=20260929-r336-home-portrait">
+  <link rel="stylesheet" href="./lap-result-toast.css?build=20260929-r336">
+  <link rel="stylesheet" href="./scoring/score-feedback.css?build=20260929-r336">
+  <link rel="stylesheet" href="./peripheral-hud-r261.css?build=20260929-r336">
+  <link rel="stylesheet" href="./hud-feedback-r267.css?build=20260929-r336">
+  <link rel="stylesheet" href="./rival-onboarding.css?build=20260929-r336">
   <style>
     /* LAB identity only: production MOUNTAIN owns the mountain card class.
        DEAD CANYON overrides its passive paper/fold here; selection already uses
@@ -56,40 +56,40 @@
       --track-card-fold: #d96874;
     }
   </style>
-  <link rel="stylesheet" href="./track-intro.css?build=20260929-r335">
-  <link rel="stylesheet" href="./accessibility/color-cues-r163.css?build=20260929-r335-accessible-paint">
-  <link rel="stylesheet" href="./home-header-r425.css?build=20260929-r335">
+  <link rel="stylesheet" href="./track-intro.css?build=20260929-r336">
+  <link rel="stylesheet" href="./accessibility/color-cues-r163.css?build=20260929-r336-accessible-paint">
+  <link rel="stylesheet" href="./home-header-r425.css?build=20260929-r336">
   <script src="/turn-lab/lab-bootstrap.js"></script>
   <script src="./pwa-usable-viewport-r181.js?revision=r181-usable-web-layer"></script>
-  <script src="./motion-safe-zone.js?build=20260929-r335"></script>
-  <script src="./orientation-compat.js?build=20260929-r335&revision=r163-voiceover-native-picker-events"></script>
-  <script src="./live-steering-setting.js?build=20260929-r335-live-steering"></script>
-  <link rel="stylesheet" href="./responsive.css?build=20260929-r335" data-turn-responsive>
+  <script src="./motion-safe-zone.js?build=20260929-r336"></script>
+  <script src="./orientation-compat.js?build=20260929-r336&revision=r163-voiceover-native-picker-events"></script>
+  <script src="./live-steering-setting.js?build=20260929-r336-live-steering"></script>
+  <link rel="stylesheet" href="./responsive.css?build=20260929-r336" data-turn-responsive>
   <script type="importmap">
     {
       "imports": {
         "three-native": "/turn/vendor/three-0.184.0/build/three.module.js",
-        "three": "/turn/three-runtime.js?build=20260929-r335",
+        "three": "/turn/three-runtime.js?build=20260929-r336",
         "three/addons/": "/turn/vendor/three-0.184.0/examples/jsm/",
-        "/turn/platform/platform-context.js": "/turn/platform/platform-context.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?revision=r240-trophy-road-2": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?revision=r243-mountain-1300": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?revision=r248-supercar": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?revision=r250-supercar-finish": "/turn/vehicle/catalog.js?build=20260929-r335",
+        "/turn/platform/platform-context.js": "/turn/platform/platform-context.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?revision=r240-trophy-road-2": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?revision=r243-mountain-1300": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?revision=r248-supercar": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?revision=r250-supercar-finish": "/turn/vehicle/catalog.js?build=20260929-r336",
         "/turn/vehicle/semantic-car-finish.js": "/turn/vehicle/semantic-car-finish.js?revision=r223-training-car-taxi&build=20260917-r253",
-        "/turn/vehicle/car-models.js": "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=20260929-r335",
-        "/turn/vehicle/car-models.js?revision=r252-supercar-outward-rims": "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=20260929-r335",
-        "/turn/vehicle/car-models.js?revision=r253-supercar-release": "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=20260929-r335",
-        "/turn/vehicle/emergency-livery-models.js": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=20260929-r335",
-        "/turn/main.js?build=20260826-r184": "/turn/main.js?revision=r270-runtime-health&build=20260929-r335",
+        "/turn/vehicle/car-models.js": "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=20260929-r336",
+        "/turn/vehicle/car-models.js?revision=r252-supercar-outward-rims": "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=20260929-r336",
+        "/turn/vehicle/car-models.js?revision=r253-supercar-release": "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=20260929-r336",
+        "/turn/vehicle/emergency-livery-models.js": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=20260929-r336",
+        "/turn/main.js?build=20260826-r184": "/turn/main.js?revision=r270-runtime-health&build=20260929-r336",
         "/turn/input/motion.js": "/turn/input/motion.js?revision=r164-ipad-motion-profile",
-        "/turn/race/session-orchestrator.js?source=20260729-r118-m8": "/turn/race/session-orchestrator.js?build=20260929-r335",
-        "/turn/training/drive-by-ear-training.js?build=20260817-r172-r151-dbe-training-device-fixes": "/turn/training/drive-by-ear-training.js?build=20260929-r335",
+        "/turn/race/session-orchestrator.js?source=20260729-r118-m8": "/turn/race/session-orchestrator.js?build=20260929-r336",
+        "/turn/training/drive-by-ear-training.js?build=20260817-r172-r151-dbe-training-device-fixes": "/turn/training/drive-by-ear-training.js?build=20260929-r336",
         "/turn/audio/audio-system.js?build=20260809-r163": "/turn/audio/audio-system.js?build=20260809-r163&revision=r163-voiceover-native-picker-events",
-        "/turn/audio/audio-preferences.js?build=20260929-r335": "/turn/audio/audio-preferences.js?build=20260929-r335&revision=r197-audio-mix",
-        "/turn/audio/racing-music-v2.js?build=20260929-r335-racing-music-warm-v2": "/turn/audio/racing-music-v5.js?build=20260929-r335",
-        "/turn/audio/music/songbook.js?revision=r197-audio-mix": "/turn/audio/music/songbook.js?build=20260929-r335",
+        "/turn/audio/audio-preferences.js?build=20260929-r336": "/turn/audio/audio-preferences.js?build=20260929-r336&revision=r197-audio-mix",
+        "/turn/audio/racing-music-v2.js?build=20260929-r336-racing-music-warm-v2": "/turn/audio/racing-music-v5.js?build=20260929-r336",
+        "/turn/audio/music/songbook.js?revision=r197-audio-mix": "/turn/audio/music/songbook.js?build=20260929-r336",
         "/turn/audio/music/instrument-bank.js?revision=r184-score-v2": "/turn/audio/music/instrument-bank.js?revision=r197-audio-mix",
         "/turn/audio/music/tone-runtime.js?revision=r184-score-v2": "/turn/audio/music/tone-runtime-ties.js?revision=r186-note-ties",
         "/turn/audio/music/song-tools.js?revision=r184-score-v2": "/turn/audio/music/song-tools.js?revision=r186-note-ties",
@@ -97,230 +97,230 @@
         "/turn/ui/in-game-menu.js?build=20260809-r163": "/turn/ui/in-game-menu.js?build=20260809-r163&revision=r163-restart-source-label",
         "/turn/ui/how-to-play-guide.js?revision=r241-learning-achievements&build=20260909-r212": "/turn/ui/how-to-play-guide.js?revision=r264-show-records-copy&build=20260909-r212",
         "/turn/race/world-collision.js?build=20260723-r53": "/turn/race/world-collision.js?revision=mountain-long-prod-r1",
-        "/turn/achievements/catalog-base.js?revision=r222-awd-label": "/turn/achievements/catalog-base.js?build=20260929-r335",
-        "/turn/achievements/scoring-achievements.js?revision=r2-calibrated-targets": "/turn/achievements/scoring-achievements.js?build=20260929-r335",
-        "/turn/achievements/store.js?revision=r240-trophy-road-2": "/turn/achievements/store.js?build=20260929-r335",
-        "/turn/achievements/time-trials.js?revision=r166-bella-records": "/turn/achievements/time-trials.js?build=20260929-r335",
-        "/turn/achievements/view.js?revision=r166-bella-records": "/turn/achievements/view.js?build=20260929-r335",
-        "/turn/achievements/view.js?revision=r240-trophy-road-2": "/turn/achievements/view.js?build=20260929-r335",
-        "/turn/achievements/challenge-expansion-r166.js?revision=r166-bella-records": "/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=20260929-r335",
-        "/turn/achievements/challenge-expansion-r166.js?revision=r241-learning-achievements": "/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=20260929-r335",
-        "/turn/achievements/runtime.js?revision=r240-trophy-road-2": "/turn/achievements/runtime.js?revision=r244-reward-toast-guide&build=20260929-r335",
-        "./achievements/runtime.js?revision=r164-long-session-robustness": "/turn/achievements/runtime.js?revision=r244-reward-toast-guide&build=20260929-r335",
-        "/turn/achievements/trophy-road-showcase.js?revision=r160-reward-detail-sync": "/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release&build=20260929-r335",
-        "/turn/achievements/trophy-road-showcase.js?revision=r243-mountain-1300": "/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release&build=20260929-r335",
+        "/turn/achievements/catalog-base.js?revision=r222-awd-label": "/turn/achievements/catalog-base.js?build=20260929-r336",
+        "/turn/achievements/scoring-achievements.js?revision=r2-calibrated-targets": "/turn/achievements/scoring-achievements.js?build=20260929-r336",
+        "/turn/achievements/store.js?revision=r240-trophy-road-2": "/turn/achievements/store.js?build=20260929-r336",
+        "/turn/achievements/time-trials.js?revision=r166-bella-records": "/turn/achievements/time-trials.js?build=20260929-r336",
+        "/turn/achievements/view.js?revision=r166-bella-records": "/turn/achievements/view.js?build=20260929-r336",
+        "/turn/achievements/view.js?revision=r240-trophy-road-2": "/turn/achievements/view.js?build=20260929-r336",
+        "/turn/achievements/challenge-expansion-r166.js?revision=r166-bella-records": "/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=20260929-r336",
+        "/turn/achievements/challenge-expansion-r166.js?revision=r241-learning-achievements": "/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=20260929-r336",
+        "/turn/achievements/runtime.js?revision=r240-trophy-road-2": "/turn/achievements/runtime.js?revision=r244-reward-toast-guide&build=20260929-r336",
+        "./achievements/runtime.js?revision=r164-long-session-robustness": "/turn/achievements/runtime.js?revision=r244-reward-toast-guide&build=20260929-r336",
+        "/turn/achievements/trophy-road-showcase.js?revision=r160-reward-detail-sync": "/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release&build=20260929-r336",
+        "/turn/achievements/trophy-road-showcase.js?revision=r243-mountain-1300": "/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release&build=20260929-r336",
         "/turn/vehicle/shift-profile.js?revision=r232-double-shift": "/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility",
         "/turn/vehicle/shift-profile.js?revision=r253-supercar-release": "/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility",
-        "/turn/vehicle/flow-shift.js?revision=r248-supercar": "/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=20260929-r335",
-        "/turn/vehicle/flow-shift.js?revision=r253-supercar-release": "/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=20260929-r335",
-        "/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority": "/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=20260929-r335",
-        "/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility": "/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=20260929-r335",
+        "/turn/vehicle/flow-shift.js?revision=r248-supercar": "/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=20260929-r336",
+        "/turn/vehicle/flow-shift.js?revision=r253-supercar-release": "/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=20260929-r336",
+        "/turn/vehicle/flow-shift.js?revision=r254-flow-shift-authority": "/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=20260929-r336",
+        "/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility": "/turn/vehicle/flow-shift.js?revision=r255-flow-shift-accessibility&build=20260929-r336",
         "/turn/ui/shift-feedback.js?revision=r232-double-shift": "/turn/ui/shift-feedback.js?revision=r255-flow-shift-accessibility",
         "/turn/ui/shift-feedback.js?revision=r253-supercar-release": "/turn/ui/shift-feedback.js?revision=r255-flow-shift-accessibility",
-        "/turn/render/covered-rendering.js?build=20260929-r335": "/turn/render/covered-rendering.js?build=20260929-r335&revision=r164-long-session-robustness",
-        "/turn/ui/rival-onboarding.js?build=20260929-r335": "/turn/ui/rival-onboarding.js?build=20260929-r335&revision=r277-main-rival-gpu-warmup",
-        "/turn/vehicle/catalog.js?build=20260804-r157-factory-colors": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?build=20260720-r20&revision=r588-canonical-attributes": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r200&build=20260818-r175": "/turn/m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r206-pwa-color&build=20260929-r335",
-        "/turn/m8-home.js?revision=r217-track-record-layout&trophy-road=r159&showroom=r200&build=20260909-r212": "/turn/m8-home.js?revision=r217-track-record-layout&trophy-road=r159&showroom=r200&transition=r259-swift-lot-ui&build=20260929-r335",
-        "./render/camera.js?build=20260720-r19": "./render/camera.js?build=20260929-r335",
-        "./race/lap-system.js?build=20260720-r19": "./race/lap-system-r86.js?build=20260929-r335&revision=r262-forgiving-lap-void",
-        "./race/game-state.js": "./race/game-state.js?build=20260929-r335",
-        "./race/replay-system.js": "./race/replay-system.js?build=20260929-r335",
-        "./race/rival-storage.js": "/turn/race/rival-storage.js?build=20260929-r335&revision=r224-finish-line-summary",
-        "./race/rival-storage.js?build=20260720-r19": "/turn/race/rival-storage.js?build=20260929-r335&revision=r224-finish-line-summary",
-        "./race/rival-storage.js?build=20260722-r50": "/turn/race/rival-storage.js?build=20260929-r335&revision=r224-finish-line-summary",
-        "/turn/race/rival-storage.js?build=20260806-r161": "/turn/race/rival-storage.js?build=20260929-r335&revision=r224-finish-line-summary",
-        "/turn/race/rival-storage.js?source=20260729-r118-m8": "/turn/race/rival-storage.js?build=20260929-r335&revision=r224-finish-line-summary",
-        "./race/track-spatial-index.js?build=20260720-r19": "./race/track-spatial-index.js?build=20260929-r335",
-        "./performance-monitor.js?build=20260720-r19": "./performance-monitor.js?build=20260929-r335",
-        "./world-assets.js": "./world-assets.js?build=20260929-r335&revision=r532-countryside-nature-polish",
-        "./vehicle/physics.js?build=20260720-r19": "./vehicle/physics.js?build=20260929-r335&revision=r233-graduated",
-        "./vehicle/catalog.js?build=20260720-r19": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "./vehicle/catalog.js?build=20260720-r20": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "./vehicle/car-models.js?build=20260720-r19": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=20260929-r335",
-        "./vehicle/car-models.js?build=20260720-r22": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=20260929-r335",
-        "./ui/race-announcements.js": "./ui/race-announcements.js?build=20260929-r335",
-        "./ui/track-intro.js?build=20260725-r75": "/turn/ui/track-intro.js?build=20260929-r335",
-        "./tracks/catalog.js?build=20260722-r50": "/turn/tracks/catalog.js?build=20260929-r335",
-        "./tracks/catalog.js": "/turn/tracks/catalog.js?build=20260929-r335",
-        "./tracks/cliffside-layout.js": "./tracks/cliffside-layout.js?build=20260929-r335",
-        "./tracks/harbor-collision.js": "./tracks/harbor-collision.js?build=20260929-r335",
-        "./tracks/harbor-layout.js": "./tracks/harbor-layout.js?build=20260929-r335",
-        "./tracks/harbor-world.js": "./tracks/harbor-world-r82.js?build=20260929-r335&revision=r164-long-session-robustness",
-        "./tracks/definitions.js": "/turn/tracks/definitions.js?build=20260929-r335",
-        "./tracks/elevation.js": "./tracks/elevation.js?build=20260929-r335",
-        "./tracks/pace-notes.js": "./tracks/pace-notes.js?build=20260929-r335&revision=mountain-long-prod-r1",
-        "./tracks/registry.js": "./tracks/registry.js?build=20260929-r335&revision=mountain-long-prod-r1-r519-midnight-full-width-accents",
-        "./tracks/track-manager.js?build=20260722-r52": "/turn/tracks/track-manager.js?build=20260929-r335",
-        "/turn/main.js?build=20260909-r212": "/turn/main.js?revision=r270-runtime-health&build=20260929-r335",
-        "/turn/ui/spectate.js?revision=r164-elevation-aware&build=20260909-r212": "/turn/ui/spectate.js?revision=r270-spectate-hotpath&build=20260929-r335",
-        "/turn/scoring/drift-records.js": "/turn/scoring/drift-records.js?build=20260929-r335",
-        "/turn/scoring/drift-records.js?revision=r206-home-track-records": "/turn/scoring/drift-records.js?build=20260929-r335",
-        "/turn/scoring/drift-records.js?revision=r219-record-paint": "/turn/scoring/drift-records.js?build=20260929-r335",
-        "/turn/scoring/flow-records.js": "/turn/scoring/flow-records.js?build=20260929-r335",
-        "/turn/scoring/flow-records.js?revision=r206-home-track-records": "/turn/scoring/flow-records.js?build=20260929-r335",
-        "/turn/scoring/flow-records.js?revision=r219-record-paint": "/turn/scoring/flow-records.js?build=20260929-r335",
-        "/turn/scoring/score-record-store.js": "/turn/scoring/score-record-store.js?build=20260929-r335",
-        "/turn/scoring/drift-attack-runtime.js": "/turn/scoring/drift-attack-runtime.js?build=20260929-r335",
-        "/turn/scoring/drift-attack-runtime.js?revision=r240-trophy-road-2": "/turn/scoring/drift-attack-runtime.js?build=20260929-r335",
-        "/turn/scoring/flow-runtime.js": "/turn/scoring/flow-runtime.js?build=20260929-r335",
-        "/turn/scoring/flow-runtime.js?revision=r240-trophy-road-2": "/turn/scoring/flow-runtime.js?build=20260929-r335",
-        "/turn/achievements/runtime.js?revision=r244-reward-toast-guide": "/turn/achievements/runtime.js?revision=r244-reward-toast-guide&build=20260929-r335",
-        "/turn/main.js": "/turn/main.js?revision=r270-runtime-health&build=20260929-r335",
-        "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin": "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=20260929-r335",
-        "/turn/vehicle/car-visual-resources.js": "/turn/vehicle/car-visual-resources.js?build=20260929-r335",
-        "/turn/vehicle/emergency-livery-models.js?build=20260823-r179": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=20260929-r335",
-        "/turn/vehicle/emergency-livery-models.js?build=20260811-r164": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=20260929-r335",
-        "/turn/vehicle/learner-car-livery.js": "/turn/vehicle/learner-car-livery.js?revision=r223-training-car-taxi&build=20260929-r335",
-        "/turn/vehicle/learner-car-livery.js?revision=r223-training-car-taxi": "/turn/vehicle/learner-car-livery.js?revision=r223-training-car-taxi&build=20260929-r335",
-        "/turn/vehicle/supercar-kenney-wheels.js": "/turn/vehicle/supercar-kenney-wheels.js?revision=r253-supercar-release&build=20260929-r335",
-        "/turn/vehicle/supercar-kenney-wheels.js?revision=r253-supercar-release": "/turn/vehicle/supercar-kenney-wheels.js?revision=r253-supercar-release&build=20260929-r335",
-        "/turn/ui/track-best-car.js": "/turn/ui/track-best-car.js?revision=r253-supercar-release&build=20260929-r335",
-        "/turn/ui/track-best-car.js?revision=r253-supercar-release": "/turn/ui/track-best-car.js?revision=r253-supercar-release&build=20260929-r335",
-        "/turn/achievements/trophy-road-showcase.js": "/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release&build=20260929-r335",
-        "/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release": "/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release&build=20260929-r335",
-        "/turn/graphics-profile.js": "/turn/graphics-profile.js?build=20260929-r335",
-        "/turn/tracks/airport-emergency-r493.js?revision=r527-no-finish-sync-wreck": "/turn/tracks/airport-emergency-r493.js?build=20260929-r335",
-        "/turn/tracks/airport-world-r50.js?build=20260722-r50": "/turn/tracks/airport-world-r50.js?build=20260929-r335",
-        "/turn/tracks/airport-world-r53.js?build=20260814-r57": "/turn/tracks/airport-world-r53.js?build=20260929-r335",
+        "/turn/render/covered-rendering.js?build=20260929-r336": "/turn/render/covered-rendering.js?build=20260929-r336&revision=r164-long-session-robustness",
+        "/turn/ui/rival-onboarding.js?build=20260929-r336": "/turn/ui/rival-onboarding.js?build=20260929-r336&revision=r277-main-rival-gpu-warmup",
+        "/turn/vehicle/catalog.js?build=20260804-r157-factory-colors": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?build=20260720-r20&revision=r588-canonical-attributes": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r200&build=20260818-r175": "/turn/m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r206-pwa-color&build=20260929-r336",
+        "/turn/m8-home.js?revision=r217-track-record-layout&trophy-road=r159&showroom=r200&build=20260909-r212": "/turn/m8-home.js?revision=r217-track-record-layout&trophy-road=r159&showroom=r200&transition=r259-swift-lot-ui&build=20260929-r336",
+        "./render/camera.js?build=20260720-r19": "./render/camera.js?build=20260929-r336",
+        "./race/lap-system.js?build=20260720-r19": "./race/lap-system-r86.js?build=20260929-r336&revision=r262-forgiving-lap-void",
+        "./race/game-state.js": "./race/game-state.js?build=20260929-r336",
+        "./race/replay-system.js": "./race/replay-system.js?build=20260929-r336",
+        "./race/rival-storage.js": "/turn/race/rival-storage.js?build=20260929-r336&revision=r224-finish-line-summary",
+        "./race/rival-storage.js?build=20260720-r19": "/turn/race/rival-storage.js?build=20260929-r336&revision=r224-finish-line-summary",
+        "./race/rival-storage.js?build=20260722-r50": "/turn/race/rival-storage.js?build=20260929-r336&revision=r224-finish-line-summary",
+        "/turn/race/rival-storage.js?build=20260806-r161": "/turn/race/rival-storage.js?build=20260929-r336&revision=r224-finish-line-summary",
+        "/turn/race/rival-storage.js?source=20260729-r118-m8": "/turn/race/rival-storage.js?build=20260929-r336&revision=r224-finish-line-summary",
+        "./race/track-spatial-index.js?build=20260720-r19": "./race/track-spatial-index.js?build=20260929-r336",
+        "./performance-monitor.js?build=20260720-r19": "./performance-monitor.js?build=20260929-r336",
+        "./world-assets.js": "./world-assets.js?build=20260929-r336&revision=r532-countryside-nature-polish",
+        "./vehicle/physics.js?build=20260720-r19": "./vehicle/physics.js?build=20260929-r336&revision=r233-graduated",
+        "./vehicle/catalog.js?build=20260720-r19": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "./vehicle/catalog.js?build=20260720-r20": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "./vehicle/car-models.js?build=20260720-r19": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=20260929-r336",
+        "./vehicle/car-models.js?build=20260720-r22": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=20260929-r336",
+        "./ui/race-announcements.js": "./ui/race-announcements.js?build=20260929-r336",
+        "./ui/track-intro.js?build=20260725-r75": "/turn/ui/track-intro.js?build=20260929-r336",
+        "./tracks/catalog.js?build=20260722-r50": "/turn/tracks/catalog.js?build=20260929-r336",
+        "./tracks/catalog.js": "/turn/tracks/catalog.js?build=20260929-r336",
+        "./tracks/cliffside-layout.js": "./tracks/cliffside-layout.js?build=20260929-r336",
+        "./tracks/harbor-collision.js": "./tracks/harbor-collision.js?build=20260929-r336",
+        "./tracks/harbor-layout.js": "./tracks/harbor-layout.js?build=20260929-r336",
+        "./tracks/harbor-world.js": "./tracks/harbor-world-r82.js?build=20260929-r336&revision=r164-long-session-robustness",
+        "./tracks/definitions.js": "/turn/tracks/definitions.js?build=20260929-r336",
+        "./tracks/elevation.js": "./tracks/elevation.js?build=20260929-r336",
+        "./tracks/pace-notes.js": "./tracks/pace-notes.js?build=20260929-r336&revision=mountain-long-prod-r1",
+        "./tracks/registry.js": "./tracks/registry.js?build=20260929-r336&revision=mountain-long-prod-r1-r519-midnight-full-width-accents",
+        "./tracks/track-manager.js?build=20260722-r52": "/turn/tracks/track-manager.js?build=20260929-r336",
+        "/turn/main.js?build=20260909-r212": "/turn/main.js?revision=r270-runtime-health&build=20260929-r336",
+        "/turn/ui/spectate.js?revision=r164-elevation-aware&build=20260909-r212": "/turn/ui/spectate.js?revision=r270-spectate-hotpath&build=20260929-r336",
+        "/turn/scoring/drift-records.js": "/turn/scoring/drift-records.js?build=20260929-r336",
+        "/turn/scoring/drift-records.js?revision=r206-home-track-records": "/turn/scoring/drift-records.js?build=20260929-r336",
+        "/turn/scoring/drift-records.js?revision=r219-record-paint": "/turn/scoring/drift-records.js?build=20260929-r336",
+        "/turn/scoring/flow-records.js": "/turn/scoring/flow-records.js?build=20260929-r336",
+        "/turn/scoring/flow-records.js?revision=r206-home-track-records": "/turn/scoring/flow-records.js?build=20260929-r336",
+        "/turn/scoring/flow-records.js?revision=r219-record-paint": "/turn/scoring/flow-records.js?build=20260929-r336",
+        "/turn/scoring/score-record-store.js": "/turn/scoring/score-record-store.js?build=20260929-r336",
+        "/turn/scoring/drift-attack-runtime.js": "/turn/scoring/drift-attack-runtime.js?build=20260929-r336",
+        "/turn/scoring/drift-attack-runtime.js?revision=r240-trophy-road-2": "/turn/scoring/drift-attack-runtime.js?build=20260929-r336",
+        "/turn/scoring/flow-runtime.js": "/turn/scoring/flow-runtime.js?build=20260929-r336",
+        "/turn/scoring/flow-runtime.js?revision=r240-trophy-road-2": "/turn/scoring/flow-runtime.js?build=20260929-r336",
+        "/turn/achievements/runtime.js?revision=r244-reward-toast-guide": "/turn/achievements/runtime.js?revision=r244-reward-toast-guide&build=20260929-r336",
+        "/turn/main.js": "/turn/main.js?revision=r270-runtime-health&build=20260929-r336",
+        "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin": "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin&build=20260929-r336",
+        "/turn/vehicle/car-visual-resources.js": "/turn/vehicle/car-visual-resources.js?build=20260929-r336",
+        "/turn/vehicle/emergency-livery-models.js?build=20260823-r179": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=20260929-r336",
+        "/turn/vehicle/emergency-livery-models.js?build=20260811-r164": "/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=20260929-r336",
+        "/turn/vehicle/learner-car-livery.js": "/turn/vehicle/learner-car-livery.js?revision=r223-training-car-taxi&build=20260929-r336",
+        "/turn/vehicle/learner-car-livery.js?revision=r223-training-car-taxi": "/turn/vehicle/learner-car-livery.js?revision=r223-training-car-taxi&build=20260929-r336",
+        "/turn/vehicle/supercar-kenney-wheels.js": "/turn/vehicle/supercar-kenney-wheels.js?revision=r253-supercar-release&build=20260929-r336",
+        "/turn/vehicle/supercar-kenney-wheels.js?revision=r253-supercar-release": "/turn/vehicle/supercar-kenney-wheels.js?revision=r253-supercar-release&build=20260929-r336",
+        "/turn/ui/track-best-car.js": "/turn/ui/track-best-car.js?revision=r253-supercar-release&build=20260929-r336",
+        "/turn/ui/track-best-car.js?revision=r253-supercar-release": "/turn/ui/track-best-car.js?revision=r253-supercar-release&build=20260929-r336",
+        "/turn/achievements/trophy-road-showcase.js": "/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release&build=20260929-r336",
+        "/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release": "/turn/achievements/trophy-road-showcase.js?revision=r253-supercar-release&build=20260929-r336",
+        "/turn/graphics-profile.js": "/turn/graphics-profile.js?build=20260929-r336",
+        "/turn/tracks/airport-emergency-r493.js?revision=r527-no-finish-sync-wreck": "/turn/tracks/airport-emergency-r493.js?build=20260929-r336",
+        "/turn/tracks/airport-world-r50.js?build=20260722-r50": "/turn/tracks/airport-world-r50.js?build=20260929-r336",
+        "/turn/tracks/airport-world-r53.js?build=20260814-r57": "/turn/tracks/airport-world-r53.js?build=20260929-r336",
         "/turn/tracks/countryside-bella-rescue-r173.js?revision=r256-achievement-polling": "/turn/tracks/countryside-bella-rescue-r173.js?build=20260929-r335",
-        "/turn/tracks/countryside-world-r531.js?revision=r532-countryside-nature-polish": "/turn/tracks/countryside-world-r531.js?build=20260929-r335",
-        "/turn/tracks/start-area-polish-r519.js?revision=r519-midnight-full-width-accents": "/turn/tracks/start-area-polish-r519.js?build=20260929-r335",
-        "/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling": "/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=20260929-r335",
-        "/turn/achievements/store.js": "/turn/achievements/store.js?build=20260929-r335",
-        "/turn/achievements/store.js?revision=r243-mountain-1300": "/turn/achievements/store.js?build=20260929-r335",
-        "/turn/achievements/support-challenges.js": "/turn/achievements/support-challenges.js?build=20260929-r335",
-        "/turn/achievements/support-challenge-feedback.js": "/turn/achievements/support-challenge-feedback.js?build=20260929-r335",
-        "/turn/achievements/support-challenge-feedback.js?revision=r244-reward-toast-guide": "/turn/achievements/support-challenge-feedback.js?build=20260929-r335",
-        "/turn/achievements/view.js": "/turn/achievements/view.js?build=20260929-r335",
-        "/turn/achievements/view.js?revision=r244-reward-toast-guide": "/turn/achievements/view.js?build=20260929-r335",
-        "/turn/achievements/home-reward-replay-r225.js": "/turn/achievements/home-reward-replay-r225.js?build=20260929-r335",
-        "/turn/achievements/home-reward-replay-r225.js?revision=r244-reward-toast-guide": "/turn/achievements/home-reward-replay-r225.js?build=20260929-r335",
-        "/turn/vehicle/perk-presentation.js": "/turn/vehicle/perk-presentation.js?build=20260929-r335",
-        "/turn/vehicle/perk-presentation.js?revision=r220-apex-grip": "/turn/vehicle/perk-presentation.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?revision=r253-supercar-release": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?source=20260729-r118-m8": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?build=20260806-r161": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?build=20260724-r59": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?revision=r230-vehicle-perks": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/vehicle/catalog.js?build=20260720-r20&revision=r246-lot-saved-paint": "/turn/vehicle/catalog.js?build=20260929-r335",
-        "/turn/training/drive-by-ear-training.js": "/turn/training/drive-by-ear-training.js?build=20260929-r335",
-        "/turn/training/stages.js": "/turn/training/stages.js?build=20260929-r335",
-        "/turn/training/view.js": "/turn/training/view.js?build=20260929-r335",
-        "/turn/input/keyboard-driving-controls.js": "/turn/input/keyboard-driving-controls.js?build=20260929-r335",
-        "/turn/input/keyboard-drive-ownership.js": "/turn/input/keyboard-drive-ownership.js?build=20260929-r335",
-        "/turn/input/qe-drive-controls.js": "/turn/input/qe-drive-controls.js?build=20260929-r335",
-        "/turn/performance-monitor.js": "/turn/performance-monitor.js?build=20260929-r335",
-        "/turn/performance-profile.js": "/turn/performance-profile.js?build=20260929-r335",
-        "/turn/render/car-shadows.js": "/turn/render/car-shadows.js?build=20260929-r335",
-        "/turn/three-runtime.js": "/turn/three-runtime.js?build=20260929-r335",
-        "/turn/tracks/airport-emergency-r493.js": "/turn/tracks/airport-emergency-r493.js?build=20260929-r335",
-        "/turn/tracks/airport-emergency-r494.js": "/turn/tracks/airport-emergency-r494.js?build=20260929-r335",
-        "/turn/tracks/airport-world-r50.js": "/turn/tracks/airport-world-r50.js?build=20260929-r335",
-        "/turn/tracks/airport-world-r52.js": "/turn/tracks/airport-world-r52.js?build=20260929-r335",
-        "/turn/tracks/airport-world-r53.js": "/turn/tracks/airport-world-r53.js?build=20260929-r335",
-        "/turn/tracks/cliffside-world.js": "/turn/tracks/cliffside-world.js?build=20260929-r335",
-        "/turn/tracks/contextual-road-edges.js": "/turn/tracks/contextual-road-edges.js?build=20260929-r335",
-        "/turn/tracks/countryside-bella-r166.js": "/turn/tracks/countryside-bella-r166.js?build=20260929-r335",
-        "/turn/tracks/countryside-world-r531.js": "/turn/tracks/countryside-world-r531.js?build=20260929-r335",
-        "/turn/tracks/harbor-world-r82.js": "/turn/tracks/harbor-world-r82.js?build=20260929-r335",
-        "/turn/tracks/harbor-world.js": "/turn/tracks/harbor-world.js?build=20260929-r335",
-        "/turn/tracks/kenney-track-landmarks-r517.js": "/turn/tracks/kenney-track-landmarks-r517.js?build=20260929-r335",
-        "/turn/tracks/midnight-city-world.js": "/turn/tracks/midnight-city-world.js?build=20260929-r335",
-        "/turn/tracks/night-player-spotlight-r560.js": "/turn/tracks/night-player-spotlight-r560.js?build=20260929-r335",
-        "/turn/tracks/start-area-polish-r519.js": "/turn/tracks/start-area-polish-r519.js?build=20260929-r335",
-        "/turn/training/course.js": "/turn/training/course.js?build=20260929-r335",
-        "/turn/ui/low-graphics-setting.js": "/turn/ui/low-graphics-setting.js?build=20260929-r335",
-        "/turn/ui/spectate.js": "/turn/ui/spectate.js?build=20260929-r335",
-        "/turn/vehicle/tractor-smv-sign.js": "/turn/vehicle/tractor-smv-sign.js?build=20260929-r335",
-        "/turn/world-art-pass.js": "/turn/world-art-pass.js?build=20260929-r335",
-        "/turn/world-assets.js": "/turn/world-assets.js?build=20260929-r335",
-        "/turn/world-beauty.js": "/turn/world-beauty.js?build=20260929-r335",
-        "/turn/performance-monitor.js?build=20260720-r20": "/turn/performance-monitor.js?build=20260929-r335",
-        "/turn/tracks/airport-emergency-r494.js?revision=r496-hud-depth": "/turn/tracks/airport-emergency-r494.js?build=20260929-r335",
-        "/turn/tracks/airport-world-r52.js?build=20260722-r52": "/turn/tracks/airport-world-r52.js?build=20260929-r335",
-        "/turn/tracks/contextual-road-edges.js?revision=r518-signature-yellow": "/turn/tracks/contextual-road-edges.js?build=20260929-r335",
-        "/turn/tracks/harbor-world.js?base=20260725-r80": "/turn/tracks/harbor-world.js?build=20260929-r335",
-        "/turn/tracks/night-player-spotlight-r560.js?revision=r175-reconcile": "/turn/tracks/night-player-spotlight-r560.js?build=20260929-r335",
-        "/turn/tracks/airport-start-banner-r520.js?revision=r520-signature-yellow": "/turn/tracks/airport-start-banner-r520.js?build=20260929-r335",
-        "/turn/ui/drift-camera-setting.js": "/turn/ui/drift-camera-setting.js?build=20260929-r335",
-        "/turn/ui/drift-camera-setting.js?revision=r214-shared-speed-fov": "/turn/ui/drift-camera-setting.js?build=20260929-r335",
-        "/turn/ui/player-marker-r427.js": "/turn/ui/player-marker-r427.js?build=20260929-r335",
-        "/turn/ui/player-marker-r427.js?revision=r427": "/turn/ui/player-marker-r427.js?build=20260929-r335",
-        "/turn/tracks/shared-night-sky.js": "/turn/tracks/shared-night-sky.js?build=20260929-r335",
-        "/turn/tracks/definitions.js": "/turn/tracks/definitions.js?build=20260929-r335",
-        "/turn/tracks/definitions.js?build=20260805-r160": "/turn/tracks/definitions.js?build=20260929-r335",
-        "/turn/tracks/definitions.js?build=20260808-r162": "/turn/tracks/definitions.js?build=20260929-r335",
-        "/turn/tracks/definitions.js?lab-base=dead-canyon-suburbs": "/turn/tracks/definitions.js?build=20260929-r335",
-        "/turn/achievements/catalog-base.js": "/turn/achievements/catalog-base.js?build=20260929-r335",
-        "/turn/achievements/catalog-base.js?revision=r241-trophy-balance": "/turn/achievements/catalog-base.js?build=20260929-r335",
-        "/turn/achievements/scoring-achievements.js": "/turn/achievements/scoring-achievements.js?build=20260929-r335",
-        "/turn/achievements/scoring-achievements.js?revision=r3-trophy-balance": "/turn/achievements/scoring-achievements.js?build=20260929-r335",
-        "/turn/audio/music/songbook.js": "/turn/audio/music/songbook.js?build=20260929-r335",
-        "/turn/audio/music/songbook.js?revision=r214-mountain-ccttbb": "/turn/audio/music/songbook.js?build=20260929-r335",
-        "/turn/accessibility/color-cues.js": "/turn/accessibility/color-cues.js?build=20260929-r335",
-        "/turn/accessibility/color-cues.js?revision=r163": "/turn/accessibility/color-cues.js?build=20260929-r335",
-        "/turn/ui/track-icons.js": "/turn/ui/track-icons.js?build=20260929-r335",
-        "/turn/ui/track-icons.js?revision=r1-track-reward-icons": "/turn/ui/track-icons.js?build=20260929-r335",
-        "/turn/tracks/pace-notes-base.js": "/turn/tracks/pace-notes-base.js?build=20260929-r335",
-        "/turn/tracks/definitions.js?build=20260806-r161": "/turn/tracks/definitions.js?build=20260929-r335",
-        "/turn/ui/track-intro.js": "/turn/ui/track-intro.js?build=20260929-r335",
-        "/turn/ui/race-orientation.js": "/turn/ui/race-orientation.js?build=20260929-r335",
-        "/turn/ui/track-intro.js?source=20260729-r118-m8": "/turn/ui/track-intro.js?build=20260929-r335",
-        "/turn/ui/track-intro.js?build=20260725-r75": "/turn/ui/track-intro.js?build=20260929-r335",
-        "/turn/achievements/night-shift.js?revision=r146-achievement-expansion": "/turn/achievements/night-shift.js?build=20260929-r335",
-        "/turn/achievements/catalog.js": "/turn/achievements/catalog.js?build=20260929-r335",
-        "/turn/progression/trophy-road.js": "/turn/progression/trophy-road.js?build=20260929-r335",
-        "/turn/tracks/cliffside-village.js": "/turn/tracks/cliffside-village.js?build=20260929-r335",
-        "/turn/tracks/mountain-world.js": "/turn/tracks/mountain-world.js?build=20260929-r335",
-        "/turn/tracks/mountain-world-base.js": "/turn/tracks/mountain-world-base.js?build=20260929-r335",
-        "/turn/tracks/mountain-terrain.js": "/turn/tracks/mountain-terrain.js?build=20260929-r335",
-        "/turn/tracks/mountain-scenery.js": "/turn/tracks/mountain-scenery.js?build=20260929-r335",
-        "/turn/tracks/mountain-polish.js": "/turn/tracks/mountain-polish.js?build=20260929-r335",
-        "/turn/tracks/mountain-visual-polish.js": "/turn/tracks/mountain-visual-polish.js?build=20260929-r335",
-        "/turn/tracks/mountain-waterfall.js": "/turn/tracks/mountain-waterfall.js?build=20260929-r335",
-        "/turn/tracks/mountain-village.js": "/turn/tracks/mountain-village.js?build=20260929-r335",
-        "/turn/tracks/mountain-night.js": "/turn/tracks/mountain-night.js?build=20260929-r335",
-        "/turn/tracks/mountain-long-extension.js": "/turn/tracks/mountain-long-extension.js?build=20260929-r335",
-        "/turn/tracks/definitions-base.js": "/turn/tracks/definitions-base.js?build=20260929-r335",
-        "/turn/tracks/catalog.js": "/turn/tracks/catalog.js?build=20260929-r335",
-        "/turn/tracks/catalog.js?source=20260729-r118-m8": "/turn/tracks/catalog.js?build=20260929-r335",
-        "/turn/tracks/catalog.js?build=20260806-r161": "/turn/tracks/catalog.js?build=20260929-r335",
-        "/turn/tracks/catalog.js?build=20260818-r175": "/turn/tracks/catalog.js?build=20260929-r335",
-        "/turn/achievements/time-trials.js": "/turn/achievements/time-trials.js?build=20260929-r335",
-        "/turn/achievements/time-trials.js?revision=r224-sprint-targets": "/turn/achievements/time-trials.js?build=20260929-r335",
-        "/turn/scoring/scorekeeper-records.js": "/turn/scoring/scorekeeper-records.js?build=20260929-r335",
-        "/turn/tracks/airport-emergency-r496.js": "/turn/tracks/airport-emergency-r496.js?build=20260929-r335",
-        "/turn/tracks/airport-emergency-r496.js?revision=r497-depth-fire": "/turn/tracks/airport-emergency-r496.js?build=20260929-r335",
-        "/turn/ui/minor-ux-polish-r229.js": "/turn/ui/minor-ux-polish-r229.js?build=20260929-r335",
-        "/turn/ui/minor-ux-polish-r229.js?revision=r229-discoverability-cues": "/turn/ui/minor-ux-polish-r229.js?build=20260929-r335",
-        "/turn/ui/leader-marker-r500.js": "/turn/ui/leader-marker-r500.js?build=20260929-r335",
-        "/turn/ui/leader-marker-r500.js?revision=r227-night-marker-outline": "/turn/ui/leader-marker-r500.js?build=20260929-r335",
-        "/turn/ui/player-marker-r428.js": "/turn/ui/player-marker-r428.js?build=20260929-r335",
-        "/turn/ui/player-marker-r428.js?revision=r227-night-marker-outline": "/turn/ui/player-marker-r428.js?build=20260929-r335",
-        "/turn/social/your-turn-share.js": "/turn/social/your-turn-share.js?build=20260929-r335",
-        "/turn/social/your-turn-share.js?revision=r4-runtime-share-state": "/turn/social/your-turn-share.js?build=20260929-r335",
-        "/turn/content/about-turn.js": "/turn/content/about-turn.js?build=20260929-r335",
-        "/turn/content/about-turn.js?revision=r1": "/turn/content/about-turn.js?build=20260929-r335",
-        "/turn/audio/racing-music-v5.js": "/turn/audio/racing-music-v5.js?build=20260929-r335",
-        "/turn/audio/racing-music-v5.js?revision=r197-audio-mix": "/turn/audio/racing-music-v5.js?build=20260929-r335",
-        "/turn/roadbook/roadbook.js": "/turn/roadbook/roadbook.js?build=20260929-r335",
-        "/turn/garage/garage.js": "/turn/garage/garage.js?build=20260929-r335",
-        "/turn/garage/garage-cars.js": "/turn/garage/garage-cars.js?build=20260929-r335",
-        "/turn/garage/garage-selection.js": "/turn/garage/garage-selection.js?build=20260929-r335",
-        "/turn/garage/showroom-viewer.js": "/turn/garage/showroom-viewer.js?build=20260929-r335",
-        "/turn/garage/training-car-guide.js": "/turn/garage/training-car-guide.js?build=20260929-r335",
-        "/turn/garage/training-car-guide.js?revision=r1": "/turn/garage/training-car-guide.js?build=20260929-r335",
-        "/turn/garage/garage-catalog.js": "/turn/garage/garage-catalog.js?build=20260929-r335",
-        "/turn/garage/car-view.js": "/turn/garage/car-view.js?build=20260929-r335",
-        "/turn/garage/car-still.js": "/turn/garage/car-still.js?build=20260929-r335",
-        "/turn/garage/shift-setup.js": "/turn/garage/shift-setup.js?build=20260929-r335",
-        "/turn/garage/shift-gearbox.js": "/turn/garage/shift-gearbox.js?build=20260929-r335",
-        "/turn/garage/saved-car-paint.js": "/turn/garage/saved-car-paint.js?build=20260929-r335",
-        "/turn/tracks/track-manager.js": "/turn/tracks/track-manager.js?build=20260929-r335",
-        "/turn/tracks/track-manager.js?source=20260729-r118-m8": "/turn/tracks/track-manager.js?build=20260929-r335"
+        "/turn/tracks/countryside-world-r531.js?revision=r532-countryside-nature-polish": "/turn/tracks/countryside-world-r531.js?build=20260929-r336",
+        "/turn/tracks/start-area-polish-r519.js?revision=r519-midnight-full-width-accents": "/turn/tracks/start-area-polish-r519.js?build=20260929-r336",
+        "/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling": "/turn/achievements/challenge-expansion-r166.js?revision=r256-achievement-polling&build=20260929-r336",
+        "/turn/achievements/store.js": "/turn/achievements/store.js?build=20260929-r336",
+        "/turn/achievements/store.js?revision=r243-mountain-1300": "/turn/achievements/store.js?build=20260929-r336",
+        "/turn/achievements/support-challenges.js": "/turn/achievements/support-challenges.js?build=20260929-r336",
+        "/turn/achievements/support-challenge-feedback.js": "/turn/achievements/support-challenge-feedback.js?build=20260929-r336",
+        "/turn/achievements/support-challenge-feedback.js?revision=r244-reward-toast-guide": "/turn/achievements/support-challenge-feedback.js?build=20260929-r336",
+        "/turn/achievements/view.js": "/turn/achievements/view.js?build=20260929-r336",
+        "/turn/achievements/view.js?revision=r244-reward-toast-guide": "/turn/achievements/view.js?build=20260929-r336",
+        "/turn/achievements/home-reward-replay-r225.js": "/turn/achievements/home-reward-replay-r225.js?build=20260929-r336",
+        "/turn/achievements/home-reward-replay-r225.js?revision=r244-reward-toast-guide": "/turn/achievements/home-reward-replay-r225.js?build=20260929-r336",
+        "/turn/vehicle/perk-presentation.js": "/turn/vehicle/perk-presentation.js?build=20260929-r336",
+        "/turn/vehicle/perk-presentation.js?revision=r220-apex-grip": "/turn/vehicle/perk-presentation.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?revision=r253-supercar-release": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?source=20260729-r118-m8": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?build=20260806-r161": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?build=20260724-r59": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?revision=r230-vehicle-perks": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/vehicle/catalog.js?build=20260720-r20&revision=r246-lot-saved-paint": "/turn/vehicle/catalog.js?build=20260929-r336",
+        "/turn/training/drive-by-ear-training.js": "/turn/training/drive-by-ear-training.js?build=20260929-r336",
+        "/turn/training/stages.js": "/turn/training/stages.js?build=20260929-r336",
+        "/turn/training/view.js": "/turn/training/view.js?build=20260929-r336",
+        "/turn/input/keyboard-driving-controls.js": "/turn/input/keyboard-driving-controls.js?build=20260929-r336",
+        "/turn/input/keyboard-drive-ownership.js": "/turn/input/keyboard-drive-ownership.js?build=20260929-r336",
+        "/turn/input/qe-drive-controls.js": "/turn/input/qe-drive-controls.js?build=20260929-r336",
+        "/turn/performance-monitor.js": "/turn/performance-monitor.js?build=20260929-r336",
+        "/turn/performance-profile.js": "/turn/performance-profile.js?build=20260929-r336",
+        "/turn/render/car-shadows.js": "/turn/render/car-shadows.js?build=20260929-r336",
+        "/turn/three-runtime.js": "/turn/three-runtime.js?build=20260929-r336",
+        "/turn/tracks/airport-emergency-r493.js": "/turn/tracks/airport-emergency-r493.js?build=20260929-r336",
+        "/turn/tracks/airport-emergency-r494.js": "/turn/tracks/airport-emergency-r494.js?build=20260929-r336",
+        "/turn/tracks/airport-world-r50.js": "/turn/tracks/airport-world-r50.js?build=20260929-r336",
+        "/turn/tracks/airport-world-r52.js": "/turn/tracks/airport-world-r52.js?build=20260929-r336",
+        "/turn/tracks/airport-world-r53.js": "/turn/tracks/airport-world-r53.js?build=20260929-r336",
+        "/turn/tracks/cliffside-world.js": "/turn/tracks/cliffside-world.js?build=20260929-r336",
+        "/turn/tracks/contextual-road-edges.js": "/turn/tracks/contextual-road-edges.js?build=20260929-r336",
+        "/turn/tracks/countryside-bella-r166.js": "/turn/tracks/countryside-bella-r166.js?build=20260929-r336",
+        "/turn/tracks/countryside-world-r531.js": "/turn/tracks/countryside-world-r531.js?build=20260929-r336",
+        "/turn/tracks/harbor-world-r82.js": "/turn/tracks/harbor-world-r82.js?build=20260929-r336",
+        "/turn/tracks/harbor-world.js": "/turn/tracks/harbor-world.js?build=20260929-r336",
+        "/turn/tracks/kenney-track-landmarks-r517.js": "/turn/tracks/kenney-track-landmarks-r517.js?build=20260929-r336",
+        "/turn/tracks/midnight-city-world.js": "/turn/tracks/midnight-city-world.js?build=20260929-r336",
+        "/turn/tracks/night-player-spotlight-r560.js": "/turn/tracks/night-player-spotlight-r560.js?build=20260929-r336",
+        "/turn/tracks/start-area-polish-r519.js": "/turn/tracks/start-area-polish-r519.js?build=20260929-r336",
+        "/turn/training/course.js": "/turn/training/course.js?build=20260929-r336",
+        "/turn/ui/low-graphics-setting.js": "/turn/ui/low-graphics-setting.js?build=20260929-r336",
+        "/turn/ui/spectate.js": "/turn/ui/spectate.js?build=20260929-r336",
+        "/turn/vehicle/tractor-smv-sign.js": "/turn/vehicle/tractor-smv-sign.js?build=20260929-r336",
+        "/turn/world-art-pass.js": "/turn/world-art-pass.js?build=20260929-r336",
+        "/turn/world-assets.js": "/turn/world-assets.js?build=20260929-r336",
+        "/turn/world-beauty.js": "/turn/world-beauty.js?build=20260929-r336",
+        "/turn/performance-monitor.js?build=20260720-r20": "/turn/performance-monitor.js?build=20260929-r336",
+        "/turn/tracks/airport-emergency-r494.js?revision=r496-hud-depth": "/turn/tracks/airport-emergency-r494.js?build=20260929-r336",
+        "/turn/tracks/airport-world-r52.js?build=20260722-r52": "/turn/tracks/airport-world-r52.js?build=20260929-r336",
+        "/turn/tracks/contextual-road-edges.js?revision=r518-signature-yellow": "/turn/tracks/contextual-road-edges.js?build=20260929-r336",
+        "/turn/tracks/harbor-world.js?base=20260725-r80": "/turn/tracks/harbor-world.js?build=20260929-r336",
+        "/turn/tracks/night-player-spotlight-r560.js?revision=r175-reconcile": "/turn/tracks/night-player-spotlight-r560.js?build=20260929-r336",
+        "/turn/tracks/airport-start-banner-r520.js?revision=r520-signature-yellow": "/turn/tracks/airport-start-banner-r520.js?build=20260929-r336",
+        "/turn/ui/drift-camera-setting.js": "/turn/ui/drift-camera-setting.js?build=20260929-r336",
+        "/turn/ui/drift-camera-setting.js?revision=r214-shared-speed-fov": "/turn/ui/drift-camera-setting.js?build=20260929-r336",
+        "/turn/ui/player-marker-r427.js": "/turn/ui/player-marker-r427.js?build=20260929-r336",
+        "/turn/ui/player-marker-r427.js?revision=r427": "/turn/ui/player-marker-r427.js?build=20260929-r336",
+        "/turn/tracks/shared-night-sky.js": "/turn/tracks/shared-night-sky.js?build=20260929-r336",
+        "/turn/tracks/definitions.js": "/turn/tracks/definitions.js?build=20260929-r336",
+        "/turn/tracks/definitions.js?build=20260805-r160": "/turn/tracks/definitions.js?build=20260929-r336",
+        "/turn/tracks/definitions.js?build=20260808-r162": "/turn/tracks/definitions.js?build=20260929-r336",
+        "/turn/tracks/definitions.js?lab-base=dead-canyon-suburbs": "/turn/tracks/definitions.js?build=20260929-r336",
+        "/turn/achievements/catalog-base.js": "/turn/achievements/catalog-base.js?build=20260929-r336",
+        "/turn/achievements/catalog-base.js?revision=r241-trophy-balance": "/turn/achievements/catalog-base.js?build=20260929-r336",
+        "/turn/achievements/scoring-achievements.js": "/turn/achievements/scoring-achievements.js?build=20260929-r336",
+        "/turn/achievements/scoring-achievements.js?revision=r3-trophy-balance": "/turn/achievements/scoring-achievements.js?build=20260929-r336",
+        "/turn/audio/music/songbook.js": "/turn/audio/music/songbook.js?build=20260929-r336",
+        "/turn/audio/music/songbook.js?revision=r214-mountain-ccttbb": "/turn/audio/music/songbook.js?build=20260929-r336",
+        "/turn/accessibility/color-cues.js": "/turn/accessibility/color-cues.js?build=20260929-r336",
+        "/turn/accessibility/color-cues.js?revision=r163": "/turn/accessibility/color-cues.js?build=20260929-r336",
+        "/turn/ui/track-icons.js": "/turn/ui/track-icons.js?build=20260929-r336",
+        "/turn/ui/track-icons.js?revision=r1-track-reward-icons": "/turn/ui/track-icons.js?build=20260929-r336",
+        "/turn/tracks/pace-notes-base.js": "/turn/tracks/pace-notes-base.js?build=20260929-r336",
+        "/turn/tracks/definitions.js?build=20260806-r161": "/turn/tracks/definitions.js?build=20260929-r336",
+        "/turn/ui/track-intro.js": "/turn/ui/track-intro.js?build=20260929-r336",
+        "/turn/ui/race-orientation.js": "/turn/ui/race-orientation.js?build=20260929-r336",
+        "/turn/ui/track-intro.js?source=20260729-r118-m8": "/turn/ui/track-intro.js?build=20260929-r336",
+        "/turn/ui/track-intro.js?build=20260725-r75": "/turn/ui/track-intro.js?build=20260929-r336",
+        "/turn/achievements/night-shift.js?revision=r146-achievement-expansion": "/turn/achievements/night-shift.js?build=20260929-r336",
+        "/turn/achievements/catalog.js": "/turn/achievements/catalog.js?build=20260929-r336",
+        "/turn/progression/trophy-road.js": "/turn/progression/trophy-road.js?build=20260929-r336",
+        "/turn/tracks/cliffside-village.js": "/turn/tracks/cliffside-village.js?build=20260929-r336",
+        "/turn/tracks/mountain-world.js": "/turn/tracks/mountain-world.js?build=20260929-r336",
+        "/turn/tracks/mountain-world-base.js": "/turn/tracks/mountain-world-base.js?build=20260929-r336",
+        "/turn/tracks/mountain-terrain.js": "/turn/tracks/mountain-terrain.js?build=20260929-r336",
+        "/turn/tracks/mountain-scenery.js": "/turn/tracks/mountain-scenery.js?build=20260929-r336",
+        "/turn/tracks/mountain-polish.js": "/turn/tracks/mountain-polish.js?build=20260929-r336",
+        "/turn/tracks/mountain-visual-polish.js": "/turn/tracks/mountain-visual-polish.js?build=20260929-r336",
+        "/turn/tracks/mountain-waterfall.js": "/turn/tracks/mountain-waterfall.js?build=20260929-r336",
+        "/turn/tracks/mountain-village.js": "/turn/tracks/mountain-village.js?build=20260929-r336",
+        "/turn/tracks/mountain-night.js": "/turn/tracks/mountain-night.js?build=20260929-r336",
+        "/turn/tracks/mountain-long-extension.js": "/turn/tracks/mountain-long-extension.js?build=20260929-r336",
+        "/turn/tracks/definitions-base.js": "/turn/tracks/definitions-base.js?build=20260929-r336",
+        "/turn/tracks/catalog.js": "/turn/tracks/catalog.js?build=20260929-r336",
+        "/turn/tracks/catalog.js?source=20260729-r118-m8": "/turn/tracks/catalog.js?build=20260929-r336",
+        "/turn/tracks/catalog.js?build=20260806-r161": "/turn/tracks/catalog.js?build=20260929-r336",
+        "/turn/tracks/catalog.js?build=20260818-r175": "/turn/tracks/catalog.js?build=20260929-r336",
+        "/turn/achievements/time-trials.js": "/turn/achievements/time-trials.js?build=20260929-r336",
+        "/turn/achievements/time-trials.js?revision=r224-sprint-targets": "/turn/achievements/time-trials.js?build=20260929-r336",
+        "/turn/scoring/scorekeeper-records.js": "/turn/scoring/scorekeeper-records.js?build=20260929-r336",
+        "/turn/tracks/airport-emergency-r496.js": "/turn/tracks/airport-emergency-r496.js?build=20260929-r336",
+        "/turn/tracks/airport-emergency-r496.js?revision=r497-depth-fire": "/turn/tracks/airport-emergency-r496.js?build=20260929-r336",
+        "/turn/ui/minor-ux-polish-r229.js": "/turn/ui/minor-ux-polish-r229.js?build=20260929-r336",
+        "/turn/ui/minor-ux-polish-r229.js?revision=r229-discoverability-cues": "/turn/ui/minor-ux-polish-r229.js?build=20260929-r336",
+        "/turn/ui/leader-marker-r500.js": "/turn/ui/leader-marker-r500.js?build=20260929-r336",
+        "/turn/ui/leader-marker-r500.js?revision=r227-night-marker-outline": "/turn/ui/leader-marker-r500.js?build=20260929-r336",
+        "/turn/ui/player-marker-r428.js": "/turn/ui/player-marker-r428.js?build=20260929-r336",
+        "/turn/ui/player-marker-r428.js?revision=r227-night-marker-outline": "/turn/ui/player-marker-r428.js?build=20260929-r336",
+        "/turn/social/your-turn-share.js": "/turn/social/your-turn-share.js?build=20260929-r336",
+        "/turn/social/your-turn-share.js?revision=r4-runtime-share-state": "/turn/social/your-turn-share.js?build=20260929-r336",
+        "/turn/content/about-turn.js": "/turn/content/about-turn.js?build=20260929-r336",
+        "/turn/content/about-turn.js?revision=r1": "/turn/content/about-turn.js?build=20260929-r336",
+        "/turn/audio/racing-music-v5.js": "/turn/audio/racing-music-v5.js?build=20260929-r336",
+        "/turn/audio/racing-music-v5.js?revision=r197-audio-mix": "/turn/audio/racing-music-v5.js?build=20260929-r336",
+        "/turn/roadbook/roadbook.js": "/turn/roadbook/roadbook.js?build=20260929-r336",
+        "/turn/garage/garage.js": "/turn/garage/garage.js?build=20260929-r336",
+        "/turn/garage/garage-cars.js": "/turn/garage/garage-cars.js?build=20260929-r336",
+        "/turn/garage/garage-selection.js": "/turn/garage/garage-selection.js?build=20260929-r336",
+        "/turn/garage/showroom-viewer.js": "/turn/garage/showroom-viewer.js?build=20260929-r336",
+        "/turn/garage/training-car-guide.js": "/turn/garage/training-car-guide.js?build=20260929-r336",
+        "/turn/garage/training-car-guide.js?revision=r1": "/turn/garage/training-car-guide.js?build=20260929-r336",
+        "/turn/garage/garage-catalog.js": "/turn/garage/garage-catalog.js?build=20260929-r336",
+        "/turn/garage/car-view.js": "/turn/garage/car-view.js?build=20260929-r336",
+        "/turn/garage/car-still.js": "/turn/garage/car-still.js?build=20260929-r336",
+        "/turn/garage/shift-setup.js": "/turn/garage/shift-setup.js?build=20260929-r336",
+        "/turn/garage/shift-gearbox.js": "/turn/garage/shift-gearbox.js?build=20260929-r336",
+        "/turn/garage/saved-car-paint.js": "/turn/garage/saved-car-paint.js?build=20260929-r336",
+        "/turn/tracks/track-manager.js": "/turn/tracks/track-manager.js?build=20260929-r336",
+        "/turn/tracks/track-manager.js?source=20260729-r118-m8": "/turn/tracks/track-manager.js?build=20260929-r336"
       }
     }
   </script>
@@ -411,18 +411,18 @@
   </div>
   <div class="manual-steer" id="manualSteer" role="slider" aria-label="Steering. Drag left or right." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" hidden><span class="manual-steer-knob" aria-hidden="true"></span></div>
   <div class="controls" id="controls" hidden><div class="utility-group"><button class="utility" id="calibrateButton" type="button">Recalibrate</button><button class="utility" id="resetButton" type="button" aria-label="Restart the current lap from the start line">Restart Lap</button></div><div class="pedals"><button class="pedal brake" id="brakeButton" type="button">Brake</button><button class="pedal gas" id="gasButton" type="button">Gas</button></div></div>
-  <script type="module" src="./ui/about-history-bootstrap-r165.js?build=20260929-r335-r534-heading-first-about-r224-modal-headings"></script>
-  <script src="./ui/startup-screen-reader-handoff-r529.js?build=20260929-r335&revision=r531-screen-reader-followup"></script>
-  <script type="module" src="./testing/admin-unlock-sequence.js?build=20260929-r335&revision=r243-mountain-1300"></script>
-  <script type="module" src="./ui/low-graphics-setting.js?build=20260929-r335"></script>
-  <script type="module" src="./app.js?build=20260929-r335-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r420-music-warm-r426-loading-copy-r164-long-session-robustness-post-soak-r199-card-gap-rim-r518-landmark-framing-ground-layering-showroom-r200-pwa-color-r206-r532-countryside-nature-r221-trajectory-wheel-steering-30-r220-race-apex-guide-r224-modal-headings-r254-achievement-filter-rows"></script>
-  <script type="module" src="./render/skid-continuity-r198.js?revision=r198-skid-continuity&build=20260929-r335"></script>
+  <script type="module" src="./ui/about-history-bootstrap-r165.js?build=20260929-r336-r534-heading-first-about-r224-modal-headings"></script>
+  <script src="./ui/startup-screen-reader-handoff-r529.js?build=20260929-r336&revision=r531-screen-reader-followup"></script>
+  <script type="module" src="./testing/admin-unlock-sequence.js?build=20260929-r336&revision=r243-mountain-1300"></script>
+  <script type="module" src="./ui/low-graphics-setting.js?build=20260929-r336"></script>
+  <script type="module" src="./app.js?build=20260929-r336-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r420-music-warm-r426-loading-copy-r164-long-session-robustness-post-soak-r199-card-gap-rim-r518-landmark-framing-ground-layering-showroom-r200-pwa-color-r206-r532-countryside-nature-r221-trajectory-wheel-steering-30-r220-race-apex-guide-r224-modal-headings-r254-achievement-filter-rows"></script>
+  <script type="module" src="./render/skid-continuity-r198.js?revision=r198-skid-continuity&build=20260929-r336"></script>
 
-  <script type="module" src="./input/qe-drive-controls-bootstrap.js?build=20260929-r335"></script>
-  <script type="module" src="./ui/r411-race-controls.js?build=20260929-r335"></script>
-  <script type="module" src="./ui/trophy-road-highlight-perk-polish-r258.js?build=20260929-r335&revision=r258-highlight-perk-polish"></script>
-  <script type="module" src="./accessibility/color-accessibility-r163.js?build=20260929-r335-paint-basics"></script>
-  <script type="module" src="./achievements/chromatic-camouflage-r183.js?revision=r184-idle-summary-check&build=20260929-r335"></script>
+  <script type="module" src="./input/qe-drive-controls-bootstrap.js?build=20260929-r336"></script>
+  <script type="module" src="./ui/r411-race-controls.js?build=20260929-r336"></script>
+  <script type="module" src="./ui/trophy-road-highlight-perk-polish-r258.js?build=20260929-r336&revision=r258-highlight-perk-polish"></script>
+  <script type="module" src="./accessibility/color-accessibility-r163.js?build=20260929-r336-paint-basics"></script>
+  <script type="module" src="./achievements/chromatic-camouflage-r183.js?revision=r184-idle-summary-check&build=20260929-r336"></script>
   <script type="module" src="./social/your-turn-share-bootstrap.js?revision=r4-runtime-share-state"></script>
-  <script type="module" src="./tracks/countryside-bella-rescue-hotfix-r176.js?build=20260929-r335&revision=r530-screen-reader-quality"></script>
+  <script type="module" src="./tracks/countryside-bella-rescue-hotfix-r176.js?build=20260929-r336&revision=r530-screen-reader-quality"></script>
 </body></html>
