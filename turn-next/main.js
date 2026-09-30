@@ -38,10 +38,7 @@ import {
   resetVehiclePerkRuntimeState,
   resolveGraduatedStageFeedback
 } from '/turn/vehicle/perk-runtime.js?revision=r233-graduated';
-import {
-  resolveVehiclePerkStatusFeedback,
-  vehiclePerkStatusDurationMs
-} from '/turn/vehicle/perk-presentation.js';
+import { resolveVehiclePerkStatusFeedback } from '/turn/vehicle/perk-presentation.js';
 import { showCompactRacePill } from '/turn/achievements/support-challenge-feedback.js';
 import { createScoreFeedback } from '/turn/scoring/score-feedback.js';
 import {
@@ -1022,12 +1019,7 @@ function updatePhysics(dt, now) {
     previousProgress: previousVehiclePerkProgress,
     nextProgress: state.vehiclePerkProgress
   });
-  if (perkStatusFeedback) {
-    showCompactRacePill(perkStatusFeedback, {
-      tone: 'blue',
-      duration: vehiclePerkStatusDurationMs(state.vehicleId)
-    });
-  }
+  if (perkStatusFeedback) showCompactRacePill(perkStatusFeedback, { tone: 'blue' });
 
   const graduatedFeedback = resolveGraduatedStageFeedback(
     previousVehiclePerkStage,

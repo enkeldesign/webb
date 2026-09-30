@@ -5,10 +5,7 @@ import {
   CAR_CATALOG,
   deriveVehicleTuning
 } from '../../turn/vehicle/catalog.js';
-import {
-  resolveVehiclePerkStatusFeedback,
-  vehiclePerkStatusDurationMs
-} from '../../turn/vehicle/perk-presentation.js';
+import { resolveVehiclePerkStatusFeedback } from '../../turn/vehicle/perk-presentation.js';
 import { getVehicleSpeedLimit } from '../../turn/vehicle/physics.js';
 import {
   CARRY_ON_LOCK_DRAG_ADD,
@@ -452,10 +449,7 @@ const shiftedToFive = cleanExitRun([[1, straight], [1.5, drifting], [1, straight
 assert.equal(shiftedToFive.peak, compactControlFive.controlMultiplier, 'CLEAN EXIT never lifts CONTROL past 5/5');
 assert.equal(resolveVehiclePerkStatusFeedback({
   vehicleId: compact.id, perkUnlocked: true, previousProgress: 0.4, nextProgress: 1
-}), 'CONTROL +1', 'Every clean drift shows the CONTROL +1 cue, a refresh included');
-assert.equal(vehiclePerkStatusDurationMs(compact.id), CLEAN_EXIT_SECONDS * 1000, 'The cue stays while the bonus lasts');
-assert.equal(vehiclePerkStatusDurationMs(suv.id), undefined, 'Other perk cues keep the standard pill time');
-assert.match(mainSource, /showCompactRacePill\(perkStatusFeedback, \{\s*tone: 'blue',\s*duration: vehiclePerkStatusDurationMs\(state\.vehicleId\)\s*\}\)/);
+}), null, 'CLEAN EXIT triggers too often for a race pill: it has no cue');
 
 // Ownership and lifecycle are canonical race state, not a cached UI guess.
 assert.match(mainSource, /vehiclePerkUnlocked: isVehiclePerkUnlocked\(initialVehicleSelection\.carId\)/);
