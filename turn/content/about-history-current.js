@@ -1085,7 +1085,7 @@ Object.freeze({
     Object.freeze(['1.31.1 r336', 'ROADBOOK no longer disappears after swiping back from GARAGE. When GARAGE closed under a finger still on the screen, the swipe was never finished: ROADBOOK stopped taking taps, and the next touch could hide it, leaving only the empty track behind. The swipe now always ends, and ROADBOOK only hides again behind a GARAGE that is still open.']),
     Object.freeze(['1.31.2 r337', 'Race HUD and Trophy Road fit their content. The lap banner grows to fit the lap time instead of cutting it off before DRIFT is unlocked, gives BEST and NEW BEST their own line where columns are narrow, uses the full width in left-handed portrait, and on the narrowest phones puts DRIFT and FLOW under the lap time. In landscape, DRIFT and FLOW show LAST and BEST on a line each, as in portrait, so a five-digit record stays inside its panel; on the shortest phones the panel keeps the live score. Trophy Road\'s decorative bends meet the road without gaps in portrait.']),
     Object.freeze(['1.31.3 r338', 'ROADBOOK and GARAGE are titled in the TURN font, the heavy rounded face of LOADING and the track names. In portrait, the track loading screen now shows one quick TIP instead of a paragraph: a yellow card with the rotate-device symbol, whose phone turns to landscape, and TIP: ROTATE TO LANDSCAPE FOR RACING.']),
-    Object.freeze(['1.32.0 r339', 'GOALS on the Track sheet. Every track lists what there is to earn on it: its achievements from ACHIEVEMENTS, each marked UNLOCKED, IN PROGRESS or LOCKED with its trophies, and how far you are on the scored ones (DRIFT 4,200 / 8,000, or your best lap against a SPRINT target). The goal to go for next comes first. Choose a goal to open ACHIEVEMENTS on that track\'s achievements, at that goal. On iPad the overview beside ROADBOOK shows the same goals.'])
+    Object.freeze(['1.32.0 r339', 'TRACK ACHIEVEMENTS on the Track sheet. Every track lists what there is to earn on it, straight from ACHIEVEMENTS: each with its category, trophies and state, EARNED, IN PROGRESS or NOT EARNED, and how far you are on the scored ones (DRIFT 4,200 / 8,000, or your best lap against a SPRINT target). A DRIFT or FLOW achievement says when Trophy Road unlocks its mode. The one to go for next comes first, marked NEXT UP. Choose one to open ACHIEVEMENTS on that track, at that achievement. On iPad the overview beside ROADBOOK shows the same list.'])
   ])
 })
 ]);
@@ -1093,5 +1093,5 @@ Object.freeze({
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.32.0',
   build: '2026.09.30-r339',
-  note: 'GOALS: every track\'s achievements on its Track sheet, the next one to go for first.'
+  note: 'TRACK ACHIEVEMENTS: every track\'s achievements on its Track sheet, the next one to go for first.'
 });

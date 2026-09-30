@@ -41,7 +41,16 @@ const RECORD_KINDS = Object.freeze([
 // A DRIFT or FLOW goal can only be scored once its mode is unlocked on Trophy Road.
 const SCORE_GOAL_FEATURES = Object.freeze({ drift: 'drift-attack', flow: 'flow' });
 const SCORE_GOAL_RECORDS = Object.freeze({ drift: getBestDriftRecord, flow: getBestFlowRecord });
-const GOAL_STATUS_TEXT = Object.freeze({ unlocked: '✓ UNLOCKED', progress: 'IN PROGRESS', locked: 'LOCKED' });
+const GOAL_STATUS_TEXT = Object.freeze({ earned: 'EARNED', progress: 'IN PROGRESS', open: 'NOT EARNED' });
+// The chip each goal wears, in ACHIEVEMENTS' words.
+const GOAL_TAGS = Object.freeze({
+  racing: 'RACING',
+  'time-trials': 'TIME TRIALS',
+  scoring: 'SCORING',
+  exploration: 'EXPLORATION',
+  'ways-to-play': 'WAYS TO PLAY',
+  onboarding: 'GETTING STARTED'
+});
 // The inline overview replaces the Track sheet once the screen has room for it: beside
 // the grid on large landscape screens, below it on tall portrait ones.
 const OVERVIEW_QUERY = '(min-width: 1000px) and (min-height: 640px), (min-width: 700px) and (min-height: 1000px)';
@@ -187,7 +196,7 @@ function renderDetail(track, { idPrefix }) {
     </section>
     <section class="roadbook-goals" aria-labelledby="${idPrefix}GoalsTitle">
       <h3 class="turn-pr-section-title roadbook-goals-title" id="${idPrefix}GoalsTitle">
-        <span>Goals</span><span class="roadbook-goals-count"></span>
+        <span>Track achievements</span><span class="roadbook-goals-count"></span>
       </h3>
       <ol class="roadbook-goal-list"></ol>
     </section>`;
@@ -214,11 +223,6 @@ function achievementEarned(id) {
 function goalProgress(achievement, trackId) {
   const channel = achievement.scoreChannel;
   if (channel && SCORE_GOAL_FEATURES[channel]) {
-    const featureId = SCORE_GOAL_FEATURES[channel];
-    if (!isFeatureUnlocked(featureId)) {
-      const reward = rewardForFeature(featureId);
-      return { ratio: 0, text: `${channel.toUpperCase()} unlocks at ${reward?.threshold ?? ''} trophies` };
-    }
     const score = Math.max(0, Math.round(Number(SCORE_GOAL_RECORDS[channel](trackId)?.score) || 0));
     const target = Number(achievement.target) || 0;
     if (!score || !target) return null;
@@ -238,54 +242,63 @@ function goalProgress(achievement, trackId) {
   return null;
 }
 
+// Each goal is EARNED, IN PROGRESS, NOT EARNED, or gated: a DRIFT or FLOW score whose
+// mode Trophy Road has yet to unlock.
 export function trackGoals(trackId) {
   const goals = trackAchievements(trackId).map((achievement) => {
     const earned = achievementEarned(achievement.id);
-    const progress = earned ? null : goalProgress(achievement, trackId);
-    const state = earned ? 'unlocked' : progress?.ratio > 0 ? 'progress' : 'locked';
+    const featureId = SCORE_GOAL_FEATURES[achievement.scoreChannel];
+    const gate = !earned && featureId && !isFeatureUnlocked(featureId) ? rewardForFeature(featureId) : null;
+    const progress = earned || gate ? null : goalProgress(achievement, trackId);
+    const state = earned ? 'earned' : gate ? 'gated' : progress?.ratio > 0 ? 'progress' : 'open';
     // A hidden achievement keeps its secret until it is earned, as in ACHIEVEMENTS.
     const secret = achievement.hidden === true && !earned;
-    return { achievement, state, progress, secret };
+    return { achievement, state, progress, gate, secret };
   });
   // Next: the goal the player is closest to, else the first open one in catalog order.
-  // Never a secret, nor a score whose mode is still locked.
-  const open = goals.filter((goal) => goal.state !== 'unlocked' && !goal.secret
-    && !(goal.achievement.scoreChannel && !isFeatureUnlocked(SCORE_GOAL_FEATURES[goal.achievement.scoreChannel])));
+  // Never a secret, nor a gated score.
+  const open = goals.filter((goal) => (goal.state === 'progress' || goal.state === 'open') && !goal.secret);
   const next = open.reduce((best, goal) => (
     goal.state === 'progress' && (!best || best.state !== 'progress' || goal.progress.ratio > best.progress.ratio) ? goal : best
   ), null) || open[0] || null;
   if (next) next.next = true;
-  const rank = (goal) => (goal.next ? 0 : goal.state === 'unlocked' ? 2 : 1);
+  const rank = (goal) => (goal.next ? 0 : goal.state === 'earned' ? 2 : 1);
   return goals
     .map((goal, index) => ({ goal, index }))
     .sort((a, b) => rank(a.goal) - rank(b.goal) || a.index - b.index)
     .map(({ goal }) => goal);
 }
 
-function goalMarkup({ achievement, state, progress, secret, next }) {
+function goalMarkup({ achievement, state, progress, gate, secret, next }) {
   const description = secret
     ? (Object.hasOwn(achievement, 'lockedDescription') ? achievement.lockedDescription : 'Hidden achievement. The title is your clue.')
     : achievement.description;
   const icon = ACHIEVEMENT_ICONS[secret ? 'secret' : achievement.icon] || ACHIEVEMENT_ICONS.trophy;
+  const tag = achievement.hidden === true ? 'HIDDEN' : GOAL_TAGS[achievement.category] || String(achievement.category).toUpperCase();
+  const channel = String(achievement.scoreChannel || '').toUpperCase();
+  const status = gate
+    ? `<span class="roadbook-goal-gate"><span class="turn-pr-lock-icon" aria-hidden="true">${LOCK_ICON}</span><span>Unlock ${channel} at ${gate.threshold}<span class="turn-pr-lock-icon" aria-hidden="true">${TROPHY_ICON}</span><span class="turn-sr-only"> trophies</span></span></span>`
+    : `<span class="roadbook-goal-pill">${state === 'earned' ? '<span aria-hidden="true">✓</span>' : ''}${GOAL_STATUS_TEXT[state]}</span>`;
   const progressMarkup = progress && !secret ? `
-      <span class="roadbook-goal-progress">
-        <span class="roadbook-goal-progress-text">${escapeHtml(progress.text)}</span>
-        ${progress.ratio > 0 ? `<span class="roadbook-goal-bar" aria-hidden="true"><i style="--roadbook-goal-progress:${(progress.ratio * 100).toFixed(1)}%"></i></span>` : ''}
-      </span>` : '';
+        <span class="roadbook-goal-progress">
+          <span class="roadbook-goal-progress-text">${escapeHtml(progress.text)}</span>
+          <span class="roadbook-goal-bar" aria-hidden="true"><i style="--roadbook-goal-progress:${(progress.ratio * 100).toFixed(1)}%"></i></span>
+        </span>` : '';
+  // Title first for screen readers; the grid puts the chip row on top.
   return `
     <li class="roadbook-goal-item">
       <button class="roadbook-goal is-${state}${next ? ' is-next' : ''}" type="button" aria-haspopup="dialog" data-achievement-id="${escapeHtml(achievement.id)}">
         <span class="roadbook-goal-icon" aria-hidden="true">${icon}</span>
         <span class="roadbook-goal-copy">
-          ${next ? '<span class="roadbook-goal-next">NEXT UP</span>' : ''}
           <span class="roadbook-goal-name">${escapeHtml(achievement.title)}</span>
           ${description ? `<span class="roadbook-goal-description">${escapeHtml(description)}</span>` : ''}
           ${progressMarkup}
         </span>
-        <span class="roadbook-goal-side">
-          <span class="roadbook-goal-status">${state === 'locked' ? `<span class="turn-pr-lock-icon" aria-hidden="true">${LOCK_ICON}</span>` : ''}${GOAL_STATUS_TEXT[state]}</span>
-          <span class="roadbook-goal-reward"><span class="turn-pr-lock-icon" aria-hidden="true">${TROPHY_ICON}</span>${achievement.trophies}<span class="turn-sr-only"> trophies</span></span>
+        <span class="roadbook-goal-meta">
+          <span class="roadbook-goal-tag${achievement.hidden === true ? ' is-hidden' : ''}">${tag}</span>
+          <span class="roadbook-goal-reward">+${achievement.trophies}<span class="turn-pr-lock-icon" aria-hidden="true">${TROPHY_ICON}</span><span class="turn-sr-only"> trophies</span></span>
         </span>
+        <span class="roadbook-goal-status">${next ? '<span class="roadbook-goal-next">NEXT UP</span>' : ''}${status}</span>
       </button>
     </li>`;
 }
@@ -295,8 +308,8 @@ function fillGoals(container, track) {
   const count = container.querySelector('.roadbook-goals-count');
   if (!list) return;
   const goals = trackGoals(track.id);
-  const earned = goals.filter((goal) => goal.state === 'unlocked').length;
-  count.textContent = `${earned} of ${goals.length} unlocked`;
+  const earned = goals.filter((goal) => goal.state === 'earned').length;
+  count.textContent = `${earned} / ${goals.length} EARNED`;
   list.innerHTML = goals.map(goalMarkup).join('');
 }
 

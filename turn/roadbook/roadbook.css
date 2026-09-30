@@ -182,9 +182,9 @@
   }
 }
 
-/* ---------- Goals (#1031) ----------
-   The track's achievements on the Track sheet and the overview. Each goal names its
-   state in text (UNLOCKED, IN PROGRESS, LOCKED); colour only repeats it. */
+/* ---------- Track achievements (#1031) ----------
+   The track's achievements on the Track sheet and the overview. Each names its state
+   in text (EARNED, IN PROGRESS, NOT EARNED, or what unlocks it); colour repeats it. */
 
 .roadbook-goals {
   display: grid;
@@ -201,8 +201,7 @@
 }
 
 .roadbook-goals-count {
-  color: var(--turn-pr-muted);
-  font-weight: 700;
+  font-weight: 900;
   letter-spacing: 0.06em;
 }
 
@@ -214,11 +213,16 @@
   list-style: none;
 }
 
+/* The chip row on top with the state beside it, then the goal's words across the
+   card. The words come first in the DOM, so screen readers start with the title. */
 .roadbook-goal {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "icon meta status"
+    "icon copy copy";
   align-items: start;
-  gap: 4px 12px;
+  gap: 6px 12px;
   width: 100%;
   min-height: var(--turn-pr-target, 44px);
   margin: 0;
@@ -226,8 +230,8 @@
   border: 2px solid var(--turn-ink, #08090a);
   border-radius: 12px;
   background: var(--turn-pr-card, #fffcf2);
-  color: var(--turn-ink, #08090a);
   box-shadow: none;
+  color: var(--turn-ink, #08090a);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -238,13 +242,17 @@
   outline-offset: 3px;
 }
 
+.roadbook-goal.is-earned { background: var(--turn-green-100, #c8f5d0); }
+.roadbook-goal.is-gated { background: var(--turn-muted, #d6d0c2); }
+
 .roadbook-goal.is-next {
   border-width: 3px;
-  background: var(--turn-yellow-100, #fff3bf);
+  background: var(--turn-yellow-100, #fff0a8);
 }
 
 /* A fixed size, as in ACHIEVEMENTS: larger text grows the words, not the icon. */
 .roadbook-goal-icon {
+  grid-area: icon;
   display: grid;
   place-items: center;
   width: 44px;
@@ -253,7 +261,7 @@
   box-sizing: border-box;
   border: 2px solid var(--turn-ink, #08090a);
   border-radius: 10px;
-  background: var(--turn-muted, #d6d0c2);
+  background: var(--turn-paper, #fff8e8);
 }
 
 .roadbook-goal-icon svg {
@@ -267,26 +275,101 @@
   stroke-linejoin: round;
 }
 
-.roadbook-goal.is-unlocked .roadbook-goal-icon { background: var(--turn-action-success, #8ce99a); }
+.roadbook-goal.is-earned .roadbook-goal-icon { background: var(--turn-action-success, #8ce99a); }
 .roadbook-goal.is-progress .roadbook-goal-icon { background: var(--turn-blue-200, #8ed8ff); }
+.roadbook-goal.is-gated .roadbook-goal-icon { background: var(--turn-muted, #d6d0c2); }
 
-.roadbook-goal-copy {
-  display: grid;
-  gap: 3px;
+.roadbook-goal-meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
   min-width: 0;
 }
 
-.roadbook-goal-next {
-  justify-self: start;
-  padding: 2px 7px;
+/* Chips and pills: compact, bold, uppercase labels, as ACHIEVEMENTS' tags. */
+.roadbook-goal-tag,
+.roadbook-goal-next,
+.roadbook-goal-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 2px solid var(--turn-ink, #08090a);
   border-radius: 999px;
+  background: var(--turn-paper, #fff8e8);
+  font-family: var(--turn-pr-font-body);
+  font-size: max(var(--turn-text-floor, 11px), 0.6875rem);
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.roadbook-goal-tag.is-hidden { background: var(--turn-muted, #d6d0c2); }
+
+.roadbook-goal-next {
   background: var(--turn-ink, #08090a);
   color: var(--turn-yellow-400, #ffd43b);
-  font-family: var(--turn-pr-font-mono);
-  font-size: var(--turn-pr-type-meta);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  line-height: 1.3;
+}
+
+.roadbook-goal-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--turn-pr-font-body);
+  font-size: max(var(--turn-text-floor, 11px), 0.8125rem);
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+/* The state, with NEXT UP above it on the goal to go for. */
+.roadbook-goal-status {
+  grid-area: status;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.roadbook-goal-pill {
+  background: var(--turn-muted, #d6d0c2);
+}
+
+.roadbook-goal.is-earned .roadbook-goal-pill { background: var(--turn-action-success, #8ce99a); }
+.roadbook-goal.is-progress .roadbook-goal-pill { background: var(--turn-blue-200, #8ed8ff); }
+
+/* A score Trophy Road has yet to unlock: what unlocks it, where the state would be. */
+.roadbook-goal-gate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 9.5rem;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgb(8 9 10 / 0.08);
+  font-family: var(--turn-pr-font-body);
+  font-size: max(var(--turn-text-floor, 11px), 0.6875rem);
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.roadbook-goal-gate > .turn-pr-lock-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.roadbook-goal-gate .turn-pr-lock-icon + .turn-sr-only,
+.roadbook-goal-gate span > .turn-pr-lock-icon {
+  margin-left: 3px;
+}
+
+.roadbook-goal-copy {
+  grid-area: copy;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
 }
 
 .roadbook-goal-name {
@@ -312,7 +395,7 @@
 .roadbook-goal-progress {
   display: grid;
   gap: 4px;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 .roadbook-goal-progress-text {
@@ -338,57 +421,42 @@
   background: var(--turn-blue-500, #38d9ff);
 }
 
-.roadbook-goal-side {
-  display: grid;
-  justify-items: end;
-  gap: 6px;
-  font-family: var(--turn-pr-font-mono);
-  font-size: var(--turn-pr-type-meta);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.roadbook-goal-status,
-.roadbook-goal-reward {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.roadbook-goal.is-locked .roadbook-goal-status { color: var(--turn-pr-muted); }
-
-/* A narrow list (phones, the iPad overview's column, large text): state and trophies
-   move under the goal's text. */
-@container (max-width: 30rem) {
+/* Narrow lists (small phones): chips, then the state, then the words, beside the icon. */
+@container (max-width: 21rem) {
   .roadbook-goal {
     grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-areas:
+      "icon meta"
+      "icon status"
+      "icon copy";
   }
 
-  .roadbook-goal-side {
-    grid-column: 2;
-    grid-auto-flow: column;
-    justify-content: start;
-    justify-items: start;
-    gap: 12px;
-    text-align: left;
+  .roadbook-goal-status {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
   }
 }
 
-/* Very large text: the icon heads the goal, so its words get the whole width. */
+/* Very large text: the icon and state share the top row, the chips the next, so the
+   goal's words get the whole width. */
 @container (max-width: 17rem) {
   .roadbook-goal {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-areas:
+      "icon status"
+      "meta meta"
+      "copy copy";
   }
 
-  .roadbook-goal-side {
-    grid-column: 1;
+  .roadbook-goal-status {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
   }
 }
 
-/* Short landscape: the sheet's two columns, goals across both below them. */
+/* Short landscape: the sheet's two columns, the achievements across both below them. */
 @media (orientation: landscape) and (max-height: 500px) {
   .turn-pr-sheet-body .roadbook-goals {
     grid-column: 1 / -1;

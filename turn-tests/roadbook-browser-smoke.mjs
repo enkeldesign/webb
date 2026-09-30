@@ -245,8 +245,8 @@ async function phoneFlow(browserType, name) {
     assert.equal(sheet.inside, true, `${name}: the Track sheet fits the viewport`);
     assert.ok(sheet.height >= 300 && sheet.recordsInside, `${name}: the Track sheet shows its content (${sheet.height}px)`);
 
-    // GOALS (#1031): the track's achievements from the catalog, each naming its state in
-    // text, the one to go for first.
+    // TRACK ACHIEVEMENTS (#1031): the track's achievements from the catalog, each naming
+    // its state in text, the one to go for first.
     await page.waitForFunction(() => globalThis.__turnAchievements?.open);
     const goals = await page.evaluate(() => {
       const section = document.querySelector('#turnTrackSheet .roadbook-goals');
@@ -256,15 +256,21 @@ async function phoneFlow(browserType, name) {
         rows: [...section.querySelectorAll('.roadbook-goal')].map((goal) => ({
           id: goal.dataset.achievementId,
           next: goal.classList.contains('is-next'),
-          status: goal.querySelector('.roadbook-goal-status').textContent.trim()
+          status: goal.querySelector('.roadbook-goal-pill, .roadbook-goal-gate').textContent.replace(/\s+/g, ' ').trim()
         }))
       };
     });
     const cliffsideGoals = trackAchievements('cliffside').map((achievement) => achievement.id);
     assert.equal(goals.labelled, true);
     assert.deepEqual(goals.rows.map((row) => row.id).sort(), [...cliffsideGoals].sort(), `${name}: the Track sheet lists the track's achievements`);
-    assert.equal(goals.count, `0 of ${cliffsideGoals.length} unlocked`);
-    assert.ok(goals.rows.every((row) => row.status === 'LOCKED'), `${name}: every goal names its state in text`);
+    assert.equal(goals.count, `0 / ${cliffsideGoals.length} EARNED`);
+    assert.deepEqual(Object.fromEntries(goals.rows.map((row) => [row.id, row.status])), {
+      'cliffside-winner': 'NOT EARNED',
+      'cliffside-safety': 'NOT EARNED',
+      'cliffside-drift-score': 'Unlock DRIFT at 600 trophies',
+      'cliffside-flow-score': 'Unlock FLOW at 1500 trophies',
+      'cliffside-sprint': 'NOT EARNED'
+    }, `${name}: every goal names its state in text, a locked score what unlocks it`);
     assert.deepEqual(goals.rows.filter((row) => row.next).map((row) => row.id), [goals.rows[0].id], `${name}: one goal to go for, first`);
     assert.equal(goals.rows[0].id, 'cliffside-winner', `${name}: a new profile's next goal is the first open one`);
 
