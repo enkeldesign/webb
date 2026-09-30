@@ -1089,13 +1089,14 @@ Object.freeze({
     Object.freeze(['1.32.1 r340', 'GARAGE shows there is more below the car. On portrait phones the fold used to fall between the car\'s description and the next section, so the page looked finished. Now the car\'s stage gives up a little height so the next section (Specifications, Perk, PAINT, or the car\'s name on small phones) always shows a slice above the RACE dock, and a soft fade over the dock\'s edge says the page goes on until you reach the end.']),
     Object.freeze(['1.32.2 r341', 'GARAGE keeps its car still. On an iPhone the car\'s stage resized while you scrolled: pulling down at the top made the car zoom out and back, and stepping from car to car nudged it too. The stage is now sized once, before GARAGE first shows, and again only when the screen itself changes, such as rotating or text size. It is also sized for the right thing: the car\'s name and description read whole, and PAINT and SHIFT peek above the RACE dock, with a fade that says the page goes on.']),
     Object.freeze(['1.33.0 r342', 'A new car: the Compact, a nimble lime city hatch that is easy to place and happy to drift, but runs out of puff on the straights. It is the first car on Trophy Road, at 300 trophies, and sits between the Sports Car and the Vintage Racer in GARAGE. Its perk, CLEAN EXIT: a clean DRIFT, one that ends without hitting a wall or spinning out, adds 1 CONTROL for a few seconds, up to 5/5, with a CONTROL +1 cue while it lasts.']),
-    Object.freeze(['1.33.1 r343', 'The Compact\'s CLEAN EXIT perk no longer shows a CONTROL +1 race pill after every clean drift: it came up so often it was noise. The perk itself is unchanged.'])
+    Object.freeze(['1.33.1 r343', 'The Compact\'s CLEAN EXIT perk no longer shows a CONTROL +1 race pill after every clean drift: it came up so often it was noise. The perk itself is unchanged.']),
+    Object.freeze(['1.33.2 r344', 'First start: if the race setup fails to load, TURN reloads once and continues to GARAGE by itself; if it keeps failing, a RESTART notice shows instead of a button that does nothing.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.33.1',
-  build: '2026.09.30-r343',
-  note: 'The Compact\'s CLEAN EXIT works quietly, without a race pill.'
+  version: '1.33.2',
+  build: '2026.09.30-r344',
+  note: 'A GARAGE file that failed to download once stayed failed until restart; CHOOSE CAR now recovers.'
 });

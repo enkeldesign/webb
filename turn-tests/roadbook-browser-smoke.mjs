@@ -35,7 +35,7 @@ assert.deepEqual(Object.keys(TRACK_ICON_ASSETS).sort(), [...trackIds].sort(), 'E
 
 // textSize: the browser's own text size setting (Chromium), as a player who enlarges
 // text sets it; unlike a root font-size override it moves rem media queries too.
-async function openHome(browserType, { width, height, isMobile = true, textSize = 0 }) {
+async function openHome(browserType, { width, height, isMobile = true, textSize = 0, beforeLoad = null }) {
   const browser = await browserType.launch();
   const context = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: browserType !== webkit && isMobile, reducedMotion: 'reduce' });
   const page = await context.newPage();
@@ -61,6 +61,7 @@ async function openHome(browserType, { width, height, isMobile = true, textSize 
     localStorage.setItem('turn-racing-music-volume-v1', '0');
     Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
   });
+  await beforeLoad?.(page);
   await page.goto(`${origin}/turn/`);
   await page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
   return { browser, page, errors };
@@ -398,7 +399,52 @@ async function layoutAt(browserType, name, size, check) {
   }
 }
 
+// A GARAGE module that fails to download once stays failed until the page reloads.
+// CHOOSE CAR then reloads once and carries on to GARAGE by itself; if the download keeps
+// failing, a visible RESTART notice says so instead of a button that does nothing.
+async function setupRecovery(browserType, name, failures) {
+  let left = failures;
+  const { browser, page, errors } = await openHome(browserType, {
+    width: 393,
+    height: 852,
+    beforeLoad: (target) => target.route('**/turn/garage/garage-catalog.js*', (route) => {
+      if (left <= 0) return route.continue();
+      left -= 1;
+      return route.fulfill({ status: 503, body: '' });
+    })
+  });
+  try {
+    await page.locator('.roadbook-card[data-track-id="countryside"]').click();
+    await page.locator('.m8-track-continue').click();
+    if (failures === 1) {
+      await page.waitForSelector('.garage', { timeout: 60000 });
+      assert.equal(await page.evaluate(() => globalThis.sessionStorage.getItem('turn-setup-resume')), null, `${name}: the resume is used once`);
+    } else {
+      await page.waitForSelector('.turn-setup-failure', { timeout: 60000 });
+      const notice = await page.evaluate(() => {
+        const toast = document.querySelector('.turn-setup-failure');
+        const box = toast.getBoundingClientRect();
+        return {
+          role: toast.getAttribute('role'),
+          onScreen: box.width > 0 && box.top >= 0 && box.bottom <= globalThis.innerHeight,
+          restart: Boolean(toast.querySelector('.turn-update-toast-restart')),
+          homeShown: !document.querySelector('.m8-home').hidden,
+          buttonReady: !document.querySelector('.m8-track-continue').disabled
+        };
+      });
+      assert.deepEqual(notice, { role: 'alert', onScreen: true, restart: true, homeShown: true, buttonReady: true },
+        `${name}: a setup that keeps failing says so and offers RESTART`);
+    }
+    assert.deepEqual(errors, [], `${name}: no page errors`);
+  } finally {
+    await browser.close();
+  }
+}
+
 try {
+  await setupRecovery(chromium, 'Chromium one failed download', 1);
+  await setupRecovery(webkit, 'WebKit one failed download', 1);
+  await setupRecovery(chromium, 'Chromium failing downloads', 99);
   await phoneFlow(chromium, 'Chromium');
   await phoneFlow(webkit, 'WebKit');
   await layoutAt(chromium, '320x568', { width: 320, height: 568 }, (facts) => {
