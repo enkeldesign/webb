@@ -340,20 +340,28 @@ async function responsiveRace(browser, name) {
     }
     await page.setViewportSize({ width: 393, height: 852 });
     await page.locator('.garage-race').click();
-    await page.waitForSelector('.turn-orientation-hint');
     // One line and the rotate-device symbol, short enough to read before the track loads (#1041).
-    assert.deepEqual(await page.evaluate(() => {
+    // Waited for and read in one go: the TIP only shows for the track intro's hold.
+    const tipFacts = await (await page.waitForFunction(() => {
       const hint = document.querySelector('.turn-orientation-hint');
+      if (!hint || !hint.getClientRects().length) return null;
+      const box = (node) => {
+        const rect = node.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height, right: rect.right, bottom: rect.bottom };
+      };
       return {
         text: hint.textContent.trim(),
         symbol: Boolean(hint.querySelector('.turn-orientation-icon svg .turn-orientation-phone')),
-        status: document.querySelector('#raceOrientationStatus').textContent
+        status: document.querySelector('#raceOrientationStatus').textContent,
+        tip: box(hint),
+        icon: box(hint.querySelector('.turn-orientation-icon'))
       };
-    }), { text: 'TIP: ROTATE TO LANDSCAPE FOR RACING', symbol: true, status: 'Tip: rotate to landscape for racing.' },
-    'Portrait loading shows the rotate TIP');
-    const tip = await bounds(page, '.turn-orientation-hint');
-    within(tip, 393, 852, 'Rotate TIP');
-    within(await bounds(page, '.turn-orientation-icon'), 393, 852, 'Rotate symbol');
+    })).jsonValue();
+    assert.deepEqual({ text: tipFacts.text, symbol: tipFacts.symbol, status: tipFacts.status },
+      { text: 'TIP: ROTATE TO LANDSCAPE FOR RACING', symbol: true, status: 'Tip: rotate to landscape for racing.' },
+      'Portrait loading shows the rotate TIP');
+    within(tipFacts.tip, 393, 852, 'Rotate TIP');
+    within(tipFacts.icon, 393, 852, 'Rotate symbol');
     await page.waitForSelector('#controls:not([hidden])');
     assert.equal(await page.locator('.turn-orientation-hint').count(), 0, 'Loading recommendation ends before active racing');
     // The TIP card and its symbol also stay on screen on a 320px phone and with doubled

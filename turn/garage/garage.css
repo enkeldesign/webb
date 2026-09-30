@@ -128,7 +128,9 @@
 .garage-stage {
   position: relative;
   isolation: isolate;
-  height: clamp(13rem, 42vh, 22rem);
+  /* On portrait phones garage.js may lower the stage so the next block always shows
+     above the dock (--garage-stage-fit); it never grows past the usual height. */
+  height: min(var(--garage-stage-fit, 100vh), clamp(13rem, 42vh, 22rem));
   overflow: hidden;
   border: var(--turn-pr-rule);
   border-radius: var(--turn-pr-radius);
@@ -745,6 +747,25 @@
 
 /* ---------- Dock ---------- */
 
+/* More page under the dock: a soft Paper fade just above its rule says so, and goes
+   once the end of the page is in view. A fade, not a shadow. */
+.garage-dock::before {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 3px);
+  left: 0;
+  height: 32px;
+  background: linear-gradient(to bottom, rgb(255 248 232 / 0), var(--turn-surface-page, #fff8e8));
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.garage.has-more-below .garage-dock::before {
+  opacity: 1;
+}
+
 .garage-dock-context {
   justify-content: space-between;
 }
@@ -1214,5 +1235,9 @@
 @media (prefers-reduced-motion: reduce) {
   .garage * {
     scroll-behavior: auto;
+  }
+
+  .garage-dock::before {
+    transition: none;
   }
 }
