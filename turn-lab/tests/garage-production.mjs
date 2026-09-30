@@ -8,11 +8,11 @@ const catalogSource = await fs.readFile(path.join(turnDir, 'vehicle/catalog.js')
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 const expectedIds = [
   'convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck',
-  'race-future', 'race', 'sedan-sports', 'tractor', 'sedan', 'suv', 'firetruck',
+  'race-future', 'race', 'sedan-sports', 'compact', 'tractor', 'sedan', 'suv', 'firetruck',
   'police', 'ambulance', 'truck', 'van', 'supercar'
 ];
 
-assert.equal(catalog.CAR_CATALOG.length, 17, 'The Lot must contain exactly 17 cars');
+assert.equal(catalog.CAR_CATALOG.length, 18, 'The Lot must contain exactly 18 cars');
 assert.deepEqual(catalog.CAR_CATALOG.map((car) => car.id), expectedIds, 'The Lot car order changed unexpectedly');
 for (const car of catalog.CAR_CATALOG) {
   if (car.id === 'supercar') {

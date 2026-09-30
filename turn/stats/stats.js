@@ -1,4 +1,4 @@
-import { TRACK_DEFINITIONS } from '../tracks/definitions.js?build=20260930-r341';
+import { TRACK_DEFINITIONS } from '../tracks/definitions.js?build=20260930-r342';
 
 const STATS_ENDPOINT = 'https://turn-challenges.erik-jansson-ux.workers.dev/v1/stats';
 const DEVELOPER_STORAGE_KEY = 'turn.telemetry.developer.v1';
@@ -16,6 +16,7 @@ const CARS = Object.freeze([
   ['race-future', 'Future Racer'],
   ['race', 'Race Car'],
   ['sedan-sports', 'Sports Car'],
+  ['compact', 'Compact'],
   ['sedan', 'Sedan'],
   ['suv', 'SUV'],
   ['firetruck', 'Fire Truck'],

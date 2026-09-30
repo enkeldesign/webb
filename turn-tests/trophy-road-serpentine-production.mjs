@@ -20,6 +20,7 @@ const [viewSource, roadStyles, semanticStyles, bend, straight, checkered] = awai
 ]);
 
 const expectedRoad = [
+  ['compact', 300],
   ['medium-tracks', 400],
   ['awd-traction', 500],
   ['drift-attack', 600],
@@ -47,7 +48,7 @@ assert.deepEqual(
   expectedRoad,
   'The visual road must preserve the current Trophy Road order and thresholds'
 );
-assert.equal(TROPHY_ROAD_REWARDS.length, 20);
+assert.equal(TROPHY_ROAD_REWARDS.length, 21);
 assert.equal(getTrophyRoadReward('?'), null, 'A future teaser must never become a reward entitlement');
 
 assert.deepEqual(
@@ -59,7 +60,7 @@ assert.deepEqual(
 const expectedCurrentLayouts = new Map([
   [3, {
     rowCount: 7,
-    finish: [7, 4],
+    finish: [7, 5],
     slots: [
       [1, 2], [1, 3], [1, 4],
       [2, 4], [2, 3], [2, 2],
@@ -67,26 +68,27 @@ const expectedCurrentLayouts = new Map([
       [4, 4], [4, 3], [4, 2],
       [5, 2], [5, 3], [5, 4],
       [6, 4], [6, 3], [6, 2],
-      [7, 2], [7, 3]
+      [7, 2], [7, 3], [7, 4]
     ]
   }],
   [5, {
-    rowCount: 4,
-    finish: [4, 1],
+    rowCount: 5,
+    finish: [5, 3],
     slots: [
       [1, 2], [1, 3], [1, 4], [1, 5], [1, 6],
       [2, 6], [2, 5], [2, 4], [2, 3], [2, 2],
       [3, 2], [3, 3], [3, 4], [3, 5], [3, 6],
-      [4, 6], [4, 5], [4, 4], [4, 3], [4, 2]
+      [4, 6], [4, 5], [4, 4], [4, 3], [4, 2],
+      [5, 2]
     ]
   }],
   [7, {
     rowCount: 3,
-    finish: [3, 8],
+    finish: [3, 9],
     slots: [
       [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7], [1, 8],
       [2, 8], [2, 7], [2, 6], [2, 5], [2, 4], [2, 3], [2, 2],
-      [3, 2], [3, 3], [3, 4], [3, 5], [3, 6], [3, 7]
+      [3, 2], [3, 3], [3, 4], [3, 5], [3, 6], [3, 7], [3, 8]
     ]
   }]
 ]);

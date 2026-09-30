@@ -1,4 +1,4 @@
-@import url('../design-semantic.css?build=20260930-r341');
+@import url('../design-semantic.css?build=20260930-r342');
 
 /* Give the road the complete summary width. Totals stay in their own header row. */
 .turn-achievements-dialog .turn-achievements-summary {
@@ -369,6 +369,10 @@
   background: currentColor;
   -webkit-mask: var(--turn-trophy-road-authored-source) center / contain no-repeat;
   mask: var(--turn-trophy-road-authored-source) center / contain no-repeat;
+}
+
+.turn-trophy-road-authored-icon.is-compact {
+  --turn-trophy-road-authored-source: url('../assets/trophy-road/compact.svg');
 }
 
 .turn-trophy-road-authored-icon.is-vintage-racer {

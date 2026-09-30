@@ -22,6 +22,9 @@ const REWARD_CARS = Object.freeze({
   monster: Object.freeze([
     Object.freeze({ carId: 'monster-truck', x: 0, targetLength: 6.0, yaw: Math.PI - 0.55 })
   ]),
+  compact: Object.freeze([
+    Object.freeze({ carId: 'compact', x: 0, targetLength: 5.6, yaw: Math.PI - 0.55 })
+  ]),
   'vintage-racer': Object.freeze([
     Object.freeze({ carId: 'vintage-racer', x: 0, targetLength: 6.0, yaw: Math.PI - 0.55 })
   ]),

@@ -35,7 +35,7 @@ assert.ok(
   'Semantic native car finishes must remain part of TURN 1.10.4 or later'
 );
 assert.match(release.id, /^\d{4}\.\d{2}\.\d{2}-r\d+$/);
-assert.equal(catalog.CAR_CATALOG.length, 17);
+assert.equal(catalog.CAR_CATALOG.length, 18);
 assert.deepEqual(
   catalog.CAR_CATALOG
     .filter((car) => !car.fixedLivery && !car.secondaryPaint)
@@ -85,7 +85,15 @@ for (const contract of new Map([...paletteContracts.values()].map((value) => [va
   assert.equal(sha256(png), contract.sha256, `${contract.file} must remain the verified source atlas`);
 }
 
-for (const car of catalog.CAR_CATALOG.filter((candidate) => !['rgsdev', 'cosmo'].includes(candidate.pack))) {
+// A car built from primitives has no palette: it declares which materials take the paint.
+for (const car of catalog.CAR_CATALOG.filter((candidate) => candidate.pack === 'procedural')) {
+  const source = await fs.readFile(new URL(`../../turn/${car.asset.replace(/^\.\//, '')}`, import.meta.url), 'utf8');
+  assert.match(source, /body: paint\(mat\('compact-body-paint'/, `${car.name} must paint its body with the primary colour`);
+  assert.match(source, /trim: paint\(mat\('compact-trim-paint', o\.trimColor, \{ roughness: 0\.9 \}\), null, 'secondary'\)/,
+    `${car.name} must paint its trim with the secondary colour`);
+}
+
+for (const car of catalog.CAR_CATALOG.filter((candidate) => !['rgsdev', 'cosmo', 'procedural'].includes(candidate.pack))) {
   assert.ok(paletteContracts.has(car.pack), `${car.name} must resolve to a known Kenney palette family`);
   const glb = await fs.readFile(new URL(`../../turn/${car.asset.replace(/^\.\//, '')}`, import.meta.url));
   const json = readGlbJson(glb, car.id);

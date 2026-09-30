@@ -14,9 +14,10 @@
     "garage/car-still.js": "f7c977915ed17040",
     "garage/car-view.js": "ac1cd63feb9a6c5e",
     "graphics-profile.js": "a7c5d009c1a2d38e",
-    "vehicle/car-models.js": "3620f2c21393132b",
+    "vehicle/car-models.js": "944dd78b24202cde",
     "vehicle/car-visual-resources.js": "34f62a09e6a528d6",
-    "vehicle/catalog.js": "944e6e5036c674e0",
+    "vehicle/catalog.js": "4e9657e6d9780ec5",
+    "vehicle/compact-car.js": "935c1aca172e70e1",
     "vehicle/learner-car-livery.js": "eba71a56625e6419",
     "vehicle/semantic-car-finish.js": "f8da44c597b61022",
     "vehicle/supercar-kenney-wheels.js": "fb7c3d35ffe347bb",
@@ -71,6 +72,11 @@
       "sources": {
         "assets/cars/hatchback-sports.glb": "bd5c9d4c3b4bdd25",
         "assets/cars/palettes/car-kit.png": "f3622a03a20c6696"
+      }
+    },
+    "compact": {
+      "sources": {
+        "vehicle/compact-car.js": "935c1aca172e70e1"
       }
     },
     "tractor": {

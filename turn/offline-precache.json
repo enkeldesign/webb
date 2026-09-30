@@ -1,5 +1,5 @@
 {
-  "release": "20260930-r341",
+  "release": "20260930-r342",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -52,6 +52,8 @@
     "/turn/assets/cars/stills/ambulance.webp",
     "/turn/assets/cars/stills/classic-outline.webp",
     "/turn/assets/cars/stills/classic.webp",
+    "/turn/assets/cars/stills/compact-outline.webp",
+    "/turn/assets/cars/stills/compact.webp",
     "/turn/assets/cars/stills/convertible-outline.webp",
     "/turn/assets/cars/stills/convertible.webp",
     "/turn/assets/cars/stills/firetruck-outline.webp",
@@ -174,6 +176,7 @@
     "/turn/assets/trophy-road/airport.svg",
     "/turn/assets/trophy-road/beachfront.svg",
     "/turn/assets/trophy-road/cliffside.svg",
+    "/turn/assets/trophy-road/compact.svg",
     "/turn/assets/trophy-road/countryside.svg",
     "/turn/assets/trophy-road/dead-canyon.svg",
     "/turn/assets/trophy-road/future-racer.svg",
@@ -466,6 +469,7 @@
     "/turn/vehicle/car-models.js",
     "/turn/vehicle/car-visual-resources.js",
     "/turn/vehicle/catalog.js",
+    "/turn/vehicle/compact-car.js",
     "/turn/vehicle/emergency-livery-models.js",
     "/turn/vehicle/flow-shift.js",
     "/turn/vehicle/front-wheel-steering.js",

@@ -52,7 +52,8 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
   police: Object.freeze({ fallback: '#222222' }),
   ambulance: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
   truck: Object.freeze({ fallback: '#b93632', p3: Object.freeze([0.72, 0.12, 0.12]) }),
-  van: Object.freeze({ fallback: '#ff7700' })
+  van: Object.freeze({ fallback: '#ff7700' }),
+  compact: Object.freeze({ fallback: '#a2c14f' })
 });
 
 const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
@@ -72,7 +73,8 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
   tractor: Object.freeze({ fallback: '#666000' }),
   firetruck: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   police: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
-  ambulance: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) })
+  ambulance: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) }),
+  compact: Object.freeze({ fallback: '#1d2026' })
 });
 
 const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
@@ -184,6 +186,10 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
     rewardId: 'van-carry-on',
     threshold: 1400
   }),
+  compact: Object.freeze({
+    title: 'CLEAN EXIT',
+    description: 'A clean DRIFT, one that ends without hitting a wall or spinning out, adds 1 CONTROL for a few seconds, up to 5/5.'
+  }),
   'race-future': Object.freeze({
     title: 'OVERDRIVE',
     description: 'The longer you drive fast and clean, the higher the speed cap becomes. Leaving the track or colliding resets it.'
@@ -225,6 +231,8 @@ const RAW_CARS = [
   ['race-future', 'Future Racer', 'car', { speed: 5, acceleration: 5, control: 3, drift: 1, boostPower: 3, boostDuration: 1 }, 0.96, 0, 1.42],
   ['race', 'Race Car', 'car', { speed: 5, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 1 }, 0.94, 0, 1.55],
   ['sedan-sports', 'Sports Car', 'car', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 2 }, 0.98, 0, 1.12],
+  // Built from primitives at runtime (vehicle/compact-car.js), not loaded from a model.
+  ['compact', 'Compact', 'procedural', { speed: 1, acceleration: 3, control: 4, drift: 4, boostPower: 3, boostDuration: 3 }, 0.88, 0, 1.06],
   ['tractor', 'Tractor', 'car', { speed: 1, acceleration: 1, control: 5, drift: 1, boostPower: 5, boostDuration: 5 }, 1.00, 0, 0.62],
   ['sedan', 'Sedan', 'car', { speed: 3, acceleration: 3, control: 3, drift: 3, boostPower: 3, boostDuration: 3 }, 1.00, 0, 1.00],
   ['suv', 'SUV', 'car', { speed: 3, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 2 }, 1.05, 0, 0.90],
@@ -276,6 +284,9 @@ const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({
   'toy-racer': Object.freeze({
     secondaryPaint: Object.freeze({ label: 'Rally trim', meshNames: Object.freeze(['spoiler']) })
   }),
+  compact: Object.freeze({
+    secondaryPaint: Object.freeze({ label: 'Trim', meshNames: Object.freeze([]) })
+  }),
   supercar: Object.freeze({
     secondaryPaint: Object.freeze({
       label: 'Rims',
@@ -294,7 +305,8 @@ const MODEL_ASSET_BY_ID = Object.freeze({
   convertible: './assets/cars/suv.glb',
   suv: './assets/cars/suv-luxury.glb',
   'sedan-sports': './assets/cars/hatchback-sports.glb',
-  'toy-racer': './assets/cars/sedan-sports.glb'
+  'toy-racer': './assets/cars/sedan-sports.glb',
+  compact: './vehicle/compact-car.js'
 });
 
 const SURFACE_PROFILE_BY_ID = Object.freeze({
