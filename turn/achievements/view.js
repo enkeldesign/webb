@@ -241,7 +241,7 @@ function achievementCard(achievement, store, session) {
   const context = unlocked ? contextLine(record) : '';
 
   return `
-    <article class="${classes}" data-achievement-category="${achievement.category}" data-achievement-status="${status.toLowerCase().replace(' ', '-')}">
+    <article class="${classes}" data-achievement-id="${achievement.id}" data-achievement-track="${achievement.trackId || ''}" data-achievement-category="${achievement.category}" data-achievement-status="${status.toLowerCase().replace(' ', '-')}">
       <div class="turn-achievement-icon" aria-hidden="true">${ICONS[achievement.icon]}</div>
       <div class="turn-achievement-copy">
         <span>${CATEGORY_LABELS[achievement.category]} · ${achievement.trophies} trophies</span>
@@ -701,19 +701,34 @@ export function createAchievementView({ store, session, utilityGroup }) {
     raceTrigger.hidden = utilityGroup.dataset.menuState !== 'staged';
   }
 
-  function open(trigger) {
+  // With a trackId, ACHIEVEMENTS opens on that track's achievements alone (the filters
+  // read the scope when they reset for the opening), and on the one asked for, if any.
+  function open(trigger, { trackId = '', achievementId = '' } = {}) {
     returnFocus = trigger;
     closeTrophyRoadDetail({ restoreFocus: false });
     selectedRewardId = initialRewardSelection(store);
+    if (trackId && TRACK_NAMES[trackId]) dialog.dataset.achievementTrackScope = trackId;
+    else delete dialog.dataset.achievementTrackScope;
     render({ force: true });
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
     closeButton.focus();
     store.markAllSeen();
     syncTriggers();
+    const card = achievementId ? list.querySelector(`[data-achievement-id="${CSS.escape(achievementId)}"]`) : null;
+    if (card) {
+      // After the filters have applied the scope, so the card is laid out.
+      requestAnimationFrame(() => {
+        if (!dialogIsOpen() || card.hidden) return;
+        card.tabIndex = -1;
+        card.scrollIntoView({ block: 'center' });
+        card.focus({ preventScroll: true });
+      });
+    }
   }
 
   function close() {
+    delete dialog.dataset.achievementTrackScope;
     closeTrophyRoadDetail({ restoreFocus: false });
     if (typeof dialog.close === 'function' && dialog.open) dialog.close();
     else dialog.removeAttribute('open');
@@ -745,6 +760,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
     if (event.target === dialog) close();
   });
   dialog.addEventListener('close', () => {
+    delete dialog.dataset.achievementTrackScope;
     closeTrophyRoadDetail({ restoreFocus: false });
     returnFocus?.focus?.();
   });
