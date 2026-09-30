@@ -55,7 +55,8 @@ const expectedVisualScales = new Map([
 ]);
 
 const expectedGlobalSizeMultipliers = new Map([
-  ['vintage-racer', 0.75],
+  ['vintage-racer', 0.9],
+  ['compact', 0.8],
   ['police', 1.15],
   ['supercar', 1.35]
 ]);
@@ -185,7 +186,7 @@ assert.equal(supercar.asset, './assets/cars/supercar.glb');
 assertClose(awd.visualScale * awd.visualSizeMultiplier, 0.98, 'AWD effective visual scale');
 assertClose(suv.visualScale * suv.visualSizeMultiplier, 1.05, 'SUV effective visual scale');
 assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 1, 'Training Car standard-car visual scale');
-assertClose(vintageRacer.visualScale * vintageRacer.visualSizeMultiplier, 0.72, 'Vintage Racer effective visual scale');
+assertClose(vintageRacer.visualScale * vintageRacer.visualSizeMultiplier, 0.864, 'Vintage Racer effective visual scale');
 assertClose(rallyRacer.visualScale * rallyRacer.visualSizeMultiplier, 0.98, 'Rally Racer effective visual scale');
 assertClose(hatchback.visualScale * hatchback.visualSizeMultiplier, 0.98, 'Hatchback effective visual scale');
 assertClose(policeCar.visualScale * policeCar.visualSizeMultiplier, 1.127, 'Police Car effective visual scale');

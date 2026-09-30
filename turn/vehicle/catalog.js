@@ -78,7 +78,8 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
 });
 
 const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
-  'vintage-racer': 0.75,
+  'vintage-racer': 0.9,
+  compact: 0.8,
   police: 1.15,
   supercar: 1.35
 });
