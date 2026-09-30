@@ -18,6 +18,7 @@ import {
   AUTHORED_SAFETY_ICON
 } from '../ui/authored-icons.js?revision=r245-shared-drift-safety-icons';
 import { TRACK_ICON_MARKUP } from '../ui/track-icons.js?revision=r1-track-reward-icons';
+import { TIME_TRIALS } from './time-trials.js?revision=r166-bella-records';
 
 export const HEAD_START_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" aria-hidden="true">
   <g fill="currentColor" stroke="none">
@@ -178,6 +179,7 @@ assertTrackConfigCoverage(SAFETY_TARGET_LABELS, 'achievement safety target label
 const PRODUCTION_TRACK_WINNER_ACHIEVEMENTS = Object.freeze(
   base.TRACK_IDS.map((trackId) => Object.freeze({
     id: `${trackId}-winner`,
+    trackId,
     category: base.CATEGORY.RACING,
     trophies: 50,
     title: `${base.TRACK_NAMES[trackId].toUpperCase()} WINNER`,
@@ -189,6 +191,7 @@ const PRODUCTION_TRACK_WINNER_ACHIEVEMENTS = Object.freeze(
 export const TRACK_SAFETY_ACHIEVEMENTS = Object.freeze(
   base.TRACK_IDS.map((trackId) => Object.freeze({
     id: `${trackId}-safety`,
+    trackId,
     category: base.CATEGORY.RACING,
     trophies: 75,
     title: `${base.TRACK_NAMES[trackId].toUpperCase()} SAFETY`,
@@ -323,9 +326,38 @@ export const CATCH_THE_CHARGE_ACHIEVEMENT = withPresentationIcon(
   PRODUCTION_CATCH_THE_CHARGE_ACHIEVEMENT
 );
 
+// The one track an achievement is earned on, where there is one. WINNER, SAFETY, DRIFT
+// and FLOW carry theirs; a SPRINT takes its trial's track and target time; these few
+// belong to one track by their description.
+const SINGLE_TRACK_ACHIEVEMENTS = Object.freeze({
+  'night-shift-sheriff': 'midnight-city',
+  'golden-hour': 'airport',
+  'find-lilya': 'midnight-city',
+  'find-darvid': 'harbor',
+  'save-bella': 'countryside'
+});
+const TIME_TRIAL_BY_ID = new Map(TIME_TRIALS.map((trial) => [trial.id, trial]));
+
+function withTrack(achievement) {
+  if (achievement.trackId) return achievement;
+  const trial = TIME_TRIAL_BY_ID.get(achievement.id);
+  if (trial) return Object.freeze({ ...achievement, trackId: trial.trackId, targetSeconds: trial.targetSeconds });
+  const trackId = SINGLE_TRACK_ACHIEVEMENTS[achievement.id];
+  return trackId ? Object.freeze({ ...achievement, trackId }) : achievement;
+}
+
 export const ACHIEVEMENTS = Object.freeze(
-  PRODUCTION_ACHIEVEMENTS.map(withPresentationIcon)
+  PRODUCTION_ACHIEVEMENTS.map(withPresentationIcon).map(withTrack)
 );
+
+// A track's goals are its achievements, in catalog order: the Track sheet lists them
+// (#1031) and ACHIEVEMENTS filters to them. Targets still awaiting calibration are left
+// out, as ACHIEVEMENTS leaves them out of its count.
+export function trackAchievements(trackId) {
+  return ACHIEVEMENTS.filter((achievement) => (
+    achievement.trackId === trackId && achievement.calibrationPending !== true
+  ));
+}
 
 const achievementById = new Map(ACHIEVEMENTS.map((achievement) => [achievement.id, achievement]));
 

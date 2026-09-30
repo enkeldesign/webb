@@ -22,6 +22,7 @@ import { getCarDefinition } from '/turn/vehicle/catalog.js?source=20260729-r118-
 import { renderBestCarThumbnail } from '/turn/ui/track-best-car.js?revision=r253-supercar-release';
 import { getBestDriftRecord } from '/turn/scoring/drift-records.js?revision=r206-home-track-records';
 import { getBestFlowRecord } from '/turn/scoring/flow-records.js?revision=r206-home-track-records';
+import { ICONS as ACHIEVEMENT_ICONS, trackAchievements } from '/turn/achievements/catalog.js';
 
 const SCORE_FORMATTER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 const SHEET_ID = 'turnTrackSheet';
@@ -37,6 +38,10 @@ const RECORD_KINDS = Object.freeze([
   Object.freeze({ kind: 'drift', label: 'DRIFT', featureId: 'drift-attack', read: getBestDriftRecord }),
   Object.freeze({ kind: 'flow', label: 'FLOW', featureId: 'flow', read: getBestFlowRecord })
 ]);
+// A DRIFT or FLOW goal can only be scored once its mode is unlocked on Trophy Road.
+const SCORE_GOAL_FEATURES = Object.freeze({ drift: 'drift-attack', flow: 'flow' });
+const SCORE_GOAL_RECORDS = Object.freeze({ drift: getBestDriftRecord, flow: getBestFlowRecord });
+const GOAL_STATUS_TEXT = Object.freeze({ unlocked: '✓ UNLOCKED', progress: 'IN PROGRESS', locked: 'LOCKED' });
 // The inline overview replaces the Track sheet once the screen has room for it: beside
 // the grid on large landscape screens, below it on tall portrait ones.
 const OVERVIEW_QUERY = '(min-width: 1000px) and (min-height: 640px), (min-width: 700px) and (min-height: 1000px)';
@@ -179,7 +184,120 @@ function renderDetail(track, { idPrefix }) {
       <h3 class="turn-pr-section-title" id="${idPrefix}RecordsTitle">Personal bests</h3>
       <ul class="turn-pr-record-list">${records}</ul>
       <div class="turn-pr-detail-actions"></div>
+    </section>
+    <section class="roadbook-goals" aria-labelledby="${idPrefix}GoalsTitle">
+      <h3 class="turn-pr-section-title roadbook-goals-title" id="${idPrefix}GoalsTitle">
+        <span>Goals</span><span class="roadbook-goals-count"></span>
+      </h3>
+      <ol class="roadbook-goal-list"></ol>
     </section>`;
+}
+
+// ---------- Goals (#1031) ----------
+// A track's goals are its achievements, straight from the catalog: each with its
+// state, the one to go for next first, and a way into ACHIEVEMENTS.
+
+function achievementEarned(id) {
+  const store = globalThis.__turnAchievements?.store;
+  if (store?.isUnlocked) return store.isUnlocked(id) === true;
+  // Before ACHIEVEMENTS has started, the saved state says the same.
+  try {
+    const unlocked = JSON.parse(globalThis.localStorage?.getItem('turn-achievements-v1') || 'null')?.unlocked;
+    return Array.isArray(unlocked) ? unlocked.includes(id) : Boolean(unlocked?.[id]);
+  } catch (_) {
+    return false;
+  }
+}
+
+// How far the player is: DRIFT and FLOW by their best score, a SPRINT by the best lap.
+// The rest are earned in one go and have no progress to show.
+function goalProgress(achievement, trackId) {
+  const channel = achievement.scoreChannel;
+  if (channel && SCORE_GOAL_FEATURES[channel]) {
+    const featureId = SCORE_GOAL_FEATURES[channel];
+    if (!isFeatureUnlocked(featureId)) {
+      const reward = rewardForFeature(featureId);
+      return { ratio: 0, text: `${channel.toUpperCase()} unlocks at ${reward?.threshold ?? ''} trophies` };
+    }
+    const score = Math.max(0, Math.round(Number(SCORE_GOAL_RECORDS[channel](trackId)?.score) || 0));
+    const target = Number(achievement.target) || 0;
+    if (!score || !target) return null;
+    return {
+      ratio: Math.min(1, score / target),
+      text: `${channel.toUpperCase()} ${SCORE_FORMATTER.format(score)} / ${SCORE_FORMATTER.format(target)}`
+    };
+  }
+  if (achievement.targetSeconds) {
+    const best = Number(getStoredBestLap(trackId)?.time);
+    if (!Number.isFinite(best) || best <= 0) return null;
+    return {
+      ratio: Math.min(1, achievement.targetSeconds / best),
+      text: `BEST ${formatRecordTime(best)} / UNDER ${formatRecordTime(achievement.targetSeconds)}`
+    };
+  }
+  return null;
+}
+
+export function trackGoals(trackId) {
+  const goals = trackAchievements(trackId).map((achievement) => {
+    const earned = achievementEarned(achievement.id);
+    const progress = earned ? null : goalProgress(achievement, trackId);
+    const state = earned ? 'unlocked' : progress?.ratio > 0 ? 'progress' : 'locked';
+    // A hidden achievement keeps its secret until it is earned, as in ACHIEVEMENTS.
+    const secret = achievement.hidden === true && !earned;
+    return { achievement, state, progress, secret };
+  });
+  // Next: the goal the player is closest to, else the first open one in catalog order.
+  // Never a secret, nor a score whose mode is still locked.
+  const open = goals.filter((goal) => goal.state !== 'unlocked' && !goal.secret
+    && !(goal.achievement.scoreChannel && !isFeatureUnlocked(SCORE_GOAL_FEATURES[goal.achievement.scoreChannel])));
+  const next = open.reduce((best, goal) => (
+    goal.state === 'progress' && (!best || best.state !== 'progress' || goal.progress.ratio > best.progress.ratio) ? goal : best
+  ), null) || open[0] || null;
+  if (next) next.next = true;
+  const rank = (goal) => (goal.next ? 0 : goal.state === 'unlocked' ? 2 : 1);
+  return goals
+    .map((goal, index) => ({ goal, index }))
+    .sort((a, b) => rank(a.goal) - rank(b.goal) || a.index - b.index)
+    .map(({ goal }) => goal);
+}
+
+function goalMarkup({ achievement, state, progress, secret, next }) {
+  const description = secret
+    ? (Object.hasOwn(achievement, 'lockedDescription') ? achievement.lockedDescription : 'Hidden achievement. The title is your clue.')
+    : achievement.description;
+  const icon = ACHIEVEMENT_ICONS[secret ? 'secret' : achievement.icon] || ACHIEVEMENT_ICONS.trophy;
+  const progressMarkup = progress && !secret ? `
+      <span class="roadbook-goal-progress">
+        <span class="roadbook-goal-progress-text">${escapeHtml(progress.text)}</span>
+        ${progress.ratio > 0 ? `<span class="roadbook-goal-bar" aria-hidden="true"><i style="--roadbook-goal-progress:${(progress.ratio * 100).toFixed(1)}%"></i></span>` : ''}
+      </span>` : '';
+  return `
+    <li class="roadbook-goal-item">
+      <button class="roadbook-goal is-${state}${next ? ' is-next' : ''}" type="button" aria-haspopup="dialog" data-achievement-id="${escapeHtml(achievement.id)}">
+        <span class="roadbook-goal-icon" aria-hidden="true">${icon}</span>
+        <span class="roadbook-goal-copy">
+          ${next ? '<span class="roadbook-goal-next">NEXT UP</span>' : ''}
+          <span class="roadbook-goal-name">${escapeHtml(achievement.title)}</span>
+          ${description ? `<span class="roadbook-goal-description">${escapeHtml(description)}</span>` : ''}
+          ${progressMarkup}
+        </span>
+        <span class="roadbook-goal-side">
+          <span class="roadbook-goal-status">${state === 'locked' ? `<span class="turn-pr-lock-icon" aria-hidden="true">${LOCK_ICON}</span>` : ''}${GOAL_STATUS_TEXT[state]}</span>
+          <span class="roadbook-goal-reward"><span class="turn-pr-lock-icon" aria-hidden="true">${TROPHY_ICON}</span>${achievement.trophies}<span class="turn-sr-only"> trophies</span></span>
+        </span>
+      </button>
+    </li>`;
+}
+
+function fillGoals(container, track) {
+  const list = container.querySelector('.roadbook-goal-list');
+  const count = container.querySelector('.roadbook-goals-count');
+  if (!list) return;
+  const goals = trackGoals(track.id);
+  const earned = goals.filter((goal) => goal.state === 'unlocked').length;
+  count.textContent = `${earned} of ${goals.length} unlocked`;
+  list.innerHTML = goals.map(goalMarkup).join('');
 }
 
 let thumbnailGeneration = 0;
@@ -336,6 +454,22 @@ export function installRoadbook({
     container.innerHTML = renderDetail(track, { idPrefix });
     fillRecords(container, track);
     shareSlot(container, track);
+    fillGoals(container, track);
+  }
+
+  // A goal opens ACHIEVEMENTS on that track's achievements, at the one chosen; closing
+  // it comes back here.
+  function openGoal(event) {
+    const button = event.target.closest('.roadbook-goal[data-achievement-id]');
+    const achievements = globalThis.__turnAchievements;
+    if (!button || !achievements?.open) return;
+    achievements.open(button, { trackId: selectedTrack().id, achievementId: button.dataset.achievementId });
+  }
+
+  function refreshGoals() {
+    const track = selectedTrack();
+    if (!overview.hidden && overviewTrackId === track.id) fillGoals(overviewBody, track);
+    if (sheet.open) fillGoals(sheetBody, track);
   }
 
   function syncCards() {
@@ -460,6 +594,8 @@ export function installRoadbook({
     onChooseCar();
   });
   sheetButton.addEventListener('click', openSheet);
+  sheetBody.addEventListener('click', openGoal);
+  overviewBody.addEventListener('click', openGoal);
   sheetClose.addEventListener('click', closeSheet);
   sheet.addEventListener('click', (event) => {
     if (event.target === sheet) closeSheet();
@@ -486,6 +622,8 @@ export function installRoadbook({
     if (event.key === 'turn-achievements-v1') sync();
   });
   windowRef.addEventListener('turn:rivals-reset', refreshRecords);
+  windowRef.addEventListener('turn:achievements-ready', refreshGoals);
+  windowRef.addEventListener('turn:achievements-updated', refreshGoals);
   documentRef.addEventListener('turn:your-turn-share-changed', refreshRecords);
 
   home.querySelector('.m8-home-shell').appendChild(root);

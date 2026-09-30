@@ -6,10 +6,11 @@ import { fileURLToPath } from 'node:url';
 import { chromium, webkit } from 'playwright';
 import { TRACK_DEFINITIONS } from '../turn/tracks/definitions.js';
 import { TRACK_ICON_ASSETS } from '../turn/ui/track-icons.js';
+import { trackAchievements } from '../turn/achievements/catalog.js';
 
 // ROADBOOK (roadbook/roadbook.js): every track from the catalog with its pictogram and
 // route, one clear selection, locked tracks inspectable but never raced, the Track
-// sheet, the dock inside the usable viewport, and the iPad overview.
+// sheet with its GOALS (#1031), the dock inside the usable viewport, and the iPad overview.
 const root = fileURLToPath(new URL('../', import.meta.url));
 const threeRoot = fileURLToPath(new URL('../', import.meta.resolve('three')));
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.PNG': 'image/png' };
@@ -243,6 +244,53 @@ async function phoneFlow(browserType, name) {
     assert.ok(sheet.closeSize.every((size) => size >= 44), `${name}: close is a 44px target`);
     assert.equal(sheet.inside, true, `${name}: the Track sheet fits the viewport`);
     assert.ok(sheet.height >= 300 && sheet.recordsInside, `${name}: the Track sheet shows its content (${sheet.height}px)`);
+
+    // GOALS (#1031): the track's achievements from the catalog, each naming its state in
+    // text, the one to go for first.
+    await page.waitForFunction(() => globalThis.__turnAchievements?.open);
+    const goals = await page.evaluate(() => {
+      const section = document.querySelector('#turnTrackSheet .roadbook-goals');
+      return {
+        labelled: section.getAttribute('aria-labelledby') === 'turnTrackSheetGoalsTitle',
+        count: section.querySelector('.roadbook-goals-count').textContent,
+        rows: [...section.querySelectorAll('.roadbook-goal')].map((goal) => ({
+          id: goal.dataset.achievementId,
+          next: goal.classList.contains('is-next'),
+          status: goal.querySelector('.roadbook-goal-status').textContent.trim()
+        }))
+      };
+    });
+    const cliffsideGoals = trackAchievements('cliffside').map((achievement) => achievement.id);
+    assert.equal(goals.labelled, true);
+    assert.deepEqual(goals.rows.map((row) => row.id).sort(), [...cliffsideGoals].sort(), `${name}: the Track sheet lists the track's achievements`);
+    assert.equal(goals.count, `0 of ${cliffsideGoals.length} unlocked`);
+    assert.ok(goals.rows.every((row) => row.status === 'LOCKED'), `${name}: every goal names its state in text`);
+    assert.deepEqual(goals.rows.filter((row) => row.next).map((row) => row.id), [goals.rows[0].id], `${name}: one goal to go for, first`);
+    assert.equal(goals.rows[0].id, 'cliffside-winner', `${name}: a new profile's next goal is the first open one`);
+
+    // A goal opens ACHIEVEMENTS on the track's achievements, at that goal; the chip
+    // shows every track again, and closing returns to the goal.
+    await page.locator('#turnTrackSheet .roadbook-goal[data-achievement-id="cliffside-safety"]').click();
+    await page.waitForSelector('.turn-achievements-dialog[open]');
+    await page.waitForFunction(() => document.activeElement?.dataset?.achievementId === 'cliffside-safety');
+    const scoped = await page.evaluate(() => ({
+      visible: [...document.querySelectorAll('.turn-achievement-card')].filter((card) => !card.hidden).map((card) => card.dataset.achievementId),
+      chip: document.querySelector('[data-achievement-filter="track"]').textContent,
+      chipShown: !document.querySelector('[data-achievement-filter="track"]').hidden,
+      allPressed: document.querySelector('[data-achievement-filter="all"]').getAttribute('aria-pressed'),
+      sheetOpen: document.querySelector('#turnTrackSheet').open
+    }));
+    assert.deepEqual(scoped, { visible: cliffsideGoals, chip: 'CLIFFSIDE ×', chipShown: true, allPressed: 'false', sheetOpen: true },
+      `${name}: a goal opens ACHIEVEMENTS filtered to its track`);
+    await page.locator('[data-achievement-filter="track"]').click();
+    assert.ok(await page.evaluate(() => [...document.querySelectorAll('.turn-achievement-card')].filter((card) => !card.hidden).length) > cliffsideGoals.length,
+      `${name}: the track chip shows every track again`);
+    await page.locator('.turn-achievements-dialog [data-dialog-close]').click();
+    await page.waitForFunction(() => !document.querySelector('.turn-achievements-dialog').open);
+    assert.deepEqual(await page.evaluate(() => ({
+      sheetOpen: document.querySelector('#turnTrackSheet').open,
+      focus: document.activeElement?.dataset?.achievementId
+    })), { sheetOpen: true, focus: 'cliffside-safety' }, `${name}: closing ACHIEVEMENTS returns to the goal`);
     await page.locator('#turnTrackSheet .turn-pr-close').click();
     await page.waitForFunction(() => !document.querySelector('#turnTrackSheet').open);
     assert.equal(await page.evaluate(() => globalThis.getComputedStyle(document.documentElement).getPropertyValue('--turn-modal-paper')), '',
@@ -364,9 +412,10 @@ try {
     const sheet = await page.evaluate(() => {
       const body = document.querySelector('#turnTrackSheet .turn-pr-sheet-body');
       const card = document.querySelector('#turnTrackSheet .turn-pr-sheet-card').getBoundingClientRect();
-      return { overflowX: body.scrollWidth - body.clientWidth, inside: card.right <= globalThis.innerWidth + 0.5 && card.bottom <= globalThis.innerHeight + 0.5 };
+      const clippedGoals = [...body.querySelectorAll('.roadbook-goal')].filter((goal) => goal.scrollWidth > goal.clientWidth + 1).length;
+      return { overflowX: body.scrollWidth - body.clientWidth, inside: card.right <= globalThis.innerWidth + 0.5 && card.bottom <= globalThis.innerHeight + 0.5, clippedGoals };
     });
-    assert.deepEqual(sheet, { overflowX: 0, inside: true }, '200% text: the Track sheet reflows inside the screen');
+    assert.deepEqual(sheet, { overflowX: 0, inside: true, clippedGoals: 0 }, '200% text: the Track sheet and its goals reflow inside the screen');
     await page.locator('#turnTrackSheet .turn-pr-close').click();
   });
   await layoutAt(chromium, '852x393 short landscape', { width: 852, height: 393 }, (facts) => {
@@ -390,6 +439,11 @@ try {
     assert.equal(beside, true);
     await page.locator('.roadbook-card[data-track-id="cliffside"]').click();
     assert.equal(await page.locator('#roadbookOverviewTitle').textContent(), 'Cliffside', 'the overview follows the selection');
+    assert.deepEqual(
+      await page.$$eval('.roadbook-overview .roadbook-goal', (rows) => rows.map((row) => row.dataset.achievementId).sort()),
+      trackAchievements('cliffside').map((achievement) => achievement.id).sort(),
+      'the overview lists the selected track\'s goals'
+    );
     // Growing into the overview with the Track sheet open closes the sheet, and focus
     // lands on the overview, never on the Track sheet button that just disappeared.
     await page.setViewportSize({ width: 900, height: 820 });
@@ -414,7 +468,7 @@ try {
     await page.waitForFunction(() => !document.querySelector('.roadbook-overview').hidden);
     await unlockWithVisibleControls(page, '1180x820 iPad landscape');
   });
-  console.log('ROADBOOK lists every track, keeps one clear selection, gates locked tracks and fits 320px to iPad.');
+  console.log('ROADBOOK lists every track, keeps one clear selection, gates locked tracks, shows each track\'s goals and fits 320px to iPad.');
 } finally {
   server.close();
 }

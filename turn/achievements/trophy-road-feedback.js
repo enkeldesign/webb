@@ -1,4 +1,4 @@
-import { CATEGORY } from './catalog.js';
+import { CATEGORY, TRACK_NAMES } from './catalog.js';
 import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r253-supercar-release';
 import {
   achievementCardMatchesFilters
@@ -135,6 +135,12 @@ function prepareFilters(dialog) {
   const allButton = container.querySelector('[data-achievement-filter="all"]');
   const newButton = container.querySelector('[data-achievement-filter="new"]');
   const list = dialog.querySelector('.turn-achievements-list');
+  // One track's achievements, when ACHIEVEMENTS opens from that track's goals (#1031).
+  // The chip names the track and takes the scope off; so does ALL.
+  let activeTrack = '';
+  const trackButton = makeFilterButton('track', '', true);
+  trackButton.hidden = true;
+  allButton?.after(trackButton);
 
   function hasUnseenAchievements() {
     return Boolean(list?.querySelector('[data-achievement-unseen="true"]'));
@@ -150,9 +156,13 @@ function prepareFilters(dialog) {
   }
 
   function syncButtons() {
-    const all = activeTags.size === 0 && activeStatuses.size === 0;
+    const all = activeTags.size === 0 && activeStatuses.size === 0 && !activeTrack;
     allButton?.setAttribute('aria-pressed', String(all));
-    for (const button of container.querySelectorAll('[data-achievement-filter]:not([data-achievement-filter="all"])')) {
+    const trackName = TRACK_NAMES[activeTrack] || '';
+    trackButton.hidden = !trackName;
+    trackButton.textContent = trackName ? `${trackName.toUpperCase()} ×` : '';
+    if (trackName) trackButton.setAttribute('aria-label', `${trackName} achievements only. Show every track.`);
+    for (const button of container.querySelectorAll('[data-achievement-filter]:not([data-achievement-filter="all"]):not([data-achievement-filter="track"])')) {
       const id = button.dataset.achievementFilter;
       const pressed = tagIds.has(id) ? activeTags.has(id) : activeStatuses.has(id);
       button.setAttribute('aria-pressed', String(pressed));
@@ -168,7 +178,7 @@ function prepareFilters(dialog) {
         category: card.dataset.achievementCategory,
         unseen: card.dataset.achievementUnseen === 'true',
         status: card.dataset.achievementStatus
-      }, { activeTags, activeStatuses });
+      }, { activeTags, activeStatuses }) && (!activeTrack || card.dataset.achievementTrack === activeTrack);
       card.hidden = !visible;
       if (visible) visibleCount += 1;
     }
@@ -179,7 +189,13 @@ function prepareFilters(dialog) {
   function reset() {
     activeTags.clear();
     activeStatuses.clear();
+    activeTrack = TRACK_NAMES[dialog.dataset.achievementTrackScope] ? dialog.dataset.achievementTrackScope : '';
     apply();
+  }
+
+  function clearTrack() {
+    delete dialog.dataset.achievementTrackScope;
+    activeTrack = '';
   }
 
   function handleFilterClick(event) {
@@ -187,7 +203,14 @@ function prepareFilters(dialog) {
     if (!button) return;
     const id = button.dataset.achievementFilter;
     if (id === 'all') {
+      clearTrack();
       reset();
+      return;
+    }
+    if (id === 'track') {
+      clearTrack();
+      apply();
+      allButton?.focus();
       return;
     }
     if (tagIds.has(id)) {
@@ -213,6 +236,7 @@ function prepareFilters(dialog) {
       attributes: true,
       attributeFilter: [
         'data-achievement-tags',
+        'data-achievement-track',
         'data-achievement-unseen',
         'data-achievement-status'
       ]
