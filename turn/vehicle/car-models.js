@@ -31,6 +31,7 @@ import {
   collectAssetWheelRig,
   installAssetWheelRig
 } from './wheel-animation-rig.js?revision=r257-authored-wheel-spin';
+import { createCompactCar } from './compact-car.js';
 
 const loadersByPack = new Map();
 const sourceCache = new Map();
@@ -41,6 +42,11 @@ const TIRE_COLOR = 0x17191c;
 const SUPERCAR_MATTE_ROUGHNESS = 0.78;
 const SUPERCAR_MATTE_METALNESS = 0.04;
 const FEATURED_SURFACE_TARGET_LENGTHS = new Set([5.15, 5.5]);
+const WHITE = new THREE.Color(0xffffff);
+// Cars built from primitives at runtime instead of loaded from a model file.
+const PROCEDURAL_CAR_BUILDERS = Object.freeze({
+  compact: () => createCompactCar(THREE, { outlineMaterial: CAR_OUTLINE_MATERIAL })
+});
 const REVERSED_FRONT_WHEEL_LABEL_IDS = new Set(['vintage-racer']);
 const COMPETITOR_GHOST_TARGET_LENGTH = 5.5;
 const COMPETITOR_GHOST_TEMPLATE_LIMIT = 16;
@@ -121,8 +127,11 @@ export async function createCarVisual({
     const semanticPaintRecords = [];
     let explicitPaintCount = 0;
 
+    const procedural = Boolean(PROCEDURAL_CAR_BUILDERS[car.id]);
+    // A procedural car carries its outlines; they follow the same switches as the others.
+    if (procedural && !(outline && graphicsProfile.outlines)) removeOutlines(model);
     model.traverse((node) => {
-      if (!node.isMesh || !node.material) return;
+      if (!node.isMesh || !node.material || node.userData.turnOutline) return;
       const materials = Array.isArray(node.material) ? node.material : [node.material];
       const cloned = materials.map((material) => (
         resources.has(material) ? material : resources.own(material.clone())
@@ -130,6 +139,10 @@ export async function createCarVisual({
       node.material = Array.isArray(node.material) ? cloned : cloned[0];
 
       cloned.forEach((material) => {
+        if (material.userData.turnPaintRole) {
+          meshRecords.push({ node, material, paintRole: material.userData.turnPaintRole });
+          return;
+        }
         const semantic = installSemanticCarFinish({
           node,
           material,
@@ -155,6 +168,14 @@ export async function createCarVisual({
     });
 
     for (const record of meshRecords) {
+      if (record.paintRole) {
+        const primary = record.paintRole === 'primary';
+        paintMaterial(record.material, primary
+          ? (ghost ? ghostColor : requestedColorSpec)
+          : (ghost ? ghostSecondaryColor : requestedSecondaryColorSpec));
+        (primary ? primaryPaintMaterials : secondaryPaintMaterials).push(record.material);
+        continue;
+      }
       const {
         material,
         semantic,
@@ -205,7 +226,7 @@ export async function createCarVisual({
 
     }
 
-    if (outline) addOutlines(model);
+    if (outline && !procedural) addOutlines(model);
     const { frontWheelPivots, wheelSpinners } = installAssetWheelRig({
       model,
       frontRole: REVERSED_FRONT_WHEEL_LABEL_IDS.has(car.id) ? 'back' : 'front',
@@ -414,11 +435,11 @@ export function recolorCarVisual(root, color, secondaryColor = root?.userData?.t
   recolorSemanticCarFinish(root, displayColor, displaySecondary);
   for (const material of root?.userData?.turnPrimaryPaintMaterials || []) {
     if (material.userData?.turnSemanticPaint) continue;
-    setThreeColor(material.color, displayColor);
+    paintMaterial(material, displayColor);
   }
   for (const material of root?.userData?.turnSecondaryPaintMaterials || []) {
     if (material.userData?.turnSemanticPaint) continue;
-    setThreeColor(material.color, displaySecondary);
+    paintMaterial(material, displaySecondary);
   }
   if (root?.userData) {
     root.userData.turnCarColor = normalized;
@@ -441,11 +462,23 @@ async function loadEmbeddedSupercarSource(car) {
   return gltf.scene;
 }
 
+// A paint colour, or a declared shade of it: a procedural car's wheel dish is darker
+// than its paint and its hub cap lighter, and both follow every repaint.
+function paintMaterial(material, colorSpec) {
+  setThreeColor(material.color, colorSpec);
+  const shade = material.userData?.turnPaintShade;
+  if (shade?.multiply) material.color.multiplyScalar(shade.multiply);
+  if (shade?.lighten) material.color.lerp(WHITE, shade.lighten);
+}
+
 async function loadCarSource(carId) {
   const car = getCarDefinition(carId);
   let sourcePromise = sourceCache.get(car.id);
   if (!sourcePromise) {
-    const loadPromise = car.id === 'supercar'
+    const buildProcedural = PROCEDURAL_CAR_BUILDERS[car.id];
+    const loadPromise = buildProcedural
+      ? Promise.resolve().then(buildProcedural)
+      : car.id === 'supercar'
       ? loadEmbeddedSupercarSource(car)
       : loaderForPack(car.pack).loadAsync(assetUrl(car.asset)).then((gltf) => gltf.scene);
     sourcePromise = loadPromise.catch((error) => {
@@ -496,6 +529,14 @@ function addOutlines(model) {
     outline.userData.turnOutline = true;
     node.add(outline);
   }
+}
+
+function removeOutlines(model) {
+  const outlines = [];
+  model.traverse((node) => {
+    if (node.userData.turnOutline) outlines.push(node);
+  });
+  for (const node of outlines) node.parent.remove(node);
 }
 
 function normalizeModelToGround(model, targetLength, cacheKey = '') {

@@ -5,10 +5,15 @@ import {
   CAR_CATALOG,
   deriveVehicleTuning
 } from '../../turn/vehicle/catalog.js';
-import { resolveVehiclePerkStatusFeedback } from '../../turn/vehicle/perk-presentation.js';
+import {
+  resolveVehiclePerkStatusFeedback,
+  vehiclePerkStatusDurationMs
+} from '../../turn/vehicle/perk-presentation.js';
 import { getVehicleSpeedLimit } from '../../turn/vehicle/physics.js';
 import {
   CARRY_ON_LOCK_DRAG_ADD,
+  CLEAN_EXIT_CONTROL_BONUS,
+  CLEAN_EXIT_SECONDS,
   DRIFT_DEMON_BUILD_SECONDS,
   DRIFT_DEMON_DECAY_SECONDS,
   FULL_TANK_BUILD_SECONDS,
@@ -311,7 +316,7 @@ assert.equal(resolveVehiclePerkStatusFeedback({
   vehicleId: suv.id, perkUnlocked: true, previousProgress: 1, nextProgress: 1
 }), null, 'Status feedback must fire only on threshold crossings');
 assert.match(mainSource,
-  /resolveVehiclePerkStatusFeedback\([\s\S]*previousVehiclePerkProgress[\s\S]*state\.vehiclePerkProgress[\s\S]*showCompactRacePill\(perkStatusFeedback, \{ tone: 'blue' \}\)/,
+  /resolveVehiclePerkStatusFeedback\([\s\S]*previousVehiclePerkProgress[\s\S]*state\.vehiclePerkProgress[\s\S]*showCompactRacePill\(perkStatusFeedback, \{\s*tone: 'blue'/,
   'Dynamic perk milestones must use the shared compact blue race cue lane');
 
 // GRADUATED builds one readable stage at a time from the current base and earns
@@ -404,6 +409,53 @@ assert.match(indexSource, /<div class="message" id="message" role="status"><\/di
 assert.match(mainSource,
   /resolveGraduatedStageFeedback\([\s\S]*previousVehiclePerkStage[\s\S]*state\.vehiclePerkStage[\s\S]*showMessage\(graduatedFeedback, 1800\)/,
   'The race loop must announce only reached or lost GRADUATED stages');
+
+// CLEAN EXIT (Compact): a clean drift, one DRIFT ATTACK would bank, adds 1 CONTROL up to
+// 5/5 for CLEAN_EXIT_SECONDS. A wall hit, a spin or a tap earns nothing; a new clean drift
+// restarts the time and never stacks.
+const compact = CAR_CATALOG.find(({ id }) => id === 'compact');
+assert.equal(compact.perk.title, 'CLEAN EXIT');
+assert.deepEqual([CLEAN_EXIT_CONTROL_BONUS, CLEAN_EXIT_SECONDS], [1, 3]);
+const compactControlFive = deriveVehicleTuning({ ...compact.stats, control: 5 });
+const straight = () => ({ speed: 25, slipAngle: 0 });
+const drifting = () => ({ speed: 25, slipAngle: 0.9 });
+function cleanExitRun(steps, tuning = compact.tuning) {
+  const state = perkState(compact.id, true, tuning);
+  const controls = [];
+  for (const [seconds, input] of steps) {
+    for (let frame = 0; frame < Math.round(seconds * 60); frame += 1) {
+      advanceVehiclePerkRuntimeState({ state, dt: 1 / 60, ...input() });
+      controls.push(resolveVehiclePerkTuning({ state, tuning }).controlMultiplier);
+    }
+  }
+  const bonusSeconds = controls.filter((control) => control > tuning.controlMultiplier).length / 60;
+  return { state, controls, bonusSeconds, peak: Math.max(...controls) };
+}
+const cleanDrift = cleanExitRun([[1, straight], [1.5, drifting], [5, straight]]);
+assert.ok(Math.abs(cleanDrift.bonusSeconds - CLEAN_EXIT_SECONDS) < 0.05,
+  `A clean drift adds CONTROL for ${CLEAN_EXIT_SECONDS} s (${cleanDrift.bonusSeconds} s)`);
+assert.equal(cleanDrift.peak, compactControlFive.controlMultiplier, 'CLEAN EXIT adds one CONTROL point: 4/5 becomes 5/5');
+assert.equal(cleanDrift.controls.at(-1), compact.tuning.controlMultiplier, 'CONTROL returns to 4/5 when the time runs out');
+for (const [label, steps] of [
+  ['a tap', [[1, straight], [0.12, drifting], [5, straight]]],
+  ['a wall hit', [[1, straight], [1.2, drifting], [0.1, () => ({ speed: 20, slipAngle: 0.9, collided: true })], [5, straight]]],
+  ['a spin', [[1, straight], [1.2, drifting], [0.3, () => ({ speed: 20, slipAngle: 2.4 })], [5, straight]]],
+  ['leaving the road', [[1, straight], [1.2, drifting], [0.2, () => ({ speed: 22, slipAngle: 0.9, offRoad: true })], [5, straight]]]
+]) {
+  assert.equal(cleanExitRun(steps).bonusSeconds, 0, `CLEAN EXIT needs a clean drift, not ${label}`);
+}
+const twoDrifts = cleanExitRun([[1, straight], [1.5, drifting], [2, straight], [1.5, drifting], [5, straight]]);
+assert.equal(twoDrifts.peak, compactControlFive.controlMultiplier, 'A second clean drift never stacks CONTROL');
+assert.ok(twoDrifts.bonusSeconds > CLEAN_EXIT_SECONDS * 1.4 && twoDrifts.bonusSeconds <= CLEAN_EXIT_SECONDS * 2 + 0.05,
+  `A second clean drift restarts the time (${twoDrifts.bonusSeconds} s)`);
+const shiftedToFive = cleanExitRun([[1, straight], [1.5, drifting], [1, straight]], compactControlFive);
+assert.equal(shiftedToFive.peak, compactControlFive.controlMultiplier, 'CLEAN EXIT never lifts CONTROL past 5/5');
+assert.equal(resolveVehiclePerkStatusFeedback({
+  vehicleId: compact.id, perkUnlocked: true, previousProgress: 0.4, nextProgress: 1
+}), 'CONTROL +1', 'Every clean drift shows the CONTROL +1 cue, a refresh included');
+assert.equal(vehiclePerkStatusDurationMs(compact.id), CLEAN_EXIT_SECONDS * 1000, 'The cue stays while the bonus lasts');
+assert.equal(vehiclePerkStatusDurationMs(suv.id), undefined, 'Other perk cues keep the standard pill time');
+assert.match(mainSource, /showCompactRacePill\(perkStatusFeedback, \{\s*tone: 'blue',\s*duration: vehiclePerkStatusDurationMs\(state\.vehicleId\)\s*\}\)/);
 
 // Ownership and lifecycle are canonical race state, not a cached UI guess.
 assert.match(mainSource, /vehiclePerkUnlocked: isVehiclePerkUnlocked\(initialVehicleSelection\.carId\)/);

@@ -33,6 +33,7 @@ const loadCarSource = vm.runInNewContext(
   `${section(carModels, 'async function loadCarSource(', '\nfunction loaderForPack')}\nloadCarSource`,
   {
     sourceCache,
+    PROCEDURAL_CAR_BUILDERS: {},
     getCarDefinition: (id) => ({ id, pack: 'default', asset: `./assets/${id}.glb` }),
     loadEmbeddedSupercarSource: () => Promise.reject(new Error('supercar path not used here')),
     loaderForPack: () => loader,

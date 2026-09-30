@@ -175,6 +175,7 @@ assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300);
 assert.deepEqual(
   TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
   [
+    ['compact', 300],
     ['medium-tracks', 400],
     ['awd-traction', 500],
     ['drift-attack', 600],

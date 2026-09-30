@@ -21,6 +21,7 @@ const expectedQuarterTurns = new Map([
   ['race-future', 0],
   ['race', 0],
   ['sedan-sports', 0],
+  ['compact', 0],
   ['tractor', 0],
   ['sedan', 0],
   ['suv', 0],
@@ -41,6 +42,7 @@ const expectedVisualScales = new Map([
   ['race-future', 0.96],
   ['race', 0.94],
   ['sedan-sports', 0.98],
+  ['compact', 0.88],
   ['tractor', 1],
   ['sedan', 1],
   ['suv', 1.05],
@@ -91,6 +93,40 @@ for (const car of catalog.CAR_CATALOG) {
     `${car.name} must keep its Lot-and-race featured multiplier`
   );
 
+  const rawFront = car.pack === 'procedural'
+    ? await proceduralFrontAxis(car)
+    : await authoredGlbFrontAxis(car);
+  const rawLength = Math.hypot(rawFront.x, rawFront.z);
+  assert.ok(rawLength > 0.1, `${car.name} must expose a usable front/back wheel axis`);
+
+  const correctedFront = rotateYaw(rawFront, car.modelYawQuarterTurns * Math.PI / 2);
+  assert.ok(
+    Math.abs(correctedFront.x) < rawLength * 1e-6 && correctedFront.z > 0,
+    `${car.name} correction must normalize its authored nose to +Z`
+  );
+
+  const factoryFront = rotateYaw(correctedFront, Math.PI);
+  const raceFront = rotateYaw(factoryFront, Math.PI);
+  // GARAGE opens every car 20° off head-on, towards its camera on the +X/+Z side.
+  const viewerFront = rotateYaw(factoryFront, Math.PI + Math.PI / 9);
+  assert.ok(raceFront.z > 0, `${car.name} must face the physics heading in a race`);
+  assert.ok(viewerFront.z > 0 && viewerFront.x > 0, `${car.name} must open on a front three-quarter view`);
+}
+
+// A car built from primitives (vehicle/compact-car.js) names its wheels like the GLB
+// wheels, for the shared rig, and authors its nose at +Z like the GLB cars.
+async function proceduralFrontAxis(car) {
+  const source = await fs.readFile(new URL(`../../turn/${car.asset.replace(/^\.\//, '')}`, import.meta.url), 'utf8');
+  for (const role of ['front-left', 'front-right', 'back-left', 'back-right']) {
+    assert.match(source, new RegExp(`wheel\\('wheel-${role}', -?1, -?AXLE_Z\\)`), `${car.name} must name its ${role} wheel for the shared rig`);
+  }
+  assert.match(source, /wheel\('wheel-front-left', 1, AXLE_Z\)/, `${car.name} must author its front axle at +Z`);
+  assert.match(source, /wheel\('wheel-back-left', 1, -AXLE_Z\)/, `${car.name} must author its back axle at -Z`);
+  assert.match(source, /const AXLE_Z = WB \/ 2/);
+  return { x: 0, z: 1 };
+}
+
+async function authoredGlbFrontAxis(car) {
   const glb = await readCarGlb(car);
   const json = readGlbJson(glb, car.id);
   const drivableWheels = (json.nodes || []).filter((node) => drivableWheelRole(node.name));
@@ -110,22 +146,7 @@ for (const car of catalog.CAR_CATALOG) {
     assert.equal(verifiedLocalAxles, 4,
       `${car.name} must expose directly verifiable authored wheel geometry`);
   }
-  const rawFront = getKenneyWheelAxis(json, car);
-  const rawLength = Math.hypot(rawFront.x, rawFront.z);
-  assert.ok(rawLength > 0.1, `${car.name} must expose a usable front/back wheel axis`);
-
-  const correctedFront = rotateYaw(rawFront, car.modelYawQuarterTurns * Math.PI / 2);
-  assert.ok(
-    Math.abs(correctedFront.x) < rawLength * 1e-6 && correctedFront.z > 0,
-    `${car.name} correction must normalize its authored nose to +Z`
-  );
-
-  const factoryFront = rotateYaw(correctedFront, Math.PI);
-  const raceFront = rotateYaw(factoryFront, Math.PI);
-  // GARAGE opens every car 20° off head-on, towards its camera on the +X/+Z side.
-  const viewerFront = rotateYaw(factoryFront, Math.PI + Math.PI / 9);
-  assert.ok(raceFront.z > 0, `${car.name} must face the physics heading in a race`);
-  assert.ok(viewerFront.z > 0 && viewerFront.x > 0, `${car.name} must open on a front three-quarter view`);
+  return getKenneyWheelAxis(json, car);
 }
 
 const awd = catalog.getCarDefinition('convertible');
@@ -345,7 +366,7 @@ assert.match(
 assert.match(main, /animateWheelRig\(car, \{ steerAngle, speed, dt \}\)/,
   'The gameplay wheel animator must use the shared steering-and-spin behavior');
 
-console.log(`TURN ${release.id} car orientation, trajectory steering, visible wheel integration and surface-specific visual sizing passed for all 17 models.`);
+console.log(`TURN ${release.id} car orientation, trajectory steering, visible wheel integration and surface-specific visual sizing passed for all ${catalog.CAR_CATALOG.length} models.`);
 
 function assertClose(actual, expected, label) {
   assert.ok(

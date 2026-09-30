@@ -31,6 +31,7 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   paint: AUTHORED_PAINT_ICON,
   emergency: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M18 35V21a14 14 0 0 1 28 0v14"></path><path d="M12 35h40v9H12Z"></path><path d="M32 2v7M9 9l6 6M55 9l-6 6M3 25h8M53 25h8"></path><path d="M24 34V22a8 8 0 0 1 16 0v12"></path></svg>',
   monster: authoredRewardIcon('monster-truck'),
+  compact: authoredRewardIcon('compact'),
   vintage: authoredRewardIcon('vintage-racer'),
   rally: authoredRewardIcon('rally-racer'),
   supercar: authoredRewardIcon('supercar'),
@@ -41,6 +42,17 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
 });
 
 const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
+  Object.freeze({
+    id: 'compact',
+    title: 'COMPACT',
+    shortTitle: 'Compact',
+    type: 'vehicle',
+    vehicleIds: Object.freeze(['compact']),
+    icon: 'compact',
+    perkTitle: 'CLEAN EXIT',
+    perkDescription: 'A clean DRIFT, one that ends without hitting a wall or spinning out, adds 1 CONTROL for a few seconds, up to 5/5.',
+    description: 'Unlock the Compact: a nimble city hatch that is happy to drift.<br><strong>CLEAN EXIT:</strong> A clean DRIFT, one that ends without hitting a wall or spinning out, adds 1 CONTROL for a few seconds, up to 5/5.'
+  }),
   Object.freeze({
     id: 'vintage-racer',
     title: 'VINTAGE RACER',
@@ -251,6 +263,7 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
 
 // EASY tracks are open from the start; each harder difficulty tier is one reward.
 const REWARD_ORDER = Object.freeze([
+  Object.freeze(['compact', 300]),
   Object.freeze(['medium-tracks', 400]),
   Object.freeze(['awd-traction', 500]),
   Object.freeze(['drift-attack', 600]),

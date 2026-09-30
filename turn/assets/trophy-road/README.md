@@ -14,6 +14,7 @@ Kenney Racing Pack is CC0. These small primitives are kept as original PNGs rath
 
 | Trophy Road reward | Source |
 | --- | --- |
+| COMPACT | `compact.svg` (drawn from the Compact's own side profile in `vehicle/compact-car.js`) |
 | VINTAGE RACER | `vintage-racer.svg` |
 | SHIFT | `shift.svg` |
 | RACE CAR | `race-car.svg` |

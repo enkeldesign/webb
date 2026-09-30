@@ -533,6 +533,21 @@ for (const browserType of [chromium, webkit]) {
         if (carId === 'monster-truck' || carId === 'supercar') {
           return { node: spinner, centre: new THREE.Vector3(), spinner };
         }
+        if (carId === 'compact') {
+          // Built from primitives: its wheel is several meshes (tyre, rim, dish, hub).
+          // Measure them together, outline shells excluded, on the spin axis.
+          const bounds = new THREE.Box3();
+          spinner.updateWorldMatrix(true, true);
+          const inverse = spinner.matrixWorld.clone().invert();
+          spinner.traverse((part) => {
+            if (!part.geometry || part.userData.turnOutline) return;
+            part.geometry.computeBoundingBox();
+            bounds.union(part.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(part.matrixWorld)));
+          });
+          const centre = new THREE.Vector3();
+          centre.x = (bounds.min.x + bounds.max.x) / 2;
+          return { node: spinner, centre, spinner };
+        }
         // Independently measure the authored wheel mesh, not its mount or the
         // renderer's cached offset. Contour children are deliberately excluded.
         const node = spinner.children[0];
@@ -574,6 +589,8 @@ for (const browserType of [chromium, webkit]) {
     assert.ok(result.wheelGap < 0.001, `${result.carId}: rendered skids meet the rear tyre centres`);
     if (['monster-truck', 'supercar', 'vintage-racer'].includes(result.carId)) {
       assert.ok(result.wheelShift < 0.001, `${result.carId}: already centred tracks keep their spacing`);
+    } else if (result.carId === 'compact') {
+      assert.ok(result.wheelShift < 0.05, `${result.carId}: wheels built round their axle keep their tracks there`);
     } else {
       assert.ok(result.wheelShift > 0.1, `${result.carId}: tracks move out from the inner wheel origins`);
     }

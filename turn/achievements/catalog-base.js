@@ -46,6 +46,7 @@ export const VEHICLE_NAMES = Object.freeze({
   'race-future': 'Future Racer',
   race: 'Race Car',
   'sedan-sports': 'Sports Car',
+  compact: 'Compact',
   sedan: 'Sedan',
   suv: 'SUV',
   firetruck: 'Fire Truck',

@@ -65,7 +65,8 @@ function createMemoryStorage(initial = {}) {
 }
 
 const productionRewardIds = PRODUCTION_TROPHY_ROAD_REWARDS.map((reward) => reward.id);
-const through400 = ['medium-tracks'];
+const through300 = ['compact'];
+const through400 = [...through300, 'medium-tracks'];
 const through500 = [...through400, 'awd-traction'];
 const through600 = [...through500, 'drift-attack'];
 const through700 = [...through600, 'advanced-tracks'];
@@ -112,6 +113,7 @@ assert.equal(PRODUCTION_TROPHY_ROAD_MAX_THRESHOLD, 2300,
 assert.deepEqual(
   PRODUCTION_TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
   [
+    ['compact', 300],
     ['medium-tracks', 400],
     ['awd-traction', 500],
     ['drift-attack', 600],
@@ -136,7 +138,8 @@ assert.deepEqual(
 );
 
 assert.deepEqual(productionRewardIdsForTrophies(299), []);
-assert.deepEqual(productionRewardIdsForTrophies(300), []);
+assert.deepEqual(productionRewardIdsForTrophies(300), through300);
+assert.deepEqual(productionRewardIdsForTrophies(399), through300);
 assert.deepEqual(productionRewardIdsForTrophies(400), through400);
 assert.deepEqual(productionRewardIdsForTrophies(500), through500);
 assert.deepEqual(productionRewardIdsForTrophies(600), through600);
@@ -501,7 +504,7 @@ const migratedVersionFiveAt500 = normalizeAchievementState({
 assert.equal(migratedVersionFiveAt500.version, 10);
 assert.deepEqual(
   migratedVersionFiveAt500.rewards.unlocked,
-  ['vintage-racer', 'medium-tracks', 'awd-traction'],
+  ['vintage-racer', 'compact', 'medium-tracks', 'awd-traction'],
   'A 500-trophy profile keeps its old rewards and derives the current rewards through 500'
 );
 assert.deepEqual(migratedVersionFiveAt500.rewards.seen, ['vintage-racer'],

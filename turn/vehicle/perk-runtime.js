@@ -1,4 +1,6 @@
 import { deriveVehicleTuning } from './catalog.js?revision=r230-vehicle-perks';
+import { createDriftAttackScorer } from '../scoring/drift-attack.js';
+import { SCORE_FEEDBACK_EVENT } from '../scoring/score-feedback.js';
 
 export const TRACTION_MIN_OFFROAD_PENALTY = 0.22;
 export const TRACTION_SHALLOW_DEPTH_RATIO = 0.08;
@@ -16,6 +18,10 @@ export const GRADUATED_MIN_SPEED = 8;
 export const GRADUATED_MAX_CONTROL_MULTIPLIER = 1.28;
 export const GRADUATED_MAX_ACCELERATION_MULTIPLIER = 1.24;
 export const GRADUATED_MAX_TOP_SPEED_MULTIPLIER = 1.20;
+// CLEAN EXIT (Compact): a clean drift adds CONTROL for a moment. A new clean drift
+// restarts the time; the bonus never stacks and never goes past CONTROL 5/5.
+export const CLEAN_EXIT_CONTROL_BONUS = 1;
+export const CLEAN_EXIT_SECONDS = 3;
 
 const GRADUATED_STAGE_LABELS = Object.freeze([
   '',
@@ -24,14 +30,23 @@ const GRADUATED_STAGE_LABELS = Object.freeze([
   'TOP SPEED'
 ]);
 
-const MAX_ATTRIBUTE_TUNING = Object.freeze(deriveVehicleTuning({
+const MAX_ATTRIBUTE_STATS = Object.freeze({
   speed: 5,
   acceleration: 5,
   control: 5,
   drift: 5,
   boostPower: 5,
   boostDuration: 5
-}));
+});
+const MAX_ATTRIBUTE_TUNING = Object.freeze(deriveVehicleTuning(MAX_ATTRIBUTE_STATS));
+// CONTROL 1/5 … 5/5 as the handling multiplier every car's stats map to.
+const CONTROL_MULTIPLIER_BY_LEVEL = Object.freeze([1, 2, 3, 4, 5].map((control) => (
+  deriveVehicleTuning({ ...MAX_ATTRIBUTE_STATS, control }).controlMultiplier
+)));
+// A clean drift is one DRIFT ATTACK would bank: it ends without a wall hit, a spin,
+// leaving the road or stopping, and scores more than a tap. Each car state keeps its
+// own scorer, whether or not DRIFT ATTACK is unlocked or shown.
+const cleanDriftTrackers = new WeakMap();
 
 function clamp(value, min = 0, max = 1) {
   return Math.min(max, Math.max(min, Number(value) || 0));
@@ -84,8 +99,34 @@ export function resolveGraduatedStageFeedback(previousStage, nextStage) {
   return `GRADUATED · ${GRADUATED_STAGE_LABELS[next]}`;
 }
 
+function cleanDriftTracker(state) {
+  let tracker = cleanDriftTrackers.get(state);
+  if (!tracker) {
+    tracker = { clockMs: 0, banked: false };
+    tracker.scorer = createDriftAttackScorer({
+      onEvent(type) {
+        if (type === SCORE_FEEDBACK_EVENT.BANK) tracker.banked = true;
+      }
+    });
+    cleanDriftTrackers.set(state, tracker);
+  }
+  return tracker;
+}
+
+// The CONTROL multiplier one or more points up, never past 5/5.
+export function resolveControlMultiplierBonus(controlMultiplier, points = CLEAN_EXIT_CONTROL_BONUS) {
+  const base = Number(controlMultiplier) || 1;
+  let level = 0;
+  CONTROL_MULTIPLIER_BY_LEVEL.forEach((value, index) => {
+    if (Math.abs(value - base) < Math.abs(CONTROL_MULTIPLIER_BY_LEVEL[level] - base)) level = index;
+  });
+  const raised = CONTROL_MULTIPLIER_BY_LEVEL[Math.min(CONTROL_MULTIPLIER_BY_LEVEL.length - 1, level + points)];
+  return Math.max(base, raised);
+}
+
 export function resetVehiclePerkRuntimeState(state) {
   if (!state) return null;
+  cleanDriftTrackers.delete(state);
   state.vehiclePerkRuntimeVehicleId = String(state.vehicleId || '');
   state.vehiclePerkRuntimeUnlocked = state.vehiclePerkUnlocked === true;
   state.vehiclePerkProgress = 0;
@@ -137,7 +178,8 @@ export function advanceVehiclePerkRuntimeState({
   collided = false,
   speed = state?.speed || 0,
   overcharge = 0,
-  boostActive = false
+  boostActive = false,
+  slipAngle = state?.driftSlipAngle || 0
 } = {}) {
   if (!state) return 0;
   syncVehiclePerkRuntimeState(state);
@@ -175,6 +217,15 @@ export function advanceVehiclePerkRuntimeState({
         state.vehiclePerkProgress + elapsed / GRADUATED_TOTAL_SECONDS
       );
     }
+  } else if (activePerk(state, 'compact')) {
+    // Progress is the CLEAN EXIT time left: full after a clean drift, then running out.
+    const tracker = cleanDriftTracker(state);
+    tracker.clockMs += elapsed * 1000;
+    tracker.banked = false;
+    tracker.scorer.advance(elapsed, tracker.clockMs, speed, slipAngle, offRoad, collided, true);
+    state.vehiclePerkProgress = tracker.banked
+      ? 1
+      : clampProgress(state.vehiclePerkProgress - elapsed / CLEAN_EXIT_SECONDS);
   } else {
     state.vehiclePerkProgress = 0;
   }
@@ -194,7 +245,8 @@ export function resolveVehiclePerkTuning({ state, tuning } = {}) {
   const fullTankActive = activePerk(state, 'suv');
   const driftDemonActive = activePerk(state, 'sedan-sports');
   const graduatedActive = activePerk(state, 'classic');
-  if (progress <= 0 || (!torqueActive && !fullTankActive && !driftDemonActive && !graduatedActive)) {
+  const cleanExitActive = activePerk(state, 'compact');
+  if (progress <= 0 || (!torqueActive && !fullTankActive && !driftDemonActive && !graduatedActive && !cleanExitActive)) {
     state.vehicleEffectiveTuning = baseTuning;
     return baseTuning;
   }
@@ -248,6 +300,9 @@ export function resolveVehiclePerkTuning({ state, tuning } = {}) {
       GRADUATED_MAX_TOP_SPEED_MULTIPLIER,
       graduatedStageProgress(progress, 2)
     );
+  }
+  if (cleanExitActive) {
+    effective.controlMultiplier = resolveControlMultiplierBonus(baseTuning.controlMultiplier);
   }
   state.vehicleEffectiveTuning = effective;
   return effective;

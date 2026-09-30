@@ -426,8 +426,8 @@ assert.equal(store.unlock('an-army-of-me', { trackId: 'midnight-city' })?.trophi
 assert.equal(store.unlock('on-course-of-course', { trackId: 'harbor' })?.trophies, 100);
 assert.equal(store.unlock('save-bella', { trackId: 'countryside', vehicleId: 'firetruck' })?.trophies, 25);
 assert.equal(store.trophyTotal(), 325);
-assert.deepEqual(store.syncRewards(), [],
-  'Trophy Road intentionally has no reward before the 400-trophy milestone');
+assert.deepEqual(store.syncRewards().map(({ id }) => id), ['compact'],
+  'At 325 trophies only Trophy Road’s first reward, the Compact at 300, has arrived');
 assert.doesNotMatch(storeSource, /rival-storage|clearRivalsState|clearAllRivalsState/,
   'Rival resets must remain independent from achievements');
 
