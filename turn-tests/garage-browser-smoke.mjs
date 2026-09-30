@@ -612,6 +612,32 @@ async function sheetFacts(page) {
   return facts;
 }
 
+// Portrait phones: the dock never falls in a gap between two blocks, where the page
+// would look finished. Some block always shows a slice of itself above the dock, and a
+// fade over the dock's edge says there is more, until the end of the page is in view.
+async function foldFacts(page) {
+  await page.evaluate(() => { document.querySelector('.garage').scrollTop = 0; });
+  await page.waitForTimeout(400);
+  const top = await page.evaluate(() => {
+    const garage = document.querySelector('.garage');
+    const dockTop = document.querySelector('.garage-dock').getBoundingClientRect().top;
+    const blocks = [...garage.querySelectorAll('.garage-identity > *, .garage-tools, .garage-disclosure, .garage-catalog-inline')]
+      .map((node) => node.getBoundingClientRect()).filter((rect) => rect.height > 0);
+    const cut = blocks.find((rect) => rect.bottom > dockTop + 1);
+    return {
+      slice: cut ? Math.round(dockTop - cut.top) : null,
+      stage: document.querySelector('.garage-stage').getBoundingClientRect().height,
+      fade: garage.classList.contains('has-more-below')
+        && globalThis.getComputedStyle(document.querySelector('.garage-dock'), '::before').opacity === '1'
+    };
+  });
+  await page.evaluate(() => { const garage = document.querySelector('.garage'); garage.scrollTop = garage.scrollHeight; });
+  await page.waitForTimeout(250);
+  const endFade = await page.evaluate(() => document.querySelector('.garage').classList.contains('has-more-below'));
+  await page.evaluate(() => { document.querySelector('.garage').scrollTop = 0; });
+  return { ...top, endFade };
+}
+
 async function layoutAt(name, size, check) {
   const { browser, page, errors } = await openGarage(chromium, size);
   try {
@@ -655,9 +681,18 @@ try {
   await layoutAt('430x932', { width: 430, height: 932 }, async (facts, page) => {
     assert.deepEqual(await sheetFacts(page), { columns: 2, inside: true, overflowX: 0, clippedNames: [], brokenWords: [] },
       '430: ALL CARS keeps two columns and whole names');
+    for (const [width, height] of [[430, 932], [393, 852], [390, 844], [375, 667], [360, 780], [320, 568]]) {
+      await page.setViewportSize({ width, height });
+      const fold = await foldFacts(page);
+      assert.ok(fold.slice >= 12, `${width}x${height}: a block shows a slice of itself above the dock (${fold.slice}px)`);
+      assert.ok(fold.stage >= 159, `${width}x${height}: the stage keeps the car in view (${fold.stage}px)`);
+      assert.deepEqual([fold.fade, fold.endFade], [true, false], `${width}x${height}: the fade shows until the end of the page`);
+    }
   });
   await layoutAt('393x852 200% text', { width: 393, height: 852, textSize: 32 }, async (facts, page) => {
     assert.equal(facts.dockFixed, false, '200% text: the dock joins the end of the page');
+    assert.equal(await page.evaluate(() => document.querySelector('.garage').classList.contains('has-more-below')), false,
+      '200% text: a dock in the page needs no fade');
     assert.equal(facts.catalog, 'sheet');
     const sheet = await sheetFacts(page);
     assert.deepEqual([sheet.inside, sheet.overflowX, sheet.clippedNames, sheet.brokenWords], [true, 0, [], []],
