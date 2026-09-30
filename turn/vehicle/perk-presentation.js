@@ -1,5 +1,3 @@
-import { CLEAN_EXIT_CONTROL_BONUS, CLEAN_EXIT_SECONDS } from './perk-runtime.js?revision=r233-graduated';
-
 // OVERDRIVE deliberately has no top-end ceiling; player-facing copy describes the fast, clean-driving requirement without exposing tuning numbers.
 export const FUTURE_RACER_REWARD_PERK_DESCRIPTION =
   'The longer you drive fast and clean, the higher the speed cap becomes. Leaving the track or colliding resets it.';
@@ -25,16 +23,9 @@ export function resolveVehiclePerkStatusFeedback({
     if (vehicleId === 'suv') return 'FULL TANK';
     if (vehicleId === 'truck') return 'BOOST TANK 5/5';
     if (vehicleId === 'sedan-sports') return 'DRIFT 5/5';
-    // Every clean drift fills CLEAN EXIT again, so its cue shows again.
-    if (vehicleId === 'compact') return `CONTROL +${CLEAN_EXIT_CONTROL_BONUS}`;
   }
   if (vehicleId === 'suv' && previousFull && !nextFull) return 'FULL TANK LOST';
   return null;
-}
-
-// How long a perk's race pill stays: CLEAN EXIT's shows for as long as its bonus lasts.
-export function vehiclePerkStatusDurationMs(vehicleId) {
-  return vehicleId === 'compact' ? CLEAN_EXIT_SECONDS * 1000 : undefined;
 }
 
 export function vehiclePerkPresentation(vehicleId, perk) {
