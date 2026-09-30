@@ -18,6 +18,9 @@ import {
 const STEERING_MODE_KEY = 'turn-steering-mode-v1';
 const STEERING_MODE = Object.freeze({ MOTION: 'motion', MANUAL: 'manual' });
 const ICON_REVISION = '20260803-profile-512';
+const SETUP_RESUME_KEY = 'turn-setup-resume';
+const SETUP_RELOADED_KEY = 'turn-setup-reloaded-at';
+const SETUP_RELOAD_WINDOW_MS = 60000;
 
 let installed = false;
 
@@ -498,8 +501,58 @@ export async function installM8HomeNavigation() {
     window.dispatchEvent(new CustomEvent('turn:home-hidden'));
   }
 
+  // A module that fails to load once stays failed until the page reloads, so a setup
+  // that could not load (a dropped request on the very first start) reloads once and
+  // carries on to the chosen track; a second failure soon after shows RESTART instead.
+  function recoverSetup(trackId) {
+    try {
+      const last = Number(sessionStorage.getItem(SETUP_RELOADED_KEY)) || 0;
+      if (Date.now() - last > SETUP_RELOAD_WINDOW_MS) {
+        sessionStorage.setItem(SETUP_RELOADED_KEY, String(Date.now()));
+        sessionStorage.setItem(SETUP_RESUME_KEY, JSON.stringify({ trackId, at: Date.now() }));
+        location.reload();
+        return true;
+      }
+    } catch {
+      // No session storage: offer RESTART below.
+    }
+    showSetupFailure();
+    return false;
+  }
+
+  function showSetupFailure() {
+    document.querySelector('.turn-setup-failure')?.remove();
+    const toast = document.createElement('div');
+    toast.className = 'turn-update-toast turn-setup-failure';
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+      <p class="turn-update-toast-text">The race setup didn’t load</p>
+      <button class="turn-update-toast-restart" type="button">RESTART</button>
+      <button class="turn-update-toast-later" type="button" aria-label="Close">×</button>`;
+    toast.querySelector('.turn-update-toast-restart').addEventListener('click', () => location.reload());
+    toast.querySelector('.turn-update-toast-later').addEventListener('click', () => toast.remove());
+    (document.querySelector('.turn-toast-region') || document.body).appendChild(toast);
+  }
+
+  function resumeSetupAfterReload() {
+    let resume = null;
+    try {
+      resume = JSON.parse(sessionStorage.getItem(SETUP_RESUME_KEY) || 'null');
+      sessionStorage.removeItem(SETUP_RESUME_KEY);
+    } catch {
+      return;
+    }
+    if (!resume || Date.now() - resume.at > SETUP_RELOAD_WINDOW_MS) return;
+    selectedTrackId = normalizeTrackId(resume.trackId);
+    roadbook.sync();
+    void continueToTrack();
+  }
+
   async function continueToTrack() {
     if (setupPending) return false;
+    document.querySelector('.turn-setup-failure')?.remove();
+    let garageOpened = false;
+    let reloading = false;
     const trackId = selectedTrackId;
     const trackName = selectedTrack().name.toUpperCase();
     const setupMessage = `PREPARING ${trackName} AND GARAGE…`;
@@ -517,6 +570,7 @@ export async function installM8HomeNavigation() {
         prepareGarageOnce()
       ]);
       hideHome();
+      garageOpened = true;
       const track = selectedTrack();
       const lotPromise = garageModule.showGarage({
         initialSelection: selectedVehicle(runtime),
@@ -549,13 +603,21 @@ export async function installM8HomeNavigation() {
       await raceSession.startGame(pendingAccess?.fullscreenPromise);
       return true;
     } catch (error) {
+      if (!garageOpened) {
+        console.warn('TURN: the race setup could not load.', error);
+        reloading = recoverSetup(trackId);
+        if (reloading) return false;
+      }
       showHome();
       homeStatus.textContent = error instanceof Error ? error.message : 'The race setup could not be opened.';
       continueButton.focus();
       return false;
     } finally {
-      setupPending = false;
-      roadbook.setBusy('');
+      // Reloading: the button keeps its busy label until the page goes.
+      if (!reloading) {
+        setupPending = false;
+        roadbook.setBusy('');
+      }
       if (homeStatus.textContent === setupMessage) homeStatus.textContent = '';
     }
   }
@@ -598,5 +660,6 @@ export async function installM8HomeNavigation() {
 
   syncRaceSettingsVisibility();
   showHome();
+  resumeSetupAfterReload();
   return globalThis.__turnNextHome;
 }
