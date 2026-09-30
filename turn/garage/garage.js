@@ -947,55 +947,65 @@ export function showGarage({
     };
 
     // Portrait phones: the page must look like it goes on. A fold that falls in the gap
-    // between two blocks reads as the end of the page, so the stage gives up height,
-    // down to a floor, until the first block the dock cuts shows a clear slice of itself
-    // above the dock. It only changes with the page at the top, never under a reader.
+    // between two sections, or through the description, reads as the end of the page, so
+    // the stage gives up height, down to a floor, until the car's name and description
+    // read whole and the next section (PAINT and SHIFT, as a rule) shows a clear slice of
+    // itself above the dock. A screen too short for that lets the dock cut the name or
+    // description instead, still with a clear slice showing. The stage is fitted before
+    // GARAGE first paints and again only when the screen changes (rotating, the iOS
+    // viewport settling, text size, fonts arriving), then holds still: a resize while
+    // scrolling or from car to car zooms the car.
     const STAGE_PEEK = 52;
     const stageElement = $('.garage-stage');
-    const peekBlocks = '.garage-identity > *, .garage-tools, .garage-disclosure, .garage-catalog-inline';
-    let fitFrame = 0;
+    let fitKey = '';
     const fitStage = () => {
-      fitFrame = 0;
       if (disposed) return;
       const dockFixed = windowRef.getComputedStyle(dock).position === 'fixed';
       const portraitPhone = dockFixed && !root.classList.contains('is-spacious') && root.dataset.catalog !== 'side'
         && windowRef.matchMedia?.('(orientation: portrait)')?.matches;
       if (!portraitPhone) {
+        fitKey = '';
         stageElement.style.removeProperty('--garage-stage-fit');
         return;
       }
-      if (root.scrollTop > 8) return;
+      const fontSize = parseFloat(windowRef.getComputedStyle(documentRef.documentElement).fontSize);
+      const key = [root.clientWidth, root.clientHeight, fontSize, documentRef.fonts?.status].join(' ');
+      if (key === fitKey || !stageElement.getClientRects().length) return;
+      fitKey = key;
+      // Measured from the stage's usual height and as at the top of the page, so the fit
+      // is the same whatever it was before and however far the page is scrolled.
+      stageElement.style.removeProperty('--garage-stage-fit');
+      const usual = stageElement.getBoundingClientRect().height;
       const dockTop = dock.getBoundingClientRect().top;
-      const blocks = [...root.querySelectorAll(peekBlocks)]
-        .map((node) => node.getBoundingClientRect())
-        .filter((rect) => rect.height > 0);
-      if (!blocks.length) return;
-      const current = stageElement.getBoundingClientRect().height;
-      const cut = blocks.find((rect) => rect.bottom > dockTop + 1);
-      // Everything fits: the stage may grow back until the last block meets the dock.
-      const change = cut
-        ? (dockTop - cut.top) - Math.min(STAGE_PEEK, cut.height - 16)
-        : dockTop - 12 - blocks[blocks.length - 1].bottom;
-      if (Math.abs(change) < 1) return;
-      const floor = 10 * parseFloat(windowRef.getComputedStyle(documentRef.documentElement).fontSize);
-      stageElement.style.setProperty('--garage-stage-fit', `${Math.round(Math.max(floor, current + change))}px`);
-    };
-    const scheduleFit = () => {
-      if (!fitFrame) fitFrame = windowRef.requestAnimationFrame(fitStage);
+      // How much the stage gives up for the first of these blocks the dock reaches.
+      const shrinkFor = (selector) => {
+        for (const node of root.querySelectorAll(selector)) {
+          const rect = node.getBoundingClientRect();
+          if (!rect.height || rect.bottom + root.scrollTop <= dockTop) continue;
+          return Math.min(STAGE_PEEK, rect.height - 16) - (dockTop - rect.top - root.scrollTop);
+        }
+        return 0;
+      };
+      const floor = 10 * fontSize;
+      let fit = usual - shrinkFor('.garage-tools, .garage-disclosure, .garage-catalog-inline');
+      if (fit < floor) fit = usual - shrinkFor('.garage-identity > *');
+      fit = Math.round(Math.max(floor, fit));
+      if (fit < usual) stageElement.style.setProperty('--garage-stage-fit', `${fit}px`);
     };
 
     // While there is more page under the dock, a soft fade above it says so.
     const syncMoreBelow = () => {
       const fixed = windowRef.getComputedStyle(dock).position === 'fixed';
       root.classList.toggle('has-more-below', fixed && root.scrollHeight - root.scrollTop - root.clientHeight > 24);
-      // A fit put off while the page was scrolled catches up at the top.
-      if (root.scrollTop <= 8) scheduleFit();
     };
     root.addEventListener('scroll', syncMoreBelow, { passive: true });
 
+    // Observations arrive after layout and before paint, so a fit made here is already
+    // in the frame that shows it. The page itself is watched for the viewport's size.
     const resizeObserver = typeof ResizeObserver === 'function'
-      ? new ResizeObserver(() => { syncDockSpace(); scheduleFit(); syncMoreBelow(); })
+      ? new ResizeObserver(() => { syncDockSpace(); fitStage(); syncMoreBelow(); })
       : null;
+    resizeObserver?.observe(root);
     resizeObserver?.observe(dock);
     resizeObserver?.observe(viewHost);
     resizeObserver?.observe(layout);
