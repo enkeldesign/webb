@@ -1083,13 +1083,14 @@ Object.freeze({
     Object.freeze(['1.30.0 r334', 'TURN plays offline. After one launch with a connection, the installed app keeps the whole game on the device: start it in airplane mode, choose a track and a car, and race. The first download shows how far it has come and says when TURN is ready to play offline. Three.js now comes from TURN itself, and each track\'s scenery is kept once it has loaded. A new version installs quietly and asks to restart, never during a race. Pages that need a connection say so instead of showing an error, and usage statistics wait for the connection.']),
     Object.freeze(['1.31.0 r335', 'PAUSE. A square Ⅱ beside RESTART LAP stops the race where it stands: the car, the lap time, rivals, DRIFT, FLOW, BOOST and perks all wait, and held controls let go. PAUSED offers RESUME, RESTART LAP, SETTINGS and LEAVE RACE. RESUME carries on the same lap from the same moment; the pause never counts. Back during a race pauses too, and a race that leaves the screen (another app, the lock screen) waits paused until you choose RESUME.']),
     Object.freeze(['1.31.1 r336', 'ROADBOOK no longer disappears after swiping back from GARAGE. When GARAGE closed under a finger still on the screen, the swipe was never finished: ROADBOOK stopped taking taps, and the next touch could hide it, leaving only the empty track behind. The swipe now always ends, and ROADBOOK only hides again behind a GARAGE that is still open.']),
-    Object.freeze(['1.31.2 r337', 'Race HUD and Trophy Road fit their content. The lap banner grows to fit the lap time instead of cutting it off before DRIFT is unlocked, gives BEST and NEW BEST their own line where columns are narrow, uses the full width in left-handed portrait, and on the narrowest phones puts DRIFT and FLOW under the lap time. In landscape, DRIFT and FLOW show LAST and BEST on a line each, as in portrait, so a five-digit record stays inside its panel; on the shortest phones the panel keeps the live score. Trophy Road\'s decorative bends meet the road without gaps in portrait.'])
+    Object.freeze(['1.31.2 r337', 'Race HUD and Trophy Road fit their content. The lap banner grows to fit the lap time instead of cutting it off before DRIFT is unlocked, gives BEST and NEW BEST their own line where columns are narrow, uses the full width in left-handed portrait, and on the narrowest phones puts DRIFT and FLOW under the lap time. In landscape, DRIFT and FLOW show LAST and BEST on a line each, as in portrait, so a five-digit record stays inside its panel; on the shortest phones the panel keeps the live score. Trophy Road\'s decorative bends meet the road without gaps in portrait.']),
+    Object.freeze(['1.31.3 r338', 'ROADBOOK and GARAGE are titled in the TURN font, the heavy rounded face of LOADING and the track names. In portrait, the track loading screen now shows one quick TIP instead of a paragraph: a yellow card with the rotate-device symbol, whose phone turns to landscape, and TIP: ROTATE TO LANDSCAPE FOR RACING.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.31.2',
-  build: '2026.09.29-r337',
-  note: 'The lap banner, LAST and BEST, and Trophy Road\'s road fit on every phone.'
+  version: '1.31.3',
+  build: '2026.09.30-r338',
+  note: 'ROADBOOK and GARAGE in the TURN font, and a quick rotate TIP while a track loads.'
 });

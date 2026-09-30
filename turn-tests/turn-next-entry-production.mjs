@@ -142,8 +142,9 @@ assert.match(liveSteeringSource, /raceSession\.prepareManualAccess\(\)/);
 assert.match(liveSteeringSource, /__turnMotionLifecycle\?\.stop\?\.\(\)/);
 assert.match(liveSteeringSource, /steering-mode-changed/);
 assert.match(liveSteeringSource, /saveSteeringMode\(activeMode\)/);
-// The ROADBOOK heading (pre-race.css) keeps the heavy, tight TURN display face.
-assert.match(menuFontCss, /\.turn-pr-display \{[^}]*font-weight: 900;[^}]*letter-spacing: -0\.035em;[^}]*line-height: 0\.95;/);
+// The ROADBOOK and GARAGE headings (pre-race.css) are in the TURN font, as LOADING is.
+assert.match(menuFontCss, /--turn-pr-font-brand: Inter, ui-rounded, system-ui,/);
+assert.match(menuFontCss, /\.turn-pr-display \{[^}]*font-family: var\(--turn-pr-font-brand\);[^}]*font-weight: 1000;[^}]*letter-spacing: -0\.065em;[^}]*line-height: 0\.95;/);
 
 assert.match(nextIndex, /data-turn-deployment="next"/);
 assert.match(nextIndex, /<base href="\/turn\/">/);

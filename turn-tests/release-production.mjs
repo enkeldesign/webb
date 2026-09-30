@@ -96,8 +96,9 @@ assert.match(liveSteering, /raceSession\.prepareMotionAccess\(\)/);
 assert.match(liveSteering, /raceSession\.prepareManualAccess\(\)/);
 assert.match(liveSteering, /steering-mode-changed/);
 assert.match(liveSteering, /state\?\.running/);
-// The ROADBOOK heading (pre-race.css) keeps the heavy, tight TURN display face.
-assert.match(menuFontCss, /\.turn-pr-display \{[^}]*font-weight: 900;[^}]*letter-spacing: -0\.035em;[^}]*line-height: 0\.95;/);
+// The ROADBOOK and GARAGE headings (pre-race.css) are in the TURN font, as LOADING is.
+assert.match(menuFontCss, /--turn-pr-font-brand: Inter, ui-rounded, system-ui,/);
+assert.match(menuFontCss, /\.turn-pr-display \{[^}]*font-family: var\(--turn-pr-font-brand\);[^}]*font-weight: 1000;[^}]*letter-spacing: -0\.065em;[^}]*line-height: 0\.95;/);
 
 const attributeBuilds = [...index.matchAll(/(?:href|src)="\.\/[^"?]+\?build=([^"&]+)/g)].map((match) => match[1]);
 assert.ok(attributeBuilds.length >= 15, 'Production entry document must cache-bust its local assets');

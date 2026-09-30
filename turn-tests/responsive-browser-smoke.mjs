@@ -280,10 +280,26 @@ async function responsiveRace(browser, name) {
       const rect = node.getBoundingClientRect();
       return { bottomGap: Math.round(globalThis.innerHeight - rect.bottom), background: globalThis.getComputedStyle(node).backgroundColor };
     }));
+    // ROADBOOK and GARAGE are titled in the TURN font, as LOADING is (#1040).
+    const turnFont = (selector) => page.locator(selector).evaluate((node) => {
+      const style = globalThis.getComputedStyle(node);
+      return { family: style.fontFamily, weight: style.fontWeight };
+    });
+    const loadingFont = await page.evaluate(() => {
+      const probe = document.createElement('h1');
+      probe.textContent = 'LOADING';
+      document.body.append(probe);
+      const style = globalThis.getComputedStyle(probe);
+      const font = { family: style.fontFamily, weight: style.fontWeight };
+      probe.remove();
+      return font;
+    });
+    assert.deepEqual(await turnFont('#m8HomeTitle'), loadingFont, 'ROADBOOK is titled in the LOADING font');
     const homeDock = await dockStyle('.m8-track-continue');
     await page.locator('.m8-track-continue').click();
     await page.waitForSelector('.garage');
     await settle(page);
+    assert.deepEqual(await turnFont('#garageTitle'), loadingFont, 'GARAGE is titled in the LOADING font');
     const lotDock = await dockStyle('.garage-race');
     assert.equal(lotDock.background, homeDock.background, `${name}: RACE uses ROADBOOK's primary colour`);
     assert.ok(homeDock.bottomGap <= 24 && lotDock.bottomGap <= 24, `${name}: both forward actions sit at the foot (${JSON.stringify([homeDock, lotDock])})`);
@@ -326,7 +342,19 @@ async function responsiveRace(browser, name) {
     await page.setViewportSize({ width: 393, height: 852 });
     await page.locator('.garage-race').click();
     await page.waitForSelector('.turn-orientation-hint');
-    assert.match(await page.locator('.turn-orientation-hint').textContent(), /Portrait\/upright orientation is fully supported/);
+    // One line and the rotate-device symbol, short enough to read before the track loads (#1041).
+    assert.deepEqual(await page.evaluate(() => {
+      const hint = document.querySelector('.turn-orientation-hint');
+      return {
+        text: hint.textContent.trim(),
+        symbol: Boolean(hint.querySelector('.turn-orientation-icon svg .turn-orientation-phone')),
+        status: document.querySelector('#raceOrientationStatus').textContent
+      };
+    }), { text: 'TIP: ROTATE TO LANDSCAPE FOR RACING', symbol: true, status: 'Tip: rotate to landscape for racing.' },
+    'Portrait loading shows the rotate TIP');
+    const tip = await bounds(page, '.turn-orientation-hint');
+    within(tip, 393, 852, 'Rotate TIP');
+    within(await bounds(page, '.turn-orientation-icon'), 393, 852, 'Rotate symbol');
     await page.waitForSelector('#controls:not([hidden])');
     assert.equal(await page.locator('.turn-orientation-hint').count(), 0, 'Loading recommendation ends before active racing');
     await page.evaluate(() => {
