@@ -613,24 +613,37 @@ async function sheetFacts(page) {
 }
 
 // Portrait phones: the dock never falls in a gap between two blocks, where the page
-// would look finished. Some block always shows a slice of itself above the dock, and a
-// fade over the dock's edge says there is more, until the end of the page is in view.
-async function foldFacts(page) {
-  await page.evaluate(() => { document.querySelector('.garage').scrollTop = 0; });
-  await page.waitForTimeout(400);
-  const top = await page.evaluate(() => {
+// would look finished. Some block always shows a slice of itself above the dock; where
+// the screen has room, the name and description read whole and the next section shows a
+// clear slice (short: how far it falls short). A fade over the dock's edge says there is
+// more, until the end of the page is in view.
+const installFold = (page) => page.evaluate(() => {
+  globalThis.__garageFold = () => {
     const garage = document.querySelector('.garage');
     const dockTop = document.querySelector('.garage-dock').getBoundingClientRect().top;
-    const blocks = [...garage.querySelectorAll('.garage-identity > *, .garage-tools, .garage-disclosure, .garage-catalog-inline')]
-      .map((node) => node.getBoundingClientRect()).filter((rect) => rect.height > 0);
-    const cut = blocks.find((rect) => rect.bottom > dockTop + 1);
+    const cut = (selector) => [...garage.querySelectorAll(selector)]
+      .map((node) => node.getBoundingClientRect()).filter((rect) => rect.height > 0)
+      .find((rect) => rect.bottom > dockTop + 1);
+    const block = cut('.garage-identity > *, .garage-tools, .garage-disclosure, .garage-catalog-inline');
+    const section = cut('.garage-tools, .garage-disclosure, .garage-catalog-inline');
     return {
-      slice: cut ? Math.round(dockTop - cut.top) : null,
-      stage: document.querySelector('.garage-stage').getBoundingClientRect().height,
-      fade: garage.classList.contains('has-more-below')
-        && globalThis.getComputedStyle(document.querySelector('.garage-dock'), '::before').opacity === '1'
+      slice: block ? Math.round(dockTop - block.top) : null,
+      identityWhole: garage.querySelector('.garage-identity').getBoundingClientRect().bottom <= dockTop,
+      short: section ? Math.max(0, Math.round(Math.min(52, section.height - 16) - (dockTop - section.top))) : 0,
+      stage: document.querySelector('.garage-stage').getBoundingClientRect().height
     };
-  });
+  };
+});
+
+async function foldFacts(page) {
+  await installFold(page);
+  await page.evaluate(() => { document.querySelector('.garage').scrollTop = 0; });
+  await page.waitForTimeout(400);
+  const top = await page.evaluate(() => ({
+    ...globalThis.__garageFold(),
+    fade: document.querySelector('.garage').classList.contains('has-more-below')
+      && globalThis.getComputedStyle(document.querySelector('.garage-dock'), '::before').opacity === '1'
+  }));
   await page.evaluate(() => { const garage = document.querySelector('.garage'); garage.scrollTop = garage.scrollHeight; });
   await page.waitForTimeout(250);
   const endFade = await page.evaluate(() => document.querySelector('.garage').classList.contains('has-more-below'));
@@ -687,7 +700,61 @@ try {
       assert.ok(fold.slice >= 12, `${width}x${height}: a block shows a slice of itself above the dock (${fold.slice}px)`);
       assert.ok(fold.stage >= 159, `${width}x${height}: the stage keeps the car in view (${fold.stage}px)`);
       assert.deepEqual([fold.fade, fold.endFade], [true, false], `${width}x${height}: the fade shows until the end of the page`);
+      if (height >= 780) {
+        assert.ok(fold.identityWhole && fold.short <= 1,
+          `${width}x${height}: the name and description read whole above a clear slice of the next section (${JSON.stringify(fold)})`);
+      }
     }
+
+    // Once fitted the stage holds still: scrolling near the top and stepping from car to
+    // car never resize it, or the car would zoom with it.
+    await page.setViewportSize({ width: 393, height: 852 });
+    await foldFacts(page);
+    const stageHeight = () => page.evaluate(async () => {
+      await new Promise((resolve) => globalThis.requestAnimationFrame(() => globalThis.requestAnimationFrame(resolve)));
+      return document.querySelector('.garage-stage').getBoundingClientRect().height;
+    });
+    const heights = [await stageHeight()];
+    for (const top of [3, 8, 0, 60, 0]) {
+      await page.evaluate((value) => { document.querySelector('.garage').scrollTop = value; }, top);
+      heights.push(await stageHeight());
+    }
+    for (const direction of ['is-next', 'is-next', 'is-next', 'is-previous', 'is-previous', 'is-previous']) {
+      await page.locator(`.garage-step.${direction}`).click();
+      heights.push(await stageHeight());
+    }
+    assert.equal(new Set(heights).size, 1, `393x852: the stage keeps one height while scrolling and stepping (${heights})`);
+
+    // A home-screen app's viewport can settle shorter after GARAGE opens: the stage is
+    // fitted again straight away, not at the next scroll.
+    await page.setViewportSize({ width: 393, height: 793 });
+    const settled = await page.evaluate(async () => {
+      await new Promise((resolve) => globalThis.requestAnimationFrame(() => globalThis.requestAnimationFrame(resolve)));
+      return globalThis.__garageFold();
+    });
+    assert.ok(settled.identityWhole && settled.short <= 1, `393x793: the stage is fitted to the settled viewport (${JSON.stringify(settled)})`);
+
+    // The first frame GARAGE paints is already fitted (building the car viewer can hold
+    // the next frame back for half a second). Size observations come after layout and
+    // before paint, and GARAGE's come first: the first one here sees that first frame.
+    await page.locator('.garage-back').click();
+    await page.waitForFunction(() => !document.querySelector('.m8-home').hidden && !document.querySelector('.garage'));
+    await page.evaluate(() => {
+      const watch = new globalThis.MutationObserver(() => {
+        const stage = document.querySelector('.garage-stage');
+        if (!stage) return;
+        watch.disconnect();
+        const seen = new globalThis.ResizeObserver(() => {
+          seen.disconnect();
+          globalThis.__garageFirstFold = globalThis.__garageFold();
+        });
+        seen.observe(stage);
+      });
+      watch.observe(document.body, { childList: true, subtree: true });
+    });
+    await page.locator('.m8-track-continue').click();
+    const first = await (await page.waitForFunction(() => globalThis.__garageFirstFold)).jsonValue();
+    assert.ok(first.identityWhole && first.short <= 1, `393x793: GARAGE first paints with its stage fitted (${JSON.stringify(first)})`);
   });
   await layoutAt('393x852 200% text', { width: 393, height: 852, textSize: 32 }, async (facts, page) => {
     assert.equal(facts.dockFixed, false, '200% text: the dock joins the end of the page');
