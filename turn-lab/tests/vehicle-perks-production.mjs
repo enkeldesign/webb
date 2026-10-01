@@ -235,15 +235,20 @@ assert.ok(halfTankDuration > suv.tuning.boostDurationSeconds && halfTankDuration
 advanceForSeconds(fullTankSuv, FULL_TANK_BUILD_SECONDS / 2, { speed: 40 });
 assert.equal(fullTankSuv.vehiclePerkProgress, 1);
 assert.equal(resolveVehiclePerkTuning({ state: fullTankSuv, tuning: suv.tuning }).boostDurationSeconds, 3.74);
-// Clean driving also fills the charge, at the build rate, even once the tank is 5/5.
-assert.equal(fullTankSuv.vehiclePerkBoostRefill, 1 / FULL_TANK_BUILD_SECONDS, 'Clean driving fills the BOOST TANK at the build rate');
+// Clean driving also fills the charge at the build rate, in race time: the fill accrues
+// with every physics step (so a slow frame rate fills as fast as capacity grows), even
+// once the tank is 5/5, and the BOOST loop takes it each frame.
+fullTankSuv.vehiclePerkBoostRefill = 0;
+for (let step = 0; step < 20; step += 1) advanceVehiclePerkRuntimeState({ state: fullTankSuv, dt: 0.1, speed: 40 });
+assert.ok(Math.abs(fullTankSuv.vehiclePerkBoostRefill - 2 / FULL_TANK_BUILD_SECONDS) < 1e-9, 'Two seconds of clean driving earn a quarter tank');
+fullTankSuv.vehiclePerkBoostRefill = 0;
 advanceVehiclePerkRuntimeState({ state: fullTankSuv, dt: 0.1, speed: FULL_TANK_MIN_SPEED / 2 });
 assert.equal(fullTankSuv.vehiclePerkBoostRefill, 0, 'Crawling does not fill the tank');
 advanceVehiclePerkRuntimeState({ state: lockedSuv, dt: 0.1, speed: 40 });
 assert.equal(lockedSuv.vehiclePerkBoostRefill, 0, 'Locked FULL TANK fills nothing');
 advanceVehiclePerkRuntimeState({ state: fullTankSuv, dt: 0.1, speed: 40, collided: true });
 assert.equal(fullTankSuv.vehiclePerkProgress, 0, 'A collision must reset FULL TANK immediately');
-assert.equal(fullTankSuv.vehiclePerkBoostRefill, 0, 'A collision stops the fill');
+assert.equal(fullTankSuv.vehiclePerkBoostRefill, 0, 'A collision earns no fill');
 fullTankSuv.vehiclePerkProgress = 1;
 advanceVehiclePerkRuntimeState({ state: fullTankSuv, dt: 0.1, speed: 40, offRoad: true });
 assert.equal(fullTankSuv.vehiclePerkProgress, 0, 'Meaningful off-road travel must reset FULL TANK immediately');
@@ -262,8 +267,9 @@ assert.match(controlsSource,
   /vehicleEffectiveTuning\?\.boostDurationSeconds[\s\S]*__turnVehicleTuning\?\.boostDurationSeconds/,
   'Boost consumption must read FULL TANK’s effective capacity before the ordinary base capacity');
 assert.match(controlsSource,
-  /if \(boostCharge < 0\.999999\) \{[\s\S]*vehiclePerkBoostRefill[\s\S]*rechargeMultiplier \/ BOOST_RECHARGE_SECONDS \+ perkRefill/,
-  'FULL TANK fills the charge between boosts, alongside DRIFT recharge');
+  /const perkRefill = [^\n]*vehiclePerkBoostRefill[\s\S]*perkState\.vehiclePerkBoostRefill = 0;[\s\S]*if \(boostCharge < 0\.999999\) \{\s*boostCharge = Math\.min\(1, boostCharge \+ dt \* rechargeMultiplier \/ BOOST_RECHARGE_SECONDS \+ perkRefill\)/,
+  'FULL TANK fill is taken every frame and fills the charge only between boosts');
+assert.match(physicsSource, /advanceVehiclePerkRuntimeState\(/, 'The fill accrues in the physics step, which only runs while the race runs');
 assert.match(controlsSource, /globalThis\.__turnBoostCharge = boostCharge/,
   'Capacity changes must retain normalized charge instead of manufacturing Boost');
 

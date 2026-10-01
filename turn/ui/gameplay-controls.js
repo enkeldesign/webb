@@ -1034,6 +1034,11 @@ function installGameplayUi() {
       lockCeilingMultiplier: DRIFT_LOCK_RECHARGE_MULTIPLIER
     });
     const active = boostRequested && !boostExhausted && (boostOvercharge > 0 || boostCharge > 0.001);
+    // FULL TANK (SUV perk): the fill clean driving has earned since the last frame, in
+    // race time. Taken every frame; it only fills the tank between boosts.
+    const perkState = globalThis.__turnRuntime?.state;
+    const perkRefill = Math.max(0, Number(perkState?.vehiclePerkBoostRefill) || 0);
+    if (perkState) perkState.vehiclePerkBoostRefill = 0;
 
     if (active) {
       if (boostOvercharge > 0) {
@@ -1055,9 +1060,7 @@ function installGameplayUi() {
       }
     } else {
       if (boostCharge < 0.999999) {
-        // FULL TANK (SUV perk): clean driving fills the tank per second, set by the perk runtime.
-        const perkRefill = Math.max(0, Number(globalThis.__turnRuntime?.state?.vehiclePerkBoostRefill) || 0);
-        boostCharge = Math.min(1, boostCharge + dt * (rechargeMultiplier / BOOST_RECHARGE_SECONDS + perkRefill));
+        boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS + perkRefill);
       }
 
       if (boostCharge >= 0.999999 || boostOvercharge > 0) {
