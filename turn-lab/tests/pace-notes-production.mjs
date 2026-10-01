@@ -294,14 +294,15 @@ for (const definition of TRACK_DEFINITIONS) {
   assert.equal(TRAINING_STAGES.some((stage) => 'notes' in stage), false, 'training has no hand-placed notes');
 }
 
-// Admin sound picker: ten polished voices beside the race sound, chosen only by admin
+// Admin sound picker: fifteen polished voices beside the race sound, chosen only by admin
 // profiles; every player keeps choice 00.
 {
   const { SWOOSH_SOUND_CHOICES, SWOOSH_SOUND_STORAGE_KEY, swooshSoundIndex } = await import('../../turn/audio/swoosh-pace-notes.js');
-  const { VOICE_VARIANTS, VOICE_PITCH_HZ, SWOOSH_VOICES, startSwoosh } = await import('../../turn/audio/swoosh-sound.js');
+  const { VOICE_VARIANTS, VOICE_PITCH_HZ, SWOOSH_VOICES, startSwoosh, swooshLengths } = await import('../../turn/audio/swoosh-sound.js');
   const { swooshCaption, currentCaptionEntry } = await import('../../turn/testing/swoosh-sound-picker.js');
-  assert.equal(VOICE_VARIANTS.length, 10, 'ten polished voices');
-  assert.equal(SWOOSH_SOUND_CHOICES.length, 11);
+  assert.equal(VOICE_VARIANTS.length, 15, 'fifteen polished voices');
+  assert.equal(SWOOSH_SOUND_CHOICES.length, 16);
+  assert.deepEqual(SWOOSH_SOUND_CHOICES.slice(1, 11).map((choice) => choice.name), ['GLIDE', 'BREATH', 'SILK', 'CHIME', 'FLUTE', 'SWELL', 'HALO', 'WIND', 'PEBBLE', 'WOOD'], 'choices 01–10 keep their numbers');
   assert.equal(SWOOSH_SOUND_CHOICES[0].variant, SWOOSH_PACE_TUNING.variant, 'choice 00 is the race sound');
   const store = (entries) => ({ getItem: (key) => entries[key] ?? null });
   assert.equal(swooshSoundIndex(store({ [SWOOSH_SOUND_STORAGE_KEY]: '4' })), 0, 'a player without admin unlock always hears the race sound');
@@ -323,15 +324,58 @@ for (const definition of TRACK_DEFINITIONS) {
       const [panner] = context.panners;
       assert.deepEqual(panner.pan.events.slice(0, 2).map(([, value]) => value), [-0.5, -1], `${variant}: the same 50% → 100% swipe`);
       assert.ok(Math.abs(handle.endsAt - 1.18) < 1e-9 && typeof handle.stop === 'function');
-      // Smooth: the envelope is one curve from silence back to silence, never a ramp.
-      const curve = gains.flatMap((gain) => gain.gain.events).find((event) => event[0] === 'curve');
-      assert.ok(curve && curve[1][0] === 0 && Math.abs(curve[1].at(-1)) < 1e-6, `${variant}: fades in from and out to silence`);
-      assert.ok(curve[1].every((value, index, values) => index === 0 || Math.abs(value - values[index - 1]) < 0.35 * Math.max(...values)), `${variant}: no step in the envelope`);
+      // Smooth: each envelope is one curve from silence back to silence, never a ramp.
+      const curves = gains.flatMap((gain) => gain.gain.events).filter((event) => event[0] === 'curve');
+      assert.equal(curves.length, voice.layer ? 2 : 1, `${variant}: one envelope per layer`);
+      for (const curve of curves) {
+        assert.ok(curve[1][0] === 0 && Math.abs(curve[1].at(-1)) < 1e-6, `${variant}: fades in from and out to silence`);
+        assert.ok(curve[1].every((value, index, values) => index === 0 || Math.abs(value - values[index - 1]) < 0.35 * Math.max(...values)), `${variant}: no step in the envelope`);
+      }
       assert.ok(filters.some((filter) => filter.type === 'lowpass' && filter.frequency.value <= 5000), `${variant}: a gentle low-pass keeps it soft`);
       const carrier = voice.partials.length ? oscillators[0].frequency : filters.find((filter) => filter.type === 'bandpass').frequency;
       pitches.push(carrier.events[0][1] / VOICE_PITCH_HZ[tightness]);
     }
     assert.ok(pitches.every((ratio) => Math.abs(ratio - pitches[0]) < 1e-9), `${variant}: pitch follows tightness`);
+  }
+  // CHIME variants: each tries one remedy for CHIME fading out before the full side.
+  {
+    const render = (variant) => {
+      const context = createContext();
+      const gains = [];
+      const { createGain } = context;
+      context.createGain = () => { const node = createGain(); gains.push(node); return node; };
+      startSwoosh(context, context.node(), { side: 1, tightness: 'medium', variant, at: 1, durationSeconds: 0.36 });
+      const curves = gains.flatMap((gain) => gain.gain.events).filter((event) => event[0] === 'curve').map(([, values]) => values);
+      return { curves, pan: context.panners[0].pan.events };
+    };
+    // Summed envelope where the swipe has reached the full side, against the strike.
+    const atFullSide = (variant) => {
+      const { curves, pan } = render(variant);
+      const index = Math.round((pan[1][2] - 1) / 0.36 * (curves[0].length - 1));
+      const sum = (at) => curves.reduce((total, values) => total + values[at], 0);
+      return sum(index) / Math.max(...curves[0]);
+    };
+    const chime = atFullSide('voice-chime');
+    assert.ok(atFullSide('voice-chime-ring') > 3 * chime, 'CHIME RING: the ring lives on out to the full side');
+    assert.ok(Math.abs(render('voice-chime-early').pan[1][2] - (1 + 0.36 * 0.3)) < 1e-9, 'CHIME EARLY: the swipe reaches the full side within its first 30%');
+    assert.ok(atFullSide('voice-chime-early') > 3 * chime, 'CHIME EARLY: the strike is still ringing at the full side');
+    for (const variant of ['voice-chime-wind', 'voice-chime-mirrored']) {
+      const [, layer] = render(variant).curves;
+      const peak = layer.indexOf(Math.max(...layer));
+      assert.ok(peak > layer.length * 0.75, `${variant}: its second layer peaks near the end, at the full side`);
+      assert.ok(atFullSide(variant) > 5 * chime, `${variant}: loud at the full side`);
+    }
+    assert.equal(SWOOSH_VOICES['voice-chime-mirrored'].layer.fm.rising, true, 'CHIME MIRRORED: a reversed chime, its brightness growing');
+    assert.ok(SWOOSH_VOICES['voice-chime-wind'].layer.noise, 'CHIME WIND: a wind layer');
+    // CHIME LONGER: a long curve's swipe is markedly longer, and the scheduler plans with it.
+    const longer = swooshLengths('voice-chime-longer');
+    const chimeLengths = swooshLengths('voice-chime');
+    assert.equal(longer.short, chimeLengths.short);
+    assert.ok(longer.long >= 1.5 * chimeLengths.long, 'CHIME LONGER: a long curve gets a markedly longer chime');
+    assert.equal(swooshLengths('swipe-undertone'), SWOOSH_LENGTHS, 'the race sound keeps its lengths');
+    assert.equal(swooshDuration({ length: 160 }, SWOOSH_PACE_TUNING, longer), longer.long);
+    const [planned] = planSwooshes([{ segment: { id: 'x', length: 160 }, ahead: 200 }], 40, SWOOSH_PACE_TUNING, longer);
+    assert.ok(Math.abs(planned.end - planned.start - longer.long) < 1e-9, 'the plan makes room for the longer chime');
   }
   assert.ok(Math.abs(VOICE_PITCH_HZ.medium / VOICE_PITCH_HZ.gentle - 1.5) < 0.01 && Math.abs(VOICE_PITCH_HZ.tight / VOICE_PITCH_HZ.medium - 1.5) < 0.01, 'tightness pitches a fifth apart');
   // A picker preview is heard as in the race: the mix and the music duck under it.
