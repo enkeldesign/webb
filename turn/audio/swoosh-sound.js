@@ -1,6 +1,7 @@
-// SWOOSH sounds (#909, #928). Round 3 chose 'swipe-tone': 100% on S-curves and
-// same-direction pairs, comfort 5/5. In the full race mix its tone drowned the air, so the
-// race plays 'swipe-undertone': the same swipe, with the pitch under a soft air. Round 1
+// SWOOSH sounds (#909, #928). Since 1.35.3 the race plays CHIME (SWOOSH_VOICES below),
+// Erik's favourite from the admin sound picker. Round 3 chose 'swipe-tone': 100% on
+// S-curves and same-direction pairs, comfort 5/5. In the full race mix its tone drowned
+// the air, so 1.35.1 played 'swipe-undertone': the pitch under a soft air. Round 1
 // settled tightness on pitch (texture
 // dropped: unreliable and raspy). Round 2's arrow (centre → full side) and smoother
 // timbre raised comfort but made S-curves harder: starting in the centre, its side is
@@ -101,6 +102,9 @@ export function startSwoosh(context, destination, options = {}) {
 // each voice's loudness (RMS, rendered offline) to the race sound 'swipe-undertone'.
 export const VOICE_PITCH_HZ = Object.freeze({ gentle: 440, medium: 659.25, tight: 987.77 });
 const sine = (ratio, gain, detuneCents = 0) => Object.freeze({ ratio, gain, type: 'sine', detuneCents });
+// A soft bell: gentle FM whose brightness fades, like glass. The race sound since 1.35.3,
+// a little longer than the other voices so its ring reaches further out to the side.
+const CHIME = Object.freeze({ name: 'CHIME', partials: [sine(1, 1)], fm: { ratio: 2, index: 1.2 }, glide: [1, 1], envelope: 'pluck', attack: 0.006, release: 0.12, lowpassHz: 5000, reverb: 0.22, gain: 0.924, lengths: Object.freeze({ short: 0.22, long: 0.45 }) });
 export const SWOOSH_VOICES = Object.freeze({
   // A clean sine that rises a semitone: a calm interface glide.
   'voice-glide': Object.freeze({ name: 'GLIDE', partials: [sine(1, 1), sine(2, 0.12)], glide: [0.944, 1], envelope: 'bell', attack: 0.03, release: 0.07, lowpassHz: 4000, reverb: 0.16, gain: 0.326 }),
@@ -108,8 +112,7 @@ export const SWOOSH_VOICES = Object.freeze({
   'voice-breath': Object.freeze({ name: 'BREATH', partials: [sine(0.5, 0.35)], noise: { level: 1, q: 2.2, ratio: 1.5 }, glide: [0.9, 1.04], envelope: 'bell', attack: 0.035, release: 0.08, lowpassHz: 3200, reverb: 0.14, gain: 0.836 }),
   // Two slightly detuned sines: a soft chorused shimmer.
   'voice-silk': Object.freeze({ name: 'SILK', partials: [sine(1, 0.6, -7), sine(1, 0.6, 7), sine(2, 0.08)], glide: [0.97, 1], envelope: 'bell', attack: 0.04, release: 0.09, lowpassHz: 3500, reverb: 0.2, gain: 0.425 }),
-  // A soft bell: gentle FM whose brightness fades, like glass.
-  'voice-chime': Object.freeze({ name: 'CHIME', partials: [sine(1, 1)], fm: { ratio: 2, index: 1.2 }, glide: [1, 1], envelope: 'pluck', attack: 0.006, release: 0.12, lowpassHz: 5000, reverb: 0.22, gain: 0.924 }),
+  'voice-chime': CHIME,
   // Air through a narrow band at the pitch, with a hint of tone: a breathy flute.
   'voice-flute': Object.freeze({ name: 'FLUTE', partials: [sine(1, 0.55)], noise: { level: 0.7, q: 9, ratio: 1 }, glide: [0.97, 1], envelope: 'bell', attack: 0.04, release: 0.07, lowpassHz: 3800, reverb: 0.16, gain: 0.602 }),
   // Swells toward the bend, then lets go quickly: the cue leans forward.
@@ -124,6 +127,11 @@ export const SWOOSH_VOICES = Object.freeze({
   'voice-wood': Object.freeze({ name: 'WOOD', partials: [sine(1, 1), sine(3.9, 0.12)], glide: [1, 1], envelope: 'pluck', attack: 0.006, release: 0.12, lowpassHz: 4200, reverb: 0.14, gain: 0.766 })
 });
 export const VOICE_VARIANTS = Object.freeze(Object.keys(SWOOSH_VOICES));
+
+/** A variant's two swipe lengths: a voice may have its own (CHIME). */
+export function swooshLengths(variant) {
+  return Object.hasOwn(SWOOSH_VOICES, variant) && SWOOSH_VOICES[variant].lengths ? SWOOSH_VOICES[variant].lengths : SWOOSH_LENGTHS;
+}
 
 const reverbBuffers = new WeakMap();
 
