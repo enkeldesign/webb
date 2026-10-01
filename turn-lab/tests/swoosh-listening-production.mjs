@@ -79,6 +79,14 @@ const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   assert.match(ui, /if \(!isAdminProfile\(\) \|\| !document\.body\) return;/);
   assert.match(ui, /element\.type = 'button';/);
   assert.match(page, /<script type="module" src="\.\/testing\/swoosh-listening-test\.js\?build=/);
+  // Menu music is held (unsaved) while the test is open and released on close, and
+  // PLAY AGAIN replaces a pending autoplay so each press is exactly one swoosh.
+  assert.match(ui, /__turnRacingMusic\?\.hold\?\.\(true\);[\s\S]*dialog\.showModal\(\)/);
+  assert.match(ui, /addEventListener\('close'[\s\S]*__turnRacingMusic\?\.hold\?\.\(false\)/);
+  assert.match(ui, /button\('PLAY AGAIN', \(\) => \{[\s\S]{0,120}clearTimeout\(playTimer\);/);
+  const music = await fs.readFile(new URL('../../turn/audio/racing-music-v5.js', import.meta.url), 'utf8');
+  assert.match(music, /function shouldPlay\(\) \{ return soundEnabled && musicVolume > 0 && !held/, 'a hold stops tap-to-resume');
+  assert.match(music, /function hold\(on\) \{ held = Boolean\(on\); if \(held\) void stopPlayback\(\{ reset: false \}\);/, 'a hold never saves volume');
 }
 
 console.log('TURN SWOOSH listening test: 3 blind versions × 24 balanced trials, scoring, JSON summary and full-side candidate sounds passed.');

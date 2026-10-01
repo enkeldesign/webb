@@ -329,6 +329,8 @@ function installTest() {
     const replayRow = document.createElement('div');
     replayRow.className = 'turn-swoosh-test-row';
     replayRow.append(button('PLAY AGAIN', () => {
+      // Replaces a pending autoplay, so each press is exactly one swoosh.
+      clearTimeout(playTimer);
       current.replays += 1;
       play(current.side, current.tightness, block.variant);
     }));
@@ -398,6 +400,7 @@ function installTest() {
   dialog.querySelector('[data-dialog-close]').addEventListener('click', () => dialog.close());
   dialog.addEventListener('close', () => {
     clearTimeout(playTimer);
+    globalThis.__turnRacingMusic?.hold?.(false);
     status.textContent = '';
     dialog.__turnReturnFocus?.focus?.();
   });
@@ -405,6 +408,8 @@ function installTest() {
   return (trigger) => {
     dialog.__turnReturnFocus = trigger;
     status.textContent = '';
+    // Menu music would mask the swooshes: hold it (unsaved) while the test is open.
+    globalThis.__turnRacingMusic?.hold?.(true);
     intro();
     dialog.showModal();
   };
