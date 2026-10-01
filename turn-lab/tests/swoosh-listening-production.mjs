@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-// SWOOSH listening test (#909, #928): SOL's protocol — three blind versions, 24 trials
-// each (2 sides × 3 anchors × 4), scored for side, tightness and comfort — and the
-// candidate sounds: full-side pan, one changed dimension per variant, level-compensated.
+// SWOOSH listening test (#909, #928), round 3: three blind swipe timbres, 12 linked pairs
+// each (8 S-curves, 4 same-direction, random tightness and length per swoosh), scored for
+// S-curves, same-direction pairs and comfort — and the candidate sounds: a swipe from 50%
+// to 100% on its own side, pitch for tightness, every swoosh ending fully on its side.
 const { SWOOSH_LENGTHS, SWOOSH_TIGHTNESS, swooshCharacter } = await import('../../turn/audio/swoosh-sound.js');
 const { createPairs, createSession, createTrials, scoreBlock, summarizeSession } = await import('../../turn/testing/swoosh-listening-test.js');
 
@@ -25,76 +26,91 @@ const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   assert.notEqual(order, createTrials(() => 0.999).map((trial) => `${trial.side}${trial.tightness}${trial.length}`).join(), 'the order is shuffled');
 }
 
-// Pairs: R → R, R → L, L → R and L → L twice each.
+// Round 3 pairs: R → L and L → R four times each, R → R and L → L twice each, every
+// swoosh with a valid tightness and length.
 {
   const pairs = createPairs(random);
-  assert.equal(pairs.length, 8);
-  for (const first of [-1, 1]) for (const second of [-1, 1]) {
-    assert.equal(pairs.filter((pair) => pair.first === first && pair.second === second).length, 2);
+  assert.equal(pairs.length, 12);
+  const count = (first, second) => pairs.filter((pair) => pair.first === first && pair.second === second).length;
+  assert.equal(count(1, -1), 4);
+  assert.equal(count(-1, 1), 4);
+  assert.equal(count(1, 1), 2);
+  assert.equal(count(-1, -1), 2);
+  for (const pair of pairs) {
+    assert.ok(SWOOSH_TIGHTNESS.includes(pair.firstTightness) && SWOOSH_TIGHTNESS.includes(pair.secondTightness));
+    assert.ok(Object.hasOwn(SWOOSH_LENGTHS, pair.firstLength) && Object.hasOwn(SWOOSH_LENGTHS, pair.secondLength));
   }
 }
 
-// Sessions: the arrow against round 1's static pitch sound, blind-labelled.
+// Round 3 sessions: three swipe timbres, blind-labelled, pairs only.
 {
   const session = createSession(random);
-  assert.equal(session.round, 2);
-  assert.deepEqual(session.blocks.map((block) => block.variant).sort(), ['arrow', 'pitch']);
-  assert.deepEqual(session.blocks.map((block) => block.label), ['VERSION 1', 'VERSION 2']);
+  assert.equal(session.round, 3);
+  assert.deepEqual(session.blocks.map((block) => block.variant).sort(), ['swipe-air', 'swipe-breath', 'swipe-tone']);
+  assert.deepEqual(session.blocks.map((block) => block.label), ['VERSION 1', 'VERSION 2', 'VERSION 3']);
+  assert.ok(session.blocks.every((block) => block.trials.length === 0 && block.pairs.length === 12));
 }
 
-// Scoring: side, tightness, length, length pulling tightness, pairs, replays, comfort.
+// Scoring: pairs, S-curves and same-direction pairs separately, replays and comfort.
 {
   const session = createSession(random);
   const block = session.blocks[0];
-  block.trials.forEach((trial, index) => {
-    trial.answerSide = index < 18 ? trial.side : -trial.side;
-    // Short tight swooshes are heard as tight; every short gentle one is heard as medium.
-    trial.answerTightness = trial.length === 'short' && trial.tightness === 'gentle' ? 'medium' : trial.tightness;
-    trial.answerLength = trial.length;
-    trial.replays = index === 0 ? 2 : 0;
-  });
-  block.pairs.forEach((pair, index) => {
+  let wrongSCurves = 0;
+  block.pairs.forEach((pair) => {
     pair.answerFirst = pair.first;
-    pair.answerSecond = index < 6 ? pair.second : -pair.second;
+    const sCurve = pair.first !== pair.second;
+    // One S-curve heard as same-direction.
+    pair.answerSecond = sCurve && wrongSCurves++ === 0 ? pair.first : pair.second;
   });
-  block.comfort = 4;
+  block.pairs[0].replays = 1;
+  block.comfort = 5;
   const score = scoreBlock(block);
-  assert.equal(score.answered, 24);
-  assert.equal(score.directionPercent, 75);
-  assert.equal(score.tightnessPercent, 83.3);
-  assert.equal(score.lengthPercent, 100);
-  assert.equal(score.shortHeardTighter, 4);
-  assert.equal(score.longHeardGentler, 0);
-  assert.equal(score.gentleHeardAsTight, 0);
-  assert.equal(score.pairsPercent, 75);
-  assert.equal(score.replays, 2);
-  assert.equal(score.comfort, 4);
-  const summary = summarizeSession(session, { build: '1.33.7 test' });
-  assert.equal(summary.round, 2);
-  assert.equal(summary.trials[0].trials.length, 24);
-  assert.equal(summary.trials[0].pairs.length, 8);
-  assert.match(summary.trials[0].trials[0].played, /^(left|right) (gentle|medium|tight) (short|long)$/);
+  assert.equal(score.answered, 0, 'no single swooshes in round 3');
+  assert.equal(score.pairsAnswered, 12);
+  assert.equal(score.pairsPercent, 91.7);
+  assert.equal(score.sCurvesAnswered, 8);
+  assert.equal(score.sCurvePercent, 87.5);
+  assert.equal(score.sameSidePercent, 100);
+  assert.equal(score.replays, 1);
+  assert.equal(score.comfort, 5);
+  const summary = summarizeSession(session, { build: '1.33.8 test' });
+  assert.equal(summary.round, 3);
+  assert.equal(summary.trials[0].pairs.length, 12);
   assert.match(summary.trials[0].pairs[0].played, /^(left|right) → (left|right)$/);
-  assert.equal(summary.scores[1].answered, 0, 'unanswered versions score nothing');
+  assert.match(summary.trials[0].pairs[0].swooshes, /^(gentle|medium|tight) (short|long) → (gentle|medium|tight) (short|long)$/);
   JSON.parse(JSON.stringify(summary));
 }
 
-// Candidate sounds: the arrow travels and uses pitch with the smooth timbre; texture is
-// gone from both round 2 versions; pitch rises gentle → tight; lengths are 180/360 ms.
+// Round 2's scoring of single swooshes still works (kept for later rounds).
 {
-  const arrow = SWOOSH_TIGHTNESS.map((tightness) => swooshCharacter('arrow', tightness));
-  const pitch = SWOOSH_TIGHTNESS.map((tightness) => swooshCharacter('pitch', tightness));
-  for (const series of [arrow, pitch]) {
-    assert.ok(series.every((item) => item.roughnessDepth === 0), 'no roughness in round 2');
-    assert.ok(series[0].pitchHz < series[1].pitchHz && series[1].pitchHz < series[2].pitchHz, 'pitch rises gentle → tight');
+  const block = { variant: 'arrow', label: 'VERSION 1', trials: createTrials(random), pairs: [], comfort: 4 };
+  block.trials.forEach((trial) => {
+    trial.answerSide = trial.side;
+    trial.answerTightness = trial.length === 'short' && trial.tightness === 'gentle' ? 'medium' : trial.tightness;
+    trial.answerLength = trial.length;
+  });
+  const score = scoreBlock(block);
+  assert.equal(score.directionPercent, 100);
+  assert.equal(score.tightnessPercent, 83.3);
+  assert.equal(score.lengthPercent, 100);
+  assert.equal(score.shortHeardTighter, 4);
+}
+
+// Candidate sounds: every swipe starts halfway out on its own side and travels to the
+// full side, with pitch for tightness and no roughness; the three timbres differ.
+{
+  const swipes = ['swipe-air', 'swipe-tone', 'swipe-breath'];
+  for (const variant of swipes) {
+    const series = SWOOSH_TIGHTNESS.map((tightness) => swooshCharacter(variant, tightness));
+    assert.ok(series.every((item) => item.travels && item.startPan === 0.5 && item.roughnessDepth === 0), `${variant}: a 50 → 100% swipe without roughness`);
+    assert.ok(series[0].pitchHz < series[1].pitchHz && series[1].pitchHz < series[2].pitchHz, `${variant}: pitch rises gentle → tight`);
   }
-  assert.ok(arrow.every((item) => item.travels && item.timbre === 'smooth'), 'the arrow travels with the smooth timbre');
-  assert.ok(pitch.every((item) => !item.travels && item.timbre === 'round1'), 'round 1 pitch stays static');
+  assert.equal(new Set(swipes.map((variant) => swooshCharacter(variant, 'medium').timbre)).size, 3, 'three different timbres');
+  assert.equal(swooshCharacter('arrow', 'medium').startPan, 0, "round 2's arrow started in the centre");
   assert.deepEqual(SWOOSH_LENGTHS, { short: 0.18, long: 0.36 });
   const source = await fs.readFile(new URL('../../turn/audio/swoosh-sound.js', import.meta.url), 'utf8');
-  assert.match(source, /panner\.pan\.setValueAtTime\(0, at\);\s*panner\.pan\.linearRampToValueAtTime\(fullSide,/, 'the arrow travels from the centre to the full side');
+  assert.match(source, /panner\.pan\.setValueAtTime\(fullSide \* startPan, at\);\s*panner\.pan\.linearRampToValueAtTime\(fullSide,/, 'a swipe travels from its start on its own side to the full side');
   assert.match(source, /const fullSide = side < 0 \? -1 : 1;/, 'every swoosh ends fully on its side');
-  assert.match(source, /const compensation = 1 \/ Math\.sqrt/, 'roughness stays level-compensated');
 }
 
 // The test is admin-only, uses real buttons, and is loaded by the production page.
@@ -114,4 +130,4 @@ const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   assert.match(music, /function hold\(on\) \{ held = Boolean\(on\); if \(held\) void stopPlayback\(\{ reset: false \}\);/, 'a hold never saves volume');
 }
 
-console.log('TURN SWOOSH listening test round 2: arrow vs pitch, 24 balanced swooshes with lengths, 8 linked pairs, scoring, JSON summary and the travelling arrow passed.');
+console.log('TURN SWOOSH listening test round 3: three swipe timbres, 12 balanced linked pairs (8 S-curves), S-curve scoring, JSON summary and the 50 → 100% swipe passed.');
