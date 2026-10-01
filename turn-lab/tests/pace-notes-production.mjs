@@ -323,6 +323,22 @@ for (const definition of TRACK_DEFINITIONS) {
     assert.ok(pitches.every((ratio) => Math.abs(ratio - pitches[0]) < 1e-9), `${variant}: pitch follows tightness`);
   }
   assert.ok(Math.abs(VOICE_PITCH_HZ.medium / VOICE_PITCH_HZ.gentle - 1.5) < 0.01 && Math.abs(VOICE_PITCH_HZ.tight / VOICE_PITCH_HZ.medium - 1.5) < 0.01, 'tightness pitches a fifth apart');
+  // A picker preview is heard as in the race: the mix and the music duck under it.
+  {
+    const routeAudio = createRouteAudio();
+    const before = ducks.length;
+    globalThis.__turnRouteAudio = routeAudio;
+    try {
+      const { installSwooshPaceNotes } = await import('../../turn/audio/swoosh-pace-notes.js');
+      globalThis.__turnAudio = { unlock() {}, update() {}, cue() {}, silence() {} };
+      installSwooshPaceNotes();
+      assert.equal(globalThis.__turnSwooshPaceNotes.preview({ side: 1 }), true);
+      assert.ok(routeAudio.held > 0, 'a preview holds the car sounds back');
+      assert.equal(ducks.length, before + 1, 'a preview ducks the music');
+    } finally {
+      delete globalThis.__turnRouteAudio;
+    }
+  }
   assert.equal(swooshCaption({ tightness: 'gentle', long: true, side: 'left' }), 'GENTLE LONG LEFT');
   assert.equal(swooshCaption({ tightness: 'tight', long: false, side: 'right' }), 'TIGHT SHORT RIGHT');
   const history = [

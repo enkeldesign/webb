@@ -175,13 +175,18 @@ export function installSwooshPaceNotes() {
     preview({ side = 1, tightness = 'medium', long = false } = {}) {
       const routeAudio = globalThis.__turnRouteAudio;
       if (!routeAudio?.ready || !routeAudio.destination) return false;
-      startSwoosh(routeAudio.context, routeAudio.destination, {
+      // Heard as in the race: the car sounds and music duck under it, as in playPlanned().
+      const at = routeAudio.context.currentTime + 0.02;
+      const handle = startSwoosh(routeAudio.context, routeAudio.destination, {
         side,
         tightness,
         variant: SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant,
         durationSeconds: long ? SWOOSH_LENGTHS.long : SWOOSH_LENGTHS.short,
-        level: swooshLevel(globalThis.__turnAudioPreferences?.getSettings?.()?.balance)
+        level: swooshLevel(globalThis.__turnAudioPreferences?.getSettings?.()?.balance),
+        at
       });
+      routeAudio.holdMixUntil?.(handle.endsAt + 0.05);
+      globalThis.__turnRacingMusic?.duck?.(at - routeAudio.context.currentTime, handle.endsAt - at);
       return true;
     },
     get audioTime() {
