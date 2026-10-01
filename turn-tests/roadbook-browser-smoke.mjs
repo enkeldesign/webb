@@ -212,6 +212,7 @@ async function phoneFlow(browserType, name) {
         records: [...dialog.querySelectorAll('.turn-pr-record')].map((row) => `${row.dataset.recordKind}:${row.className.includes('is-locked') ? 'locked' : row.className.includes('is-empty') ? 'empty' : 'set'}`),
         route: Boolean(dialog.querySelector('.turn-pr-detail-route svg path')),
         pictogram: Boolean(dialog.querySelector('.turn-pr-detail-route .turn-pr-icon > span')),
+        length: dialog.querySelector('.turn-pr-detail-route .turn-pr-detail-length')?.textContent || '',
         description: dialog.querySelector('.turn-pr-detail-description').textContent.length > 0,
         // TURN focuses every dialog's heading as it opens, so it is announced first.
         focus: document.activeElement === dialog.querySelector('#turnTrackSheetTitle'),
@@ -236,6 +237,7 @@ async function phoneFlow(browserType, name) {
     assert.equal(sheet.title, 'Cliffside');
     assert.deepEqual(sheet.records, ['time:empty', 'drift:locked', 'flow:locked'], `${name}: a new profile has no time and locked DRIFT/FLOW records`);
     assert.ok(sheet.route && sheet.pictogram && sheet.description);
+    assert.match(sheet.length, /^Length: \d+\.\d km$/, 'the map frame shows the lap length in km, one decimal');
     assert.equal(sheet.focus, true, `${name}: the Track sheet opens on its heading`);
     assert.equal(sheet.closeColor, 'rgb(255, 123, 84)', `${name}: close is orange`);
     const channels = (color) => (color.match(/[\d.]+/g) || []).slice(0, 3).map(Number).map((value) => value <= 1 && /srgb/.test(color) ? value * 255 : value);

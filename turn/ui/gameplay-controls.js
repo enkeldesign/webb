@@ -1055,7 +1055,9 @@ function installGameplayUi() {
       }
     } else {
       if (boostCharge < 0.999999) {
-        boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS);
+        // FULL TANK (SUV perk): clean driving fills the tank per second, set by the perk runtime.
+        const perkRefill = Math.max(0, Number(globalThis.__turnRuntime?.state?.vehiclePerkBoostRefill) || 0);
+        boostCharge = Math.min(1, boostCharge + dt * (rechargeMultiplier / BOOST_RECHARGE_SECONDS + perkRefill));
       }
 
       if (boostCharge >= 0.999999 || boostOvercharge > 0) {

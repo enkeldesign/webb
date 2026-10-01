@@ -123,6 +123,17 @@ export function saveTrackSelection(trackId) {
   return normalized;
 }
 
+const trackLengths = new Map();
+
+/** A lap's length in metres, measured as the race samples the track. */
+export function getTrackLengthMetres(trackId) {
+  const definition = getTrackDefinition(trackId);
+  if (!trackLengths.has(definition.id)) {
+    trackLengths.set(definition.id, createTrackRuntime(definition.id, definition.sampleCount || TRACK_SAMPLE_COUNT).trackLength);
+  }
+  return trackLengths.get(definition.id);
+}
+
 export function createTrackRuntime(trackId, sampleCount = TRACK_SAMPLE_COUNT) {
   const definition = getTrackDefinition(trackId);
   const controlPoints = definition.createControlPoints();

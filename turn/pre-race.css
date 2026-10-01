@@ -794,6 +794,19 @@ html body .turn-pr-app-logo {
   left: 12px;
 }
 
+/* The lap length, in the frame's lower-left corner. */
+.turn-pr-detail-route .turn-pr-detail-length {
+  position: absolute;
+  z-index: 1;
+  bottom: 10px;
+  left: 12px;
+  color: var(--turn-ink, #08090a);
+  font-family: var(--turn-pr-font-body);
+  font-size: var(--turn-pr-type-spec);
+  font-weight: 750;
+  line-height: 1.2;
+}
+
 .turn-pr-detail-route .turn-pr-route {
   position: absolute;
   inset: 22px 20px 18px;
