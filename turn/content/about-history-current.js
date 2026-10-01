@@ -1093,13 +1093,14 @@ Object.freeze({
     Object.freeze(['1.33.2 r344', 'First start: if the race setup fails to load, TURN reloads once and continues to GARAGE by itself; if it keeps failing, a RESTART notice shows instead of a button that does nothing.']),
     Object.freeze(['1.33.3 r345', 'COMPACT is now smaller and VINTAGE RACER slightly larger, so the lineup sits in proportion.']),
     Object.freeze(['1.33.4 r346', 'BELLA\'s final coat colours apply again; a colour-maths error stopped them on every Countryside load.']),
-    Object.freeze(['1.33.5 r347', 'Admin: ROUTE TEST HUD shows the SWOOSH bends computed from each track\'s centreline, live while racing (#909 step 1). Players see no change.'])
+    Object.freeze(['1.33.5 r347', 'Admin: ROUTE TEST HUD shows the SWOOSH bends computed from each track\'s centreline, live while racing (#909 step 1). Players see no change.']),
+    Object.freeze(['1.33.6 r348', 'Admin: SWOOSH LISTENING TEST (three blind candidate sounds, 24 swooshes each, results to copy) and a glanceable NOW/NEXT route HUD (#909, #928). Players see no change.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.33.5',
-  build: '2026.09.30-r347',
-  note: 'Admin-only route HUD for SWOOSH pace notes; no sound change yet.'
+  version: '1.33.6',
+  build: '2026.09.30-r348',
+  note: 'Admin listening test for SWOOSH and a simpler route HUD.'
 });
