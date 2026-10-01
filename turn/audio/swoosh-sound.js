@@ -85,33 +85,82 @@ export function playSwoosh(context, destination, options = {}) {
 
 /** Play one swoosh and keep a handle: { endsAt, stop() } silences it, even before it starts. */
 export function startSwoosh(context, destination, options = {}) {
-  if (Object.hasOwn(SWORD_STYLES, options.variant)) return startSwordSwoosh(context, destination, options);
+  if (Object.hasOwn(SWOOSH_VOICES, options.variant)) return startVoiceSwoosh(context, destination, options);
   return startAirSwoosh(context, destination, options);
 }
 
-// Sword swings (admin sound picker): the pitch is in the swish itself. Noise through a
-// resonant band whose centre carries tightness and moves with the swing, under a bell
-// envelope with micro fades in and out, so each cue is one clear stroke. No separate
-// tone. Ten styles differ in resonance (airy → whistling), the swing's pitch contour,
-// fades, and a second harmonic band. gain matches each style's loudness (RMS, rendered
-// offline) to the race sound 'swipe-undertone'; values are audition seeds for Erik to
-// compare in the race.
-export const SWORD_PITCH_HZ = Object.freeze({ gentle: 650, medium: 1050, tight: 1650 });
-export const SWORD_STYLES = Object.freeze({
-  'sword-blade': Object.freeze({ name: 'BLADE', q: 6, contour: [0.75, 1, 0.85], peakAt: 0.55, fadeIn: 0.012, fadeOut: 0.05, gain: 2.06 }),
-  'sword-katana': Object.freeze({ name: 'KATANA', q: 11, contour: [0.7, 1.05, 1], peakAt: 0.7, fadeIn: 0.008, fadeOut: 0.04, gain: 2.0 }),
-  'sword-rapier': Object.freeze({ name: 'RAPIER', q: 16, contour: [0.9, 1.1, 1.05], peakAt: 0.6, fadeIn: 0.006, fadeOut: 0.03, gain: 1.75 }),
-  'sword-sabre': Object.freeze({ name: 'SABRE', q: 4, contour: [0.7, 1, 0.8], peakAt: 0.5, fadeIn: 0.015, fadeOut: 0.06, gain: 2.01 }),
-  'sword-staff': Object.freeze({ name: 'STAFF', q: 3, contour: [0.45, 0.62, 0.5], peakAt: 0.5, fadeIn: 0.018, fadeOut: 0.07, gain: 2.71 }),
-  'sword-whip': Object.freeze({ name: 'WHIP', q: 8, contour: [0.5, 1.35, 1.25], peakAt: 0.8, fadeIn: 0.005, fadeOut: 0.025, gain: 1.97 }),
-  'sword-fan': Object.freeze({ name: 'FAN', q: 1.6, contour: [0.8, 1, 0.9], peakAt: 0.45, fadeIn: 0.03, fadeOut: 0.09, gain: 2.14 }),
-  'sword-arrow': Object.freeze({ name: 'ARROW', q: 9, contour: [1.25, 1.1, 0.8], peakAt: 0.35, fadeIn: 0.01, fadeOut: 0.05, gain: 1.78 }),
-  'sword-twin': Object.freeze({ name: 'TWIN', q: 7, contour: [0.75, 1, 0.85], peakAt: 0.55, fadeIn: 0.01, fadeOut: 0.05, gain: 1.68, harmonic: 1.5 }),
-  'sword-breeze': Object.freeze({ name: 'BREEZE', q: 2.4, contour: [0.85, 1, 0.92], peakAt: 0.5, fadeIn: 0.025, fadeOut: 0.08, gain: 2.07 })
+// Polished voices (admin sound picker). DBE is on by default for every player, so a
+// pace note must sound finished, not like a test tone. Each voice is built to avoid
+// roughness:
+// - raised-cosine envelopes (setValueCurveAtTime), never linear ramps or clicks;
+// - a gentle low-pass over everything, so no hiss or harsh top;
+// - a small, quiet room on the cue's own side, for space without smearing the side;
+// - musical tightness pitches a fifth apart (A4 / E5 / B5), each voice gliding a little
+//   so the cue moves.
+// Each keeps the 50% → 100% swipe, pitch = tightness and duration = length. gain matches
+// each voice's loudness (RMS, rendered offline) to the race sound 'swipe-undertone'.
+export const VOICE_PITCH_HZ = Object.freeze({ gentle: 440, medium: 659.25, tight: 987.77 });
+const sine = (ratio, gain, detuneCents = 0) => Object.freeze({ ratio, gain, type: 'sine', detuneCents });
+export const SWOOSH_VOICES = Object.freeze({
+  // A clean sine that rises a semitone: a calm interface glide.
+  'voice-glide': Object.freeze({ name: 'GLIDE', partials: [sine(1, 1), sine(2, 0.12)], glide: [0.944, 1], envelope: 'bell', attack: 0.03, release: 0.07, lowpassHz: 4000, reverb: 0.16, gain: 0.326 }),
+  // Warm air at the pitch, a soft sine beneath it: the race sound's idea, smoothed.
+  'voice-breath': Object.freeze({ name: 'BREATH', partials: [sine(0.5, 0.35)], noise: { level: 1, q: 2.2, ratio: 1.5 }, glide: [0.9, 1.04], envelope: 'bell', attack: 0.035, release: 0.08, lowpassHz: 3200, reverb: 0.14, gain: 0.836 }),
+  // Two slightly detuned sines: a soft chorused shimmer.
+  'voice-silk': Object.freeze({ name: 'SILK', partials: [sine(1, 0.6, -7), sine(1, 0.6, 7), sine(2, 0.08)], glide: [0.97, 1], envelope: 'bell', attack: 0.04, release: 0.09, lowpassHz: 3500, reverb: 0.2, gain: 0.425 }),
+  // A soft bell: gentle FM whose brightness fades, like glass.
+  'voice-chime': Object.freeze({ name: 'CHIME', partials: [sine(1, 1)], fm: { ratio: 2, index: 1.2 }, glide: [1, 1], envelope: 'pluck', attack: 0.006, release: 0.12, lowpassHz: 5000, reverb: 0.22, gain: 0.924 }),
+  // Air through a narrow band at the pitch, with a hint of tone: a breathy flute.
+  'voice-flute': Object.freeze({ name: 'FLUTE', partials: [sine(1, 0.55)], noise: { level: 0.7, q: 9, ratio: 1 }, glide: [0.97, 1], envelope: 'bell', attack: 0.04, release: 0.07, lowpassHz: 3800, reverb: 0.16, gain: 0.602 }),
+  // Swells toward the bend, then lets go quickly: the cue leans forward.
+  'voice-swell': Object.freeze({ name: 'SWELL', partials: [sine(1, 0.9), sine(1.5, 0.15)], glide: [0.97, 1.02], envelope: 'swell', attack: 0.02, release: 0.05, lowpassHz: 3600, reverb: 0.15, gain: 0.457 }),
+  // Root and fifth, softly: an open, musical halo.
+  'voice-halo': Object.freeze({ name: 'HALO', partials: [sine(1, 0.75), sine(1.5, 0.4), sine(2, 0.1)], glide: [1, 1], envelope: 'bell', attack: 0.035, release: 0.1, lowpassHz: 3800, reverb: 0.24, gain: 0.395 }),
+  // A smooth wind sweep, filtered so it never hisses, with the pitch in the sweep.
+  'voice-wind': Object.freeze({ name: 'WIND', partials: [], noise: { level: 1, q: 3.5, ratio: 1.5 }, glide: [0.8, 1.08], envelope: 'bell', attack: 0.03, release: 0.08, lowpassHz: 3000, reverb: 0.18, gain: 1.687 }),
+  // A rounded triangle tone: firmer and closer, still soft at the edges.
+  'voice-pebble': Object.freeze({ name: 'PEBBLE', partials: [Object.freeze({ ratio: 1, gain: 0.8, type: 'triangle', detuneCents: 0 })], glide: [1.02, 1], envelope: 'pluck', attack: 0.008, release: 0.1, lowpassHz: 2400, reverb: 0.12, gain: 1.102 }),
+  // A muted marimba-like tap with a woody partial.
+  'voice-wood': Object.freeze({ name: 'WOOD', partials: [sine(1, 1), sine(3.9, 0.12)], glide: [1, 1], envelope: 'pluck', attack: 0.006, release: 0.12, lowpassHz: 4200, reverb: 0.14, gain: 0.766 })
 });
-export const SWORD_VARIANTS = Object.freeze(Object.keys(SWORD_STYLES));
+export const VOICE_VARIANTS = Object.freeze(Object.keys(SWOOSH_VOICES));
 
-function startSwordSwoosh(context, destination, {
+const reverbBuffers = new WeakMap();
+
+// A small, dark room: 0.4 s of decaying, smoothed noise.
+function reverbBuffer(context) {
+  let buffer = reverbBuffers.get(context);
+  if (buffer) return buffer;
+  const length = Math.round(context.sampleRate * 0.4);
+  buffer = context.createBuffer(1, length, context.sampleRate);
+  const data = buffer.getChannelData(0);
+  let smooth = 0;
+  for (let index = 0; index < length; index += 1) {
+    smooth += ((Math.random() * 2 - 1) - smooth) * 0.35;
+    data[index] = smooth * Math.exp(-index / (context.sampleRate * 0.09));
+  }
+  reverbBuffers.set(context, buffer);
+  return buffer;
+}
+
+// Envelope shapes over the cue's length, as raised-cosine curves at 1 ms resolution, so
+// even a 4 ms pluck attack is a smooth curve.
+function envelopeCurve(shape, durationSeconds, attack, release, points = Math.max(64, Math.ceil(durationSeconds * 1000) + 1)) {
+  const curve = new Float32Array(points);
+  const rise = (x) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, x)));
+  for (let index = 0; index < points; index += 1) {
+    const t = (index / (points - 1)) * durationSeconds;
+    const fadeIn = rise(t / attack);
+    const fadeOut = rise((durationSeconds - t) / release);
+    let body = 1;
+    if (shape === 'swell') body = 0.45 + 0.55 * rise(t / Math.max(attack, durationSeconds - release));
+    if (shape === 'pluck') body = Math.exp(-3.2 * Math.max(0, t - attack) / durationSeconds);
+    curve[index] = fadeIn * fadeOut * body;
+  }
+  return curve;
+}
+
+function startVoiceSwoosh(context, destination, {
   side,
   tightness = 'medium',
   variant,
@@ -119,15 +168,17 @@ function startSwordSwoosh(context, destination, {
   durationSeconds = SWOOSH_TUNING.durationSeconds,
   level = SWOOSH_TUNING.level
 } = {}) {
-  const style = SWORD_STYLES[variant];
-  const pitchHz = SWORD_PITCH_HZ[SWOOSH_TIGHTNESS.includes(tightness) ? tightness : 'medium'];
+  const voice = SWOOSH_VOICES[variant];
+  const pitchHz = VOICE_PITCH_HZ[SWOOSH_TIGHTNESS.includes(tightness) ? tightness : 'medium'];
   const end = at + durationSeconds;
-  const fadeIn = Math.min(style.fadeIn, durationSeconds * 0.3);
-  const fadeOut = Math.min(style.fadeOut, durationSeconds * 0.4);
-  const peakTime = at + Math.max(fadeIn, durationSeconds * style.peakAt);
   const nodes = [];
+  const sources = [];
   const track = (node) => {
     nodes.push(node);
+    return node;
+  };
+  const source = (node) => {
+    sources.push(track(node));
     return node;
   };
 
@@ -138,37 +189,74 @@ function startSwordSwoosh(context, destination, {
   panner.pan.linearRampToValueAtTime(fullSide, at + durationSeconds * SWOOSH_TUNING.travelShare);
   panner.connect(destination);
 
-  // A bell: micro fade in, swell to the swing's peak, micro fade out. A resonant band
-  // passes little noise energy, so its level is given back with √Q.
+  // Dry and a small room, both on the cue's side.
+  const tone = track(context.createBiquadFilter());
+  tone.type = 'lowpass';
+  tone.frequency.value = voice.lowpassHz;
+  tone.Q.value = 0.5;
+  tone.connect(panner);
+  let tail = 0;
+  if (voice.reverb > 0 && typeof context.createConvolver === 'function') {
+    const room = track(context.createConvolver());
+    const wet = track(context.createGain());
+    room.buffer = reverbBuffer(context);
+    wet.gain.value = voice.reverb;
+    tone.connect(room).connect(wet).connect(panner);
+    tail = 0.4;
+  }
+
   const envelope = track(context.createGain());
-  // A constant-Q band passes more energy at higher pitch: √(pitch) is given back, so
-  // tight is not simply louder than gentle.
-  const peak = level * style.gain * Math.sqrt(style.q) * 0.9 * Math.sqrt(SWORD_PITCH_HZ.medium / pitchHz);
-  envelope.gain.setValueAtTime(0, at);
-  envelope.gain.linearRampToValueAtTime(peak * 0.55, at + fadeIn);
-  envelope.gain.linearRampToValueAtTime(peak, peakTime);
-  envelope.gain.setValueAtTime(peak, Math.max(peakTime, end - fadeOut));
-  envelope.gain.linearRampToValueAtTime(0, end);
-  envelope.connect(panner);
+  envelope.gain.value = 0;
+  envelope.gain.setValueCurveAtTime(
+    envelopeCurve(voice.envelope, durationSeconds, Math.min(voice.attack, durationSeconds * 0.4), Math.min(voice.release, durationSeconds * 0.5))
+      .map((value) => value * level * voice.gain),
+    at,
+    durationSeconds
+  );
+  envelope.connect(tone);
 
-  const noise = track(context.createBufferSource());
-  noise.buffer = noiseBuffer(context);
-  const bands = [1, style.harmonic].filter(Boolean).map((ratio, index) => {
+  const [glideFrom, glideTo] = voice.glide;
+  const glide = (param, base) => {
+    param.setValueAtTime(base * glideFrom, at);
+    param.exponentialRampToValueAtTime(base * glideTo, end);
+  };
+  for (const partial of voice.partials) {
+    const oscillator = source(context.createOscillator());
+    const partialGain = track(context.createGain());
+    oscillator.type = partial.type;
+    oscillator.detune.value = partial.detuneCents;
+    glide(oscillator.frequency, pitchHz * partial.ratio);
+    partialGain.gain.value = partial.gain;
+    oscillator.connect(partialGain).connect(envelope);
+    if (voice.fm) {
+      // Brightness that fades: the modulator's depth decays over the cue.
+      const modulator = source(context.createOscillator());
+      const depth = track(context.createGain());
+      glide(modulator.frequency, pitchHz * partial.ratio * voice.fm.ratio);
+      depth.gain.setValueAtTime(pitchHz * voice.fm.index, at);
+      depth.gain.exponentialRampToValueAtTime(pitchHz * voice.fm.index * 0.05, end);
+      modulator.connect(depth).connect(oscillator.frequency);
+    }
+  }
+  if (voice.noise) {
+    const noise = source(context.createBufferSource());
     const band = track(context.createBiquadFilter());
-    const bandGain = track(context.createGain());
-    const [from, top, to] = style.contour.map((value) => value * pitchHz * ratio);
+    const noiseGain = track(context.createGain());
+    noise.buffer = noiseBuffer(context);
     band.type = 'bandpass';
-    band.Q.value = style.q;
-    band.frequency.setValueAtTime(from, at);
-    band.frequency.exponentialRampToValueAtTime(top, peakTime);
-    band.frequency.exponentialRampToValueAtTime(to, end);
-    bandGain.gain.value = index ? 0.45 : 1;
-    noise.connect(band).connect(bandGain).connect(envelope);
-    return band;
-  });
-  noise.start(at, Math.random() * 0.5);
-  noise.stop(end + 0.05);
+    band.Q.value = voice.noise.q;
+    glide(band.frequency, pitchHz * voice.noise.ratio);
+    // A band passes little of the noise: give back √Q. A constant-Q band passes more at
+    // higher pitch: give back √pitch, so tight is not simply louder than gentle.
+    noiseGain.gain.value = voice.noise.level * Math.sqrt(voice.noise.q) * Math.sqrt(VOICE_PITCH_HZ.medium / pitchHz);
+    noise.connect(band).connect(noiseGain).connect(envelope);
+  }
 
+  for (const node of sources) {
+    if (node.buffer) node.start(at, Math.random() * 0.5);
+    else node.start(at);
+    node.stop(end + 0.02);
+  }
   const disconnect = () => {
     for (const node of nodes) {
       try {
@@ -178,15 +266,24 @@ function startSwordSwoosh(context, destination, {
       }
     }
   };
-  noise.addEventListener('ended', disconnect, { once: true });
+  // Let the room ring out on its own side before letting go of the nodes.
+  const timer = typeof context.createConstantSource === 'function' ? track(context.createConstantSource()) : sources[0];
+  if (timer !== sources[0]) {
+    timer.offset.value = 0;
+    timer.connect(envelope);
+    timer.start(at);
+    timer.stop(end + tail + 0.05);
+  }
+  timer.addEventListener('ended', disconnect, { once: true });
   return Object.freeze({
     endsAt: end,
-    bands: bands.length,
     stop() {
-      try {
-        noise.stop();
-      } catch (_) {
-        // Already stopped.
+      for (const node of [...sources, timer]) {
+        try {
+          node.stop();
+        } catch (_) {
+          // Already stopped.
+        }
       }
       disconnect();
     }

@@ -16,7 +16,7 @@
 // Output goes through the engine's route channel (globalThis.__turnRouteAudio): Drive
 // By Ear's balance and on/off apply, and the car sounds and music duck underneath.
 import { routeForSamples, routeSegmentAt, upcomingRouteSegments } from './route-geometry.js';
-import { SWOOSH_LENGTHS, SWORD_STYLES, SWORD_VARIANTS, startSwoosh } from './swoosh-sound.js';
+import { SWOOSH_LENGTHS, SWOOSH_VOICES, VOICE_VARIANTS, startSwoosh } from './swoosh-sound.js';
 
 export const SWOOSH_PACE_TUNING = Object.freeze({
   variant: 'swipe-undertone',
@@ -65,10 +65,10 @@ const history = [];
 const counts = { fired: 0, late: 0, phrases: 0, suppressed: 0, cancelled: 0 };
 
 // Admin sound picker: an admin-unlocked profile may race with any of these. Choice 0 is
-// the race sound every player hears; 1–10 are the sword swings. Players are unaffected.
+// the race sound every player hears; 1–10 are the polished voices. Players are unaffected.
 export const SWOOSH_SOUND_CHOICES = Object.freeze([
   Object.freeze({ variant: SWOOSH_PACE_TUNING.variant, name: 'RACE' }),
-  ...SWORD_VARIANTS.map((variant) => Object.freeze({ variant, name: SWORD_STYLES[variant].name }))
+  ...VOICE_VARIANTS.map((variant) => Object.freeze({ variant, name: SWOOSH_VOICES[variant].name }))
 ]);
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 export const SWOOSH_SOUND_STORAGE_KEY = 'turn-swoosh-sound-v1';

@@ -1100,7 +1100,7 @@ Object.freeze({
     Object.freeze(['1.34.0 r351', 'SWOOSH pace notes replace the BIPs. Before every bend, on every track, a swipe travels out to the ear on the bend\'s side and ends before the bend begins: higher pitch for a tighter bend, a quick swipe for a short one and a slower swipe for a long one. A bend of more than 90° is told as linked swipes, and bends that follow each other link into one phrase instead of being dropped. The car sounds and music duck while a swipe plays. Pace notes wait while you are off the road and stop when you face the wrong way. DRIVE BY EAR 101 and the sound guides teach the swipes (#909, #928).']),
     Object.freeze(['1.35.0 r352', 'The Track sheet shows each track\'s lap length in its map frame, for example Length: 3.3 km. The SUV\'s FULL TANK perk now also fills BOOST: clean driving refills the tank at the same rate it grows, between boosts.']),
     Object.freeze(['1.35.1 r353', 'SWOOSH pace notes tuned to a driver, from the first race test. They sit closer to the guiding ribbon at the default Sound balance and grow louder as you favour Drive By Ear. A softer air leads, with the tightness pitch underneath it. Gentle bends under 15° pass silently, and a corner up to 120° is one swipe, so a hairpin complex speaks the way you would count it (#909, #928).']),
-    Object.freeze(['1.35.2 r354', 'Admin: SWOOSH SOUND PICKER in SETTINGS. While racing, a box where the steering pad goes chooses the pace-note sound: the race sound or one of ten sword swings, where the swish itself carries the pitch. Each step plays the new sound, and a caption names the swoosh just played, such as GENTLE LONG LEFT. Players hear no change.'])
+    Object.freeze(['1.35.2 r354', 'Admin: SWOOSH SOUND PICKER in SETTINGS. While racing, a box where the steering pad goes chooses the pace-note sound: the race sound or one of ten polished voices (GLIDE, BREATH, SILK, CHIME, FLUTE, SWELL, HALO, WIND, PEBBLE, WOOD), with smooth fades, a soft top and a small room. Each step plays the new sound, and a caption names the swoosh just played, such as GENTLE LONG LEFT. Players hear no change.'])
   ])
 })
 ]);
@@ -1108,5 +1108,5 @@ Object.freeze({
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.35.2',
   build: '2026.10.01-r354',
-  note: 'Admin SWOOSH sound picker with ten sword swings.'
+  note: 'Admin SWOOSH sound picker with ten polished voices.'
 });
