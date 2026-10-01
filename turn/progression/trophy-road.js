@@ -223,8 +223,8 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     vehicleId: 'suv',
     icon: 'perk',
     perkTitle: 'FULL TANK',
-    perkDescription: 'Clean driving builds BOOST TANK up to 5/5.',
-    description: 'Unlock <strong>FULL TANK</strong> for SUV. Clean driving builds BOOST TANK up to 5/5.'
+    perkDescription: 'Clean driving builds BOOST TANK up to 5/5 and fills it as you go.',
+    description: 'Unlock <strong>FULL TANK</strong> for SUV. Clean driving builds BOOST TANK up to 5/5 and fills it as you go.'
   }),
   Object.freeze({
     id: 'sedan-double-shift',

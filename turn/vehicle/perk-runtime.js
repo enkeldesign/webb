@@ -131,6 +131,7 @@ export function resetVehiclePerkRuntimeState(state) {
   state.vehiclePerkRuntimeUnlocked = state.vehiclePerkUnlocked === true;
   state.vehiclePerkProgress = 0;
   state.vehiclePerkStage = 0;
+  state.vehiclePerkBoostRefill = 0;
   state.vehicleEffectiveTuning = state.vehicleTuning || null;
   state.vehicleEffectiveMaxSpeed = 0;
   return state;
@@ -185,6 +186,7 @@ export function advanceVehiclePerkRuntimeState({
   syncVehiclePerkRuntimeState(state);
 
   const elapsed = clamp(dt, 0, 0.1);
+  if (!activePerk(state, 'suv')) state.vehiclePerkBoostRefill = 0;
   if (activePerk(state, 'truck')) {
     if ((Number(overcharge) || 0) > 0) {
       state.vehiclePerkProgress = clampProgress(
@@ -203,6 +205,10 @@ export function advanceVehiclePerkRuntimeState({
       state.vehiclePerkProgress = clampProgress(
         state.vehiclePerkProgress + elapsed / FULL_TANK_BUILD_SECONDS
       );
+      // Clean driving also fills the BOOST TANK, at the same rate it builds. The fill
+      // accrues in race time here (only while the race runs, with every physics
+      // substep) and the BOOST loop takes it each frame.
+      state.vehiclePerkBoostRefill = (Number(state.vehiclePerkBoostRefill) || 0) + elapsed / FULL_TANK_BUILD_SECONDS;
     }
   } else if (activePerk(state, 'sedan-sports')) {
     const delta = driftHeld

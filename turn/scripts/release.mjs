@@ -379,7 +379,9 @@ function synchronizeUiBaselineTargets(importMap, release) {
     // Modules that request a stylesheet by a release-bound literal URL.
     ['/turn/social/your-turn-share.js', ['?revision=r4-runtime-share-state']],
     ['/turn/content/about-turn.js', ['?revision=r1']],
-    ['/turn/audio/racing-music-v5.js', ['?revision=r197-audio-mix']]
+    ['/turn/audio/racing-music-v5.js', ['?revision=r197-audio-mix']],
+    // Vehicle perks change with gameplay tuning (FULL TANK refill, 1.35.0).
+    ['/turn/vehicle/perk-runtime.js', ['?revision=r233-graduated']]
   ]) {
     const target = `${pathname}?build=${release.cacheKey}`;
     // Existing aliases that route to the module (the racing music entry) follow it.

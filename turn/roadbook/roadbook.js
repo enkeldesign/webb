@@ -6,7 +6,7 @@
 // and ROADBOOK calls back when the player picks another track or continues to GARAGE.
 // Styles: pre-race.css (the shared primitives GARAGE reuses) and roadbook.css.
 
-import { TRACK_CATALOG, TRACK_PLACEHOLDERS, getTrackPreviewPoints } from '/turn/tracks/catalog.js?source=20260729-r118-m8';
+import { TRACK_CATALOG, TRACK_PLACEHOLDERS, getTrackLengthMetres, getTrackPreviewPoints } from '/turn/tracks/catalog.js?source=20260729-r118-m8';
 import { trackIconMarkup } from '/turn/ui/track-icons.js';
 import {
   LOCK_ICON,
@@ -182,6 +182,7 @@ function renderDetail(track, { idPrefix }) {
       ${difficultyChip(track)}
       <span class="turn-pr-icon is-large" aria-hidden="true">${trackIconMarkup(track.id)}</span>
       ${routeMarkup(track.id)}
+      <span class="turn-pr-detail-length">Length: ${(getTrackLengthMetres(track.id) / 1000).toFixed(1)} km</span>
     </div>
     <p class="turn-pr-detail-description">${escapeHtml(track.description)}</p>
     ${lock ? `

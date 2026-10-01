@@ -1097,13 +1097,14 @@ Object.freeze({
     Object.freeze(['1.33.6 r348', 'Admin: SWOOSH LISTENING TEST (three blind candidate sounds, 24 swooshes each, results to copy) and a glanceable NOW/NEXT route HUD (#909, #928). Players see no change.']),
     Object.freeze(['1.33.7 r349', 'Admin: SWOOSH listening test round 2 compares the arrow (centre to full side, speed = curve length, pitch = tightness, smoother sound) with round 1\'s pitch sound, with lengths and linked pairs (#909, #928). Players see no change.']),
     Object.freeze(['1.33.8 r350', 'Admin: SWOOSH listening test round 3 — S-curves only, with a swipe from 50% to 100% on its own side in three timbres (#909, #928). Players see no change.']),
-    Object.freeze(['1.34.0 r351', 'SWOOSH pace notes replace the BIPs. Before every bend, on every track, a swipe travels out to the ear on the bend\'s side and ends before the bend begins: higher pitch for a tighter bend, a quick swipe for a short one and a slower swipe for a long one. A bend of more than 90° is told as linked swipes, and bends that follow each other link into one phrase instead of being dropped. The car sounds and music duck while a swipe plays. Pace notes wait while you are off the road and stop when you face the wrong way. DRIVE BY EAR 101 and the sound guides teach the swipes (#909, #928).'])
+    Object.freeze(['1.34.0 r351', 'SWOOSH pace notes replace the BIPs. Before every bend, on every track, a swipe travels out to the ear on the bend\'s side and ends before the bend begins: higher pitch for a tighter bend, a quick swipe for a short one and a slower swipe for a long one. A bend of more than 90° is told as linked swipes, and bends that follow each other link into one phrase instead of being dropped. The car sounds and music duck while a swipe plays. Pace notes wait while you are off the road and stop when you face the wrong way. DRIVE BY EAR 101 and the sound guides teach the swipes (#909, #928).']),
+    Object.freeze(['1.35.0 r352', 'The Track sheet shows each track\'s lap length in its map frame, for example Length: 3.3 km. The SUV\'s FULL TANK perk now also fills BOOST: clean driving refills the tank at the same rate it grows, between boosts.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.34.0',
-  build: '2026.10.01-r351',
-  note: 'SWOOSH pace notes: every bend, painted with sound.'
+  version: '1.35.0',
+  build: '2026.10.01-r352',
+  note: 'Track length on the Track sheet; FULL TANK fills BOOST.'
 });

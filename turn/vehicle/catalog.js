@@ -173,7 +173,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
   }),
   suv: Object.freeze({
     title: 'FULL TANK',
-    description: 'Clean driving builds BOOST TANK up to 5/5.',
+    description: 'Clean driving builds BOOST TANK up to 5/5 and fills it as you go.',
     rewardId: 'suv-full-tank',
     threshold: 1700
   }),
