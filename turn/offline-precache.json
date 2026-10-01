@@ -1,5 +1,5 @@
 {
-  "release": "20260930-r346",
+  "release": "20260930-r347",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -230,6 +230,7 @@
     "/turn/audio/racing-music-v2.js",
     "/turn/audio/racing-music-v5.js",
     "/turn/audio/recovery-guidance.js",
+    "/turn/audio/route-geometry.js",
     "/turn/browser-install-r165.css",
     "/turn/content/about-history-current.js",
     "/turn/content/about-history.js",
@@ -354,6 +355,7 @@
     "/turn/surfaces.css",
     "/turn/telemetry/client.js",
     "/turn/testing/admin-unlock-sequence.js",
+    "/turn/testing/route-test-hud.js",
     "/turn/three-runtime.js",
     "/turn/track-identity.js",
     "/turn/track-intro.css",
