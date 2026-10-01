@@ -91,7 +91,7 @@ for (const heading of [
 }
 assert.match(menu, /Pace notes tell you what comes next/);
 assert.match(menu, /Pace notes are swipes/);
-assert.match(menu, /A bend of more than 90° is told as linked swipes/);
+assert.match(menu, /A bend of more than 120° is told as linked swipes/);
 assert.doesNotMatch(menu, /\bbeeps?\b/i, 'BIP/BEEP pace notes are retired (#909)');
 assert.match(menu, /Off road, centred gravel marks the surface/);
 assert.match(menu, /Tyre noise stays centred/);

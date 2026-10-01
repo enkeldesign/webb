@@ -3,8 +3,8 @@
 //
 // - A bend is a run of road turning one way. Left and right are never merged, so an
 //   S-curve is two bends even when it ends on the heading it started with.
-// - A bend over 90° is split into equal-angle segments (n = ceil(angle / 90°)), so
-//   160° is 80° + 80° and 198° is 66° + 66° + 66°. Equal angles, not equal lengths:
+// - A bend over 120° is split into equal-angle segments (n = ceil(angle / 120°)), so
+//   160° is 80° + 80° and 250° is 83° × 3. Equal angles, not equal lengths:
 //   each segment keeps its own length and tightness.
 // - Direction is relative to the road's heading at the start of each segment, so
 //   rotating or mirroring a track never changes the sequence (mirroring swaps sides).
@@ -31,10 +31,12 @@ export const ROUTE_GEOMETRY_TUNING = Object.freeze({
   // this fraction of the tighter part on both sides.
   reliefMetres: 30,
   reliefRatio: 0.35,
-  // Bends that change heading by less than this are sampling noise, not route.
-  noiseAngleDegrees: 3,
-  // One SWOOSH never represents more than this much heading change...
-  maxSegmentDegrees: 90,
+  // Bends that change heading by less than this pass silently: a natural approach holds
+  // them without steering (Erik's device test, 1.34.0). N → NNE (22.5°) still speaks.
+  noiseAngleDegrees: 15,
+  // One SWOOSH never represents more than this much heading change, so a 105° corner is
+  // one cue and a 156° hairpin two, as a driver counts them...
+  maxSegmentDegrees: 120,
   // ...within measurement accuracy: a sampled 180° hairpin can measure 180.3°, and must
   // still be two swooshes, not three.
   splitToleranceDegrees: 1

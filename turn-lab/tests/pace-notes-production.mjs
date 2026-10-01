@@ -16,6 +16,7 @@ const {
   SWOOSH_PACE_TUNING,
   planSwooshes,
   resetSwooshDelivery,
+  swooshLevel,
   swooshDuration,
   swooshTightness,
   updateSwooshPaceNotes
@@ -133,7 +134,15 @@ function trackRuntime(id) {
 }
 
 // Sound mapping: pitch from the tightest sustained radius, swipe speed from road length.
-assert.equal(SWOOSH_PACE_TUNING.variant, 'swipe-tone', 'the race uses the swipe chosen in listening test round 3');
+assert.equal(SWOOSH_PACE_TUNING.variant, 'swipe-undertone', 'the race uses the soft air with the pitch underneath (1.34.0 device test)');
+// Level: close to the ribbon at TURN's default balance, rising to the listening-test level
+// as the balance favours Drive By Ear (Erik's device test: 0.24 only suited 10–20% DBE).
+assert.equal(swooshLevel(0.55), SWOOSH_PACE_TUNING.level);
+assert.equal(swooshLevel(undefined), SWOOSH_PACE_TUNING.level, 'no stored balance is the default');
+assert.ok(swooshLevel(0.1) === SWOOSH_PACE_TUNING.level, 'favouring other sounds never raises it');
+assert.ok(Math.abs(swooshLevel(0.925) - 0.24) < 1e-9 && swooshLevel(1) === 0.24, '92.5% Drive By Ear and above: the former level');
+assert.ok(swooshLevel(0.75) > SWOOSH_PACE_TUNING.level && swooshLevel(0.75) < 0.24);
+assert.ok(Math.abs(SWOOSH_PACE_TUNING.level - 0.24 * 0.15) < 0.005, 'default ≈ the former level at 10–20% Drive By Ear');
 assert.equal(swooshTightness({ peakRadius: 20 }), 'tight');
 assert.equal(swooshTightness({ peakRadius: 80 }), 'medium');
 assert.equal(swooshTightness({ peakRadius: 300 }), 'gentle');
@@ -262,14 +271,14 @@ for (const definition of TRACK_DEFINITIONS) {
   };
   const [part1, part2, part3, part4, part5] = TRAINING_STAGES;
   assert.equal(sidesOf(part1), '', 'Part 1 is straight');
-  assert.equal(sidesOf(part2), 'LLRR', 'Part 2: a left, then a right');
+  assert.equal(sidesOf(part2), 'LR', 'Part 2: a left, then a right');
   assert.match(part2.lead, /a left, then later a right/);
   assert.equal(sidesOf(part3), 'L', 'Part 3: one long left');
   assert.match(part3.lead, /slow swipe in the left ear/);
-  assert.equal(sidesOf(part4), 'RRR', 'Part 4: one long right in three linked swipes');
-  assert.match(part4.lead, /Three linked swipes in the right ear/);
-  assert.equal(sidesOf(part5), 'LLLRR', 'Part 5: a left, then a left linked to a right');
-  assert.match(part5.lead, /a swipe in the left ear, then swipes in the right ear/);
+  assert.equal(sidesOf(part4), 'RR', 'Part 4: one long right in two linked swipes');
+  assert.match(part4.lead, /Two linked swipes in the right ear/);
+  assert.equal(sidesOf(part5), 'LLR', 'Part 5: a left, then a left linked to a right');
+  assert.match(part5.lead, /a swipe in the left ear, then a swipe in the right ear/);
   assert.equal(TRAINING_STAGES.some((stage) => 'notes' in stage), false, 'training has no hand-placed notes');
 }
 
