@@ -124,11 +124,36 @@ export const SWOOSH_VOICES = Object.freeze({
   // A rounded triangle tone: firmer and closer, still soft at the edges.
   'voice-pebble': Object.freeze({ name: 'PEBBLE', partials: [Object.freeze({ ratio: 1, gain: 0.8, type: 'triangle', detuneCents: 0 })], glide: [1.02, 1], envelope: 'pluck', attack: 0.008, release: 0.1, lowpassHz: 2400, reverb: 0.12, gain: 1.102 }),
   // A muted marimba-like tap with a woody partial.
-  'voice-wood': Object.freeze({ name: 'WOOD', partials: [sine(1, 1), sine(3.9, 0.12)], glide: [1, 1], envelope: 'pluck', attack: 0.006, release: 0.12, lowpassHz: 4200, reverb: 0.14, gain: 0.766 })
+  'voice-wood': Object.freeze({ name: 'WOOD', partials: [sine(1, 1), sine(3.9, 0.12)], glide: [1, 1], envelope: 'pluck', attack: 0.006, release: 0.12, lowpassHz: 4200, reverb: 0.14, gain: 0.766 }),
+  // CHIME variants (Erik's race test of 1.35.2). CHIME is the favourite, but its strike
+  // has faded by the time the swipe reaches the full side, so the side it lands on is
+  // the quietest part. Each variant tries one remedy, so the race can tell which works:
+  // A slower decay: the ring lives on out to the full side.
+  'voice-chime-ring': Object.freeze({ ...CHIME, name: 'CHIME RING', decay: 1.1, release: 0.05, gain: 0.561 }),
+  // The same strike, but the swipe reaches the full side within its first 30%.
+  'voice-chime-early': Object.freeze({ ...CHIME, name: 'CHIME EARLY', travelShare: 0.3 }),
+  // The strike carries tightness; a soft wind at the same pitch rises behind it and
+  // carries the length out to the full side.
+  'voice-chime-wind': Object.freeze({
+    ...CHIME,
+    name: 'CHIME WIND',
+    layer: Object.freeze({ partials: [], noise: { level: 2.5, q: 5, ratio: 1 }, glide: [0.85, 1.05], envelope: 'rise', attack: 0.01, release: 0.08, level: 1 }),
+    gain: 0.733
+  }),
+  // Erik's idea: a long curve gets a markedly longer chime (0.75 s against CHIME's 0.45 s).
+  'voice-chime-longer': Object.freeze({ ...CHIME, name: 'CHIME LONGER', lengths: Object.freeze({ short: CHIME.lengths.short, long: 0.75 }) }),
+  // Erik's drawing: the chime, mirrored at the end. A reversed chime (its brightness
+  // growing) swells under it and peaks at the full side, then lets go.
+  'voice-chime-mirrored': Object.freeze({
+    ...CHIME,
+    name: 'CHIME MIRRORED',
+    layer: Object.freeze({ partials: [sine(1, 1)], fm: { ratio: 2, index: 1.2, rising: true }, envelope: 'reverse', decay: 5, attack: 0.01, release: 0.03, level: 0.6 }),
+    gain: 0.742
+  })
 });
 export const VOICE_VARIANTS = Object.freeze(Object.keys(SWOOSH_VOICES));
 
-/** A variant's two swipe lengths: a voice may have its own (CHIME). */
+/** A variant's two swipe lengths: a voice may have its own (CHIME, CHIME LONGER). */
 export function swooshLengths(variant) {
   return Object.hasOwn(SWOOSH_VOICES, variant) && SWOOSH_VOICES[variant].lengths ? SWOOSH_VOICES[variant].lengths : SWOOSH_LENGTHS;
 }
@@ -152,8 +177,10 @@ function reverbBuffer(context) {
 }
 
 // Envelope shapes over the cue's length, as raised-cosine curves at 1 ms resolution, so
-// even a 4 ms pluck attack is a smooth curve.
-function envelopeCurve(shape, durationSeconds, attack, release, points = Math.max(64, Math.ceil(durationSeconds * 1000) + 1)) {
+// even a 4 ms pluck attack is a smooth curve. 'pluck' decays from its strike; 'reverse'
+// is a pluck mirrored, swelling to its peak where the release begins; 'rise' grows from
+// silence to full over the cue.
+function envelopeCurve(shape, durationSeconds, attack, release, decay = 3.2, points = Math.max(64, Math.ceil(durationSeconds * 1000) + 1)) {
   const curve = new Float32Array(points);
   const rise = (x) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, x)));
   for (let index = 0; index < points; index += 1) {
@@ -162,10 +189,52 @@ function envelopeCurve(shape, durationSeconds, attack, release, points = Math.ma
     const fadeOut = rise((durationSeconds - t) / release);
     let body = 1;
     if (shape === 'swell') body = 0.45 + 0.55 * rise(t / Math.max(attack, durationSeconds - release));
-    if (shape === 'pluck') body = Math.exp(-3.2 * Math.max(0, t - attack) / durationSeconds);
+    if (shape === 'pluck') body = Math.exp(-decay * Math.max(0, t - attack) / durationSeconds);
+    if (shape === 'reverse') body = Math.exp(-decay * Math.max(0, durationSeconds - release - t) / durationSeconds);
+    if (shape === 'rise') body = rise(t / Math.max(attack, durationSeconds - release));
     curve[index] = fadeIn * fadeOut * body;
   }
   return curve;
+}
+
+function addVoiceSources(context, layer, [glideFrom, glideTo], pitchHz, at, end, envelope, track, source) {
+  const glide = (param, base) => {
+    param.setValueAtTime(base * glideFrom, at);
+    param.exponentialRampToValueAtTime(base * glideTo, end);
+  };
+  for (const partial of layer.partials) {
+    const oscillator = source(context.createOscillator());
+    const partialGain = track(context.createGain());
+    oscillator.type = partial.type;
+    oscillator.detune.value = partial.detuneCents;
+    glide(oscillator.frequency, pitchHz * partial.ratio);
+    partialGain.gain.value = partial.gain;
+    oscillator.connect(partialGain).connect(envelope);
+    if (layer.fm) {
+      // Brightness that fades: the modulator's depth decays over the cue. A reversed
+      // chime's brightness grows instead.
+      const modulator = source(context.createOscillator());
+      const depth = track(context.createGain());
+      const [from, to] = layer.fm.rising ? [0.05, 1] : [1, 0.05];
+      glide(modulator.frequency, pitchHz * partial.ratio * layer.fm.ratio);
+      depth.gain.setValueAtTime(pitchHz * layer.fm.index * from, at);
+      depth.gain.exponentialRampToValueAtTime(pitchHz * layer.fm.index * to, end);
+      modulator.connect(depth).connect(oscillator.frequency);
+    }
+  }
+  if (layer.noise) {
+    const noise = source(context.createBufferSource());
+    const band = track(context.createBiquadFilter());
+    const noiseGain = track(context.createGain());
+    noise.buffer = noiseBuffer(context);
+    band.type = 'bandpass';
+    band.Q.value = layer.noise.q;
+    glide(band.frequency, pitchHz * layer.noise.ratio);
+    // A band passes little of the noise: give back √Q. A constant-Q band passes more at
+    // higher pitch: give back √pitch, so tight is not simply louder than gentle.
+    noiseGain.gain.value = layer.noise.level * Math.sqrt(layer.noise.q) * Math.sqrt(VOICE_PITCH_HZ.medium / pitchHz);
+    noise.connect(band).connect(noiseGain).connect(envelope);
+  }
 }
 
 function startVoiceSwoosh(context, destination, {
@@ -194,7 +263,7 @@ function startVoiceSwoosh(context, destination, {
   const panner = track(context.createStereoPanner());
   const fullSide = side < 0 ? -1 : 1;
   panner.pan.setValueAtTime(fullSide * SWOOSH_TUNING.swipeStartPan, at);
-  panner.pan.linearRampToValueAtTime(fullSide, at + durationSeconds * SWOOSH_TUNING.travelShare);
+  panner.pan.linearRampToValueAtTime(fullSide, at + durationSeconds * (voice.travelShare ?? SWOOSH_TUNING.travelShare));
   panner.connect(destination);
 
   // Dry and a small room, both on the cue's side.
@@ -213,51 +282,21 @@ function startVoiceSwoosh(context, destination, {
     tail = 0.4;
   }
 
-  const envelope = track(context.createGain());
-  envelope.gain.value = 0;
-  envelope.gain.setValueCurveAtTime(
-    envelopeCurve(voice.envelope, durationSeconds, Math.min(voice.attack, durationSeconds * 0.4), Math.min(voice.release, durationSeconds * 0.5))
-      .map((value) => value * level * voice.gain),
-    at,
-    durationSeconds
-  );
-  envelope.connect(tone);
-
-  const [glideFrom, glideTo] = voice.glide;
-  const glide = (param, base) => {
-    param.setValueAtTime(base * glideFrom, at);
-    param.exponentialRampToValueAtTime(base * glideTo, end);
-  };
-  for (const partial of voice.partials) {
-    const oscillator = source(context.createOscillator());
-    const partialGain = track(context.createGain());
-    oscillator.type = partial.type;
-    oscillator.detune.value = partial.detuneCents;
-    glide(oscillator.frequency, pitchHz * partial.ratio);
-    partialGain.gain.value = partial.gain;
-    oscillator.connect(partialGain).connect(envelope);
-    if (voice.fm) {
-      // Brightness that fades: the modulator's depth decays over the cue.
-      const modulator = source(context.createOscillator());
-      const depth = track(context.createGain());
-      glide(modulator.frequency, pitchHz * partial.ratio * voice.fm.ratio);
-      depth.gain.setValueAtTime(pitchHz * voice.fm.index, at);
-      depth.gain.exponentialRampToValueAtTime(pitchHz * voice.fm.index * 0.05, end);
-      modulator.connect(depth).connect(oscillator.frequency);
-    }
-  }
-  if (voice.noise) {
-    const noise = source(context.createBufferSource());
-    const band = track(context.createBiquadFilter());
-    const noiseGain = track(context.createGain());
-    noise.buffer = noiseBuffer(context);
-    band.type = 'bandpass';
-    band.Q.value = voice.noise.q;
-    glide(band.frequency, pitchHz * voice.noise.ratio);
-    // A band passes little of the noise: give back √Q. A constant-Q band passes more at
-    // higher pitch: give back √pitch, so tight is not simply louder than gentle.
-    noiseGain.gain.value = voice.noise.level * Math.sqrt(voice.noise.q) * Math.sqrt(VOICE_PITCH_HZ.medium / pitchHz);
-    noise.connect(band).connect(noiseGain).connect(envelope);
+  // The voice, and a second layer with its own envelope where it has one (CHIME WIND,
+  // CHIME MIRRORED).
+  let envelope = null;
+  for (const layer of voice.layer ? [voice, voice.layer] : [voice]) {
+    const layerEnvelope = track(context.createGain());
+    layerEnvelope.gain.value = 0;
+    layerEnvelope.gain.setValueCurveAtTime(
+      envelopeCurve(layer.envelope, durationSeconds, Math.min(layer.attack, durationSeconds * 0.4), Math.min(layer.release, durationSeconds * 0.5), layer.decay)
+        .map((value) => value * level * voice.gain * (layer.level ?? 1)),
+      at,
+      durationSeconds
+    );
+    layerEnvelope.connect(tone);
+    envelope ||= layerEnvelope;
+    addVoiceSources(context, layer, layer.glide || voice.glide, pitchHz, at, end, layerEnvelope, track, source);
   }
 
   for (const node of sources) {

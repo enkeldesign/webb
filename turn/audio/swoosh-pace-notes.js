@@ -66,7 +66,7 @@ const history = [];
 const counts = { fired: 0, late: 0, phrases: 0, suppressed: 0, cancelled: 0 };
 
 // Admin sound picker: an admin-unlocked profile may race with any of these. Choice 0 is
-// the race sound every player hears; 1–10 are the polished voices. Players are unaffected.
+// the race sound every player hears; 1–15 are the polished voices. Players are unaffected.
 export const SWOOSH_SOUND_CHOICES = Object.freeze([
   Object.freeze({ variant: SWOOSH_PACE_TUNING.variant, name: 'RACE' }),
   ...VOICE_VARIANTS.map((variant) => Object.freeze({ variant, name: SWOOSH_VOICES[variant].name }))
