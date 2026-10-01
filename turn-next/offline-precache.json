@@ -1,5 +1,5 @@
 {
-  "release": "20261001-r353",
+  "release": "20261001-r354",
   "files": [
     "/turn-next/app.js",
     "/turn-next/challenge-codec.js",
@@ -373,6 +373,7 @@
     "/turn/testing/admin-unlock-sequence.js",
     "/turn/testing/route-test-hud.js",
     "/turn/testing/swoosh-listening-test.js",
+    "/turn/testing/swoosh-sound-picker.js",
     "/turn/three-runtime.js",
     "/turn/track-identity.js",
     "/turn/track-intro.css",
