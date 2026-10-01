@@ -178,6 +178,31 @@ assert.match(visualSmoke, /closestPlannedGeometryToBella/);
 assert.match(visualWorkflow, /playwright@1\.55\.0/);
 assert.match(visualWorkflow, /countryside-visual-smoke/);
 
+// BELLA's final coat remap runs on real geometry: THREE.Color has no vector maths, and a
+// call like color.lengthSq() threw here, skipping the final look on every Countryside load.
+{
+  const THREE = await import('three');
+  const { applyBellaFinalVisuals } = await import('../turn/tracks/countryside-bella-final-r172.js');
+  const cat = new THREE.Group();
+  const coat = new THREE.BufferGeometry();
+  coat.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 1, 1, 1], 3));
+  const cream = new THREE.Color(0xf4eada);
+  const brown = new THREE.Color(0x382c1f);
+  coat.setAttribute('color', new THREE.Float32BufferAttribute([cream.r, cream.g, cream.b, brown.r, brown.g, brown.b], 3));
+  cat.add(new THREE.Mesh(coat, new THREE.MeshBasicMaterial({ vertexColors: true })));
+  const trim = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0xf4eada }));
+  cat.add(trim);
+  const root = new THREE.Group();
+  root.add(cat);
+  root.userData.turnBellaFocus = cat;
+  applyBellaFinalVisuals(root);
+  const colors = coat.getAttribute('color');
+  assert.equal(new THREE.Color(colors.getX(0), colors.getY(0), colors.getZ(0)).getHexString(), 'fff8ec', 'BELLA cream becomes the final cream');
+  assert.equal(new THREE.Color(colors.getX(1), colors.getY(1), colors.getZ(1)).getHexString(), '382c1f', 'BELLA markings stay seal brown');
+  assert.equal(trim.material.color.getHexString(), 'fff8ec', 'BELLA fallback cream materials become the final cream');
+  assert.ok(root.userData.turnBellaFinalVisuals, 'BELLA final visuals are applied');
+}
+
 console.log('TURN planned COUNTRYSIDE world, protected BELLA scene and Kenney asset palette passed.');
 
 function readText(relative) {
