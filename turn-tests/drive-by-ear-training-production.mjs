@@ -80,9 +80,9 @@ assert.ok(part2.points[3][1] >= 180, 'Part 2 must begin with a long straight');
 assert.match(part2.lead, /Pace notes are swipes/);
 assert.equal(part3.startOffset, -(ROAD_HALF_WIDTH + 4));
 assert.match(part3.lead, /Pace notes wait while you are off the road/);
-assert.match(part4.lead, /Three linked swipes in the right ear/);
+assert.match(part4.lead, /Two linked swipes in the right ear/);
 assert.ok(part5.points[3][1] >= 210, 'Part 5 must begin with a long straight');
-assert.match(part5.lead, /a swipe in the left ear, then swipes in the right ear/);
+assert.match(part5.lead, /a swipe in the left ear, then a swipe in the right ear/);
 assert.match(part5.visualHint, /final two curves follow closely/);
 
 for (const stage of TRAINING_STAGES) {

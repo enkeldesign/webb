@@ -120,7 +120,7 @@ assert.doesNotMatch(guide, /[;.]\s*DBE\s+(?:supplies|provides)/, 'Player-facing 
 
 assert.match(guide, /Pace notes are swipes/);
 assert.match(guide, /Higher pitch means a tighter bend, a quick swipe a short bend and a slower swipe a long one/);
-assert.match(guide, /A bend of more than 90° is told as linked swipes/);
+assert.match(guide, /A bend of more than 120° is told as linked swipes/);
 assert.match(guide, /Pace notes need stereo/);
 assert.doesNotMatch(guide, /\bbeeps?\b|bip-|lengthMarker/i, 'BIP/BEEP pace notes are retired (#909)');
 assert.match(guide, /root\.querySelector\('#dbeGuidePaceNotes'\)/, 'The in-race audio guide must receive the same swipe language too');

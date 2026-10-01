@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import { register } from 'node:module';
 
 // SWOOSH route geometry (#909, #928): bends from the centreline, equal-angle segments of
-// at most 90°, each read from the road's heading at its own start. Synthetic tracks pin
+// at most 120° (tuned to how a driver counts corners, 1.35.1), each read from the road's heading at its own start. Synthetic tracks pin
 // the rules; every production track is then parsed and cross-checked.
 const threeUrl = new URL('../../turn/vendor/three-0.184.0/build/three.module.js', import.meta.url).href;
 register(`data:text/javascript,export async function resolve(specifier, context, next) {
@@ -11,7 +11,7 @@ register(`data:text/javascript,export async function resolve(specifier, context,
   return next(specifier, context);
 }`);
 
-const { computeRouteGeometry, upcomingRouteSegments, ROUTE_DIRECTION } = await import('../../turn/audio/route-geometry.js');
+const { computeRouteGeometry, upcomingRouteSegments, ROUTE_DIRECTION, ROUTE_GEOMETRY_TUNING } = await import('../../turn/audio/route-geometry.js');
 const { createTrackRuntime } = await import('../../turn/tracks/catalog.js');
 const { TRACK_DEFINITIONS } = await import('../../turn/tracks/definitions.js');
 const { getTrackPaceNotes } = await import('../../turn/tracks/pace-notes.js');
@@ -73,14 +73,16 @@ const sCurve = [['S', 100], ['R', 90, 30], ['L', 90, 30], ['S', 100], ['R', 180,
   }
 }
 
-// Equal-angle splitting: 160° is 80 + 80, 198° is 66 + 66 + 66, a 90° bend stays whole.
+// Equal-angle splitting: 160° is 80 + 80, 250° is 83 × 3, a 105° corner stays whole.
 {
-  const route = computeRouteGeometry(track([['S', 150], ['R', 160, 50], ['S', 150], ['R', 198, 35], ['S', 60], ['R', 2, 400]]));
-  const bends = route.segments.filter((segment) => segment.bendAngleDegrees > 100);
-  assert.deepEqual(bends.map((segment) => Math.round(segment.angleDegrees)), [80, 80, 66, 66, 66], 'equal-angle parts');
-  const tight = computeRouteGeometry(track([['S', 100], ['R', 90, 25], ['S', 300], ['R', 270, 60]]));
-  assert.equal(tight.segments[0].parts, 1, 'exactly 90° is one swoosh');
-  for (const segment of route.segments) assert.ok(segment.angleDegrees <= 90.5, 'no swoosh exceeds 90° (within measurement accuracy)');
+  const route = computeRouteGeometry(track([['S', 150], ['R', 160, 50], ['S', 150], ['R', 250, 35], ['S', 60], ['R', 2, 400]]));
+  const bends = route.segments.filter((segment) => segment.bendAngleDegrees > 130);
+  assert.deepEqual(bends.map((segment) => Math.round(segment.angleDegrees)), [80, 80, 83, 83, 83], 'equal-angle parts');
+  const tight = computeRouteGeometry(track([['S', 100], ['R', 105, 25], ['S', 300], ['R', 255, 60]]));
+  assert.equal(tight.segments[0].parts, 1, 'a 105° corner is one swoosh, as a driver counts it');
+  const exact = computeRouteGeometry(track([['S', 100], ['R', 120, 30], ['S', 300], ['R', 240, 60]]));
+  assert.equal(exact.segments[0].parts, 1, 'exactly 120° is one swoosh');
+  for (const segment of route.segments) assert.ok(segment.angleDegrees <= 120.5, 'no swoosh exceeds 120° (within measurement accuracy)');
 }
 
 // Tightness is curvature, not angle: a 20° kink at radius 15 is tighter than a 90°
@@ -108,10 +110,10 @@ const sCurve = [['S', 100], ['R', 90, 30], ['L', 90, 30], ['S', 100], ['R', 180,
 }
 
 // Turning that runs through the lap seam is counted once: a plain circle is 360° in
-// four 90° swooshes, and a seam-crossing bend next to another bend keeps its angle.
+// three 120° swooshes, and a seam-crossing bend next to another bend keeps its angle.
 {
   const circle = computeRouteGeometry(track([['R', 360, 80]]));
-  assert.deepEqual(angles(circle), [90, 90, 90, 90], 'a circle is four 90° swooshes');
+  assert.deepEqual(angles(circle), [120, 120, 120], 'a circle is three 120° swooshes');
   const loop = computeRouteGeometry(track([['R', 45, 60], ['S', 200], ['R', 180, 50], ['S', 200], ['R', 135, 60]]));
   assert.deepEqual(loop.bends.map((bend) => Math.round(bend.angleDegrees)).sort((a, b) => a - b), [180, 180], 'the seam bend is 45° + 135°, counted once');
 }
@@ -138,10 +140,14 @@ for (const definition of TRACK_DEFINITIONS) {
   const route = computeRouteGeometry(runtime.samples);
   assert.ok(route.segments.length >= 3, `${definition.id}: swooshes found`);
   near(route.trackLength, runtime.trackLength, runtime.trackLength * 0.01, `${definition.id}: track length`);
-  const net = route.bends.reduce((sum, bend) => sum + bend.direction * bend.angleDegrees, 0);
+  // Integrity: with only sampling noise silent, the bends add up to one lap. (Production
+  // also lets gentle bends under 15° pass silently, so its sum is not a lap.)
+  const everyBend = computeRouteGeometry(runtime.samples, { ...ROUTE_GEOMETRY_TUNING, noiseAngleDegrees: 3 });
+  const net = everyBend.bends.reduce((sum, bend) => sum + bend.direction * bend.angleDegrees, 0);
   assert.ok(Math.abs(Math.abs(net) - 360) < 25, `${definition.id}: bends add up to one lap (${Math.round(net)}°)`);
+  assert.ok(route.bends.every((bend) => bend.angleDegrees >= ROUTE_GEOMETRY_TUNING.noiseAngleDegrees), `${definition.id}: no bend under the silence threshold speaks`);
   for (const segment of route.segments) {
-    assert.ok(segment.angleDegrees <= 90.5 && segment.length > 0 && segment.peakCurvature >= segment.averageCurvature * 0.5);
+    assert.ok(segment.angleDegrees <= 120.5 && segment.length > 0 && segment.peakCurvature >= segment.averageCurvature * 0.5);
   }
   // Each hand-written phrase's groups appear as swooshes on the same sides, in the same
   // order, starting just behind or after its trigger.
@@ -176,4 +182,4 @@ for (const definition of TRACK_DEFINITIONS) {
   assert.match(page, /<script type="module" src="\.\/testing\/route-test-hud\.js\?build=/);
 }
 
-console.log('TURN route geometry: equal-angle swooshes ≤90°, per-segment perspective, mirrored/rotated/seam cases and all production tracks passed.');
+console.log('TURN route geometry: equal-angle swooshes ≤120°, gentle bends under 15° silent, per-segment perspective, mirrored/rotated/seam cases and all production tracks passed.');

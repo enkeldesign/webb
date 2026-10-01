@@ -19,9 +19,14 @@ import { routeForSamples, routeSegmentAt, upcomingRouteSegments } from './route-
 import { SWOOSH_LENGTHS, startSwoosh } from './swoosh-sound.js';
 
 export const SWOOSH_PACE_TUNING = Object.freeze({
-  variant: 'swipe-tone',
-  // Peak level into the route channel (the listening test played 0.5 alone).
-  level: 0.24,
+  variant: 'swipe-undertone',
+  // Peak level into the route channel. At TURN's default balance, swooshes sit close to the
+  // guiding ribbon (Erik found 0.24 comfortable only with Drive By Ear at 10–20%, i.e.
+  // ~0.036); as the balance favours Drive By Ear they rise, reaching 0.24 at 92.5%.
+  level: 0.036,
+  focusLevel: 0.24,
+  defaultBalance: 0.55,
+  focusBalance: 0.925,
   // Pitch from the tightest sustained radius (metres): tight below 40, medium below 120.
   tightRadius: 40,
   mediumRadius: 120,
@@ -213,7 +218,7 @@ function playPlanned(item, routeAudio) {
     tightness: swooshTightness(item.segment),
     variant: tuning.variant,
     durationSeconds: item.duration,
-    level: tuning.level,
+    level: swooshLevel(globalThis.__turnAudioPreferences?.getSettings?.()?.balance),
     at
   });
   const linked = at <= lastEndsAt + tuning.gapSeconds + 0.02;
@@ -303,6 +308,13 @@ export function resetSwooshDelivery(reason = 'reset') {
   lastDistance = null;
   nextFreeAt = 0;
   lastEndsAt = -Infinity;
+}
+
+/** Swoosh peak for a Sound balance (0 other sounds … 1 Drive By Ear). */
+export function swooshLevel(balance, tuning = SWOOSH_PACE_TUNING) {
+  const value = Number.isFinite(Number(balance)) ? Number(balance) : tuning.defaultBalance;
+  const focus = Math.min(1, Math.max(0, (value - tuning.defaultBalance) / (tuning.focusBalance - tuning.defaultBalance)));
+  return tuning.level + (tuning.focusLevel - tuning.level) * focus;
 }
 
 function routeCuesEnabled() {

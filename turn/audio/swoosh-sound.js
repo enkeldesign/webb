@@ -1,5 +1,7 @@
-// SWOOSH sounds (#909, #928). Round 3 chose 'swipe-tone' for the race: 100% on S-curves
-// and same-direction pairs, comfort 5/5. Round 1 settled tightness on pitch (texture
+// SWOOSH sounds (#909, #928). Round 3 chose 'swipe-tone': 100% on S-curves and
+// same-direction pairs, comfort 5/5. In the full race mix its tone drowned the air, so the
+// race plays 'swipe-undertone': the same swipe, with the pitch under a soft air. Round 1
+// settled tightness on pitch (texture
 // dropped: unreliable and raspy). Round 2's arrow (centre → full side) and smoother
 // timbre raised comfort but made S-curves harder: starting in the centre, its side is
 // ambiguous at first. Erik keeps the travelling arrow — the pan paints the curve — and
@@ -10,7 +12,7 @@
 // one a long turn), pitch = tightness. 'arrow' (round 2), 'pitch' (round 1), 'texture'
 // and 'combined' stay for reference. Values are audition seeds: the test chooses.
 
-export const SWOOSH_VARIANTS = Object.freeze(['swipe-air', 'swipe-tone', 'swipe-breath', 'arrow', 'pitch', 'texture', 'combined']);
+export const SWOOSH_VARIANTS = Object.freeze(['swipe-undertone', 'swipe-air', 'swipe-tone', 'swipe-breath', 'arrow', 'pitch', 'texture', 'combined']);
 export const SWOOSH_TIGHTNESS = Object.freeze(['gentle', 'medium', 'tight']);
 export const SWOOSH_LENGTHS = Object.freeze({ short: 0.18, long: 0.36 });
 
@@ -39,9 +41,12 @@ const TIMBRES = Object.freeze({
   round1: Object.freeze({ sweepFromHz: 900, sweepToHz: 2400, sweepQ: 1.1, noiseLevel: 1, toneType: 'triangle', toneLevel: 0.22, octaveLevel: 0 }),
   smooth: Object.freeze({ sweepFromHz: 500, sweepToHz: 1500, sweepQ: 0.7, noiseLevel: 0.6, toneType: 'sine', toneLevel: 0.34, octaveLevel: 0 }),
   tone: Object.freeze({ sweepFromHz: 600, sweepToHz: 1400, sweepQ: 0.7, noiseLevel: 0.12, toneType: 'sine', toneLevel: 0.42, octaveLevel: 0.12 }),
-  breath: Object.freeze({ sweepFromHz: 300, sweepToHz: 900, sweepQ: 0.5, noiseLevel: 0.85, toneType: 'sine', toneLevel: 0.26, octaveLevel: 0 })
+  breath: Object.freeze({ sweepFromHz: 300, sweepToHz: 900, sweepQ: 0.5, noiseLevel: 0.85, toneType: 'sine', toneLevel: 0.26, octaveLevel: 0 }),
+  // In the race 'tone' was all that came through and the swoosh was lost (1.34.0 device
+  // test): a soft air leads, and the tightness pitch sits an octave below, underneath it.
+  undertone: Object.freeze({ sweepFromHz: 450, sweepToHz: 1300, sweepQ: 0.55, noiseLevel: 0.9, toneType: 'sine', toneLevel: 0.24, octaveLevel: 0, toneRatio: 0.5 })
 });
-const SWIPE_TIMBRES = Object.freeze({ 'swipe-air': 'smooth', 'swipe-tone': 'tone', 'swipe-breath': 'breath' });
+const SWIPE_TIMBRES = Object.freeze({ 'swipe-undertone': 'undertone', 'swipe-air': 'smooth', 'swipe-tone': 'tone', 'swipe-breath': 'breath' });
 
 const noiseBuffers = new WeakMap();
 
@@ -155,7 +160,7 @@ export function startSwoosh(context, destination, {
   const tone = track(context.createOscillator());
   const toneGain = track(context.createGain());
   tone.type = timbre.toneType;
-  tone.frequency.value = pitchHz;
+  tone.frequency.value = pitchHz * (timbre.toneRatio || 1);
   toneGain.gain.value = timbre.toneLevel;
   tone.connect(toneGain).connect(roughness);
   tone.start(at);
@@ -164,7 +169,7 @@ export function startSwoosh(context, destination, {
     const octave = track(context.createOscillator());
     const octaveGain = track(context.createGain());
     octave.type = 'sine';
-    octave.frequency.value = pitchHz * 2;
+    octave.frequency.value = pitchHz * (timbre.toneRatio || 1) * 2;
     octaveGain.gain.value = timbre.octaveLevel;
     octave.connect(octaveGain).connect(roughness);
     octave.start(at);

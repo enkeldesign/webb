@@ -5,7 +5,7 @@ import {
 } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
 
 const GUIDE_VERSION = 'r263-how-to-play-copy';
-const PACE_NOTE_EXPLANATION = "Pace notes are swipes. Before every bend, a swipe travels out to the ear on the bend's side and ends before the bend begins. Higher pitch means a tighter bend, a quick swipe a short bend and a slower swipe a long one. A bend of more than 90° is told as linked swipes, and bends that follow each other link into one phrase in the order you will meet them. Pace notes need stereo: use headphones or hold the device so both speakers face you.";
+const PACE_NOTE_EXPLANATION = "Pace notes are swipes. Before every bend, a swipe travels out to the ear on the bend's side and ends before the bend begins. Higher pitch means a tighter bend, a quick swipe a short bend and a slower swipe a long one. A bend of more than 120° is told as linked swipes, and bends that follow each other link into one phrase in the order you will meet them. Pace notes need stereo: use headphones or hold the device so both speakers face you.";
 const GUIDE_CARD_ID_BY_NUMBER = Object.freeze({
   1: 'choose-track-and-car',
   2: 'turn-device-to-steer',
