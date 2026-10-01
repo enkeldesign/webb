@@ -1,17 +1,26 @@
-// Admin SWOOSH LISTENING TEST (#909, #928): SOL's first listening protocol in the game.
-// Each of the three candidate versions (texture, pitch, both) gets labelled examples,
-// then 24 blind trials (2 sides × 3 tightness anchors × 4 repeats) in random order and
-// a comfort rating. Results stay on this device and can be copied as JSON for #928.
+// Admin SWOOSH LISTENING TEST (#909, #928), round 2. Round 1 settled tightness on pitch
+// (results in #928); Erik then defined the arrow: the sound travels from the centre out
+// to the full side, its speed the curve's length and its pitch the tightness. Round 2
+// compares that arrow with round 1's static pitch sound: labelled examples, 24 blind
+// swooshes per version (2 sides × 3 tightness anchors × 2 lengths × 2), 8 linked pairs
+// (does R → R stay two swooshes, does R → L keep both sides?) and a comfort rating.
+// Results stay on this device and can be copied as JSON for #928.
 // Admin-unlocked profiles only; ordinary buttons throughout, so it works with VoiceOver.
-import { SWOOSH_TIGHTNESS, SWOOSH_VARIANTS, playSwoosh } from '../audio/swoosh-sound.js';
+import { SWOOSH_LENGTHS, SWOOSH_TIGHTNESS, playSwoosh, playSwooshPhrase } from '../audio/swoosh-sound.js';
 
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 const RESULTS_KEY = 'turn-swoosh-listening-v1';
+const ROUND = 2;
+const ROUND_VARIANTS = Object.freeze(['arrow', 'pitch']);
 const KEPT_SESSIONS = 10;
-const REPEATS = 4;
+const REPEATS = 2;
+const PAIR_REPEATS = 2;
 const PLAY_DELAY_MS = 700;
 const SIDES = Object.freeze([-1, 1]);
+const LENGTHS = Object.freeze(Object.keys(SWOOSH_LENGTHS));
 const VERSION_NAMES = Object.freeze(['VERSION 1', 'VERSION 2', 'VERSION 3']);
+// Pairs use the shortest swooshes at medium tightness: the hardest case to keep apart.
+const PAIR_SWOOSH = Object.freeze({ tightness: 'medium', length: 'short' });
 
 function shuffle(items, random) {
   const list = [...items];
@@ -22,57 +31,93 @@ function shuffle(items, random) {
   return list;
 }
 
-/** 24 trials for one version: every side × anchor, four times, shuffled. */
+/** 24 swooshes for one version: every side × anchor × length, twice, shuffled. */
 export function createTrials(random = Math.random) {
   const trials = [];
   for (let repeat = 0; repeat < REPEATS; repeat += 1) {
-    for (const side of SIDES) for (const tightness of SWOOSH_TIGHTNESS) trials.push({ side, tightness });
+    for (const side of SIDES) {
+      for (const tightness of SWOOSH_TIGHTNESS) for (const length of LENGTHS) trials.push({ side, tightness, length });
+    }
   }
-  return shuffle(trials, random).map((trial, index) => ({ ...trial, index, answerSide: null, answerTightness: null, replays: 0 }));
+  return shuffle(trials, random).map((trial, index) => ({
+    ...trial, index, answerSide: null, answerTightness: null, answerLength: null, replays: 0
+  }));
 }
 
-/** The three versions in random order, blind-labelled VERSION 1–3. */
+/** 8 linked pairs: R → R, R → L, L → R and L → L, twice, shuffled. */
+export function createPairs(random = Math.random) {
+  const pairs = [];
+  for (let repeat = 0; repeat < PAIR_REPEATS; repeat += 1) {
+    for (const first of SIDES) for (const second of SIDES) pairs.push({ first, second });
+  }
+  return shuffle(pairs, random).map((pair, index) => ({ ...pair, index, answerFirst: null, answerSecond: null, replays: 0 }));
+}
+
+/** Both versions in random order, blind-labelled. */
 export function createSession(random = Math.random) {
   return {
+    round: ROUND,
     startedAt: new Date().toISOString(),
-    blocks: shuffle(SWOOSH_VARIANTS, random).map((variant, index) => ({
+    blocks: shuffle(ROUND_VARIANTS, random).map((variant, index) => ({
       variant,
       label: VERSION_NAMES[index],
       trials: createTrials(random),
+      pairs: createPairs(random),
       comfort: null
     }))
   };
 }
 
-/** Direction and tightness accuracy, the tightness confusion matrix and comfort. */
+const rank = (tightness) => SWOOSH_TIGHTNESS.indexOf(tightness);
+
+/**
+ * Side, tightness and length accuracy; whether length pulls tightness (short heard
+ * tighter, long heard gentler); pair accuracy; the tightness confusion matrix.
+ */
 export function scoreBlock(block) {
-  const answered = block.trials.filter((trial) => trial.answerSide !== null && trial.answerTightness !== null);
+  const answered = block.trials.filter((trial) => trial.answerSide !== null && trial.answerTightness !== null && trial.answerLength !== null);
   const confusion = Object.fromEntries(SWOOSH_TIGHTNESS.map((played) => [played, Object.fromEntries(SWOOSH_TIGHTNESS.map((heard) => [heard, 0]))]));
+  const pull = Object.fromEntries(LENGTHS.map((length) => [length, { tighter: 0, gentler: 0 }]));
   let sides = 0;
   let tightness = 0;
+  let lengths = 0;
   for (const trial of answered) {
     if (trial.answerSide === trial.side) sides += 1;
     if (trial.answerTightness === trial.tightness) tightness += 1;
+    if (trial.answerLength === trial.length) lengths += 1;
     confusion[trial.tightness][trial.answerTightness] += 1;
+    const shift = rank(trial.answerTightness) - rank(trial.tightness);
+    if (shift > 0) pull[trial.length].tighter += 1;
+    if (shift < 0) pull[trial.length].gentler += 1;
   }
-  const share = (count) => (answered.length ? Math.round((count / answered.length) * 1000) / 10 : 0);
+  const pairs = (block.pairs || []).filter((pair) => pair.answerFirst !== null && pair.answerSecond !== null);
+  const pairsRight = pairs.filter((pair) => pair.answerFirst === pair.first && pair.answerSecond === pair.second).length;
+  const share = (count, total) => (total ? Math.round((count / total) * 1000) / 10 : 0);
   return {
     variant: block.variant,
     label: block.label,
     answered: answered.length,
-    directionPercent: share(sides),
-    tightnessPercent: share(tightness),
+    directionPercent: share(sides, answered.length),
+    tightnessPercent: share(tightness, answered.length),
+    lengthPercent: share(lengths, answered.length),
     tightHeardAsGentle: confusion.tight.gentle,
     gentleHeardAsTight: confusion.gentle.tight,
+    shortHeardTighter: pull.short.tighter,
+    longHeardGentler: pull.long.gentler,
     confusion,
-    replays: block.trials.reduce((sum, trial) => sum + trial.replays, 0),
+    pairsAnswered: pairs.length,
+    pairsPercent: share(pairsRight, pairs.length),
+    replays: block.trials.reduce((sum, trial) => sum + trial.replays, 0) + (block.pairs || []).reduce((sum, pair) => sum + pair.replays, 0),
     comfort: block.comfort
   };
 }
 
+const sideWord = (side) => (side < 0 ? 'left' : 'right');
+
 export function summarizeSession(session, { build = '', device = '' } = {}) {
   return {
     test: 'TURN SWOOSH listening test (#909, #928)',
+    round: session.round ?? ROUND,
     build,
     device,
     startedAt: session.startedAt,
@@ -80,9 +125,14 @@ export function summarizeSession(session, { build = '', device = '' } = {}) {
     scores: session.blocks.map(scoreBlock),
     trials: session.blocks.map((block) => ({
       variant: block.variant,
-      trials: block.trials.map(({ side, tightness, answerSide, answerTightness, replays }) => ({
-        played: `${side < 0 ? 'left' : 'right'} ${tightness}`,
-        heard: answerSide === null ? null : `${answerSide < 0 ? 'left' : 'right'} ${answerTightness}`,
+      trials: block.trials.map(({ side, tightness, length, answerSide, answerTightness, answerLength, replays }) => ({
+        played: `${sideWord(side)} ${tightness} ${length}`,
+        heard: answerSide === null ? null : `${sideWord(answerSide)} ${answerTightness} ${answerLength}`,
+        replays
+      })),
+      pairs: (block.pairs || []).map(({ first, second, answerFirst, answerSecond, replays }) => ({
+        played: `${sideWord(first)} → ${sideWord(second)}`,
+        heard: answerFirst === null ? null : `${sideWord(answerFirst)} → ${sideWord(answerSecond)}`,
         replays
       }))
     }))
@@ -153,6 +203,7 @@ function buildId() {
 }
 
 const sideName = (side) => (side < 0 ? 'LEFT' : 'RIGHT');
+const arrowName = (side) => (side < 0 ? '←' : '→');
 
 function createDialog() {
   const dialog = document.createElement('dialog');
@@ -183,7 +234,8 @@ function installStyles() {
     .turn-swoosh-test-row button[aria-pressed="true"] { background: var(--turn-action-success, #8ce99a); }
     .turn-swoosh-test-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
     .turn-swoosh-test-grid button { min-height: 48px; }
-    .turn-swoosh-test-results { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    .turn-swoosh-test-results { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .turn-swoosh-test-results th { white-space: nowrap; }
     .turn-swoosh-test-results th, .turn-swoosh-test-results td { padding: 6px 4px; text-align: left; border-bottom: 1px solid currentColor; }
     .turn-swoosh-test-results td:not(:first-child) { white-space: nowrap; }
     .turn-swoosh-test-status:empty { display: none; }`;
@@ -215,13 +267,22 @@ function installTest() {
     return context;
   };
 
-  const play = (side, tightness, variant) => {
+  const readyContext = () => {
     const ctx = audio();
-    if (!ctx) {
-      status.textContent = 'This browser cannot play the test sounds.';
-      return;
-    }
-    playSwoosh(ctx, ctx.destination, { side, tightness, variant });
+    if (!ctx) status.textContent = 'This browser cannot play the test sounds.';
+    return ctx;
+  };
+
+  const play = (side, tightness, length, variant) => {
+    const ctx = readyContext();
+    if (ctx) playSwoosh(ctx, ctx.destination, { side, tightness, variant, durationSeconds: SWOOSH_LENGTHS[length] });
+  };
+
+  const playPair = (first, second, variant) => {
+    const ctx = readyContext();
+    if (!ctx) return;
+    const swoosh = { ...PAIR_SWOOSH, variant, durationSeconds: SWOOSH_LENGTHS[PAIR_SWOOSH.length] };
+    playSwooshPhrase(ctx, ctx.destination, [{ ...swoosh, side: first }, { ...swoosh, side: second }]);
   };
 
   const button = (label, onClick, extra = {}) => {
@@ -252,14 +313,28 @@ function installTest() {
     body.querySelector('h3')?.focus();
   };
 
+  const choiceRow = (label, options, onChoose) => {
+    const row = document.createElement('div');
+    row.className = 'turn-swoosh-test-row';
+    row.setAttribute('role', 'group');
+    row.setAttribute('aria-label', label);
+    for (const [text, value] of options) {
+      row.append(button(text, (event) => {
+        row.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === event.currentTarget)));
+        onChoose(value);
+      }, { 'aria-pressed': 'false' }));
+    }
+    return row;
+  };
+
   function intro() {
     const saved = loadSavedSessions();
     const row = document.createElement('div');
     row.className = 'turn-swoosh-test-row';
     show(...[
-      heading('Before you start'),
-      paragraph('Use stereo headphones or earbuds. You will hear three versions of the SWOOSH. Each version starts with labelled examples, then plays 24 swooshes in random order.'),
-      paragraph('For each swoosh, answer which side it came from and how tight the bend sounded: GENTLE, MEDIUM or TIGHT. No answers are revealed during the test. It takes about 10 minutes.'),
+      heading('Round 2 · before you start'),
+      paragraph('Use stereo headphones or earbuds. Two versions this time, both with pitch for tightness. Each version starts with labelled examples, then plays 24 swooshes and 8 linked pairs in random order.'),
+      paragraph('For each swoosh, answer the side, the tightness (GENTLE, MEDIUM or TIGHT) and the length of the curve (SHORT or LONG). For each pair, answer the side of the first and the second swoosh. No answers are revealed during the test. It takes about 10 minutes.'),
       saved.length ? paragraph(`${saved.length} earlier ${saved.length === 1 ? 'session is' : 'sessions are'} saved on this device.`) : null,
       row
     ].filter(Boolean));
@@ -278,19 +353,26 @@ function installTest() {
     grid.className = 'turn-swoosh-test-grid';
     for (const side of SIDES) {
       for (const tightness of SWOOSH_TIGHTNESS) {
-        grid.append(button(`${sideName(side)} ${tightness.toUpperCase()}`, () => play(side, tightness, block.variant)));
+        grid.append(button(`${sideName(side)} ${tightness.toUpperCase()}`, () => play(side, tightness, 'long', block.variant)));
       }
     }
+    const lengths = document.createElement('div');
+    lengths.className = 'turn-swoosh-test-grid';
+    for (const length of LENGTHS) {
+      lengths.append(button(`${length.toUpperCase()} RIGHT MEDIUM`, () => play(1, 'medium', length, block.variant)));
+    }
+    lengths.append(button('PAIR RIGHT → LEFT', () => playPair(1, -1, block.variant)));
     const row = document.createElement('div');
     row.className = 'turn-swoosh-test-row';
-    row.append(button('START 24 SWOOSHES', () => {
+    row.append(button('START', () => {
       trialIndex = 0;
       trial();
     }));
     show(
-      heading(`${block.label} of 3 · examples`),
-      paragraph('Play each example as often as you like. Tighter bends should sound different from gentle ones; the side tells you the direction.'),
+      heading(`${block.label} of ${session.blocks.length} · examples`),
+      paragraph('Play each example as often as you like. The side tells you the direction, the pitch the tightness and the speed the length of the curve.'),
       grid,
+      lengths,
       row
     );
   }
@@ -298,44 +380,57 @@ function installTest() {
   function trial() {
     const block = session.blocks[blockIndex];
     const current = block.trials[trialIndex];
-    const sideRow = document.createElement('div');
-    sideRow.className = 'turn-swoosh-test-row';
-    sideRow.setAttribute('role', 'group');
-    sideRow.setAttribute('aria-label', 'Side');
-    const tightRow = document.createElement('div');
-    tightRow.className = 'turn-swoosh-test-row';
-    tightRow.setAttribute('role', 'group');
-    tightRow.setAttribute('aria-label', 'Tightness');
     const answer = () => {
-      if (current.answerSide === null || current.answerTightness === null) return;
+      if (current.answerSide === null || current.answerTightness === null || current.answerLength === null) return;
       trialIndex += 1;
       if (trialIndex < block.trials.length) trial();
-      else comfort();
+      else {
+        trialIndex = 0;
+        pairTrial();
+      }
     };
-    for (const side of SIDES) {
-      sideRow.append(button(sideName(side), (event) => {
-        current.answerSide = side;
-        sideRow.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === event.currentTarget)));
-        answer();
-      }, { 'aria-pressed': 'false' }));
-    }
-    for (const tightness of SWOOSH_TIGHTNESS) {
-      tightRow.append(button(tightness.toUpperCase(), (event) => {
-        current.answerTightness = tightness;
-        tightRow.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === event.currentTarget)));
-        answer();
-      }, { 'aria-pressed': 'false' }));
-    }
     const replayRow = document.createElement('div');
     replayRow.className = 'turn-swoosh-test-row';
     replayRow.append(button('PLAY AGAIN', () => {
       // Replaces a pending autoplay, so each press is exactly one swoosh.
       clearTimeout(playTimer);
       current.replays += 1;
-      play(current.side, current.tightness, block.variant);
+      play(current.side, current.tightness, current.length, block.variant);
     }));
-    show(heading(`${block.label} · swoosh ${trialIndex + 1} of ${block.trials.length}`), sideRow, tightRow, replayRow);
-    playTimer = setTimeout(() => play(current.side, current.tightness, block.variant), PLAY_DELAY_MS);
+    show(
+      heading(`${block.label} · swoosh ${trialIndex + 1} of ${block.trials.length}`),
+      choiceRow('Side', SIDES.map((side) => [sideName(side), side]), (value) => { current.answerSide = value; answer(); }),
+      choiceRow('Tightness', SWOOSH_TIGHTNESS.map((value) => [value.toUpperCase(), value]), (value) => { current.answerTightness = value; answer(); }),
+      choiceRow('Length', LENGTHS.map((value) => [value.toUpperCase(), value]), (value) => { current.answerLength = value; answer(); }),
+      replayRow
+    );
+    playTimer = setTimeout(() => play(current.side, current.tightness, current.length, block.variant), PLAY_DELAY_MS);
+  }
+
+  function pairTrial() {
+    const block = session.blocks[blockIndex];
+    const current = block.pairs[trialIndex];
+    const answer = () => {
+      if (current.answerFirst === null || current.answerSecond === null) return;
+      trialIndex += 1;
+      if (trialIndex < block.pairs.length) pairTrial();
+      else comfort();
+    };
+    const replayRow = document.createElement('div');
+    replayRow.className = 'turn-swoosh-test-row';
+    replayRow.append(button('PLAY AGAIN', () => {
+      clearTimeout(playTimer);
+      current.replays += 1;
+      playPair(current.first, current.second, block.variant);
+    }));
+    show(
+      heading(`${block.label} · pair ${trialIndex + 1} of ${block.pairs.length}`),
+      paragraph('Two linked swooshes. Which side was each?'),
+      choiceRow('First swoosh', SIDES.map((side) => [`FIRST ${arrowName(side)} ${sideName(side)}`, side]), (value) => { current.answerFirst = value; answer(); }),
+      choiceRow('Second swoosh', SIDES.map((side) => [`SECOND ${arrowName(side)} ${sideName(side)}`, side]), (value) => { current.answerSecond = value; answer(); }),
+      replayRow
+    );
+    playTimer = setTimeout(() => playPair(current.first, current.second, block.variant), PLAY_DELAY_MS);
   }
 
   function comfort() {
@@ -363,10 +458,10 @@ function installTest() {
     const saved = saveSession(summary);
     const table = document.createElement('table');
     table.className = 'turn-swoosh-test-results';
-    table.innerHTML = '<thead><tr><th scope="col">Version</th><th scope="col">Side</th><th scope="col">Tight&shy;ness</th><th scope="col" aria-label="Tight heard as gentle">T→G</th><th scope="col">Comfort</th></tr></thead><tbody></tbody>';
+    table.innerHTML = '<thead><tr><th scope="col">Version</th><th scope="col">Side</th><th scope="col" aria-label="Tightness">Tight</th><th scope="col" aria-label="Length">Len</th><th scope="col">Pairs</th><th scope="col" aria-label="Comfort">Comf</th></tr></thead><tbody></tbody>';
     for (const score of summary.scores) {
       const row = document.createElement('tr');
-      for (const value of [`${score.label} · ${score.variant}`, `${Math.round(score.directionPercent)}%`, `${Math.round(score.tightnessPercent)}%`, String(score.tightHeardAsGentle), `${score.comfort ?? '–'}/5`]) {
+      for (const value of [`${score.label.replace('VERSION ', 'V')} ${score.variant}`, `${Math.round(score.directionPercent)}%`, `${Math.round(score.tightnessPercent)}%`, `${Math.round(score.lengthPercent)}%`, `${Math.round(score.pairsPercent)}%`, `${score.comfort ?? '–'}/5`]) {
         const cell = document.createElement('td');
         cell.textContent = value;
         row.append(cell);
@@ -386,7 +481,7 @@ function installTest() {
       heading('Results'),
       paragraph('Saved on this device. COPY RESULTS puts them on the clipboard as JSON to paste into #928 or to OPUS.'),
       table,
-      paragraph('Side and Tightness: share answered correctly. T→G: tight swooshes heard as gentle. Comfort: your rating.'),
+      paragraph('Side, Tight(ness) and Len(gth): share of swooshes answered correctly. Pairs: both sides right. Comf(ort): your rating.'),
       row,
       paragraph(`${saved.length} ${saved.length === 1 ? 'session' : 'sessions'} saved.`)
     );

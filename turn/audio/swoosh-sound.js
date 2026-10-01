@@ -1,28 +1,38 @@
-// SWOOSH candidate sounds (#909, #928): one broadband air/brush sweep, hard-panned to
-// the side of the bend, whose tightness is painted by texture, pitch or both. These are
-// SOL's audition seeds, not tuned product values: the listening test exists to choose
-// between them. Every anchor shares the same envelope, duration, pan and sweep, and is
-// level-compensated, so "tighter" never just means "louder".
+// SWOOSH candidate sounds (#909, #928). Listening test round 1 settled tightness on
+// pitch (texture/roughness dropped: unreliable and uncomfortable) and Erik set what
+// "painting" means: the sound travels from the centre out to the full side, drawing an
+// arrow. Its end point is the side, its speed the curve's length (a quick arrow is a
+// short curve, a slow arrow a long turn) and its pitch the tightness.
+//
+// 'arrow' is that candidate, with a smoother air band and a sine tone (round 1's
+// comfort was held back by raspiness). 'pitch' is round 1's winner (static full-side
+// pan) kept for comparison; 'texture' and 'combined' stay for reference only. Values
+// are audition seeds, not tuned product constants: the listening test chooses.
 
-export const SWOOSH_VARIANTS = Object.freeze(['texture', 'pitch', 'combined']);
+export const SWOOSH_VARIANTS = Object.freeze(['arrow', 'pitch', 'texture', 'combined']);
 export const SWOOSH_TIGHTNESS = Object.freeze(['gentle', 'medium', 'tight']);
+export const SWOOSH_LENGTHS = Object.freeze({ short: 0.18, long: 0.36 });
 
 const SWOOSH_TUNING = Object.freeze({
   durationSeconds: 0.3,
   attackSeconds: 0.02,
   releaseSeconds: 0.04,
   level: 0.5,
-  // The air sweep: a band of noise rising through this range over the swoosh.
-  sweepFromHz: 900,
-  sweepToHz: 2400,
-  sweepQ: 1.1,
-  // Texture: amplitude roughness at a fixed rate, deeper for tighter bends.
+  // The arrow reaches the full side at this share of its duration, then holds there.
+  travelShare: 0.85,
+  // Gap between linked swooshes in a phrase.
+  phraseGapSeconds: 0.035,
+  // Texture (reference only): amplitude roughness at a fixed rate.
   roughnessRateHz: 50,
   roughnessDepth: Object.freeze({ gentle: 0, medium: 0.25, tight: 0.5 }),
-  // Pitch: a restrained tonal component inside the sweep, higher for tighter bends.
-  pitchHz: Object.freeze({ gentle: 500, medium: 800, tight: 1250 }),
-  // The tone sits under the noise; variants without a pitch change keep it at medium.
-  toneLevel: 0.22
+  // Pitch: a tonal component inside the sweep, higher for tighter bends.
+  pitchHz: Object.freeze({ gentle: 500, medium: 800, tight: 1250 })
+});
+
+// Round 1 sound (pitch/texture/combined) and the smoother arrow.
+const TIMBRES = Object.freeze({
+  round1: Object.freeze({ sweepFromHz: 900, sweepToHz: 2400, sweepQ: 1.1, noiseLevel: 1, toneType: 'triangle', toneLevel: 0.22 }),
+  smooth: Object.freeze({ sweepFromHz: 500, sweepToHz: 1500, sweepQ: 0.7, noiseLevel: 0.6, toneType: 'sine', toneLevel: 0.34 })
 });
 
 const noiseBuffers = new WeakMap();
@@ -37,39 +47,51 @@ function noiseBuffer(context) {
   return buffer;
 }
 
-/** What a variant changes for a tightness anchor: roughness depth and tone frequency. */
+/** What a variant does for a tightness anchor: roughness, tone, travel and timbre. */
 export function swooshCharacter(variant, tightness) {
   const anchor = SWOOSH_TIGHTNESS.includes(tightness) ? tightness : 'medium';
   const texture = variant === 'texture' || variant === 'combined';
-  const pitch = variant === 'pitch' || variant === 'combined';
+  const pitch = variant === 'pitch' || variant === 'combined' || variant === 'arrow';
   return Object.freeze({
     roughnessDepth: texture ? SWOOSH_TUNING.roughnessDepth[anchor] : 0,
-    pitchHz: pitch ? SWOOSH_TUNING.pitchHz[anchor] : SWOOSH_TUNING.pitchHz.medium
+    pitchHz: pitch ? SWOOSH_TUNING.pitchHz[anchor] : SWOOSH_TUNING.pitchHz.medium,
+    travels: variant === 'arrow',
+    timbre: variant === 'arrow' ? 'smooth' : 'round1'
   });
 }
 
 /**
- * Play one swoosh. side: -1 left, +1 right (always full-side). Returns its end time.
+ * Play one swoosh. side: -1 left, +1 right. durationSeconds: its length (see
+ * SWOOSH_LENGTHS). Returns its end time.
  */
 export function playSwoosh(context, destination, {
   side,
   tightness = 'medium',
-  variant = 'combined',
+  variant = 'arrow',
   at = context.currentTime + 0.02,
   durationSeconds = SWOOSH_TUNING.durationSeconds
 } = {}) {
   const tuning = SWOOSH_TUNING;
-  const { roughnessDepth, pitchHz } = swooshCharacter(variant, tightness);
+  const { roughnessDepth, pitchHz, travels, timbre: timbreName } = swooshCharacter(variant, tightness);
+  const timbre = TIMBRES[timbreName];
   const end = at + durationSeconds;
+  const release = Math.min(tuning.releaseSeconds, durationSeconds * 0.25);
   const nodes = [];
   const track = (node) => {
     nodes.push(node);
     return node;
   };
 
-  // Full-side direction: the whole cue stays on its side.
+  // Direction: the arrow travels from the centre to the full side; round 1 sounds
+  // stay on the full side throughout. Either way it ends at -1 or +1.
   const panner = track(context.createStereoPanner());
-  panner.pan.value = side < 0 ? -1 : 1;
+  const fullSide = side < 0 ? -1 : 1;
+  if (travels) {
+    panner.pan.setValueAtTime(0, at);
+    panner.pan.linearRampToValueAtTime(fullSide, at + durationSeconds * tuning.travelShare);
+  } else {
+    panner.pan.value = fullSide;
+  }
   panner.connect(destination);
 
   // Envelope, with the level lost to amplitude roughness given back:
@@ -80,7 +102,7 @@ export function playSwoosh(context, destination, {
   const peak = tuning.level * compensation;
   envelope.gain.setValueAtTime(0, at);
   envelope.gain.linearRampToValueAtTime(peak, at + tuning.attackSeconds);
-  envelope.gain.setValueAtTime(peak, end - tuning.releaseSeconds);
+  envelope.gain.setValueAtTime(peak, end - release);
   envelope.gain.linearRampToValueAtTime(0, end);
   envelope.connect(panner);
 
@@ -102,20 +124,22 @@ export function playSwoosh(context, destination, {
   const noise = track(context.createBufferSource());
   noise.buffer = noiseBuffer(context);
   const band = track(context.createBiquadFilter());
+  const noiseGain = track(context.createGain());
   band.type = 'bandpass';
-  band.Q.value = tuning.sweepQ;
-  band.frequency.setValueAtTime(tuning.sweepFromHz, at);
-  band.frequency.exponentialRampToValueAtTime(tuning.sweepToHz, end);
-  noise.connect(band).connect(roughness);
+  band.Q.value = timbre.sweepQ;
+  band.frequency.setValueAtTime(timbre.sweepFromHz, at);
+  band.frequency.exponentialRampToValueAtTime(timbre.sweepToHz, end);
+  noiseGain.gain.value = timbre.noiseLevel;
+  noise.connect(band).connect(noiseGain).connect(roughness);
   noise.start(at, Math.random() * 0.5);
   noise.stop(end + 0.05);
 
-  // The tonal component.
+  // The tonal component carries tightness.
   const tone = track(context.createOscillator());
   const toneGain = track(context.createGain());
-  tone.type = 'triangle';
+  tone.type = timbre.toneType;
   tone.frequency.value = pitchHz;
-  toneGain.gain.value = tuning.toneLevel;
+  toneGain.gain.value = timbre.toneLevel;
   tone.connect(toneGain).connect(roughness);
   tone.start(at);
   tone.stop(end + 0.05);
@@ -130,4 +154,16 @@ export function playSwoosh(context, destination, {
     }
   }, { once: true });
   return end;
+}
+
+/** Linked swooshes with a short gap between them. Returns the phrase's end time. */
+export function playSwooshPhrase(context, destination, swooshes, {
+  at = context.currentTime + 0.02,
+  gapSeconds = SWOOSH_TUNING.phraseGapSeconds
+} = {}) {
+  let cursor = at;
+  for (const swoosh of swooshes) {
+    cursor = playSwoosh(context, destination, { ...swoosh, at: cursor }) + gapSeconds;
+  }
+  return cursor - gapSeconds;
 }
