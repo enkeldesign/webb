@@ -1,15 +1,15 @@
-// SWOOSH candidate sounds (#909, #928). Listening test round 1 settled tightness on
-// pitch (texture/roughness dropped: unreliable and uncomfortable) and Erik set what
-// "painting" means: the sound travels from the centre out to the full side, drawing an
-// arrow. Its end point is the side, its speed the curve's length (a quick arrow is a
-// short curve, a slow arrow a long turn) and its pitch the tightness.
+// SWOOSH candidate sounds (#909, #928). Round 1 settled tightness on pitch (texture
+// dropped: unreliable and raspy). Round 2's arrow (centre → full side) and smoother
+// timbre raised comfort but made S-curves harder: starting in the centre, its side is
+// ambiguous at first. Erik keeps the travelling arrow — the pan paints the curve — and
+// round 3 tests a swipe from 50% to 100% on its own side (+0.5 → +1 for RIGHT), so the
+// side is clear from the first moment, in three timbres.
 //
-// 'arrow' is that candidate, with a smoother air band and a sine tone (round 1's
-// comfort was held back by raspiness). 'pitch' is round 1's winner (static full-side
-// pan) kept for comparison; 'texture' and 'combined' stay for reference only. Values
-// are audition seeds, not tuned product constants: the listening test chooses.
+// End point = side, speed = the curve's length (a quick swipe is a short curve, a slow
+// one a long turn), pitch = tightness. 'arrow' (round 2), 'pitch' (round 1), 'texture'
+// and 'combined' stay for reference. Values are audition seeds: the test chooses.
 
-export const SWOOSH_VARIANTS = Object.freeze(['arrow', 'pitch', 'texture', 'combined']);
+export const SWOOSH_VARIANTS = Object.freeze(['swipe-air', 'swipe-tone', 'swipe-breath', 'arrow', 'pitch', 'texture', 'combined']);
 export const SWOOSH_TIGHTNESS = Object.freeze(['gentle', 'medium', 'tight']);
 export const SWOOSH_LENGTHS = Object.freeze({ short: 0.18, long: 0.36 });
 
@@ -18,8 +18,10 @@ const SWOOSH_TUNING = Object.freeze({
   attackSeconds: 0.02,
   releaseSeconds: 0.04,
   level: 0.5,
-  // The arrow reaches the full side at this share of its duration, then holds there.
+  // A travelling swoosh reaches the full side at this share of its duration, then holds.
   travelShare: 0.85,
+  // Where a swipe starts on its own side (round 2's arrow started in the centre, 0).
+  swipeStartPan: 0.5,
   // Gap between linked swooshes in a phrase.
   phraseGapSeconds: 0.035,
   // Texture (reference only): amplitude roughness at a fixed rate.
@@ -29,11 +31,16 @@ const SWOOSH_TUNING = Object.freeze({
   pitchHz: Object.freeze({ gentle: 500, medium: 800, tight: 1250 })
 });
 
-// Round 1 sound (pitch/texture/combined) and the smoother arrow.
+// Timbres: round 1's sound, round 2's smooth air (the swipe's 'air'), a clean tone with
+// a soft octave and almost no air ('tone'), and a breathier, darker air with the tone
+// tucked underneath ('breath').
 const TIMBRES = Object.freeze({
-  round1: Object.freeze({ sweepFromHz: 900, sweepToHz: 2400, sweepQ: 1.1, noiseLevel: 1, toneType: 'triangle', toneLevel: 0.22 }),
-  smooth: Object.freeze({ sweepFromHz: 500, sweepToHz: 1500, sweepQ: 0.7, noiseLevel: 0.6, toneType: 'sine', toneLevel: 0.34 })
+  round1: Object.freeze({ sweepFromHz: 900, sweepToHz: 2400, sweepQ: 1.1, noiseLevel: 1, toneType: 'triangle', toneLevel: 0.22, octaveLevel: 0 }),
+  smooth: Object.freeze({ sweepFromHz: 500, sweepToHz: 1500, sweepQ: 0.7, noiseLevel: 0.6, toneType: 'sine', toneLevel: 0.34, octaveLevel: 0 }),
+  tone: Object.freeze({ sweepFromHz: 600, sweepToHz: 1400, sweepQ: 0.7, noiseLevel: 0.12, toneType: 'sine', toneLevel: 0.42, octaveLevel: 0.12 }),
+  breath: Object.freeze({ sweepFromHz: 300, sweepToHz: 900, sweepQ: 0.5, noiseLevel: 0.85, toneType: 'sine', toneLevel: 0.26, octaveLevel: 0 })
 });
+const SWIPE_TIMBRES = Object.freeze({ 'swipe-air': 'smooth', 'swipe-tone': 'tone', 'swipe-breath': 'breath' });
 
 const noiseBuffers = new WeakMap();
 
@@ -50,13 +57,15 @@ function noiseBuffer(context) {
 /** What a variant does for a tightness anchor: roughness, tone, travel and timbre. */
 export function swooshCharacter(variant, tightness) {
   const anchor = SWOOSH_TIGHTNESS.includes(tightness) ? tightness : 'medium';
+  const swipe = Object.hasOwn(SWIPE_TIMBRES, variant);
   const texture = variant === 'texture' || variant === 'combined';
-  const pitch = variant === 'pitch' || variant === 'combined' || variant === 'arrow';
+  const pitch = swipe || variant === 'pitch' || variant === 'combined' || variant === 'arrow';
   return Object.freeze({
     roughnessDepth: texture ? SWOOSH_TUNING.roughnessDepth[anchor] : 0,
     pitchHz: pitch ? SWOOSH_TUNING.pitchHz[anchor] : SWOOSH_TUNING.pitchHz.medium,
-    travels: variant === 'arrow',
-    timbre: variant === 'arrow' ? 'smooth' : 'round1'
+    travels: swipe || variant === 'arrow',
+    startPan: swipe ? SWOOSH_TUNING.swipeStartPan : 0,
+    timbre: swipe ? SWIPE_TIMBRES[variant] : variant === 'arrow' ? 'smooth' : 'round1'
   });
 }
 
@@ -72,7 +81,7 @@ export function playSwoosh(context, destination, {
   durationSeconds = SWOOSH_TUNING.durationSeconds
 } = {}) {
   const tuning = SWOOSH_TUNING;
-  const { roughnessDepth, pitchHz, travels, timbre: timbreName } = swooshCharacter(variant, tightness);
+  const { roughnessDepth, pitchHz, travels, startPan, timbre: timbreName } = swooshCharacter(variant, tightness);
   const timbre = TIMBRES[timbreName];
   const end = at + durationSeconds;
   const release = Math.min(tuning.releaseSeconds, durationSeconds * 0.25);
@@ -82,12 +91,13 @@ export function playSwoosh(context, destination, {
     return node;
   };
 
-  // Direction: the arrow travels from the centre to the full side; round 1 sounds
-  // stay on the full side throughout. Either way it ends at -1 or +1.
+  // Direction: a travelling swoosh moves from startPan on its own side (0 for round 2's
+  // arrow) out to the full side; round 1 sounds stay on the full side throughout.
+  // Either way it ends at -1 or +1.
   const panner = track(context.createStereoPanner());
   const fullSide = side < 0 ? -1 : 1;
   if (travels) {
-    panner.pan.setValueAtTime(0, at);
+    panner.pan.setValueAtTime(fullSide * startPan, at);
     panner.pan.linearRampToValueAtTime(fullSide, at + durationSeconds * tuning.travelShare);
   } else {
     panner.pan.value = fullSide;
@@ -143,6 +153,16 @@ export function playSwoosh(context, destination, {
   tone.connect(toneGain).connect(roughness);
   tone.start(at);
   tone.stop(end + 0.05);
+  if (timbre.octaveLevel > 0) {
+    const octave = track(context.createOscillator());
+    const octaveGain = track(context.createGain());
+    octave.type = 'sine';
+    octave.frequency.value = pitchHz * 2;
+    octaveGain.gain.value = timbre.octaveLevel;
+    octave.connect(octaveGain).connect(roughness);
+    octave.start(at);
+    octave.stop(end + 0.05);
+  }
 
   noise.addEventListener('ended', () => {
     for (const node of nodes) {

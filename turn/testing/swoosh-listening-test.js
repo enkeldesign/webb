@@ -1,26 +1,26 @@
-// Admin SWOOSH LISTENING TEST (#909, #928), round 2. Round 1 settled tightness on pitch
-// (results in #928); Erik then defined the arrow: the sound travels from the centre out
-// to the full side, its speed the curve's length and its pitch the tightness. Round 2
-// compares that arrow with round 1's static pitch sound: labelled examples, 24 blind
-// swooshes per version (2 sides × 3 tightness anchors × 2 lengths × 2), 8 linked pairs
-// (does R → R stay two swooshes, does R → L keep both sides?) and a comfort rating.
-// Results stay on this device and can be copied as JSON for #928.
+// Admin SWOOSH LISTENING TEST (#909, #928), round 3. Round 1 settled tightness on pitch;
+// round 2 found the smooth timbre comfortable but S-curves harder with an arrow that
+// starts in the centre (results in #928). Erik keeps the travelling arrow and round 3
+// tests only the S-curve case: a swipe from 50% to 100% on its own side, in three
+// timbres. Each version: labelled examples, 12 blind linked pairs (8 S-curves, 4 same
+// direction so the answer can't be guessed; every swoosh gets a random tightness and
+// length, as on a real track) and a comfort rating. Results stay on this device and can
+// be copied as JSON for #928.
 // Admin-unlocked profiles only; ordinary buttons throughout, so it works with VoiceOver.
 import { SWOOSH_LENGTHS, SWOOSH_TIGHTNESS, playSwoosh, playSwooshPhrase } from '../audio/swoosh-sound.js';
 
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 const RESULTS_KEY = 'turn-swoosh-listening-v1';
-const ROUND = 2;
-const ROUND_VARIANTS = Object.freeze(['arrow', 'pitch']);
+const ROUND = 3;
+const ROUND_VARIANTS = Object.freeze(['swipe-air', 'swipe-tone', 'swipe-breath']);
 const KEPT_SESSIONS = 10;
 const REPEATS = 2;
-const PAIR_REPEATS = 2;
+const S_CURVE_REPEATS = 4;
+const SAME_SIDE_REPEATS = 2;
 const PLAY_DELAY_MS = 700;
 const SIDES = Object.freeze([-1, 1]);
 const LENGTHS = Object.freeze(Object.keys(SWOOSH_LENGTHS));
 const VERSION_NAMES = Object.freeze(['VERSION 1', 'VERSION 2', 'VERSION 3']);
-// Pairs use the shortest swooshes at medium tightness: the hardest case to keep apart.
-const PAIR_SWOOSH = Object.freeze({ tightness: 'medium', length: 'short' });
 
 function shuffle(items, random) {
   const list = [...items];
@@ -44,16 +44,34 @@ export function createTrials(random = Math.random) {
   }));
 }
 
-/** 8 linked pairs: R → R, R → L, L → R and L → L, twice, shuffled. */
+const pick = (items, random) => items[Math.floor(random() * items.length)];
+
+/**
+ * 12 linked pairs: R → L and L → R four times each (the S-curves under test), R → R
+ * and L → L twice each, shuffled; every swoosh gets a random tightness and length.
+ */
 export function createPairs(random = Math.random) {
   const pairs = [];
-  for (let repeat = 0; repeat < PAIR_REPEATS; repeat += 1) {
-    for (const first of SIDES) for (const second of SIDES) pairs.push({ first, second });
+  const add = (first, second, repeats) => {
+    for (let repeat = 0; repeat < repeats; repeat += 1) {
+      pairs.push({
+        first,
+        second,
+        firstTightness: pick(SWOOSH_TIGHTNESS, random),
+        secondTightness: pick(SWOOSH_TIGHTNESS, random),
+        firstLength: pick(LENGTHS, random),
+        secondLength: pick(LENGTHS, random)
+      });
+    }
+  };
+  for (const side of SIDES) {
+    add(side, -side, S_CURVE_REPEATS);
+    add(side, side, SAME_SIDE_REPEATS);
   }
   return shuffle(pairs, random).map((pair, index) => ({ ...pair, index, answerFirst: null, answerSecond: null, replays: 0 }));
 }
 
-/** Both versions in random order, blind-labelled. */
+/** Every version in random order, blind-labelled; round 3 plays pairs only. */
 export function createSession(random = Math.random) {
   return {
     round: ROUND,
@@ -61,7 +79,7 @@ export function createSession(random = Math.random) {
     blocks: shuffle(ROUND_VARIANTS, random).map((variant, index) => ({
       variant,
       label: VERSION_NAMES[index],
-      trials: createTrials(random),
+      trials: [],
       pairs: createPairs(random),
       comfort: null
     }))
@@ -91,7 +109,10 @@ export function scoreBlock(block) {
     if (shift < 0) pull[trial.length].gentler += 1;
   }
   const pairs = (block.pairs || []).filter((pair) => pair.answerFirst !== null && pair.answerSecond !== null);
-  const pairsRight = pairs.filter((pair) => pair.answerFirst === pair.first && pair.answerSecond === pair.second).length;
+  const right = (pair) => pair.answerFirst === pair.first && pair.answerSecond === pair.second;
+  const pairsRight = pairs.filter(right).length;
+  const sCurves = pairs.filter((pair) => pair.first !== pair.second);
+  const sameSide = pairs.filter((pair) => pair.first === pair.second);
   const share = (count, total) => (total ? Math.round((count / total) * 1000) / 10 : 0);
   return {
     variant: block.variant,
@@ -107,6 +128,9 @@ export function scoreBlock(block) {
     confusion,
     pairsAnswered: pairs.length,
     pairsPercent: share(pairsRight, pairs.length),
+    sCurvesAnswered: sCurves.length,
+    sCurvePercent: share(sCurves.filter(right).length, sCurves.length),
+    sameSidePercent: share(sameSide.filter(right).length, sameSide.length),
     replays: block.trials.reduce((sum, trial) => sum + trial.replays, 0) + (block.pairs || []).reduce((sum, pair) => sum + pair.replays, 0),
     comfort: block.comfort
   };
@@ -130,8 +154,9 @@ export function summarizeSession(session, { build = '', device = '' } = {}) {
         heard: answerSide === null ? null : `${sideWord(answerSide)} ${answerTightness} ${answerLength}`,
         replays
       })),
-      pairs: (block.pairs || []).map(({ first, second, answerFirst, answerSecond, replays }) => ({
+      pairs: (block.pairs || []).map(({ first, second, firstTightness, secondTightness, firstLength, secondLength, answerFirst, answerSecond, replays }) => ({
         played: `${sideWord(first)} → ${sideWord(second)}`,
+        swooshes: `${firstTightness ?? ''} ${firstLength ?? ''} → ${secondTightness ?? ''} ${secondLength ?? ''}`.trim(),
         heard: answerFirst === null ? null : `${sideWord(answerFirst)} → ${sideWord(answerSecond)}`,
         replays
       }))
@@ -278,11 +303,13 @@ function installTest() {
     if (ctx) playSwoosh(ctx, ctx.destination, { side, tightness, variant, durationSeconds: SWOOSH_LENGTHS[length] });
   };
 
-  const playPair = (first, second, variant) => {
+  const playPair = (pair, variant) => {
     const ctx = readyContext();
     if (!ctx) return;
-    const swoosh = { ...PAIR_SWOOSH, variant, durationSeconds: SWOOSH_LENGTHS[PAIR_SWOOSH.length] };
-    playSwooshPhrase(ctx, ctx.destination, [{ ...swoosh, side: first }, { ...swoosh, side: second }]);
+    playSwooshPhrase(ctx, ctx.destination, [
+      { side: pair.first, tightness: pair.firstTightness, variant, durationSeconds: SWOOSH_LENGTHS[pair.firstLength] },
+      { side: pair.second, tightness: pair.secondTightness, variant, durationSeconds: SWOOSH_LENGTHS[pair.secondLength] }
+    ]);
   };
 
   const button = (label, onClick, extra = {}) => {
@@ -332,9 +359,9 @@ function installTest() {
     const row = document.createElement('div');
     row.className = 'turn-swoosh-test-row';
     show(...[
-      heading('Round 2 · before you start'),
-      paragraph('Use stereo headphones or earbuds. Two versions this time, both with pitch for tightness. Each version starts with labelled examples, then plays 24 swooshes and 8 linked pairs in random order.'),
-      paragraph('For each swoosh, answer the side, the tightness (GENTLE, MEDIUM or TIGHT) and the length of the curve (SHORT or LONG). For each pair, answer the side of the first and the second swoosh. No answers are revealed during the test. It takes about 10 minutes.'),
+      heading('Round 3 · S-curves'),
+      paragraph('Use stereo headphones or earbuds. Three sound versions of the swipe: each swoosh starts halfway out on its own side and swipes to the edge. Pitch is the tightness, speed the length of the curve.'),
+      paragraph('Each version starts with labelled examples, then plays 12 linked pairs in random order. Most are S-curves. For each pair, answer the side of the first and the second swoosh, then rate the version. No answers are revealed during the test. It takes about 5 minutes.'),
       saved.length ? paragraph(`${saved.length} earlier ${saved.length === 1 ? 'session is' : 'sessions are'} saved on this device.`) : null,
       row
     ].filter(Boolean));
@@ -349,30 +376,33 @@ function installTest() {
 
   function examples() {
     const block = session.blocks[blockIndex];
-    const grid = document.createElement('div');
-    grid.className = 'turn-swoosh-test-grid';
-    for (const side of SIDES) {
-      for (const tightness of SWOOSH_TIGHTNESS) {
-        grid.append(button(`${sideName(side)} ${tightness.toUpperCase()}`, () => play(side, tightness, 'long', block.variant)));
-      }
-    }
-    const lengths = document.createElement('div');
-    lengths.className = 'turn-swoosh-test-grid';
-    for (const length of LENGTHS) {
-      lengths.append(button(`${length.toUpperCase()} RIGHT MEDIUM`, () => play(1, 'medium', length, block.variant)));
-    }
-    lengths.append(button('PAIR RIGHT → LEFT', () => playPair(1, -1, block.variant)));
+    const example = (first, second) => ({ first, second, firstTightness: 'medium', secondTightness: 'medium', firstLength: 'short', secondLength: 'short' });
+    const pairs = document.createElement('div');
+    pairs.className = 'turn-swoosh-test-grid';
+    pairs.append(
+      button('S-CURVE RIGHT → LEFT', () => playPair(example(1, -1), block.variant)),
+      button('S-CURVE LEFT → RIGHT', () => playPair(example(-1, 1), block.variant)),
+      button('RIGHT → RIGHT', () => playPair(example(1, 1), block.variant))
+    );
+    const singles = document.createElement('div');
+    singles.className = 'turn-swoosh-test-grid';
+    singles.append(
+      button('RIGHT GENTLE LONG', () => play(1, 'gentle', 'long', block.variant)),
+      button('LEFT TIGHT SHORT', () => play(-1, 'tight', 'short', block.variant)),
+      button('LEFT MEDIUM LONG', () => play(-1, 'medium', 'long', block.variant))
+    );
     const row = document.createElement('div');
     row.className = 'turn-swoosh-test-row';
     row.append(button('START', () => {
       trialIndex = 0;
-      trial();
+      if (block.trials.length) trial();
+      else pairTrial();
     }));
     show(
       heading(`${block.label} of ${session.blocks.length} · examples`),
-      paragraph('Play each example as often as you like. The side tells you the direction, the pitch the tightness and the speed the length of the curve.'),
-      grid,
-      lengths,
+      paragraph('Play each example as often as you like. Each swoosh starts halfway out on its side and swipes to the edge.'),
+      pairs,
+      singles,
       row
     );
   }
@@ -421,7 +451,7 @@ function installTest() {
     replayRow.append(button('PLAY AGAIN', () => {
       clearTimeout(playTimer);
       current.replays += 1;
-      playPair(current.first, current.second, block.variant);
+      playPair(current, block.variant);
     }));
     show(
       heading(`${block.label} · pair ${trialIndex + 1} of ${block.pairs.length}`),
@@ -430,7 +460,7 @@ function installTest() {
       choiceRow('Second swoosh', SIDES.map((side) => [`SECOND ${arrowName(side)} ${sideName(side)}`, side]), (value) => { current.answerSecond = value; answer(); }),
       replayRow
     );
-    playTimer = setTimeout(() => playPair(current.first, current.second, block.variant), PLAY_DELAY_MS);
+    playTimer = setTimeout(() => playPair(current, block.variant), PLAY_DELAY_MS);
   }
 
   function comfort() {
@@ -458,10 +488,10 @@ function installTest() {
     const saved = saveSession(summary);
     const table = document.createElement('table');
     table.className = 'turn-swoosh-test-results';
-    table.innerHTML = '<thead><tr><th scope="col">Version</th><th scope="col">Side</th><th scope="col" aria-label="Tightness">Tight</th><th scope="col" aria-label="Length">Len</th><th scope="col">Pairs</th><th scope="col" aria-label="Comfort">Comf</th></tr></thead><tbody></tbody>';
+    table.innerHTML = '<thead><tr><th scope="col">Version</th><th scope="col">Pairs</th><th scope="col">S-curves</th><th scope="col" aria-label="Same direction">Same</th><th scope="col" aria-label="Comfort">Comf</th></tr></thead><tbody></tbody>';
     for (const score of summary.scores) {
       const row = document.createElement('tr');
-      for (const value of [`${score.label.replace('VERSION ', 'V')} ${score.variant}`, `${Math.round(score.directionPercent)}%`, `${Math.round(score.tightnessPercent)}%`, `${Math.round(score.lengthPercent)}%`, `${Math.round(score.pairsPercent)}%`, `${score.comfort ?? '–'}/5`]) {
+      for (const value of [`${score.label.replace('VERSION ', 'V')} ${score.variant.replace('swipe-', '')}`, `${Math.round(score.pairsPercent)}%`, `${Math.round(score.sCurvePercent)}%`, `${Math.round(score.sameSidePercent)}%`, `${score.comfort ?? '–'}/5`]) {
         const cell = document.createElement('td');
         cell.textContent = value;
         row.append(cell);
@@ -481,7 +511,7 @@ function installTest() {
       heading('Results'),
       paragraph('Saved on this device. COPY RESULTS puts them on the clipboard as JSON to paste into #928 or to OPUS.'),
       table,
-      paragraph('Side, Tight(ness) and Len(gth): share of swooshes answered correctly. Pairs: both sides right. Comf(ort): your rating.'),
+      paragraph('Pairs: both sides right. S-curves: R → L and L → R pairs right. Same: R → R and L → L pairs right. Comf(ort): your rating.'),
       row,
       paragraph(`${saved.length} ${saved.length === 1 ? 'session' : 'sessions'} saved.`)
     );

@@ -529,6 +529,8 @@ function synchronizeLowGraphicsProducerTargets(importMap, release) {
 function synchronizeProjectedShadowTargets(importMap, release) {
   const imports = importMap.imports ||= {};
   const paths = new Set([
+    "/turn/audio/route-geometry.js",
+    "/turn/audio/swoosh-sound.js",
     "/turn/graphics-profile.js",
     "/turn/main.js",
     "/turn/performance-monitor.js",

@@ -1095,13 +1095,14 @@ Object.freeze({
     Object.freeze(['1.33.4 r346', 'BELLA\'s final coat colours apply again; a colour-maths error stopped them on every Countryside load.']),
     Object.freeze(['1.33.5 r347', 'Admin: ROUTE TEST HUD shows the SWOOSH bends computed from each track\'s centreline, live while racing (#909 step 1). Players see no change.']),
     Object.freeze(['1.33.6 r348', 'Admin: SWOOSH LISTENING TEST (three blind candidate sounds, 24 swooshes each, results to copy) and a glanceable NOW/NEXT route HUD (#909, #928). Players see no change.']),
-    Object.freeze(['1.33.7 r349', 'Admin: SWOOSH listening test round 2 compares the arrow (centre to full side, speed = curve length, pitch = tightness, smoother sound) with round 1\'s pitch sound, with lengths and linked pairs (#909, #928). Players see no change.'])
+    Object.freeze(['1.33.7 r349', 'Admin: SWOOSH listening test round 2 compares the arrow (centre to full side, speed = curve length, pitch = tightness, smoother sound) with round 1\'s pitch sound, with lengths and linked pairs (#909, #928). Players see no change.']),
+    Object.freeze(['1.33.8 r350', 'Admin: SWOOSH listening test round 3 — S-curves only, with a swipe from 50% to 100% on its own side in three timbres (#909, #928). Players see no change.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.33.7',
-  build: '2026.09.30-r349',
-  note: 'Listening test round 2: the arrow swoosh, lengths and pairs.'
+  version: '1.33.8',
+  build: '2026.09.30-r350',
+  note: 'Listening test round 3: the 50→100% swipe and S-curves.'
 });
