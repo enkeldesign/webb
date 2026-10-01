@@ -143,7 +143,7 @@ function applyMasterVolume() {
   catch (_) { masterGain.gain.value=gain; }
 }
 async function startPlayback({ restart = false } = {}) {
-  if (!soundEnabled || musicVolume <= 0 || document.visibilityState === 'hidden') return false;
+  if (!soundEnabled || musicVolume <= 0 || held || document.visibilityState === 'hidden') return false;
   if (!ensureGraph()) return false;
   if (restart) resetSongPosition();
   try { if (context.state !== 'running') await context.resume(); } catch (_) { return false; }
@@ -156,7 +156,10 @@ async function stopPlayback({ reset = false } = {}) {
   playing=false; clearScheduler(); tones?.stop(); drums?.stop(); if(reset)resetSongPosition(); if(!context)return; applyMasterVolume();
   try { if(context.state==='running') await context.suspend(); } catch (_) {}
 }
-function shouldPlay() { return soundEnabled && musicVolume > 0 && document.visibilityState !== 'hidden'; }
+// A temporary, unsaved hold (e.g. the admin listening test): the player's volume stays as set.
+let held = false;
+function shouldPlay() { return soundEnabled && musicVolume > 0 && !held && document.visibilityState !== 'hidden'; }
+function hold(on) { held = Boolean(on); if (held) void stopPlayback({ reset: false }); else if (shouldPlay()) void startPlayback({ restart: false }); return held; }
 function setVolume(nextVolume,{restart=false}={}) {
   const previous=musicVolume; musicVolume=clamp(Number(nextVolume),0,100,DEFAULT_VOLUME);
   if(musicVolume>0){lastNonZeroVolume=musicVolume;writeStoredNumber(MUSIC_LAST_VOLUME_STORAGE_KEY,lastNonZeroVolume);}
@@ -174,7 +177,7 @@ function installMusicStylesheet() {
   const link = document.createElement('link');
   link.id = 'turn-racing-music-stylesheet';
   link.rel = 'stylesheet';
-  link.href = '/turn/audio/music/music-controls.css?build=20260930-r347';
+  link.href = '/turn/audio/music/music-controls.css?build=20260930-r348';
   document.head.appendChild(link);
 }
 
@@ -199,7 +202,7 @@ export function installRacingMusic({ home = document.querySelector('.m8-home') }
     instruments:Object.freeze({lead:Object.freeze(Object.keys(LEAD_VOICES)),bass:Object.freeze(Object.keys(BASS_VOICES)),arp:Object.freeze(Object.keys(ARP_VOICES)),drums:Object.freeze(Object.keys(DRUM_KITS))}),
     songs:Object.freeze(SONGBOOK.map((song)=>Object.freeze({id:song.id,name:song.name,bpm:song.bpm,key:song.key,style:song.style,swing:song.swing,form:song.form}))),
     get bpm(){return activeSong.bpm;},get songId(){return activeSong.id;},get songName(){return activeSong.name;},get arrangement(){return activeSong.form;},get volume(){return musicVolume;},get enabled(){return musicVolume>0;},get playing(){return playing;},get state(){return context?.state||'not-created';},
-    setVolume,toggle:toggleMusic,start:()=>startPlayback({restart:false}),stop:()=>setVolume(0),syncControls:()=>controls?.sync()
+    setVolume,toggle:toggleMusic,start:()=>startPlayback({restart:false}),stop:()=>setVolume(0),hold,syncControls:()=>controls?.sync()
   });
   globalThis.__turnRacingMusic=api;return api;
 }

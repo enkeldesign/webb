@@ -331,6 +331,9 @@ jobs:
       - name: Run SWOOSH route geometry regression
         run: node turn-lab/tests/route-geometry-production.mjs
 
+      - name: Run SWOOSH listening test regression
+        run: node turn-lab/tests/swoosh-listening-production.mjs
+
       - name: Run Drive By Ear preference and shutdown regression
         run: node turn-lab/tests/drive-by-ear-production.mjs
 
