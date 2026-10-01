@@ -57,11 +57,14 @@ function headingOf(sample) {
 
 // Signed heading change per sample: positive is a RIGHT turn. TURN's world is y-up
 // with the right-hand side of travel at (-tangent.z, tangent.x), so turning right
-// lowers atan2(x, z).
-function turnPerSample(samples) {
+// lowers atan2(x, z). An open course (DRIVE BY EAR 101) does not turn from its finish
+// back to its start.
+function turnPerSample(samples, closed) {
   const count = samples.length;
   const headings = samples.map(headingOf);
-  return headings.map((heading, index) => -wrapAngle(headings[(index + 1) % count] - heading));
+  return headings.map((heading, index) => (
+    !closed && index === count - 1 ? 0 : -wrapAngle(headings[(index + 1) % count] - heading)
+  ));
 }
 
 function movingAverage(values, radius) {
@@ -80,12 +83,19 @@ function pointDistance(a, b) {
   return Math.hypot(a.point.x - b.point.x, a.point.z - b.point.z);
 }
 
-function trackLengthOf(samples) {
+function trackLengthOf(samples, closed) {
   let length = 0;
-  for (let index = 0; index < samples.length; index += 1) {
+  const steps = closed ? samples.length : samples.length - 1;
+  for (let index = 0; index < steps; index += 1) {
     length += pointDistance(samples[index], samples[(index + 1) % samples.length]);
   }
   return length;
+}
+
+// A lap's last sample sits one step from its first; an open course's ends are far apart.
+function isClosedCourse(samples) {
+  const openLength = trackLengthOf(samples, false);
+  return pointDistance(samples.at(-1), samples[0]) <= 3 * openLength / (samples.length - 1);
 }
 
 // Runs of samples turning one way, as { side, from, length } in sample counts from a
@@ -149,11 +159,12 @@ function splitByRelief(run, curvatureAt, ratio, minimumSamples) {
  */
 export function computeRouteGeometry(samples, tuning = ROUTE_GEOMETRY_TUNING) {
   const count = samples?.length || 0;
-  if (count < 8) return Object.freeze({ trackLength: 0, sampleSpacing: 0, bends: [], segments: [] });
+  if (count < 8) return Object.freeze({ trackLength: 0, sampleSpacing: 0, closed: true, bends: [], segments: [] });
 
-  const trackLength = trackLengthOf(samples);
-  const spacing = trackLength / count;
-  const turn = turnPerSample(samples);
+  const closed = isClosedCourse(samples);
+  const trackLength = trackLengthOf(samples, closed);
+  const spacing = trackLength / (closed ? count : count - 1);
+  const turn = turnPerSample(samples, closed);
   const smoothing = Math.max(1, Math.round(tuning.smoothingMetres / spacing / 2));
   const sustained = Math.max(smoothing, Math.round(tuning.sustainedMetres / spacing / 2));
   const curvature = movingAverage(turn, smoothing).map((value) => value / spacing);
@@ -247,19 +258,53 @@ export function computeRouteGeometry(samples, tuning = ROUTE_GEOMETRY_TUNING) {
   return Object.freeze({
     trackLength,
     sampleSpacing: spacing,
+    closed,
     tuning,
     bends: Object.freeze(bends.sort((a, b) => a.startIndex - b.startIndex)),
     segments: Object.freeze(segments)
   });
 }
 
-/** Segments ahead of a track distance, nearest first, each with its distance ahead. */
+let cachedRoute = { key: '', route: null };
+
+/** The route of a course, computed once and shared by the SWOOSH scheduler and the HUD. */
+export function routeForSamples(samples, courseId = '') {
+  if (!Array.isArray(samples) || samples.length < 8) return null;
+  const first = samples[0]?.point;
+  const middle = samples[samples.length >> 1]?.point;
+  const key = `${courseId}|${samples.length}|${first?.x},${first?.z}|${middle?.x},${middle?.z}`;
+  if (cachedRoute.key !== key) cachedRoute = { key, route: computeRouteGeometry(samples) };
+  return cachedRoute.route;
+}
+
+/** The segment the car is inside at a track distance, if any. */
+export function routeSegmentAt(route, distance) {
+  const length = route?.trackLength || 0;
+  if (!length) return null;
+  return route.segments.find((segment) => {
+    const into = route.closed === false
+      ? distance - segment.startDistance
+      : ((distance - segment.startDistance) % length + length) % length;
+    return into >= 0 && into < segment.length;
+  }) || null;
+}
+
+/**
+ * Segments ahead of a track distance, nearest first, each with its distance ahead. A lap
+ * wraps past the line; an open course ends at its finish.
+ */
 export function upcomingRouteSegments(route, distance, count = 4) {
   const segments = route?.segments || [];
   const length = route?.trackLength || 0;
   if (!segments.length || !length) return [];
   return segments
-    .map((segment) => ({ segment, ahead: ((segment.startDistance - distance) % length + length) % length }))
+    .map((segment) => ({
+      segment,
+      ahead: route.closed === false
+        ? segment.startDistance - distance
+        : ((segment.startDistance - distance) % length + length) % length
+    }))
+    .filter(({ ahead }) => ahead >= 0)
     .sort((a, b) => a.ahead - b.ahead)
     .slice(0, count);
 }

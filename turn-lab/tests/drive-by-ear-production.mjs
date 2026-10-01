@@ -35,7 +35,7 @@ const [
   fs.readFile(new URL('../../turn/audio/organic-ribbon.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/recovery-guidance.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/offroad-ear-direction.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/audio/pace-notes.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/audio/swoosh-pace-notes.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/screen-blanking.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/r104-polish.css', import.meta.url), 'utf8')
 ]);
@@ -81,9 +81,9 @@ assert.match(app, /installAudioPreferenceRuntime\(\)/);
 assert.match(runtimeLoader, /export function prepareDriveByEarRuntime\(\)/);
 assert.match(runtimeLoader, /prepareOrganicRibbonCapture\(\)/);
 assert.match(runtimeLoader, /prepareRecoveryGuidanceCapture\(\)/);
-assert.match(runtimeLoader, /preparePaceNotePriorityCapture\(\)/);
+assert.doesNotMatch(runtimeLoader, /preparePaceNotePriorityCapture|pace-note-priority/, 'SWOOSH pace notes use the route channel, not createGain capture (#909)');
 assert.match(runtimeLoader, /export async function ensureDriveByEarRuntime\(\)/);
-assert.match(runtimeLoader, /installOrganicRibbon\(\);[\s\S]*installPaceNotePriority\(\);[\s\S]*installUniversalDrivingSoundscape\(\);[\s\S]*installPaceNotes\(\);[\s\S]*installOffroadEarDirection\(\);[\s\S]*installRecoveryGuidance\(\);/,
+assert.match(runtimeLoader, /installOrganicRibbon\(\);[\s\S]*installSwooshPaceNotes\(\);[\s\S]*installUniversalDrivingSoundscape\(\);[\s\S]*installOffroadEarDirection\(\);[\s\S]*installRecoveryGuidance\(\);/,
   'Lazy activation must install the complete Drive By Ear stack in the established wrapper order');
 assert.match(runtimeLoader, /globalThis\.__turnDriveByEarRuntimeReady = true/);
 assert.match(runtimeLoader, /console\.error\('TURN: Drive By Ear could not be started\.'/);
@@ -139,7 +139,7 @@ assert.match(runtimeGuard, /\{ \.\.\.frame, \.\.\.DBE_DISABLED_FRAME \}/);
 assert.doesNotMatch(runtimeGuard, /AudioContext|webkitAudioContext|new Audio\(/);
 
 assert.match(audio, /DRIVE_BY_EAR_ENABLED = globalThis\.__turnDriveByEarEnabled !== false/);
-assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{[\s\S]*window\.addEventListener\('turn:pace-note'/);
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) window\.addEventListener\('turn:pace-note-silence', releaseRouteMix\)/);
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) installDbeGraphs\(\)/);
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{\s*const recoveryRibbon/);
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) updateDrivingSafety/);

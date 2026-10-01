@@ -70,53 +70,19 @@ assert.ok(part1.points.every(([x]) => x === 0), 'Part 1 must remain a clean stra
 assert.equal(part1.guideRails, true);
 assert.equal(part1.outerLimit, RECOVERY_LIMIT);
 
-assert.equal(part2.notes.length, 2, 'Part 2 must contain only the gentle right and broader left');
-assert.deepEqual(
-  part2.notes.map(({ direction, severity, long }) => [direction, severity, long]),
-  [[-1, 1, false], [1, 2, false]],
-  'Training ear values must use the physical-device mapping: right negative, left positive'
-);
-assert.equal(part2.notes[0].progress, 0.19, 'The first Part 2 BIP must stay on the straight but sit closer to the gentle right');
-assert.equal(part2.notes[1].progress, 0.55, 'The second Part 2 cue must sit closer to its broader left');
+// Pace notes are SWOOSH swipes generated from each course's geometry (#909), as on every
+// track; turn-lab/tests/pace-notes-production.mjs checks the sides each course produces.
+for (const stage of TRAINING_STAGES) {
+  assert.equal('notes' in stage, false, `${stage.id} has no hand-placed notes`);
+  assert.doesNotMatch(`${stage.lead} ${stage.menuSummary} ${stage.visualHint}`, /\bBIP|\bBEEP/, `${stage.id} teaches swipes, not BIPs`);
+}
 assert.ok(part2.points[3][1] >= 180, 'Part 2 must begin with a long straight');
-
-assert.equal(part3.notes.length, 1);
-assert.deepEqual(
-  [part3.notes[0].direction, part3.notes[0].severity, part3.notes[0].long],
-  [-1, 1, false]
-);
-assert.equal(part3.notes[0].progress, 0.27, 'Part 3 BIP must play on the final straight approach to the gentle right');
+assert.match(part2.lead, /Pace notes are swipes/);
 assert.equal(part3.startOffset, -(ROAD_HALF_WIDTH + 4));
-
-assert.equal(part4.notes.length, 1, 'Part 4 must describe one uninterrupted curve');
-assert.deepEqual(
-  [part4.notes[0].direction, part4.notes[0].severity, part4.notes[0].long],
-  [1, 3, true],
-  'Part 4 must play BIP BIP BEEP in the physically verified left ear'
-);
-assert.equal(part4.notes[0].progress, 0.27, 'Part 4 phrase must play closer to the long tight left at SMV practice speed');
-assert.match(part4.lead, /BIP BIP BEEP/);
-assert.match(part4.lead, /held final BEEP/);
-
-assert.equal(part5.notes.length, 3);
+assert.match(part3.lead, /Pace notes wait while you are off the road/);
+assert.match(part4.lead, /Three linked swipes in the right ear/);
 assert.ok(part5.points[3][1] >= 210, 'Part 5 must begin with a long straight');
-assert.deepEqual(
-  part5.notes.map(({ direction, severity, long }) => [direction, severity, long]),
-  [[-1, 1, false], [-1, 2, false], [1, 2, true]],
-  'Part 5 must end with BIP BIP right followed by BIP BEEP left'
-);
-assert.deepEqual(
-  part5.notes.map(({ progress }) => progress),
-  [0.15, 0.45, 0.45],
-  'Part 5 pace notes must sit close to their curve entries at SMV practice speed'
-);
-assert.equal(
-  part5.notes[1].progress,
-  part5.notes[2].progress,
-  'The final right-left pair must enqueue as one linked pace-note sequence'
-);
-assert.match(part5.lead, /BIP BIP in the right ear/);
-assert.match(part5.lead, /BIP BEEP in the left/);
+assert.match(part5.lead, /a swipe in the left ear, then swipes in the right ear/);
 assert.match(part5.visualHint, /final two curves follow closely/);
 
 for (const stage of TRAINING_STAGES) {
@@ -181,8 +147,8 @@ assert.match(view, /Pace notes/);
 assert.match(view, /Status and safety/);
 assert.match(view, /maximum-steering two-tone/);
 assert.match(view, /These sounds are not corner instructions/);
-assert.match(view, /The ear gives the turn side/);
-assert.match(view, /held final BEEP means the curve continues/);
+assert.match(view, /A swipe travels out to the ear on the side of the coming bend/);
+assert.match(view, /Higher pitch means tighter; a slower swipe means a longer bend/);
 assert.match(view, /dialog\.classList\.contains\('turn-dbe-training-intro-dialog'\)/);
 assert.match(view, /dialog\.querySelector\('\[data-training-cancel\]'\)/);
 assert.match(view, /focus\(\{ preventScroll: true \}\)/);

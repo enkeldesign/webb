@@ -7,10 +7,10 @@
   const MENU_GLYPHS = new Set(['…', '⋮', '☰']);
   const TRAINING_START_MESSAGES = Object.freeze({
     'dbe-training-1': 'Part one, Find the ribbon. Steer toward the warm guiding hum and keep it centred.',
-    'dbe-training-2': 'Part two, Listen ahead. Follow the guiding hum and listen for one right pace note, then a broader two-BIP left.',
-    'dbe-training-3': 'Part three, Leave and return. You start off-road. Use gravel and the warm recovery hum to rejoin, then listen for one right pace note.',
-    'dbe-training-4': 'Part four, Trust the sequence. Listen for BIP BIP BEEP in the left ear before the long tight left.',
-    'dbe-training-5': 'Part five, Drive by ear. Combine the guiding hum with the right-left pace-note sequence, and recover by sound if you leave the road.'
+    'dbe-training-2': 'Part two, Listen ahead. Follow the guiding hum and listen for a left swipe, then later a right swipe.',
+    'dbe-training-3': 'Part three, Leave and return. You start off-road. Use gravel and the warm recovery hum to rejoin, then listen for a slow left swipe.',
+    'dbe-training-4': 'Part four, Trust the sequence. Listen for three linked right swipes before the long right.',
+    'dbe-training-5': 'Part five, Drive by ear. Combine the guiding hum with the left-right swipe sequence, and recover by sound if you leave the road.'
   });
 
   let speechQueue = [];

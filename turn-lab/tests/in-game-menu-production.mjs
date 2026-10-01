@@ -90,8 +90,9 @@ for (const heading of [
   assert.ok(menu.includes(`>${heading}<`), `The DBE guide must include ${heading}`);
 }
 assert.match(menu, /Pace notes tell you what comes next/);
-assert.match(menu, /one to three short beeps/);
-assert.match(menu, /delayed extra beep on the same side marks a long corner/);
+assert.match(menu, /Pace notes are swipes/);
+assert.match(menu, /A bend of more than 90° is told as linked swipes/);
+assert.doesNotMatch(menu, /\bbeeps?\b/i, 'BIP/BEEP pace notes are retired (#909)');
 assert.match(menu, /Off road, centred gravel marks the surface/);
 assert.match(menu, /Tyre noise stays centred/);
 assert.match(menu, /heads-up rather than a continuous tracker/);
@@ -100,7 +101,8 @@ assert.match(menu, /works alongside screen readers/);
 assert.match(menu, /including VoiceOver/);
 assert.match(menu, /menus, controls, race position and lap results/);
 assert.match(menu, /complete non-visual way to play TURN/);
-assert.match(menu, /Pace notes are deliberately prominent/);
+assert.match(menu, /lowers engine, drift, boost and music while a pace note plays/);
+assert.match(menu, /Pace notes wait while you are off the road or facing the wrong way/);
 assert.match(menu, /saveDriveByEarEnabled\(enabled\)/);
 assert.match(menu, /setAudioEnabled/);
 assert.match(menu, /setDriveByEarEnabled/);

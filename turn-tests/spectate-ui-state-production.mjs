@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
 const spectateSource = await fs.readFile(new URL('../turn/ui/spectate.js', import.meta.url), 'utf8');
-const paceNotesSource = await fs.readFile(new URL('../turn/audio/pace-notes.js', import.meta.url), 'utf8');
+const paceNotesSource = await fs.readFile(new URL('../turn/audio/swoosh-pace-notes.js', import.meta.url), 'utf8');
 
 const notifyMatch = spectateSource.match(/function notifyUiState\(runtime, reason\) \{[\s\S]*?\n\}/);
 assert.ok(notifyMatch, 'Spectate must publish UI-state changes through the runtime snapshot helper');
@@ -68,7 +68,7 @@ assert.doesNotMatch(
 
 assert.match(
   paceNotesSource,
-  /if \(!event\.detail\?\.running \|\| reason === 'race-reset'\)/,
+  /if \(!event\.detail\?\.running \|\| event\.detail\?\.reason === 'race-reset'\)/,
   'The regression must continue covering a consumer that treats missing running as stopped'
 );
 

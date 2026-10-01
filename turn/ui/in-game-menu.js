@@ -67,7 +67,7 @@ function createAudioPanel() {
               <ul class="audio-guide-basics">
                 <li>Use headphones and begin at a comfortable speed.</li>
                 <li>Steer <strong>toward</strong> the warm guiding hum.</li>
-                <li>Listen to pace notes before corners: the ear tells you the direction, and more beeps mean a tighter turn.</li>
+                <li>Listen to pace notes before bends: the ear tells you the direction, and higher pitch means a tighter bend.</li>
                 <li>Engine, tyre and gravel sounds describe the car and surface. They are not steering instructions.</li>
               </ul>
             </section>
@@ -79,7 +79,7 @@ function createAudioPanel() {
 
             <section class="audio-guide-section" aria-labelledby="dbeGuidePaceNotes">
               <h3 id="dbeGuidePaceNotes">Pace notes</h3>
-              <p>Before major corners, one to three short beeps play in the ear on the turn side. One beep means a gentler corner; three means tighter. A delayed extra beep on the same side marks a long corner. Separate groups describe linked corners in the order you will meet them.</p>
+              <p>Pace notes are swipes. Before every bend, a swipe travels out to the ear on the bend's side and ends before the bend begins. Higher pitch means a tighter bend, a quick swipe a short bend and a slower swipe a long one. A bend of more than 90° is told as linked swipes, and bends that follow each other link into one phrase in the order you will meet them. Pace notes need stereo: use headphones or hold the device so both speakers face you.</p>
             </section>
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideRecovery">
@@ -109,7 +109,7 @@ function createAudioPanel() {
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideMix">
               <h3 id="dbeGuideMix">Sound balance and priority</h3>
-              <p>TURN automatically lowers engine, drift and boost when guidance needs room. Pace notes are deliberately prominent. Use Sound balance above to favour Drive By Ear or the car and world sounds; the middle position is TURN's intended mix.</p>
+              <p>TURN automatically lowers engine, drift, boost and music while a pace note plays. Pace notes wait while you are off the road or facing the wrong way. Use Sound balance above to favour Drive By Ear or the car and world sounds; the middle position is TURN's intended mix.</p>
             </section>
           </div>
         </details>

@@ -10,21 +10,12 @@ export const RAIL_ASSIST_START = ROAD_HALF_WIDTH + 0.35;
 export const RECOVERY_LIMIT = ROAD_HALF_WIDTH + 10;
 export const SAFETY_ASSIST_START = RECOVERY_LIMIT - 4;
 
-// Physical landscape-device testing shows the shared priority panner reaches the
-// opposite ear for these authored training-course turns. Keep the stage definitions
-// semantic and map course left/right to the ear values that players actually hear.
-const LEFT = 1;
-const RIGHT = -1;
-const note = (progress, direction, severity, long = false) => Object.freeze({
-  progress,
-  direction,
-  severity,
-  long
-});
+// Pace notes are SWOOSH swipes generated from each course's centreline, exactly as on
+// every track (#909). The texts below name the sides the geometry gives: in TURN's world,
+// a road heading +z that bends toward +x is a LEFT bend.
 const stage = (definition) => Object.freeze({
   ...definition,
-  points: Object.freeze(definition.points.map((point) => Object.freeze(point))),
-  notes: Object.freeze(definition.notes)
+  points: Object.freeze(definition.points.map((point) => Object.freeze(point)))
 });
 
 export const TRAINING_STAGES = Object.freeze([
@@ -37,15 +28,14 @@ export const TRAINING_STAGES = Object.freeze([
     guideRails: true,
     startOffset: -6,
     outerLimit: RECOVERY_LIMIT,
-    points: [[0, 0], [0, 70], [0, 140], [0, 210], [0, 280], [0, 350], [0, 420]],
-    notes: []
+    points: [[0, 0], [0, 70], [0, 140], [0, 210], [0, 280], [0, 350], [0, 420]]
   }),
   stage({
     id: 'dbe-training-2',
     title: 'Listen ahead',
-    menuSummary: 'Hear one gentle right and one broader left before they begin.',
-    lead: 'The sharp directional BIPs are pace notes. The ear gives the turn side and the count gives its severity. This course has one gentle right followed later by one broader two-BIP left.',
-    visualHint: 'Both cues play on the long approach before their curve. The guide rails remain so you can focus on matching sound to road.',
+    menuSummary: 'Hear a left and then a right swipe before each bend begins.',
+    lead: 'Pace notes are swipes. Each swipe travels out to the ear on the side of the coming bend and ends before the bend begins. Higher pitch means tighter; a slower swipe means a longer bend. A bend of more than 90° is told as linked swipes. This course has a left, then later a right.',
+    visualHint: 'The swipes play on the approach to each bend. The guide rails remain so you can focus on matching sound to road.',
     guideRails: true,
     startOffset: 0,
     outerLimit: RECOVERY_LIMIT,
@@ -53,14 +43,13 @@ export const TRAINING_STAGES = Object.freeze([
       [0, 0], [0, 60], [0, 120], [0, 180], [5, 220], [20, 255],
       [50, 282], [90, 298], [140, 300], [200, 300], [250, 310],
       [290, 335], [315, 370], [325, 415], [325, 470], [325, 530]
-    ],
-    notes: [note(0.19, RIGHT, 1), note(0.55, LEFT, 2)]
+    ]
   }),
   stage({
     id: 'dbe-training-3',
     title: 'Leave and return',
-    menuSummary: 'Use gravel and recovery guidance to rejoin, then hear one right.',
-    lead: 'You begin just off the right side of the road. Centred gravel confirms the surface; the warm recovery hum points toward a useful place to rejoin. After the long straight, one BIP in the right ear announces the gentle right.',
+    menuSummary: 'Use gravel and recovery guidance to rejoin, then hear one left.',
+    lead: 'You begin just off the right side of the road. Centred gravel confirms the surface; the warm recovery hum points toward a useful place to rejoin. Pace notes wait while you are off the road. After the long straight, a slow swipe in the left ear announces the long left.',
     visualHint: 'There are no visible rails along the road. A wider invisible safety zone only intervenes if you travel far away.',
     guideRails: false,
     startOffset: -(ROAD_HALF_WIDTH + 4),
@@ -68,14 +57,13 @@ export const TRAINING_STAGES = Object.freeze([
     points: [
       [0, 0], [0, 60], [0, 120], [0, 180], [5, 225], [20, 265],
       [48, 295], [88, 312], [138, 316], [198, 316], [260, 316]
-    ],
-    notes: [note(0.27, RIGHT, 1)]
+    ]
   }),
   stage({
     id: 'dbe-training-4',
     title: 'Trust the sequence',
-    menuSummary: 'Recognise BIP BIP BEEP before one long tight left.',
-    lead: 'BIP BIP BEEP describes one long tight curve: three sounds mean tight, and the held final BEEP means the same curve continues. Hear the complete phrase in the left ear before the single long left begins.',
+    menuSummary: 'Recognise three linked right swipes before one long right.',
+    lead: 'Three linked swipes in the right ear describe one long right that turns almost all the way round: each swipe is one part of the same bend, at most 90°. Hear the complete phrase before the bend begins.',
     visualHint: 'This spacious course contains one uninterrupted curve and no road overlap. Try Blank screen mode when the phrase feels clear.',
     guideRails: false,
     startOffset: 0,
@@ -84,14 +72,13 @@ export const TRAINING_STAGES = Object.freeze([
       [0, 0], [0, 60], [0, 120], [0, 180], [0, 210], [-6, 239],
       [-22, 263], [-46, 280], [-75, 285], [-104, 280], [-128, 263],
       [-144, 239], [-150, 210], [-150, 160], [-150, 100], [-150, 35]
-    ],
-    notes: [note(0.27, LEFT, 3, true)]
+    ]
   }),
   stage({
     id: 'dbe-training-5',
     title: 'Drive by ear',
-    menuSummary: 'Combine the ribbon with a linked right–left pace-note sequence.',
-    lead: 'Put it together on a spacious course. After the first gentle right, listen for a linked sequence: BIP BIP in the right ear, then BIP BEEP in the left for the long curve immediately after it. Use gravel plus recovery guidance if you leave the road.',
+    menuSummary: 'Combine the ribbon with a linked left–right swipe sequence.',
+    lead: 'Put it together on a spacious course. After the first left, listen for a linked sequence: a swipe in the left ear, then swipes in the right ear for the bend immediately after it. Soft, low swipes mark gentle bends. Use gravel plus recovery guidance if you leave the road.',
     visualHint: 'The final two curves follow closely without crossing the route. Try Blank screen mode, or keep the course visible and repeat any part from the navigation controls.',
     guideRails: false,
     startOffset: 0,
@@ -102,9 +89,6 @@ export const TRAINING_STAGES = Object.freeze([
       [305, 325], [340, 305], [360, 275], [368, 235], [368, 195],
       [375, 160], [395, 130], [425, 108], [465, 95], [510, 94],
       [560, 102], [615, 110], [680, 110]
-    ],
-    // The matching progress values intentionally enqueue one linked phrase:
-    // BIP BIP right, followed by BIP BEEP left.
-    notes: [note(0.15, RIGHT, 1), note(0.45, RIGHT, 2), note(0.45, LEFT, 2, true)]
+    ]
   })
 ]);

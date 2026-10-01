@@ -118,11 +118,12 @@ assert.match(guide, /Drive By Ear provides the continuous spatial information/);
 assert.match(guide, /root\.querySelector\('#dbeGuideScreenReaders'\)/, 'The in-race guide must replace its abbreviated screen-reader copy before it can be shown');
 assert.doesNotMatch(guide, /[;.]\s*DBE\s+(?:supplies|provides)/, 'Player-facing help must always spell out Drive By Ear');
 
-assert.match(guide, /A long corner keeps the same number of beeps but holds the final beep longer/);
-assert.match(guide, /bip-beeeep for a long medium corner/);
-assert.match(guide, /bip-bip-beeeep for a long tight corner/);
-assert.doesNotMatch(guide, /delayed extra beep|extra one-beep group|lengthMarker/);
-assert.match(guide, /root\.querySelector\('#dbeGuidePaceNotes'\)/, 'The in-race audio guide must receive the corrected long-corner language too');
+assert.match(guide, /Pace notes are swipes/);
+assert.match(guide, /Higher pitch means a tighter bend, a quick swipe a short bend and a slower swipe a long one/);
+assert.match(guide, /A bend of more than 90° is told as linked swipes/);
+assert.match(guide, /Pace notes need stereo/);
+assert.doesNotMatch(guide, /\bbeeps?\b|bip-|lengthMarker/i, 'BIP/BEEP pace notes are retired (#909)');
+assert.match(guide, /root\.querySelector\('#dbeGuidePaceNotes'\)/, 'The in-race audio guide must receive the same swipe language too');
 
 assert.match(css, /\.m8-how-dialog[\s\S]*-webkit-text-size-adjust: 100%[\s\S]*text-size-adjust: 100%/, 'Opening details must not trigger iOS text autosizing');
 assert.match(css, /\.m8-how-dialog \.m8-dialog-card[\s\S]*overscroll-behavior-y: contain/);
