@@ -1091,13 +1091,14 @@ Object.freeze({
     Object.freeze(['1.33.0 r342', 'A new car: the Compact, a nimble lime city hatch that is easy to place and happy to drift, but runs out of puff on the straights. It is the first car on Trophy Road, at 300 trophies, and sits between the Sports Car and the Vintage Racer in GARAGE. Its perk, CLEAN EXIT: a clean DRIFT, one that ends without hitting a wall or spinning out, adds 1 CONTROL for a few seconds, up to 5/5, with a CONTROL +1 cue while it lasts.']),
     Object.freeze(['1.33.1 r343', 'The Compact\'s CLEAN EXIT perk no longer shows a CONTROL +1 race pill after every clean drift: it came up so often it was noise. The perk itself is unchanged.']),
     Object.freeze(['1.33.2 r344', 'First start: if the race setup fails to load, TURN reloads once and continues to GARAGE by itself; if it keeps failing, a RESTART notice shows instead of a button that does nothing.']),
-    Object.freeze(['1.33.3 r345', 'COMPACT is now smaller and VINTAGE RACER slightly larger, so the lineup sits in proportion.'])
+    Object.freeze(['1.33.3 r345', 'COMPACT is now smaller and VINTAGE RACER slightly larger, so the lineup sits in proportion.']),
+    Object.freeze(['1.33.4 r346', 'BELLA\'s final coat colours apply again; a colour-maths error stopped them on every Countryside load.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.33.3',
-  build: '2026.09.30-r345',
-  note: 'Visual size only; handling is unchanged.'
+  version: '1.33.4',
+  build: '2026.09.30-r346',
+  note: 'Bella\'s cream and seal-brown coat now shows as designed; her rescue and meow are unchanged.'
 });

@@ -413,6 +413,11 @@ async function setupRecovery(browserType, name, failures) {
       return route.fulfill({ status: 503, body: '' });
     })
   });
+  // The recovery reload cancels downloads still in flight, which WebKit reports as page
+  // errors ("… due to access control checks"); only errors after the last load count.
+  page.on('framenavigated', (frame) => {
+    if (frame === page.mainFrame()) errors.length = 0;
+  });
   try {
     await page.locator('.roadbook-card[data-track-id="countryside"]').click();
     await page.locator('.m8-track-continue').click();

@@ -26,12 +26,16 @@ function getCatLocalBounds(cat, eyes) {
   return bounds;
 }
 
+// THREE.Color has no vector maths (lengthSq, dot, distanceTo), so the coat
+// projection works on plain RGB triples.
+const rgbDot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const rgbDifference = (a, b) => [a.r - b.r, a.g - b.g, a.b - b.b];
+
 function remapCoatVertexColors(cat, eyes) {
-  const coatVector = SEAL_BROWN.clone().sub(PREVIOUS_CREAM);
-  const coatLengthSquared = Math.max(coatVector.lengthSq(), Number.EPSILON);
+  const coatVector = rgbDifference(SEAL_BROWN, PREVIOUS_CREAM);
+  const coatLengthSquared = Math.max(rgbDot(coatVector, coatVector), Number.EPSILON);
   const source = new THREE.Color();
   const remapped = new THREE.Color();
-  const offset = new THREE.Color();
 
   cat.traverse((node) => {
     if (!node.isMesh || eyes.includes(node)) return;
@@ -40,8 +44,8 @@ function remapCoatVertexColors(cat, eyes) {
     if (colors && node.material?.vertexColors) {
       for (let index = 0; index < colors.count; index += 1) {
         source.fromBufferAttribute(colors, index);
-        offset.copy(source).sub(PREVIOUS_CREAM);
-        const darkMix = THREE.MathUtils.clamp(offset.dot(coatVector) / coatLengthSquared, 0, 1);
+        const offset = rgbDifference(source, PREVIOUS_CREAM);
+        const darkMix = THREE.MathUtils.clamp(rgbDot(offset, coatVector) / coatLengthSquared, 0, 1);
         remapped.copy(FINAL_CREAM).lerp(SEAL_BROWN, darkMix);
         colors.setXYZ(index, remapped.r, remapped.g, remapped.b);
       }
@@ -52,7 +56,8 @@ function remapCoatVertexColors(cat, eyes) {
     const materials = Array.isArray(node.material) ? node.material : [node.material];
     for (const material of materials) {
       if (!material?.color) continue;
-      if (material.color.distanceTo(PREVIOUS_CREAM) < 0.02) {
+      const difference = rgbDifference(material.color, PREVIOUS_CREAM);
+      if (Math.sqrt(rgbDot(difference, difference)) < 0.02) {
         material.color.copy(FINAL_CREAM);
         material.needsUpdate = true;
       }
