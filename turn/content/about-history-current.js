@@ -1094,13 +1094,14 @@ Object.freeze({
     Object.freeze(['1.33.3 r345', 'COMPACT is now smaller and VINTAGE RACER slightly larger, so the lineup sits in proportion.']),
     Object.freeze(['1.33.4 r346', 'BELLA\'s final coat colours apply again; a colour-maths error stopped them on every Countryside load.']),
     Object.freeze(['1.33.5 r347', 'Admin: ROUTE TEST HUD shows the SWOOSH bends computed from each track\'s centreline, live while racing (#909 step 1). Players see no change.']),
-    Object.freeze(['1.33.6 r348', 'Admin: SWOOSH LISTENING TEST (three blind candidate sounds, 24 swooshes each, results to copy) and a glanceable NOW/NEXT route HUD (#909, #928). Players see no change.'])
+    Object.freeze(['1.33.6 r348', 'Admin: SWOOSH LISTENING TEST (three blind candidate sounds, 24 swooshes each, results to copy) and a glanceable NOW/NEXT route HUD (#909, #928). Players see no change.']),
+    Object.freeze(['1.33.7 r349', 'Admin: SWOOSH listening test round 2 compares the arrow (centre to full side, speed = curve length, pitch = tightness, smoother sound) with round 1\'s pitch sound, with lengths and linked pairs (#909, #928). Players see no change.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.33.6',
-  build: '2026.09.30-r348',
-  note: 'Admin listening test for SWOOSH and a simpler route HUD.'
+  version: '1.33.7',
+  build: '2026.09.30-r349',
+  note: 'Listening test round 2: the arrow swoosh, lengths and pairs.'
 });
