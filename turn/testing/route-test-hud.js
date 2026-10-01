@@ -1,9 +1,10 @@
-// Admin route test HUD (#909 step 1): the SWOOSH segments computed from the track's
-// centreline, live while racing, so the geometry can be checked against the road before
-// any sound changes. Admin-unlocked profiles only, switched in SETTINGS; it stays visible
-// above blank screen mode and is hidden from assistive technology (no per-frame
-// announcements). It reads the race state and never changes it.
-import { computeRouteGeometry, upcomingRouteSegments } from '../audio/route-geometry.js';
+// Admin route test HUD (#909): the SWOOSH segments computed from the track's centreline,
+// live while racing, and what the pace-note scheduler did with each: played on time,
+// late, held back (off road, no time) or cancelled (wrong way, pause). Admin-unlocked
+// profiles only, switched in SETTINGS; it stays visible above blank screen mode and is
+// hidden from assistive technology (no per-frame announcements). It reads the race
+// state and never changes it.
+import { routeForSamples, routeSegmentAt, upcomingRouteSegments } from '../audio/route-geometry.js';
 
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 const HUD_SETTING_KEY = 'turn-route-test-hud-v1';
@@ -66,6 +67,7 @@ function installStyles() {
     }
     .turn-route-test-hud .turn-route-hud-main { display: block; font-size: clamp(14px, 4.6vw, 20px); line-height: 1.2; white-space: nowrap; }
     .turn-route-test-hud .turn-route-hud-then { display: block; margin-top: 3px; white-space: nowrap; }
+    .turn-route-test-hud .turn-route-hud-sound { display: block; margin-top: 3px; white-space: nowrap; }
     .turn-route-test-hud .turn-route-hud-tuning { display: block; margin-top: 3px; font-size: 10px; white-space: normal; }
     .turn-route-test-hud[hidden] { display: none; }
     .turn-route-test-hud .is-right { color: #8ce99a; }
@@ -75,17 +77,12 @@ function installStyles() {
 }
 
 function routeFor(runtime) {
-  const samples = runtime?.samples;
-  if (!Array.isArray(samples) || samples.length < 8) return null;
-  const trackId = String(runtime.trackId || runtime.state?.trackId || globalThis.__turnGetTrackId?.() || '');
-  const cache = routeFor.cache;
-  if (cache && cache.samples === samples && cache.trackId === trackId) return cache.route;
-  routeFor.cache = { samples, trackId, route: computeRouteGeometry(samples) };
-  return routeFor.cache.route;
+  const trackId = String(runtime?.trackId || runtime?.state?.trackId || globalThis.__turnGetTrackId?.() || '');
+  return routeForSamples(runtime?.samples, trackId);
 }
 
 // Tightness words for reading the HUD at speed, from the tightest sustained radius.
-// Display only: how tightness sounds is what the listening test decides.
+// The same anchors the SWOOSH scheduler uses for pitch (SWOOSH_PACE_TUNING).
 const TIGHT_RADIUS = 40;
 const MEDIUM_RADIUS = 120;
 const tightnessWord = (segment) => (segment.peakRadius < TIGHT_RADIUS ? 'tight' : segment.peakRadius < MEDIUM_RADIUS ? 'medium' : 'gentle');
@@ -100,9 +97,22 @@ function span(className, text, tone = '') {
   return element;
 }
 
-function currentSegment(route, distance) {
-  const length = route.trackLength;
-  return route.segments.find((segment) => (((distance - segment.startDistance) % length) + length) % length < segment.length) || null;
+// What the SWOOSH scheduler did with a segment on this approach.
+const STATUS_WORDS = Object.freeze({ fired: '♪ on time', late: '♪ late', suppressed: 'held back', missed: 'held back', cancelled: 'cancelled' });
+
+function statusWord(entry) {
+  if (!entry) return '';
+  const word = STATUS_WORDS[entry.status] || entry.status;
+  if (entry.status === 'fired' || entry.status === 'late') return `${word} ${entry.margin.toFixed(1)} s${entry.linked ? ' linked' : ''}`;
+  return entry.reason ? `${word} (${entry.reason})` : word;
+}
+
+function soundLine(pace) {
+  if (!pace) return 'SOUND · Drive By Ear is off';
+  const last = pace.history.at(-1);
+  const counts = pace.counts;
+  const latest = last ? `last ${last.side === 'right' ? 'R' : 'L'} ${Math.round(last.angleDegrees)}° ${statusWord(last)}` : 'no swooshes yet';
+  return `${latest} · played ${counts.fired} · late ${counts.late} · held ${counts.suppressed} · cancelled ${counts.cancelled}`;
 }
 
 // NOW while the car is inside a swoosh's road, NEXT before it, then the two after.
@@ -116,13 +126,18 @@ function render(hud, runtime) {
   const index = Math.max(0, Math.round(Number(state.nearestTrackIndex) || 0));
   const distance = index * route.sampleSpacing;
   const speed = Math.max(0, Number(state.speed) || 0);
-  const now = currentSegment(route, distance);
+  const now = routeSegmentAt(route, distance);
+  const pace = globalThis.__turnSwooshPaceNotes || null;
+  const status = (segment) => {
+    const word = statusWord(pace?.statusOf(segment.id));
+    return word ? ` · ${word}` : '';
+  };
   const ahead = upcomingRouteSegments(route, distance, 3).filter(({ segment }) => segment !== now);
   const tone = (segment) => (segment.direction > 0 ? 'is-right' : 'is-left');
   const main = now
-    ? span('turn-route-hud-main', `NOW ${arrow(now)} ${sideWord(now)} ${Math.round(now.angleDegrees)}°${part(now)} · ${tightnessWord(now)}`, tone(now))
+    ? span('turn-route-hud-main', `NOW ${arrow(now)} ${sideWord(now)} ${Math.round(now.angleDegrees)}°${part(now)} · ${tightnessWord(now)}${status(now)}`, tone(now))
     : ahead[0]
-      ? span('turn-route-hud-main', `NEXT ${arrow(ahead[0].segment)} ${sideWord(ahead[0].segment)} ${Math.round(ahead[0].segment.angleDegrees)}°${part(ahead[0].segment)} · ${tightnessWord(ahead[0].segment)} · ${speed > 1 ? `${(ahead[0].ahead / speed).toFixed(1)} s` : `${Math.round(ahead[0].ahead)} m`}`, tone(ahead[0].segment))
+      ? span('turn-route-hud-main', `NEXT ${arrow(ahead[0].segment)} ${sideWord(ahead[0].segment)} ${Math.round(ahead[0].segment.angleDegrees)}°${part(ahead[0].segment)} · ${tightnessWord(ahead[0].segment)} · ${speed > 1 ? `${(ahead[0].ahead / speed).toFixed(1)} s` : `${Math.round(ahead[0].ahead)} m`}${status(ahead[0].segment)}`, tone(ahead[0].segment))
       : span('turn-route-hud-main', 'NO BENDS');
   const later = (now ? ahead : ahead.slice(1)).slice(0, 2)
     .map(({ segment }) => `${segment.direction > 0 ? 'R' : 'L'} ${Math.round(segment.angleDegrees)}°${part(segment)} ${tightnessWord(segment)}`);
@@ -130,7 +145,8 @@ function render(hud, runtime) {
   hud.replaceChildren(
     main,
     span('turn-route-hud-then', later.length ? `then ${later.join(' · ')}` : ' ', 'is-dim'),
-    span('turn-route-hud-tuning', `${route.segments.length} swooshes · tight <r${TIGHT_RADIUS} · medium <r${MEDIUM_RADIUS}`
+    span('turn-route-hud-sound', soundLine(pace)),
+    span('turn-route-hud-tuning', `${route.bends.length} bends · ${route.segments.length} swooshes · ${pace?.counts.phrases ?? 0} phrases played · tight <r${TIGHT_RADIUS} · medium <r${MEDIUM_RADIUS}`
       + ` · turns below r${Math.round(1 / tuning.turningCurvature)} · ignores <${tuning.noiseAngleDegrees}°`, 'is-dim')
   );
 }

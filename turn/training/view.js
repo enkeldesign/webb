@@ -163,7 +163,7 @@ function createDialogs() {
               </div>
               <div>
                 <dt>Pace notes</dt>
-                <dd>Sharp directional BIPs play before curves. The ear gives the turn side, the count gives severity, and a held final BEEP means the curve continues.</dd>
+                <dd>A swipe travels out to the ear on the side of the coming bend and ends before it begins. Higher pitch means tighter; a slower swipe means a longer bend. Linked swipes tell a bend of more than 90° or bends that follow each other.</dd>
               </div>
               <div>
                 <dt>Status and safety</dt>

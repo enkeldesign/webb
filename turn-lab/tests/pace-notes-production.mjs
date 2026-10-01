@@ -1,286 +1,305 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {
-  PACE_NOTE_LENGTH,
-  getTrackPaceNotes,
-  speedAdjustedPaceNoteTrigger
-} from '../../turn/tracks/pace-notes.js';
-import {
-  paceNoteDuration,
-  paceNotePhraseGroups,
-  progressCrossedForward,
-  progressInRange,
-  resetPaceNotePassage,
-  updatePaceNoteState
-} from '../../turn/audio/pace-notes.js';
+import { register } from 'node:module';
 
-const [releaseSource, app, audio, paceAudio, priorityAudio, paceMap, audioPanel] = await Promise.all([
-  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/audio/pace-notes.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/audio/pace-note-priority.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/pace-notes.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/in-game-menu.js', import.meta.url), 'utf8')
+// SWOOSH pace notes in the race (#909 step 2, #928). The BIP/BEEP notes are retired: every
+// bend of every course is cued from its centreline, through the engine's route channel,
+// timed to end a steering lead before the bend, with no bend dropped, and route cues
+// yield to recovery and safety.
+const threeUrl = new URL('../../turn/vendor/three-0.184.0/build/three.module.js', import.meta.url).href;
+register(`data:text/javascript,export async function resolve(specifier, context, next) {
+  if (specifier === 'three') return { url: ${JSON.stringify(threeUrl)}, shortCircuit: true };
+  return next(specifier, context);
+}`);
+
+const {
+  SWOOSH_PACE_TUNING,
+  planSwooshes,
+  resetSwooshDelivery,
+  swooshDuration,
+  swooshTightness,
+  updateSwooshPaceNotes
+} = await import('../../turn/audio/swoosh-pace-notes.js');
+const { routeForSamples } = await import('../../turn/audio/route-geometry.js');
+const { SWOOSH_LENGTHS } = await import('../../turn/audio/swoosh-sound.js');
+const { createTrackRuntime } = await import('../../turn/tracks/catalog.js');
+const { TRACK_DEFINITIONS } = await import('../../turn/tracks/definitions.js');
+const { TRAINING_STAGES } = await import('../../turn/training/stages.js');
+const { buildTrainingCourse } = await import('../../turn/training/course.js');
+
+const read = (path) => fs.readFile(new URL(`../../${path}`, import.meta.url), 'utf8');
+const [releaseSource, app, loader, audio, scheduler, music, hud, training, stagesSource, menu, guide, pause] = await Promise.all([
+  read('turn/release.json'),
+  read('turn/app.js'),
+  read('turn/audio/drive-by-ear-runtime.js'),
+  read('turn/audio/audio-system.js'),
+  read('turn/audio/swoosh-pace-notes.js'),
+  read('turn/audio/racing-music-v5.js'),
+  read('turn/testing/route-test-hud.js'),
+  read('turn/training/drive-by-ear-training.js'),
+  read('turn/training/stages.js'),
+  read('turn/ui/in-game-menu.js'),
+  read('turn/ui/how-to-play-guide.js'),
+  read('turn/race/race-pause.js')
 ]);
 const release = JSON.parse(releaseSource);
 
-const expectedMaps = Object.freeze({
-  countryside: Object.freeze([
-    [[1, 2]],
-    [[1, 1]],
-    [[1, 2]],
-    [[1, 1]]
-  ]),
-  airport: Object.freeze([
-    [[1, 2]],
-    [[1, 1]],
-    [[1, 2], [-1, 3]],
-    [[1, 2]]
-  ]),
-  cliffside: Object.freeze([
-    [[1, 2]],
-    [[-1, 1]],
-    [[1, 2]],
-    [[-1, 1], [1, 2]],
-    [[1, 1]]
-  ]),
-  harbor: Object.freeze([
-    [[1, 2]],
-    [[1, 3]],
-    [[-1, 3]],
-    [[1, 3]],
-    [[1, 2]]
-  ])
-});
-
-for (const [trackId, expectedGroups] of Object.entries(expectedMaps)) {
-  const notes = getTrackPaceNotes(trackId);
-  assert.equal(notes.length, expectedGroups.length, `${trackId} must expose every hand-placed sign from its supplied map`);
-  assert.deepEqual(
-    notes.map((note) => note.groups.map((group) => [group.direction, group.severity])),
-    expectedGroups,
-    `${trackId} must preserve the authored direction and severity sequence`
-  );
-
-  for (const note of notes) {
-    const slowTrigger = speedAdjustedPaceNoteTrigger(note, 8, 88);
-    const fastTrigger = speedAdjustedPaceNoteTrigger(note, 62, 88);
-    assert.ok(fastTrigger <= slowTrigger, 'Higher speed must move a pace note toward the earlier edge of its authored zone');
-    assert.ok(fastTrigger >= note.triggerStart && slowTrigger <= note.triggerEnd);
-  }
-}
-assert.equal(getTrackPaceNotes('unknown').length, 0, 'Tracks without authored data must remain quiet');
-
-const airportNotes = getTrackPaceNotes('airport');
-assert.deepEqual(
-  airportNotes.map((note) => note.groups.map((group) => group.length)),
-  [
-    [PACE_NOTE_LENGTH.MEDIUM],
-    [PACE_NOTE_LENGTH.LONG],
-    [PACE_NOTE_LENGTH.LONG, PACE_NOTE_LENGTH.MEDIUM],
-    [PACE_NOTE_LENGTH.LONG]
-  ],
-  'AIRPORT must preserve the authored broad sweep and long exits without changing direction or severity'
-);
-for (const trackId of ['countryside', 'cliffside', 'harbor']) {
-  assert.ok(
-    getTrackPaceNotes(trackId).every((note) => note.groups.every((group) => group.length === undefined)),
-    `${trackId} must keep its currently authored compact phrase unchanged`
-  );
-}
-
-const regularTightPhrase = paceNotePhraseGroups([{ direction: 1, severity: 3 }]);
-const longTightPhrase = paceNotePhraseGroups([{ direction: 1, severity: 3, length: PACE_NOTE_LENGTH.LONG }]);
-assert.equal(regularTightPhrase.length, 1, 'A regular tight curve must remain one three-beep group');
-assert.equal(longTightPhrase.length, 1, 'A long tight curve must not gain a fourth beep');
-assert.equal(regularTightPhrase[0].finalBeepDurationSeconds, 0.055);
-assert.equal(longTightPhrase[0].finalBeepDurationSeconds, 0.17, 'A long curve must hold its existing final beep');
-assert.equal('lengthMarker' in longTightPhrase[0], false, 'The retired extra-tail marker must not return');
-assert.ok(
-  paceNoteDuration(longTightPhrase) > paceNoteDuration(regularTightPhrase),
-  'bip-bip-beep must last longer than bip-bip-bip without changing beep count'
-);
-
-const longMediumPhrase = paceNotePhraseGroups([{
-  direction: -1,
-  severity: 2,
-  length: PACE_NOTE_LENGTH.LONG
-}]);
-assert.deepEqual(
-  longMediumPhrase.map((group) => [group.direction, group.severity, group.finalBeepDurationSeconds]),
-  [[-1, 2, 0.17]],
-  'A long medium curve must encode bip-beep as one two-beep group'
-);
-
-const linkedAirportPhrase = paceNotePhraseGroups(airportNotes[2].groups);
-assert.deepEqual(
-  linkedAirportPhrase.map((group) => [
-    group.direction,
-    group.severity,
-    group.finalBeepDurationSeconds
-  ]),
-  [[1, 2, 0.17], [-1, 3, 0.055]],
-  'A linked phrase must hold only the final beep of the authored long first corner before direction changes'
-);
-assert.ok(paceNoteDuration(airportNotes[2].groups) < 1, 'The longest authored phrase must remain under one second');
-assert.ok(
-  paceNoteDuration([{ direction: 1, severity: 2 }, { direction: -1, severity: 3 }]) < 0.8,
-  'Existing linked notes must remain as brief as before'
-);
-
-assert.equal(progressInRange(0.2, 0.1, 0.3), true);
-assert.equal(progressInRange(0.9, 0.95, 0.05), false);
-assert.equal(progressInRange(0.98, 0.95, 0.05), true, 'The generic trigger helper must support a zone that wraps over start/finish');
-assert.equal(progressInRange(0.02, 0.95, 0.05), true);
-assert.equal(progressCrossedForward(0.12, 0.24, 0.18), true, 'A forward frame hitch must still cross a skipped trigger');
-assert.equal(progressCrossedForward(0.24, 0.12, 0.18), false, 'Reverse travel must not masquerade as a forward trigger crossing');
-assert.equal(progressCrossedForward(0.96, 0.04, 0.99), true, 'Forward crossing must work over the lap boundary');
-assert.equal(progressCrossedForward(0.1, 0.7, 0.2), false, 'A teleport-sized progress jump must not emit a chain of stale notes');
-
-const samples = Array.from({ length: 720 }, (_, index) => ({
-  point: { x: 0, z: index },
-  tangent: { x: 0, z: 1 },
-  normal: { x: -1, z: 0 }
-}));
-
-function makeRuntime({
-  trackId = 'airport',
-  progress = 0.2,
-  speed = 35,
-  lap = 1,
-  offRoad = false,
-  mode = 'racing',
-  getForward = () => ({ x: 0, z: 1 })
-} = {}) {
+// A Web Audio stand-in that records what each swoosh does.
+function param(value = 0) {
   return {
-    trackId,
-    maxSpeed: 88,
-    samples,
-    state: {
-      trackId,
-      running: true,
-      mode,
-      lap,
-      progress,
-      nearestTrackIndex: Math.round(progress * samples.length) % samples.length,
-      speed,
-      offRoad,
-      velocity: { x: 0, z: speed }
+    value,
+    events: [],
+    setValueAtTime(next, at) { this.events.push(['set', next, at]); },
+    linearRampToValueAtTime(next, at) { this.events.push(['linear', next, at]); },
+    exponentialRampToValueAtTime(next, at) { this.events.push(['exp', next, at]); },
+    setTargetAtTime() {},
+    cancelScheduledValues() {}
+  };
+}
+function createContext() {
+  const context = {
+    currentTime: 0,
+    sampleRate: 8000,
+    state: 'running',
+    panners: [],
+    cancelled: 0,
+    node(extra = {}) {
+      return { connect: (target) => target, disconnect() {}, ...extra };
     },
-    getForward
+    source(extra = {}) {
+      return context.node({
+        start() {},
+        stop(...args) { if (!args.length) context.cancelled += 1; },
+        addEventListener() {},
+        ...extra
+      });
+    },
+    createStereoPanner() {
+      const panner = context.node({ pan: param() });
+      context.panners.push(panner);
+      return panner;
+    },
+    createGain: () => context.node({ gain: param(1) }),
+    createBiquadFilter: () => context.node({ Q: param(), frequency: param() }),
+    createOscillator: () => context.source({ frequency: param() }),
+    createBufferSource: () => context.source({ buffer: null }),
+    createBuffer: (channels, length) => ({ getChannelData: () => new Float32Array(length) })
+  };
+  return context;
+}
+function createRouteAudio() {
+  const context = createContext();
+  return {
+    context,
+    destination: context.node(),
+    ready: true,
+    held: 0,
+    released: 0,
+    holdMixUntil(time) { this.held = Math.max(this.held, time); },
+    releaseMix() { this.released += 1; }
   };
 }
 
-function triggerProgress(trackId, noteIndex, speed = 35) {
-  const note = getTrackPaceNotes(trackId)[noteIndex];
-  return speedAdjustedPaceNoteTrigger(note, speed, 88) + 0.001;
+const ducks = [];
+globalThis.__turnRacingMusic = { duck: (inSeconds, seconds) => ducks.push([inSeconds, seconds]) };
+
+// Drive laps at a steady speed, 30 updates a second, as the race loop does.
+function drive(runtime, routeAudio, { speed = 40, seconds, frame = () => ({ active: true }), startDistance = 0 } = {}) {
+  const route = routeForSamples(runtime.samples, runtime.trackId);
+  const count = runtime.samples.length;
+  const played = [];
+  let distance = startDistance;
+  const dt = 1 / 30;
+  for (let step = 0; step < Math.round(seconds / dt); step += 1) {
+    const index = Math.round(distance / route.sampleSpacing) % count;
+    const tangent = runtime.samples[index].tangent;
+    Object.assign(runtime.state, {
+      nearestTrackIndex: index,
+      speed,
+      velocity: { x: tangent.x * speed, z: tangent.z * speed }
+    });
+    for (const swoosh of updateSwooshPaceNotes(runtime, frame(step * dt), routeAudio)) {
+      played.push({ ...swoosh, lap: Math.floor(distance / route.trackLength), distance });
+    }
+    distance += speed * dt;
+    routeAudio.context.currentTime += dt;
+  }
+  return { route, played };
+}
+function trackRuntime(id) {
+  const definition = TRACK_DEFINITIONS.find((candidate) => candidate.id === id);
+  const runtime = createTrackRuntime(id, definition.sampleCount || 2160);
+  return { trackId: id, samples: runtime.samples, state: { trackId: id, running: true, mode: 'racing' } };
 }
 
-for (const trackId of Object.keys(expectedMaps)) {
-  resetPaceNotePassage();
-  const progress = triggerProgress(trackId, 0);
-  const firstPass = updatePaceNoteState(makeRuntime({ trackId, progress }), { active: true });
-  assert.equal(firstPass?.id, `${trackId}-1`, `${trackId} must play its first authored sign`);
-  assert.equal(
-    updatePaceNoteState(makeRuntime({ trackId, progress: progress + 0.002 }), { active: true }),
-    null,
-    'A sign must play only once per lap passage'
-  );
+// Sound mapping: pitch from the tightest sustained radius, swipe speed from road length.
+assert.equal(SWOOSH_PACE_TUNING.variant, 'swipe-tone', 'the race uses the swipe chosen in listening test round 3');
+assert.equal(swooshTightness({ peakRadius: 20 }), 'tight');
+assert.equal(swooshTightness({ peakRadius: 80 }), 'medium');
+assert.equal(swooshTightness({ peakRadius: 300 }), 'gentle');
+assert.equal(swooshDuration({ length: 40 }), SWOOSH_LENGTHS.short);
+assert.equal(swooshDuration({ length: 160 }), SWOOSH_LENGTHS.long);
 
-  const nextLapPass = updatePaceNoteState(makeRuntime({ trackId, progress, lap: 2 }), { active: true });
-  assert.equal(nextLapPass?.id, `${trackId}-1`, 'A new lap must re-arm every track map');
+// Planning: on open road a swoosh ends a steering lead before its bend; in a dense run
+// the earlier swooshes start earlier so every one fits, in order, without overlapping.
+{
+  const segment = (length) => ({ length, peakRadius: 50 });
+  const [lone] = planSwooshes([{ segment: segment(40), ahead: 200 }], 40);
+  assert.ok(Math.abs(lone.entry - lone.end - SWOOSH_PACE_TUNING.steeringLeadSeconds) < 1e-9, 'a lone swoosh ends one steering lead before its bend');
+  const dense = planSwooshes([
+    { segment: segment(20), ahead: 100 },
+    { segment: segment(20), ahead: 110 },
+    { segment: segment(20), ahead: 120 },
+    { segment: segment(160), ahead: 130 }
+  ], 50);
+  for (let index = 1; index < dense.length; index += 1) {
+    assert.ok(dense[index - 1].end <= dense[index].start - SWOOSH_PACE_TUNING.gapSeconds + 1e-9, 'linked swooshes never overlap');
+  }
+  assert.ok(dense[0].end < dense[0].entry - SWOOSH_PACE_TUNING.steeringLeadSeconds, 'a dense run starts earlier instead of dropping a bend');
+  const slow = planSwooshes([{ segment: segment(40), ahead: 12 }], 9);
+  const fast = planSwooshes([{ segment: segment(40), ahead: 12 }], 60);
+  assert.equal(slow[0].duration, fast[0].duration, 'speed never changes what a bend sounds like');
 }
 
-resetPaceNotePassage();
-const airportProgress = triggerProgress('airport', 1);
-assert.equal(
-  updatePaceNoteState(makeRuntime({ progress: airportProgress, offRoad: true }), { active: true })?.id,
-  'airport-2',
-  'Leaving the road must not discard an upcoming-corner note'
-);
-resetPaceNotePassage();
-assert.equal(updatePaceNoteState(makeRuntime({ progress: airportProgress, mode: 'spectating' }), { active: true }), null, 'Spectating must not trigger player navigation notes');
-
-resetPaceNotePassage();
-const skippedNote = airportNotes[1];
-const skippedTrigger = speedAdjustedPaceNoteTrigger(skippedNote, 35, 88);
-assert.equal(
-  updatePaceNoteState(makeRuntime({ progress: skippedTrigger - 0.012 }), { active: true }),
-  null,
-  'The approach sample before a note must remain quiet'
-);
-assert.equal(
-  updatePaceNoteState(makeRuntime({ progress: skippedNote.triggerEnd + 0.012 }), { active: true })?.id,
-  skippedNote.id,
-  'A frame hitch that lands beyond the authored window must still deliver the crossed note'
-);
-
-resetPaceNotePassage();
-let forwardChecks = 0;
-const countedForward = () => {
-  forwardChecks += 1;
-  return { x: 0, z: 1 };
-};
-const notes = getTrackPaceNotes('airport');
-for (let index = 0; index < notes.length; index += 1) {
-  updatePaceNoteState(makeRuntime({
-    progress: triggerProgress('airport', index),
-    getForward: countedForward
-  }), { active: true });
+// Every production track: from the second lap, every swoosh plays exactly once a lap, in
+// road order, on its own side, without overlapping, while the mix and music duck.
+for (const definition of TRACK_DEFINITIONS) {
+  resetSwooshDelivery();
+  const runtime = trackRuntime(definition.id);
+  const routeAudio = createRouteAudio();
+  const speed = 40;
+  const route = routeForSamples(runtime.samples, runtime.trackId);
+  const { played } = drive(runtime, routeAudio, { speed, seconds: (route.trackLength * 3) / speed });
+  for (const lap of [1, 2]) {
+    const ids = played.filter((swoosh) => swoosh.lap === lap || (swoosh.lap === lap - 1 && swoosh.distance > route.trackLength * (lap) - 400)).map((swoosh) => swoosh.id);
+    for (const segment of route.segments) {
+      assert.ok(ids.includes(segment.id), `${definition.id}: swoosh ${segment.id} plays on lap ${lap + 1}`);
+    }
+  }
+  for (let index = 1; index < played.length; index += 1) {
+    assert.ok(played[index].at >= played[index - 1].endsAt + SWOOSH_PACE_TUNING.gapSeconds - 1e-6, `${definition.id}: swooshes never overlap`);
+  }
+  const sides = routeAudio.context.panners.map((panner) => Math.sign(panner.pan.events[0][1]));
+  const expected = played.map((swoosh) => route.segments.find((segment) => segment.id === swoosh.id).direction);
+  assert.deepEqual(sides, expected, `${definition.id}: every swoosh is on its bend's side`);
+  for (const panner of routeAudio.context.panners) {
+    assert.equal(Math.abs(panner.pan.events[0][1]), 0.5, 'the swipe starts at 50% on its side');
+    assert.equal(Math.abs(panner.pan.events[1][1]), 1, 'and travels to the full side');
+  }
+  assert.ok(routeAudio.held > 0 && ducks.length > 0, `${definition.id}: the car sounds and music duck under swooshes`);
+  const late = played.filter((swoosh) => swoosh.margin < SWOOSH_PACE_TUNING.steeringLeadSeconds / 2).length;
+  assert.ok(late <= played.length * 0.25, `${definition.id}: at ${speed} m/s most swooshes end a steering lead early (${late}/${played.length} late)`);
 }
-const checksAfterFinalNote = forwardChecks;
-updatePaceNoteState(makeRuntime({
-  progress: triggerProgress('airport', notes.length - 1) + 0.002,
-  getForward: countedForward
-}), { active: true });
-assert.equal(forwardChecks, checksAfterFinalNote, 'Once every note has fired, the lap must skip unnecessary guidance work');
 
-assert.match(app, /const driveByEarEnabled = installDriveByEarSetting\(\)/);
-assert.match(app, /preparePaceNotePriorityCapture\(\)/, 'The shared-context priority layer must prepare before graph creation');
-assert.ok(app.indexOf('preparePaceNotePriorityCapture()') < app.indexOf('./audio/audio-preferences.js'));
-assert.match(app, /installPaceNotePriority\(\);[\s\S]*installPaceNotes\(\);/);
-assert.match(app, /if \(driveByEarEnabled\) \{[\s\S]*installUniversalDrivingSoundscape\(\);[\s\S]*installPaceNotes\(\);/);
-assert.match(paceAudio, /PACE_NOTE_UPDATE_INTERVAL_MS = 1000 \/ 30/, 'Pace-note position checks must be capped at 30 Hz');
-assert.match(paceAudio, /now - lastCheckedAt >= PACE_NOTE_UPDATE_INTERVAL_MS/);
-assert.match(paceAudio, /baseAudio\.update\(frame, now\)/, 'Pace-note detection must remain inside the central audio update path');
-assert.match(paceAudio, /progressCrossedForward\(previousProgress, progress, trigger\)/, 'Skipped progress windows must still trigger');
-assert.match(paceAudio, /groups: paceNotePhraseGroups\(note\.groups\)/, 'Authored corner length must be translated before entering playback');
-assert.match(paceAudio, /LONG_NOTE_DURATION_SECONDS = 0\.17/);
-assert.match(paceAudio, /finalBeepDurationSeconds:/);
-assert.doesNotMatch(paceAudio, /lengthMarker|paceNoteLengthTailCount/, 'Long curves must not synthesize an extra beep group');
-assert.match(paceAudio, /firedNoteIds\.size >= notes\.length/, 'A completed pace-note lap must take the fast path');
-assert.match(paceAudio, /turn:pace-note-priority/, 'Production must dispatch into the reliable priority queue');
-assert.doesNotMatch(paceAudio, /state\.offRoad === true/, 'Off-road recovery must not suppress an upcoming corner');
-assert.doesNotMatch(paceAudio, /MIN_FORWARD_ALIGNMENT|headingAlignment/, 'A brief steering or drift angle must not erase a pace note');
-assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext|createOscillator|createDynamicsCompressor/, 'Detection must not create a second audio engine');
-assert.match(priorityAudio, /const pendingPaceNotes = \[\]/, 'Triggered notes must wait in a persistent FIFO until scheduled');
-assert.match(priorityAudio, /context\.state !== 'running'/, 'Interrupted Web Audio must retain rather than discard a note');
-assert.match(priorityAudio, /requestAudioResume\(now, forceResume\)/, 'The normal update path must retry an interrupted context');
-assert.match(priorityAudio, /context\.addEventListener\?\.\('statechange'/, 'Automatic iOS audio recovery must flush retained notes');
-assert.match(priorityAudio, /priorityBus\.connect\(masterGain\)/, 'Pace notes must use the shared context while bypassing route and safety muting');
-assert.match(priorityAudio, /panner\.connect\(priorityBus\)/);
-assert.match(priorityAudio, /PACE_NOTE_LEVEL = 0\.084/, 'The critical route phrase must remain prominent in the app mix');
-assert.match(priorityAudio, /PACE_NOTE_LONG_DURATION_SECONDS = 0\.17/);
-assert.match(priorityAudio, /index === severity - 1[\s\S]*paceNoteFinalBeepDuration\(group\)/, 'Only the final regular beep may be lengthened');
-assert.match(priorityAudio, /schedulePaceNoteBeep\(cursor, pan, severity, duration\)/, 'Playback must hold the final beep rather than schedule a tail');
-assert.match(priorityAudio, /const endAt = startAt \+ duration/);
-assert.doesNotMatch(priorityAudio, /lengthMarker/, 'Priority playback must not depend on the retired extra-beep marker');
-assert.doesNotMatch(priorityAudio, /safetyMode|offRoadLatched/, 'Ribbon, recovery and wrong-way state must never veto a queued pace note');
-assert.doesNotMatch(priorityAudio, /new AudioContext|new webkitAudioContext|new Audio\(|fetch\(/, 'Priority playback must reuse TURN’s one AudioContext and generated tones');
-assert.doesNotMatch(priorityAudio, /requestAnimationFrame|setInterval|setTimeout/, 'Reliability must use existing updates and state changes rather than another loop');
-assert.match(audio, /window\.addEventListener\('turn:pace-note', handlePaceNoteAudio\)/, 'The legacy event remains as a safe fallback if the priority layer cannot install');
-assert.doesNotMatch(paceAudio, /requestAnimationFrame|setInterval|setTimeout/, 'Pace-note detection must not add another timing loop');
-assert.match(paceAudio, /mode === 'spectating'/, 'Spectator mode must stay quiet');
-for (const trackName of ['COUNTRYSIDE', 'AIRPORT', 'CLIFFSIDE', 'HARBOR']) {
-  assert.match(paceMap, new RegExp(`const ${trackName}_PACE_NOTES`), `${trackName} must keep an explicit authored pace-note map`);
+// Off road the route yields: nothing plays, a swoosh already playing stops, and the bends
+// passed meanwhile are recorded as held back. Back on the road, the next bends play.
+{
+  resetSwooshDelivery();
+  const runtime = trackRuntime('countryside');
+  const routeAudio = createRouteAudio();
+  const { played } = drive(runtime, routeAudio, { seconds: 20, frame: (time) => ({ active: true, offRoad: time > 1 && time < 12 }) });
+  assert.ok(played.every((swoosh) => swoosh.at <= 1.2 || swoosh.at >= 12), 'no swoosh starts while off road');
+  assert.ok(played.some((swoosh) => swoosh.at >= 12), 'swooshes return with the road');
 }
-assert.match(paceMap, /export const PACE_NOTE_LENGTH/);
-assert.match(audioPanel, /Drive By Ear sound guide/);
-assert.match(audioPanel, /Pace notes tell you what comes next/);
-assert.match(audioPanel, /A warm organic hum guides your steering/);
-assert.match(audioPanel, /Off road, centred gravel marks the surface/);
-assert.match(audioPanel, /nearby-rival warnings are directional/);
-assert.doesNotMatch(audioPanel, /TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/, 'The audio guide must not resurrect retired or track-specific DBE generations');
 
-console.log(`TURN ${release.id} final-beep long-curve encoding and priority pace notes passed.`);
+// Wrong way cancels: a scheduled swoosh is stopped and its bend re-armed, so it plays again
+// once the car is the right way round and still before the bend.
+{
+  resetSwooshDelivery();
+  const runtime = trackRuntime('mountain');
+  const routeAudio = createRouteAudio();
+  // Drive the long first bend until the next swoosh has just been scheduled, then turn
+  // the wrong way for half a second, well before that next bend begins.
+  let distance = 200;
+  let first = [];
+  while (!first.length && distance < 2000) {
+    first = drive(runtime, routeAudio, { seconds: 1 / 30, startDistance: distance }).played;
+    distance += 40 / 30;
+  }
+  assert.ok(first.length, 'a swoosh is scheduled on the approach');
+  const { played } = drive(runtime, routeAudio, { seconds: 0.5, frame: () => ({ active: true, wrongWay: true }), startDistance: distance });
+  assert.equal(played.length, 0, 'nothing plays the wrong way');
+  assert.ok(routeAudio.context.cancelled > 0 && routeAudio.released > 0, 'the live swoosh is stopped and the mix released');
+  const again = drive(runtime, routeAudio, { seconds: 0.2, startDistance: distance + 20 }).played;
+  assert.ok(again.some((swoosh) => swoosh.id === first[0].id), 'the right way round, the cancelled bend plays again');
+}
+
+// Spectating, an inactive frame (garage, hidden page) and Drive By Ear off stay silent.
+{
+  for (const [label, mutate, frame] of [
+    ['spectating', (state) => { state.mode = 'spectating'; }, { active: true }],
+    ['an inactive frame', () => {}, { active: false }],
+    ['Drive By Ear off', () => { globalThis.__turnDriveByEarEnabled = false; }, { active: true }]
+  ]) {
+    resetSwooshDelivery();
+    const runtime = trackRuntime('airport');
+    mutate(runtime.state);
+    const { played } = drive(runtime, createRouteAudio(), { seconds: 15, frame: () => frame });
+    assert.equal(played.length, 0, `${label} plays no pace notes`);
+    delete globalThis.__turnDriveByEarEnabled;
+  }
+}
+
+// A paused or suspended context loses nothing: once it runs, the next bends still play.
+{
+  resetSwooshDelivery();
+  const runtime = trackRuntime('harbor');
+  const routeAudio = createRouteAudio();
+  routeAudio.ready = false;
+  assert.equal(drive(runtime, routeAudio, { seconds: 2 }).played.length, 0);
+  routeAudio.ready = true;
+  assert.ok(drive(runtime, routeAudio, { seconds: 6, startDistance: 80 }).played.length > 0, 'a resumed context plays the bends ahead');
+}
+
+// DRIVE BY EAR 101 uses the same path: its open courses have no seam bend, and its texts
+// name the sides the geometry gives.
+{
+  const sidesOf = (stage) => {
+    const { samples } = buildTrainingCourse(stage, 27);
+    const route = routeForSamples(samples, stage.id);
+    assert.equal(route.closed, false, `${stage.id} is an open course`);
+    return route.segments.filter((segment) => segment.angleDegrees > 20).map((segment) => segment.side[0].toUpperCase()).join('');
+  };
+  const [part1, part2, part3, part4, part5] = TRAINING_STAGES;
+  assert.equal(sidesOf(part1), '', 'Part 1 is straight');
+  assert.equal(sidesOf(part2), 'LLRR', 'Part 2: a left, then a right');
+  assert.match(part2.lead, /a left, then later a right/);
+  assert.equal(sidesOf(part3), 'L', 'Part 3: one long left');
+  assert.match(part3.lead, /slow swipe in the left ear/);
+  assert.equal(sidesOf(part4), 'RRR', 'Part 4: one long right in three linked swipes');
+  assert.match(part4.lead, /Three linked swipes in the right ear/);
+  assert.equal(sidesOf(part5), 'LLLRR', 'Part 5: a left, then a left linked to a right');
+  assert.match(part5.lead, /a swipe in the left ear, then swipes in the right ear/);
+  assert.equal(TRAINING_STAGES.some((stage) => 'notes' in stage), false, 'training has no hand-placed notes');
+}
+
+// Contracts: one supported route channel, no graph interception for pace notes, no
+// second timing loop, BIP/BEEP retired everywhere players hear or read about them.
+assert.match(audio, /globalThis\.__turnRouteAudio = routeAudio/, 'the engine publishes its route channel');
+assert.match(audio, /get destination\(\) \{\s*return routeBus;/, 'pace notes play into routeBus: balance, DBE on/off, off-road and wrong-way muting apply');
+assert.doesNotMatch(audio, /turn:pace-note'|handlePaceNoteAudio|schedulePaceNoteBeep/, 'the engine has no BIP renderer');
+assert.doesNotMatch(loader, /pace-note-priority|preparePaceNotePriorityCapture|'\.\/pace-notes\.js/, 'the createGain capture and BIP modules are gone');
+assert.match(loader, /installOrganicRibbon\(\);[\s\S]*installSwooshPaceNotes\(\);[\s\S]*installUniversalDrivingSoundscape\(\);[\s\S]*installOffroadEarDirection\(\);[\s\S]*installRecoveryGuidance\(\);/,
+  'SWOOSH sits inside the soundscape, so it sees the off-road and wrong-way state the mix uses');
+assert.match(app, /installSwooshPaceNotes\(\);/);
+assert.doesNotMatch(scheduler, /requestAnimationFrame|setInterval|setTimeout|new AudioContext|createGain = |prototype/, 'the scheduler uses the audio update and the route channel only');
+assert.match(scheduler, /mode \|\| ''\) !== 'spectating'/);
+assert.match(scheduler, /if \(!event\.detail\?\.running \|\| event\.detail\?\.reason === 'race-reset'\)/);
+assert.match(pause, /turn:pace-note-silence/, 'pausing still silences route cues');
+assert.match(music, /function duck\(inSeconds = 0, seconds = 0\)/);
+assert.match(music, /masterGain\.connect\(duckGain\);\s*duckGain\.connect\(compressor\);/, 'music ducks on its own gain, never the player volume');
+assert.match(hud, /tight <r\$\{TIGHT_RADIUS\}/);
+assert.match(hud, new RegExp(`const TIGHT_RADIUS = ${SWOOSH_PACE_TUNING.tightRadius};`));
+assert.match(hud, new RegExp(`const MEDIUM_RADIUS = ${SWOOSH_PACE_TUNING.mediumRadius};`));
+assert.doesNotMatch(training, /turn:pace-note-priority|fireScheduledNotes/);
+for (const [label, source] of [['stages', stagesSource], ['menu', menu], ['guide', guide]]) {
+  assert.doesNotMatch(source, /\bBIP|\bBEEP|beeps?\b/i, `${label}: no BIP/BEEP language remains`);
+}
+assert.match(guide, /Pace notes need stereo/);
+assert.match(menu, /Drive By Ear sound guide/);
+assert.match(menu, /Pace notes tell you what comes next/);
+assert.match(menu, /A warm organic hum guides your steering/);
+assert.match(menu, /Off road, centred gravel marks the surface/);
+assert.match(menu, /nearby-rival warnings are directional/);
+
+console.log(`TURN ${release.id} SWOOSH pace notes: every bend on every track and DRIVE BY EAR 101, timed, linked, on its side, ducked, and yielding off road and the wrong way.`);

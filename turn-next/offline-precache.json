@@ -1,5 +1,5 @@
 {
-  "release": "20260930-r350",
+  "release": "20261001-r351",
   "files": [
     "/turn-next/app.js",
     "/turn-next/challenge-codec.js",
@@ -240,13 +240,12 @@
     "/turn/audio/music/tone-runtime.js",
     "/turn/audio/offroad-ear-direction.js",
     "/turn/audio/organic-ribbon.js",
-    "/turn/audio/pace-note-priority.js",
-    "/turn/audio/pace-notes.js",
     "/turn/audio/racing-music-health.js",
     "/turn/audio/racing-music-v2.js",
     "/turn/audio/racing-music-v5.js",
     "/turn/audio/recovery-guidance.js",
     "/turn/audio/route-geometry.js",
+    "/turn/audio/swoosh-pace-notes.js",
     "/turn/audio/swoosh-sound.js",
     "/turn/browser-install-r165.css",
     "/turn/content/about-history-current.js",

@@ -90,7 +90,8 @@ const sCurve = [['S', 100], ['R', 90, 30], ['L', 90, 30], ['S', 100], ['R', 180,
   const kink = route.segments.find((segment) => Math.round(segment.angleDegrees) === 20);
   const sweeper = route.segments.find((segment) => Math.round(segment.angleDegrees) === 90 && segment.side === 'left');
   const gentle = route.segments.find((segment) => segment.side === 'right');
-  assert.ok(kink && sweeper && kink.peakCurvature > sweeper.peakCurvature * 5, 'the short kink is far tighter than the long sweeper');
+  // Sustained curvature spreads the 5 m kink over 12 m of road: still r < 40 against r150.
+  assert.ok(kink && sweeper && kink.peakCurvature > sweeper.peakCurvature * 4, 'the short kink is far tighter than the long sweeper');
   assert.ok(gentle, 'a 22.5° bend at radius 300 (N → NNE) is a swoosh');
   near(gentle.angleDegrees, 22.5, 1, 'gentle bend angle');
 }

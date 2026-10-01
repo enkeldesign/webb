@@ -5,10 +5,6 @@ const AUDIO_RECOVERY_RETRY_MS = 1000;
 const MASTER_GAIN = 0.72;
 const RIVAL_NEAR_ENTER_METERS = 10;
 const RIVAL_NEAR_EXIT_METERS = 15;
-const PACE_NOTE_LEVEL = 0.052;
-const PACE_NOTE_DURATION_SECONDS = 0.055;
-const PACE_NOTE_STEP_SECONDS = 0.105;
-const PACE_NOTE_GROUP_GAP_SECONDS = 0.22;
 const TRANSIENT_NOISE_SECONDS = 0.5;
 const DRIVE_BY_EAR_ENABLED = globalThis.__turnDriveByEarEnabled !== false;
 const EMERGENCY_SERVICE_BY_VEHICLE_ID = Object.freeze({
@@ -80,7 +76,6 @@ let recoveryAttempts = 0;
 let recoverySuccesses = 0;
 let maxTransientSources = 0;
 const cueTimes = new Map();
-const activePaceNoteSources = new Set();
 const activeTransientSources = new Set();
 const transientNoiseBuffers = new Map();
 
@@ -103,7 +98,6 @@ export function installTurnAudio() {
       return Object.freeze({
         state: context?.state || 'unavailable',
         activeTransientSources: activeTransientSources.size,
-        activePaceNoteSources: activePaceNoteSources.size,
         maxTransientSources,
         recoveryAttempts,
         recoverySuccesses
@@ -112,6 +106,7 @@ export function installTurnAudio() {
   });
 
   globalThis.__turnAudio = api;
+  globalThis.__turnRouteAudio = routeAudio;
 
   document.addEventListener('pointerdown', unlockFromGesture, { capture: true, passive: true });
   document.addEventListener('pointerdown', handleLotPointerDown, { capture: true, passive: true });
@@ -120,10 +115,7 @@ export function installTurnAudio() {
   document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
   window.addEventListener('pageshow', handlePageShow, { passive: true });
   window.addEventListener('pagehide', handlePageHide, { passive: true });
-  if (DRIVE_BY_EAR_ENABLED) {
-    window.addEventListener('turn:pace-note', handlePaceNoteAudio);
-    window.addEventListener('turn:pace-note-silence', stopPaceNoteSources);
-  }
+  if (DRIVE_BY_EAR_ENABLED) window.addEventListener('turn:pace-note-silence', releaseRouteMix);
 
   lotOpen = document.body?.classList.contains('turn-garage-open') || false;
   if (document.body && typeof MutationObserver !== 'undefined') {
@@ -186,9 +178,9 @@ export function update(frame = {}, now = performance.now()) {
   const nextSafetyMode = wrongWay ? 'wrong-way' : 'none';
   if (nextSafetyMode !== safetyMode) {
     safetyMode = nextSafetyMode;
-    if (safetyMode !== 'none') stopPaceNoteSources();
+    if (safetyMode !== 'none') releaseRouteMix();
   }
-  if (offRoad && !offRoadLatched) stopPaceNoteSources();
+  if (offRoad && !offRoadLatched) releaseRouteMix();
   offRoadLatched = offRoad;
 
   const sliderPresence = DRIVE_BY_EAR_ENABLED
@@ -311,7 +303,7 @@ export function silence() {
   if (sirenGain) hardMute(sirenGain.gain, now);
   if (sliderGain) hardMute(sliderGain.gain, now);
   if (surfaceGain) hardMute(surfaceGain.gain, now);
-  if (DRIVE_BY_EAR_ENABLED) stopPaceNoteSources();
+  if (DRIVE_BY_EAR_ENABLED) releaseRouteMix();
   lastBoostActive = false;
   rivalNearLatched = false;
   resetSafetyState();
@@ -662,77 +654,27 @@ function resetSafetyState() {
   offRoadLatched = false;
 }
 
-function handlePaceNoteAudio(event) {
-  const groups = Array.isArray(event.detail?.groups) ? event.detail.groups : [];
-  if (!groups.length || safetyMode !== 'none' || offRoadLatched) return;
+// The route channel (#909): SWOOSH pace notes play into routeBus, so Drive By Ear's
+// balance and on/off, off-road and wrong-way muting all apply, and hold the rest of the
+// mix back while they play. This is the supported way in; nothing intercepts the graph.
+const routeAudio = Object.freeze({
+  get context() {
+    return context;
+  },
+  get destination() {
+    return routeBus;
+  },
+  get ready() {
+    return Boolean(context && routeBus && context.state === 'running');
+  },
+  unlock,
+  holdMixUntil(audioTime) {
+    if (Number.isFinite(audioTime)) routeDuckUntil = Math.max(routeDuckUntil, audioTime);
+  },
+  releaseMix: () => releaseRouteMix()
+});
 
-  void unlock().then((ready) => {
-    if (ready) schedulePaceNoteGroups(groups);
-  });
-}
-
-function schedulePaceNoteGroups(groups) {
-  if (!context || context.state !== 'running' || !routeBus || safetyMode !== 'none' || offRoadLatched) return;
-  let cursor = context.currentTime + 0.012;
-
-  groups.forEach((group, groupIndex) => {
-    const direction = Math.sign(Number(group?.direction) || 0);
-    const severity = clamp(Math.round(Number(group?.severity) || 1), 1, 3);
-    const pan = direction < 0 ? -0.96 : 0.96;
-
-    for (let index = 0; index < severity; index += 1) {
-      schedulePaceNoteBeep(cursor, pan, severity);
-      cursor += PACE_NOTE_STEP_SECONDS;
-    }
-
-    if (groupIndex < groups.length - 1) {
-      cursor += PACE_NOTE_GROUP_GAP_SECONDS - PACE_NOTE_STEP_SECONDS;
-    }
-  });
-
-  routeDuckUntil = Math.max(routeDuckUntil, cursor + 0.05);
-}
-
-function schedulePaceNoteBeep(startAt, pan, severity) {
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  const panner = createPannerNode();
-  const endAt = startAt + PACE_NOTE_DURATION_SECONDS;
-  const baseFrequency = 650 + severity * 38;
-
-  oscillator.type = 'triangle';
-  oscillator.frequency.setValueAtTime(baseFrequency, startAt);
-  oscillator.frequency.exponentialRampToValueAtTime(baseFrequency * 1.13, endAt);
-
-  gain.gain.setValueAtTime(0.0001, startAt);
-  gain.gain.exponentialRampToValueAtTime(PACE_NOTE_LEVEL, startAt + 0.006);
-  gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
-
-  if (panner.pan) panner.pan.setValueAtTime(pan, startAt);
-  oscillator.connect(gain);
-  gain.connect(panner);
-  panner.connect(routeBus);
-
-  const record = { oscillator, gain, panner };
-  activePaceNoteSources.add(record);
-  oscillator.addEventListener('ended', () => cleanupPaceNoteSource(record), { once: true });
-
-  oscillator.start(startAt);
-  oscillator.stop(endAt + 0.01);
-}
-
-function cleanupPaceNoteSource(record) {
-  activePaceNoteSources.delete(record);
-  disconnectNodes(record.oscillator, record.gain, record.panner);
-}
-
-function stopPaceNoteSources() {
-  for (const record of [...activePaceNoteSources]) {
-    try {
-      record.oscillator.stop();
-    } catch (_) {}
-    cleanupPaceNoteSource(record);
-  }
+function releaseRouteMix() {
   routeDuckUntil = -Infinity;
 }
 

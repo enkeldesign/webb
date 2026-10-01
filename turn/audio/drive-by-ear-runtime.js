@@ -14,17 +14,14 @@ export function prepareDriveByEarRuntime() {
 
   preparationPromise = Promise.all([
     import(withBuild('./organic-ribbon.js?revision=r164-long-session-robustness')),
-    import(withBuild('./recovery-guidance.js?revision=r164-long-session-robustness')),
-    import(withBuild('./pace-note-priority.js?revision=r123-final-hold'))
-  ]).then(([organicRibbon, recoveryGuidance, paceNotePriority]) => {
+    import(withBuild('./recovery-guidance.js?revision=r164-long-session-robustness'))
+  ]).then(([organicRibbon, recoveryGuidance]) => {
     organicRibbon.prepareOrganicRibbonCapture();
     recoveryGuidance.prepareRecoveryGuidanceCapture();
-    paceNotePriority.preparePaceNotePriorityCapture();
 
     return Object.freeze({
       organicRibbon,
-      recoveryGuidance,
-      paceNotePriority
+      recoveryGuidance
     });
   });
 
@@ -37,16 +34,17 @@ export async function ensureDriveByEarRuntime() {
 
   installationPromise = (async () => {
     const prepared = await prepareDriveByEarRuntime();
-    const [drivingSoundscape, paceNotes, offroadEarDirection] = await Promise.all([
+    const [drivingSoundscape, swooshPaceNotes, offroadEarDirection] = await Promise.all([
       import(withBuild('./driving-soundscape.js')),
-      import(withBuild('./pace-notes.js?revision=r123-final-hold')),
+      import(withBuild('./swoosh-pace-notes.js')),
       import(withBuild('./offroad-ear-direction.js'))
     ]);
 
+    // SWOOSH pace notes sit inside the soundscape, so they see the same off-road and
+    // wrong-way state as the mix.
     prepared.organicRibbon.installOrganicRibbon();
-    prepared.paceNotePriority.installPaceNotePriority();
+    swooshPaceNotes.installSwooshPaceNotes();
     drivingSoundscape.installUniversalDrivingSoundscape();
-    paceNotes.installPaceNotes();
     offroadEarDirection.installOffroadEarDirection();
     prepared.recoveryGuidance.installRecoveryGuidance();
 

@@ -234,8 +234,6 @@ await prepareDriveByEarRuntime();
 // organicRibbon.prepareOrganicRibbonCapture();
 // recoveryGuidance = await import(withBuild('./audio/recovery-guidance.js'))
 // recoveryGuidance.prepareRecoveryGuidanceCapture();
-// paceNotePriority = await import(withBuild('./audio/pace-note-priority.js?revision=r123-final-hold'))
-// paceNotePriority.preparePaceNotePriorityCapture();
 
 globalThis.__turnDriveByEarEnabled = true;
 const { installAudioPreferences } = await import(withBuild('./audio/audio-preferences.js'));
@@ -249,17 +247,16 @@ audioPreferences.setDriveByEarEnabled(driveByEarEnabled);
 
 // Runtime-loader regression markers for the post-graph wrapper order:
 // organicRibbon.installOrganicRibbon();
-// paceNotePriority.installPaceNotePriority();
+// import(withBuild('./audio/swoosh-pace-notes.js'))
+// installSwooshPaceNotes();
 // import(withBuild('./audio/driving-soundscape.js'))
 // installUniversalDrivingSoundscape();
-// import(withBuild('./audio/pace-notes.js?revision=r123-final-hold'))
-// installPaceNotes();
 // withBuild('./audio/offroad-ear-direction.js')
 // installOffroadEarDirection();
 // recoveryGuidance.installRecoveryGuidance();
 // if (driveByEarEnabled) {
+//   installSwooshPaceNotes();
 //   installUniversalDrivingSoundscape();
-//   installPaceNotes();
 // }
 
 const { installSteeringLimitWarning } = await import(

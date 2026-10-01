@@ -20,7 +20,7 @@ assert.ok(
   'The existing AudioContext and master gain must be observed before the core graph is created'
 );
 assert.ok(
-  app.indexOf('installPaceNotes()') < app.indexOf('installRecoveryGuidance()')
+  app.indexOf('installSwooshPaceNotes()') < app.indexOf('installRecoveryGuidance()')
     && app.indexOf('installRecoveryGuidance()') < app.indexOf('./audio/audio-preference-runtime.js'),
   'Recovery overrides must wrap the computed soundscape while remaining inside live DBE preferences'
 );

@@ -1,4 +1,5 @@
-// SWOOSH candidate sounds (#909, #928). Round 1 settled tightness on pitch (texture
+// SWOOSH sounds (#909, #928). Round 3 chose 'swipe-tone' for the race: 100% on S-curves
+// and same-direction pairs, comfort 5/5. Round 1 settled tightness on pitch (texture
 // dropped: unreliable and raspy). Round 2's arrow (centre → full side) and smoother
 // timbre raised comfort but made S-curves harder: starting in the centre, its side is
 // ambiguous at first. Erik keeps the travelling arrow — the pan paints the curve — and
@@ -71,14 +72,20 @@ export function swooshCharacter(variant, tightness) {
 
 /**
  * Play one swoosh. side: -1 left, +1 right. durationSeconds: its length (see
- * SWOOSH_LENGTHS). Returns its end time.
+ * SWOOSH_LENGTHS). level: its peak, before any mix. Returns its end time.
  */
-export function playSwoosh(context, destination, {
+export function playSwoosh(context, destination, options = {}) {
+  return startSwoosh(context, destination, options).endsAt;
+}
+
+/** Play one swoosh and keep a handle: { endsAt, stop() } silences it, even before it starts. */
+export function startSwoosh(context, destination, {
   side,
   tightness = 'medium',
   variant = 'arrow',
   at = context.currentTime + 0.02,
-  durationSeconds = SWOOSH_TUNING.durationSeconds
+  durationSeconds = SWOOSH_TUNING.durationSeconds,
+  level = SWOOSH_TUNING.level
 } = {}) {
   const tuning = SWOOSH_TUNING;
   const { roughnessDepth, pitchHz, travels, startPan, timbre: timbreName } = swooshCharacter(variant, tightness);
@@ -109,7 +116,7 @@ export function playSwoosh(context, destination, {
   const halfDepth = roughnessDepth / 2;
   const compensation = 1 / Math.sqrt((1 - halfDepth) ** 2 + (halfDepth ** 2) / 2);
   const envelope = track(context.createGain());
-  const peak = tuning.level * compensation;
+  const peak = level * compensation;
   envelope.gain.setValueAtTime(0, at);
   envelope.gain.linearRampToValueAtTime(peak, at + tuning.attackSeconds);
   envelope.gain.setValueAtTime(peak, end - release);
@@ -164,7 +171,8 @@ export function playSwoosh(context, destination, {
     octave.stop(end + 0.05);
   }
 
-  noise.addEventListener('ended', () => {
+  const sources = nodes.filter((node) => typeof node.stop === 'function');
+  const disconnect = () => {
     for (const node of nodes) {
       try {
         node.disconnect();
@@ -172,8 +180,21 @@ export function playSwoosh(context, destination, {
         // Already disconnected.
       }
     }
-  }, { once: true });
-  return end;
+  };
+  noise.addEventListener('ended', disconnect, { once: true });
+  return Object.freeze({
+    endsAt: end,
+    stop() {
+      for (const source of sources) {
+        try {
+          source.stop();
+        } catch (_) {
+          // Already stopped.
+        }
+      }
+      disconnect();
+    }
+  });
 }
 
 /** Linked swooshes with a short gap between them. Returns the phrase's end time. */

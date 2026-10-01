@@ -33,7 +33,6 @@ const TRAINING_REVISION = 'r241-learning-achievements';
 const AUDIO_ENABLED_STORAGE_KEY = 'turn-audio-enabled-v1';
 const AUDIO_BALANCE_STORAGE_KEY = 'turn-audio-balance-v1';
 const DRIVE_BY_EAR_STORAGE_KEY = 'turn-drive-by-ear-v1';
-const MAX_PROGRESS_ADVANCE = 0.12;
 const HARD_BOUNDARY_OVERSHOOT = 4;
 let installed = false;
 
@@ -60,8 +59,6 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     stageIndex: 0,
     stage: null,
     world: null,
-    notesFired: new Set(),
-    previousProgress: 0,
     previousPosition: null,
     finishing: false,
     frame: 0,
@@ -223,7 +220,6 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       if (runtime.state.running) raceSession.leaveRace();
       session.stageIndex = stageIndex;
       session.stage = stage;
-      session.notesFired.clear();
       session.finishing = false;
       silencePaceNotes();
 
@@ -246,7 +242,6 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       const fullscreenPromise = first ? session.preparedAccess?.fullscreenPromise : Promise.resolve(false);
       await raceSession.startGame(fullscreenPromise || Promise.resolve(false), { announceStart: false });
       positionStageStart(stage);
-      session.previousProgress = runtime.state.progress;
       session.previousPosition = snapshotPosition(runtime.state.position);
       session.lastFrameAt = globalThis.performance?.now?.() || 0;
       if (!session.frame) session.frame = requestAnimationFrame(trainingFrame);
@@ -332,8 +327,6 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     event?.preventDefault?.();
     event?.stopImmediatePropagation?.();
     positionStageStart(session.stage);
-    session.notesFired.clear();
-    session.previousProgress = runtime.state.progress;
     session.previousPosition = snapshotPosition(runtime.state.position);
     session.finishing = false;
     silencePaceNotes();
@@ -354,13 +347,8 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       : 1 / 60;
     session.lastFrameAt = now;
 
-    let nearest = runtime.trackSpatialIndex.find(runtime.state.position);
-    if (constrainToCourse(nearest, session.stage, dt)) {
-      nearest = runtime.trackSpatialIndex.find(runtime.state.position);
-    }
+    constrainToCourse(runtime.trackSpatialIndex.find(runtime.state.position), session.stage, dt);
 
-    const progress = nearest.index / Math.max(1, runtime.samples.length - 1);
-    fireScheduledNotes(session.stage, progress);
     const currentPosition = snapshotPosition(runtime.state.position);
     const finish = runtime.samples[Math.floor(runtime.samples.length * FINISH_PROGRESS)];
     const forwardSpeed = runtime.state.velocity.dot(finish.tangent);
@@ -378,7 +366,6 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       void completePart();
     }
 
-    session.previousProgress = progress;
     session.previousPosition = currentPosition;
     session.frame = requestAnimationFrame(trainingFrame);
   }
@@ -436,31 +423,6 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       sample.normal,
       -side * inwardAcceleration * dt
     );
-  }
-
-  function fireScheduledNotes(stage, progress) {
-    const advance = progress - session.previousProgress;
-    if (advance < 0 || advance > MAX_PROGRESS_ADVANCE) return;
-
-    stage.notes.forEach((paceNote, index) => {
-      const id = `${stage.id}-note-${index + 1}`;
-      if (session.notesFired.has(id)) return;
-      if (!(session.previousProgress < paceNote.progress && progress >= paceNote.progress)) return;
-      session.notesFired.add(id);
-      globalThis.dispatchEvent(new CustomEvent('turn:pace-note-priority', {
-        detail: {
-          id,
-          passageKey: `${stage.id}:${id}`,
-          trackId: stage.id,
-          progress,
-          groups: [Object.freeze({
-            direction: paceNote.direction,
-            severity: paceNote.severity,
-            finalBeepDurationSeconds: paceNote.long ? 0.17 : 0.055
-          })]
-        }
-      }));
-    });
   }
 
   async function completePart() {
@@ -531,7 +493,6 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       preparedAccess: null,
       lastFrameAt: 0
     });
-    session.notesFired.clear();
     home.showHome({ focus: true });
   }
 

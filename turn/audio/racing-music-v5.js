@@ -12,6 +12,11 @@ const STEPS_PER_BEAT = 4;
 const LOOKAHEAD_MS = 25;
 const SCHEDULE_AHEAD_SECONDS = 0.12;
 const DESIGNED_MASTER_GAIN = 0.54;
+// SWOOSH pace notes (#909) duck the music while they play, on its own gain so the
+// player's volume is never touched.
+const ROUTE_DUCK_LEVEL = 0.5;
+const ROUTE_DUCK_ATTACK_SECONDS = 0.03;
+const ROUTE_DUCK_RELEASE_SECONDS = 0.15;
 
 const NOTE_INDEX = Object.freeze({
   C: 0, 'C#': 1, Db: 1, D: 2, 'D#': 3, Eb: 3, E: 4, F: 5,
@@ -21,6 +26,8 @@ const NOTE_INDEX = Object.freeze({
 let installed = false;
 let context = null;
 let masterGain = null;
+let duckGain = null;
+let duckUntil = 0;
 let noiseBuffer = null;
 let schedulerTimer = 0;
 let activeSong = MENU_SONG;
@@ -82,7 +89,9 @@ function ensureGraph() {
   compressor.ratio.value = 2.8;
   compressor.attack.value = 0.012;
   compressor.release.value = 0.26;
-  masterGain.connect(compressor);
+  duckGain = makeGain(1);
+  masterGain.connect(duckGain);
+  duckGain.connect(compressor);
   compressor.connect(context.destination);
   noiseBuffer = makeNoiseBuffer();
   tones = createToneRuntime({ context, masterGain, noteToFrequency, getStepSeconds: () => stepSeconds });
@@ -156,6 +165,19 @@ async function stopPlayback({ reset = false } = {}) {
   playing=false; clearScheduler(); tones?.stop(); drums?.stop(); if(reset)resetSongPosition(); if(!context)return; applyMasterVolume();
   try { if(context.state==='running') await context.suspend(); } catch (_) {}
 }
+// Duck under a route cue that starts `inSeconds` from now and lasts `seconds`.
+function duck(inSeconds = 0, seconds = 0) {
+  if (!duckGain || context?.state !== 'running') return false;
+  const now = context.currentTime;
+  const from = now + Math.max(0, Number(inSeconds) || 0);
+  duckUntil = Math.max(duckUntil, from + Math.max(0, Number(seconds) || 0));
+  try {
+    duckGain.gain.cancelScheduledValues(now);
+    duckGain.gain.setTargetAtTime(ROUTE_DUCK_LEVEL, Math.max(now, from - ROUTE_DUCK_ATTACK_SECONDS * 2), ROUTE_DUCK_ATTACK_SECONDS);
+    duckGain.gain.setTargetAtTime(1, duckUntil, ROUTE_DUCK_RELEASE_SECONDS);
+  } catch (_) { return false; }
+  return true;
+}
 // A temporary, unsaved hold (e.g. the admin listening test): the player's volume stays as set.
 let held = false;
 function shouldPlay() { return soundEnabled && musicVolume > 0 && !held && document.visibilityState !== 'hidden'; }
@@ -177,7 +199,7 @@ function installMusicStylesheet() {
   const link = document.createElement('link');
   link.id = 'turn-racing-music-stylesheet';
   link.rel = 'stylesheet';
-  link.href = '/turn/audio/music/music-controls.css?build=20260930-r350';
+  link.href = '/turn/audio/music/music-controls.css?build=20261001-r351';
   document.head.appendChild(link);
 }
 
@@ -202,7 +224,7 @@ export function installRacingMusic({ home = document.querySelector('.m8-home') }
     instruments:Object.freeze({lead:Object.freeze(Object.keys(LEAD_VOICES)),bass:Object.freeze(Object.keys(BASS_VOICES)),arp:Object.freeze(Object.keys(ARP_VOICES)),drums:Object.freeze(Object.keys(DRUM_KITS))}),
     songs:Object.freeze(SONGBOOK.map((song)=>Object.freeze({id:song.id,name:song.name,bpm:song.bpm,key:song.key,style:song.style,swing:song.swing,form:song.form}))),
     get bpm(){return activeSong.bpm;},get songId(){return activeSong.id;},get songName(){return activeSong.name;},get arrangement(){return activeSong.form;},get volume(){return musicVolume;},get enabled(){return musicVolume>0;},get playing(){return playing;},get state(){return context?.state||'not-created';},
-    setVolume,toggle:toggleMusic,start:()=>startPlayback({restart:false}),stop:()=>setVolume(0),hold,syncControls:()=>controls?.sync()
+    setVolume,toggle:toggleMusic,start:()=>startPlayback({restart:false}),stop:()=>setVolume(0),hold,duck,syncControls:()=>controls?.sync()
   });
   globalThis.__turnRacingMusic=api;return api;
 }
