@@ -171,15 +171,19 @@ export function computeRouteGeometry(samples, tuning = ROUTE_GEOMETRY_TUNING) {
     // Smoothing spreads a bend's turn over `smoothing` samples beyond each end of its
     // run. Take that road too, but never past halfway to the neighbouring bend, then
     // integrate the raw turn so every bend's angle is exact and no turn counts twice.
-    const previous = runs[runIndex - 1];
-    const next = runs[runIndex + 1];
+    // The lap is a loop: the first and last bends are neighbours across the seam, so
+    // seam samples are shared out once. A single bend may take at most one lap.
     const runEnd = run.from + run.length - 1;
-    const from = previous
-      ? Math.max(run.from - smoothing, Math.floor((previous.from + previous.length - 1 + run.from) / 2) + 1)
-      : run.from - smoothing;
-    const to = next
-      ? Math.min(runEnd + smoothing, Math.floor((runEnd + next.from) / 2))
-      : runEnd + smoothing;
+    let from = run.from - smoothing;
+    let to = runEnd + smoothing;
+    if (runs.length > 1) {
+      const previous = runIndex > 0 ? runs[runIndex - 1] : { ...runs.at(-1), from: runs.at(-1).from - count };
+      const next = runIndex < runs.length - 1 ? runs[runIndex + 1] : { ...runs[0], from: runs[0].from + count };
+      from = Math.max(from, Math.floor((previous.from + previous.length - 1 + run.from) / 2) + 1);
+      to = Math.min(to, Math.floor((runEnd + next.from) / 2));
+    } else {
+      to = Math.min(to, from + count - 1);
+    }
     const indices = [];
     for (let step = from; step <= to; step += 1) indices.push(((start + step) % count + count) % count);
     const signedAngle = indices.reduce((sum, index) => sum + turn[index], 0);

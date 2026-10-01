@@ -106,6 +106,15 @@ const sCurve = [['S', 100], ['R', 90, 30], ['L', 90, 30], ['S', 100], ['R', 180,
   assert.deepEqual(seam.bends.map((bend) => Math.round(bend.angleDegrees)).sort(), [180, 180]);
 }
 
+// Turning that runs through the lap seam is counted once: a plain circle is 360° in
+// four 90° swooshes, and a seam-crossing bend next to another bend keeps its angle.
+{
+  const circle = computeRouteGeometry(track([['R', 360, 80]]));
+  assert.deepEqual(angles(circle), [90, 90, 90, 90], 'a circle is four 90° swooshes');
+  const loop = computeRouteGeometry(track([['R', 45, 60], ['S', 200], ['R', 180, 50], ['S', 200], ['R', 135, 60]]));
+  assert.deepEqual(loop.bends.map((bend) => Math.round(bend.angleDegrees)).sort((a, b) => a - b), [180, 180], 'the seam bend is 45° + 135°, counted once');
+}
+
 // Corners joined by gentler road in the same direction are separate bends.
 {
   const route = computeRouteGeometry(track([['S', 100], ['R', 80, 30], ['R', 30, 600], ['R', 80, 30], ['S', 400], ['R', 170, 80]]));
