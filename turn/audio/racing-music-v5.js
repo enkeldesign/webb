@@ -27,7 +27,7 @@ let installed = false;
 let context = null;
 let masterGain = null;
 let duckGain = null;
-let duckUntil = 0;
+let duckWindow = { from: 0, until: 0 };
 let noiseBuffer = null;
 let schedulerTimer = 0;
 let activeSong = MENU_SONG;
@@ -165,16 +165,24 @@ async function stopPlayback({ reset = false } = {}) {
   playing=false; clearScheduler(); tones?.stop(); drums?.stop(); if(reset)resetSongPosition(); if(!context)return; applyMasterVolume();
   try { if(context.state==='running') await context.suspend(); } catch (_) {}
 }
+// The duck that covers every route cue scheduled so far: a cue that overlaps or follows
+// a pending duck extends it, and the earliest start is kept, so a phrase of linked cues
+// scheduled in one update ducks from its first cue, not its last.
+export function nextDuckWindow(window, now, inSeconds = 0, seconds = 0) {
+  const from = now + Math.max(0, Number(inSeconds) || 0);
+  const until = from + Math.max(0, Number(seconds) || 0);
+  if (window.until <= now) return { from, until };
+  return { from: Math.min(window.from, from), until: Math.max(window.until, until) };
+}
 // Duck under a route cue that starts `inSeconds` from now and lasts `seconds`.
 function duck(inSeconds = 0, seconds = 0) {
   if (!duckGain || context?.state !== 'running') return false;
   const now = context.currentTime;
-  const from = now + Math.max(0, Number(inSeconds) || 0);
-  duckUntil = Math.max(duckUntil, from + Math.max(0, Number(seconds) || 0));
+  duckWindow = nextDuckWindow(duckWindow, now, inSeconds, seconds);
   try {
     duckGain.gain.cancelScheduledValues(now);
-    duckGain.gain.setTargetAtTime(ROUTE_DUCK_LEVEL, Math.max(now, from - ROUTE_DUCK_ATTACK_SECONDS * 2), ROUTE_DUCK_ATTACK_SECONDS);
-    duckGain.gain.setTargetAtTime(1, duckUntil, ROUTE_DUCK_RELEASE_SECONDS);
+    duckGain.gain.setTargetAtTime(ROUTE_DUCK_LEVEL, Math.max(now, duckWindow.from - ROUTE_DUCK_ATTACK_SECONDS * 2), ROUTE_DUCK_ATTACK_SECONDS);
+    duckGain.gain.setTargetAtTime(1, duckWindow.until, ROUTE_DUCK_RELEASE_SECONDS);
   } catch (_) { return false; }
   return true;
 }

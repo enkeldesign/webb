@@ -287,6 +287,16 @@ assert.match(scheduler, /mode \|\| ''\) !== 'spectating'/);
 assert.match(scheduler, /if \(!event\.detail\?\.running \|\| event\.detail\?\.reason === 'race-reset'\)/);
 assert.match(pause, /turn:pace-note-silence/, 'pausing still silences route cues');
 assert.match(music, /function duck\(inSeconds = 0, seconds = 0\)/);
+{
+  // Linked swooshes scheduled in one update: the duck starts with the first, ends with the last.
+  const { nextDuckWindow } = await import('../../turn/audio/racing-music-v5.js');
+  let window = { from: 0, until: 0 };
+  window = nextDuckWindow(window, 10, 0.05, 0.18);
+  window = nextDuckWindow(window, 10, 0.265, 0.36);
+  assert.ok(Math.abs(window.from - 10.05) < 1e-9 && Math.abs(window.until - 10.625) < 1e-9, 'a later linked cue never moves the duck start');
+  window = nextDuckWindow(window, 20, 0.1, 0.2);
+  assert.ok(Math.abs(window.from - 20.1) < 1e-9, 'a cue after the duck has ended starts a new one');
+}
 assert.match(music, /masterGain\.connect\(duckGain\);\s*duckGain\.connect\(compressor\);/, 'music ducks on its own gain, never the player volume');
 assert.match(hud, /tight <r\$\{TIGHT_RADIUS\}/);
 assert.match(hud, new RegExp(`const TIGHT_RADIUS = ${SWOOSH_PACE_TUNING.tightRadius};`));
