@@ -181,8 +181,13 @@ assert.match(visualWorkflow, /countryside-visual-smoke/);
 // BELLA's final coat remap runs on real geometry: THREE.Color has no vector maths, and a
 // call like color.lengthSq() threw here, skipping the final look on every Countryside load.
 {
-  const THREE = await import('three');
-  const { applyBellaFinalVisuals } = await import('../turn/tracks/countryside-bella-final-r172.js');
+  // CI runs this before installing packages: use TURN's vendored three.js, and load the
+  // module with its bare 'three' import pointed at the same copy.
+  const threeUrl = new URL('../turn/vendor/three-0.184.0/build/three.module.js', import.meta.url).href;
+  const THREE = await import(threeUrl);
+  const bellaFinalSource = (await fs.readFile(new URL('../turn/tracks/countryside-bella-final-r172.js', import.meta.url), 'utf8'))
+    .replace("from 'three';", `from '${threeUrl}';`);
+  const { applyBellaFinalVisuals } = await import(`data:text/javascript,${encodeURIComponent(bellaFinalSource)}`);
   const cat = new THREE.Group();
   const coat = new THREE.BufferGeometry();
   coat.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 1, 1, 1], 3));
