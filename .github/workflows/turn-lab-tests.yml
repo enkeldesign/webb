@@ -328,6 +328,9 @@ jobs:
       - name: Audit Midnight City pace notes against route geometry
         run: node turn-tests/midnight-city-pace-note-map-production.mjs
 
+      - name: Run SWOOSH route geometry regression
+        run: node turn-lab/tests/route-geometry-production.mjs
+
       - name: Run Drive By Ear preference and shutdown regression
         run: node turn-lab/tests/drive-by-ear-production.mjs
 
