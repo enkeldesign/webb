@@ -84,7 +84,116 @@ export function playSwoosh(context, destination, options = {}) {
 }
 
 /** Play one swoosh and keep a handle: { endsAt, stop() } silences it, even before it starts. */
-export function startSwoosh(context, destination, {
+export function startSwoosh(context, destination, options = {}) {
+  if (Object.hasOwn(SWORD_STYLES, options.variant)) return startSwordSwoosh(context, destination, options);
+  return startAirSwoosh(context, destination, options);
+}
+
+// Sword swings (admin sound picker): the pitch is in the swish itself. Noise through a
+// resonant band whose centre carries tightness and moves with the swing, under a bell
+// envelope with micro fades in and out, so each cue is one clear stroke. No separate
+// tone. Ten styles differ in resonance (airy → whistling), the swing's pitch contour,
+// fades, and a second harmonic band. gain matches each style's loudness (RMS, rendered
+// offline) to the race sound 'swipe-undertone'; values are audition seeds for Erik to
+// compare in the race.
+export const SWORD_PITCH_HZ = Object.freeze({ gentle: 650, medium: 1050, tight: 1650 });
+export const SWORD_STYLES = Object.freeze({
+  'sword-blade': Object.freeze({ name: 'BLADE', q: 6, contour: [0.75, 1, 0.85], peakAt: 0.55, fadeIn: 0.012, fadeOut: 0.05, gain: 2.06 }),
+  'sword-katana': Object.freeze({ name: 'KATANA', q: 11, contour: [0.7, 1.05, 1], peakAt: 0.7, fadeIn: 0.008, fadeOut: 0.04, gain: 2.0 }),
+  'sword-rapier': Object.freeze({ name: 'RAPIER', q: 16, contour: [0.9, 1.1, 1.05], peakAt: 0.6, fadeIn: 0.006, fadeOut: 0.03, gain: 1.75 }),
+  'sword-sabre': Object.freeze({ name: 'SABRE', q: 4, contour: [0.7, 1, 0.8], peakAt: 0.5, fadeIn: 0.015, fadeOut: 0.06, gain: 2.01 }),
+  'sword-staff': Object.freeze({ name: 'STAFF', q: 3, contour: [0.45, 0.62, 0.5], peakAt: 0.5, fadeIn: 0.018, fadeOut: 0.07, gain: 2.71 }),
+  'sword-whip': Object.freeze({ name: 'WHIP', q: 8, contour: [0.5, 1.35, 1.25], peakAt: 0.8, fadeIn: 0.005, fadeOut: 0.025, gain: 1.97 }),
+  'sword-fan': Object.freeze({ name: 'FAN', q: 1.6, contour: [0.8, 1, 0.9], peakAt: 0.45, fadeIn: 0.03, fadeOut: 0.09, gain: 2.14 }),
+  'sword-arrow': Object.freeze({ name: 'ARROW', q: 9, contour: [1.25, 1.1, 0.8], peakAt: 0.35, fadeIn: 0.01, fadeOut: 0.05, gain: 1.78 }),
+  'sword-twin': Object.freeze({ name: 'TWIN', q: 7, contour: [0.75, 1, 0.85], peakAt: 0.55, fadeIn: 0.01, fadeOut: 0.05, gain: 1.68, harmonic: 1.5 }),
+  'sword-breeze': Object.freeze({ name: 'BREEZE', q: 2.4, contour: [0.85, 1, 0.92], peakAt: 0.5, fadeIn: 0.025, fadeOut: 0.08, gain: 2.07 })
+});
+export const SWORD_VARIANTS = Object.freeze(Object.keys(SWORD_STYLES));
+
+function startSwordSwoosh(context, destination, {
+  side,
+  tightness = 'medium',
+  variant,
+  at = context.currentTime + 0.02,
+  durationSeconds = SWOOSH_TUNING.durationSeconds,
+  level = SWOOSH_TUNING.level
+} = {}) {
+  const style = SWORD_STYLES[variant];
+  const pitchHz = SWORD_PITCH_HZ[SWOOSH_TIGHTNESS.includes(tightness) ? tightness : 'medium'];
+  const end = at + durationSeconds;
+  const fadeIn = Math.min(style.fadeIn, durationSeconds * 0.3);
+  const fadeOut = Math.min(style.fadeOut, durationSeconds * 0.4);
+  const peakTime = at + Math.max(fadeIn, durationSeconds * style.peakAt);
+  const nodes = [];
+  const track = (node) => {
+    nodes.push(node);
+    return node;
+  };
+
+  // The same swipe as the race sound: 50% → 100% on its own side.
+  const panner = track(context.createStereoPanner());
+  const fullSide = side < 0 ? -1 : 1;
+  panner.pan.setValueAtTime(fullSide * SWOOSH_TUNING.swipeStartPan, at);
+  panner.pan.linearRampToValueAtTime(fullSide, at + durationSeconds * SWOOSH_TUNING.travelShare);
+  panner.connect(destination);
+
+  // A bell: micro fade in, swell to the swing's peak, micro fade out. A resonant band
+  // passes little noise energy, so its level is given back with √Q.
+  const envelope = track(context.createGain());
+  // A constant-Q band passes more energy at higher pitch: √(pitch) is given back, so
+  // tight is not simply louder than gentle.
+  const peak = level * style.gain * Math.sqrt(style.q) * 0.9 * Math.sqrt(SWORD_PITCH_HZ.medium / pitchHz);
+  envelope.gain.setValueAtTime(0, at);
+  envelope.gain.linearRampToValueAtTime(peak * 0.55, at + fadeIn);
+  envelope.gain.linearRampToValueAtTime(peak, peakTime);
+  envelope.gain.setValueAtTime(peak, Math.max(peakTime, end - fadeOut));
+  envelope.gain.linearRampToValueAtTime(0, end);
+  envelope.connect(panner);
+
+  const noise = track(context.createBufferSource());
+  noise.buffer = noiseBuffer(context);
+  const bands = [1, style.harmonic].filter(Boolean).map((ratio, index) => {
+    const band = track(context.createBiquadFilter());
+    const bandGain = track(context.createGain());
+    const [from, top, to] = style.contour.map((value) => value * pitchHz * ratio);
+    band.type = 'bandpass';
+    band.Q.value = style.q;
+    band.frequency.setValueAtTime(from, at);
+    band.frequency.exponentialRampToValueAtTime(top, peakTime);
+    band.frequency.exponentialRampToValueAtTime(to, end);
+    bandGain.gain.value = index ? 0.45 : 1;
+    noise.connect(band).connect(bandGain).connect(envelope);
+    return band;
+  });
+  noise.start(at, Math.random() * 0.5);
+  noise.stop(end + 0.05);
+
+  const disconnect = () => {
+    for (const node of nodes) {
+      try {
+        node.disconnect();
+      } catch (_) {
+        // Already disconnected.
+      }
+    }
+  };
+  noise.addEventListener('ended', disconnect, { once: true });
+  return Object.freeze({
+    endsAt: end,
+    bands: bands.length,
+    stop() {
+      try {
+        noise.stop();
+      } catch (_) {
+        // Already stopped.
+      }
+      disconnect();
+    }
+  });
+}
+
+function startAirSwoosh(context, destination, {
   side,
   tightness = 'medium',
   variant = 'arrow',

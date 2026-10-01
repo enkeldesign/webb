@@ -16,7 +16,7 @@
 // Output goes through the engine's route channel (globalThis.__turnRouteAudio): Drive
 // By Ear's balance and on/off apply, and the car sounds and music duck underneath.
 import { routeForSamples, routeSegmentAt, upcomingRouteSegments } from './route-geometry.js';
-import { SWOOSH_LENGTHS, startSwoosh } from './swoosh-sound.js';
+import { SWOOSH_LENGTHS, SWORD_STYLES, SWORD_VARIANTS, startSwoosh } from './swoosh-sound.js';
 
 export const SWOOSH_PACE_TUNING = Object.freeze({
   variant: 'swipe-undertone',
@@ -63,6 +63,26 @@ const delivery = new Map();
 const live = new Map();
 const history = [];
 const counts = { fired: 0, late: 0, phrases: 0, suppressed: 0, cancelled: 0 };
+
+// Admin sound picker: an admin-unlocked profile may race with any of these. Choice 0 is
+// the race sound every player hears; 1–10 are the sword swings. Players are unaffected.
+export const SWOOSH_SOUND_CHOICES = Object.freeze([
+  Object.freeze({ variant: SWOOSH_PACE_TUNING.variant, name: 'RACE' }),
+  ...SWORD_VARIANTS.map((variant) => Object.freeze({ variant, name: SWORD_STYLES[variant].name }))
+]);
+const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
+export const SWOOSH_SOUND_STORAGE_KEY = 'turn-swoosh-sound-v1';
+
+/** The chosen sound's index: the admin's stored choice, else 0 (the race sound). */
+export function swooshSoundIndex(storage = globalThis.localStorage) {
+  try {
+    if (!storage?.getItem(ADMIN_UNLOCK_MARKER)) return 0;
+    const index = Number(storage.getItem(SWOOSH_SOUND_STORAGE_KEY));
+    return Number.isInteger(index) && index >= 0 && index < SWOOSH_SOUND_CHOICES.length ? index : 0;
+  } catch (_) {
+    return 0;
+  }
+}
 
 /** Pitch anchor for a segment. */
 export function swooshTightness(segment, tuning = SWOOSH_PACE_TUNING) {
@@ -137,6 +157,36 @@ export function installSwooshPaceNotes() {
 
   globalThis.__turnSwooshPaceNotes = Object.freeze({
     tuning: SWOOSH_PACE_TUNING,
+    soundChoices: SWOOSH_SOUND_CHOICES,
+    get soundIndex() {
+      return swooshSoundIndex();
+    },
+    // Admin sound picker: store a choice (admin profiles only) and hear it once.
+    setSoundIndex(index) {
+      const next = ((Math.round(Number(index)) || 0) % SWOOSH_SOUND_CHOICES.length + SWOOSH_SOUND_CHOICES.length) % SWOOSH_SOUND_CHOICES.length;
+      try {
+        if (!globalThis.localStorage?.getItem(ADMIN_UNLOCK_MARKER)) return 0;
+        globalThis.localStorage.setItem(SWOOSH_SOUND_STORAGE_KEY, String(next));
+      } catch (_) {
+        return swooshSoundIndex();
+      }
+      return swooshSoundIndex();
+    },
+    preview({ side = 1, tightness = 'medium', long = false } = {}) {
+      const routeAudio = globalThis.__turnRouteAudio;
+      if (!routeAudio?.ready || !routeAudio.destination) return false;
+      startSwoosh(routeAudio.context, routeAudio.destination, {
+        side,
+        tightness,
+        variant: SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant,
+        durationSeconds: long ? SWOOSH_LENGTHS.long : SWOOSH_LENGTHS.short,
+        level: swooshLevel(globalThis.__turnAudioPreferences?.getSettings?.()?.balance)
+      });
+      return true;
+    },
+    get audioTime() {
+      return globalThis.__turnRouteAudio?.context?.currentTime ?? 0;
+    },
     get route() {
       return route;
     },
@@ -216,7 +266,7 @@ function playPlanned(item, routeAudio) {
   const handle = startSwoosh(context, routeAudio.destination, {
     side: item.segment.direction,
     tightness: swooshTightness(item.segment),
-    variant: tuning.variant,
+    variant: SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant,
     durationSeconds: item.duration,
     level: swooshLevel(globalThis.__turnAudioPreferences?.getSettings?.()?.balance),
     at
@@ -233,7 +283,7 @@ function playPlanned(item, routeAudio) {
   // Seconds between the swoosh ending and the car reaching the bend.
   const margin = item.entry - (handle.endsAt - now);
   const late = margin < tuning.steeringLeadSeconds / 2;
-  record(item.segment, late ? 'late' : 'fired', { margin, linked });
+  record(item.segment, late ? 'late' : 'fired', { margin, linked, at, endsAt: handle.endsAt });
   return Object.freeze({ id: item.segment.id, at, endsAt: handle.endsAt, margin, linked });
 }
 

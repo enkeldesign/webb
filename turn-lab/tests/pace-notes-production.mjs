@@ -282,6 +282,51 @@ for (const definition of TRACK_DEFINITIONS) {
   assert.equal(TRAINING_STAGES.some((stage) => 'notes' in stage), false, 'training has no hand-placed notes');
 }
 
+// Admin sound picker: ten sword swings beside the race sound, chosen only by admin
+// profiles; every player keeps choice 00.
+{
+  const { SWOOSH_SOUND_CHOICES, SWOOSH_SOUND_STORAGE_KEY, swooshSoundIndex } = await import('../../turn/audio/swoosh-pace-notes.js');
+  const { SWORD_VARIANTS, SWORD_PITCH_HZ, startSwoosh } = await import('../../turn/audio/swoosh-sound.js');
+  const { swooshCaption, currentCaptionEntry } = await import('../../turn/testing/swoosh-sound-picker.js');
+  assert.equal(SWORD_VARIANTS.length, 10, 'ten sword-swing variants');
+  assert.equal(SWOOSH_SOUND_CHOICES.length, 11);
+  assert.equal(SWOOSH_SOUND_CHOICES[0].variant, SWOOSH_PACE_TUNING.variant, 'choice 00 is the race sound');
+  const store = (entries) => ({ getItem: (key) => entries[key] ?? null });
+  assert.equal(swooshSoundIndex(store({ [SWOOSH_SOUND_STORAGE_KEY]: '4' })), 0, 'a player without admin unlock always hears the race sound');
+  assert.equal(swooshSoundIndex(store({ 'turn-admin-unlock-v1': '1', [SWOOSH_SOUND_STORAGE_KEY]: '4' })), 4);
+  assert.equal(swooshSoundIndex(store({ 'turn-admin-unlock-v1': '1', [SWOOSH_SOUND_STORAGE_KEY]: '99' })), 0, 'an unknown choice falls back to the race sound');
+  for (const variant of SWORD_VARIANTS) {
+    const frequencies = [];
+    for (const tightness of ['gentle', 'medium', 'tight']) {
+      const context = createContext();
+      const filters = [];
+      const createBiquadFilter = context.createBiquadFilter;
+      context.createBiquadFilter = () => { const filter = createBiquadFilter(); filters.push(filter); return filter; };
+      const handle = startSwoosh(context, context.node(), { side: -1, tightness, variant, at: 1, durationSeconds: 0.18 });
+      const [panner] = context.panners;
+      assert.deepEqual(panner.pan.events.slice(0, 2).map(([, value]) => value), [-0.5, -1], `${variant}: the same 50% → 100% swipe`);
+      assert.ok(Math.abs(handle.endsAt - 1.18) < 1e-9 && typeof handle.stop === 'function');
+      frequencies.push(filters[0].frequency.events[0][1] / SWORD_PITCH_HZ[tightness]);
+      assert.ok(filters[0].Q.value >= 1.5, `${variant}: a resonant band carries the pitch`);
+    }
+    assert.ok(frequencies.every((ratio) => Math.abs(ratio - frequencies[0]) < 1e-9), `${variant}: pitch follows tightness`);
+  }
+  assert.equal(swooshCaption({ tightness: 'gentle', long: true, side: 'left' }), 'GENTLE LONG LEFT');
+  assert.equal(swooshCaption({ tightness: 'tight', long: false, side: 'right' }), 'TIGHT SHORT RIGHT');
+  const history = [
+    { status: 'fired', at: 10, endsAt: 10.2, tightness: 'gentle', long: true, side: 'left' },
+    { status: 'cancelled', at: 11, endsAt: 11.2 },
+    { status: 'fired', at: 12, endsAt: 12.2, tightness: 'tight', long: false, side: 'right' }
+  ];
+  assert.equal(currentCaptionEntry(history, 11.5)?.tightness, 'gentle', 'the latest swoosh already heard, not one still to come');
+  assert.equal(currentCaptionEntry(history, 12.1)?.tightness, 'tight');
+  assert.equal(currentCaptionEntry(history, 20), null, 'the caption clears after its hold');
+  const [picker, turnPage, labPage] = await Promise.all([read('turn/testing/swoosh-sound-picker.js'), read('turn/index.html'), read('turn-lab/index.html')]);
+  assert.match(picker, /if \(!isAdminProfile\(\) \|\| !document\.body\) return;/, 'the picker installs nothing for players');
+  assert.match(picker, /aria-label="Previous sound"[\s\S]*aria-label="Next sound"/);
+  for (const page of [turnPage, labPage]) assert.match(page, /<script type="module" src="\.\/testing\/swoosh-sound-picker\.js\?build=/);
+}
+
 // Contracts: one supported route channel, no graph interception for pace notes, no
 // second timing loop, BIP/BEEP retired everywhere players hear or read about them.
 assert.match(audio, /globalThis\.__turnRouteAudio = routeAudio/, 'the engine publishes its route channel');
