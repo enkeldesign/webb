@@ -1,7 +1,7 @@
 // SWOOSH pace notes (#909, #928): the road ahead painted with sound. Every bend comes
 // from the course's centreline (route-geometry.js), so every track, future tracks and
-// DRIVE BY EAR 101 are covered by the same path. Each segment of at most 90° is one
-// swipe (swoosh-sound.js, 'swipe-tone', chosen in listening test round 3):
+// DRIVE BY EAR 101 are covered by the same path. Each segment of at most 120° is one
+// swipe (swoosh-sound.js; the race sound is CHIME, chosen in Erik's race tests):
 //
 // - side: the swipe travels from 50% to 100% on the bend's side;
 // - tightness: pitch, from the tightest sustained radius;
@@ -16,10 +16,11 @@
 // Output goes through the engine's route channel (globalThis.__turnRouteAudio): Drive
 // By Ear's balance and on/off apply, and the car sounds and music duck underneath.
 import { routeForSamples, routeSegmentAt, upcomingRouteSegments } from './route-geometry.js';
-import { SWOOSH_LENGTHS, SWOOSH_VOICES, VOICE_VARIANTS, startSwoosh } from './swoosh-sound.js';
+import { SWOOSH_LENGTHS, SWOOSH_VOICES, VOICE_VARIANTS, startSwoosh, swooshLengths } from './swoosh-sound.js';
 
 export const SWOOSH_PACE_TUNING = Object.freeze({
-  variant: 'swipe-undertone',
+  // The race sound: CHIME, Erik's favourite from the admin sound picker (1.35.2).
+  variant: 'voice-chime',
   // Peak level into the route channel. At TURN's default balance, swooshes sit close to the
   // guiding ribbon (Erik found 0.24 comfortable only with Drive By Ear at 10–20%, i.e.
   // ~0.036); as the balance favours Drive By Ear they rise, reaching 0.24 at 92.5%.
@@ -91,9 +92,14 @@ export function swooshTightness(segment, tuning = SWOOSH_PACE_TUNING) {
   return radius < tuning.mediumRadius ? 'medium' : 'gentle';
 }
 
-/** Swipe length for a segment: road length, never speed. */
-export function swooshDuration(segment, tuning = SWOOSH_PACE_TUNING) {
-  return (Number(segment?.length) || 0) >= tuning.longMetres ? SWOOSH_LENGTHS.long : SWOOSH_LENGTHS.short;
+/** Whether a segment gets a long swipe: road length, never speed. */
+export function isLongSwoosh(segment, tuning = SWOOSH_PACE_TUNING) {
+  return (Number(segment?.length) || 0) >= tuning.longMetres;
+}
+
+/** Swipe length for a segment, in the chosen sound's lengths. */
+export function swooshDuration(segment, tuning = SWOOSH_PACE_TUNING, lengths = SWOOSH_LENGTHS) {
+  return isLongSwoosh(segment, tuning) ? lengths.long : lengths.short;
 }
 
 /**
@@ -101,10 +107,10 @@ export function swooshDuration(segment, tuning = SWOOSH_PACE_TUNING) {
  * before its bend, unless the next swoosh needs the time, in which case it starts
  * earlier. upcoming: [{ segment, ahead }] nearest first.
  */
-export function planSwooshes(upcoming, speed, tuning = SWOOSH_PACE_TUNING) {
+export function planSwooshes(upcoming, speed, tuning = SWOOSH_PACE_TUNING, lengths = SWOOSH_LENGTHS) {
   const pace = Math.max(Number(speed) || 0, tuning.minimumPlanningSpeed);
   const plan = upcoming.map(({ segment, ahead }) => {
-    const duration = swooshDuration(segment, tuning);
+    const duration = swooshDuration(segment, tuning, lengths);
     const entry = ahead / pace;
     const end = entry - tuning.steeringLeadSeconds;
     return { segment, ahead, entry, duration, start: end - duration, end };
@@ -177,11 +183,12 @@ export function installSwooshPaceNotes() {
       if (!routeAudio?.ready || !routeAudio.destination) return false;
       // Heard as in the race: the car sounds and music duck under it, as in playPlanned().
       const at = routeAudio.context.currentTime + 0.02;
+      const variant = SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant;
       const handle = startSwoosh(routeAudio.context, routeAudio.destination, {
         side,
         tightness,
-        variant: SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant,
-        durationSeconds: long ? SWOOSH_LENGTHS.long : SWOOSH_LENGTHS.short,
+        variant,
+        durationSeconds: long ? swooshLengths(variant).long : swooshLengths(variant).short,
         level: swooshLevel(globalThis.__turnAudioPreferences?.getSettings?.()?.balance),
         at
       });
@@ -256,7 +263,8 @@ export function updateSwooshPaceNotes(runtime, frame = {}, routeAudio = globalTh
     .filter(({ segment, ahead }) => ahead > 0 && segment !== current && !delivery.has(segment.id));
   const speed = Math.max(0, Number(state.speed) || forwardSpeed);
   const started = [];
-  for (const item of planSwooshes(upcoming, speed)) {
+  const lengths = swooshLengths(SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant);
+  for (const item of planSwooshes(upcoming, speed, SWOOSH_PACE_TUNING, lengths)) {
     if (item.start > SWOOSH_PACE_TUNING.scheduleAheadSeconds) break;
     started.push(playPlanned(item, routeAudio));
   }
@@ -298,7 +306,7 @@ function record(segment, status, detail = {}) {
     side: segment.side,
     angleDegrees: segment.angleDegrees,
     tightness: swooshTightness(segment),
-    long: swooshDuration(segment) === SWOOSH_LENGTHS.long,
+    long: isLongSwoosh(segment),
     status,
     ...detail
   });
