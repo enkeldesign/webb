@@ -10,6 +10,17 @@
 // - Resume thaws the clock. The next frame continues from the paused moment, so the
 //   pause never becomes one long physics step or lap time.
 // - A race that ends while paused (RESTART LAP, LEAVE RACE, Home) ends the pause.
+// - A screen rotation the OS completes mid-lap (#1080) pauses too: a phone tipped over
+//   while steering must not cost the lap. Only the finished rotation counts (the
+//   screen's orientation type changes), never a tilt angle. Turning back to the
+//   orientation the race was driven in announces 'race-rotation' { rotatedBack: true }.
+//   Every resume adopts the screen's orientation as the race's own, so racing on
+//   in the new orientation is simply resuming.
+// - Where the platform can (Android: an installed app or fullscreen), the screen is
+//   locked to the race's orientation while a lap runs and unlocked whenever it pauses
+//   or ends, so a tipped phone cannot rotate mid-lap. To race the other way round, the
+//   player pauses, turns the phone and resumes. iOS and desktop browsers have no lock;
+//   there the rotation pause above applies.
 //
 // Every change goes out as turn:ui-state-change { reason: 'race-paused' |
 // 'race-resumed', paused, pauseReason }, so HUD, scoring, audio and tests follow it
@@ -22,7 +33,8 @@ const RACING = 'racing';
 
 export const PAUSE_REASON = Object.freeze({
   PLAYER: 'player',
-  BACKGROUND: 'background'
+  BACKGROUND: 'background',
+  ROTATION: 'rotation'
 });
 
 export function installRacePause({ windowRef = window, documentRef = document } = {}) {
@@ -30,6 +42,9 @@ export function installRacePause({ windowRef = window, documentRef = document } 
   const body = documentRef.body;
   let reason = null;
   let pausedAt = 0;
+  // The screen orientation the race is driven in; it follows every rotation outside a lap.
+  const orientationNow = () => windowRef.screen?.orientation?.type || String(windowRef.orientation ?? '');
+  let raceOrientation = orientationNow();
 
   const runtime = () => windowRef.__turnRuntime;
   const racing = () => {
@@ -45,7 +60,8 @@ export function installRacePause({ windowRef = window, documentRef = document } 
         mode: state?.mode,
         running: state?.running === true,
         paused: reason !== null,
-        pauseReason: reason
+        pauseReason: reason,
+        rotatedBack: reason === PAUSE_REASON.ROTATION ? orientationNow() === raceOrientation : undefined
       }
     }));
   }
@@ -74,6 +90,7 @@ export function installRacePause({ windowRef = window, documentRef = document } 
     thawRaceClock();
     body.classList.remove('turn-runtime-paused', 'turn-race-paused');
     reason = null;
+    raceOrientation = orientationNow();
     pausedAt = 0;
     publish(ending ? 'race-pause-ended' : 'race-resumed');
     return true;
@@ -82,7 +99,7 @@ export function installRacePause({ windowRef = window, documentRef = document } 
   // A race that stops being a race while paused ends the pause with it.
   windowRef.addEventListener('turn:ui-state-change', (event) => {
     const change = event.detail?.reason;
-    if (reason === null || change === 'race-paused' || change === 'race-resumed' || change === 'race-pause-ended') return;
+    if (reason === null || change === 'race-paused' || change === 'race-resumed' || change === 'race-pause-ended' || change === 'race-rotation') return;
     if (!racing()) resume({ ending: true });
   });
 
@@ -93,6 +110,41 @@ export function installRacePause({ windowRef = window, documentRef = document } 
   });
   windowRef.addEventListener('pagehide', () => pause(PAUSE_REASON.BACKGROUND));
   windowRef.addEventListener('blur', () => pause(PAUSE_REASON.BACKGROUND));
+
+  // Both events can report one rotation; only a changed orientation type counts.
+  let lastOrientation = raceOrientation;
+  function orientationChanged() {
+    const next = orientationNow();
+    if (next === lastOrientation) return;
+    lastOrientation = next;
+    if (reason === PAUSE_REASON.ROTATION) {
+      publish('race-rotation');
+      return;
+    }
+    if (reason === null && racing() && next !== raceOrientation) {
+      pause(PAUSE_REASON.ROTATION);
+      return;
+    }
+    if (reason === null) raceOrientation = next;
+  }
+  windowRef.addEventListener('orientationchange', orientationChanged);
+  windowRef.screen?.orientation?.addEventListener?.('change', orientationChanged);
+
+  let locked = false;
+  function syncOrientationLock() {
+    const orientation = windowRef.screen?.orientation;
+    if (typeof orientation?.lock !== 'function') return;
+    const lock = reason === null && racing();
+    if (lock === locked) return;
+    locked = lock;
+    try {
+      if (lock) orientation.lock(orientationNow()).catch(() => { locked = false; });
+      else orientation.unlock?.();
+    } catch (_) {
+      locked = false;
+    }
+  }
+  windowRef.addEventListener('turn:ui-state-change', syncOrientationLock);
 
   const api = Object.freeze({
     pause,
@@ -109,6 +161,10 @@ export function installRacePause({ windowRef = window, documentRef = document } 
     },
     get canPause() {
       return reason === null && racing();
+    },
+    // A rotation pause: whether the screen is back in the race's orientation.
+    get rotatedBack() {
+      return reason === PAUSE_REASON.ROTATION && orientationNow() === raceOrientation;
     }
   });
   windowRef[INSTALL_KEY] = api;

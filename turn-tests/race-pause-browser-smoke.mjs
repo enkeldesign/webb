@@ -328,8 +328,90 @@ try {
     await opened.context.close();
   }
 
+  // A screen rotation mid-lap (#1080) pauses as SCREEN ROTATED. Turning back resumes
+  // after a fast 3-2-1; RACE IN PORTRAIT races on in the new orientation, which is then
+  // the race's own.
+  {
+    const opened = await openRace({ width: 852, height: 393 });
+    const { page } = opened;
+    // Where lock() exists (Android), a running lap holds the screen in its orientation.
+    await page.evaluate(() => {
+      globalThis.__locks = [];
+      globalThis.screen.orientation.lock = (type) => { globalThis.__locks.push(`lock ${type}`); return Promise.resolve(); };
+      globalThis.screen.orientation.unlock = () => { globalThis.__locks.push('unlock'); };
+    });
+    await startLap(page);
+    await page.keyboard.up('ArrowUp');
+    assert.deepEqual(await page.evaluate(() => globalThis.__locks), ['lock landscape-primary'], 'a running lap locks the screen in its orientation');
+    await page.evaluate(() => globalThis.__turnRacePause.pause('player'));
+    assert.deepEqual(await page.evaluate(() => globalThis.__locks), ['lock landscape-primary', 'unlock'], 'a pause unlocks it, so the player can turn the phone');
+    await page.locator('.turn-race-pause-resume').click();
+    assert.equal(await page.evaluate(() => globalThis.__locks.at(-1)), 'lock landscape-primary', 'resuming locks again');
+    const paused = () => page.evaluate(() => ({
+      paused: globalThis.__turnRacePause.paused,
+      reason: globalThis.__turnRacePause.reason,
+      open: document.querySelector('.turn-race-pause-dialog').open,
+      title: document.querySelector('#turnRacePauseTitle').textContent,
+      action: document.querySelector('.turn-race-pause-resume').textContent,
+      note: !document.querySelector('.turn-race-pause-note').hidden
+    }));
+
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.waitForFunction(() => globalThis.__turnRacePause.paused);
+    assert.deepEqual(await paused(), { paused: true, reason: 'rotation', open: true, title: 'SCREEN ROTATED', action: 'RACE IN PORTRAIT', note: true },
+      'a rotation mid-lap pauses as SCREEN ROTATED');
+    const frozenAt = (await race(page)).lap;
+    await page.waitForTimeout(400);
+    assert.equal((await race(page)).lap, frozenAt, 'the lap time holds while rotated');
+
+    await page.setViewportSize({ width: 852, height: 393 });
+    await page.waitForFunction(() => !document.querySelector('.turn-race-countdown').hidden);
+    assert.equal(await page.evaluate(() => globalThis.__turnRacePause.paused), true, 'turned back, the race counts in before it runs');
+    await page.waitForFunction(() => !globalThis.__turnRacePause.paused, null, { timeout: 3000 });
+    assert.equal((await race(page)).mode, 'racing', 'turned back, the race runs on after 3-2-1');
+    assert.equal(await page.evaluate(() => document.querySelector('.turn-race-pause-dialog').open), false, 'and the dialog has closed');
+
+    // Turned back with SETTINGS open over the dialog: the pause holds, and reads as an
+    // ordinary pause once Settings closes.
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.waitForFunction(() => globalThis.__turnRacePause.reason === 'rotation');
+    await page.locator('[data-pause-action="settings"]').click();
+    await page.waitForFunction(() => document.querySelector('.m8-settings-dialog')?.open);
+    await page.setViewportSize({ width: 852, height: 393 });
+    await page.waitForTimeout(1600);
+    assert.equal(await page.evaluate(() => globalThis.__turnRacePause.paused), true, 'turned back under SETTINGS, the race stays paused');
+    await page.evaluate(() => document.querySelector('.m8-settings-dialog').close());
+    assert.deepEqual(await paused(), { paused: true, reason: 'rotation', open: true, title: 'PAUSED', action: 'RESUME', note: false },
+      'turned back, the rotation pause reads as PAUSED / RESUME');
+    await page.locator('.turn-race-pause-resume').click();
+    await page.waitForFunction(() => !globalThis.__turnRacePause.paused, null, { timeout: 3000 });
+
+    // Leaving TURN mid-count holds the race: the count stops and PAUSED returns.
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.waitForFunction(() => globalThis.__turnRacePause.reason === 'rotation');
+    await page.setViewportSize({ width: 852, height: 393 });
+    await page.waitForFunction(() => !document.querySelector('.turn-race-countdown').hidden);
+    await page.evaluate(() => globalThis.dispatchEvent(new globalThis.Event("blur")));
+    await page.waitForTimeout(1600);
+    assert.equal(await page.evaluate(() => globalThis.__turnRacePause.paused), true, 'blurred mid-count, the race stays paused');
+    assert.equal((await paused()).open, true, 'and PAUSED is back');
+    await page.locator('.turn-race-pause-resume').click();
+    await page.waitForFunction(() => !globalThis.__turnRacePause.paused, null, { timeout: 3000 });
+
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.waitForFunction(() => globalThis.__turnRacePause.reason === 'rotation');
+    await page.locator('.turn-race-pause-resume').click();
+    await page.waitForFunction(() => !globalThis.__turnRacePause.paused, null, { timeout: 3000 });
+    assert.equal((await race(page)).mode, 'racing', 'RACE IN PORTRAIT races on in portrait');
+    await page.setViewportSize({ width: 852, height: 393 });
+    await page.waitForFunction(() => globalThis.__turnRacePause.reason === 'rotation');
+    assert.equal((await paused()).action, 'RACE IN LANDSCAPE', 'portrait is now the race\'s own: turning to landscape pauses');
+    await page.locator('.turn-race-pause-leave').click();
+    await opened.context.close();
+  }
+
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Race pause: Ⅱ beside RESTART LAP during a lap; frozen car, lap time, BOOST and race clock; released controls; Settings, Escape, back, background, RESTART LAP and LEAVE RACE; landscape, portrait (turned while paused) and left-handed passed.');
+  console.log('Race pause: Ⅱ beside RESTART LAP during a lap; frozen car, lap time, BOOST and race clock; released controls; Settings, Escape, back, background, RESTART LAP and LEAVE RACE; landscape, portrait (turned while paused) and left-handed; a running lap locks the screen where the platform can; a rotation mid-lap pauses as SCREEN ROTATED and resumes after 3-2-1 passed.');
 } finally {
   await browser.close();
   server.close();
