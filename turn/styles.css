@@ -267,6 +267,10 @@ h1 {
   background: rgb(255 255 255 / 0.82);
 }
 
+:root[data-theme="dark"] .map-wrap {
+  background: color-mix(in srgb, var(--turn-surface-page) 90%, transparent);
+}
+
 #map {
   width: 100%;
   height: 100%;

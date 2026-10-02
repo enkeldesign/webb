@@ -9,6 +9,7 @@
 // NEXT UP on its Ink chip, is left alone. The light theme never runs it.
 const MARK = 'data-turn-on';
 const PILL = 'data-turn-pill';
+const EDGE = 'data-turn-edge';
 const MIN_CONTRAST = 4.5;
 const INK = [8, 9, 10];
 const CREAM = [255, 248, 232];
@@ -96,6 +97,21 @@ function pill(element) {
   return true;
 }
 
+// An outline drawn on a colour (a close button on a Yellow sheet head) reads Ink, as
+// in light; on a night surface it stays the theme's cream outline.
+function edge(element, outline) {
+  const style = getComputedStyle(element);
+  if (!(parseFloat(style.borderTopWidth) > 0) || style.borderTopColor !== outline) return;
+  const behind = element.parentElement && backdrop(element.parentElement);
+  if (behind && luminance(behind) > NIGHT) element.setAttribute(EDGE, '');
+}
+
+function outlineColor() {
+  const hex = getComputedStyle(document.documentElement).getPropertyValue('--turn-outline').trim();
+  const match = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  return match ? `rgb(${match.slice(1).map((part) => parseInt(part, 16)).join(', ')})` : null;
+}
+
 function check(element) {
   if (element.closest('canvas, svg > *')) return;
   if (element.closest(`[${PILL}]`)) return;
@@ -126,8 +142,13 @@ function scan() {
   scheduled = false;
   const started = performance.now();
   const root = document.documentElement;
+  // Every scan starts clean: a mark judged in one place (a button in the race row)
+  // must not follow the element somewhere else (the same button in the race menu).
+  for (const marked of document.querySelectorAll(`[${MARK}], [${EDGE}]`)) {
+    marked.removeAttribute(MARK);
+    marked.removeAttribute(EDGE);
+  }
   if (root.dataset.theme !== 'dark') {
-    for (const marked of document.querySelectorAll(`[${MARK}]`)) marked.removeAttribute(MARK);
     for (const marked of document.querySelectorAll(`[${PILL}]`)) {
       marked.removeAttribute(PILL);
       marked.style.removeProperty('--turn-pill');
@@ -141,8 +162,11 @@ function scan() {
       element.style.removeProperty('--turn-pill');
     }
   }
+  const outline = outlineColor();
   for (const element of document.body.querySelectorAll('*')) {
-    if (!element.hasAttribute(PILL) && element.checkVisibility?.() !== false) pill(element);
+    if (element.checkVisibility?.() === false) continue;
+    if (!element.hasAttribute(PILL)) pill(element);
+    edge(element, outline);
   }
   // Two passes: marking a parent changes what its children inherit.
   for (let pass = 0; pass < 2; pass += 1) {
@@ -177,10 +201,7 @@ function install() {
     attributes: true,
     attributeFilter: ['class', 'open', 'hidden', 'aria-selected', 'aria-pressed', 'aria-current']
   });
-  globalThis.__turnTheme?.subscribe?.(() => {
-    for (const marked of document.querySelectorAll(`[${MARK}]`)) marked.removeAttribute(MARK);
-    schedule();
-  });
+  globalThis.__turnTheme?.subscribe?.(schedule);
   schedule();
   globalThis.__turnThemeContrast = Object.freeze({ scan, get lastMs() { return lastMs; } });
 }

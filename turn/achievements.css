@@ -147,6 +147,11 @@
   background: var(--turn-muted, #d6d0c2);
 }
 
+:root[data-theme="dark"] :is(.turn-achievements-total-progress, .turn-achievement-progress > div, .turn-trophy-road-progress) {
+  border-color: var(--turn-outline);
+  background: var(--turn-surface-bright);
+}
+
 .turn-achievements-total-progress {
   height: 12.75px;
   margin-top: 6px;

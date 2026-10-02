@@ -143,6 +143,11 @@ html[data-theme="dark"] .garage-bar {
   background: linear-gradient(to bottom, #c7ecff 0 58%, #6f7d88 58% 100%);
 }
 
+/* Dark theme: a dusk showroom, so the lit car stays the brightest thing on screen. */
+:root[data-theme="dark"] :is(.garage-stage, .garage-car-art) {
+  background: linear-gradient(to bottom, #4a6577 0 58%, #3b434b 58% 100%);
+}
+
 .garage-view {
   position: absolute;
   z-index: 0;
