@@ -45,10 +45,10 @@
         linear-gradient(145deg, #38d9ff 0 45%, #8ce99a 100%);
     }
     html.${CLASS}:has(body.turn-race-active) body {
-      background: #08090a !important;
+      background: var(--turn-ink) !important;
     }
     html.${CLASS}:has(body:is(.turn-home-open, .turn-garage-open)) body {
-      background: var(--turn-modal-paper, var(--turn-surface-page, #fff8e8)) !important;
+      background: var(--turn-modal-paper, var(--turn-surface-page)) !important;
     }
   `;
   document.head.appendChild(style);

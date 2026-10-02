@@ -4,7 +4,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #08090a;
+  color: var(--turn-text);
   overflow: visible;
 }
 
@@ -15,19 +15,19 @@
 
 .turn-motion-denied-card {
   padding: clamp(16.5px, 4vw, 25.5px);
-  border: 4.5px solid #08090a;
+  border: 4.5px solid var(--turn-ink);
   border-radius: 19.5px;
   background:
     radial-gradient(circle at 92% 9%, rgb(255 79 163 / 0.32), transparent 24%),
-    #fff8e8;
-  box-shadow: 7.5px 7.5px 0 #08090a;
+    var(--turn-surface-page);
+  box-shadow: 7.5px 7.5px 0 var(--turn-shadow-color);
   text-align: left;
 }
 
 .turn-motion-denied-kicker {
   display: inline-block;
   padding: 4.5px 8.25px;
-  border: 2.25px solid #08090a;
+  border: 2.25px solid var(--turn-ink);
   border-radius: 749.25px;
   background: #ffd43b;
   font-size: max(var(--turn-text-floor, 11px), 0.585rem);
@@ -55,11 +55,11 @@
   width: 100%;
   margin-top: 16.5px;
   padding: 9px 13.5px;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-ink);
   border-radius: 11.25px;
   background: var(--turn-action-primary, #ea5da1);
-  color: #08090a;
-  box-shadow: 3px 3px 0 #08090a;
+  color: var(--turn-ink);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: inherit;
   font-weight: 950;
   letter-spacing: 0.08em;

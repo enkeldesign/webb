@@ -4,11 +4,11 @@
   display: grid;
   place-items: center;
   padding: 0;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-outline);
   border-radius: 50%;
-  background: #fff8e8;
-  color: #08090a;
-  box-shadow: 3.75px 3.75px 0 #08090a;
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
+  box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
   touch-action: manipulation;
 }
 
@@ -32,7 +32,7 @@
 
 .lap-result-yourturn-share:active {
   transform: translate(3px, 3px);
-  box-shadow: 0.75px 0.75px 0 #08090a;
+  box-shadow: 0.75px 0.75px 0 var(--turn-shadow-color);
 }
 
 .lap-result-yourturn-share:focus-visible {
@@ -53,7 +53,7 @@
   height: 36px;
   transform: translateY(-50%);
   pointer-events: auto;
-  box-shadow: 3px 3px 0 #08090a;
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
 }
 
 .lap-result-yourturn-share:hover {
@@ -70,7 +70,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #08090a;
+  color: var(--turn-text);
 }
 
 .turn-yourturn-share-dialog::backdrop {
@@ -83,10 +83,10 @@
   max-height: calc(100dvh - 21px);
   overflow: auto;
   padding: clamp(13.5px, 3vw, 21px);
-  border: 3.75px solid #08090a;
+  border: 3.75px solid var(--turn-outline);
   border-radius: 19.5px;
-  background: #fff8e8;
-  box-shadow: 7.5px 7.5px 0 #08090a;
+  background: var(--turn-surface-page);
+  box-shadow: 7.5px 7.5px 0 var(--turn-shadow-color);
 }
 
 .turn-yourturn-share-head {
@@ -118,11 +118,11 @@
   width: 36px;
   height: 36px;
   padding: 0;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-ink);
   border-radius: 50%;
   background: #ff9b66;
-  color: #08090a;
-  box-shadow: 3px 3px 0 #08090a;
+  color: var(--turn-ink);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: 1000 max(var(--turn-text-floor, 11px), 1.275rem)/1 system-ui, sans-serif;
 }
 
@@ -133,7 +133,7 @@
   gap: 6px 10.5px;
   margin-bottom: 10.5px;
   padding: 7.5px 9.75px;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-ink);
   border-radius: 12px;
   background: #ffd43b;
   font-weight: 900;
@@ -161,10 +161,10 @@
   width: 100%;
   min-height: 36px;
   padding: 6.75px 9px;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-outline);
   border-radius: 9px;
-  background: #fff;
-  color: #08090a;
+  background: var(--turn-surface-bright);
+  color: var(--turn-text);
   font: inherit;
   font-size: max(var(--turn-text-floor, 11px), 0.7875rem);
   font-weight: 900;
@@ -192,10 +192,10 @@
 .turn-yourturn-share-actions button {
   min-height: 36px;
   padding: 7.5px 13.5px;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-outline);
   border-radius: 10.5px;
-  color: #08090a;
-  box-shadow: 3.75px 3.75px 0 #08090a;
+  color: var(--turn-text);
+  box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
   font: inherit;
   font-weight: 1000;
 }

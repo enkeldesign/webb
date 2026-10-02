@@ -164,7 +164,7 @@ const preRace = await fs.readFile(new URL('../turn/pre-race.css', import.meta.ur
 // One elevation scale (design-scale.css): the older shadow tokens and ROADBOOK/GARAGE's
 // primitives resolve to its levels instead of carrying their own pixel values.
 for (const level of ['press', 'control', 'action', 'card', 'dialog']) {
-  assert.match(scale, new RegExp(`--turn-shadow-${level}: \\d+px \\d+px 0 var\\(--turn-ink`), `design-scale.css defines the ${level} elevation`);
+  assert.match(scale, new RegExp(`--turn-shadow-${level}: \\d+px \\d+px 0 var\\(--turn-shadow-color\\)`), `design-scale.css defines the ${level} elevation`);
 }
 assert.match(tokens, /--turn-shadow-compact: var\(--turn-shadow-control,/);
 assert.match(tokens, /--turn-shadow-default: var\(--turn-shadow-card,/);

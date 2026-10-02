@@ -31,10 +31,10 @@ function installStyles() {
       width: 12px;
       height: 12px;
       box-sizing: border-box;
-      border: 3px solid var(--turn-ink, #08090a);
+      border: 3px solid var(--turn-ink);
       border-radius: 50%;
       background: var(--turn-action-warning, #ffd43b);
-      box-shadow: 1.5px 1.5px 0 var(--turn-ink, #08090a);
+      box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
       pointer-events: none;
     }
 

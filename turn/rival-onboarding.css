@@ -28,11 +28,11 @@
 
 .rival-onboarding-copy {
   padding: 5.25px 10.5px;
-  border: 3px solid var(--ink);
+  border: 3px solid var(--turn-ink);
   border-radius: 749.25px;
   background: var(--rival-onboarding-color, var(--yellow));
-  color: var(--ink);
-  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--turn-ink);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.5625rem, 2vw, 0.75rem));
   letter-spacing: 0.02em;
   white-space: nowrap;

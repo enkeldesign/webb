@@ -1,4 +1,4 @@
-@import url('./design-tokens.css?build=20261002-r357');
+@import url('./design-tokens.css?build=20261002-r358');
 
 /*
   Normative production roles.
@@ -95,7 +95,7 @@
 
 .drive-pad.is-boosting {
   box-shadow:
-    5.25px 6px 0 var(--turn-ink),
+    5.25px 6px 0 var(--turn-shadow-color),
     0 0 0 3.75px rgb(255 212 59 / 0.32) !important;
 }
 

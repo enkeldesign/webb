@@ -1103,13 +1103,14 @@ Object.freeze({
     Object.freeze(['1.35.2 r354', 'Admin: SWOOSH SOUND PICKER in SETTINGS. While racing, a box where the steering pad goes chooses the pace-note sound: the race sound or one of ten polished voices (GLIDE, BREATH, SILK, CHIME, FLUTE, SWELL, HALO, WIND, PEBBLE, WOOD), with smooth fades, a soft top and a small room. Each step plays the new sound, and a caption names the swoosh just played, such as GENTLE LONG LEFT. Players hear no change.']),
     Object.freeze(['1.35.3 r355', 'Drive By Ear: pace notes are now CHIME, a soft bell that travels out to the ear on the side of the bend, with its pitch telling how tight the bend is. It rings a little longer than before, so short and long bends are easier to tell apart.']),
     Object.freeze(['1.35.4 r356', 'Admin: five CHIME variants in the SWOOSH SOUND PICKER (11–15), each trying to keep the chime strong where the swipe lands on its side: CHIME RING rings longer, CHIME EARLY reaches the side sooner, CHIME WIND adds a soft wind that carries the length, CHIME LONGER gives long curves a longer chime, and CHIME MIRRORED adds a reversed chime that swells to the side. Players hear no change.']),
-    Object.freeze(['1.35.5 r357', 'Drive By Ear: pace notes are now CHIME RING, a chime that keeps ringing out to the side of the bend. Its length tells the bend in three steps: short, medium and long.'])
+    Object.freeze(['1.35.5 r357', 'Drive By Ear: pace notes are now CHIME RING, a chime that keeps ringing out to the side of the bend. Its length tells the bend in three steps: short, medium and long.']),
+    Object.freeze(['1.35.6 r358', 'Groundwork for dark mode: the colours of pages, cards, text, outlines and hard shadows now come from shared theme roles. Nothing looks different yet.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.35.5',
-  build: '2026.10.02-r357',
-  note: 'Pace notes are CHIME RING, in three lengths.'
+  version: '1.35.6',
+  build: '2026.10.02-r358',
+  note: 'Theme roles for dark mode; no visual change.'
 });

@@ -131,7 +131,7 @@ assert.match(css, /scroll-padding-block-end: max\(24px, env\(safe-area-inset-bot
 assert.match(css, /scrollbar-gutter: stable/, 'The dialog width must remain stable when expanded content creates a scrollbar');
 assert.match(css, /\.m8-guide-grid section\.m8-guide-card-shell[\s\S]*background: transparent[\s\S]*box-shadow: none/,
   'Ordinary guide sections become neutral grid shells around the disclosure card');
-assert.match(css, /\.m8-guide-card-disclosure[\s\S]*border: 4px solid var\(--m8-ink\)[\s\S]*border-radius: 15px[\s\S]*box-shadow: 3\.75px 3\.75px 0 var\(--m8-ink\)/);
+assert.match(css, /\.m8-guide-card-disclosure[\s\S]*border: 4px solid var\(--turn-outline\)[\s\S]*border-radius: 15px[\s\S]*box-shadow: 3\.75px 3\.75px 0 var\(--turn-shadow-color\)/);
 assert.match(css, /\.m8-guide-card-disclosure > summary[\s\S]*display: grid[\s\S]*cursor: pointer/);
 assert.match(css, /\.m8-guide-card-disclosure\[open\] > summary[\s\S]*border-bottom: 3px solid/);
 assert.match(css, /\.m8-guide-card-disclosure > summary::after[\s\S]*content: "\+"/);

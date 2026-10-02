@@ -1,4 +1,4 @@
-@import url('./trophy-road.css?build=20261002-r357');
+@import url('./trophy-road.css?build=20261002-r358');
 
 /* Trophy Road locked/unlocked states use the primitive TURN palette directly. */
 :root {
@@ -45,7 +45,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   opacity: .16;
   font-size: max(var(--turn-text-floor, 11px), 2.55rem);
   font-style: normal;
@@ -64,11 +64,11 @@
   height: 22.5px;
   padding: 3px;
   place-items: center;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-ink);
   border-radius: 50%;
   background: var(--turn-action-warning, #ffd43b);
-  box-shadow: 1.5px 1.5px 0 var(--turn-ink, #08090a);
-  color: var(--turn-ink, #08090a);
+  box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
+  color: var(--turn-ink);
   pointer-events: none;
 }
 
@@ -111,7 +111,7 @@
   [data-trophy-reward-type="vehicle-pack"]
 ).is-unlocked {
   background: var(--turn-reward-vehicle-unlocked);
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
 }
 
 .turn-trophy-road-marker[data-trophy-reward-type="track"].is-locked {

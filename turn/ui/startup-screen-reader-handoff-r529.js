@@ -453,10 +453,10 @@
         min-height: 44px;
         padding: 0 12px;
         box-sizing: border-box;
-        border: 2px solid #08090a;
+        border: 2px solid var(--turn-outline);
         border-radius: 8px;
-        background: #fff8e8;
-        color: #08090a;
+        background: var(--turn-surface-page);
+        color: var(--turn-text);
         font: 900 0.9375rem/1.1 system-ui, sans-serif;
         text-decoration: underline;
       }

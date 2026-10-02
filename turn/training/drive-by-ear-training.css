@@ -9,11 +9,11 @@
   gap: 7.5px;
   margin-top: 10.5px;
   padding: 10.5px;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-outline);
   border-radius: 10.5px;
   background: var(--turn-surface-information, #b9f3ff);
-  color: var(--turn-ink, #08090a);
-  box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+  color: var(--turn-text);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
 }
 
 .turn-dbe-training-how p,
@@ -28,11 +28,11 @@
 .turn-dbe-training-race-nav button {
   min-height: 33px;
   padding: 6.75px 10.5px;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-ink);
   border-radius: 749.25px;
   background: var(--turn-action-information, #38d9ff);
-  color: var(--turn-ink, #08090a);
-  box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+  color: var(--turn-ink);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: inherit;
   font-weight: 900;
   line-height: 1;
@@ -74,7 +74,7 @@
   display: grid;
   gap: 7.5px;
   padding: 10.5px;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-outline);
   border-radius: 10.5px;
   background: var(--turn-surface-information, #b9f3ff);
 }
@@ -94,9 +94,9 @@
 
 .turn-dbe-training-sound-key dl > div {
   padding: 8.25px 9px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-outline);
   border-radius: 8.25px;
-  background: var(--turn-surface-raised, #fffdf6);
+  background: var(--turn-surface-raised);
 }
 
 .turn-dbe-training-sound-key dt {
@@ -129,7 +129,7 @@
   gap: 3px;
   padding: 9px 10.5px;
   border-radius: 9.75px;
-  background: var(--turn-surface-raised, #fffdf6);
+  background: var(--turn-surface-raised);
   line-height: 1.2;
   text-align: left;
   text-transform: none;
@@ -154,7 +154,7 @@
 
 .turn-dbe-training-visual-hint {
   padding: 9px 10.5px;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-ink);
   border-radius: 9px;
   background: var(--turn-warning-soft, #fff1a8);
   font-weight: 800;
@@ -198,11 +198,11 @@
   display: grid;
   min-width: min(270px, calc(100vw - 135px));
   padding: 6px 10.5px;
-  border: 2.25px solid #08090a;
+  border: 2.25px solid var(--turn-ink);
   border-radius: 10.5px;
   background: #b9f3ff;
-  color: #08090a;
-  box-shadow: 3.75px 3.75px 0 #08090a;
+  color: var(--turn-ink);
+  box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
   transform: translateX(-50%);
   text-align: center;
   pointer-events: none;
@@ -238,8 +238,8 @@
   min-height: 30px;
   padding: 5.25px 9px;
   border-radius: 8.25px;
-  background: var(--turn-surface-raised, #fffdf6);
-  box-shadow: 2.25px 2.25px 0 #08090a;
+  background: var(--turn-surface-raised);
+  box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.495rem, 1.2vw, 0.615rem));
   white-space: nowrap;
 }

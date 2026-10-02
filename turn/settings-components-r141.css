@@ -1,4 +1,4 @@
-@import url('./design-semantic.css?build=20261002-r357');
+@import url('./design-semantic.css?build=20261002-r358');
 
 /*
   Native form controls and disclosures keep their real semantics while sharing
@@ -17,7 +17,7 @@
   max-width: calc(100% - 18px);
   padding: 0 6px;
   background: var(--turn-surface-raised);
-  color: var(--turn-ink);
+  color: var(--turn-text);
   font-size: max(var(--turn-text-floor, 11px), 0.9375rem);
   font-weight: 950;
   line-height: 1.1;

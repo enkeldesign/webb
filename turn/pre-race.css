@@ -14,12 +14,12 @@
   --turn-pr-radius-sheet: 20px;
   /* Hard shadows come from design-scale.css: only the selected card (card level),
      the primary action (action level) and a sheet (dialog level) carry one. */
-  --turn-pr-shadow: var(--turn-shadow-card, 6px 6px 0 var(--turn-ink, #08090a));
-  --turn-pr-shadow-action: var(--turn-shadow-action, 4px 4px 0 var(--turn-ink, #08090a));
-  --turn-pr-shadow-press: var(--turn-shadow-press, 1px 1px 0 var(--turn-ink, #08090a));
-  --turn-pr-shadow-sheet: var(--turn-shadow-dialog, 8px 8px 0 var(--turn-ink, #08090a));
+  --turn-pr-shadow: var(--turn-shadow-card, 6px 6px 0 var(--turn-shadow-color));
+  --turn-pr-shadow-action: var(--turn-shadow-action, 4px 4px 0 var(--turn-shadow-color));
+  --turn-pr-shadow-press: var(--turn-shadow-press, 1px 1px 0 var(--turn-shadow-color));
+  --turn-pr-shadow-sheet: var(--turn-shadow-dialog, 8px 8px 0 var(--turn-shadow-color));
   /* A bottom sheet's hard edge, cast upward (surfaces.css draws the same for dialogs). */
-  --turn-pr-shadow-sheet-edge: 0 -4px 0 var(--turn-ink, #08090a);
+  --turn-pr-shadow-sheet-edge: 0 -4px 0 var(--turn-shadow-color);
   --turn-pr-gutter: 16px;
   --turn-pr-max-width: 72.5rem;
   --turn-pr-target: 44px;
@@ -49,7 +49,7 @@
 
 .turn-pr-display {
   margin: 0;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   /* ROADBOOK and GARAGE are titled in the TURN font, like LOADING (#1040). */
   font-family: var(--turn-pr-font-brand);
   /* Enlarged text grows the heading until it would outgrow the screen. */
@@ -67,7 +67,7 @@
 
 .turn-pr-display:focus-visible,
 .turn-pr-panel-title:focus-visible {
-  outline: 3px solid var(--turn-ink, #08090a);
+  outline: 3px solid var(--turn-outline);
   outline-offset: 4px;
 }
 
@@ -84,7 +84,7 @@
   margin: 0;
   padding: 0 0 6px;
   border-bottom: var(--turn-pr-rule);
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   font-family: var(--turn-pr-font-mono);
   font-size: var(--turn-pr-type-meta);
   font-weight: 800;
@@ -115,10 +115,10 @@ html body .turn-pr-app-logo {
   align-self: flex-start;
   margin: 0 0 calc(var(--turn-pr-target, 44px) - var(--turn-pr-logo-size));
   box-sizing: border-box;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-outline);
   border-radius: 24%;
-  background: var(--turn-paper, #fff8e8);
-  box-shadow: var(--turn-shadow-control, 3px 3px 0 var(--turn-ink, #08090a));
+  background: var(--turn-surface-page);
+  box-shadow: var(--turn-shadow-control, 3px 3px 0 var(--turn-shadow-color));
   filter: none;
   object-fit: cover;
   transform: rotate(-3deg);
@@ -140,7 +140,7 @@ html body .turn-pr-app-logo {
   flex: none;
   width: 1.75rem;
   height: 1.75rem;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
 }
 
 .turn-pr-icon.is-large {
@@ -187,7 +187,7 @@ html body .turn-pr-app-logo {
 }
 
 .turn-pr-route-outline {
-  stroke: var(--turn-ink, #08090a);
+  stroke: var(--turn-text);
   stroke-width: 6px;
 }
 
@@ -204,10 +204,10 @@ html body .turn-pr-app-logo {
   min-height: 1.5rem;
   padding: 0 0.5rem;
   box-sizing: border-box;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 999px;
   background: var(--turn-pr-card);
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font-family: var(--turn-pr-font-mono);
   font-size: var(--turn-pr-type-meta);
   font-weight: 800;
@@ -238,7 +238,7 @@ html body .turn-pr-app-logo {
   border-radius: var(--turn-pr-radius);
   background: var(--turn-pr-card);
   box-shadow: none;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -327,7 +327,7 @@ html body .turn-pr-app-logo {
   place-items: center;
   padding: 10px;
   border-left: var(--turn-pr-rule);
-  background: var(--turn-paper, #fff8e8);
+  background: var(--turn-surface-page);
 }
 
 .turn-pr-card-art .turn-pr-route {
@@ -341,7 +341,7 @@ html body .turn-pr-app-logo {
 }
 
 .turn-pr-card.is-selected .turn-pr-card-tab {
-  background: var(--turn-ink, #08090a);
+  background: var(--turn-ink);
   color: var(--turn-paper, #fff8e8);
 }
 
@@ -390,13 +390,13 @@ html body .turn-pr-app-logo {
 }
 
 .turn-pr-card:focus-visible {
-  outline: 3px solid var(--turn-ink, #08090a);
+  outline: 3px solid var(--turn-outline);
   outline-offset: 4px;
 }
 
 @media (hover: hover) {
   .turn-pr-card:not(.is-coming-soon):hover {
-    border-color: var(--turn-ink, #08090a);
+    border-color: var(--turn-outline);
   }
 }
 
@@ -444,7 +444,7 @@ html body .turn-pr-app-logo {
   border-radius: var(--turn-pr-radius);
   background: var(--turn-pr-card);
   box-shadow: none;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font-family: var(--turn-pr-font-display);
   font-size: 1.0625rem;
   font-weight: 800;
@@ -490,7 +490,7 @@ html body .turn-pr-app-logo {
 
 .turn-pr-button:focus-visible,
 .turn-pr-close:focus-visible {
-  outline: 3px solid var(--turn-ink, #08090a);
+  outline: 3px solid var(--turn-outline);
   outline-offset: 3px;
 }
 
@@ -541,7 +541,7 @@ html body .turn-pr-app-logo {
   border-radius: 50%;
   background: var(--turn-action-navigation, #ff7b54);
   box-shadow: none;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font-family: var(--turn-pr-font-body);
   font-size: 1.625rem;
   font-weight: 800;
@@ -562,7 +562,7 @@ html body .turn-pr-app-logo {
     max(12px, env(safe-area-inset-bottom))
     max(var(--turn-pr-gutter), env(safe-area-inset-left));
   border-top: var(--turn-pr-rule);
-  background: var(--turn-surface-page, #fff8e8);
+  background: var(--turn-surface-page);
 }
 
 .turn-pr-dock-inner {
@@ -687,8 +687,8 @@ html body .turn-pr-app-logo {
   overflow: hidden;
   border: var(--turn-pr-rule);
   border-radius: var(--turn-pr-radius-sheet);
-  background: var(--turn-surface-page, #fff8e8);
-  color: var(--turn-ink, #08090a);
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
 }
 
 .turn-pr-panel-head,
@@ -748,7 +748,7 @@ html body .turn-pr-app-logo {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   overflow: visible;
 }
 
@@ -800,7 +800,7 @@ html body .turn-pr-app-logo {
   z-index: 1;
   bottom: 10px;
   left: 12px;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   font-family: var(--turn-pr-font-body);
   font-size: var(--turn-pr-type-spec);
   font-weight: 750;
@@ -824,7 +824,7 @@ html body .turn-pr-app-logo {
 
 .turn-pr-detail-description {
   margin: 0;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   font-family: var(--turn-pr-font-body);
   font-size: var(--turn-pr-type-body);
   font-weight: 450;
@@ -837,7 +837,7 @@ html body .turn-pr-app-logo {
   gap: 10px;
   margin: 0;
   padding: 12px 14px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 12px;
   background: var(--turn-orange-100, #ffd0ae);
   font-family: var(--turn-pr-font-body);
@@ -872,7 +872,7 @@ html body .turn-pr-app-logo {
   min-height: 4rem;
   padding: 8px 0 8px 14px;
   border-bottom: 2px solid rgb(8 9 10 / 0.14);
-  box-shadow: inset 6px 0 0 var(--turn-pr-record-accent, var(--turn-ink, #08090a));
+  box-shadow: inset 6px 0 0 var(--turn-pr-record-accent, var(--turn-shadow-color));
 }
 
 .turn-pr-record.is-time { --turn-pr-record-accent: var(--turn-yellow-400, #ffd43b); }

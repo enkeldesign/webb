@@ -64,10 +64,10 @@ body .m8-feedback-content * {
   overflow: hidden;
   display: grid;
   grid-template-rows: 32% 44% 24%;
-  border: 4px solid var(--ink);
+  border: 4px solid var(--turn-ink);
   border-radius: 22.5px;
   background: var(--lime);
-  box-shadow: 5.25px 6px 0 var(--ink);
+  box-shadow: 5.25px 6px 0 var(--turn-shadow-color);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -85,10 +85,10 @@ body .m8-feedback-content * {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 4px solid var(--ink);
+  border: 4px solid var(--turn-ink);
   border-radius: 749.25px 0 0 749.25px;
   background: #748ffc;
-  color: var(--ink);
+  color: var(--turn-ink);
   opacity: 0;
   transform: translateX(62%) scaleX(0.38);
   transform-origin: right center;
@@ -123,10 +123,10 @@ body .m8-feedback-content * {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 4px solid var(--ink);
+  border: 4px solid var(--turn-ink);
   border-radius: 749.25px 0 0 749.25px;
   background: #8ce99a;
-  color: var(--ink);
+  color: var(--turn-ink);
   box-shadow: none;
   opacity: 0;
   transform: translateX(62%) scaleX(0.38);
@@ -177,10 +177,10 @@ body .m8-feedback-content * {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 4px solid var(--ink);
+  border: 4px solid var(--turn-ink);
   border-radius: 749.25px 0 0 749.25px;
   background: var(--drive-brake-color);
-  color: var(--ink);
+  color: var(--turn-ink);
   box-shadow: none;
   opacity: 0;
   transform: translateX(62%) scaleX(0.38);
@@ -275,7 +275,7 @@ body .m8-feedback-content * {
   border-radius: 0;
   box-shadow: none;
   transform: none;
-  color: var(--ink);
+  color: var(--turn-text);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.585rem, 2vw, 0.84rem));
   letter-spacing: 0.025em;
   text-transform: uppercase;
@@ -290,14 +290,14 @@ body .m8-feedback-content * {
 }
 
 .drive-drift-zone {
-  border-right: 2px solid var(--ink);
+  border-right: 2px solid var(--turn-ink);
   background: #54c2ef;
 }
 
 .drive-boost-zone {
   position: relative;
   overflow: hidden;
-  border-left: 2px solid var(--ink);
+  border-left: 2px solid var(--turn-ink);
   background:
     linear-gradient(
       to top,
@@ -321,7 +321,7 @@ body .m8-feedback-content * {
   display: grid;
   place-items: center;
   text-align: center;
-  border-top: 4px solid var(--ink);
+  border-top: 4px solid var(--turn-ink);
   background: #c8db08;
 }
 
@@ -333,7 +333,7 @@ body .m8-feedback-content * {
   display: grid;
   place-items: center;
   padding: 4.5px 9px;
-  border-top: 4px solid var(--ink);
+  border-top: 4px solid var(--turn-ink);
   background: var(--drive-brake-color);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.45rem, 1.45vw, 0.615rem));
   letter-spacing: 0.035em;
@@ -370,7 +370,7 @@ body .m8-feedback-content * {
 
 .drive-pad.is-boosting {
   box-shadow:
-    5.25px 6px 0 var(--ink),
+    5.25px 6px 0 var(--turn-shadow-color),
     0 0 0 3.75px rgb(255 90 95 / 0.28);
 }
 
@@ -444,13 +444,13 @@ body .m8-feedback-content * {
 }
 
 :root.turn-left-handed-controls .drive-boost-zone {
-  border-right: 2px solid var(--ink);
+  border-right: 2px solid var(--turn-outline);
   border-left: 0;
 }
 
 :root.turn-left-handed-controls .drive-drift-zone {
   border-right: 0;
-  border-left: 2px solid var(--ink);
+  border-left: 2px solid var(--turn-outline);
 }
 
 .drive-boost-zone.is-locked::after {
@@ -459,9 +459,9 @@ body .m8-feedback-content * {
   right: 5.25px;
   bottom: 4.5px;
   padding: 1.5px 3.75px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 749.25px;
-  background: var(--paper);
+  background: var(--turn-surface-page);
   font-size: max(var(--turn-text-floor, 11px), 0.33rem);
   letter-spacing: 0.06em;
 }
@@ -478,7 +478,7 @@ body .m8-feedback-content * {
   .drive-pad {
     border-width: 2.25px;
     border-radius: 18px;
-    box-shadow: 3.75px 4.5px 0 var(--ink);
+    box-shadow: 3.75px 4.5px 0 var(--turn-shadow-color);
   }
 
   .drive-pad .drive-gas-zone,

@@ -89,10 +89,10 @@ function installStyles() {
       min-width: 0 !important;
       max-width: min(92vw, 420px) !important;
       padding: 6px 12px !important;
-      border: 4px solid var(--turn-ink, #08090a) !important;
+      border: 4px solid var(--turn-ink) !important;
       border-radius: 749.25px !important;
       background: var(--turn-green-500, #8ce99a) !important;
-      box-shadow: 3.75px 3.75px 0 var(--turn-ink, #08090a) !important;
+      box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color) !important;
       line-height: 1 !important;
       white-space: nowrap;
       transform: translate(-50%, -6px) scale(.96) !important;
@@ -121,10 +121,10 @@ function installStyles() {
       min-width: 0 !important;
       max-width: min(92vw, 420px) !important;
       padding: 6px 12px !important;
-      border: 4px solid var(--turn-ink, #08090a) !important;
+      border: 4px solid var(--turn-ink) !important;
       border-radius: 749.25px !important;
       background: var(--turn-action-warning, #ffd43b) !important;
-      box-shadow: 3.75px 3.75px 0 var(--turn-ink, #08090a) !important;
+      box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color) !important;
       font-size: max(var(--turn-text-floor, 11px), clamp(0.495rem, 1.6vw, 0.645rem)) !important;
       font-weight: 950 !important;
       letter-spacing: .045em !important;

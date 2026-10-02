@@ -2,7 +2,7 @@
 .turn-race-achievements-button {
   position: relative;
   background: var(--turn-action-success, #8ce99a);
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font-weight: 950;
   text-transform: uppercase;
 }
@@ -25,11 +25,11 @@
   height: 22.5px;
   padding: 0;
   place-items: center;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
   border-radius: 50%;
   background: var(--turn-action-warning, #ffd43b);
-  color: var(--turn-ink, #08090a);
-  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 #08090a);
+  color: var(--turn-ink);
+  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 var(--turn-shadow-color));
   font-size: max(var(--turn-text-floor, 11px), 0.51rem);
   line-height: 1;
   letter-spacing: 0;
@@ -74,7 +74,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
 }
 
 .turn-achievements-dialog::backdrop {
@@ -97,7 +97,7 @@
   display: grid;
   gap: 12px;
   padding: clamp(10.5px, 3vw, 18px);
-  background: var(--turn-surface-page, #fff8e8);
+  background: var(--turn-surface-page);
 }
 
 .turn-achievements-summary {
@@ -106,10 +106,10 @@
   gap: 13.5px;
   align-items: center;
   padding: 10.5px;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-default, 4px) solid var(--turn-outline);
   border-radius: var(--turn-radius-default, 18px);
-  background: var(--turn-surface-raised, #fffdf6);
-  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 #08090a);
+  background: var(--turn-surface-raised);
+  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 var(--turn-shadow-color));
 }
 
 .turn-achievements-summary > div > strong {
@@ -142,7 +142,7 @@
 .turn-achievements-total-progress,
 .turn-achievement-progress > div {
   overflow: hidden;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
   border-radius: var(--turn-radius-pill, 999px);
   background: var(--turn-muted, #d6d0c2);
 }
@@ -157,14 +157,14 @@
   display: block;
   width: var(--turn-achievement-progress, 0%);
   height: 100%;
-  border-right: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border-right: var(--turn-border-compact, 3px) solid var(--turn-ink);
   background: var(--turn-action-success, #8ce99a);
 }
 
 .turn-achievements-storage-note {
   margin: 0;
   padding: 7.5px 9px;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
   border-radius: var(--turn-radius-compact, 12px);
   background: var(--turn-action-warning, #ffd43b);
 }
@@ -178,11 +178,11 @@
 .turn-achievements-filters button {
   min-height: 30px;
   padding: 4.5px 9px;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
   border-radius: var(--turn-radius-pill, 999px);
-  background: var(--turn-action-utility, #fff8e8);
-  color: var(--turn-ink, #08090a);
-  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 #08090a);
+  background: var(--turn-action-utility, var(--turn-surface-page));
+  color: var(--turn-ink);
+  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 var(--turn-shadow-color));
   font-weight: 950;
 }
 
@@ -201,10 +201,10 @@
   gap: 11.25px;
   align-items: center;
   padding: 10.5px;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-default, 4px) solid var(--turn-outline);
   border-radius: var(--turn-radius-default, 18px);
-  background: var(--turn-surface-raised, #fffdf6);
-  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 #08090a);
+  background: var(--turn-surface-raised);
+  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 var(--turn-shadow-color));
 }
 
 .turn-achievement-card[hidden] {
@@ -212,7 +212,7 @@
 }
 
 .turn-achievement-card.is-unlocked {
-  background: color-mix(in srgb, var(--turn-green-200, #d9f5c2) 72%, var(--turn-white, #fffdf6));
+  background: color-mix(in srgb, var(--turn-green-200, #d9f5c2) 72%, var(--turn-surface-raised));
 }
 
 .turn-achievement-icon {
@@ -221,10 +221,10 @@
   height: 58.5px;
   padding: 11.25px;
   place-items: center;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-default, 4px) solid var(--turn-ink);
   border-radius: var(--turn-radius-default, 18px);
   background: var(--turn-action-success, #8ce99a);
-  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 #08090a);
+  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 var(--turn-shadow-color));
 }
 
 .turn-achievement-card.is-locked .turn-achievement-icon {
@@ -256,9 +256,9 @@
 .turn-achievement-status {
   justify-self: end;
   padding: 3.75px 6px;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-compact, 3px) solid var(--turn-outline);
   border-radius: var(--turn-radius-pill, 999px);
-  background: var(--turn-surface-page, #fff8e8);
+  background: var(--turn-surface-page);
   font-size: max(var(--turn-text-floor, 11px), 0.4875rem);
   letter-spacing: .07em;
   white-space: nowrap;
@@ -289,11 +289,11 @@
   gap: 9.75px;
   align-items: center;
   padding: 9px;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-default, 4px) solid var(--turn-ink);
   border-radius: var(--turn-radius-default, 18px);
   background: var(--turn-action-success, #8ce99a);
-  color: var(--turn-ink, #08090a);
-  box-shadow: var(--turn-shadow-default, 5.25px 5.25px 0 #08090a);
+  color: var(--turn-ink);
+  box-shadow: var(--turn-shadow-default, 5.25px 5.25px 0 var(--turn-shadow-color));
   opacity: 0;
   transform: translate(-50%, -130%);
   transition: transform 220ms ease, opacity 180ms ease;
@@ -315,9 +315,9 @@
   height: 48px;
   padding: 9px;
   place-items: center;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-compact, 3px) solid var(--turn-outline);
   border-radius: var(--turn-radius-compact, 12px);
-  background: var(--turn-surface-page, #fff8e8);
+  background: var(--turn-surface-page);
 }
 
 .turn-achievement-toast strong {
@@ -328,7 +328,7 @@
 
 .turn-achievement-toast > b {
   padding: 3.75px 6px;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
   border-radius: var(--turn-radius-pill, 999px);
   background: var(--turn-action-warning, #ffd43b);
   font-size: max(var(--turn-text-floor, 11px), 0.54rem);

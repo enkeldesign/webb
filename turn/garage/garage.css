@@ -20,8 +20,8 @@
   overscroll-behavior: contain;
   scroll-padding-top: calc(var(--turn-app-bar-height, 56px) + var(--turn-pr-logo-overhang, 28px) + 12px);
   scroll-padding-bottom: calc(var(--garage-dock-height) + 12px);
-  background: var(--turn-surface-page, #fff8e8);
-  color: var(--turn-ink, #08090a);
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
   font-family: var(--turn-pr-font-body);
   -webkit-text-size-adjust: 100%;
 }
@@ -67,7 +67,7 @@
   border-radius: 999px;
   background: var(--turn-action-navigation, #ff7b54);
   box-shadow: none;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font-family: var(--turn-pr-font-display);
   font-size: 0.9375rem;
   font-weight: 900;
@@ -76,7 +76,7 @@
 }
 
 .garage-back:focus-visible {
-  outline: 3px solid var(--turn-ink, #08090a);
+  outline: 3px solid var(--turn-outline);
   outline-offset: 3px;
 }
 
@@ -157,7 +157,7 @@
   top: 10px;
   left: 10px;
   padding: 4px 10px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 999px;
   background: var(--turn-pr-card);
   font-family: var(--turn-pr-font-mono);
@@ -177,7 +177,7 @@
   inset: auto 60px 50% 60px;
   margin: 0;
   padding: 10px 12px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 12px;
   background: var(--turn-pr-card);
   font-size: var(--turn-pr-type-spec);
@@ -205,7 +205,7 @@
   /* Yellow, like ALL CARS: every way to another car shares one colour. */
   background: var(--turn-yellow-600, #ffbd12);
   box-shadow: none;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font-size: 1.75rem;
   font-weight: 900;
   line-height: 1;
@@ -231,18 +231,18 @@
   height: var(--turn-pr-target);
   margin: 0;
   padding: 0;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 50%;
   background: rgb(255 252 242 / 0.9);
   box-shadow: none;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
 }
 
 :is(.garage-step, .garage-rotate-button):focus-visible {
-  outline: 3px solid var(--turn-ink, #08090a);
+  outline: 3px solid var(--turn-outline);
   outline-offset: 2px;
 }
 
@@ -292,10 +292,10 @@
   width: max-content;
   max-width: 100%;
   padding: 4px 10px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-outline);
   border-radius: 999px;
-  background: var(--turn-paper, #fff8e8);
-  color: var(--turn-ink, #08090a);
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
   font-size: var(--turn-pr-type-meta, 12px);
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -318,7 +318,7 @@
   gap: 10px;
   margin: 0;
   padding: 12px 14px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 12px;
   background: var(--turn-orange-100, #ffd0ae);
   font-size: var(--turn-pr-type-spec);
@@ -341,9 +341,9 @@
   justify-items: start;
   gap: 6px;
   padding: 12px 14px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 12px;
-  background: var(--turn-ink, #08090a);
+  background: var(--turn-ink);
   color: var(--turn-paper, #fff8e8);
 }
 
@@ -395,7 +395,7 @@
 }
 
 .garage .garage-shift.is-active i {
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
 }
 
 .garage .garage-shift.is-locked,
@@ -407,7 +407,7 @@
   display: grid;
   gap: 12px;
   padding: 14px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 12px;
   background: var(--turn-pr-card);
 }
@@ -455,7 +455,7 @@
 }
 
 .garage-swatch:focus-within .garage-swatch-face {
-  outline: 3px solid var(--turn-ink, #08090a);
+  outline: 3px solid var(--turn-outline);
   outline-offset: 3px;
 }
 
@@ -538,7 +538,7 @@
   border-radius: 0;
   background: none;
   box-shadow: none;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -549,7 +549,7 @@
 }
 
 .garage-disclosure-toggle:focus-visible {
-  outline: 3px solid var(--turn-ink, #08090a);
+  outline: 3px solid var(--turn-outline);
   outline-offset: 2px;
 }
 
@@ -641,13 +641,13 @@
 
 .garage-spec-meter i {
   height: 0.625rem;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 3px;
   background: var(--turn-pr-card);
 }
 
 .garage-spec-meter i.is-full {
-  background: var(--turn-ink, #08090a);
+  background: var(--turn-ink);
 }
 
 /* Each attribute pair wears the colour of the control it feeds: GAS, DRIFT, BOOST. */
@@ -699,9 +699,9 @@
   width: 22.5px;
   height: 22.5px;
   margin: 0;
-  border: 4px solid var(--turn-ink, #08090a);
+  border: 4px solid var(--turn-ink);
   border-radius: var(--turn-radius-micro, 4px);
-  background-color: var(--turn-form-control-idle, #fff8e8);
+  background-color: var(--turn-form-control-idle, var(--turn-surface-page));
   background-position: center;
   background-repeat: no-repeat;
   cursor: pointer;
@@ -755,7 +755,7 @@
   bottom: calc(100% + 3px);
   left: 0;
   height: 32px;
-  background: linear-gradient(to bottom, rgb(255 248 232 / 0), var(--turn-surface-page, #fff8e8));
+  background: linear-gradient(to bottom, rgb(255 248 232 / 0), var(--turn-surface-page));
   content: '';
   opacity: 0;
   pointer-events: none;
@@ -808,7 +808,7 @@
 }
 
 .garage-perk-state [aria-hidden="true"]:first-child:not(.turn-pr-lock-icon) {
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   font-size: 1.125rem;
 }
 
@@ -920,7 +920,7 @@
   border-radius: var(--turn-pr-radius);
   background: var(--turn-pr-card);
   box-shadow: none;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -977,7 +977,7 @@
 
 .garage-car-ordinal {
   padding: 2px 7px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-outline);
   border-radius: 999px;
   font-family: var(--turn-pr-font-mono);
   font-size: var(--turn-pr-type-meta);
@@ -1009,7 +1009,7 @@
 }
 
 .garage-car-card.is-selected .garage-car-ordinal {
-  background: var(--turn-ink, #08090a);
+  background: var(--turn-ink);
   color: var(--turn-paper, #fff8e8);
 }
 
@@ -1021,7 +1021,7 @@
 
 .garage-car-card.is-locked .garage-car-art {
   border-color: var(--turn-pr-faint);
-  background: var(--turn-paper, #fff8e8);
+  background: var(--turn-surface-page);
 }
 
 .garage-car-card.is-locked .garage-car-still {
@@ -1040,21 +1040,21 @@
 /* The locked car on stage right now: an Ink dashed edge, for a look that is not a choice. */
 .garage-car-card.is-locked.is-previewed {
   border-style: dashed;
-  border-color: var(--turn-ink, #08090a);
+  border-color: var(--turn-outline);
 }
 
 .garage-car-card.is-previewed .garage-car-state {
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
 }
 
 .garage-car-card:focus-visible {
-  outline: 3px solid var(--turn-ink, #08090a);
+  outline: 3px solid var(--turn-outline);
   outline-offset: 4px;
 }
 
 @media (hover: hover) {
   .garage-car-card:hover {
-    border-color: var(--turn-ink, #08090a);
+    border-color: var(--turn-outline);
   }
 }
 

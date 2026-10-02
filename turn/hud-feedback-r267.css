@@ -94,9 +94,9 @@ body .turn-screen-blank-toast {
   min-width: 46.5px;
   padding: 3.75px 5.25px 4.5px;
   overflow: hidden;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 7.5px;
-  box-shadow: 2.25px 2.25px 0 var(--turn-ink);
+  box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
   transform-origin: right bottom;
 }
 
@@ -192,7 +192,7 @@ body .turn-screen-blank-toast {
     padding: 3px 6px 3.75px;
     border-width: 1.5px;
     border-radius: 7.5px;
-    box-shadow: 1.5px 1.5px 0 var(--ink);
+    box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
   }
 }
 

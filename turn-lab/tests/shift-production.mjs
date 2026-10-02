@@ -402,7 +402,7 @@ assert.match(lotStyles, /\.garage-shift-close[\s\S]*?background: var\(--turn-act
   'The SHIFT close control must use navigation orange');
 assert.match(lotStyles, /\.garage-shift-cancel \{ background: var\(--turn-action-navigation, #ff7b54\); \}/,
   'Cancel must use navigation orange');
-assert.match(lotStyles, /\.garage-shift-deactivate \{ margin-right: auto; background: var\(--turn-action-utility, #fff8e8\); \}/,
+assert.match(lotStyles, /\.garage-shift-deactivate \{ margin-right: auto; background: var\(--turn-action-utility, var\(--turn-surface-page\)\); \}/,
   'Deactivate must use the secondary paper action');
 assert.match(lotStyles, /\.garage-shift-save \{ background: var\(--turn-action-primary, #ff4fa3\); \}/,
   'Save must use primary pink');

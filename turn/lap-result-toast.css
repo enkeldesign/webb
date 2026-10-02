@@ -17,11 +17,11 @@
     calc(100vw - var(--lap-result-left) - var(--lap-result-map-clearance) - var(--lap-result-right-clearance))
   );
   padding: 6.75px 11.25px 7.5px;
-  border: 4px solid var(--ink);
+  border: 4px solid var(--turn-ink);
   border-radius: 13.5px;
   background: var(--yellow);
-  box-shadow: 5.25px 5.25px 0 var(--ink);
-  color: var(--ink);
+  box-shadow: 5.25px 5.25px 0 var(--turn-shadow-color);
+  color: var(--turn-ink);
   pointer-events: none;
   opacity: 0;
   transform: translateY(9px) scale(0.97);
@@ -209,7 +209,7 @@
     padding: 5.25px 8.25px 6px;
     border-width: 2.25px;
     border-radius: 11.25px;
-    box-shadow: 3.75px 3.75px 0 var(--ink);
+    box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
   }
 
   .lap-result-drift {

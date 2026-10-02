@@ -12,7 +12,7 @@
   overflow: visible;
   border: 0;
   background: transparent;
-  color: var(--ink, #08090a);
+  color: var(--turn-text);
 }
 
 .garage-shift-dialog::backdrop {
@@ -26,10 +26,10 @@
   padding: clamp(9px, 2.4vw, 16.5px);
   gap: clamp(6px, 1.5vh, 10.5px);
   overflow-y: auto;
-  border: 4px solid var(--ink, #08090a);
+  border: 4px solid var(--turn-outline);
   border-radius: 16.5px;
-  background: var(--paper, #fff8e8);
-  box-shadow: var(--turn-shadow-card, 6px 6px 0 var(--ink, #08090a));
+  background: var(--turn-surface-page);
+  box-shadow: var(--turn-shadow-card, 6px 6px 0 var(--turn-shadow-color));
 }
 
 .garage-shift-dialog-head {
@@ -60,11 +60,11 @@
   height: 31.5px;
   min-height: 31.5px;
   padding: 0 0 3px;
-  border: 3px solid var(--ink, #08090a);
+  border: 3px solid var(--turn-ink);
   border-radius: 9px;
   background: var(--turn-action-navigation, #ff7b54);
-  box-shadow: var(--turn-shadow-control, 3px 3px 0 var(--ink, #08090a));
-  color: var(--ink, #08090a);
+  box-shadow: var(--turn-shadow-control, 3px 3px 0 var(--turn-shadow-color));
+  color: var(--turn-ink);
   font-size: max(var(--turn-text-floor, 11px), 1.125rem);
   line-height: 1;
 }
@@ -99,7 +99,7 @@
   border-radius: 7.5px;
   background: transparent;
   box-shadow: none;
-  color: var(--ink, #08090a);
+  color: var(--turn-text);
   font: inherit;
   text-align: center;
   cursor: pointer;
@@ -139,10 +139,10 @@
   width: clamp(37.5px, 7vw, 48px);
   height: clamp(37.5px, 7vw, 48px);
   place-items: center;
-  border: 4px solid var(--ink, #08090a);
+  border: 4px solid var(--turn-ink);
   border-radius: 8.25px;
   background: #4dabf7;
-  color: var(--ink, #08090a);
+  color: var(--turn-ink);
   box-shadow: 0 1.5px 0 rgb(8 9 10 / .15);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.54rem, 1.4vw, 0.75rem));
   font-weight: 950;
@@ -201,17 +201,17 @@
 .garage-shift-actions button {
   min-height: 31.5px;
   padding: 5.25px 9.75px;
-  border: 3px solid var(--ink, #08090a);
+  border: 3px solid var(--turn-outline);
   border-radius: 749.25px;
-  box-shadow: var(--turn-shadow-control, 3px 3px 0 var(--ink, #08090a));
-  color: var(--ink, #08090a);
+  box-shadow: var(--turn-shadow-control, 3px 3px 0 var(--turn-shadow-color));
+  color: var(--turn-text);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.42rem, 1vw, 0.525rem));
   font-weight: 950;
   letter-spacing: .045em;
 }
 
 .garage-shift-cancel { background: var(--turn-action-navigation, #ff7b54); }
-.garage-shift-deactivate { margin-right: auto; background: var(--turn-action-utility, #fff8e8); }
+.garage-shift-deactivate { margin-right: auto; background: var(--turn-action-utility, var(--turn-surface-page)); }
 .garage-shift-save { background: var(--turn-action-primary, #ff4fa3); }
 .garage-shift-save:disabled { opacity: .42; }
 

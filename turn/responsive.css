@@ -151,13 +151,13 @@
 :root body .turn-orientation-hint {
   position: absolute; inset: auto var(--turn-edge) max(20px, env(safe-area-inset-bottom));
   max-width: 420px; margin-inline: auto; padding: 36px 16px 16px;
-  border: 3px solid var(--ink); border-radius: 16px; background: var(--yellow); color: var(--ink);
-  box-shadow: 4px 4px 0 var(--ink); pointer-events: none; text-align: center;
+  border: 3px solid var(--turn-ink); border-radius: 16px; background: var(--yellow); color: var(--turn-ink);
+  box-shadow: 4px 4px 0 var(--turn-shadow-color); pointer-events: none; text-align: center;
 }
 .turn-orientation-icon {
   position: absolute; top: 0; left: 50%; display: grid; place-items: center; width: 64px; height: 50px;
-  border: 3px solid var(--ink); border-radius: 12px; background: var(--paper); color: var(--ink);
-  box-shadow: 3px 3px 0 var(--ink); transform: translate(-50%, -58%) rotate(-4deg);
+  border: 3px solid var(--turn-outline); border-radius: 12px; background: var(--turn-surface-page); color: var(--turn-text);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color); transform: translate(-50%, -58%) rotate(-4deg);
 }
 .turn-orientation-icon svg { display: block; width: 40px; height: 40px; overflow: visible; }
 .turn-orientation-phone { transform-box: fill-box; transform-origin: center; animation: turn-orientation-rotate 1.2s cubic-bezier(.3, 0, .2, 1) .35s both; }

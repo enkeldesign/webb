@@ -395,11 +395,11 @@ function installStyles() {
       width: clamp(31.5px, 5vw, 40.5px);
       height: clamp(31.5px, 5vw, 40.5px);
       padding: 6px;
-      border: 4px solid var(--turn-ink, #08090a);
+      border: 4px solid var(--turn-ink);
       border-radius: 50%;
       background: var(--turn-yellow-500, #ffd43b);
-      color: var(--turn-ink, #08090a);
-      box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+      color: var(--turn-ink);
+      box-shadow: 3px 3px 0 var(--turn-shadow-color);
       cursor: pointer;
     }
     .turn-support-challenge-trigger svg {
@@ -415,7 +415,7 @@ function installStyles() {
     .turn-support-challenge-trigger:hover { transform: translateY(-1.5px); }
     .turn-support-challenge-trigger:active {
       transform: translate(2.25px, 2.25px);
-      box-shadow: 0.75px 0.75px 0 var(--turn-ink, #08090a);
+      box-shadow: 0.75px 0.75px 0 var(--turn-shadow-color);
     }
     .turn-support-challenge-trigger:focus-visible,
     .turn-support-challenge-dialog button:focus-visible {
@@ -431,10 +431,10 @@ function installStyles() {
       min-width: 16.5px;
       height: 16.5px;
       padding: 0 3px;
-      border: 3px solid var(--turn-ink, #08090a);
+      border: 3px solid var(--turn-ink);
       border-radius: 749.25px;
       background: var(--turn-pink-500, #ff4fa3);
-      color: var(--turn-ink, #08090a);
+      color: var(--turn-ink);
       font-size: max(var(--turn-text-floor, 11px), 9px);
       font-weight: 950;
       line-height: 1;
@@ -443,11 +443,11 @@ function installStyles() {
       width: min(390px, calc(100vw - 21px));
       max-height: calc(100dvh - 21px);
       padding: 0;
-      border: 5px solid var(--turn-ink, #08090a);
+      border: 5px solid var(--turn-outline);
       border-radius: 12px;
-      background: var(--turn-paper, #fff8e8);
-      color: var(--turn-ink, #08090a);
-      box-shadow: 7.5px 7.5px 0 var(--turn-ink, #08090a);
+      background: var(--turn-surface-page);
+      color: var(--turn-text);
+      box-shadow: 7.5px 7.5px 0 var(--turn-shadow-color);
     }
     .turn-support-challenge-dialog::backdrop { background: rgb(8 9 10 / .65); }
     .turn-support-challenge-card { padding: clamp(15px, 4vw, 24px); }
@@ -488,17 +488,17 @@ function installStyles() {
     .turn-support-challenge-actions button {
       min-height: 36px;
       padding: 6px 12px;
-      border: 4px solid var(--turn-ink, #08090a);
+      border: 4px solid var(--turn-ink);
       border-radius: 749.25px;
       background: var(--turn-green-500, #8ce99a);
-      color: var(--turn-ink, #08090a);
-      box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+      color: var(--turn-ink);
+      box-shadow: 3px 3px 0 var(--turn-shadow-color);
       font: inherit;
       font-weight: 950;
       cursor: pointer;
     }
     .turn-support-challenge-actions [data-support-reroll] { background: var(--turn-blue-200, #bdefff); }
-    .turn-support-challenge-actions [data-support-close] { background: var(--turn-paper, #fff8e8); }
+    .turn-support-challenge-actions [data-support-close] { background: var(--turn-surface-page); }
     .turn-support-bonus-toast {
       position: fixed;
       z-index: 12000;
@@ -510,11 +510,11 @@ function installStyles() {
       min-width: min(270px, calc(100vw - 21px));
       max-width: calc(100vw - 21px);
       padding: 9px 12px;
-      border: 4px solid var(--turn-ink, #08090a);
+      border: 4px solid var(--turn-ink);
       border-radius: 9px;
       background: var(--turn-yellow-500, #ffd43b);
-      color: var(--turn-ink, #08090a);
-      box-shadow: 5.25px 5.25px 0 var(--turn-ink, #08090a);
+      color: var(--turn-ink);
+      box-shadow: 5.25px 5.25px 0 var(--turn-shadow-color);
       opacity: 0;
       pointer-events: none;
       transition: opacity .18s ease, transform .18s ease;
