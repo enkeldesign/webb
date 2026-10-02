@@ -4,12 +4,16 @@
 // those light colours but inherits its colour from a dark surface would read cream on
 // yellow. This guard finds text whose colour fails against the background it actually
 // sits on, and marks that element to read Ink or cream, whichever contrasts better with
-// that background (design-tokens.css [data-turn-on]). Text that already reads well,
-// such as yellow NEXT UP on its Ink chip, is left alone. The light theme never runs it.
+// that background (design-tokens.css [data-turn-on]). Buttons on a colour always read
+// Ink, exactly as in the light theme. Text that already reads well, such as yellow
+// NEXT UP on its Ink chip, is left alone. The light theme never runs it.
 const MARK = 'data-turn-on';
 const MIN_CONTRAST = 4.5;
 const INK = [8, 9, 10];
 const CREAM = [255, 248, 232];
+const CONTROLS = 'button, a, [role="button"], summary, select, .turn-pr-chip';
+// Night surfaces are darker than this (relative luminance); anything lighter is a colour.
+const NIGHT = 0.12;
 
 function parseColor(value) {
   const match = String(value).match(/rgba?\(([^)]+)\)/) || String(value).match(/color\(srgb ([^)]+)\)/);
@@ -70,6 +74,14 @@ function check(element) {
   if (element.closest('canvas, svg > *')) return;
   if (!hasOwnText(element)) return;
   if (element.checkVisibility && !element.checkVisibility()) return;
+  // A button on a colour reads exactly as in the light theme: Ink, always. Only a
+  // control on a night surface (PAINT, menu entries) reads cream.
+  const control = element.closest(CONTROLS);
+  const controlFill = control ? fillOf(control) : null;
+  if (controlFill && luminance(controlFill) > NIGHT) {
+    if (control.getAttribute(MARK) !== 'light') control.setAttribute(MARK, 'light');
+    return;
+  }
   const style = getComputedStyle(element);
   const text = parseColor(style.color);
   const fill = backdrop(element);

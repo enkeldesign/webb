@@ -280,6 +280,7 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.match(guard, /if \(root\.dataset\.theme !== 'dark'\) \{/, 'the light theme never runs the contrast guard');
   assert.match(guard, /const MIN_CONTRAST = 4\.5;/, 'text below WCAG AA against its own backdrop is corrected');
   assert.match(guard, /turn-race-active/, 'during a race only a dialog opening or closing calls a scan');
+  assert.match(guard, /if \(controlFill && luminance\(controlFill\) > NIGHT\) \{\s*if \(control\.getAttribute\(MARK\) !== 'light'\)/, 'a button on a colour reads Ink, exactly as in the light theme');
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="light"\] \{[\s\S]*?--turn-text: var\(--turn-ink\);/);
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="dark"\] \{[\s\S]*?--turn-text: #fff8e8;/);
 }
