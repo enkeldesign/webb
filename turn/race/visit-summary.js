@@ -35,6 +35,7 @@ export function installVisitSummary({ windowRef = window, documentRef = document
 
   let visit = null;
   let pending = null;
+  let shown = null;
 
   function begin() {
     const trackId = windowRef.__turnGetTrackId?.() || windowRef.__turnRuntime?.state?.trackId || '';
@@ -145,12 +146,14 @@ export function installVisitSummary({ windowRef = window, documentRef = document
     title.textContent = track?.name || 'THIS VISIT';
     body.innerHTML = sheetMarkup(summary);
     spokenLine.textContent = spoken(summary);
+    shown = summary;
     returnFocus = documentRef.activeElement;
     if (!dialog.open) dialog.showModal();
     title.focus();
   }
 
   dialog.addEventListener('close', () => {
+    shown = null;
     const target = returnFocus?.isConnected ? returnFocus : documentRef.querySelector('#m8HomeTitle');
     returnFocus = null;
     target?.focus?.();
@@ -187,20 +190,22 @@ export function installVisitSummary({ windowRef = window, documentRef = document
     visit.flow = scoreBest(visit.flow, detail.flow);
   });
 
-  // Awards land just after the lap that earned them: keep them until the sheet shows.
-  const collector = () => visit || pending;
-  windowRef.addEventListener('turn:achievements-updated', (event) => {
+  // Awards land just after the lap that earned them, some a moment later (idle-time
+  // checks): keep collecting until the sheet closes, and show them as they arrive.
+  const collector = () => visit || pending || shown;
+  function collect(list, ids) {
     const summary = collector();
-    for (const id of event.detail?.unlocked || []) {
-      if (summary && !summary.achievements.includes(id)) summary.achievements.push(id);
+    if (!summary) return;
+    for (const id of ids || []) {
+      if (!summary[list].includes(id)) summary[list].push(id);
     }
-  });
-  windowRef.addEventListener('turn:trophy-road-updated', (event) => {
-    const summary = collector();
-    for (const id of event.detail?.unlocked || []) {
-      if (summary && !summary.rewards.includes(id)) summary.rewards.push(id);
+    if (summary === shown) {
+      body.innerHTML = sheetMarkup(shown);
+      spokenLine.textContent = spoken(shown);
     }
-  });
+  }
+  windowRef.addEventListener('turn:achievements-updated', (event) => collect('achievements', event.detail?.unlocked));
+  windowRef.addEventListener('turn:trophy-road-updated', (event) => collect('rewards', event.detail?.unlocked));
 
   const api = Object.freeze({
     dialog,

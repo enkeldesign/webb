@@ -340,6 +340,15 @@ try {
     assert.equal(sheet.rows.EARNED, award.title);
     assert.equal(sheet.rows.TROPHIES, `+${award.trophies}`);
     assert.ok(sheet.rows['NEXT UP'], 'NEXT UP names a goal on this track');
+    // An award settled a moment after the last lap still joins the open summary.
+    const late = await visitPage.evaluate(async () => {
+      const { ACHIEVEMENTS } = await import('/turn/achievements/catalog.js');
+      const shownIds = [...document.querySelectorAll('.turn-visit-summary-row li')].map((item) => item.textContent);
+      const achievement = ACHIEVEMENTS.find((entry) => !entry.hidden && !shownIds.includes(entry.title));
+      globalThis.dispatchEvent(new globalThis.CustomEvent('turn:achievements-updated', { detail: { unlocked: [achievement.id] } }));
+      return { title: achievement.title, earned: [...document.querySelectorAll('.turn-visit-summary-row li')].map((item) => item.textContent) };
+    });
+    assert.ok(late.earned.includes(late.title), 'A late award shows in the open summary');
     await visitPage.locator('.turn-visit-summary-close').click();
     await visitPage.waitForSelector('.turn-visit-summary-dialog:not([open])', { state: 'attached' });
     assert.equal(await visitPage.evaluate(() => document.activeElement?.id), 'm8HomeTitle', 'CLOSE returns focus to ROADBOOK');
