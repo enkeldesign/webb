@@ -1105,13 +1105,14 @@ Object.freeze({
     Object.freeze(['1.35.4 r356', 'Admin: five CHIME variants in the SWOOSH SOUND PICKER (11–15), each trying to keep the chime strong where the swipe lands on its side: CHIME RING rings longer, CHIME EARLY reaches the side sooner, CHIME WIND adds a soft wind that carries the length, CHIME LONGER gives long curves a longer chime, and CHIME MIRRORED adds a reversed chime that swells to the side. Players hear no change.']),
     Object.freeze(['1.35.5 r357', 'Drive By Ear: pace notes are now CHIME RING, a chime that keeps ringing out to the side of the bend. Its length tells the bend in three steps: short, medium and long.']),
     Object.freeze(['1.35.6 r358', 'Groundwork for dark mode: the colours of pages, cards, text, outlines and hard shadows now come from shared theme roles. Nothing looks different yet.']),
-    Object.freeze(['1.35.7 r359', 'Dark mode, first part (admin preview): a THEME setting in the menu (System, Light or Dark), a night header with a thin yellow rule, and dark ROADBOOK, Track sheet, GARAGE and menu. The browser colour now matches the header. Players keep the light theme until every screen is ready.'])
+    Object.freeze(['1.35.7 r359', 'Dark mode, first part (admin preview): a THEME setting in the menu (System, Light or Dark), a night header with a thin yellow rule, and dark ROADBOOK, Track sheet, GARAGE and menu. The browser colour now matches the header. Players keep the light theme until every screen is ready.']),
+    Object.freeze(['1.35.8 r360', 'Dark mode (admin preview): text on yellow, pink, cyan, green and pastel cards and tiles reads Ink again, so buttons, sheet headers, Trophy Road tiles and achievement cards are legible; the race HUD panels, DRIFT and FLOW boards and other translucent cards turn dark.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.35.7',
-  build: '2026.10.02-r359',
-  note: 'Dark mode preview for admin profiles; header colour in the browser.'
+  version: '1.35.8',
+  build: '2026.10.02-r360',
+  note: 'Dark mode preview: legible text on semantic colours, dark HUD panels.'
 });

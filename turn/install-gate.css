@@ -1,4 +1,4 @@
-@import url('./design-semantic.css?build=20261002-r359');
+@import url('./design-semantic.css?build=20261002-r360');
 
 .install-gate {
   position: absolute;
@@ -51,7 +51,7 @@ html.turn-standalone .install-gate,
   padding: clamp(16.5px, 4vw, 31.5px);
   border: 5px solid var(--turn-ink);
   border-radius: 21px;
-  background: rgb(255 248 232 / 0.96);
+  background: color-mix(in srgb, var(--turn-surface-page) 96%, transparent);
   box-shadow: 9px 9px 0 var(--turn-shadow-color);
 }
 

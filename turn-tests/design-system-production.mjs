@@ -274,6 +274,17 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   const bar = await fs.readFile(new URL('../turn/ui/home-app-bar.js', import.meta.url), 'utf8');
   assert.match(bar, /<legend>THEME<\/legend>/);
   assert.match(bar, /type="radio" name="turn-theme"/, 'THEME is one radio group');
+  // Text on a light semantic colour reads Ink in the dark theme; the guard never runs in light.
+  const guard = await fs.readFile(new URL('../turn/ui/theme-contrast.js', import.meta.url), 'utf8');
+  assert.match(index, /<script type="module" src="\.\/ui\/theme-contrast\.js\?build=/);
+  assert.match(guard, /if \(root\.dataset\.theme !== 'dark'\) \{/, 'the light theme never runs the contrast guard');
+  assert.match(guard, /const MIN_CONTRAST = 4\.5;/, 'text below WCAG AA against its own backdrop is corrected');
+  assert.match(guard, /turn-race-active/, 'during a race only a dialog opening or closing calls a scan');
+  assert.match(guard, /if \(controlFill && luminance\(controlFill\) > NIGHT\) \{\s*if \(control\.getAttribute\(MARK\) !== 'light'\)/, 'a button on a colour reads Ink, exactly as in the light theme');
+  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="light"\] \{[\s\S]*?--turn-text: var\(--turn-ink\);/);
+  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="dark"\] \{[\s\S]*?--turn-text: #fff8e8;/);
+  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="light"\] \{[\s\S]*?--turn-surface-page: var\(--turn-paper\);/, 'a coloured button is drawn with the light roles');
+  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-pill\] \{[\s\S]*?background-image: linear-gradient\(var\(--turn-ink\), var\(--turn-ink\)\)[\s\S]*?color: var\(--turn-pill\)/, 'a pill on a night surface is a coloured wireframe');
 }
 
 console.log('TURN current product-language design system, palette, gameplay, progression and dialog reference passed.');

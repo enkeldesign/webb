@@ -18,7 +18,7 @@
   min-width: 0;
   padding: 5.25px 7.5px 6px;
   border-radius: 10.5px;
-  background: rgb(255 248 232 / 0.9);
+  background: color-mix(in srgb, var(--turn-surface-page) 90%, transparent);
   text-align: left;
   transform: none;
   transform-origin: center;
@@ -60,7 +60,7 @@
 
 @keyframes turn-position-pop {
   0%, 100% {
-    background: rgb(255 248 232 / 0.9);
+    background: color-mix(in srgb, var(--turn-surface-page) 90%, transparent);
     transform: scale(1);
   }
 

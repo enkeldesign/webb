@@ -144,6 +144,43 @@
   --turn-header: #111214;
 }
 
+/* Dark theme contrast guard (ui/theme-contrast.js): anything on a light semantic colour
+   (a coloured button, a pastel card) is drawn with the light theme's roles, exactly as
+   in light; text on a dark fill reads cream; everything inside follows. */
+:root[data-theme="dark"] [data-turn-on="light"] {
+  --turn-surface-page: var(--turn-paper);
+  --turn-surface-raised: var(--turn-white);
+  --turn-surface-bright: #ffffff;
+  --turn-surface-card: #fffcf2;
+  --turn-pr-card: var(--turn-surface-card);
+  --turn-action-utility: var(--turn-surface-page);
+  --turn-text: var(--turn-ink);
+  --turn-text-muted: rgb(8 9 10 / 0.68);
+  --turn-text-faint: rgb(8 9 10 / 0.32);
+  --turn-outline: var(--turn-ink);
+  --turn-pr-muted: var(--turn-text-muted);
+  --turn-pr-faint: var(--turn-text-faint);
+  color: var(--turn-ink) !important;
+}
+
+:root[data-theme="dark"] [data-turn-on="dark"] {
+  --turn-text: #fff8e8;
+  --turn-text-muted: rgb(255 248 232 / 0.72);
+  --turn-text-faint: rgb(255 248 232 / 0.42);
+  --turn-pr-muted: var(--turn-text-muted);
+  --turn-pr-faint: var(--turn-text-faint);
+  color: #fff8e8 !important;
+}
+
+/* Pills on a night surface: a coloured wireframe, the pill's own colour on its text and
+   border over Ink (ui/theme-contrast.js sets --turn-pill from the pill's fill). */
+:root[data-theme="dark"] [data-turn-pill] {
+  border-color: var(--turn-pill) !important;
+  background-image: linear-gradient(var(--turn-ink), var(--turn-ink)) !important;
+  box-shadow: inset 0 0 0 2px var(--turn-pill) !important;
+  color: var(--turn-pill) !important;
+}
+
 /* Display P3 accents. Same OKLab lightness and hue as the sRGB values above, with
    chroma raised (up to 25%) inside the P3 gamut; contrast with ink changes by at most
    0.2 and every pair stays above WCAG AA. Pink, the primary action, is the exact P3

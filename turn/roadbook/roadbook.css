@@ -253,6 +253,9 @@
 /* An earned, gated or next goal sits on a light semantic colour: its text and rules
    stay Ink in both themes. */
 .roadbook-goal:is(.is-earned, .is-gated, .is-next) {
+  --turn-surface-page: var(--turn-paper);
+  --turn-surface-card: #fffcf2;
+  --turn-pr-card: var(--turn-surface-card);
   --turn-text: var(--turn-ink);
   --turn-outline: var(--turn-ink);
   --turn-pr-muted: rgb(8 9 10 / 0.68);
