@@ -26,16 +26,16 @@
   align-items: baseline;
   gap: 5.25px;
   padding: 4.5px 6.75px;
-  border: 2.25px solid #08090a;
+  border: 2.25px solid var(--turn-outline);
   border-radius: 749.25px;
-  background: #fff8e8;
-  box-shadow: 2.25px 2.25px 0 #08090a;
+  background: var(--turn-surface-page);
+  box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
   font-size: max(var(--turn-text-floor, 11px), 0.615rem);
   line-height: 1;
 }
 
 .yourturn-racer-summary > span[data-leader="true"] {
-  box-shadow: 0 0 0 2.25px #ffd43b, 2.25px 2.25px 0 2.25px #08090a;
+  box-shadow: 0 0 0 2.25px #ffd43b, 2.25px 2.25px 0 2.25px var(--turn-shadow-color);
 }
 
 .yourturn-racer-summary b {
@@ -62,11 +62,11 @@
   left: 0;
   max-width: 112.5px;
   padding: 3px 6px;
-  border: 1.5px solid #08090a;
+  border: 1.5px solid var(--turn-outline);
   border-radius: 749.25px;
   background: rgb(255 248 232 / 0.94);
-  color: #08090a;
-  box-shadow: 1.5px 1.5px 0 #08090a;
+  color: var(--turn-ink);
+  box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.48rem, 1.3vw, 0.615rem));
   font-weight: 900;
   line-height: 1;
@@ -138,7 +138,7 @@
   .yourturn-racer-summary > span {
     padding: 3px 5.25px;
     border-width: 1.5px;
-    box-shadow: 1.5px 1.5px 0 #08090a;
+    box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
     font-size: max(var(--turn-text-floor, 11px), 0.54rem);
   }
 
@@ -156,3 +156,10 @@
     border-width: 2.25px;
   }
 }
+
+/* Dark theme: racer labels are night pills with cream text, like the race HUD. */
+:root[data-theme="dark"] .yourturn-racer-label {
+  background: color-mix(in srgb, var(--turn-surface-page) 94%, transparent);
+  color: var(--turn-text);
+}
+

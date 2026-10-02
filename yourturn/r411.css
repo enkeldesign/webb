@@ -18,12 +18,12 @@
 }
 
 .yourturn-track-map-shadow {
-  stroke: #08090a;
+  stroke: var(--turn-text);
   stroke-width: 18;
 }
 
 .yourturn-track-map-road {
-  stroke: #fff8e8;
+  stroke: var(--turn-surface-page);
   stroke-width: 11;
 }
 
@@ -33,7 +33,7 @@
 
 .yourturn-track-map-start {
   fill: #ffff09;
-  stroke: #08090a;
+  stroke: var(--turn-text);
   stroke-width: 4;
 }
 
@@ -47,7 +47,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #08090a;
+  color: var(--turn-text);
   overflow: visible;
 }
 
@@ -61,10 +61,10 @@
   max-height: calc(100dvh - 18px);
   overflow: auto;
   padding: clamp(13.5px, 3vw, 22.5px);
-  border: 3.75px solid #08090a;
+  border: 3.75px solid var(--turn-outline);
   border-radius: 19.5px;
-  background: #fff8e8;
-  box-shadow: 7.5px 7.5px 0 #08090a;
+  background: var(--turn-surface-page);
+  box-shadow: 7.5px 7.5px 0 var(--turn-shadow-color);
 }
 
 .yourturn-settings-head {
@@ -96,11 +96,11 @@
   width: 36px;
   height: 36px;
   padding: 0;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-outline);
   border-radius: 50%;
   background: #ff9b66;
-  color: #08090a;
-  box-shadow: 3px 3px 0 #08090a;
+  color: var(--turn-ink);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: inherit;
   font-size: max(var(--turn-text-floor, 11px), 1.35rem);
   font-weight: 1000;
@@ -116,10 +116,10 @@
 .yourturn-setting-card {
   min-width: 0;
   padding: 12px;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-outline);
   border-radius: 13.5px;
-  background: #fff;
-  box-shadow: 3px 3px 0 #08090a;
+  background: var(--turn-surface-bright);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
 }
 
 .yourturn-setting-card legend,
