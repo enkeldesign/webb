@@ -144,9 +144,16 @@
   --turn-header: #111214;
 }
 
-/* Dark theme contrast guard (ui/theme-contrast.js): text sitting on a light semantic
-   colour reads Ink, text on a dark fill reads cream, and everything inside follows. */
+/* Dark theme contrast guard (ui/theme-contrast.js): anything on a light semantic colour
+   (a coloured button, a pastel card) is drawn with the light theme's roles, exactly as
+   in light; text on a dark fill reads cream; everything inside follows. */
 :root[data-theme="dark"] [data-turn-on="light"] {
+  --turn-surface-page: var(--turn-paper);
+  --turn-surface-raised: var(--turn-white);
+  --turn-surface-bright: #ffffff;
+  --turn-surface-card: #fffcf2;
+  --turn-pr-card: var(--turn-surface-card);
+  --turn-action-utility: var(--turn-surface-page);
   --turn-text: var(--turn-ink);
   --turn-text-muted: rgb(8 9 10 / 0.68);
   --turn-text-faint: rgb(8 9 10 / 0.32);
@@ -163,6 +170,15 @@
   --turn-pr-muted: var(--turn-text-muted);
   --turn-pr-faint: var(--turn-text-faint);
   color: #fff8e8 !important;
+}
+
+/* Pills on a night surface: a coloured wireframe, the pill's own colour on its text and
+   border over Ink (ui/theme-contrast.js sets --turn-pill from the pill's fill). */
+:root[data-theme="dark"] [data-turn-pill] {
+  border-color: var(--turn-pill) !important;
+  background-image: linear-gradient(var(--turn-ink), var(--turn-ink)) !important;
+  box-shadow: inset 0 0 0 2px var(--turn-pill) !important;
+  color: var(--turn-pill) !important;
 }
 
 /* Display P3 accents. Same OKLab lightness and hue as the sRGB values above, with

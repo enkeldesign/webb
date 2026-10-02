@@ -8,6 +8,7 @@
 // Ink, exactly as in the light theme. Text that already reads well, such as yellow
 // NEXT UP on its Ink chip, is left alone. The light theme never runs it.
 const MARK = 'data-turn-on';
+const PILL = 'data-turn-pill';
 const MIN_CONTRAST = 4.5;
 const INK = [8, 9, 10];
 const CREAM = [255, 248, 232];
@@ -16,10 +17,12 @@ const CONTROLS = 'button, a, [role="button"], summary, select, .turn-pr-chip';
 const NIGHT = 0.12;
 
 function parseColor(value) {
-  const match = String(value).match(/rgba?\(([^)]+)\)/) || String(value).match(/color\(srgb ([^)]+)\)/);
+  const text = String(value);
+  const wide = text.match(/color\((?:srgb|display-p3) ([^)]+)\)/);
+  const match = wide || text.match(/rgba?\(([^)]+)\)/);
   if (!match) return null;
   const parts = match[1].split(/[\s,/]+/).filter(Boolean).map(Number);
-  if (String(value).startsWith('color(')) return [parts[0] * 255, parts[1] * 255, parts[2] * 255, parts[3] ?? 1];
+  if (wide) return [parts[0] * 255, parts[1] * 255, parts[2] * 255, parts[3] ?? 1];
   return [parts[0], parts[1], parts[2], parts[3] ?? 1];
 }
 
@@ -70,8 +73,32 @@ function hasOwnText(element) {
   return before !== 'none' && before !== 'normal';
 }
 
+// Pills (Erik): on a night surface a light pill becomes a coloured wireframe, its own
+// colour on text and border over Ink. The fill stays underneath (an Ink layer covers
+// it), so a state change that recolours the pill still reads here.
+function pill(element) {
+  // A pill inside a coloured button keeps the button's look; on a night control it
+  // switches like any other pill.
+  const host = element.parentElement?.closest(CONTROLS.replace(', .turn-pr-chip', ''));
+  if (element.matches('button, a, [role="button"]') || (host && luminance(fillOf(host) || INK) > NIGHT)) return false;
+  if (!hasOwnText(element)) return false;
+  const fill = fillOf(element);
+  if (!fill || luminance(fill) <= NIGHT) return false;
+  const box = element.getBoundingClientRect();
+  if (!box.height || box.height > 44 || box.width > 280) return false;
+  const style = getComputedStyle(element);
+  if (parseFloat(style.borderTopLeftRadius) < box.height * 0.45) return false;
+  const parent = element.parentElement && backdrop(element.parentElement);
+  if (!parent || luminance(parent) > NIGHT) return false;
+  const colour = style.backgroundColor;
+  if (element.style.getPropertyValue('--turn-pill') !== colour) element.style.setProperty('--turn-pill', colour);
+  if (!element.hasAttribute(PILL)) element.setAttribute(PILL, '');
+  return true;
+}
+
 function check(element) {
   if (element.closest('canvas, svg > *')) return;
+  if (element.closest(`[${PILL}]`)) return;
   if (!hasOwnText(element)) return;
   if (element.checkVisibility && !element.checkVisibility()) return;
   // A button on a colour reads exactly as in the light theme: Ink, always. Only a
@@ -101,7 +128,21 @@ function scan() {
   const root = document.documentElement;
   if (root.dataset.theme !== 'dark') {
     for (const marked of document.querySelectorAll(`[${MARK}]`)) marked.removeAttribute(MARK);
+    for (const marked of document.querySelectorAll(`[${PILL}]`)) {
+      marked.removeAttribute(PILL);
+      marked.style.removeProperty('--turn-pill');
+    }
     return;
+  }
+  fills = new Map();
+  for (const element of document.body.querySelectorAll(`[${PILL}]`)) {
+    if (!pill(element)) {
+      element.removeAttribute(PILL);
+      element.style.removeProperty('--turn-pill');
+    }
+  }
+  for (const element of document.body.querySelectorAll('*')) {
+    if (!element.hasAttribute(PILL) && element.checkVisibility?.() !== false) pill(element);
   }
   // Two passes: marking a parent changes what its children inherit.
   for (let pass = 0; pass < 2; pass += 1) {

@@ -283,6 +283,8 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.match(guard, /if \(controlFill && luminance\(controlFill\) > NIGHT\) \{\s*if \(control\.getAttribute\(MARK\) !== 'light'\)/, 'a button on a colour reads Ink, exactly as in the light theme');
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="light"\] \{[\s\S]*?--turn-text: var\(--turn-ink\);/);
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="dark"\] \{[\s\S]*?--turn-text: #fff8e8;/);
+  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="light"\] \{[\s\S]*?--turn-surface-page: var\(--turn-paper\);/, 'a coloured button is drawn with the light roles');
+  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-pill\] \{[\s\S]*?background-image: linear-gradient\(var\(--turn-ink\), var\(--turn-ink\)\)[\s\S]*?color: var\(--turn-pill\)/, 'a pill on a night surface is a coloured wireframe');
 }
 
 console.log('TURN current product-language design system, palette, gameplay, progression and dialog reference passed.');
