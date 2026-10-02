@@ -44,6 +44,17 @@
         radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.9) 0 10%, transparent 10.5%),
         linear-gradient(145deg, #38d9ff 0 45%, #8ce99a 100%);
     }
+    /* Dark theme: the dusk sky of install-gate.css, resolving into its own green end. */
+    html[data-theme="dark"].${CLASS}:has(.install-gate.turn-startup-loading) body {
+      background: #18321f !important;
+    }
+    html[data-theme="dark"].${CLASS} .install-gate.turn-startup-loading {
+      background:
+        linear-gradient(to bottom, transparent calc(100% - 120px), #18321f),
+        radial-gradient(circle at 12% 20%, rgb(255 212 59 / 0.42) 0 7%, transparent 7.5%),
+        radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.38) 0 10%, transparent 10.5%),
+        linear-gradient(145deg, #12323d 0 45%, #18321f 100%);
+    }
     html.${CLASS}:has(body.turn-race-active) body {
       background: var(--turn-ink) !important;
     }

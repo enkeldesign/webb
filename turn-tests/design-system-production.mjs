@@ -291,6 +291,7 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.match(tokens, /\) \* \{\s*--turn-outline: var\(--turn-ink\);\s*--turn-outline-muted: var\(--turn-ink\);\s*--turn-pr-rule: 3px solid var\(--turn-ink\);/, 'outlines inside a colour surface are Ink');
   assert.match(tokens, /:not\(:is\([\s\S]*?\) \*\) \{\s*border-color: var\(--turn-pill\) !important;\s*background: var\(--turn-ink\) !important;[\s\S]*?color: var\(--turn-pill\) !important;/, 'a pill on a night surface is a coloured wireframe of its own --turn-pill');
   assert.match(await fs.readFile(new URL('../turn/ui/hud.js', import.meta.url), 'utf8'), /dataset\.theme === 'dark' \? '#fff8e8' : '#08090a'/, 'the minimap track outline follows the theme');
+  assert.match(await fs.readFile(new URL('../turn/install-gate.css', import.meta.url), 'utf8'), /:root\[data-theme="dark"\] \.install-gate \{[^}]*color: var\(--turn-text\);/, 'the dark install card reads in the text role, not the light sky\'s Ink');
   for (const file of ['styles.css', 'drive-pad.css', 'home-app-bar.css', 'garage/garage.css', 'achievements.css']) {
     const css = await fs.readFile(new URL(`../turn/${file}`, import.meta.url), 'utf8');
     assert.doesNotMatch(css, /(?:^|[\s;{])border[a-z-]*:[^;]*var\(--turn-ink\)/m, `${file}: an Ink outline in light is the cream outline in dark (--turn-outline)`);
