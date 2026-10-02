@@ -334,8 +334,19 @@ try {
   {
     const opened = await openRace({ width: 852, height: 393 });
     const { page } = opened;
+    // Where lock() exists (Android), a running lap holds the screen in its orientation.
+    await page.evaluate(() => {
+      globalThis.__locks = [];
+      screen.orientation.lock = (type) => { globalThis.__locks.push(`lock ${type}`); return Promise.resolve(); };
+      screen.orientation.unlock = () => { globalThis.__locks.push('unlock'); };
+    });
     await startLap(page);
     await page.keyboard.up('ArrowUp');
+    assert.deepEqual(await page.evaluate(() => globalThis.__locks), ['lock landscape-primary'], 'a running lap locks the screen in its orientation');
+    await page.evaluate(() => globalThis.__turnRacePause.pause('player'));
+    assert.deepEqual(await page.evaluate(() => globalThis.__locks), ['lock landscape-primary', 'unlock'], 'a pause unlocks it, so the player can turn the phone');
+    await page.locator('.turn-race-pause-resume').click();
+    assert.equal(await page.evaluate(() => globalThis.__locks.at(-1)), 'lock landscape-primary', 'resuming locks again');
     const paused = () => page.evaluate(() => ({
       paused: globalThis.__turnRacePause.paused,
       reason: globalThis.__turnRacePause.reason,
@@ -373,7 +384,7 @@ try {
   }
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Race pause: Ⅱ beside RESTART LAP during a lap; frozen car, lap time, BOOST and race clock; released controls; Settings, Escape, back, background, RESTART LAP and LEAVE RACE; landscape, portrait (turned while paused) and left-handed; a rotation mid-lap pauses as SCREEN ROTATED and resumes after 3-2-1 passed.');
+  console.log('Race pause: Ⅱ beside RESTART LAP during a lap; frozen car, lap time, BOOST and race clock; released controls; Settings, Escape, back, background, RESTART LAP and LEAVE RACE; landscape, portrait (turned while paused) and left-handed; a running lap locks the screen where the platform can; a rotation mid-lap pauses as SCREEN ROTATED and resumes after 3-2-1 passed.');
 } finally {
   await browser.close();
   server.close();

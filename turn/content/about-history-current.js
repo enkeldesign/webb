@@ -1115,7 +1115,7 @@ Object.freeze({
     Object.freeze(['1.36.5 r366', 'YOUR TURN follows your device\'s light or dark setting, with the same dark colours as TURN, and challenge links open again instead of stopping at Loading challenge.']),
     Object.freeze(['1.36.6 r367', 'Drive By Ear: a race that starts inside a bend now hears that bend first, the moment the car rolls. MIDNIGHT CITY starts in a right-hander and now says so; COUNTRYSIDE, which starts in a long right, hears it at once too.']),
     Object.freeze(['1.36.7 r368', 'Dark mode: the install page and the installed app\'s LOADING screen read cream on the dark card, and the installed app loads on the dusk sky instead of the bright one.']),
-    Object.freeze(['1.36.8 r369', 'If the screen turns while you race, the race pauses instead of driving on. Turn back and it continues after a quick 3, 2, 1, with steering centred; or choose RACE IN PORTRAIT or RACE IN LANDSCAPE to keep racing the new way round.'])
+    Object.freeze(['1.36.8 r369', 'If the screen turns while you race, the race pauses instead of driving on. Turn back and it continues after a quick 3, 2, 1, with steering centred; or choose RACE IN PORTRAIT or RACE IN LANDSCAPE to keep racing the new way round. On Android the screen stays locked while you race; pause to turn it.'])
   ])
 })
 ]);

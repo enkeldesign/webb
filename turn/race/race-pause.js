@@ -16,6 +16,11 @@
 //   orientation the race was driven in announces 'race-rotation' { rotatedBack: true }.
 //   Every resume adopts the screen's orientation as the race's own, so racing on
 //   in the new orientation is simply resuming.
+// - Where the platform can (Android: an installed app or fullscreen), the screen is
+//   locked to the race's orientation while a lap runs and unlocked whenever it pauses
+//   or ends, so a tipped phone cannot rotate mid-lap. To race the other way round, the
+//   player pauses, turns the phone and resumes. iOS and desktop browsers have no lock;
+//   there the rotation pause above applies.
 //
 // Every change goes out as turn:ui-state-change { reason: 'race-paused' |
 // 'race-resumed', paused, pauseReason }, so HUD, scoring, audio and tests follow it
@@ -124,6 +129,22 @@ export function installRacePause({ windowRef = window, documentRef = document } 
   }
   windowRef.addEventListener('orientationchange', orientationChanged);
   windowRef.screen?.orientation?.addEventListener?.('change', orientationChanged);
+
+  let locked = false;
+  function syncOrientationLock() {
+    const orientation = windowRef.screen?.orientation;
+    if (typeof orientation?.lock !== 'function') return;
+    const lock = reason === null && racing();
+    if (lock === locked) return;
+    locked = lock;
+    try {
+      if (lock) orientation.lock(orientationNow()).catch(() => { locked = false; });
+      else orientation.unlock?.();
+    } catch (_) {
+      locked = false;
+    }
+  }
+  windowRef.addEventListener('turn:ui-state-change', syncOrientationLock);
 
   const api = Object.freeze({
     pause,
