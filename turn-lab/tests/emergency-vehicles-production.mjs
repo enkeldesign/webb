@@ -189,7 +189,7 @@ assert.match(airportEmergency, /renderScene\.onBeforeRender = function airportEm
 
 assert.match(airportEmergency, /PATIENT ON BOARD · MEDICAL BAY · 30 SECONDS/);
 assert.doesNotMatch(airportEmergency, /FOLLOW THE SIRENS/);
-assert.match(airportEmergency, /\.turn-mayday-info-plate[\s\S]*top: max\(12px, calc\(env\(safe-area-inset-top\) \+ 7\.5px\)\)[\s\S]*border: 2\.25px solid #08090a[\s\S]*box-shadow: 3\.75px 3\.75px 0 #08090a/,
+assert.match(airportEmergency, /\.turn-mayday-info-plate[\s\S]*top: max\(12px, calc\(env\(safe-area-inset-top\) \+ 7\.5px\)\)[\s\S]*border: 2\.25px solid var\(--turn-ink\)[\s\S]*box-shadow: 3\.75px 3\.75px 0 var\(--turn-shadow-color\)/,
   'The base MAYDAY info plate should retain the established card treatment');
 assert.match(airportEmergency, /new THREE\.BoxGeometry\(10\.4, 6\.4, 0\.65\)/,
   'The terminal H plate should cover the window it occupies');

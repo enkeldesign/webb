@@ -79,7 +79,7 @@ assert.doesNotMatch(viewportGap, /height: 100lvh|translateZ|dialog\[open\]/,
 // iOS takes the strip colour from body, not html (1.24.7 device strip test).
 assert.match(viewportGap, /:has\(body:is\(\.turn-home-open, \.turn-garage-open\)\) body \{[\s\S]*?turn-surface-page/,
   'The strip under Home and The Lot is Paper, set on body');
-assert.match(viewportGap, /:has\(body\.turn-race-active\) body \{[\s\S]*?#08090a/,
+assert.match(viewportGap, /:has\(body\.turn-race-active\) body \{[\s\S]*?var\(--turn-ink\)/,
   'The strip under a race is Ink, set on body');
 // The loading class alone: standalone iOS shows the gate while it keeps [hidden].
 assert.match(viewportGap, /:has\(\.install-gate\.turn-startup-loading\) body \{[\s\S]*?#8ce99a/,
