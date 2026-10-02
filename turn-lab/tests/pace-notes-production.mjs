@@ -18,6 +18,7 @@ const {
   resetSwooshDelivery,
   swooshLevel,
   swooshDuration,
+  swooshLengthClass,
   swooshTightness,
   updateSwooshPaceNotes
 } = await import('../../turn/audio/swoosh-pace-notes.js');
@@ -135,7 +136,7 @@ function trackRuntime(id) {
 }
 
 // Sound mapping: pitch from the tightest sustained radius, swipe speed from road length.
-assert.equal(SWOOSH_PACE_TUNING.variant, 'voice-chime', 'the race plays CHIME, Erik\'s favourite from the sound picker (1.35.2 race test)');
+assert.equal(SWOOSH_PACE_TUNING.variant, 'voice-chime-ring', 'the race plays CHIME RING, Erik\'s choice from the sound picker (1.35.4)');
 // Level: close to the ribbon at TURN's default balance, rising to the listening-test level
 // as the balance favours Drive By Ear (Erik's device test: 0.24 only suited 10–20% DBE).
 assert.equal(swooshLevel(0.55), SWOOSH_PACE_TUNING.level);
@@ -149,16 +150,18 @@ assert.equal(swooshTightness({ peakRadius: 80 }), 'medium');
 assert.equal(swooshTightness({ peakRadius: 300 }), 'gentle');
 assert.equal(swooshDuration({ length: 40 }), SWOOSH_LENGTHS.short);
 assert.equal(swooshDuration({ length: 160 }), SWOOSH_LENGTHS.long);
-// The race CHIME is a little longer than the listening-test swipes, short and long alike,
-// and keeps short and long about an octave of time apart.
+// The race sound has three lengths (Erik): short 0.2 s below 80 m of road, medium 0.4 s
+// below 150 m, long 0.6 s from 150 m. Sounds with two lengths keep long from 100 m.
 {
   const race = swooshLengths(SWOOSH_PACE_TUNING.variant);
-  assert.ok(race.short > SWOOSH_LENGTHS.short && race.long > SWOOSH_LENGTHS.long, 'the race chime is a little longer');
-  assert.ok(race.long <= SWOOSH_LENGTHS.long * 1.5, 'only a little');
-  assert.ok(race.long / race.short >= 1.9, 'a long curve still sounds clearly longer than a short one');
-  assert.equal(swooshDuration({ length: 160 }, SWOOSH_PACE_TUNING, race), race.long);
+  assert.deepEqual({ ...race }, { short: 0.2, medium: 0.4, long: 0.6 });
+  const classOf = (metres) => swooshLengthClass({ length: metres }, SWOOSH_PACE_TUNING, race);
+  assert.deepEqual([40, 79, 80, 149, 150, 300].map(classOf), ['short', 'short', 'medium', 'medium', 'long', 'long']);
+  assert.equal(swooshDuration({ length: 100 }, SWOOSH_PACE_TUNING, race), race.medium);
+  assert.equal(swooshLengthClass({ length: 99 }), 'short', 'two lengths: short below 100 m');
+  assert.equal(swooshLengthClass({ length: 100 }), 'long', 'two lengths: long from 100 m');
   const [planned] = planSwooshes([{ segment: { length: 160, peakRadius: 50 }, ahead: 200 }], 40, SWOOSH_PACE_TUNING, race);
-  assert.ok(Math.abs(planned.end - planned.start - race.long) < 1e-9, 'the race plans with the chime\'s lengths');
+  assert.ok(Math.abs(planned.end - planned.start - race.long) < 1e-9, 'the race plans with its own lengths');
 }
 
 // Planning: on open road a swoosh ends a steering lead before its bend; in a dense run
@@ -394,8 +397,9 @@ for (const definition of TRACK_DEFINITIONS) {
       delete globalThis.__turnRouteAudio;
     }
   }
-  assert.equal(swooshCaption({ tightness: 'gentle', long: true, side: 'left' }), 'GENTLE LONG LEFT');
-  assert.equal(swooshCaption({ tightness: 'tight', long: false, side: 'right' }), 'TIGHT SHORT RIGHT');
+  assert.equal(swooshCaption({ tightness: 'gentle', length: 'long', side: 'left' }), 'GENTLE LONG LEFT');
+  assert.equal(swooshCaption({ tightness: 'medium', length: 'medium', side: 'left' }), 'MEDIUM MID LEFT');
+  assert.equal(swooshCaption({ tightness: 'tight', length: 'short', side: 'right' }), 'TIGHT SHORT RIGHT');
   const history = [
     { status: 'fired', at: 10, endsAt: 10.2, tightness: 'gentle', long: true, side: 'left' },
     { status: 'cancelled', at: 11, endsAt: 11.2 },
