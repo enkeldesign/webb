@@ -337,8 +337,8 @@ try {
     // Where lock() exists (Android), a running lap holds the screen in its orientation.
     await page.evaluate(() => {
       globalThis.__locks = [];
-      screen.orientation.lock = (type) => { globalThis.__locks.push(`lock ${type}`); return Promise.resolve(); };
-      screen.orientation.unlock = () => { globalThis.__locks.push('unlock'); };
+      globalThis.screen.orientation.lock = (type) => { globalThis.__locks.push(`lock ${type}`); return Promise.resolve(); };
+      globalThis.screen.orientation.unlock = () => { globalThis.__locks.push('unlock'); };
     });
     await startLap(page);
     await page.keyboard.up('ArrowUp');
