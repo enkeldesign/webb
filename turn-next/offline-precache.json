@@ -1,5 +1,5 @@
 {
-  "release": "20261002-r370",
+  "release": "20261002-r371",
   "files": [
     "/turn-next/app.js",
     "/turn-next/challenge-codec.js",
@@ -334,6 +334,7 @@
     "/turn/race/rival-storage.js",
     "/turn/race/session-orchestrator.js",
     "/turn/race/track-spatial-index.js",
+    "/turn/race/visit-summary.js",
     "/turn/race/world-collision-base.js",
     "/turn/race/world-collision.js",
     "/turn/render/camera.js",

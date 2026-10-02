@@ -131,3 +131,111 @@
 .turn-race-countdown[hidden] {
   display: none;
 }
+
+/* THIS VISIT (#1061, race/visit-summary.js): one line in PAUSED, and the summary
+   sheet over ROADBOOK after LEAVE RACE. CLOSE is the way back, in navigation orange,
+   and a colour surface in dark like LEAVE RACE. */
+.turn-race-pause-dialog .turn-race-pause-visit {
+  margin: 12px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.turn-race-pause-visit span,
+.turn-visit-summary-row dt {
+  font-size: 0.8em;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.turn-race-pause-visit b {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.turn-visit-summary-dialog .turn-dialog__surface {
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+}
+
+.turn-visit-summary-dialog h2:focus {
+  outline: none;
+}
+
+.turn-visit-summary-dialog h2:focus-visible {
+  outline: 3px solid var(--turn-outline);
+  outline-offset: 3px;
+}
+
+.turn-visit-summary-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+}
+
+.turn-visit-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  align-items: baseline;
+}
+
+/* Labels sit beside their values, and above them once 200% text needs the room. */
+.turn-visit-summary-row dt {
+  flex: 0 0 8em;
+}
+
+.turn-visit-summary-row dd {
+  flex: 1 1 12em;
+  margin: 0;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.turn-visit-summary-row ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.turn-visit-summary-mark {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--yellow, #ffd43b);
+  color: var(--turn-ink);
+  font-size: 0.8em;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.turn-visit-summary-progress {
+  display: block;
+  font-weight: 600;
+}
+
+.turn-visit-summary-actions {
+  display: grid;
+  margin-top: 16px;
+}
+
+.turn-visit-summary-actions .turn-visit-summary-close {
+  box-sizing: border-box;
+  min-height: 52px;
+  margin: 0;
+  padding: 10px 18px;
+  border: var(--turn-border-control, 3px) solid var(--turn-outline);
+  border-radius: var(--turn-radius-control, 12px);
+  background: var(--turn-action-navigation, var(--turn-orange-500, #ff7b54));
+  color: var(--turn-ink);
+  box-shadow: none;
+  font: inherit;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.turn-visit-summary-actions .turn-visit-summary-close:focus-visible {
+  outline: 3px solid var(--turn-outline);
+  outline-offset: 3px;
+}

@@ -12,6 +12,7 @@
 // fast 3-2-1 lets the player settle the phone, and steering centres at GO.
 
 import { installRacePause } from '../race/race-pause.js';
+import { installVisitSummary } from '../race/visit-summary.js';
 
 const INSTALL_KEY = '__turnRacePauseMenu';
 
@@ -21,6 +22,7 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
   const restartButton = documentRef.querySelector('#resetButton');
   if (!group || !restartButton) return null;
   const racePause = installRacePause({ windowRef, documentRef });
+  const visitSummary = installVisitSummary({ windowRef, documentRef });
 
   const button = documentRef.createElement('button');
   button.type = 'button';
@@ -40,6 +42,7 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
         <div><span>RACE</span><h2 id="turnRacePauseTitle">PAUSED</h2></div>
       </header>
       <p class="turn-race-pause-note" hidden>Turn back to keep racing.</p>
+      <p class="turn-race-pause-visit" hidden><span>THIS VISIT</span> <b></b></p>
       <div class="turn-race-pause-actions turn-dialog__actions">
         <button class="turn-race-pause-resume" type="button" data-pause-action="resume">RESUME</button>
         <button type="button" data-pause-action="restart">RESTART LAP</button>
@@ -51,6 +54,7 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
   const resumeButton = dialog.querySelector('[data-pause-action="resume"]');
   const title = dialog.querySelector('#turnRacePauseTitle');
   const note = dialog.querySelector('.turn-race-pause-note');
+  const visit = dialog.querySelector('.turn-race-pause-visit');
 
   const countdown = documentRef.createElement('p');
   countdown.className = 'turn-race-countdown';
@@ -90,6 +94,10 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
     title.textContent = rotatedAway() ? 'SCREEN ROTATED' : 'PAUSED';
     note.hidden = !rotatedAway();
     resumeButton.textContent = rotatedAway() ? `RACE IN ${screenWord()}` : 'RESUME';
+    // THIS VISIT (#1061), once a lap is done.
+    const visitText = visitSummary.compactText();
+    visit.querySelector('b').textContent = visitText;
+    visit.hidden = !visitText;
   }
 
   function openDialog() {
