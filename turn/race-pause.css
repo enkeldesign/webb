@@ -98,3 +98,36 @@
     padding-inline: 10px;
   }
 }
+
+/* A rotation pause (#1080): one line under SCREEN ROTATED, and the fast 3-2-1 that
+   brings the race back. */
+.turn-race-pause-dialog .turn-race-pause-note {
+  margin: 12px 0 0;
+  font-weight: 800;
+}
+
+.turn-race-countdown {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  z-index: 2400;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: 96px;
+  min-height: 96px;
+  margin: 0;
+  padding: 8px 18px;
+  transform: translate(-50%, -50%);
+  border: var(--turn-border-control, 3px) solid var(--turn-ink);
+  border-radius: var(--turn-radius-control, 12px);
+  background: var(--yellow, #ffd43b);
+  color: var(--turn-ink);
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.turn-race-countdown[hidden] {
+  display: none;
+}
