@@ -105,9 +105,11 @@
   flex: 0 0 auto;
   align-self: center;
   padding: 2.25px 4.5px 3px;
-  border: 1.5px solid currentColor;
+  border: 1.5px solid var(--turn-outline);
   border-radius: 749.25px;
   background: var(--turn-blue-200, #8ed8ff);
+  /* The combo multiplier is a colour: Ink on it in both themes. */
+  color: var(--turn-ink);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.51rem, 1.55vw, 0.675rem));
   line-height: 1;
 }

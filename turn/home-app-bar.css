@@ -392,13 +392,24 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-home-build {
   html body .turn-home-sheet .turn-home-sheet-footer {
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 16px;
+    align-items: flex-end;
+    gap: 8px 16px;
     padding-top: 8px;
   }
 
+  /* TURN MUSIC OFF sits level with the COLOR THEME choices beside it, which keep the
+     room their labels need; the build line takes the row below. */
+  html body .turn-home-sheet .turn-home-sheet-footer .turn-music-home-toggle {
+    align-self: flex-end;
+  }
+
+  html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting {
+    flex: 1 1 15rem;
+    max-width: 22rem;
+  }
+
   html body .turn-home-sheet .turn-home-sheet-footer .m8-home-meta {
-    flex: 1 1 auto;
+    flex: 1 1 100%;
   }
 
   html body .turn-home-sheet .turn-home-sheet-footer .turn-viewport-readout {

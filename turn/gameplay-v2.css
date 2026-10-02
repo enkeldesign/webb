@@ -330,7 +330,7 @@
   border: 3px solid var(--turn-outline);
   border-radius: 11.25px;
   background: color-mix(in srgb, var(--turn-surface-page) 94%, transparent);
-  color: var(--turn-ink);
+  color: var(--turn-text);
   box-shadow: 3px 3px 0 var(--turn-shadow-color);
   text-align: center;
   transform: rotate(-3deg);
@@ -356,7 +356,7 @@
 
 @keyframes turn-position-pop {
   0% { transform: rotate(-3deg) scale(1); }
-  35% { transform: rotate(4deg) scale(1.42); background: var(--yellow); }
+  35% { transform: rotate(4deg) scale(1.42); background: var(--yellow); color: var(--turn-ink); }
   65% { transform: rotate(-5deg) scale(1.18); }
   100% { transform: rotate(-3deg) scale(1); }
 }

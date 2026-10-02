@@ -290,6 +290,9 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.match(dark, /--turn-outline: #fff8e8;/, 'active dark outlines are Paper cream');
   assert.match(guard, /const SCENERY = 'body, \.garage-stage, \.garage-car-art, \.drive-pad';/, 'an outline over the race scene, the 3D stage or inside the drive pad stays cream');
   const semantic = await fs.readFile(new URL('../turn/design-semantic.css', import.meta.url), 'utf8');
+  assert.match(guard, /const RACE_HUD = '#hud, #controls';/, 'the race HUD is themed by CSS alone, never by a stale guard mark');
+  assert.match(guard, /if \(element\.closest\(RACE_HUD\)\) return;/);
+  assert.match(semantic, /\.spectate-button,\s*\.audio-settings-button,\s*\.reset-rivals-button,/, 'coloured race buttons read Ink');
   assert.match(semantic, /\.back-to-lot-button,[\s\S]*?\{\s*color: var\(--turn-ink\) !important;/, 'a coloured control reads Ink without waiting for the contrast guard');
   assert.match(await fs.readFile(new URL('../turn/ui/hud.js', import.meta.url), 'utf8'), /dataset\.theme === 'dark' \? '#fff8e8' : '#08090a'/, 'the minimap track outline follows the theme');
   for (const file of ['styles.css', 'drive-pad.css', 'home-app-bar.css', 'garage/garage.css', 'achievements.css']) {

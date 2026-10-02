@@ -16,6 +16,10 @@ const CREAM = [255, 248, 232];
 const CONTROLS = 'button, a, [role="button"], summary, select, .turn-pr-chip';
 // Night surfaces are darker than this (relative luminance); anything lighter is a colour.
 const NIGHT = 0.12;
+// The race HUD changes faster than the guard scans during a race, so a mark there
+// goes stale (a chip judged mid-flash, a button judged in another state). The HUD is
+// themed by CSS alone (role tokens, design-semantic.css) and the guard leaves it be.
+const RACE_HUD = '#hud, #controls';
 
 function parseColor(value) {
   const text = String(value);
@@ -130,6 +134,7 @@ function outlineColor() {
 
 function check(element) {
   if (element.closest('canvas, svg > *')) return;
+  if (element.closest(RACE_HUD)) return;
   if (element.closest(`[${PILL}]`)) return;
   if (!hasOwnText(element)) return;
   if (element.checkVisibility && !element.checkVisibility()) return;
@@ -173,14 +178,14 @@ function scan() {
   }
   fills = new Map();
   for (const element of document.body.querySelectorAll(`[${PILL}]`)) {
-    if (!pill(element)) {
+    if (element.closest(RACE_HUD) || !pill(element)) {
       element.removeAttribute(PILL);
       element.style.removeProperty('--turn-pill');
     }
   }
   const outline = outlineColor();
   for (const element of document.body.querySelectorAll('*')) {
-    if (element.checkVisibility?.() === false) continue;
+    if (element.checkVisibility?.() === false || element.closest(RACE_HUD)) continue;
     if (!element.hasAttribute(PILL)) pill(element);
     edge(element, outline);
   }
