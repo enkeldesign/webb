@@ -151,7 +151,7 @@
 :root body .turn-orientation-hint {
   position: absolute; inset: auto var(--turn-edge) max(20px, env(safe-area-inset-bottom));
   max-width: 420px; margin-inline: auto; padding: 36px 16px 16px;
-  border: 3px solid var(--turn-ink); border-radius: 16px; background: var(--yellow); color: var(--turn-ink);
+  border: 3px solid var(--turn-outline); border-radius: 16px; background: var(--yellow); color: var(--turn-ink);
   box-shadow: 4px 4px 0 var(--turn-shadow-color); pointer-events: none; text-align: center;
 }
 .turn-orientation-icon {

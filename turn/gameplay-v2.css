@@ -72,7 +72,7 @@
   width: calc(100% + var(--boost-overcharge-width));
   height: 11.25px;
   overflow: hidden;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 749.25px;
   background: color-mix(in srgb, var(--turn-surface-page) 82%, transparent);
   box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
@@ -327,7 +327,7 @@
   bottom: clamp(84px, 25vh, 142.5px);
   min-width: 61.5px;
   padding: 4.5px 7.5px 6px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 11.25px;
   background: color-mix(in srgb, var(--turn-surface-page) 94%, transparent);
   color: var(--turn-ink);

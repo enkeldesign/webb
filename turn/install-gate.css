@@ -1,4 +1,4 @@
-@import url('./design-semantic.css?build=20261002-r361');
+@import url('./design-semantic.css?build=20261002-r362');
 
 .install-gate {
   position: absolute;
@@ -49,7 +49,7 @@ html.turn-standalone .install-gate,
 
 .install-card {
   padding: clamp(16.5px, 4vw, 31.5px);
-  border: 5px solid var(--turn-ink);
+  border: 5px solid var(--turn-outline);
   border-radius: 21px;
   background: color-mix(in srgb, var(--turn-surface-page) 96%, transparent);
   box-shadow: 9px 9px 0 var(--turn-shadow-color);
@@ -59,7 +59,7 @@ html.turn-standalone .install-gate,
   display: inline-block;
   margin-bottom: 7.5px;
   padding: 4.5px 7.5px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 749.25px;
   background: var(--yellow);
   font-size: max(var(--turn-text-floor, 11px), 0.525rem);
@@ -199,7 +199,7 @@ html.turn-standalone .install-gate,
   place-items: center;
   width: 33px;
   height: 33px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 9px;
   background: var(--yellow);
   font-size: max(var(--turn-text-floor, 11px), 0.8625rem);

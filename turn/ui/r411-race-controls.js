@@ -31,7 +31,7 @@ function installStyles() {
       width: 12px;
       height: 12px;
       box-sizing: border-box;
-      border: 3px solid var(--turn-ink);
+      border: 3px solid var(--turn-outline);
       border-radius: 50%;
       background: var(--turn-action-warning, #ffd43b);
       box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);

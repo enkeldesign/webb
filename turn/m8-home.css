@@ -179,7 +179,7 @@ html[data-theme="dark"] .m8-home-build {
   max-height: calc(100vh - 24px);
   overflow: auto;
   padding: clamp(13.5px, 3vw, 25.5px);
-  border: 6px solid var(--turn-ink);
+  border: 6px solid var(--turn-outline);
   border-radius: 22.5px;
   background:
     radial-gradient(circle at 91% 8%, rgb(255 79 163 / 0.35), transparent 18%),
@@ -404,7 +404,7 @@ html[data-theme="dark"] .m8-home-build {
 .m8-reset-confirm {
   margin-top: 10.5px;
   padding: 10.5px;
-  border: 3px dashed var(--turn-ink);
+  border: 3px dashed var(--turn-outline);
   border-radius: 10.5px;
   background: #fff2f7;
 }

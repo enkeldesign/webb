@@ -89,7 +89,7 @@ function installStyles() {
       min-width: 0 !important;
       max-width: min(92vw, 420px) !important;
       padding: 6px 12px !important;
-      border: 4px solid var(--turn-ink) !important;
+      border: 4px solid var(--turn-outline) !important;
       border-radius: 749.25px !important;
       background: var(--turn-green-500, #8ce99a) !important;
       box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color) !important;
@@ -121,7 +121,7 @@ function installStyles() {
       min-width: 0 !important;
       max-width: min(92vw, 420px) !important;
       padding: 6px 12px !important;
-      border: 4px solid var(--turn-ink) !important;
+      border: 4px solid var(--turn-outline) !important;
       border-radius: 749.25px !important;
       background: var(--turn-action-warning, #ffd43b) !important;
       box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color) !important;

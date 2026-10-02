@@ -148,6 +148,12 @@ html[data-theme="dark"] .garage-bar {
   background: linear-gradient(to bottom, #4a6577 0 58%, #3b434b 58% 100%);
 }
 
+/* The viewer's rotate controls are night buttons with a cream edge in the dark theme. */
+:root[data-theme="dark"] .garage-rotate-button {
+  background: color-mix(in srgb, var(--turn-surface-page) 90%, transparent);
+  color: var(--turn-text);
+}
+
 .garage-view {
   position: absolute;
   z-index: 0;
@@ -242,7 +248,7 @@ html[data-theme="dark"] .garage-bar {
   height: var(--turn-pr-target);
   margin: 0;
   padding: 0;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 50%;
   background: rgb(255 252 242 / 0.9);
   box-shadow: none;
@@ -329,7 +335,7 @@ html[data-theme="dark"] .garage-bar {
   gap: 10px;
   margin: 0;
   padding: 12px 14px;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 12px;
   background: var(--turn-orange-100, #ffd0ae);
   font-size: var(--turn-pr-type-spec);
@@ -352,7 +358,7 @@ html[data-theme="dark"] .garage-bar {
   justify-items: start;
   gap: 6px;
   padding: 12px 14px;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 12px;
   background: var(--turn-ink);
   color: var(--turn-paper, #fff8e8);

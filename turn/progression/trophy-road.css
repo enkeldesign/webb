@@ -1,4 +1,4 @@
-@import url('../design-semantic.css?build=20261002-r361');
+@import url('../design-semantic.css?build=20261002-r362');
 
 /* Give the road the complete summary width. Totals stay in their own header row. */
 .turn-achievements-dialog .turn-achievements-summary {
@@ -80,7 +80,7 @@
 .turn-trophy-road-progress {
   height: 16.5px;
   overflow: hidden;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
+  border: var(--turn-border-compact, 3px) solid var(--turn-outline);
   border-radius: var(--turn-radius-pill, 999px);
   background: var(--turn-muted, #d6d0c2);
 }
@@ -149,7 +149,7 @@
 
 .turn-trophy-road-map {
   padding: 8.25px;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink);
+  border: var(--turn-border-default, 4px) solid var(--turn-outline);
   border-radius: var(--turn-radius-default, 18px);
   background: color-mix(in srgb, var(--turn-surface-raised) 88%, var(--turn-action-information, #38d9ff));
 }
@@ -456,7 +456,7 @@
   height: 16.5px;
   padding: 2.25px;
   place-items: center;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 50%;
   background: var(--turn-action-warning, #ffd43b);
   box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
@@ -590,7 +590,7 @@
   margin: 0;
   padding: 9px 39px 9px 12px;
   overflow: auto;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink);
+  border: var(--turn-border-default, 4px) solid var(--turn-outline);
   border-radius: var(--turn-radius-default, 18px);
   background: var(--turn-action-success, #8ce99a);
   box-shadow: var(--turn-shadow-default, 5.25px 5.25px 0 var(--turn-shadow-color));
@@ -623,7 +623,7 @@
   height: 27px;
   padding: 0;
   place-items: center;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
+  border: var(--turn-border-compact, 3px) solid var(--turn-outline);
   border-radius: 50%;
   background: var(--turn-action-navigation, #ff7b54);
   color: var(--turn-ink);
@@ -757,7 +757,7 @@
 
 .turn-trophy-reward-guide mark {
   padding: 2.25px 4.5px;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: var(--turn-radius-pill, 999px);
   background: var(--turn-action-information, #38d9ff);
   color: inherit;
@@ -799,7 +799,7 @@
   align-items: center;
   width: min(442.5px, calc(100vw - 21px));
   padding: 7.5px 10.5px;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink);
+  border: var(--turn-border-default, 4px) solid var(--turn-outline);
   border-radius: var(--turn-radius-default, 18px);
   background: var(--turn-action-success, #8ce99a);
   color: var(--turn-ink);
@@ -825,7 +825,7 @@
   height: 37.5px;
   padding: 6.75px;
   place-items: center;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 10.5px;
   background: var(--turn-action-warning, #ffd43b);
 }

@@ -137,7 +137,7 @@ h1 {
   display: inline-block;
   margin-bottom: 12px;
   padding: 4.5px 7.5px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 749.25px;
   background: var(--yellow);
   font-size: max(var(--turn-text-floor, 11px), 0.555rem);
@@ -182,7 +182,7 @@ h1 {
 
 .rotate-card {
   padding: 21px;
-  border: 5px solid var(--turn-ink);
+  border: 5px solid var(--turn-outline);
   border-radius: 18px;
   background: var(--yellow);
   color: var(--turn-ink);
@@ -227,7 +227,7 @@ h1 {
 .chip,
 .map-wrap,
 .tilt-drive {
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 10.5px;
   background: color-mix(in srgb, var(--turn-surface-page) 90%, transparent);
   color: var(--turn-ink);
@@ -283,7 +283,7 @@ h1 {
   top: 22%;
   transform: translateX(-50%) rotate(-2deg);
   padding: 5.25px 9.75px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 749.25px;
   background: var(--yellow);
   color: var(--turn-ink);
@@ -319,7 +319,7 @@ h1 {
   position: relative;
   height: 10.5px;
   overflow: hidden;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 749.25px;
   background: linear-gradient(90deg, var(--pink) 0 47%, var(--turn-surface-page) 47% 53%, var(--lime) 53% 100%);
 }
@@ -342,7 +342,7 @@ h1 {
   z-index: 2;
   width: 9.75px;
   height: 16.5px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 5.25px;
   background: var(--yellow);
   transform: translate(-50%, -50%);

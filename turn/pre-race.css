@@ -843,7 +843,7 @@ html body .turn-pr-app-logo {
   gap: 10px;
   margin: 0;
   padding: 12px 14px;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 12px;
   background: var(--turn-orange-100, #ffd0ae);
   font-family: var(--turn-pr-font-body);

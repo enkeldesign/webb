@@ -36,7 +36,7 @@
 .score-feedback-state,
 .score-feedback-callout {
   box-sizing: border-box;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   background: color-mix(in srgb, var(--turn-surface-page) 94%, transparent);
   box-shadow: 3px 3px 0 var(--turn-shadow-color);
 }
@@ -210,7 +210,7 @@
   height: 100%;
   margin: 0;
   overflow: hidden;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 0 7.5px 7.5px 0;
   background: var(--score-feedback-gauge-track);
   transform: translateZ(0);

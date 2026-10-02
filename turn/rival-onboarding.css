@@ -28,7 +28,7 @@
 
 .rival-onboarding-copy {
   padding: 5.25px 10.5px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 749.25px;
   background: var(--rival-onboarding-color, var(--yellow));
   color: var(--turn-ink);

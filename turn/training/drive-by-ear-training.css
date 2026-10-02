@@ -28,7 +28,7 @@
 .turn-dbe-training-race-nav button {
   min-height: 33px;
   padding: 6.75px 10.5px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 749.25px;
   background: var(--turn-action-information, #38d9ff);
   color: var(--turn-ink);
@@ -154,7 +154,7 @@
 
 .turn-dbe-training-visual-hint {
   padding: 9px 10.5px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 9px;
   background: var(--turn-warning-soft, #fff1a8);
   font-weight: 800;
@@ -198,7 +198,7 @@
   display: grid;
   min-width: min(270px, calc(100vw - 135px));
   padding: 6px 10.5px;
-  border: 2.25px solid var(--turn-ink);
+  border: 2.25px solid var(--turn-outline);
   border-radius: 10.5px;
   background: #b9f3ff;
   color: var(--turn-ink);

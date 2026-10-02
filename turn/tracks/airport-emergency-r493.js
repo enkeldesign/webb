@@ -804,7 +804,7 @@ function installMaydayUiStyle() {
       width: min(465px, calc(100vw - 24px));
       margin: 0;
       padding: 7.5px 10.5px;
-      border: 2.25px solid var(--turn-ink);
+      border: 2.25px solid var(--turn-outline);
       border-radius: 10.5px;
       background: var(--turn-surface-page);
       color: var(--turn-text);

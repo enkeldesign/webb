@@ -1,4 +1,4 @@
-@import url('./trophy-road.css?build=20261002-r361');
+@import url('./trophy-road.css?build=20261002-r362');
 
 /* Trophy Road locked/unlocked states use the primitive TURN palette directly. */
 :root {
@@ -64,7 +64,7 @@
   height: 22.5px;
   padding: 3px;
   place-items: center;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 50%;
   background: var(--turn-action-warning, #ffd43b);
   box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
