@@ -49,7 +49,7 @@ permissions:
 jobs:
   visual-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -60,15 +60,22 @@ jobs:
           node-version: '24'
 
       - name: Validate the authored Supercar wheel contract
+        timeout-minutes: 7
         run: node turn-lab/tests/semantic-car-finish-production.mjs
 
       - name: Validate LOW GRAPHICS production contract
+        timeout-minutes: 7
         run: node turn-tests/low-graphics-production.mjs
 
       - name: Install Playwright Chromium and WebKit
+        timeout-minutes: 12
         run: |
           npm install --no-save playwright@1.55.0 pngjs@7.0.0
-          npx playwright install --with-deps chromium webkit
+          # System packages install once (apt holds a lock, so it is never cut off and retried);
+          # only the browser download, which can stall, is retried.
+          npx playwright install-deps chromium webkit
+          timeout 180 npx playwright install chromium webkit \
+            || timeout 180 npx playwright install chromium webkit
 
       - name: Start static TURN server
         run: |
@@ -81,12 +88,15 @@ jobs:
           exit 1
 
       - name: Validate LOW GRAPHICS in Chromium and WebKit
+        timeout-minutes: 7
         run: node turn-tests/low-graphics-browser-smoke.mjs
 
       - name: Render and validate the actual GARAGE preview
+        timeout-minutes: 7
         run: node turn-tests/supercar-lot-visual-smoke.mjs
 
       - name: Validate CHASE YOUR BEST custom paint pixels
+        timeout-minutes: 7
         run: node turn-tests/rival-paint-webgl-regression.mjs
 
       - name: Upload Supercar Lot inspection frames

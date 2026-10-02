@@ -109,8 +109,32 @@ permissions:
 
 jobs:
   support-feedback-browser:
+    # Four parallel shards of about three minutes each (measured 2026-10-02: the eight
+    # smokes took about eleven minutes in one job). Each smoke and the browser install
+    # have their own time limit, so a hung run fails in minutes, not at the job limit.
+    name: browser (${{ matrix.shard }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: roadbook
+            tests: >-
+              turn-tests/roadbook-browser-smoke.mjs
+              turn-tests/race-menu-browser-smoke.mjs
+              turn-tests/support-feedback-browser-smoke.mjs
+          - shard: garage
+            tests: >-
+              turn-tests/garage-browser-smoke.mjs
+              turn-tests/offline-browser-smoke.mjs
+          - shard: responsive
+            tests: >-
+              turn-tests/responsive-browser-smoke.mjs
+              turn-tests/race-pause-browser-smoke.mjs
+          - shard: navigation
+            tests: >-
+              turn-tests/app-navigation-browser-smoke.mjs
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -121,9 +145,14 @@ jobs:
           node-version: '24'
 
       - name: Install Playwright browsers
+        timeout-minutes: 12
         run: |
           npm install --no-save --package-lock=false playwright@1.55.0 three@0.184.0
-          npx playwright install --with-deps chromium webkit
+          # System packages install once (apt holds a lock, so it is never cut off and retried);
+          # only the browser download, which can stall, is retried.
+          npx playwright install-deps chromium webkit
+          timeout 180 npx playwright install chromium webkit \
+            || timeout 180 npx playwright install chromium webkit
 
       - name: Start static TURN server
         run: |
@@ -135,26 +164,10 @@ jobs:
           cat /tmp/turn-support-feedback-http.log
           exit 1
 
-      - name: Verify support feedback lifecycle in Chromium and WebKit
-        run: node turn-tests/support-feedback-browser-smoke.mjs
-
-      - name: Verify responsive layouts and orientation in Chromium and WebKit
-        run: node turn-tests/responsive-browser-smoke.mjs
-
-      - name: Verify the race ☰ keeps the start row inside the viewport
-        run: node turn-tests/race-menu-browser-smoke.mjs
-
-      - name: Verify ROADBOOK from 320px to iPad
-        run: node turn-tests/roadbook-browser-smoke.mjs
-
-      - name: Verify GARAGE from 320px to iPad
-        run: node turn-tests/garage-browser-smoke.mjs
-
-      - name: Verify safe areas, back, drag to dismiss and edge swipe
-        run: node turn-tests/app-navigation-browser-smoke.mjs
-
-      - name: Verify TURN installs for offline play and races in airplane mode
-        run: node turn-tests/offline-browser-smoke.mjs
-
-      - name: Verify a race pauses exactly where it stands and resumes from there
-        run: node turn-tests/race-pause-browser-smoke.mjs
+      - name: Run browser smokes
+        run: |
+          for test in ${{ matrix.tests }}; do
+            echo "::group::$test"
+            timeout 420 node "$test" || { status=$?; echo "::endgroup::"; echo "::error::$test failed (exit $status; 124 means it ran over 7 minutes)"; exit $status; }
+            echo "::endgroup::"
+          done
