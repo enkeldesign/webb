@@ -60,15 +60,20 @@ jobs:
           node-version: '24'
 
       - name: Validate the authored Supercar wheel contract
+        timeout-minutes: 7
         run: node turn-lab/tests/semantic-car-finish-production.mjs
 
       - name: Validate LOW GRAPHICS production contract
+        timeout-minutes: 7
         run: node turn-tests/low-graphics-production.mjs
 
       - name: Install Playwright Chromium and WebKit
+        timeout-minutes: 8
         run: |
           npm install --no-save playwright@1.55.0 pngjs@7.0.0
-          npx playwright install --with-deps chromium webkit
+          # A stalled download is retried once instead of holding the job.
+          timeout 210 npx playwright install --with-deps chromium webkit \
+            || timeout 210 npx playwright install --with-deps chromium webkit
 
       - name: Start static TURN server
         run: |
@@ -81,12 +86,15 @@ jobs:
           exit 1
 
       - name: Validate LOW GRAPHICS in Chromium and WebKit
+        timeout-minutes: 7
         run: node turn-tests/low-graphics-browser-smoke.mjs
 
       - name: Render and validate the actual GARAGE preview
+        timeout-minutes: 7
         run: node turn-tests/supercar-lot-visual-smoke.mjs
 
       - name: Validate CHASE YOUR BEST custom paint pixels
+        timeout-minutes: 7
         run: node turn-tests/rival-paint-webgl-regression.mjs
 
       - name: Upload Supercar Lot inspection frames

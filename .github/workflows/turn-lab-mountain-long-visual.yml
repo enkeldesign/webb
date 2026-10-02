@@ -35,12 +35,16 @@ jobs:
           node-version: '24'
 
       - name: Validate DEAD CANYON + SUBURBS contracts
+        timeout-minutes: 7
         run: node turn-lab/tests/mountain-long-lab.mjs
 
       - name: Install Playwright Chromium
+        timeout-minutes: 8
         run: |
           npm install --no-save playwright@1.55.0
-          npx playwright install chromium
+          # A stalled download is retried once instead of holding the job.
+          timeout 210 npx playwright install chromium \
+            || timeout 210 npx playwright install chromium
 
       - name: Start static TURN server
         run: |
@@ -53,6 +57,7 @@ jobs:
           exit 1
 
       - name: Render and validate both LAB tracks
+        timeout-minutes: 7
         run: node turn-lab/tests/mountain-long-visual-smoke.mjs
 
       - name: Upload dual-track inspection frames

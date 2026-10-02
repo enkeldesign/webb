@@ -5,16 +5,8 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const testRoots = Object.freeze(['turn-tests', 'turn-lab/tests']);
-const explicitExclusions = new Map([
-  ['turn-lab/tests/portrait-centered-pad-lab.mjs',
-    'TURN LAB portrait steering experiment; not a production contract and superseded by the responsive-design work.'],
-  ['turn-lab/tests/portrait-play-lab.mjs',
-    'TURN LAB portrait play experiment; not a production contract and superseded by the responsive-design work.'],
-  ['turn-lab/tests/regression.mjs',
-    'Legacy isolated TURN LAB race harness; current production race coverage lives in turn-tests/race-production.mjs.'],
-  ['turn-tests/turn-next-world-production.mjs',
-    'TURN NEXT WORLD is an isolated real-world map experiment, not part of the canonical TURN production contract.']
-]);
+// Every test is a production contract run by CI; reviewed exceptions would be listed here.
+const explicitExclusions = new Map([]);
 
 async function collectMjs(relativeDirectory) {
   const absoluteDirectory = path.join(root, relativeDirectory);
