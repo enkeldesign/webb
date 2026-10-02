@@ -45,6 +45,7 @@
   --turn-text-muted: rgb(8 9 10 / 0.68);
   --turn-text-faint: rgb(8 9 10 / 0.32);
   --turn-outline: var(--turn-ink);
+  --turn-outline-muted: var(--turn-outline);
   --turn-shadow-color: var(--turn-ink);
 
   /* Semantic UI roles. */
@@ -129,8 +130,9 @@
 /* Dark theme (#1067), set by the theme resolver in index.html. Neutral surfaces become
    warm night greys and the ink on them becomes cream; semantic colours (actions,
    accents, the --turn-ink on them) keep their values. Hard shadows go darker than any
-   surface, so they still read as elevation rather than glow. Outlines are a muted
-   cream, never grey (Erik). Text on the page is 16:1, outlines 11:1. */
+   surface, so they still read as elevation rather than glow. Active outlines are
+   Paper cream; a locked or disabled control keeps a muted cream, never grey (Erik).
+   Text on the page is 16:1, outlines 16:1 and muted outlines 11:1. */
 :root[data-theme="dark"] {
   --turn-surface-page: #1c1d20;
   --turn-surface-raised: #26282c;
@@ -139,7 +141,8 @@
   --turn-text: #fff8e8;
   --turn-text-muted: rgb(255 248 232 / 0.72);
   --turn-text-faint: rgb(255 248 232 / 0.42);
-  --turn-outline: #d6cdb9;
+  --turn-outline: #fff8e8;
+  --turn-outline-muted: #d6cdb9;
   --turn-shadow-color: #000000;
   --turn-header: #111214;
 }
@@ -169,6 +172,11 @@
   --turn-pr-muted: var(--turn-text-muted);
   --turn-pr-faint: var(--turn-text-faint);
   color: #fff8e8 !important;
+}
+
+/* An inactive control (locked or disabled) keeps the muted outline in the dark theme. */
+:root[data-theme="dark"] :is(button, [role="button"]):is(:disabled, [aria-disabled="true"], .is-locked):not([aria-busy="true"]) {
+  border-color: var(--turn-outline-muted);
 }
 
 /* An outline on a colour (a close button on a Yellow sheet head) is Ink, as in light. */

@@ -269,7 +269,7 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.equal((index.match(/<meta name="theme-color"/g) || []).length, 1, 'one theme-color meta, updated by the resolver');
   const dark = tokens.match(/:root\[data-theme="dark"\] \{([\s\S]*?)\}/)?.[1] || '';
   const darkNames = [...dark.matchAll(/(--[\w-]+):/g)].map((match) => match[1]).sort();
-  assert.deepEqual(darkNames, ['--turn-header', '--turn-outline', '--turn-shadow-color', '--turn-surface-bright', '--turn-surface-card', '--turn-surface-page', '--turn-surface-raised', '--turn-text', '--turn-text-faint', '--turn-text-muted'], 'the dark theme changes only neutral roles');
+  assert.deepEqual(darkNames, ['--turn-header', '--turn-outline', '--turn-outline-muted', '--turn-shadow-color', '--turn-surface-bright', '--turn-surface-card', '--turn-surface-page', '--turn-surface-raised', '--turn-text', '--turn-text-faint', '--turn-text-muted'], 'the dark theme changes only neutral roles');
   assert.match(tokens, /--turn-shadow-color: var\(--turn-ink\);/, 'hard shadows have their own colour');
   const bar = await fs.readFile(new URL('../turn/ui/home-app-bar.js', import.meta.url), 'utf8');
   assert.match(bar, /<legend>COLOR THEME<\/legend>/);
@@ -287,7 +287,9 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.doesNotMatch(head, /turn-admin-unlock/, 'every player can choose a theme');
   assert.match(guard, /for \(const marked of document\.querySelectorAll\(`\[\$\{MARK\}\], \[\$\{EDGE\}\]`\)\)/, 'every scan starts clean, so a mark never follows a moved button');
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-edge\] \{\s*border-color: var\(--turn-ink\) !important;/, 'an outline on a colour is Ink, as in light');
-  assert.match(dark, /--turn-outline: #d6cdb9;/, 'dark outlines are a muted cream, never grey');
+  assert.match(dark, /--turn-outline: #fff8e8;/, 'active dark outlines are Paper cream');
+  assert.match(dark, /--turn-outline-muted: #d6cdb9;/, 'inactive dark outlines are a muted cream, never grey');
+  assert.match(tokens, /:root\[data-theme="dark"\] :is\(button, \[role="button"\]\):is\(:disabled, \[aria-disabled="true"\], \.is-locked\)[^{]*\{\s*border-color: var\(--turn-outline-muted\);/, 'a locked or disabled control keeps the muted outline');
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-pill\] \{[\s\S]*?background-image: linear-gradient\(var\(--turn-ink\), var\(--turn-ink\)\)[\s\S]*?color: var\(--turn-pill\)/, 'a pill on a night surface is a coloured wireframe');
 }
 
