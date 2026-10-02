@@ -1112,13 +1112,14 @@ Object.freeze({
     Object.freeze(['1.36.2 r363', 'Dark mode fixes: locked cars in ALL CARS are cream line drawings instead of black on dark; the loading and install screens are dimmed; the lines inside the drive pad and the minimap\'s track outline are cream; the sheet grabber shows on dark sheets; LEAVE RACE and other coloured buttons always read Ink, even when they appear mid-race; and the achievement toast\'s icon tile is Paper with an Ink outline, as on any colour.']),
     Object.freeze(['1.36.3 r364', 'Dark mode: the race HUD keeps its colours from the first moment of a race. POSITION, LEAVE RACE, RESTART LAP, SPECTATE and the other race buttons no longer show the wrong text colour until the lap is restarted, and the DRIFT and FLOW multipliers read Ink. In landscape, the menu\'s TURN MUSIC OFF sits level with the COLOR THEME choices, which keep room for their labels.']),
     Object.freeze(['1.36.4 r365', 'Dark mode is now declared once, in the design system, instead of being corrected while you play: every coloured button, sheet header, card and tile carries the light theme\'s Ink with it, and pills on dark surfaces are coloured outlines. Nothing flickers or changes colour after a screen appears. The How to play panels are dark, and the steering pad\'s arrows are Ink, as in light.']),
-    Object.freeze(['1.36.5 r366', 'YOUR TURN follows your device\'s light or dark setting, with the same dark colours as TURN, and challenge links open again instead of stopping at Loading challenge.'])
+    Object.freeze(['1.36.5 r366', 'YOUR TURN follows your device\'s light or dark setting, with the same dark colours as TURN, and challenge links open again instead of stopping at Loading challenge.']),
+    Object.freeze(['1.36.6 r367', 'Drive By Ear: a race that starts inside a bend now hears that bend first, the moment the car rolls. MIDNIGHT CITY starts in a right-hander and now says so; COUNTRYSIDE, which starts in a long right, hears it at once too.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.36.5',
-  build: '2026.10.02-r366',
-  note: 'YOUR TURN follows the system theme; challenge links open again.'
+  version: '1.36.6',
+  build: '2026.10.02-r367',
+  note: 'A standing start inside a bend hears that bend first.'
 });
