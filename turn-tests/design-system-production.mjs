@@ -272,7 +272,7 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.deepEqual(darkNames, ['--turn-header', '--turn-outline', '--turn-shadow-color', '--turn-surface-bright', '--turn-surface-card', '--turn-surface-page', '--turn-surface-raised', '--turn-text', '--turn-text-faint', '--turn-text-muted'], 'the dark theme changes only neutral roles');
   assert.match(tokens, /--turn-shadow-color: var\(--turn-ink\);/, 'hard shadows have their own colour');
   const bar = await fs.readFile(new URL('../turn/ui/home-app-bar.js', import.meta.url), 'utf8');
-  assert.match(bar, /<legend>THEME<\/legend>/);
+  assert.match(bar, /<legend>COLOR THEME<\/legend>/);
   assert.match(bar, /type="radio" name="turn-theme"/, 'THEME is one radio group');
   // Text on a light semantic colour reads Ink in the dark theme; the guard never runs in light.
   const guard = await fs.readFile(new URL('../turn/ui/theme-contrast.js', import.meta.url), 'utf8');

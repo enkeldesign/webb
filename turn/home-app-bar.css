@@ -408,30 +408,38 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-home-build {
 
 /* THEME: one choice of three, as a segmented row of 44px radios. */
 html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
+  display: block;
   min-width: 0;
   margin: 0;
   padding: 0;
-  border: 3px solid var(--turn-outline);
-  border-radius: 12px;
-  overflow: hidden;
+  border: 0;
 }
 
 html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting[hidden] {
   display: none;
 }
 
+/* COLOR THEME reads like TURN MUSIC OFF above it. */
 html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting legend {
-  grid-column: 1 / -1;
   float: left;
   width: 100%;
-  margin: 0;
-  padding: 6px 10px 2px;
-  font-size: var(--turn-type-micro, 11px);
-  font-weight: 900;
-  letter-spacing: var(--turn-tracking-micro, 0.04em);
+  margin: 0 0 10px;
+  padding: 0 4px;
+  color: var(--turn-text);
+  font-size: 14px;
+  font-weight: 950;
+  letter-spacing: 0.035em;
+  line-height: 1;
+}
+
+/* One closed segmented control: a full outline, dividers between the choices. */
+html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-options {
+  clear: both;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 3px solid var(--turn-outline);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting label {

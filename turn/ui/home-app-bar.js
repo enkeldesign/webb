@@ -58,14 +58,14 @@ export function installHomeAppBar({ documentRef = document } = {}) {
   const title = menu.querySelector('#m8MenuTitle');
   sheetHead.append(title || documentRef.createTextNode('MENU'), closeButton);
 
-  // THEME (#1067): System, Light or Dark, through the one resolver in index.html. A
+  // COLOR THEME (#1067): System, Light or Dark, through the one resolver in index.html. A
   // radio group, so it reads as one choice of three.
   const themeApi = globalThis.__turnTheme;
   const themeSetting = themeApi ? documentRef.createElement('fieldset') : null;
   if (themeSetting) {
     themeSetting.className = 'turn-theme-setting';
-    themeSetting.innerHTML = '<legend>THEME</legend>' + [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]
-      .map(([value, label]) => `<label><input type="radio" name="turn-theme" value="${value}"><span>${label}</span></label>`).join('');
+    themeSetting.innerHTML = '<legend>COLOR THEME</legend><div class="turn-theme-options">' + [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]
+      .map(([value, label]) => `<label><input type="radio" name="turn-theme" value="${value}"><span>${label}</span></label>`).join('') + '</div>';
     const sync = () => {
       for (const input of themeSetting.querySelectorAll('input')) input.checked = input.value === themeApi.choice;
     };

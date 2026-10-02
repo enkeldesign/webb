@@ -5,7 +5,7 @@ export function installMusicControls({ home, getVolume, setVolume, toggleMusic, 
     if (!button) return;
     const on = getVolume() > 0, action = on ? 'off' : 'on';
     const icon = on ? '<span aria-hidden="true">♫×</span>' : '<span aria-hidden="true">♫</span>';
-    button.innerHTML = compact ? icon : `${icon}<span>MUSIC ${action.toUpperCase()}</span>`;
+    button.innerHTML = compact ? icon : `${icon}<span>TURN MUSIC ${action.toUpperCase()}</span>`;
     button.setAttribute('aria-label', `Turn music ${action}`); button.title = `Turn music ${action}`;
     button.dataset.musicEnabled = on ? 'true' : 'false';
   }
