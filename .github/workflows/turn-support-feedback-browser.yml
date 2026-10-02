@@ -114,7 +114,7 @@ jobs:
     # have their own time limit, so a hung run fails in minutes, not at the job limit.
     name: browser (${{ matrix.shard }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -145,12 +145,14 @@ jobs:
           node-version: '24'
 
       - name: Install Playwright browsers
-        timeout-minutes: 8
+        timeout-minutes: 12
         run: |
           npm install --no-save --package-lock=false playwright@1.55.0 three@0.184.0
-          # A stalled download is retried once instead of holding the job.
-          timeout 210 npx playwright install --with-deps chromium webkit \
-            || timeout 210 npx playwright install --with-deps chromium webkit
+          # System packages install once (apt holds a lock, so it is never cut off and retried);
+          # only the browser download, which can stall, is retried.
+          npx playwright install-deps chromium webkit
+          timeout 180 npx playwright install chromium webkit \
+            || timeout 180 npx playwright install chromium webkit
 
       - name: Start static TURN server
         run: |

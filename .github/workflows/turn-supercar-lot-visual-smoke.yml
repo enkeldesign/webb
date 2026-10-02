@@ -49,7 +49,7 @@ permissions:
 jobs:
   visual-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -68,12 +68,14 @@ jobs:
         run: node turn-tests/low-graphics-production.mjs
 
       - name: Install Playwright Chromium and WebKit
-        timeout-minutes: 8
+        timeout-minutes: 12
         run: |
           npm install --no-save playwright@1.55.0 pngjs@7.0.0
-          # A stalled download is retried once instead of holding the job.
-          timeout 210 npx playwright install --with-deps chromium webkit \
-            || timeout 210 npx playwright install --with-deps chromium webkit
+          # System packages install once (apt holds a lock, so it is never cut off and retried);
+          # only the browser download, which can stall, is retried.
+          npx playwright install-deps chromium webkit
+          timeout 180 npx playwright install chromium webkit \
+            || timeout 180 npx playwright install chromium webkit
 
       - name: Start static TURN server
         run: |

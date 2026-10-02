@@ -57,12 +57,12 @@ jobs:
         run: node turn-tests/mountain-sky-aspect-production.mjs
 
       - name: Install Playwright Chromium
-        timeout-minutes: 8
+        timeout-minutes: 12
         run: |
           npm install --no-save playwright@1.55.0
-          # A stalled download is retried once instead of holding the job.
-          timeout 210 npx playwright install chromium \
-            || timeout 210 npx playwright install chromium
+          # A stalled browser download is retried once instead of holding the job.
+          timeout 180 npx playwright install chromium \
+            || timeout 180 npx playwright install chromium
 
       - name: Start static TURN server
         run: |
