@@ -1,5 +1,5 @@
 {
-  "release": "20261002-r364",
+  "release": "20261002-r365",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -464,7 +464,6 @@
     "/turn/ui/spectate.js",
     "/turn/ui/startup-screen-reader-handoff-r529.js",
     "/turn/ui/steering-limit-warning.js",
-    "/turn/ui/theme-contrast.js",
     "/turn/ui/toast-region.js",
     "/turn/ui/track-best-car.js",
     "/turn/ui/track-icons.js",

@@ -325,13 +325,6 @@
   background: var(--turn-surface-page);
 }
 
-/* A toast is a colour: inside it, outlines are Ink and the icon tile is Paper, as in
-   light, in either theme. */
-:root[data-theme="dark"] .turn-achievement-toast > * {
-  --turn-outline: var(--turn-ink);
-  --turn-surface-page: var(--turn-paper);
-}
-
 .turn-achievement-toast strong {
   display: block;
   font-size: max(var(--turn-text-floor, 11px), clamp(0.75rem, 2.4vw, 1.0125rem));

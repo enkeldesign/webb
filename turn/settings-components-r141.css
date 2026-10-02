@@ -1,4 +1,4 @@
-@import url('./design-semantic.css?build=20261002-r364');
+@import url('./design-semantic.css?build=20261002-r365');
 
 /*
   Native form controls and disclosures keep their real semantics while sharing
@@ -123,7 +123,8 @@
 }
 
 .m8-guide-wide > strong {
-  background: var(--turn-disclosure-trigger) !important;
+  --turn-pill: var(--turn-disclosure-trigger);
+  background: var(--turn-pill) !important;
 }
 
 .m8-dbe-guide,
