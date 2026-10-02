@@ -1,4 +1,4 @@
-@import url('./design-tokens.css?build=20261002-r362');
+@import url('./design-tokens.css?build=20261002-r363');
 
 /*
   Normative production roles.
@@ -109,4 +109,32 @@
 
 .boost-hud.is-drift-locking i {
   background: linear-gradient(90deg, #8b5cf6, var(--turn-control-gas)) !important;
+}
+
+/* Ink on every semantic colour, in both themes. A coloured control never takes the
+   dark theme's cream text, even when it appears mid-race, before the contrast guard
+   (ui/theme-contrast.js) has looked at it. */
+.install-primary,
+.turn-yourturn-share-submit,
+.yourturn-actions button:is(.is-share, .is-game),
+.install-close,
+.spectate-close,
+.sound-guide-close,
+.m8-dialog-head > button,
+.back-to-lot-button,
+.sound-guide-button,
+.back-to-start-button.is-lap-invalid,
+.turn-screen-blank-control[data-state="active"],
+[data-turn-navigation-action],
+.drive-drift-zone,
+.drift,
+.drive-pad .drive-gas-zone,
+.gas,
+.drive-pad .drive-brake-zone,
+.drive-reverse-bubble,
+.drive-shift-bubble,
+.drive-lock-bubble,
+.brake,
+.drive-boost-zone {
+  color: var(--turn-ink) !important;
 }

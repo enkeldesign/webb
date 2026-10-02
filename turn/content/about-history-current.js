@@ -1108,13 +1108,14 @@ Object.freeze({
     Object.freeze(['1.35.7 r359', 'Dark mode, first part (admin preview): a THEME setting in the menu (System, Light or Dark), a night header with a thin yellow rule, and dark ROADBOOK, Track sheet, GARAGE and menu. The browser colour now matches the header. Players keep the light theme until every screen is ready.']),
     Object.freeze(['1.35.8 r360', 'Dark mode (admin preview): text on yellow, pink, cyan, green and pastel cards and tiles reads Ink again, so buttons, sheet headers, Trophy Road tiles and achievement cards are legible; the race HUD panels, DRIFT and FLOW boards and other translucent cards turn dark.']),
     Object.freeze(['1.36.0 r361', 'Dark mode for everyone. TURN follows your device\'s light or dark setting, and COLOR THEME in the menu chooses System, Light or Dark; the music switch beside it now reads TURN MUSIC OFF or TURN MUSIC ON. In the dark theme outlines are a soft cream instead of grey, buttons on a yellow sheet header keep their Ink outline, the GARAGE stage and ALL CARS pictures sit in a darker showroom, and the minimap and progress bars are dark. Race buttons look the same wherever they appear, and ACHIEVEMENTS is green in the race menu too.']),
-    Object.freeze(['1.36.1 r362', 'Dark mode: every outline that is Ink in the light theme is now the same cream as the light theme\'s page: cards, buttons, the TURN logo, the race HUD and drive pad, and GARAGE\'s car viewer, whose rotate buttons are now dark. Outlines on a colour, such as the close button on a yellow sheet header, stay Ink; locked and unavailable buttons keep a softer cream, and locked tracks and cars stay quiet.'])
+    Object.freeze(['1.36.1 r362', 'Dark mode: every outline that is Ink in the light theme is now the same cream as the light theme\'s page: cards, buttons, the TURN logo, the race HUD and drive pad, and GARAGE\'s car viewer, whose rotate buttons are now dark. Outlines on a colour, such as the close button on a yellow sheet header, stay Ink; locked and unavailable buttons keep a softer cream, and locked tracks and cars stay quiet.']),
+    Object.freeze(['1.36.2 r363', 'Dark mode fixes: locked cars in ALL CARS are cream line drawings instead of black on dark; the loading and install screens are dimmed; the lines inside the drive pad and the minimap\'s track outline are cream; the sheet grabber shows on dark sheets; LEAVE RACE and other coloured buttons always read Ink, even when they appear mid-race; and the achievement toast\'s icon tile is Paper with an Ink outline, as on any colour.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.36.1',
-  build: '2026.10.02-r362',
-  note: 'Dark mode: cream outlines everywhere Ink outlines are in light.'
+  version: '1.36.2',
+  build: '2026.10.02-r363',
+  note: 'Dark mode fixes from the device test.'
 });

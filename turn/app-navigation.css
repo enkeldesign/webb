@@ -33,6 +33,10 @@
   pointer-events: none;
 }
 
+:root[data-theme="dark"] .turn-sheet-grabber {
+  background: rgb(255 248 232 / 0.42);
+}
+
 @media (pointer: fine), (hover: hover) {
   .turn-sheet-grabber {
     display: none;
