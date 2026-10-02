@@ -318,7 +318,7 @@ assert.match(css, /\.drive-stack\.is-drift-locking \.drive-lock-bubble \{[\s\S]*
   'The bubble must visibly confirm the binary LOCK state in purple');
 assert.match(css, /prefers-reduced-motion: reduce[\s\S]*\.drive-lock-bubble/,
   'The bubble reveal must respect reduced-motion preferences');
-assert.match(gameplayCss, /\.boost-hud i \{[\s\S]*box-shadow: 2\.25px 0 0 var\(--ink\);/, 'Boost charge must have a high-contrast ink edge at the live fill level');
+assert.match(gameplayCss, /\.boost-hud i \{[\s\S]*box-shadow: 2\.25px 0 0 var\(--turn-shadow-color\);/, 'Boost charge must have a high-contrast ink edge at the live fill level');
 assert.match(gameplayCss, /\.boost-hud\.is-drift-charging i \{[\s\S]*linear-gradient\(90deg, #38d9ff, #8ce99a\)/,
   'Ordinary DRIFT recharge must show the Boost gradient from blue to green');
 assert.match(gameplayCss, /\.boost-hud\.is-drift-locking i \{[\s\S]*linear-gradient\(90deg, #8b5cf6, #8ce99a\)/,
