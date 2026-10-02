@@ -476,19 +476,12 @@ for (const workflowPath of [
   '.github/workflows/turn-challenge-tests.yml',
   '.github/workflows/turn-chromatic-camouflage.yml',
   '.github/workflows/turn-color-accessibility.yml',
-  '.github/workflows/turn-lab-mountain-long-visual.yml',
   '.github/workflows/turn-mountain-visual-smoke.yml'
 ]) {
   for (const changedPath of pullRequest782Files) {
     assert.ok(!workflows[workflowPath].includes(`- '${changedPath}'`),
       `${workflowPath} must not be selected by the #782 entrypoint/layout change set`);
   }
-}
-
-const longMountainWorkflow = workflows['.github/workflows/turn-lab-mountain-long-visual.yml'];
-for (const broadPath of ['turn-lab/index.html', 'turn-lab/lab-bootstrap.js', 'turn-lab/site.webmanifest']) {
-  assert.ok(!longMountainWorkflow.includes(`- '${broadPath}'`),
-    `The long MOUNTAIN visual job must not run solely for ${broadPath}`);
 }
 
 const releaseWorkflow = workflows['.github/workflows/turn-release-composition.yml'];
