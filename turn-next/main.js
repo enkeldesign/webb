@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { createCarShadows } from '/turn/render/car-shadows.js';
 import { installKenneyWorld } from '/turn/world-assets.js';
 import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19&revision=r270-camera-hotpath';
-import { updateHudState } from '/turn/ui/hud.js?build=20260720-r19';
+import { updateHudState } from '/turn/ui/hud.js?build=20261002-r363';
 import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from '/turn/input/motion.js';
 import { createKeyboardDrivingController } from '/turn/input/keyboard-driving-controls.js';
 import { updateVehiclePhysicsState } from '/turn/vehicle/physics.js?build=20260720-r19';
