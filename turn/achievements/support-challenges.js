@@ -395,7 +395,7 @@ function installStyles() {
       width: clamp(31.5px, 5vw, 40.5px);
       height: clamp(31.5px, 5vw, 40.5px);
       padding: 6px;
-      border: 4px solid var(--turn-ink);
+      border: 4px solid var(--turn-outline);
       border-radius: 50%;
       background: var(--turn-yellow-500, #ffd43b);
       color: var(--turn-ink);
@@ -431,7 +431,7 @@ function installStyles() {
       min-width: 16.5px;
       height: 16.5px;
       padding: 0 3px;
-      border: 3px solid var(--turn-ink);
+      border: 3px solid var(--turn-outline);
       border-radius: 749.25px;
       background: var(--turn-pink-500, #ff4fa3);
       color: var(--turn-ink);
@@ -488,7 +488,7 @@ function installStyles() {
     .turn-support-challenge-actions button {
       min-height: 36px;
       padding: 6px 12px;
-      border: 4px solid var(--turn-ink);
+      border: 4px solid var(--turn-outline);
       border-radius: 749.25px;
       background: var(--turn-green-500, #8ce99a);
       color: var(--turn-ink);
@@ -510,7 +510,7 @@ function installStyles() {
       min-width: min(270px, calc(100vw - 21px));
       max-width: calc(100vw - 21px);
       padding: 9px 12px;
-      border: 4px solid var(--turn-ink);
+      border: 4px solid var(--turn-outline);
       border-radius: 9px;
       background: var(--turn-yellow-500, #ffd43b);
       color: var(--turn-ink);

@@ -29,7 +29,7 @@
 .track-intro-meta {
   display: inline-block;
   padding: 3.75px 7.5px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 749.25px;
   background: var(--yellow);
   color: var(--turn-ink);
@@ -45,7 +45,7 @@
   max-width: 100%;
   margin: 6.75px auto 0;
   padding: 0.08em 0.2em 0.12em;
-  border: 4px solid var(--turn-ink);
+  border: 4px solid var(--turn-outline);
   border-radius: 13.5px;
   background: color-mix(in srgb, var(--turn-surface-page) 94%, transparent);
   color: var(--turn-ink);

@@ -97,12 +97,27 @@ function pill(element) {
   return true;
 }
 
+// Scenery, not a surface: the race scene behind the HUD (the page body) and GARAGE's
+// 3D stage. An outline over scenery stays cream.
+const SCENERY = 'body, .garage-stage, .garage-car-art';
+
+// The surface an element is drawn on, below any scenery.
+function surfaceBehind(element) {
+  for (let node = element.parentElement; node && node.nodeType === 1 && !node.matches(SCENERY); node = node.parentElement) {
+    const fill = fillOf(node);
+    if (fill) return fill;
+  }
+  return null;
+}
+
 // An outline drawn on a colour (a close button on a Yellow sheet head) reads Ink, as
-// in light; on a night surface it stays the theme's cream outline.
+// in light; on a night surface or over scenery it stays the theme's cream outline.
+const SIDES = ['Top', 'Right', 'Bottom', 'Left'];
 function edge(element, outline) {
   const style = getComputedStyle(element);
-  if (!(parseFloat(style.borderTopWidth) > 0) || style.borderTopColor !== outline) return;
-  const behind = element.parentElement && backdrop(element.parentElement);
+  const side = SIDES.find((name) => parseFloat(style[`border${name}Width`]) > 0);
+  if (!side || style[`border${side}Color`] !== outline) return;
+  const behind = surfaceBehind(element);
   if (behind && luminance(behind) > NIGHT) element.setAttribute(EDGE, '');
 }
 

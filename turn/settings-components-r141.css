@@ -101,7 +101,7 @@
   appearance: none;
   width: 21px;
   height: 21px;
-  border: 4px solid var(--turn-ink);
+  border: 4px solid var(--turn-outline);
   border-radius: var(--turn-radius-circle);
   background: var(--turn-form-control-selected);
   box-shadow: var(--turn-shadow-compact);
@@ -111,7 +111,7 @@
 #m8AudioBalance::-moz-range-thumb {
   width: 16.5px;
   height: 16.5px;
-  border: 4px solid var(--turn-ink);
+  border: 4px solid var(--turn-outline);
   border-radius: var(--turn-radius-circle);
   background: var(--turn-form-control-selected);
   box-shadow: var(--turn-shadow-compact);

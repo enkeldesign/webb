@@ -25,7 +25,7 @@
   height: 22.5px;
   padding: 0;
   place-items: center;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
+  border: var(--turn-border-compact, 3px) solid var(--turn-outline);
   border-radius: 50%;
   background: var(--turn-action-warning, #ffd43b);
   color: var(--turn-ink);
@@ -142,7 +142,7 @@
 .turn-achievements-total-progress,
 .turn-achievement-progress > div {
   overflow: hidden;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
+  border: var(--turn-border-compact, 3px) solid var(--turn-outline);
   border-radius: var(--turn-radius-pill, 999px);
   background: var(--turn-muted, #d6d0c2);
 }
@@ -162,14 +162,14 @@
   display: block;
   width: var(--turn-achievement-progress, 0%);
   height: 100%;
-  border-right: var(--turn-border-compact, 3px) solid var(--turn-ink);
+  border-right: var(--turn-border-compact, 3px) solid var(--turn-outline);
   background: var(--turn-action-success, #8ce99a);
 }
 
 .turn-achievements-storage-note {
   margin: 0;
   padding: 7.5px 9px;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
+  border: var(--turn-border-compact, 3px) solid var(--turn-outline);
   border-radius: var(--turn-radius-compact, 12px);
   background: var(--turn-action-warning, #ffd43b);
 }
@@ -226,7 +226,7 @@
   height: 58.5px;
   padding: 11.25px;
   place-items: center;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink);
+  border: var(--turn-border-default, 4px) solid var(--turn-outline);
   border-radius: var(--turn-radius-default, 18px);
   background: var(--turn-action-success, #8ce99a);
   box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 var(--turn-shadow-color));
@@ -294,7 +294,7 @@
   gap: 9.75px;
   align-items: center;
   padding: 9px;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink);
+  border: var(--turn-border-default, 4px) solid var(--turn-outline);
   border-radius: var(--turn-radius-default, 18px);
   background: var(--turn-action-success, #8ce99a);
   color: var(--turn-ink);
@@ -333,7 +333,7 @@
 
 .turn-achievement-toast > b {
   padding: 3.75px 6px;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
+  border: var(--turn-border-compact, 3px) solid var(--turn-outline);
   border-radius: var(--turn-radius-pill, 999px);
   background: var(--turn-action-warning, #ffd43b);
   font-size: max(var(--turn-text-floor, 11px), 0.54rem);

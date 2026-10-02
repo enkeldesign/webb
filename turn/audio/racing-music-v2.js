@@ -642,7 +642,7 @@ function installStyles() {
       min-height: 37.5px;
       margin: 0;
       padding: 3px;
-      border: 2.25px solid var(--turn-ink);
+      border: 2.25px solid var(--turn-outline);
       border-radius: 9px;
       background: #ff7b54;
       color: var(--turn-ink);

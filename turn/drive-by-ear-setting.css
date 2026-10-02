@@ -5,7 +5,7 @@
   align-items: center;
   margin: -4.5px 0 15px;
   padding: 10.5px 12px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 13.5px;
   background: linear-gradient(135deg, rgb(56 217 255 / 0.22), rgb(255 212 59 / 0.24));
   box-shadow: 3px 3px 0 var(--turn-shadow-color);

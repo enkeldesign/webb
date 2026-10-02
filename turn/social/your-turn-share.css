@@ -118,7 +118,7 @@
   width: 36px;
   height: 36px;
   padding: 0;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 50%;
   background: #ff9b66;
   color: var(--turn-ink);
@@ -133,7 +133,7 @@
   gap: 6px 10.5px;
   margin-bottom: 10.5px;
   padding: 7.5px 9.75px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 12px;
   background: #ffd43b;
   font-weight: 900;

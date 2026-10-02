@@ -288,6 +288,11 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.match(guard, /for \(const marked of document\.querySelectorAll\(`\[\$\{MARK\}\], \[\$\{EDGE\}\]`\)\)/, 'every scan starts clean, so a mark never follows a moved button');
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-edge\] \{\s*border-color: var\(--turn-ink\) !important;/, 'an outline on a colour is Ink, as in light');
   assert.match(dark, /--turn-outline: #fff8e8;/, 'active dark outlines are Paper cream');
+  assert.match(guard, /const SCENERY = 'body, \.garage-stage, \.garage-car-art';/, 'an outline over the race scene or the 3D stage stays cream');
+  for (const file of ['styles.css', 'drive-pad.css', 'home-app-bar.css', 'garage/garage.css', 'achievements.css']) {
+    const css = await fs.readFile(new URL(`../turn/${file}`, import.meta.url), 'utf8');
+    assert.doesNotMatch(css, /(?:^|[\s;{])border[a-z-]*:[^;]*var\(--turn-ink\)/m, `${file}: an Ink outline in light is the cream outline in dark (--turn-outline)`);
+  }
   assert.match(dark, /--turn-outline-muted: #d6cdb9;/, 'inactive dark outlines are a muted cream, never grey');
   assert.match(tokens, /:root\[data-theme="dark"\] :is\(button, \[role="button"\]\):is\(:disabled, \[aria-disabled="true"\], \.is-locked\)[^{]*\{\s*border-color: var\(--turn-outline-muted\);/, 'a locked or disabled control keeps the muted outline');
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-pill\] \{[\s\S]*?background-image: linear-gradient\(var\(--turn-ink\), var\(--turn-ink\)\)[\s\S]*?color: var\(--turn-pill\)/, 'a pill on a night surface is a coloured wireframe');

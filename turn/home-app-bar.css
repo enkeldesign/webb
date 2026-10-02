@@ -62,7 +62,7 @@ html body .m8-home.turn-app-bar-layout .m8-home-head {
     max(var(--turn-gutter, 16px), env(safe-area-inset-right))
     8px
     max(var(--turn-gutter, 16px), env(safe-area-inset-left));
-  border-bottom: 3px solid var(--turn-ink);
+  border-bottom: 3px solid var(--turn-outline);
   background: var(--m8-yellow, #ffbd12);
 }
 
@@ -163,7 +163,7 @@ html body .m8-home.turn-app-bar-layout .turn-app-bar-actions .turn-achievements-
   margin: 0;
   padding: 0 5px;
   box-sizing: border-box;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 11px;
   background: var(--turn-yellow-400, #ffd43b);
   color: var(--turn-ink);
@@ -236,7 +236,7 @@ html body .m8-home.turn-app-bar-layout .turn-home-menu-icon i {
     max(16px, env(safe-area-inset-right))
     12px
     20px;
-  border-bottom: 3px solid var(--turn-ink);
+  border-bottom: 3px solid var(--turn-outline);
   background: var(--m8-yellow, #ffbd12);
 }
 
@@ -255,7 +255,7 @@ html body .turn-home-sheet .turn-home-sheet-head h2 {
   height: 44px;
   margin: 0;
   padding: 0;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 12px;
   background: var(--turn-orange-500, #ff7b54);
   color: var(--turn-ink);

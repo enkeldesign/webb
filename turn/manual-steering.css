@@ -9,7 +9,7 @@
   width: clamp(112.5px, 21vw, 165px);
   height: clamp(76.5px, 15vw, 112.5px);
   overflow: hidden;
-  border: 5px solid var(--turn-ink);
+  border: 5px solid var(--turn-outline);
   border-radius: 22.5px;
   background: var(--yellow);
   box-shadow: 5.25px 5.25px 0 var(--turn-shadow-color);
@@ -47,7 +47,7 @@
   z-index: 2;
   width: clamp(49.5px, 9.5vw, 72px);
   aspect-ratio: 1;
-  border: 5px solid var(--turn-ink);
+  border: 5px solid var(--turn-outline);
   border-radius: 50%;
   background: var(--cyan);
   box-shadow: 3.75px 5.25px 0 rgb(8 9 10 / 0.35);

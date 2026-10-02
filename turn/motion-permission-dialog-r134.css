@@ -15,7 +15,7 @@
 
 .turn-motion-denied-card {
   padding: clamp(16.5px, 4vw, 25.5px);
-  border: 4.5px solid var(--turn-ink);
+  border: 4.5px solid var(--turn-outline);
   border-radius: 19.5px;
   background:
     radial-gradient(circle at 92% 9%, rgb(255 79 163 / 0.32), transparent 24%),
@@ -27,7 +27,7 @@
 .turn-motion-denied-kicker {
   display: inline-block;
   padding: 4.5px 8.25px;
-  border: 2.25px solid var(--turn-ink);
+  border: 2.25px solid var(--turn-outline);
   border-radius: 749.25px;
   background: #ffd43b;
   font-size: max(var(--turn-text-floor, 11px), 0.585rem);
@@ -55,7 +55,7 @@
   width: 100%;
   margin-top: 16.5px;
   padding: 9px 13.5px;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 11.25px;
   background: var(--turn-action-primary, #ea5da1);
   color: var(--turn-ink);

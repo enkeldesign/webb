@@ -82,7 +82,7 @@ function installStyles() {
       width: min(240px, calc(100vw - 32px));
       box-sizing: border-box;
       padding: 8px;
-      border: 3px solid #08090a;
+      border: 3px solid var(--turn-outline);
       border-radius: 16px;
       background: #fff8e8;
       color: #08090a;
@@ -97,7 +97,7 @@ function installStyles() {
     .turn-swoosh-picker button {
       width: 44px;
       height: 44px;
-      border: 3px solid #08090a;
+      border: 3px solid var(--turn-outline);
       border-radius: 12px;
       background: #ffd43b;
       color: #08090a;

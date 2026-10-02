@@ -61,7 +61,7 @@
   width: 33px;
   height: 33px;
   padding: 0;
-  border: 3px solid var(--turn-ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 50%;
   background: #ff6b6b;
   color: var(--turn-ink);
