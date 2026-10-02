@@ -86,6 +86,10 @@ assert.match(viewportGap, /:has\(\.install-gate\.turn-startup-loading\) body \{[
   'The strip while loading is the artwork green, set on body');
 assert.match(viewportGap, /install-gate\.turn-startup-loading[\s\S]*linear-gradient\(to bottom, transparent calc\(100% - 120px\), #8ce99a\)/,
   'While loading, the artwork resolves into the green the strip continues in');
+assert.match(viewportGap, /html\[data-theme="dark"\]\.\$\{CLASS\}:has\(\.install-gate\.turn-startup-loading\) body \{\s*background: #18321f !important;/,
+  'Dark: the strip while loading is the dusk sky\'s green end');
+assert.match(viewportGap, /html\[data-theme="dark"\]\.\$\{CLASS\} \.install-gate\.turn-startup-loading \{[\s\S]*?#12323d 0 45%, #18321f 100%/,
+  'Dark: the installed app loads on the dusk sky, never the light one');
 assert.match(nextIndex, /pwa-usable-viewport-r181\.js\?revision=r181-usable-web-layer/);
 
 for (const manifest of [productionManifest, nextManifest]) {
