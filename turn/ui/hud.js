@@ -102,12 +102,19 @@ function drawPlayerMapMarker(context, point) {
   context.restore();
 }
 
+// The track's outline is the theme's outline: Ink in light, cream in dark (#1067).
+function trackOutlineColor() {
+  return globalThis.document?.documentElement?.dataset.theme === 'dark' ? '#fff8e8' : '#08090a';
+}
+
 function getStaticMap(mapCanvas, samples) {
   const cached = mapCache.get(mapCanvas);
   const firstSample = samples[0];
   const lastSample = samples[samples.length - 1];
+  const outline = trackOutlineColor();
   if (
     cached &&
+    cached.outline === outline &&
     cached.samples === samples &&
     cached.firstSample === firstSample &&
     cached.lastSample === lastSample &&
@@ -133,7 +140,7 @@ function getStaticMap(mapCanvas, samples) {
     else ctx.lineTo(point.x, point.y);
   });
   ctx.closePath();
-  ctx.strokeStyle = '#08090a';
+  ctx.strokeStyle = outline;
   ctx.lineWidth = 16;
   ctx.stroke();
   ctx.strokeStyle = '#ff4fa3';
@@ -160,6 +167,7 @@ function getStaticMap(mapCanvas, samples) {
   ctx.stroke();
 
   const value = {
+    outline,
     samples,
     firstSample,
     lastSample,

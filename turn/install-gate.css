@@ -1,4 +1,4 @@
-@import url('./design-semantic.css?build=20261002-r362');
+@import url('./design-semantic.css?build=20261002-r363');
 
 .install-gate {
   position: absolute;
@@ -17,6 +17,14 @@
     radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.9) 0 10%, transparent 10.5%),
     linear-gradient(145deg, #38d9ff 0 45%, #8ce99a 100%);
   color: var(--turn-ink);
+}
+
+/* Dark theme: the same sky, dusk-dimmed, so the first screen is not a flash of light. */
+:root[data-theme="dark"] .install-gate {
+  background:
+    radial-gradient(circle at 12% 20%, rgb(255 212 59 / 0.42) 0 7%, transparent 7.5%),
+    radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.38) 0 10%, transparent 10.5%),
+    linear-gradient(145deg, #12323d 0 45%, #18321f 100%);
 }
 
 html.turn-standalone .install-gate,

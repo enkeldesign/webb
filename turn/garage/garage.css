@@ -1045,6 +1045,11 @@ html[data-theme="dark"] .garage-bar {
   opacity: 0.78;
 }
 
+/* Dark theme: the Ink line drawing turns cream on the night card. */
+:root[data-theme="dark"] .garage-car-card.is-locked .garage-car-still {
+  filter: invert(1);
+}
+
 .garage-car-card.is-locked :is(.garage-car-name, .garage-car-state) {
   color: var(--turn-pr-muted);
 }

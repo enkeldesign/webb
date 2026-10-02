@@ -288,7 +288,10 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.match(guard, /for \(const marked of document\.querySelectorAll\(`\[\$\{MARK\}\], \[\$\{EDGE\}\]`\)\)/, 'every scan starts clean, so a mark never follows a moved button');
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-edge\] \{\s*border-color: var\(--turn-ink\) !important;/, 'an outline on a colour is Ink, as in light');
   assert.match(dark, /--turn-outline: #fff8e8;/, 'active dark outlines are Paper cream');
-  assert.match(guard, /const SCENERY = 'body, \.garage-stage, \.garage-car-art';/, 'an outline over the race scene or the 3D stage stays cream');
+  assert.match(guard, /const SCENERY = 'body, \.garage-stage, \.garage-car-art, \.drive-pad';/, 'an outline over the race scene, the 3D stage or inside the drive pad stays cream');
+  const semantic = await fs.readFile(new URL('../turn/design-semantic.css', import.meta.url), 'utf8');
+  assert.match(semantic, /\.back-to-lot-button,[\s\S]*?\{\s*color: var\(--turn-ink\) !important;/, 'a coloured control reads Ink without waiting for the contrast guard');
+  assert.match(await fs.readFile(new URL('../turn/ui/hud.js', import.meta.url), 'utf8'), /dataset\.theme === 'dark' \? '#fff8e8' : '#08090a'/, 'the minimap track outline follows the theme');
   for (const file of ['styles.css', 'drive-pad.css', 'home-app-bar.css', 'garage/garage.css', 'achievements.css']) {
     const css = await fs.readFile(new URL(`../turn/${file}`, import.meta.url), 'utf8');
     assert.doesNotMatch(css, /(?:^|[\s;{])border[a-z-]*:[^;]*var\(--turn-ink\)/m, `${file}: an Ink outline in light is the cream outline in dark (--turn-outline)`);

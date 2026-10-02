@@ -98,8 +98,9 @@ function pill(element) {
 }
 
 // Scenery, not a surface: the race scene behind the HUD (the page body) and GARAGE's
-// 3D stage. An outline over scenery stays cream.
-const SCENERY = 'body, .garage-stage, .garage-car-art';
+// 3D stage. An outline over scenery stays cream. The drive pad counts too: it is one
+// control, so the lines between DRIFT, BOOST, GAS and BRAKE are cream like its edge.
+const SCENERY = 'body, .garage-stage, .garage-car-art, .drive-pad';
 
 // The surface an element is drawn on, below any scenery.
 function surfaceBehind(element) {
