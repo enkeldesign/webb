@@ -2,7 +2,7 @@ import { MENU_SONG, SONGBOOK, songForTrack } from './music/songbook.js?revision=
 import { createToneRuntime } from './music/tone-runtime.js?revision=r184-score-v2';
 import { createDrumRuntime } from './music/drum-runtime.js?revision=r184-score-v2';
 import { LEAD_VOICES, BASS_VOICES, ARP_VOICES, DRUM_KITS } from './music/instrument-bank.js?revision=r184-score-v2';
-import { installMusicControls } from './music/music-controls.js?revision=r184-score-v2';
+import { installMusicControls } from './music/music-controls.js?build=20261002-r361';
 
 const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
 const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
