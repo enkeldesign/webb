@@ -18,7 +18,7 @@
    every control. */
 :root body :is(.turn-home-sheet .m8-home-menu > button, .utility-group .utility, .turn-dbe-training-actions button, .turn-dbe-training-how button, .turn-dbe-training-settings button, .m8-feedback-actions > :is(button, a), .m8-reset-rivals, .m8-reset-cancel, .m8-reset-confirm-button, .turn-dbe-training-race-nav button, .turn-support-challenge-actions button, .garage-shift-actions button):active {
   transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+  box-shadow: 1px 1px 0 var(--turn-shadow-color);
 }
 
 /* Chips keep their pill, and reach the touch minimum. */
@@ -35,7 +35,7 @@
 :root body :is(.turn-home-sheet .turn-home-sheet-close, .garage-shift-dialog .garage-shift-close) {
   border-width: 4px;
   border-radius: 50%;
-  box-shadow: 5.25px 5.25px 0 var(--turn-ink, #08090a);
+  box-shadow: 5.25px 5.25px 0 var(--turn-shadow-color);
 }
 
 :root body .garage-shift-dialog .garage-shift-close {

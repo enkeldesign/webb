@@ -24,7 +24,7 @@
 .back-to-start-button,
 .recalibrate-button,
 .reset-rivals-button {
-  background: var(--paper);
+  background: var(--turn-surface-page);
 }
 
 .back-to-start-button.is-lap-invalid {
@@ -52,7 +52,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #08090a;
+  color: var(--turn-text);
   overflow: visible;
 }
 
@@ -69,9 +69,9 @@
   max-height: calc(100dvh - 21px);
   padding: clamp(13.5px, 3vw, 22.5px);
   overflow: auto;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-outline);
   border-radius: 16.5px;
-  background: var(--paper);
+  background: var(--turn-surface-page);
   box-shadow: 0 13.5px 0 rgba(8, 9, 10, 0.28);
 }
 
@@ -115,10 +115,10 @@
   width: 33px;
   height: 33px;
   padding: 0;
-  border: 2.25px solid #08090a;
+  border: 2.25px solid var(--turn-ink);
   border-radius: 50%;
   background: #ff6b6b;
-  color: #08090a;
+  color: var(--turn-ink);
   font: inherit;
   font-size: max(var(--turn-text-floor, 11px), 1.1625rem);
   font-weight: 900;
@@ -135,9 +135,9 @@
 .sound-guide-list > section {
   min-width: 0;
   padding: 10.5px;
-  border: 2.25px solid #08090a;
+  border: 2.25px solid var(--turn-outline);
   border-radius: 11.25px;
-  background: #fffdf6;
+  background: var(--turn-surface-raised);
 }
 
 .sound-guide-button:focus-visible,

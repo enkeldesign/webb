@@ -41,10 +41,10 @@
   gap: 12px;
   align-items: center;
   padding: 9px 10.5px;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-default, 4px) solid var(--turn-outline);
   border-radius: var(--turn-radius-default, 18px);
-  background: var(--turn-surface-raised, #fffdf6);
-  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 #08090a);
+  background: var(--turn-surface-raised);
+  box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 var(--turn-shadow-color));
 }
 
 .turn-trophy-road-position > div:first-child {
@@ -80,7 +80,7 @@
 .turn-trophy-road-progress {
   height: 16.5px;
   overflow: hidden;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
   border-radius: var(--turn-radius-pill, 999px);
   background: var(--turn-muted, #d6d0c2);
 }
@@ -92,7 +92,7 @@
   overflow: hidden;
   border-radius: inherit;
   background: #2f9e44;
-  background: color-mix(in srgb, var(--turn-action-success, #8ce99a) 62%, var(--turn-ink, #08090a));
+  background: color-mix(in srgb, var(--turn-action-success, #8ce99a) 62%, var(--turn-ink));
 }
 
 .turn-trophy-road-highlights {
@@ -108,9 +108,9 @@
   align-items: center;
   min-height: 57px;
   padding: 6.75px 7.5px;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-compact, 3px) solid var(--turn-outline);
   border-radius: var(--turn-radius-compact, 12px);
-  background: var(--turn-surface-raised, #fffdf6);
+  background: var(--turn-surface-raised);
 }
 
 .turn-trophy-road-highlight-icon {
@@ -149,9 +149,9 @@
 
 .turn-trophy-road-map {
   padding: 8.25px;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-default, 4px) solid var(--turn-ink);
   border-radius: var(--turn-radius-default, 18px);
-  background: color-mix(in srgb, var(--turn-surface-raised, #fffdf6) 88%, var(--turn-action-information, #38d9ff));
+  background: color-mix(in srgb, var(--turn-surface-raised) 88%, var(--turn-action-information, #38d9ff));
 }
 
 .turn-trophy-road-map-heading {
@@ -251,7 +251,7 @@
   justify-items: center;
   gap: 2.25px;
   background: url('../assets/trophy-road/road-sand-straight.png') center / 100% 100% no-repeat;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   text-align: center;
 }
 
@@ -271,10 +271,10 @@
   gap: 3.75px;
   align-items: center;
   padding: 3.75px 5.25px;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-outline);
   border-radius: var(--turn-radius-pill, 999px);
-  background: var(--turn-surface-raised, #fffdf6);
-  box-shadow: 1.5px 1.5px 0 var(--turn-ink, #08090a);
+  background: var(--turn-surface-raised);
+  box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.39rem, 1vw, 0.51rem));
   letter-spacing: .08em;
 }
@@ -282,13 +282,13 @@
 .turn-trophy-road-landmark:is(.is-start, .is-finish) b::before {
   width: 10.5px;
   aspect-ratio: 1;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-outline);
   background:
     conic-gradient(
-      var(--turn-ink, #08090a) 25%,
-      var(--turn-surface-raised, #fffdf6) 0 50%,
-      var(--turn-ink, #08090a) 0 75%,
-      var(--turn-surface-raised, #fffdf6) 0
+      var(--turn-ink) 25%,
+      var(--turn-surface-raised) 0 50%,
+      var(--turn-ink) 0 75%,
+      var(--turn-surface-raised) 0
     ) 0 0 / 7px 7px;
   content: '';
 }
@@ -326,11 +326,11 @@
   min-width: 0;
   min-height: 48px;
   padding: 3.75px 3px 3px;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-outline);
   border-radius: 7.5px;
-  background: var(--turn-surface-raised, #fffdf6);
-  color: var(--turn-ink, #08090a);
-  box-shadow: 0 2.25px 0 var(--turn-ink, #08090a);
+  background: var(--turn-surface-raised);
+  color: var(--turn-text);
+  box-shadow: 0 2.25px 0 var(--turn-shadow-color);
   cursor: pointer;
 }
 
@@ -342,7 +342,7 @@
 .turn-achievements-dialog .turn-trophy-road-marker:hover,
 .turn-achievements-dialog .turn-trophy-road-marker:active,
 .turn-achievements-dialog .turn-trophy-road-marker.is-down {
-  box-shadow: 0 2.25px 0 var(--turn-ink, #08090a);
+  box-shadow: 0 2.25px 0 var(--turn-shadow-color);
   transform: none;
 }
 
@@ -456,10 +456,10 @@
   height: 16.5px;
   padding: 2.25px;
   place-items: center;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 50%;
   background: var(--turn-action-warning, #ffd43b);
-  box-shadow: 1.5px 1.5px 0 var(--turn-ink, #08090a);
+  box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
 }
 
 .turn-trophy-road-marker.is-selected {
@@ -590,11 +590,11 @@
   margin: 0;
   padding: 9px 39px 9px 12px;
   overflow: auto;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-default, 4px) solid var(--turn-ink);
   border-radius: var(--turn-radius-default, 18px);
   background: var(--turn-action-success, #8ce99a);
-  box-shadow: var(--turn-shadow-default, 5.25px 5.25px 0 #08090a);
-  color: var(--turn-ink, #08090a);
+  box-shadow: var(--turn-shadow-default, 5.25px 5.25px 0 var(--turn-shadow-color));
+  color: var(--turn-ink);
   text-align: left;
 }
 
@@ -623,11 +623,11 @@
   height: 27px;
   padding: 0;
   place-items: center;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
   border-radius: 50%;
   background: var(--turn-action-navigation, #ff7b54);
-  color: var(--turn-ink, #08090a);
-  box-shadow: 1.5px 1.5px 0 var(--turn-ink, #08090a);
+  color: var(--turn-ink);
+  box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
   font-size: max(var(--turn-text-floor, 11px), 1.05rem);
   font-weight: 950;
   line-height: 1;
@@ -641,7 +641,7 @@
 
 .turn-trophy-road-detail-close:hover,
 .turn-trophy-road-detail-close:active {
-  box-shadow: 1.5px 1.5px 0 var(--turn-ink, #08090a);
+  box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
   transform: none;
 }
 
@@ -725,7 +725,7 @@
 .turn-trophy-reward-toast {
   appearance: none;
   background: var(--turn-action-warning, #ffd43b);
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -744,7 +744,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 3.75px;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   font-size: max(var(--turn-text-floor, 11px), 0.465rem);
   font-weight: 950;
   letter-spacing: .055em;
@@ -757,7 +757,7 @@
 
 .turn-trophy-reward-guide mark {
   padding: 2.25px 4.5px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: var(--turn-radius-pill, 999px);
   background: var(--turn-action-information, #38d9ff);
   color: inherit;
@@ -779,7 +779,7 @@
   padding: 5.25px;
   place-items: center;
   border-radius: 50%;
-  background: var(--turn-ink, #08090a);
+  background: var(--turn-ink);
   color: var(--turn-action-warning, #ffd43b);
 }
 
@@ -799,11 +799,11 @@
   align-items: center;
   width: min(442.5px, calc(100vw - 21px));
   padding: 7.5px 10.5px;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-default, 4px) solid var(--turn-ink);
   border-radius: var(--turn-radius-default, 18px);
   background: var(--turn-action-success, #8ce99a);
-  color: var(--turn-ink, #08090a);
-  box-shadow: var(--turn-shadow-default, 5.25px 5.25px 0 #08090a);
+  color: var(--turn-ink);
+  box-shadow: var(--turn-shadow-default, 5.25px 5.25px 0 var(--turn-shadow-color));
   opacity: 0;
   transform: translate(-50%, -130%);
   transition: transform 180ms ease, opacity 160ms ease;
@@ -825,7 +825,7 @@
   height: 37.5px;
   padding: 6.75px;
   place-items: center;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-ink);
   border-radius: 10.5px;
   background: var(--turn-action-warning, #ffd43b);
 }

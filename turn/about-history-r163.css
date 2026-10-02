@@ -48,10 +48,10 @@
   justify-content: center;
   min-height: 54px;
   padding: 9px 13.5px;
-  border: 4px solid var(--m8-ink);
+  border: 4px solid var(--turn-outline);
   border-radius: 749.25px;
-  color: var(--m8-ink);
-  box-shadow: 3.75px 3.75px 0 var(--m8-ink);
+  color: var(--turn-text);
+  box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
   font: inherit;
   font-size: max(var(--turn-text-floor, 11px), clamp(0.75rem, 1.8vw, 0.87rem));
   font-weight: 950;
@@ -82,7 +82,7 @@
 .m8-about-history:active,
 .m8-about-design-system:active {
   transform: translate(3px, 3px);
-  box-shadow: 0.75px 0.75px 0 var(--m8-ink);
+  box-shadow: 0.75px 0.75px 0 var(--turn-shadow-color);
 }
 
 .m8-about-content a:not(.m8-about-design-system) {
@@ -139,10 +139,10 @@
   flex: 0 0 auto;
   min-height: 33px;
   padding: 6px 11.25px;
-  border: 4px solid var(--m8-ink);
+  border: 4px solid var(--turn-outline);
   border-radius: 749.25px;
-  background: var(--m8-cream);
-  box-shadow: 3px 3px 0 var(--m8-ink);
+  background: var(--turn-surface-page);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: inherit;
   font-size: max(var(--turn-text-floor, 11px), clamp(0.555rem, 1.3vw, 0.705rem));
   font-weight: 950;
@@ -155,17 +155,17 @@
 
 .turn-history-tabs button:active {
   transform: translate(2.25px, 2.25px) !important;
-  box-shadow: 0.75px 0.75px 0 var(--m8-ink) !important;
+  box-shadow: 0.75px 0.75px 0 var(--turn-shadow-color) !important;
 }
 
 .turn-history-panels {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  border: 4px solid var(--m8-ink);
+  border: 4px solid var(--turn-ink);
   border-radius: 15px;
   background: rgb(255 255 255 / 0.78);
-  box-shadow: 3.75px 3.75px 0 var(--m8-ink);
+  box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
 }
 
 .turn-history-panel {
@@ -193,7 +193,7 @@
   position: relative;
   max-width: 82ch;
   padding: 0 0 16.5px 16.5px;
-  border-left: 4px solid var(--m8-ink);
+  border-left: 4px solid var(--turn-outline);
 }
 
 .turn-history-entry:last-child,
@@ -209,7 +209,7 @@
   left: -7.5px;
   width: 10.5px;
   height: 10.5px;
-  border: 3px solid var(--m8-ink);
+  border: 3px solid var(--turn-ink);
   border-radius: 50%;
   background: var(--m8-pink);
 }

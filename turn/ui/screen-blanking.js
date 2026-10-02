@@ -60,8 +60,8 @@ function installStyles() {
       place-items: center;
       align-self: stretch;
       border-radius: 9px;
-      background: var(--paper, #fffdf6);
-      color: #08090a;
+      background: var(--paper, var(--turn-surface-raised));
+      color: var(--turn-ink);
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
@@ -85,7 +85,7 @@ function installStyles() {
       border-width: var(--turn-screen-blank-border-width, 3px);
       border-radius: var(--turn-screen-blank-radius, 12px);
       background: #ff7b54;
-      box-shadow: var(--turn-screen-blank-shadow, 3.75px 3.75px 0 #08090a);
+      box-shadow: var(--turn-screen-blank-shadow, 3.75px 3.75px 0 var(--turn-shadow-color));
     }
 
     .turn-screen-blank-control svg {
@@ -100,7 +100,7 @@ function installStyles() {
     }
 
     .turn-screen-blank-control[data-state="armed"] {
-      background: #fffdf6;
+      background: var(--turn-surface-raised);
     }
 
     .turn-screen-blank-control:focus-visible {
@@ -115,11 +115,11 @@ function installStyles() {
       z-index: 2147483002;
       width: min(465px, calc(100vw - 24px));
       padding: 7.5px 10.5px;
-      border: 2.25px solid #08090a;
+      border: 2.25px solid var(--turn-ink);
       border-radius: 10.5px;
-      background: var(--paper, #fffdf6);
-      color: #08090a;
-      box-shadow: 3.75px 3.75px 0 #08090a;
+      background: var(--paper, var(--turn-surface-raised));
+      color: var(--turn-ink);
+      box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
       transform: translateX(-50%);
       text-align: center;
       font-size: max(var(--turn-text-floor, 11px), clamp(0.54rem, 1.7vw, 0.69rem));

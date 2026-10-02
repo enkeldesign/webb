@@ -19,7 +19,7 @@
   --turn-dialog-padding: clamp(13.5px, 3vw, 25.5px);
   --turn-dialog-radius: var(--turn-radius-hero, 22.5px);
   --turn-dialog-border: var(--turn-border-strong, 4.5px);
-  --turn-dialog-shadow: var(--turn-shadow-hero, 9px 9px 0 var(--turn-ink, #08090a));
+  --turn-dialog-shadow: var(--turn-shadow-hero, 9px 9px 0 var(--turn-shadow-color));
 }
 
 /* The compound selector deliberately outranks the older .m8-dialog width. */

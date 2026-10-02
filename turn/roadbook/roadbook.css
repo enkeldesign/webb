@@ -14,7 +14,7 @@
     max(var(--turn-pr-gutter), env(safe-area-inset-right))
     calc(var(--roadbook-dock-height) + 20px)
     max(var(--turn-pr-gutter), env(safe-area-inset-left));
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
 }
 
 /* ROADBOOK measures its dock and keeps this current; the value here covers the first
@@ -227,18 +227,18 @@
   min-height: var(--turn-pr-target, 44px);
   margin: 0;
   padding: 10px 12px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 12px;
   background: var(--turn-pr-card, #fffcf2);
   box-shadow: none;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
 
 .roadbook-goal:focus-visible {
-  outline: 3px solid var(--turn-ink, #08090a);
+  outline: 3px solid var(--turn-outline);
   outline-offset: 3px;
 }
 
@@ -259,9 +259,9 @@
   height: 44px;
   padding: 7px;
   box-sizing: border-box;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-outline);
   border-radius: 10px;
-  background: var(--turn-paper, #fff8e8);
+  background: var(--turn-surface-page);
 }
 
 .roadbook-goal-icon svg {
@@ -296,9 +296,9 @@
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-outline);
   border-radius: 999px;
-  background: var(--turn-paper, #fff8e8);
+  background: var(--turn-surface-page);
   font-family: var(--turn-pr-font-body);
   font-size: max(var(--turn-text-floor, 11px), 0.6875rem);
   font-weight: 850;
@@ -310,7 +310,7 @@
 .roadbook-goal-tag.is-hidden { background: var(--turn-muted, #d6d0c2); }
 
 .roadbook-goal-next {
-  background: var(--turn-ink, #08090a);
+  background: var(--turn-ink);
   color: var(--turn-yellow-400, #ffd43b);
 }
 
@@ -409,9 +409,9 @@
 .roadbook-goal-bar {
   height: 8px;
   overflow: hidden;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-outline);
   border-radius: 999px;
-  background: var(--turn-paper, #fff8e8);
+  background: var(--turn-surface-page);
 }
 
 .roadbook-goal-bar i {

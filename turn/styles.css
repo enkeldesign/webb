@@ -30,7 +30,7 @@ body {
   margin: 0;
   overflow: hidden;
   overscroll-behavior: none;
-  background: var(--paper);
+  background: var(--turn-surface-page);
 }
 
 body {
@@ -67,17 +67,17 @@ canvas { display: block; }
 
 button {
   appearance: none;
-  border: 3px solid var(--ink);
+  border: 3px solid var(--turn-outline);
   border-radius: 12px;
   font: inherit;
-  color: var(--ink);
-  box-shadow: 3.75px 3.75px 0 var(--ink);
+  color: var(--turn-text);
+  box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
 }
 
 button:active,
 button.is-down {
   transform: translate(2.25px, 2.25px);
-  box-shadow: 1.5px 1.5px 0 var(--ink);
+  box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
 }
 
 [hidden] { display: none !important; }
@@ -103,11 +103,11 @@ button.is-down {
 .start-card {
   width: min(570px, 94vw);
   padding: clamp(16.5px, 5vw, 36px);
-  border: 5px solid var(--ink);
+  border: 5px solid var(--turn-outline);
   border-radius: 21px;
-  background: var(--paper);
-  color: var(--ink);
-  box-shadow: 9px 9px 0 var(--ink);
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
+  box-shadow: 9px 9px 0 var(--turn-shadow-color);
   transform: rotate(-1deg);
 }
 
@@ -137,7 +137,7 @@ h1 {
   display: inline-block;
   margin-bottom: 12px;
   padding: 4.5px 7.5px;
-  border: 3px solid var(--ink);
+  border: 3px solid var(--turn-ink);
   border-radius: 749.25px;
   background: var(--yellow);
   font-size: max(var(--turn-text-floor, 11px), 0.555rem);
@@ -182,20 +182,20 @@ h1 {
 
 .rotate-card {
   padding: 21px;
-  border: 5px solid var(--ink);
+  border: 5px solid var(--turn-ink);
   border-radius: 18px;
   background: var(--yellow);
-  color: var(--ink);
-  box-shadow: 7.5px 7.5px 0 var(--ink);
+  color: var(--turn-ink);
+  box-shadow: 7.5px 7.5px 0 var(--turn-shadow-color);
 }
 
 .rotate-phone {
   width: 72px;
   height: 40.5px;
   margin: 0 auto 12px;
-  border: 5px solid var(--ink);
+  border: 5px solid var(--turn-outline);
   border-radius: 10.5px;
-  background: var(--paper);
+  background: var(--turn-surface-page);
   transform: rotate(-10deg);
 }
 
@@ -227,11 +227,11 @@ h1 {
 .chip,
 .map-wrap,
 .tilt-drive {
-  border: 3px solid var(--ink);
+  border: 3px solid var(--turn-ink);
   border-radius: 10.5px;
   background: rgb(255 248 232 / 0.9);
-  color: var(--ink);
-  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--turn-ink);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
 }
 
 .chip {
@@ -279,11 +279,11 @@ h1 {
   top: 22%;
   transform: translateX(-50%) rotate(-2deg);
   padding: 5.25px 9.75px;
-  border: 3px solid var(--ink);
+  border: 3px solid var(--turn-ink);
   border-radius: 749.25px;
   background: var(--yellow);
-  color: var(--ink);
-  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--turn-ink);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.5625rem, 2vw, 0.75rem));
   opacity: 0;
   transition: opacity 140ms ease;
@@ -315,9 +315,9 @@ h1 {
   position: relative;
   height: 10.5px;
   overflow: hidden;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--turn-ink);
   border-radius: 749.25px;
-  background: linear-gradient(90deg, var(--pink) 0 47%, var(--paper) 47% 53%, var(--lime) 53% 100%);
+  background: linear-gradient(90deg, var(--pink) 0 47%, var(--turn-surface-page) 47% 53%, var(--lime) 53% 100%);
 }
 
 .tilt-track::after {
@@ -327,7 +327,7 @@ h1 {
   top: -1.5px;
   bottom: -1.5px;
   width: 1.5px;
-  background: var(--ink);
+  background: var(--turn-ink);
   transform: translateX(-50%);
 }
 
@@ -338,7 +338,7 @@ h1 {
   z-index: 2;
   width: 9.75px;
   height: 16.5px;
-  border: 3px solid var(--ink);
+  border: 3px solid var(--turn-ink);
   border-radius: 5.25px;
   background: var(--yellow);
   transform: translate(-50%, -50%);
@@ -378,7 +378,7 @@ h1 {
   min-height: 31.5px;
   padding: 5.25px 7.5px;
   border-radius: 9px;
-  background: var(--paper);
+  background: var(--turn-surface-page);
   font-size: max(var(--turn-text-floor, 11px), 0.495rem);
   text-transform: uppercase;
 }

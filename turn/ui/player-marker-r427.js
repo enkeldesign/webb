@@ -176,7 +176,7 @@ function installStyles() {
 
     .turn-player-marker path {
       fill: var(--turn-action-information, #38d9ff);
-      stroke: #08090a;
+      stroke: var(--turn-text);
       stroke-width: 6;
       stroke-linejoin: round;
     }

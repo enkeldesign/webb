@@ -33,9 +33,9 @@
      the round orange close is the one dismiss shape. */
   --turn-radius-control: 12px;
   --turn-border-control: 3px;
-  --turn-shadow-press: 1px 1px 0 var(--turn-ink, #08090a);        /* a primary action while pressed */
-  --turn-shadow-control: 3px 3px 0 var(--turn-ink, #08090a);
-  --turn-shadow-action: 4px 4px 0 var(--turn-ink, #08090a);
+  --turn-shadow-press: 1px 1px 0 var(--turn-shadow-color);        /* a primary action while pressed */
+  --turn-shadow-control: 3px 3px 0 var(--turn-shadow-color);
+  --turn-shadow-action: 4px 4px 0 var(--turn-shadow-color);
 
   /* Surfaces: three elevation levels. Every hard shadow in TURN is one of press,
      control, action, card or dialog; the older design-tokens.css shadow names are
@@ -44,10 +44,10 @@
      dialogs sit above everything. */
   --turn-radius-card: 18px;
   --turn-border-card: 4px;
-  --turn-shadow-card: 6px 6px 0 var(--turn-ink, #08090a);
+  --turn-shadow-card: 6px 6px 0 var(--turn-shadow-color);
   --turn-radius-dialog: 24px;
   --turn-border-dialog: 4px;
-  --turn-shadow-dialog: 8px 8px 0 var(--turn-ink, #08090a);
+  --turn-shadow-dialog: 8px 8px 0 var(--turn-shadow-color);
 
   /* Motion: functional only. */
   --turn-motion-fast: 120ms;

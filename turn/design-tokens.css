@@ -34,9 +34,17 @@
   --turn-orange-200: #ffb89f;
   --turn-orange-100: #ffd0ae;
 
-  /* Semantic UI roles. */
+  /* Theme roles (#1067). Neutral surfaces and the ink on them change with the theme;
+     anything on a semantic colour keeps --turn-ink. Hard shadows have their own colour,
+     so they stay an elevation cue in both themes. */
   --turn-surface-page: var(--turn-paper);
   --turn-surface-raised: var(--turn-white);
+  --turn-surface-bright: #ffffff;
+  --turn-text: var(--turn-ink);
+  --turn-outline: var(--turn-ink);
+  --turn-shadow-color: var(--turn-ink);
+
+  /* Semantic UI roles. */
   --turn-action-primary: var(--turn-pink-500);
   --turn-action-share: var(--turn-pink-500);
   --turn-action-utility: var(--turn-paper);

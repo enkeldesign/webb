@@ -787,15 +787,15 @@ function installMaydayUiStyle() {
       display: grid;
       place-items: center;
       box-sizing: border-box;
-      border: 2.25px solid #08090a;
+      border: 2.25px solid var(--turn-outline);
       border-radius: 50%;
-      background: #fff8e8;
+      background: var(--turn-surface-page);
       font: 900 clamp(max(var(--turn-text-floor, 11px), 9px), 2.8vh, 13.5px)/1 system-ui, sans-serif;
       pointer-events: none;
     }
     #${MAP_MARKER_ID}[hidden] { display: none; }
     #${MAP_MARKER_ID}.is-medical { color: #d92d20; }
-    #${MAP_MARKER_ID}.is-crash { color: #08090a; }
+    #${MAP_MARKER_ID}.is-crash { color: var(--turn-text); }
     .turn-mayday-info-plate {
       position: fixed;
       left: 50%;
@@ -804,11 +804,11 @@ function installMaydayUiStyle() {
       width: min(465px, calc(100vw - 24px));
       margin: 0;
       padding: 7.5px 10.5px;
-      border: 2.25px solid #08090a;
+      border: 2.25px solid var(--turn-ink);
       border-radius: 10.5px;
-      background: var(--paper, #fffdf6);
-      color: #08090a;
-      box-shadow: 3.75px 3.75px 0 #08090a;
+      background: var(--paper, var(--turn-surface-raised));
+      color: var(--turn-ink);
+      box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
       transform: translateX(-50%);
       text-align: center;
       font-size: max(var(--turn-text-floor, 11px), clamp(0.54rem, 1.7vw, 0.69rem));

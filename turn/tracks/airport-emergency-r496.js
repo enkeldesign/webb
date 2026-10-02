@@ -42,7 +42,7 @@ function installHudStyle() {
       top: auto !important;
       bottom: calc(clamp(69px, 20vh, 112.5px) + 28.5px);
       background: var(--turn-action-danger, #ff6b6b) !important;
-      color: var(--turn-ink, #08090a);
+      color: var(--turn-ink);
     }
     .turn-achievement-toast.${TOAST_CLASS} {
       transform: translate(-50%, 130%);

@@ -8,11 +8,11 @@
   box-sizing: border-box;
   width: 100%;
   padding: 8px 8px 8px 16px;
-  border: var(--turn-border-card, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-card, 3px) solid var(--turn-outline);
   border-radius: var(--turn-radius-card, 16px);
-  background: var(--turn-surface-page, #fff8e8);
-  box-shadow: var(--turn-shadow-card, 6px 6px 0 #08090a);
-  color: var(--turn-ink, #08090a);
+  background: var(--turn-surface-page);
+  box-shadow: var(--turn-shadow-card, 6px 6px 0 var(--turn-shadow-color));
+  color: var(--turn-text);
   pointer-events: auto;
 }
 
@@ -29,9 +29,9 @@
   min-width: 44px;
   min-height: 44px;
   margin: 0;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-outline);
   border-radius: var(--turn-radius-control, 12px);
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   font: inherit;
   font-weight: 900;
   cursor: pointer;
@@ -40,7 +40,7 @@
 .turn-update-toast-restart {
   padding: 0 14px;
   background: var(--turn-action-primary, var(--turn-pink-500, #ea5da1));
-  box-shadow: var(--turn-shadow-control, 3px 3px 0 #08090a);
+  box-shadow: var(--turn-shadow-control, 3px 3px 0 var(--turn-shadow-color));
   letter-spacing: 0.04em;
 }
 
@@ -62,11 +62,11 @@
   box-sizing: border-box;
   width: 100%;
   padding: 10px 16px 12px;
-  border: var(--turn-border-card, 3px) solid var(--turn-ink, #08090a);
+  border: var(--turn-border-card, 3px) solid var(--turn-outline);
   border-radius: var(--turn-radius-card, 16px);
-  background: var(--turn-surface-page, #fff8e8);
-  box-shadow: var(--turn-shadow-card, 6px 6px 0 #08090a);
-  color: var(--turn-ink, #08090a);
+  background: var(--turn-surface-page);
+  box-shadow: var(--turn-shadow-card, 6px 6px 0 var(--turn-shadow-color));
+  color: var(--turn-text);
   pointer-events: none;
 }
 
@@ -86,9 +86,9 @@
   height: 12px;
   box-sizing: border-box;
   overflow: hidden;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-outline);
   border-radius: 999px;
-  background: var(--turn-surface-page, #fff8e8);
+  background: var(--turn-surface-page);
 }
 
 .turn-offline-progress-bar > span {

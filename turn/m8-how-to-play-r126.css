@@ -27,10 +27,10 @@
 
 .m8-guide-card-disclosure {
   width: 100%;
-  border: 4px solid var(--m8-ink);
+  border: 4px solid var(--turn-outline);
   border-radius: 15px;
-  background: white;
-  box-shadow: 3.75px 3.75px 0 var(--m8-ink);
+  background: var(--turn-surface-bright);
+  box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
   box-sizing: border-box;
   overflow: hidden;
   overflow: clip;
@@ -43,8 +43,8 @@
   gap: 9.75px;
   min-height: 52.5px;
   padding: 9.75px 12px;
-  color: var(--m8-ink);
-  background: white;
+  color: var(--turn-text);
+  background: var(--turn-surface-bright);
   cursor: pointer;
   list-style: none;
   box-sizing: border-box;
@@ -55,7 +55,7 @@
 }
 
 .m8-guide-card-disclosure[open] > summary {
-  border-bottom: 3px solid var(--m8-ink);
+  border-bottom: 3px solid var(--turn-outline);
 }
 
 .m8-guide-card-disclosure > summary::after {
@@ -64,9 +64,9 @@
   place-items: center;
   width: 21px;
   height: 21px;
-  border: 2px solid var(--m8-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 50%;
-  background: var(--m8-cream);
+  background: var(--turn-surface-page);
   font-size: max(var(--turn-text-floor, 11px), 0.975rem);
   font-weight: 950;
   line-height: 1;
@@ -113,10 +113,10 @@
 .m8-guide-disclosure {
   width: 100%;
   margin-top: 10.5px;
-  border: 3px solid var(--m8-ink);
+  border: 3px solid var(--turn-ink);
   border-radius: 12px;
   background: rgb(255 255 255 / 0.86);
-  box-shadow: 3px 3px 0 var(--m8-ink);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
   box-sizing: border-box;
   overflow: hidden;
   overflow: clip;
@@ -134,7 +134,7 @@
   padding: 8.25px 10.5px;
   border: 0;
   border-radius: 9px;
-  color: var(--m8-ink);
+  color: var(--turn-ink);
   background: var(--m8-yellow);
   cursor: pointer;
   list-style: none;
@@ -146,7 +146,7 @@
 
 .m8-dbe-guide[open] > summary,
 .m8-guide-disclosure[open] > summary {
-  border-bottom: 3px solid var(--m8-ink);
+  border-bottom: 3px solid var(--turn-outline);
   border-radius: 9px 9px 0 0;
 }
 
@@ -163,9 +163,9 @@
   place-items: center;
   width: 21px;
   height: 21px;
-  border: 2px solid var(--m8-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 50%;
-  background: var(--m8-cream);
+  background: var(--turn-surface-page);
   font-size: max(var(--turn-text-floor, 11px), 0.975rem);
   line-height: 1;
 }
@@ -221,7 +221,7 @@
 .m8-overcharge-leak {
   margin: 8.25px 0 0;
   padding-top: 7.5px;
-  border-top: 2px solid var(--m8-ink);
+  border-top: 2px solid var(--turn-outline);
   font-size: max(var(--turn-text-floor, 11px), 0.75rem);
   line-height: 1.38;
 }
@@ -256,7 +256,7 @@
 .m8-dbe-guide-section {
   min-width: 0;
   padding: 9.75px 10.5px;
-  border: 2px solid var(--m8-ink);
+  border: 2px solid var(--turn-ink);
   border-radius: 10.5px;
   background: rgb(255 255 255 / 0.82);
   box-sizing: border-box;

@@ -10,7 +10,7 @@
   top: clamp(69px, 24vh, 120px);
   left: max(10.5px, env(safe-area-inset-left));
   width: var(--score-feedback-paper-width);
-  color: var(--turn-ink);
+  color: var(--turn-text);
   pointer-events: none;
 }
 
@@ -38,7 +38,7 @@
   box-sizing: border-box;
   border: 3px solid var(--turn-ink);
   background: rgb(255 248 232 / .94);
-  box-shadow: 3px 3px 0 var(--turn-ink);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
 }
 
 /*
@@ -411,7 +411,7 @@
 }
 
 .score-feedback-callout.is-release {
-  box-shadow: 3.75px 3.75px 0 var(--turn-ink);
+  box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
 }
 
 @keyframes turn-score-gauge-hot {
@@ -460,7 +460,7 @@
   .score-feedback-state {
     padding: 5.25px 6.75px 6px;
     border-width: 1.5px;
-    box-shadow: 2.25px 2.25px 0 var(--turn-ink);
+    box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
   }
 
   .score-feedback-meter,

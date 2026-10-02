@@ -569,7 +569,7 @@ function installStyles() {
       border: 0;
       border-radius: 6px;
       background: transparent;
-      color: var(--m8-ink, #08090a);
+      color: var(--turn-text);
       box-shadow: none;
       font: inherit;
       font-size: max(var(--turn-text-floor, 11px), clamp(0.54rem, 1.15vw, 0.735rem));
@@ -642,11 +642,11 @@ function installStyles() {
       min-height: 37.5px;
       margin: 0;
       padding: 3px;
-      border: 2.25px solid #08090a;
+      border: 2.25px solid var(--turn-ink);
       border-radius: 9px;
       background: #ff7b54;
-      color: #08090a;
-      box-shadow: 3.75px 3.75px 0 #08090a;
+      color: var(--turn-ink);
+      box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
       font: 950 max(var(--turn-text-floor, 11px), 0.9375rem)/1 system-ui, sans-serif;
       touch-action: manipulation;
     }

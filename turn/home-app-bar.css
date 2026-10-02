@@ -14,7 +14,7 @@
 /* Whatever the viewport does at the edges (the iOS standalone short-viewport bug,
    overscroll), the canvas behind Home is Paper, never a stray accent strip. */
 html:has(.m8-home.turn-app-bar-layout:not([hidden])) {
-  background: var(--turn-surface-page, #fff8e8);
+  background: var(--turn-surface-page);
 }
 
 /* A modal dims the canvas too, so the strip outside the viewport matches the Paper
@@ -62,7 +62,7 @@ html body .m8-home.turn-app-bar-layout .m8-home-head {
     max(var(--turn-gutter, 16px), env(safe-area-inset-right))
     8px
     max(var(--turn-gutter, 16px), env(safe-area-inset-left));
-  border-bottom: 3px solid var(--turn-ink, #08090a);
+  border-bottom: 3px solid var(--turn-ink);
   background: var(--m8-yellow, #ffbd12);
 }
 
@@ -103,11 +103,11 @@ html body .m8-home.turn-app-bar-layout .turn-app-bar-actions > button {
   min-height: 44px;
   margin: 0;
   padding: 0;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-outline);
   border-radius: 12px;
-  background: var(--turn-paper, #fff8e8);
-  color: var(--turn-ink, #08090a);
-  box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: inherit;
   line-height: 1;
   cursor: pointer;
@@ -116,11 +116,11 @@ html body .m8-home.turn-app-bar-layout .turn-app-bar-actions > button {
 
 html body .m8-home.turn-app-bar-layout .turn-app-bar-actions > button:active {
   transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+  box-shadow: 1px 1px 0 var(--turn-shadow-color);
 }
 
 html body .m8-home.turn-app-bar-layout .turn-app-bar-actions > button:focus-visible {
-  outline: 4px solid var(--turn-ink, #08090a);
+  outline: 4px solid var(--turn-outline);
   outline-offset: 3px;
 }
 
@@ -156,10 +156,10 @@ html body .m8-home.turn-app-bar-layout .turn-app-bar-actions .turn-achievements-
   margin: 0;
   padding: 0 5px;
   box-sizing: border-box;
-  border: 2px solid var(--turn-ink, #08090a);
+  border: 2px solid var(--turn-ink);
   border-radius: 11px;
   background: var(--turn-yellow-400, #ffd43b);
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   font-size: 12px;
   font-weight: 900;
   line-height: 18px;
@@ -194,9 +194,9 @@ html body .m8-home.turn-app-bar-layout .turn-home-menu-icon i {
   padding: 0;
   box-sizing: border-box;
   border: 0;
-  border-left: 3px solid var(--turn-ink, #08090a);
-  background: var(--turn-surface-page, #fff8e8);
-  color: var(--turn-ink, #08090a);
+  border-left: 3px solid var(--turn-outline);
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
   overflow: hidden;
 }
 
@@ -229,7 +229,7 @@ html body .m8-home.turn-app-bar-layout .turn-home-menu-icon i {
     max(16px, env(safe-area-inset-right))
     12px
     20px;
-  border-bottom: 3px solid var(--turn-ink, #08090a);
+  border-bottom: 3px solid var(--turn-ink);
   background: var(--m8-yellow, #ffbd12);
 }
 
@@ -248,18 +248,18 @@ html body .turn-home-sheet .turn-home-sheet-head h2 {
   height: 44px;
   margin: 0;
   padding: 0;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-ink);
   border-radius: 12px;
   background: var(--turn-orange-500, #ff7b54);
-  color: var(--turn-ink, #08090a);
-  box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+  color: var(--turn-ink);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: 900 26px/1 system-ui, sans-serif;
   cursor: pointer;
 }
 
 .turn-home-sheet-close:focus-visible,
 html body .turn-home-sheet .m8-home-menu > button:focus-visible {
-  outline: 4px solid var(--turn-ink, #08090a);
+  outline: 4px solid var(--turn-outline);
   outline-offset: 3px;
 }
 
@@ -301,11 +301,11 @@ html body .turn-home-sheet .m8-home-menu > button {
   margin: 0;
   padding: 10px 16px;
   box-sizing: border-box;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-outline);
   border-radius: 14px;
-  background: var(--turn-paper, #fff8e8);
-  color: var(--turn-ink, #08090a);
-  box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
+  box-shadow: 4px 4px 0 var(--turn-shadow-color);
   font-size: 16px;
   font-weight: 900;
   letter-spacing: 0.04em;
@@ -317,7 +317,7 @@ html body .turn-home-sheet .m8-home-menu > button {
 
 html body .turn-home-sheet .m8-home-menu > button:active {
   transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+  box-shadow: 1px 1px 0 var(--turn-shadow-color);
 }
 
 .turn-home-sheet-footer {
@@ -330,7 +330,7 @@ html body .turn-home-sheet .m8-home-menu > button:active {
     max(16px, env(safe-area-inset-right))
     max(16px, env(safe-area-inset-bottom))
     20px;
-  border-top: 3px solid var(--turn-ink, #08090a);
+  border-top: 3px solid var(--turn-outline);
 }
 
 html body .turn-home-sheet .turn-home-sheet-footer .turn-music-home-toggle {
@@ -416,7 +416,7 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
 /* Every menu entry is a utility: Paper, stepping back from the page's forward action
    (Drive By Ear 101 included, whose own stylesheet colours it for other places). */
 html body .turn-home-sheet .m8-home-menu > button {
-  background: var(--turn-action-utility, #fff8e8) !important;
+  background: var(--turn-action-utility, var(--turn-surface-page)) !important;
 }
 
 /* MUSIC and ABOUT TURN read as quiet text controls in the footer, not buttons. */
@@ -428,7 +428,7 @@ html body .turn-home-sheet .turn-home-sheet-footer :is(.turn-music-home-toggle, 
   border-radius: 6px;
   background: transparent;
   box-shadow: none;
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-text);
   font-weight: 900;
   line-height: 1;
 }
@@ -458,7 +458,7 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
 }
 
 html body .turn-home-sheet .turn-home-sheet-footer :is(.turn-music-home-toggle, .m8-about-trigger):focus-visible {
-  outline: 3px solid var(--turn-ink, #08090a);
+  outline: 3px solid var(--turn-outline);
   outline-offset: 2px;
 }
 
@@ -516,11 +516,11 @@ html body .turn-race-sheet .turn-race-menu > button {
   margin: 0;
   padding: 10px 16px;
   box-sizing: border-box;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-outline);
   border-radius: 14px;
-  background: var(--turn-paper, #fff8e8);
-  color: var(--turn-ink, #08090a);
-  box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
+  box-shadow: 4px 4px 0 var(--turn-shadow-color);
   font-size: 16px;
   font-weight: 900;
   letter-spacing: 0.04em;
@@ -551,11 +551,11 @@ html body .turn-race-sheet .turn-race-menu > button[data-race-menu-label]::after
 
 html body .turn-race-sheet .turn-race-menu > button:active {
   transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 var(--turn-ink, #08090a);
+  box-shadow: 1px 1px 0 var(--turn-shadow-color);
 }
 
 html body .turn-race-sheet .turn-race-menu > button:focus-visible {
-  outline: 4px solid var(--turn-ink, #08090a);
+  outline: 4px solid var(--turn-outline);
   outline-offset: 3px;
 }
 

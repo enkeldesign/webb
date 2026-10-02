@@ -32,10 +32,10 @@ function installStyles() {
       right: -7.5px;
       width: 15px;
       height: 15px;
-      border: 3px solid var(--turn-ink, #08090a);
+      border: 3px solid var(--turn-ink);
       border-radius: 50%;
       background: var(--turn-action-warning, #ffd43b);
-      box-shadow: 1.5px 1.5px 0 var(--turn-ink, #08090a);
+      box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
       pointer-events: none;
     }
     .turn-achievement-unread-text {
@@ -61,10 +61,10 @@ function installStyles() {
       align-items: center;
       min-height: 16.5px;
       padding: 1.5px 5.25px;
-      border: 2px solid var(--turn-ink, #08090a);
+      border: 2px solid var(--turn-outline);
       border-radius: var(--turn-radius-pill, 999px);
-      background: var(--turn-surface-page, #fff8e8);
-      color: var(--turn-ink, #08090a);
+      background: var(--turn-surface-page);
+      color: var(--turn-text);
       font-size: max(var(--turn-text-floor, 11px), 0.435rem);
       font-weight: 950;
       line-height: 1;

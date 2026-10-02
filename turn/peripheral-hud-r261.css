@@ -204,7 +204,7 @@
   .score-feedback-state {
     padding: 4.5px 6px 5.25px;
     border-width: 1.5px;
-    box-shadow: 2.25px 2.25px 0 var(--turn-ink);
+    box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
   }
 
   .score-feedback-heading,
@@ -249,7 +249,7 @@
     max-width: min(142.5px, 28vw);
     padding: 4.5px 6px 5.25px;
     border-width: 1.5px;
-    box-shadow: 2.25px 2.25px 0 var(--turn-ink);
+    box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
   }
 
   :root.turn-left-handed-controls .score-feedback-callout,
@@ -283,7 +283,7 @@
     padding: 3px 4.5px 3.75px;
     border-width: 1.5px;
     border-radius: 7.5px;
-    box-shadow: 1.5px 1.5px 0 var(--ink);
+    box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
     font-size: max(var(--turn-text-floor, 11px), 0.345rem);
   }
 
@@ -311,7 +311,7 @@
     padding: 2.25px;
     border-width: 1.5px;
     border-radius: 7.5px;
-    box-shadow: 1.5px 1.5px 0 var(--ink);
+    box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
   }
 
   .score-feedback {
@@ -364,7 +364,7 @@
     width: 96px;
     border-width: 3px;
     border-radius: 16.5px;
-    box-shadow: 3.75px 3.75px 0 var(--ink);
+    box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
   }
 
   .manual-steer::before,

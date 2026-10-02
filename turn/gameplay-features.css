@@ -24,7 +24,7 @@
 
 .gas.is-boosting {
   box-shadow:
-    5.25px 6.75px 0 var(--ink),
+    5.25px 6.75px 0 var(--turn-shadow-color),
     0 0 0 3.75px rgb(255 90 95 / 0.3);
 }
 
@@ -51,7 +51,7 @@
   right: 1.5px;
   top: 1.5px;
   height: 9.75px;
-  border: 3px solid var(--ink);
+  border: 3px solid var(--turn-ink);
   border-radius: 50% 50% 42% 42%;
   background: var(--yellow);
 }
@@ -63,10 +63,10 @@
   bottom: 1.5px;
   width: 8.25px;
   height: 11.25px;
-  border: 3px solid var(--ink);
+  border: 3px solid var(--turn-outline);
   border-top: 0;
   border-radius: 1.5px 1.5px 5.25px 5.25px;
-  background: var(--paper);
+  background: var(--turn-surface-page);
 }
 
 .mushroom-cloud-icon i {
@@ -76,7 +76,7 @@
   right: 3.75px;
   bottom: 0;
   height: 4.5px;
-  border: 3px solid var(--ink);
+  border: 3px solid var(--turn-ink);
   border-radius: 749.25px;
   background: #ff7b54;
 }
@@ -86,7 +86,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--ink);
+  color: var(--turn-text);
 }
 
 .nuke-dialog::backdrop {
@@ -96,10 +96,10 @@
 
 .nuke-dialog-card {
   padding: 21px;
-  border: 5px solid var(--ink);
+  border: 5px solid var(--turn-outline);
   border-radius: 21px;
-  background: var(--paper);
-  box-shadow: 8.25px 8.25px 0 var(--ink);
+  background: var(--turn-surface-page);
+  box-shadow: 8.25px 8.25px 0 var(--turn-shadow-color);
   text-align: center;
   transform: rotate(-1deg);
 }
@@ -110,7 +110,7 @@
   margin: 0 auto 9px;
   display: grid;
   place-items: center;
-  border: 4px solid var(--ink);
+  border: 4px solid var(--turn-ink);
   border-radius: 50%;
   background: #ff7b54;
 }
@@ -142,7 +142,7 @@
   text-transform: uppercase;
 }
 
-.nuke-cancel { background: var(--paper); }
+.nuke-cancel { background: var(--turn-surface-page); }
 .nuke-confirm { background: #ff5a5f; }
 
 .nuke-effect {
@@ -156,7 +156,7 @@
 .nuke-flash {
   position: absolute;
   inset: 0;
-  background: #fff;
+  background: var(--turn-surface-bright);
   animation: turn-nuke-flash 900ms ease-out forwards;
 }
 
@@ -170,7 +170,7 @@
   border-radius: 50%;
   box-shadow:
     0 0 0 6px #ff9f1c,
-    0 0 0 11.25px var(--ink);
+    0 0 0 11.25px var(--turn-shadow-color);
   transform: translate(-50%, -50%) scale(0.1);
   animation: turn-nuke-wave 1050ms 150ms cubic-bezier(.1,.7,.2,1) forwards;
 }
@@ -191,7 +191,7 @@
 .nuke-base {
   position: absolute;
   display: block;
-  border: 8px solid var(--ink);
+  border: 8px solid var(--turn-ink);
   background: #ffb020;
 }
 
