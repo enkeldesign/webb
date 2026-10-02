@@ -178,10 +178,10 @@
 .turn-achievements-filters button {
   min-height: 30px;
   padding: 4.5px 9px;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink);
+  border: var(--turn-border-compact, 3px) solid var(--turn-outline);
   border-radius: var(--turn-radius-pill, 999px);
   background: var(--turn-action-utility, var(--turn-surface-page));
-  color: var(--turn-ink);
+  color: var(--turn-text);
   box-shadow: var(--turn-shadow-compact, 2.25px 2.25px 0 var(--turn-shadow-color));
   font-weight: 950;
 }

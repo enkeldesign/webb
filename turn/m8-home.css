@@ -94,6 +94,10 @@
   white-space: nowrap;
 }
 
+html[data-theme="dark"] .m8-home-build {
+  background: transparent;
+}
+
 .m8-home-settings {
   align-self: center;
   justify-self: end;

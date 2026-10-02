@@ -58,6 +58,26 @@ export function installHomeAppBar({ documentRef = document } = {}) {
   const title = menu.querySelector('#m8MenuTitle');
   sheetHead.append(title || documentRef.createTextNode('MENU'), closeButton);
 
+  // THEME (#1067): System, Light or Dark, through the one resolver in index.html. A
+  // radio group, so it reads as one choice of three. Admin profiles only until every
+  // screen is themed.
+  const themeApi = globalThis.__turnTheme;
+  const themeSetting = themeApi ? documentRef.createElement('fieldset') : null;
+  if (themeSetting) {
+    themeSetting.className = 'turn-theme-setting';
+    themeSetting.innerHTML = '<legend>THEME</legend>' + [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]
+      .map(([value, label]) => `<label><input type="radio" name="turn-theme" value="${value}"><span>${label}</span></label>`).join('');
+    const sync = () => {
+      themeSetting.hidden = !themeApi.enabled;
+      for (const input of themeSetting.querySelectorAll('input')) input.checked = input.value === themeApi.choice;
+    };
+    themeSetting.addEventListener('change', (event) => {
+      if (event.target instanceof HTMLInputElement) themeApi.set(event.target.value);
+    });
+    sheet.addEventListener('toggle', sync);
+    sync();
+  }
+
   function place() {
     // The status line stays on the page, where ROADBOOK's busy and error states read.
     relocate(home.querySelector('.m8-home-status'), main);
@@ -67,12 +87,17 @@ export function installHomeAppBar({ documentRef = document } = {}) {
     // MUSIC, build and ABOUT TURN live in the sheet footer.
     const music = home.querySelector('.turn-music-home-toggle');
     if (music && footer.firstElementChild !== music) footer.prepend(music);
+    if (themeSetting) {
+      const before = music && music.parentElement === footer ? music.nextElementSibling : footer.firstElementChild;
+      if (before !== themeSetting) footer.insertBefore(themeSetting, before);
+    }
     relocate(home.querySelector('.m8-home-meta'), footer);
   }
 
   function open() {
     if (sheet.open) return;
     place();
+    if (themeSetting) themeSetting.hidden = !themeApi.enabled;
     sheet.showModal();
     menuButton.setAttribute('aria-expanded', 'true');
     home.classList.add('is-menu-open');
