@@ -761,7 +761,7 @@ html[data-theme="dark"] .garage-bar {
   bottom: calc(100% + 3px);
   left: 0;
   height: 32px;
-  background: linear-gradient(to bottom, rgb(255 248 232 / 0), var(--turn-surface-page));
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--turn-surface-page) 0%, transparent), var(--turn-surface-page));
   content: '';
   opacity: 0;
   pointer-events: none;

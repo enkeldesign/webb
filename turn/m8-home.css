@@ -87,7 +87,7 @@
   justify-self: end;
   padding: 5.25px 9px;
   border-radius: 5.25px;
-  background: rgb(255 248 232 / 0.58);
+  background: color-mix(in srgb, var(--turn-surface-page) 58%, transparent);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.51rem, 1.2vw, 0.7125rem));
   font-weight: 900;
   letter-spacing: 0.1em;

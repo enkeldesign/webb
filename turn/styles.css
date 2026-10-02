@@ -229,7 +229,7 @@ h1 {
 .tilt-drive {
   border: 3px solid var(--turn-ink);
   border-radius: 10.5px;
-  background: rgb(255 248 232 / 0.9);
+  background: color-mix(in srgb, var(--turn-surface-page) 90%, transparent);
   color: var(--turn-ink);
   box-shadow: 3px 3px 0 var(--turn-shadow-color);
 }
@@ -298,7 +298,7 @@ h1 {
   width: min(38vw, 210px);
   padding: 4.5px 6.75px 5.25px;
   transform: translateX(-50%);
-  background: rgb(255 248 232 / 0.82);
+  background: color-mix(in srgb, var(--turn-surface-page) 82%, transparent);
   text-align: center;
 }
 

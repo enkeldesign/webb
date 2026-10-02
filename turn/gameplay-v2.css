@@ -74,7 +74,7 @@
   overflow: hidden;
   border: 3px solid var(--turn-ink);
   border-radius: 749.25px;
-  background: rgb(255 248 232 / 0.82);
+  background: color-mix(in srgb, var(--turn-surface-page) 82%, transparent);
   box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
   transform: translateX(-50%);
   transform-origin: center;
@@ -224,7 +224,7 @@
 
 @keyframes turn-boost-full-bar-flash {
   0%, 100% {
-    background: rgb(255 248 232 / 0.82);
+    background: color-mix(in srgb, var(--turn-surface-page) 82%, transparent);
     box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
   }
   28%, 72% {
@@ -250,7 +250,7 @@
 
 @keyframes turn-boost-empty-bar-flash {
   0%, 100% {
-    background: rgb(255 248 232 / 0.82);
+    background: color-mix(in srgb, var(--turn-surface-page) 82%, transparent);
     box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
   }
   18%, 54% {
@@ -329,7 +329,7 @@
   padding: 4.5px 7.5px 6px;
   border: 3px solid var(--turn-ink);
   border-radius: 11.25px;
-  background: rgb(255 248 232 / 0.94);
+  background: color-mix(in srgb, var(--turn-surface-page) 94%, transparent);
   color: var(--turn-ink);
   box-shadow: 3px 3px 0 var(--turn-shadow-color);
   text-align: center;

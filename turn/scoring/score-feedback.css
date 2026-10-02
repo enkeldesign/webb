@@ -37,7 +37,7 @@
 .score-feedback-callout {
   box-sizing: border-box;
   border: 3px solid var(--turn-ink);
-  background: rgb(255 248 232 / .94);
+  background: color-mix(in srgb, var(--turn-surface-page) 94%, transparent);
   box-shadow: 3px 3px 0 var(--turn-shadow-color);
 }
 

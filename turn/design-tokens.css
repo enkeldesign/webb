@@ -144,6 +144,27 @@
   --turn-header: #111214;
 }
 
+/* Dark theme contrast guard (ui/theme-contrast.js): text sitting on a light semantic
+   colour reads Ink, text on a dark fill reads cream, and everything inside follows. */
+:root[data-theme="dark"] [data-turn-on="light"] {
+  --turn-text: var(--turn-ink);
+  --turn-text-muted: rgb(8 9 10 / 0.68);
+  --turn-text-faint: rgb(8 9 10 / 0.32);
+  --turn-outline: var(--turn-ink);
+  --turn-pr-muted: var(--turn-text-muted);
+  --turn-pr-faint: var(--turn-text-faint);
+  color: var(--turn-ink) !important;
+}
+
+:root[data-theme="dark"] [data-turn-on="dark"] {
+  --turn-text: #fff8e8;
+  --turn-text-muted: rgb(255 248 232 / 0.72);
+  --turn-text-faint: rgb(255 248 232 / 0.42);
+  --turn-pr-muted: var(--turn-text-muted);
+  --turn-pr-faint: var(--turn-text-faint);
+  color: #fff8e8 !important;
+}
+
 /* Display P3 accents. Same OKLab lightness and hue as the sRGB values above, with
    chroma raised (up to 25%) inside the P3 gamut; contrast with ink changes by at most
    0.2 and every pair stays above WCAG AA. Pink, the primary action, is the exact P3
