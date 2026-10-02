@@ -59,8 +59,7 @@ export function installHomeAppBar({ documentRef = document } = {}) {
   sheetHead.append(title || documentRef.createTextNode('MENU'), closeButton);
 
   // THEME (#1067): System, Light or Dark, through the one resolver in index.html. A
-  // radio group, so it reads as one choice of three. Admin profiles only until every
-  // screen is themed.
+  // radio group, so it reads as one choice of three.
   const themeApi = globalThis.__turnTheme;
   const themeSetting = themeApi ? documentRef.createElement('fieldset') : null;
   if (themeSetting) {
@@ -68,7 +67,6 @@ export function installHomeAppBar({ documentRef = document } = {}) {
     themeSetting.innerHTML = '<legend>THEME</legend>' + [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]
       .map(([value, label]) => `<label><input type="radio" name="turn-theme" value="${value}"><span>${label}</span></label>`).join('');
     const sync = () => {
-      themeSetting.hidden = !themeApi.enabled;
       for (const input of themeSetting.querySelectorAll('input')) input.checked = input.value === themeApi.choice;
     };
     themeSetting.addEventListener('change', (event) => {
@@ -97,7 +95,6 @@ export function installHomeAppBar({ documentRef = document } = {}) {
   function open() {
     if (sheet.open) return;
     place();
-    if (themeSetting) themeSetting.hidden = !themeApi.enabled;
     sheet.showModal();
     menuButton.setAttribute('aria-expanded', 'true');
     home.classList.add('is-menu-open');

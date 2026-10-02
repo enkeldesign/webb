@@ -60,8 +60,8 @@ function installStyles() {
       place-items: center;
       align-self: stretch;
       border-radius: 9px;
-      background: var(--paper, var(--turn-surface-raised));
-      color: var(--turn-ink);
+      background: var(--turn-surface-page);
+      color: var(--turn-text);
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
@@ -117,8 +117,8 @@ function installStyles() {
       padding: 7.5px 10.5px;
       border: 2.25px solid var(--turn-ink);
       border-radius: 10.5px;
-      background: var(--paper, var(--turn-surface-raised));
-      color: var(--turn-ink);
+      background: var(--turn-surface-page);
+      color: var(--turn-text);
       box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
       transform: translateX(-50%);
       text-align: center;

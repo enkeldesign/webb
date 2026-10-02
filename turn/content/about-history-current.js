@@ -1106,13 +1106,14 @@ Object.freeze({
     Object.freeze(['1.35.5 r357', 'Drive By Ear: pace notes are now CHIME RING, a chime that keeps ringing out to the side of the bend. Its length tells the bend in three steps: short, medium and long.']),
     Object.freeze(['1.35.6 r358', 'Groundwork for dark mode: the colours of pages, cards, text, outlines and hard shadows now come from shared theme roles. Nothing looks different yet.']),
     Object.freeze(['1.35.7 r359', 'Dark mode, first part (admin preview): a THEME setting in the menu (System, Light or Dark), a night header with a thin yellow rule, and dark ROADBOOK, Track sheet, GARAGE and menu. The browser colour now matches the header. Players keep the light theme until every screen is ready.']),
-    Object.freeze(['1.35.8 r360', 'Dark mode (admin preview): text on yellow, pink, cyan, green and pastel cards and tiles reads Ink again, so buttons, sheet headers, Trophy Road tiles and achievement cards are legible; the race HUD panels, DRIFT and FLOW boards and other translucent cards turn dark.'])
+    Object.freeze(['1.35.8 r360', 'Dark mode (admin preview): text on yellow, pink, cyan, green and pastel cards and tiles reads Ink again, so buttons, sheet headers, Trophy Road tiles and achievement cards are legible; the race HUD panels, DRIFT and FLOW boards and other translucent cards turn dark.']),
+    Object.freeze(['1.36.0 r361', 'Dark mode for everyone. TURN follows your device\'s light or dark setting, and THEME in the menu chooses System, Light or Dark. In the dark theme outlines are a soft cream instead of grey, buttons on a yellow sheet header keep their Ink outline, the GARAGE stage and ALL CARS pictures sit in a darker showroom, and the minimap and progress bars are dark. Race buttons look the same wherever they appear, and ACHIEVEMENTS is green in the race menu too.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.35.8',
-  build: '2026.10.02-r360',
-  note: 'Dark mode preview: legible text on semantic colours, dark HUD panels.'
+  version: '1.36.0',
+  build: '2026.10.02-r361',
+  note: 'Dark mode for everyone: follows your device, or choose THEME in the menu.'
 });

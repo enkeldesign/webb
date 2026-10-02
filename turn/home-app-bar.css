@@ -611,6 +611,12 @@ html body .turn-race-sheet .turn-race-menu > .spectate-button {
   background: var(--turn-blue-300, #38d9ff);
 }
 
+/* ACHIEVEMENTS is Green wherever it appears (Home's app bar, the race row). */
+html body .turn-race-sheet .turn-race-menu > .turn-race-achievements-button {
+  background: var(--turn-action-success, #8ce99a);
+  color: var(--turn-ink);
+}
+
 html body .turn-race-sheet .turn-race-menu > button svg {
   flex: none;
   width: 24px;

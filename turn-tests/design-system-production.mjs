@@ -284,6 +284,10 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="light"\] \{[\s\S]*?--turn-text: var\(--turn-ink\);/);
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="dark"\] \{[\s\S]*?--turn-text: #fff8e8;/);
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="light"\] \{[\s\S]*?--turn-surface-page: var\(--turn-paper\);/, 'a coloured button is drawn with the light roles');
+  assert.doesNotMatch(head, /turn-admin-unlock/, 'every player can choose a theme');
+  assert.match(guard, /for \(const marked of document\.querySelectorAll\(`\[\$\{MARK\}\], \[\$\{EDGE\}\]`\)\)/, 'every scan starts clean, so a mark never follows a moved button');
+  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-edge\] \{\s*border-color: var\(--turn-ink\) !important;/, 'an outline on a colour is Ink, as in light');
+  assert.match(dark, /--turn-outline: #d6cdb9;/, 'dark outlines are a muted cream, never grey');
   assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-pill\] \{[\s\S]*?background-image: linear-gradient\(var\(--turn-ink\), var\(--turn-ink\)\)[\s\S]*?color: var\(--turn-pill\)/, 'a pill on a night surface is a coloured wireframe');
 }
 
