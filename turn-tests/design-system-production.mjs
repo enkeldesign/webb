@@ -285,9 +285,16 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.ok(surfaces, 'one colour-surface list in design-tokens.css');
   assert.match(surfaces[2], /--turn-text: var\(--turn-ink\);[\s\S]*--turn-surface-page: var\(--turn-paper\)|--turn-surface-page: var\(--turn-paper\);[\s\S]*--turn-text: var\(--turn-ink\);/, 'a colour surface carries the light roles');
   assert.match(surfaces[2], /\n  color: var\(--turn-ink\);/);
-  for (const component of ['.turn-pr-button:is(.is-primary, .is-sheet):not(.is-locked)', '.turn-home-sheet-head', '.turn-pr-sheet-head', '.turn-trophy-road-marker', '.roadbook-goal:is(.is-earned, .is-gated, .is-next)', '.back-to-lot-button', '.turn-achievement-toast', '.drive-boost-zone']) {
+  for (const component of ['.turn-pr-button:is(.is-primary, .is-sheet):not(.is-locked)', '.turn-home-sheet-head', '.turn-pr-sheet-head', '.turn-trophy-road-marker', '.roadbook-goal:is(.is-earned, .is-gated, .is-next)', '.back-to-lot-button', '.turn-achievement-toast', '.drive-reverse-bubble']) {
     assert.ok(surfaces[1].includes(component), `${component} is a colour surface`);
   }
+  // The dark drive pad is muted with cream labels (Erik's design): its zones are not
+  // colour surfaces, and its control colours keep cream at 4.5:1.
+  for (const zone of ['.drive-drift-zone', '.drive-boost-zone', '.drive-gas-zone', '.drive-brake-zone']) {
+    assert.ok(!surfaces[1].includes(zone), `${zone} reads cream in dark, not Ink`);
+  }
+  assert.match(tokens, /:root\[data-theme="dark"\] \.drive-pad \{\s*--turn-control-drift: #327484;\s*--turn-control-boost: #7f7322;\s*\/\* BOOST fills with its charge over the night track, like the boost bar\. \*\/\s*--turn-control-boost-empty: var\(--turn-surface-page\);\s*--turn-yellow-600: #827203;\s*--turn-control-gas: #477e53;\s*--turn-control-brake: #7e391c;/,
+    'the dark drive pad has its own muted control colours');
   assert.match(tokens, /\) \* \{\s*--turn-outline: var\(--turn-ink\);\s*--turn-outline-muted: var\(--turn-ink\);\s*--turn-pr-rule: 3px solid var\(--turn-ink\);/, 'outlines inside a colour surface are Ink');
   assert.match(tokens, /:not\(:is\([\s\S]*?\) \*\) \{\s*border-color: var\(--turn-pill\) !important;\s*background: var\(--turn-ink\) !important;[\s\S]*?color: var\(--turn-pill\) !important;/, 'a pill on a night surface is a coloured wireframe of its own --turn-pill');
   assert.match(await fs.readFile(new URL('../turn/ui/hud.js', import.meta.url), 'utf8'), /dataset\.theme === 'dark' \? '#fff8e8' : '#08090a'/, 'the minimap track outline follows the theme');

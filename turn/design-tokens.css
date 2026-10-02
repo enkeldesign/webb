@@ -175,8 +175,7 @@
   .turn-dbe-training-actions button, .turn-dbe-training-race-nav button[data-training-race-restart],
   .turn-achievements-filters button[aria-pressed="true"], .turn-history-tabs button[aria-selected="true"],
   .m8-guide-disclosure > summary, .m8-dbe-guide > summary, .manual-steer,
-  .drive-drift-zone, .drift, .drive-pad .drive-gas-zone, .gas, .drive-pad .drive-brake-zone, .brake,
-  .drive-boost-zone, .drive-reverse-bubble, .drive-shift-bubble, .drive-lock-bubble,
+  .drive-reverse-bubble, .drive-shift-bubble, .drive-lock-bubble,
   .turn-screen-blank-control[data-state="active"],
   /* Yellow sheet heads */
   .turn-home-sheet-head, .turn-pr-sheet-head, .turn-pr-panel-head,
@@ -226,8 +225,7 @@
   .turn-dbe-training-actions button, .turn-dbe-training-race-nav button[data-training-race-restart],
   .turn-achievements-filters button[aria-pressed="true"], .turn-history-tabs button[aria-selected="true"],
   .m8-guide-disclosure > summary, .m8-dbe-guide > summary, .manual-steer,
-  .drive-drift-zone, .drift, .drive-pad .drive-gas-zone, .gas, .drive-pad .drive-brake-zone, .brake,
-  .drive-boost-zone, .drive-reverse-bubble, .drive-shift-bubble, .drive-lock-bubble,
+  .drive-reverse-bubble, .drive-shift-bubble, .drive-lock-bubble,
   .turn-screen-blank-control[data-state="active"],
   /* Yellow sheet heads */
   .turn-home-sheet-head, .turn-pr-sheet-head, .turn-pr-panel-head,
@@ -273,8 +271,7 @@
   .turn-dbe-training-actions button, .turn-dbe-training-race-nav button[data-training-race-restart],
   .turn-achievements-filters button[aria-pressed="true"], .turn-history-tabs button[aria-selected="true"],
   .m8-guide-disclosure > summary, .m8-dbe-guide > summary, .manual-steer,
-  .drive-drift-zone, .drift, .drive-pad .drive-gas-zone, .gas, .drive-pad .drive-brake-zone, .brake,
-  .drive-boost-zone, .drive-reverse-bubble, .drive-shift-bubble, .drive-lock-bubble,
+  .drive-reverse-bubble, .drive-shift-bubble, .drive-lock-bubble,
   .turn-screen-blank-control[data-state="active"],
   /* Yellow sheet heads */
   .turn-home-sheet-head, .turn-pr-sheet-head, .turn-pr-panel-head,
@@ -293,6 +290,21 @@
   background: var(--turn-ink) !important;
   box-shadow: inset 0 0 0 2px var(--turn-pill) !important;
   color: var(--turn-pill) !important;
+}
+
+/* Dark drive pad (Erik's design, #1067): muted control colours with cream labels,
+   cream dividers and a cream border, instead of the light pad's bright fills and Ink.
+   Scoped to the pad, so GARAGE and the pre-race records keep the light control
+   colours, and the REVERSE, SHIFT and LOCK bubbles beside the pad keep theirs.
+   BOOST and GAS sit a shade under the design's values so cream reads at 4.5:1. */
+:root[data-theme="dark"] .drive-pad {
+  --turn-control-drift: #327484;
+  --turn-control-boost: #7f7322;
+  /* BOOST fills with its charge over the night track, like the boost bar. */
+  --turn-control-boost-empty: var(--turn-surface-page);
+  --turn-yellow-600: #827203;
+  --turn-control-gas: #477e53;
+  --turn-control-brake: #7e391c;
 }
 
 /* Display P3 accents. Same OKLab lightness and hue as the sRGB values above, with
