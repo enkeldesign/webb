@@ -13,6 +13,11 @@
 // are held back, driving the wrong way cancels them, and any pause, reset or track
 // change clears them, so nothing stale plays afterwards.
 //
+// Start note (#1068): a standing start can sit inside a bend (MIDNIGHT CITY's grid
+// does). That bend began behind the car, so it is never ahead to be planned. When at
+// least a speakable bend of it is still to come (noiseAngleDegrees), it plays first, the
+// moment the car rolls.
+//
 // Output goes through the engine's route channel (globalThis.__turnRouteAudio): Drive
 // By Ear's balance and on/off apply, and the car sounds and music duck underneath.
 import { routeForSamples, routeSegmentAt, upcomingRouteSegments } from './route-geometry.js';
@@ -63,6 +68,9 @@ let lastCheckedAt = -Infinity;
 let lastDistance = null;
 let nextFreeAt = 0;
 let lastEndsAt = -Infinity;
+// Armed by every reset until the car rolls; the bend a standing car is inside, if any.
+let startArmed = true;
+let startBend = null;
 // Per segment id, for the current approach: { status, ... }. Cleared once the car is past.
 const delivery = new Map();
 const live = new Map();
@@ -253,21 +261,31 @@ export function updateSwooshPaceNotes(runtime, frame = {}, routeAudio = globalTh
   const current = routeSegmentAt(route, distance);
   rearmPassed(distance, current);
 
+  const sample = runtime.samples[index];
+  const forwardSpeed = (Number(state.velocity?.x) || 0) * (Number(sample?.tangent?.x) || 0)
+    + (Number(state.velocity?.z) || 0) * (Number(sample?.tangent?.z) || 0);
+  const rolling = forwardSpeed >= SWOOSH_PACE_TUNING.minimumForwardSpeed;
+  if (startArmed && !rolling) {
+    startBend = current && turnAheadDegrees(runtime.samples, index, current) >= route.tuning.noiseAngleDegrees
+      ? current
+      : null;
+  }
+  if (rolling) startArmed = false;
+  if (startBend && (startBend !== current || delivery.has(startBend.id))) startBend = null;
+
   const blocked = frame.wrongWay ? 'wrong way' : frame.offRoad ? 'off road' : '';
   if (blocked) cancelLive(blocked);
-  if (current && !delivery.has(current.id)) {
+  if (current && current !== startBend && !delivery.has(current.id)) {
     record(current, blocked ? 'suppressed' : 'missed', { reason: blocked || 'no time' });
   }
   if (blocked) return [];
 
-  const sample = runtime.samples[index];
-  const forwardSpeed = (Number(state.velocity?.x) || 0) * (Number(sample?.tangent?.x) || 0)
-    + (Number(state.velocity?.z) || 0) * (Number(sample?.tangent?.z) || 0);
-  if (forwardSpeed < SWOOSH_PACE_TUNING.minimumForwardSpeed) return [];
+  if (!rolling) return [];
   if (!routeAudio?.ready || !routeAudio.destination) return [];
 
   const upcoming = upcomingRouteSegments(route, distance, SWOOSH_PACE_TUNING.planSegments)
     .filter(({ segment, ahead }) => ahead > 0 && segment !== current && !delivery.has(segment.id));
+  if (startBend) upcoming.unshift({ segment: startBend, ahead: 0 });
   const speed = Math.max(0, Number(state.speed) || forwardSpeed);
   const started = [];
   const lengths = swooshLengths(SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant);
@@ -300,10 +318,12 @@ function playPlanned(item, routeAudio) {
   routeAudio.holdMixUntil?.(handle.endsAt + 0.05);
   globalThis.__turnRacingMusic?.duck?.(at - now, handle.endsAt - at);
 
-  // Seconds between the swoosh ending and the car reaching the bend.
+  // Seconds between the swoosh ending and the car reaching the bend. A start note plays
+  // inside its bend by design, so it is never late.
   const margin = item.entry - (handle.endsAt - now);
-  const late = margin < tuning.steeringLeadSeconds / 2;
-  record(item.segment, late ? 'late' : 'fired', { margin, linked, at, endsAt: handle.endsAt });
+  const startNote = item.segment === startBend;
+  const late = !startNote && margin < tuning.steeringLeadSeconds / 2;
+  record(item.segment, late ? 'late' : 'fired', { margin, linked, at, endsAt: handle.endsAt, ...(startNote ? { startNote } : {}) });
   return Object.freeze({ id: item.segment.id, at, endsAt: handle.endsAt, margin, linked });
 }
 
@@ -378,6 +398,18 @@ export function resetSwooshDelivery(reason = 'reset') {
   lastDistance = null;
   nextFreeAt = 0;
   lastEndsAt = -Infinity;
+  startArmed = true;
+  startBend = null;
+}
+
+// Degrees of a segment's turn still ahead of a sample inside it. Turning right lowers
+// atan2(x, z) (route-geometry.js); a segment turns at most 120°, so one wrap is enough.
+function turnAheadDegrees(samples, index, segment) {
+  const heading = (sample) => Math.atan2(sample.tangent.x, sample.tangent.z);
+  let turn = heading(samples[segment.endIndex]) - heading(samples[index]);
+  if (turn > Math.PI) turn -= 2 * Math.PI;
+  if (turn < -Math.PI) turn += 2 * Math.PI;
+  return -turn * segment.direction * 180 / Math.PI;
 }
 
 /** Swoosh peak for a Sound balance (0 other sounds … 1 Drive By Ear). */

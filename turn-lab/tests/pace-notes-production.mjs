@@ -275,6 +275,43 @@ for (const definition of TRACK_DEFINITIONS) {
   assert.ok(drive(runtime, routeAudio, { seconds: 6, startDistance: 80 }).played.length > 0, 'a resumed context plays the bends ahead');
 }
 
+// The start note (#1068): MIDNIGHT CITY's grid sits inside a right-hander that began
+// behind it, so that bend is never ahead to plan. A standing start hears it first, the
+// moment the car rolls. A grid bend with less than a speakable turn left stays silent,
+// and a car already rolling after a reset hears no start note.
+{
+  const { routeSegmentAt } = await import('../../turn/audio/route-geometry.js');
+  const standingStart = (id) => {
+    resetSwooshDelivery('race start');
+    const runtime = trackRuntime(id);
+    const routeAudio = createRouteAudio();
+    const route = routeForSamples(runtime.samples, id);
+    const grid = runtime.samples.length - 24;
+    Object.assign(runtime.state, { nearestTrackIndex: grid, speed: 0, velocity: { x: 0, z: 0 } });
+    let standing = [];
+    for (let step = 0; step < 30; step += 1) standing = standing.concat(updateSwooshPaceNotes(runtime, { active: true }, routeAudio));
+    const tangent = runtime.samples[grid].tangent;
+    Object.assign(runtime.state, { speed: 3, velocity: { x: tangent.x * 3, z: tangent.z * 3 } });
+    const rolled = updateSwooshPaceNotes(runtime, { active: true }, routeAudio);
+    return { standing, rolled, gridBend: routeSegmentAt(route, grid * route.sampleSpacing) };
+  };
+
+  const city = standingStart('midnight-city');
+  assert.equal(city.gridBend?.side, 'right', 'MIDNIGHT CITY starts inside a right-hander');
+  assert.equal(city.standing.length, 0, 'nothing plays while the car stands on the grid');
+  assert.equal(city.rolled[0]?.id, city.gridBend.id, 'the grid bend plays first, as the car rolls');
+
+  const beach = standingStart('beachfront');
+  assert.ok(beach.gridBend, 'BEACHFRONT starts inside the end of a gentle bend');
+  assert.ok(beach.rolled.every((swoosh) => swoosh.id !== beach.gridBend.id), 'a bend nearly over at the grid stays silent');
+
+  resetSwooshDelivery('resumed');
+  const runtime = trackRuntime('midnight-city');
+  const route = routeForSamples(runtime.samples, 'midnight-city');
+  const { played } = drive(runtime, createRouteAudio(), { seconds: 1, startDistance: (runtime.samples.length - 24) * route.sampleSpacing });
+  assert.ok(played.every((swoosh) => swoosh.id !== city.gridBend.id), 'a car already rolling hears no start note');
+}
+
 // DRIVE BY EAR 101 uses the same path: its open courses have no seam bend, and its texts
 // name the sides the geometry gives.
 {
