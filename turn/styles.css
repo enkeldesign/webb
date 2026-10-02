@@ -230,7 +230,7 @@ h1 {
   border: 3px solid var(--turn-outline);
   border-radius: 10.5px;
   background: color-mix(in srgb, var(--turn-surface-page) 90%, transparent);
-  color: var(--turn-ink);
+  color: var(--turn-text);
   box-shadow: 3px 3px 0 var(--turn-shadow-color);
 }
 

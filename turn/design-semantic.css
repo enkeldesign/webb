@@ -1,4 +1,4 @@
-@import url('./design-tokens.css?build=20261002-r363');
+@import url('./design-tokens.css?build=20261002-r364');
 
 /*
   Normative production roles.
@@ -123,6 +123,9 @@
 .m8-dialog-head > button,
 .back-to-lot-button,
 .sound-guide-button,
+.spectate-button,
+.audio-settings-button,
+.reset-rivals-button,
 .back-to-start-button.is-lap-invalid,
 .turn-screen-blank-control[data-state="active"],
 [data-turn-navigation-action],
