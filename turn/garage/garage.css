@@ -593,7 +593,8 @@ html[data-theme="dark"] .garage-bar {
 }
 
 .garage-perk-chip {
-  background: var(--turn-yellow-400, #ffd43b);
+  --turn-pill: var(--turn-yellow-400, #ffd43b);
+  background: var(--turn-pill);
 }
 
 .garage-disclosure-chevron {
@@ -1026,7 +1027,8 @@ html[data-theme="dark"] .garage-bar {
 }
 
 .garage-car-card.is-selected .garage-car-ordinal {
-  background: var(--turn-text);
+  --turn-pill: var(--turn-text);
+  background: var(--turn-pill);
   color: var(--turn-surface-page);
 }
 

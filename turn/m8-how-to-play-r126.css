@@ -87,7 +87,8 @@
   width: 31.5px;
   height: 31.5px;
   border-radius: 50%;
-  background: var(--m8-yellow);
+  --turn-pill: var(--m8-yellow);
+  background: var(--turn-pill);
   font-size: max(var(--turn-text-floor, 11px), 0.975rem);
 }
 
@@ -102,6 +103,11 @@
   padding: 10.5px 12px 12px;
   background: rgb(255 255 255 / 0.5);
   overflow-anchor: none;
+}
+
+/* Dark theme: the panel is a raised night surface, not a half-white wash. */
+:root[data-theme="dark"] .m8-guide-card-panel {
+  background: var(--turn-surface-raised);
 }
 
 .m8-guide-card-panel > p {

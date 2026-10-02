@@ -274,26 +274,22 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   const bar = await fs.readFile(new URL('../turn/ui/home-app-bar.js', import.meta.url), 'utf8');
   assert.match(bar, /<legend>COLOR THEME<\/legend>/);
   assert.match(bar, /type="radio" name="turn-theme"/, 'THEME is one radio group');
-  // Text on a light semantic colour reads Ink in the dark theme; the guard never runs in light.
-  const guard = await fs.readFile(new URL('../turn/ui/theme-contrast.js', import.meta.url), 'utf8');
-  assert.match(index, /<script type="module" src="\.\/ui\/theme-contrast\.js\?build=/);
-  assert.match(guard, /if \(root\.dataset\.theme !== 'dark'\) \{/, 'the light theme never runs the contrast guard');
-  assert.match(guard, /const MIN_CONTRAST = 4\.5;/, 'text below WCAG AA against its own backdrop is corrected');
-  assert.match(guard, /turn-race-active/, 'during a race only a dialog opening or closing calls a scan');
-  assert.match(guard, /if \(controlFill && luminance\(controlFill\) > NIGHT\) \{\s*if \(control\.getAttribute\(MARK\) !== 'light'\)/, 'a button on a colour reads Ink, exactly as in the light theme');
-  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="light"\] \{[\s\S]*?--turn-text: var\(--turn-ink\);/);
-  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="dark"\] \{[\s\S]*?--turn-text: #fff8e8;/);
-  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-on="light"\] \{[\s\S]*?--turn-surface-page: var\(--turn-paper\);/, 'a coloured button is drawn with the light roles');
+  // The dark theme is declared, never patched at runtime: no contrast guard script.
+  assert.doesNotMatch(index, /theme-contrast/, 'the dark theme is CSS only: no runtime contrast guard');
+  assert.doesNotMatch(tokens, /data-turn-(on|edge|pill)/);
   assert.doesNotMatch(head, /turn-admin-unlock/, 'every player can choose a theme');
-  assert.match(guard, /for \(const marked of document\.querySelectorAll\(`\[\$\{MARK\}\], \[\$\{EDGE\}\]`\)\)/, 'every scan starts clean, so a mark never follows a moved button');
-  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-edge\] \{\s*border-color: var\(--turn-ink\) !important;/, 'an outline on a colour is Ink, as in light');
   assert.match(dark, /--turn-outline: #fff8e8;/, 'active dark outlines are Paper cream');
-  assert.match(guard, /const SCENERY = 'body, \.garage-stage, \.garage-car-art, \.drive-pad';/, 'an outline over the race scene, the 3D stage or inside the drive pad stays cream');
-  const semantic = await fs.readFile(new URL('../turn/design-semantic.css', import.meta.url), 'utf8');
-  assert.match(guard, /const RACE_HUD = '#hud, #controls';/, 'the race HUD is themed by CSS alone, never by a stale guard mark');
-  assert.match(guard, /if \(element\.closest\(RACE_HUD\)\) return;/);
-  assert.match(semantic, /\.spectate-button,\s*\.audio-settings-button,\s*\.reset-rivals-button,/, 'coloured race buttons read Ink');
-  assert.match(semantic, /\.back-to-lot-button,[\s\S]*?\{\s*color: var\(--turn-ink\) !important;/, 'a coloured control reads Ink without waiting for the contrast guard');
+  // Colour surfaces: one list of components painted in a semantic colour carries the
+  // light roles (Ink text); outlines inside them are Ink, their own outline stays cream.
+  const surfaces = tokens.match(/:root\[data-theme="dark"\] :is\(\s*\/\* Coloured controls \*\/([\s\S]*?)\) \{([\s\S]*?)\n\}/);
+  assert.ok(surfaces, 'one colour-surface list in design-tokens.css');
+  assert.match(surfaces[2], /--turn-text: var\(--turn-ink\);[\s\S]*--turn-surface-page: var\(--turn-paper\)|--turn-surface-page: var\(--turn-paper\);[\s\S]*--turn-text: var\(--turn-ink\);/, 'a colour surface carries the light roles');
+  assert.match(surfaces[2], /\n  color: var\(--turn-ink\);/);
+  for (const component of ['.turn-pr-button:is(.is-primary, .is-sheet):not(.is-locked)', '.turn-home-sheet-head', '.turn-pr-sheet-head', '.turn-trophy-road-marker', '.roadbook-goal:is(.is-earned, .is-gated, .is-next)', '.back-to-lot-button', '.turn-achievement-toast', '.drive-boost-zone']) {
+    assert.ok(surfaces[1].includes(component), `${component} is a colour surface`);
+  }
+  assert.match(tokens, /\) \* \{\s*--turn-outline: var\(--turn-ink\);\s*--turn-outline-muted: var\(--turn-ink\);\s*--turn-pr-rule: 3px solid var\(--turn-ink\);/, 'outlines inside a colour surface are Ink');
+  assert.match(tokens, /:not\(:is\([\s\S]*?\) \*\) \{\s*border-color: var\(--turn-pill\) !important;\s*background: var\(--turn-ink\) !important;[\s\S]*?color: var\(--turn-pill\) !important;/, 'a pill on a night surface is a coloured wireframe of its own --turn-pill');
   assert.match(await fs.readFile(new URL('../turn/ui/hud.js', import.meta.url), 'utf8'), /dataset\.theme === 'dark' \? '#fff8e8' : '#08090a'/, 'the minimap track outline follows the theme');
   for (const file of ['styles.css', 'drive-pad.css', 'home-app-bar.css', 'garage/garage.css', 'achievements.css']) {
     const css = await fs.readFile(new URL(`../turn/${file}`, import.meta.url), 'utf8');
@@ -301,7 +297,6 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   }
   assert.match(dark, /--turn-outline-muted: #d6cdb9;/, 'inactive dark outlines are a muted cream, never grey');
   assert.match(tokens, /:root\[data-theme="dark"\] :is\(button, \[role="button"\]\):is\(:disabled, \[aria-disabled="true"\], \.is-locked\)[^{]*\{\s*border-color: var\(--turn-outline-muted\);/, 'a locked or disabled control keeps the muted outline');
-  assert.match(tokens, /:root\[data-theme="dark"\] \[data-turn-pill\] \{[\s\S]*?background-image: linear-gradient\(var\(--turn-ink\), var\(--turn-ink\)\)[\s\S]*?color: var\(--turn-pill\)/, 'a pill on a night surface is a coloured wireframe');
 }
 
 console.log('TURN current product-language design system, palette, gameplay, progression and dialog reference passed.');

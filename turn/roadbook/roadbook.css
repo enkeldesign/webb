@@ -250,19 +250,6 @@
   background: var(--turn-yellow-100, #fff0a8);
 }
 
-/* An earned, gated or next goal sits on a light semantic colour: its text and rules
-   stay Ink in both themes. */
-.roadbook-goal:is(.is-earned, .is-gated, .is-next) {
-  --turn-surface-page: var(--turn-paper);
-  --turn-surface-card: #fffcf2;
-  --turn-pr-card: var(--turn-surface-card);
-  --turn-text: var(--turn-ink);
-  --turn-outline: var(--turn-ink);
-  --turn-pr-muted: rgb(8 9 10 / 0.68);
-  --turn-pr-faint: rgb(8 9 10 / 0.32);
-  color: var(--turn-ink);
-}
-
 /* A fixed size, as in ACHIEVEMENTS: larger text grows the words, not the icon. */
 .roadbook-goal-icon {
   grid-area: icon;
@@ -320,7 +307,7 @@
   white-space: nowrap;
 }
 
-.roadbook-goal-tag.is-hidden { background: var(--turn-muted, #d6d0c2); }
+.roadbook-goal-tag.is-hidden { --turn-pill: var(--turn-muted, #d6d0c2); background: var(--turn-pill); }
 
 .roadbook-goal-next {
   background: var(--turn-ink);
@@ -347,11 +334,12 @@
 }
 
 .roadbook-goal-pill {
-  background: var(--turn-muted, #d6d0c2);
+  --turn-pill: var(--turn-muted, #d6d0c2);
+  background: var(--turn-pill);
 }
 
-.roadbook-goal.is-earned .roadbook-goal-pill { background: var(--turn-action-success, #8ce99a); }
-.roadbook-goal.is-progress .roadbook-goal-pill { background: var(--turn-blue-200, #8ed8ff); }
+.roadbook-goal.is-earned .roadbook-goal-pill { --turn-pill: var(--turn-action-success, #8ce99a); }
+.roadbook-goal.is-progress .roadbook-goal-pill { --turn-pill: var(--turn-blue-200, #8ed8ff); }
 
 /* A score Trophy Road has yet to unlock: what unlocks it, where the state would be. */
 .roadbook-goal-gate {

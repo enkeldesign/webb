@@ -73,10 +73,12 @@ function installStyles() {
       white-space: nowrap;
     }
     .turn-achievement-tag[data-achievement-tag="hidden"] {
-      background: var(--turn-muted, #d6d0c2);
+      --turn-pill: var(--turn-muted, #d6d0c2);
+      background: var(--turn-pill);
     }
     .turn-achievement-tag[data-achievement-tag="new"] {
-      background: var(--turn-action-warning, #ffd43b);
+      --turn-pill: var(--turn-action-warning, #ffd43b);
+      background: var(--turn-pill);
     }
     .turn-achievement-trophies {
       font-size: max(var(--turn-text-floor, 11px), 0.51rem);

@@ -217,10 +217,10 @@ html body .turn-pr-app-logo {
   white-space: nowrap;
 }
 
-.turn-pr-chip.is-easy { background: var(--turn-difficulty-easy, #d9f5c2); }
-.turn-pr-chip.is-medium { background: var(--turn-difficulty-medium, #ffe087); }
-.turn-pr-chip.is-advanced { background: var(--turn-difficulty-advanced, #ffb89f); }
-.turn-pr-chip.is-expert { background: var(--turn-difficulty-expert, #ff9b91); }
+.turn-pr-chip.is-easy { --turn-pill: var(--turn-difficulty-easy, #d9f5c2); background: var(--turn-pill); }
+.turn-pr-chip.is-medium { --turn-pill: var(--turn-difficulty-medium, #ffe087); background: var(--turn-pill); }
+.turn-pr-chip.is-advanced { --turn-pill: var(--turn-difficulty-advanced, #ffb89f); background: var(--turn-pill); }
+.turn-pr-chip.is-expert { --turn-pill: var(--turn-difficulty-expert, #ff9b91); background: var(--turn-pill); }
 
 /* A difficulty chip is a semantic colour: Ink on it in both themes. */
 .turn-pr-chip:is(.is-easy, .is-medium, .is-advanced, .is-expert) {
