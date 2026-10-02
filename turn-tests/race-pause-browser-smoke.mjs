@@ -274,7 +274,86 @@ try {
   now = await race(page);
   assert.equal(now.paused, false, 'LEAVE RACE ends the pause');
   assert.equal(await page.evaluate(() => document.body.classList.contains('turn-runtime-paused')), false);
+  // No lap was completed: no THIS VISIT, in PAUSED or after.
+  await page.waitForTimeout(400);
+  assert.equal(await page.evaluate(() => document.querySelector('.turn-visit-summary-dialog').open), false,
+    'A visit without a completed lap shows no summary');
   await context.close();
+
+  // ---------- THIS VISIT (#1061) ----------
+  {
+    const opened = await openRace({ width: 844, height: 390 });
+    const { page: visitPage } = opened;
+    await startLap(visitPage);
+    await visitPage.keyboard.up('ArrowUp');
+    // Two finished laps (the second beats the track record) and an achievement, as the
+    // lap system and ACHIEVEMENTS publish them.
+    const award = await visitPage.evaluate(async () => {
+      const { ACHIEVEMENTS } = await import('/turn/achievements/catalog.js');
+      const achievement = ACHIEVEMENTS.find((entry) => !entry.hidden && entry.trophies > 0);
+      const lap = (time, drift) => globalThis.dispatchEvent(new globalThis.CustomEvent('turn:lap-result', {
+        detail: { time, valid: true, saved: true, drift: { available: true, score: drift, newBest: drift > 500 }, flow: { available: false } }
+      }));
+      // The visit's baseline record, as if this track had a 70 s best before it.
+      globalThis.__turnVisitSummary.current().previousBest = 70;
+      lap(72.5, 400);
+      lap(68.25, 900);
+      globalThis.dispatchEvent(new globalThis.CustomEvent('turn:achievements-updated', { detail: { unlocked: [achievement.id] } }));
+      return { title: achievement.title, trophies: achievement.trophies };
+    });
+    await visitPage.locator('.turn-race-pause-button').click();
+    const line = await visitPage.evaluate(() => {
+      const visit = document.querySelector('.turn-race-pause-visit');
+      return { hidden: visit.hidden, text: visit.textContent.replace(/\s+/g, ' ').trim() };
+    });
+    assert.deepEqual(line, { hidden: false, text: 'THIS VISIT 2 LAPS · BEST 1:08.250 · NEW BEST −1.750 s · 1 EARNED' },
+      'PAUSED shows the visit in one line');
+    // RESTART LAP keeps the visit going.
+    await visitPage.locator('.turn-race-pause-dialog [data-pause-action="restart"]').click();
+    await startLap(visitPage);
+    await visitPage.keyboard.up('ArrowUp');
+    await visitPage.locator('.turn-race-pause-button').click();
+    assert.match(await visitPage.locator('.turn-race-pause-visit').textContent(), /2\sLAPS/, 'RESTART LAP keeps the visit');
+    await visitPage.locator('.turn-race-pause-dialog [data-pause-action="leave"]').click();
+    await visitPage.waitForSelector('.turn-visit-summary-dialog[open]');
+    await visitPage.waitForTimeout(200);
+    const sheet = await visitPage.evaluate(() => {
+      const dialog = document.querySelector('.turn-visit-summary-dialog');
+      const rows = Object.fromEntries([...dialog.querySelectorAll('.turn-visit-summary-row')]
+        .map((row) => [row.querySelector('dt').textContent, row.querySelector('dd').textContent.replace(/\s+/g, ' ').trim()]));
+      return {
+        modal: dialog.matches(':modal'),
+        focus: document.activeElement?.id,
+        home: document.body.classList.contains('turn-home-open'),
+        spoken: dialog.querySelector('#turnVisitSummarySpoken').textContent,
+        rows
+      };
+    });
+    assert.equal(sheet.modal, true, 'The summary opens over ROADBOOK');
+    assert.equal(sheet.home, true);
+    assert.equal(sheet.focus, 'turnVisitSummaryTitle', 'Focus starts on its heading');
+    assert.equal(sheet.spoken, 'This visit: 2 laps, new best lap, 1.750 seconds faster, 1 earned.');
+    assert.equal(sheet.rows.LAPS, '2');
+    assert.equal(sheet.rows['BEST LAP'], '1:08.250 NEW BEST −1.750 s');
+    assert.equal(sheet.rows['BEST DRIFT'], '900 NEW BEST');
+    assert.equal(sheet.rows['BEST FLOW'], undefined, 'No FLOW score, no FLOW row');
+    assert.equal(sheet.rows.EARNED, award.title);
+    assert.equal(sheet.rows.TROPHIES, `+${award.trophies}`);
+    assert.ok(sheet.rows['NEXT UP'], 'NEXT UP names a goal on this track');
+    // An award settled a moment after the last lap still joins the open summary.
+    const late = await visitPage.evaluate(async () => {
+      const { ACHIEVEMENTS } = await import('/turn/achievements/catalog.js');
+      const shownIds = [...document.querySelectorAll('.turn-visit-summary-row li')].map((item) => item.textContent);
+      const achievement = ACHIEVEMENTS.find((entry) => !entry.hidden && !shownIds.includes(entry.title));
+      globalThis.dispatchEvent(new globalThis.CustomEvent('turn:achievements-updated', { detail: { unlocked: [achievement.id] } }));
+      return { title: achievement.title, earned: [...document.querySelectorAll('.turn-visit-summary-row li')].map((item) => item.textContent) };
+    });
+    assert.ok(late.earned.includes(late.title), 'A late award shows in the open summary');
+    await visitPage.locator('.turn-visit-summary-close').click();
+    await visitPage.waitForSelector('.turn-visit-summary-dialog:not([open])', { state: 'attached' });
+    assert.equal(await visitPage.evaluate(() => document.activeElement?.id), 'm8HomeTitle', 'CLOSE returns focus to ROADBOOK');
+    await opened.context.close();
+  }
 
   // ---------- Portrait phone, left-handed ----------
   for (const [label, handedness] of [['portrait', 'right'], ['portrait, left-handed', 'left']]) {
@@ -411,7 +490,7 @@ try {
   }
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Race pause: Ⅱ beside RESTART LAP during a lap; frozen car, lap time, BOOST and race clock; released controls; Settings, Escape, back, background, RESTART LAP and LEAVE RACE; landscape, portrait (turned while paused) and left-handed; a running lap locks the screen where the platform can; a rotation mid-lap pauses as SCREEN ROTATED and resumes after 3-2-1 passed.');
+  console.log('Race pause: Ⅱ beside RESTART LAP during a lap; frozen car, lap time, BOOST and race clock; released controls; Settings, Escape, back, background, RESTART LAP and LEAVE RACE; landscape, portrait (turned while paused) and left-handed; a running lap locks the screen where the platform can; a rotation mid-lap pauses as SCREEN ROTATED and resumes after 3-2-1; THIS VISIT in PAUSED and over ROADBOOK after LEAVE RACE passed.');
 } finally {
   await browser.close();
   server.close();

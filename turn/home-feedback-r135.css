@@ -1,4 +1,4 @@
-@import url('./design-semantic.css?build=20261002-r370');
+@import url('./design-semantic.css?build=20261002-r371');
 
 .m8-feedback-dialog {
   width: min(570px, calc(100vw - 24px));

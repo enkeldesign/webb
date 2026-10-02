@@ -1116,13 +1116,14 @@ Object.freeze({
     Object.freeze(['1.36.6 r367', 'Drive By Ear: a race that starts inside a bend now hears that bend first, the moment the car rolls. MIDNIGHT CITY starts in a right-hander and now says so; COUNTRYSIDE, which starts in a long right, hears it at once too.']),
     Object.freeze(['1.36.7 r368', 'Dark mode: the install page and the installed app\'s LOADING screen read cream on the dark card, and the installed app loads on the dusk sky instead of the bright one.']),
     Object.freeze(['1.36.8 r369', 'If the screen turns while you race, the race pauses instead of driving on. Turn back and it continues after a quick 3, 2, 1, with steering centred; or choose RACE IN PORTRAIT or RACE IN LANDSCAPE to keep racing the new way round. On Android the screen stays locked while you race; pause to turn it.']),
-    Object.freeze(['1.36.9 r370', 'Dark mode: the drive pad is calmer at night, with muted DRIFT, BOOST, GAS and BRAKE and cream labels. BOOST fills with its charge over the dark, like the boost bar.'])
+    Object.freeze(['1.36.9 r370', 'Dark mode: the drive pad is calmer at night, with muted DRIFT, BOOST, GAS and BRAKE and cream labels. BOOST fills with its charge over the dark, like the boost bar.']),
+    Object.freeze(['1.36.10 r371', 'THIS VISIT: PAUSED shows your laps, best lap and anything earned since you started this track. After LEAVE RACE, ROADBOOK shows the whole visit: laps, best lap and how much it beat your record, best DRIFT and FLOW, achievements, trophies, unlocks and what to try next.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.36.9',
-  build: '2026.10.02-r370',
-  note: 'A muted dark drive pad with cream labels.'
+  version: '1.36.10',
+  build: '2026.10.02-r371',
+  note: 'THIS VISIT: a summary of your visit in PAUSED and after LEAVE RACE.'
 });
