@@ -293,7 +293,7 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   for (const zone of ['.drive-drift-zone', '.drive-boost-zone', '.drive-gas-zone', '.drive-brake-zone']) {
     assert.ok(!surfaces[1].includes(zone), `${zone} reads cream in dark, not Ink`);
   }
-  assert.match(tokens, /:root\[data-theme="dark"\] \.drive-pad \{\s*--turn-control-drift: #327484;\s*--turn-control-boost: #7f7322;\s*--turn-control-boost-empty: #4d4718;\s*--turn-yellow-600: #827203;\s*--turn-control-gas: #477e53;\s*--turn-control-brake: #7e391c;/,
+  assert.match(tokens, /:root\[data-theme="dark"\] \.drive-pad \{\s*--turn-control-drift: #327484;\s*--turn-control-boost: #7f7322;\s*\/\* BOOST fills with its charge over the night track, like the boost bar\. \*\/\s*--turn-control-boost-empty: var\(--turn-surface-page\);\s*--turn-yellow-600: #827203;\s*--turn-control-gas: #477e53;\s*--turn-control-brake: #7e391c;/,
     'the dark drive pad has its own muted control colours');
   assert.match(tokens, /\) \* \{\s*--turn-outline: var\(--turn-ink\);\s*--turn-outline-muted: var\(--turn-ink\);\s*--turn-pr-rule: 3px solid var\(--turn-ink\);/, 'outlines inside a colour surface are Ink');
   assert.match(tokens, /:not\(:is\([\s\S]*?\) \*\) \{\s*border-color: var\(--turn-pill\) !important;\s*background: var\(--turn-ink\) !important;[\s\S]*?color: var\(--turn-pill\) !important;/, 'a pill on a night surface is a coloured wireframe of its own --turn-pill');

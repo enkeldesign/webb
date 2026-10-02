@@ -300,7 +300,8 @@
 :root[data-theme="dark"] .drive-pad {
   --turn-control-drift: #327484;
   --turn-control-boost: #7f7322;
-  --turn-control-boost-empty: #4d4718;
+  /* BOOST fills with its charge over the night track, like the boost bar. */
+  --turn-control-boost-empty: var(--turn-surface-page);
   --turn-yellow-600: #827203;
   --turn-control-gas: #477e53;
   --turn-control-brake: #7e391c;
