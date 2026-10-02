@@ -83,10 +83,13 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
     return portrait ? 'PORTRAIT' : 'LANDSCAPE';
   };
 
+  // Turned back, a rotation pause is an ordinary pause: PAUSED, RESUME.
+  const rotatedAway = () => rotated() && !racePause.rotatedBack;
+
   function syncDialog() {
-    title.textContent = rotated() ? 'SCREEN ROTATED' : 'PAUSED';
-    note.hidden = !rotated();
-    resumeButton.textContent = rotated() ? `RACE IN ${screenWord()}` : 'RESUME';
+    title.textContent = rotatedAway() ? 'SCREEN ROTATED' : 'PAUSED';
+    note.hidden = !rotatedAway();
+    resumeButton.textContent = rotatedAway() ? `RACE IN ${screenWord()}` : 'RESUME';
   }
 
   function openDialog() {
@@ -94,7 +97,7 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
     syncDialog();
     if (!dialog.open) dialog.showModal();
     resumeButton.focus();
-    announce(rotated() ? 'Screen rotated. Race paused. Turn back to keep racing.' : 'Race paused.');
+    announce(rotatedAway() ? 'Screen rotated. Race paused. Turn back to keep racing.' : 'Race paused.');
   }
 
   function closeDialog() {
@@ -117,6 +120,10 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
     const step = () => {
       if (count === 0) {
         stopCountdown();
+        if (documentRef.hidden) {
+          openDialog();
+          return;
+        }
         if (!racePause.resume()) return;
         documentRef.querySelector('#calibrateButton')?.click();
         syncButton();
@@ -170,6 +177,18 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
 
   button.addEventListener('click', () => racePause.pause('player'));
 
+  // Leaving TURN mid-count holds the race: the count stops and PAUSED returns.
+  const holdCount = () => {
+    if (!countTimer) return;
+    stopCountdown();
+    openDialog();
+  };
+  documentRef.addEventListener('visibilitychange', () => {
+    if (documentRef.hidden) holdCount();
+  });
+  windowRef.addEventListener('pagehide', holdCount);
+  windowRef.addEventListener('blur', holdCount);
+
   windowRef.addEventListener('turn:ui-state-change', (event) => {
     const change = event.detail?.reason;
     if (change === 'race-paused') openDialog();
@@ -177,8 +196,12 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
       stopCountdown();
       closeDialog();
     } else if (change === 'race-rotation') {
-      // Turned back: race on. Turned elsewhere, even mid-count: ask again.
-      if (event.detail?.rotatedBack) resumeAfterCountdown();
+      // Turned back: race on, unless SETTINGS (or another dialog) is open over PAUSED;
+      // then the pause holds until the player resumes. Turned elsewhere, even
+      // mid-count: ask again.
+      const covered = [...documentRef.querySelectorAll('dialog[open]')].some((open) => open !== dialog);
+      if (event.detail?.rotatedBack && !covered) resumeAfterCountdown();
+      else if (event.detail?.rotatedBack) syncDialog();
       else {
         stopCountdown();
         openDialog();

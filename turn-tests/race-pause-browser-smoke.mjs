@@ -371,6 +371,33 @@ try {
     assert.equal((await race(page)).mode, 'racing', 'turned back, the race runs on after 3-2-1');
     assert.equal(await page.evaluate(() => document.querySelector('.turn-race-pause-dialog').open), false, 'and the dialog has closed');
 
+    // Turned back with SETTINGS open over the dialog: the pause holds, and reads as an
+    // ordinary pause once Settings closes.
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.waitForFunction(() => globalThis.__turnRacePause.reason === 'rotation');
+    await page.locator('[data-pause-action="settings"]').click();
+    await page.waitForFunction(() => document.querySelector('.m8-settings-dialog')?.open);
+    await page.setViewportSize({ width: 852, height: 393 });
+    await page.waitForTimeout(1600);
+    assert.equal(await page.evaluate(() => globalThis.__turnRacePause.paused), true, 'turned back under SETTINGS, the race stays paused');
+    await page.evaluate(() => document.querySelector('.m8-settings-dialog').close());
+    assert.deepEqual(await paused(), { paused: true, reason: 'rotation', open: true, title: 'PAUSED', action: 'RESUME', note: false },
+      'turned back, the rotation pause reads as PAUSED / RESUME');
+    await page.locator('.turn-race-pause-resume').click();
+    await page.waitForFunction(() => !globalThis.__turnRacePause.paused, null, { timeout: 3000 });
+
+    // Leaving TURN mid-count holds the race: the count stops and PAUSED returns.
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.waitForFunction(() => globalThis.__turnRacePause.reason === 'rotation');
+    await page.setViewportSize({ width: 852, height: 393 });
+    await page.waitForFunction(() => !document.querySelector('.turn-race-countdown').hidden);
+    await page.evaluate(() => globalThis.dispatchEvent(new globalThis.Event("blur")));
+    await page.waitForTimeout(1600);
+    assert.equal(await page.evaluate(() => globalThis.__turnRacePause.paused), true, 'blurred mid-count, the race stays paused');
+    assert.equal((await paused()).open, true, 'and PAUSED is back');
+    await page.locator('.turn-race-pause-resume').click();
+    await page.waitForFunction(() => !globalThis.__turnRacePause.paused, null, { timeout: 3000 });
+
     await page.setViewportSize({ width: 393, height: 852 });
     await page.waitForFunction(() => globalThis.__turnRacePause.reason === 'rotation');
     await page.locator('.turn-race-pause-resume').click();
