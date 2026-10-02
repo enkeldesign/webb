@@ -44,10 +44,13 @@ function saveEnabled(enabled) {
   }
 }
 
+// Length words; MID, not MEDIUM, so a medium bend of medium length is MEDIUM MID LEFT.
+const LENGTH_WORDS = Object.freeze({ short: 'SHORT', medium: 'MID', long: 'LONG' });
+
 /** A swoosh as words: GENTLE LONG LEFT. */
 export function swooshCaption(entry) {
   if (!entry) return '';
-  return `${String(entry.tightness || '').toUpperCase()} ${entry.long ? 'LONG' : 'SHORT'} ${entry.side === 'right' ? 'RIGHT' : 'LEFT'}`;
+  return `${String(entry.tightness || '').toUpperCase()} ${LENGTH_WORDS[entry.length] || 'SHORT'} ${entry.side === 'right' ? 'RIGHT' : 'LEFT'}`;
 }
 
 /** The latest swoosh heard by now, while its caption still holds. */

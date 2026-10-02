@@ -128,8 +128,9 @@ export const SWOOSH_VOICES = Object.freeze({
   // CHIME variants (Erik's race test of 1.35.2). CHIME is the favourite, but its strike
   // has faded by the time the swipe reaches the full side, so the side it lands on is
   // the quietest part. Each variant tries one remedy, so the race can tell which works:
-  // A slower decay: the ring lives on out to the full side.
-  'voice-chime-ring': Object.freeze({ ...CHIME, name: 'CHIME RING', decay: 1.1, release: 0.05, gain: 0.561 }),
+  // A slower decay: the ring lives on out to the full side. The race sound since 1.35.5,
+  // in three lengths (Erik).
+  'voice-chime-ring': Object.freeze({ ...CHIME, name: 'CHIME RING', decay: 1.1, release: 0.05, gain: 0.561, lengths: Object.freeze({ short: 0.2, medium: 0.4, long: 0.6 }) }),
   // The same strike, but the swipe reaches the full side within its first 30%.
   'voice-chime-early': Object.freeze({ ...CHIME, name: 'CHIME EARLY', travelShare: 0.3 }),
   // The strike carries tightness; a soft wind at the same pitch rises behind it and

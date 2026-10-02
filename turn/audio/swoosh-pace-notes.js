@@ -19,8 +19,9 @@ import { routeForSamples, routeSegmentAt, upcomingRouteSegments } from './route-
 import { SWOOSH_LENGTHS, SWOOSH_VOICES, VOICE_VARIANTS, startSwoosh, swooshLengths } from './swoosh-sound.js';
 
 export const SWOOSH_PACE_TUNING = Object.freeze({
-  // The race sound: CHIME, Erik's favourite from the admin sound picker (1.35.2).
-  variant: 'voice-chime',
+  // The race sound: CHIME RING, Erik's choice from the admin sound picker (1.35.4), in
+  // three lengths.
+  variant: 'voice-chime-ring',
   // Peak level into the route channel. At TURN's default balance, swooshes sit close to the
   // guiding ribbon (Erik found 0.24 comfortable only with Drive By Ear at 10–20%, i.e.
   // ~0.036); as the balance favours Drive By Ear they rise, reaching 0.24 at 92.5%.
@@ -31,8 +32,11 @@ export const SWOOSH_PACE_TUNING = Object.freeze({
   // Pitch from the tightest sustained radius (metres): tight below 40, medium below 120.
   tightRadius: 40,
   mediumRadius: 120,
-  // Swipe speed from the segment's length: a long swipe from 100 m of road.
+  // Swipe length from the segment's road length. A sound with three lengths (the race
+  // sound): short below 80 m, medium below 150 m, long from 150 m, about a third of the
+  // bends each. A sound with two: long from 100 m.
   longMetres: 100,
+  lengthClassMetres: Object.freeze({ medium: 80, long: 150 }),
   // A swipe ends at least this long before its bend begins.
   steeringLeadSeconds: 1,
   // Between linked swipes, as in the listening tests.
@@ -92,14 +96,17 @@ export function swooshTightness(segment, tuning = SWOOSH_PACE_TUNING) {
   return radius < tuning.mediumRadius ? 'medium' : 'gentle';
 }
 
-/** Whether a segment gets a long swipe: road length, never speed. */
-export function isLongSwoosh(segment, tuning = SWOOSH_PACE_TUNING) {
-  return (Number(segment?.length) || 0) >= tuning.longMetres;
+/** A segment's length class in a sound's lengths: road length, never speed. */
+export function swooshLengthClass(segment, tuning = SWOOSH_PACE_TUNING, lengths = SWOOSH_LENGTHS) {
+  const metres = Number(segment?.length) || 0;
+  if (!Number.isFinite(lengths.medium)) return metres >= tuning.longMetres ? 'long' : 'short';
+  if (metres >= tuning.lengthClassMetres.long) return 'long';
+  return metres >= tuning.lengthClassMetres.medium ? 'medium' : 'short';
 }
 
 /** Swipe length for a segment, in the chosen sound's lengths. */
 export function swooshDuration(segment, tuning = SWOOSH_PACE_TUNING, lengths = SWOOSH_LENGTHS) {
-  return isLongSwoosh(segment, tuning) ? lengths.long : lengths.short;
+  return lengths[swooshLengthClass(segment, tuning, lengths)];
 }
 
 /**
@@ -306,7 +313,7 @@ function record(segment, status, detail = {}) {
     side: segment.side,
     angleDegrees: segment.angleDegrees,
     tightness: swooshTightness(segment),
-    long: isLongSwoosh(segment),
+    length: swooshLengthClass(segment, SWOOSH_PACE_TUNING, swooshLengths(SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant)),
     status,
     ...detail
   });

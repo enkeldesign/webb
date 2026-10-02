@@ -1102,13 +1102,14 @@ Object.freeze({
     Object.freeze(['1.35.1 r353', 'SWOOSH pace notes tuned to a driver, from the first race test. They sit closer to the guiding ribbon at the default Sound balance and grow louder as you favour Drive By Ear. A softer air leads, with the tightness pitch underneath it. Gentle bends under 15° pass silently, and a corner up to 120° is one swipe, so a hairpin complex speaks the way you would count it (#909, #928).']),
     Object.freeze(['1.35.2 r354', 'Admin: SWOOSH SOUND PICKER in SETTINGS. While racing, a box where the steering pad goes chooses the pace-note sound: the race sound or one of ten polished voices (GLIDE, BREATH, SILK, CHIME, FLUTE, SWELL, HALO, WIND, PEBBLE, WOOD), with smooth fades, a soft top and a small room. Each step plays the new sound, and a caption names the swoosh just played, such as GENTLE LONG LEFT. Players hear no change.']),
     Object.freeze(['1.35.3 r355', 'Drive By Ear: pace notes are now CHIME, a soft bell that travels out to the ear on the side of the bend, with its pitch telling how tight the bend is. It rings a little longer than before, so short and long bends are easier to tell apart.']),
-    Object.freeze(['1.35.4 r356', 'Admin: five CHIME variants in the SWOOSH SOUND PICKER (11–15), each trying to keep the chime strong where the swipe lands on its side: CHIME RING rings longer, CHIME EARLY reaches the side sooner, CHIME WIND adds a soft wind that carries the length, CHIME LONGER gives long curves a longer chime, and CHIME MIRRORED adds a reversed chime that swells to the side. Players hear no change.'])
+    Object.freeze(['1.35.4 r356', 'Admin: five CHIME variants in the SWOOSH SOUND PICKER (11–15), each trying to keep the chime strong where the swipe lands on its side: CHIME RING rings longer, CHIME EARLY reaches the side sooner, CHIME WIND adds a soft wind that carries the length, CHIME LONGER gives long curves a longer chime, and CHIME MIRRORED adds a reversed chime that swells to the side. Players hear no change.']),
+    Object.freeze(['1.35.5 r357', 'Drive By Ear: pace notes are now CHIME RING, a chime that keeps ringing out to the side of the bend. Its length tells the bend in three steps: short, medium and long.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.35.4',
-  build: '2026.10.01-r356',
-  note: 'Five CHIME variants in the admin SWOOSH sound picker.'
+  version: '1.35.5',
+  build: '2026.10.02-r357',
+  note: 'Pace notes are CHIME RING, in three lengths.'
 });
