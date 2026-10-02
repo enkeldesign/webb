@@ -48,6 +48,18 @@ assert.match(indexSource, /\/yourturn\/storage-bootstrap\.js/);
 assert.match(indexSource, /\/yourturn\/app\.js\?revision=r593-canonical-motion/);
 assert.match(indexSource, /growing-challenge\.css/);
 assert.match(indexSource, /racer-labels-bootstrap\.js/);
+// TURN's race runtime (main.js) refuses to start without its score feedback root, so
+// YOUR TURN must provide it or the challenge never opens.
+assert.match(indexSource, /<aside class="score-feedback" id="scoreFeedback"/, 'YOUR TURN provides the score feedback root TURN main.js requires');
+// Theme (#1067): YOUR TURN follows the device, with no choice of its own.
+{
+  const head = indexSource.slice(0, indexSource.indexOf('<link rel="stylesheet"'));
+  assert.match(head, /matchMedia\('\(prefers-color-scheme: dark\)'\)/, 'YOUR TURN follows the system theme before any stylesheet');
+  assert.match(head, /root\.dataset\.theme = theme;/);
+  assert.match(head, /const BROWSER = \{ light: '#38d9ff', dark: '#111214' \};/);
+  assert.doesNotMatch(head, /localStorage/, 'YOUR TURN has no stored theme choice');
+  assert.doesNotMatch(indexSource, /theme-contrast/, 'YOUR TURN\'s dark theme is CSS only');
+}
 assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r595-landscape-recalibrate/,
   'The page must cache-bust the current YOUR TURN session while app.js stays on canonical TURN runtime modules');
 assert.match(indexSource, /Your name in the challenge/);

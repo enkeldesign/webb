@@ -21,9 +21,9 @@
   gap: 7.5px;
   margin: 0 0 13.5px;
   padding: 10.5px 12px;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-outline);
   border-radius: 12px;
-  background: #fff8e8;
+  background: var(--turn-surface-page);
 }
 
 .yourturn-dbe-balance h2 {
@@ -57,7 +57,7 @@
   justify-self: center;
   min-width: 9ch;
   padding: 3.75px 7.5px;
-  border: 1.5px solid #08090a;
+  border: 1.5px solid var(--turn-outline);
   border-radius: 749.25px;
   background: #ffd43b;
   font-size: max(var(--turn-text-floor, 11px), 0.6rem);

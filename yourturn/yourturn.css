@@ -6,7 +6,7 @@ html[data-turn-deployment="yourturn"] body {
   min-height: 0;
   margin: 0;
   overflow: hidden;
-  background: #08090a;
+  background: var(--turn-ink);
 }
 
 html[data-turn-deployment="yourturn"] body {
@@ -41,7 +41,7 @@ html[data-turn-deployment="yourturn"] #intro {
   gap: 7.5px;
   padding: 18px;
   background: #38d9ff;
-  color: #08090a;
+  color: var(--turn-ink);
   text-align: center;
   font: 900 max(var(--turn-text-floor, 11px), 0.75rem)/1.1 system-ui, sans-serif;
   letter-spacing: 0.04em;
@@ -53,9 +53,9 @@ html[data-turn-deployment="yourturn"] #intro {
 
 .yourturn-loading img {
   width: min(28vw, 99px);
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-outline);
   border-radius: 16.5px;
-  box-shadow: 6px 6px 0 #08090a;
+  box-shadow: 6px 6px 0 var(--turn-shadow-color);
 }
 
 .yourturn-loading strong {
@@ -81,7 +81,7 @@ html[data-turn-deployment="yourturn"] #intro {
     max(16px, env(safe-area-inset-left));
   border: 0;
   background: transparent;
-  color: #08090a;
+  color: var(--turn-text);
   place-items: center;
   overflow: auto;
 }
@@ -102,7 +102,7 @@ html[data-turn-deployment="yourturn"] #intro {
   max-height: calc(100dvh - 24px);
   overflow: auto;
   padding: clamp(13.5px, 3vw, 22.5px);
-  border: 3.75px solid #08090a;
+  border: 3.75px solid var(--turn-outline);
   border-radius: 19.5px;
   background: rgb(255 248 232 / 0.93);
   box-shadow: 9px 9px 0 rgb(8 9 10 / 0.96);
@@ -122,11 +122,11 @@ html[data-turn-deployment="yourturn"] #intro {
   min-height: 39px;
   padding: 0;
   place-items: center;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-outline);
   border-radius: 50%;
   background: #ff9b66;
-  color: #08090a;
-  box-shadow: 3px 3px 0 #08090a;
+  color: var(--turn-ink);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: 1000 max(var(--turn-text-floor, 11px), 0.9rem)/1 system-ui, sans-serif;
   touch-action: manipulation;
 }
@@ -147,9 +147,9 @@ html[data-turn-deployment="yourturn"] #intro {
 .yourturn-card-head img {
   width: clamp(36px, 7vw, 54px);
   aspect-ratio: 1;
-  border: 2.25px solid #08090a;
+  border: 2.25px solid var(--turn-outline);
   border-radius: 10.5px;
-  box-shadow: 3px 3px 0 #08090a;
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
 }
 
 .yourturn-kicker {
@@ -176,7 +176,7 @@ html[data-turn-deployment="yourturn"] #intro {
   gap: 6px 12px;
   margin: 0 0 10.5px;
   padding: 9px 11.25px;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-outline);
   border-radius: 12px;
   background: #ffd43b;
 }
@@ -232,10 +232,10 @@ html[data-turn-deployment="yourturn"] #intro {
   width: 100%;
   min-height: 36px;
   padding: 6.75px 9px;
-  border: 2.25px solid #08090a;
+  border: 2.25px solid var(--turn-outline);
   border-radius: 9px;
-  background: #fff;
-  color: #08090a;
+  background: var(--turn-surface-bright);
+  color: var(--turn-text);
   font: inherit;
   font-size: max(var(--turn-text-floor, 11px), 0.7875rem);
   font-weight: 900;
@@ -261,11 +261,11 @@ html[data-turn-deployment="yourturn"] #intro {
 .yourturn-actions button {
   min-height: 36px;
   padding: 7.5px 12px;
-  border: 3px solid #08090a;
+  border: 3px solid var(--turn-outline);
   border-radius: 10.5px;
-  background: #fff8e8;
-  color: #08090a;
-  box-shadow: 3.75px 3.75px 0 #08090a;
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
+  box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color);
   font: inherit;
   font-weight: 1000;
   letter-spacing: 0.015em;
@@ -320,7 +320,7 @@ html[data-turn-deployment="yourturn"] #intro {
     max(20px, env(safe-area-inset-bottom))
     max(20px, env(safe-area-inset-left));
   background: #38d9ff;
-  color: #08090a;
+  color: var(--turn-ink);
 }
 
 .yourturn-rotate[hidden] {
@@ -333,10 +333,10 @@ html[data-turn-deployment="yourturn"] #intro {
   gap: 12px;
   width: min(420px, 92vw);
   padding: clamp(16.5px, 5vw, 30px);
-  border: 3.75px solid #08090a;
+  border: 3.75px solid var(--turn-outline);
   border-radius: 21px;
-  background: #fff8e8;
-  box-shadow: 9px 9px 0 #08090a;
+  background: var(--turn-surface-page);
+  box-shadow: 9px 9px 0 var(--turn-shadow-color);
   text-align: center;
 }
 
@@ -356,7 +356,7 @@ html[data-turn-deployment="yourturn"] #intro {
 .yourturn-phone {
   width: 54px;
   height: 88.5px;
-  border: 4.5px solid #08090a;
+  border: 4.5px solid var(--turn-outline);
   border-radius: 12px;
   background: #ffd43b;
   transform: rotate(90deg);
@@ -364,7 +364,7 @@ html[data-turn-deployment="yourturn"] #intro {
 
 .yourturn-target-chip {
   min-width: clamp(127.5px, 22vw, 210px);
-  background: #fff8e8 !important;
+  background: var(--turn-surface-page) !important;
 }
 
 .yourturn-target-chip > span {
@@ -387,11 +387,11 @@ body.yourturn-racing .best-chip {
 
 .yourturn-challenge-button {
   background: #ff9b66 !important;
-  color: #08090a !important;
+  color: var(--turn-ink) !important;
 }
 
 body.yourturn-racing #resetButton {
-  background: #fff8e8;
+  background: var(--turn-surface-page);
 }
 
 .visually-hidden {
@@ -456,7 +456,7 @@ body.yourturn-racing #resetButton {
     min-width: 31.5px;
     min-height: 31.5px;
     border-width: 2.25px;
-    box-shadow: 2.25px 2.25px 0 #08090a;
+    box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
     font-size: max(var(--turn-text-floor, 11px), 0.75rem);
   }
 
@@ -512,7 +512,7 @@ body.yourturn-racing #resetButton {
     min-height: 30px;
     padding: 5.25px 8.25px;
     border-width: 2.25px;
-    box-shadow: 2.25px 2.25px 0 #08090a;
+    box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
     font-size: max(var(--turn-text-floor, 11px), 0.645rem);
   }
 
@@ -550,4 +550,30 @@ body.yourturn-racing #resetButton {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* Dark theme (#1067): YOUR TURN follows the device. The full-screen loading and
+   rotate screens are the dusk sky TURN's own loading screen uses, the challenge card is
+   a night surface, and every colour on it keeps Ink, as in light. */
+:root[data-theme="dark"] :is(.yourturn-loading, .yourturn-rotate) {
+  background:
+    radial-gradient(circle at 12% 20%, rgb(255 212 59 / 0.42) 0 7%, transparent 7.5%),
+    radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.38) 0 10%, transparent 10.5%),
+    linear-gradient(145deg, #12323d 0 45%, #18321f 100%);
+  color: var(--turn-text);
+}
+
+:root[data-theme="dark"] .yourturn-card {
+  background: color-mix(in srgb, var(--turn-surface-page) 93%, transparent);
+}
+
+@media (orientation: portrait) {
+  :root[data-theme="dark"] .yourturn-card {
+    background: color-mix(in srgb, var(--turn-surface-page) 90%, transparent);
+  }
+}
+
+/* The YOUR TURN kicker is a lighter purple on night, so it keeps 8:1. */
+:root[data-theme="dark"] :is(.yourturn-kicker, .yourturn-target-chip > span) {
+  color: #c4a6f0;
 }
