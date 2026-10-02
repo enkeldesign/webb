@@ -37,6 +37,12 @@
 
 /* ---------- App bar: the logo and the way back ---------- */
 
+/* Dark theme: the night header with a thin yellow rule, as on Home. */
+html[data-theme="dark"] .garage-bar {
+  border-bottom: 4px solid var(--turn-yellow-600, #ffbd12);
+  background: var(--turn-header);
+}
+
 .garage-bar {
   position: sticky;
   z-index: 20;
@@ -157,7 +163,7 @@
   top: 10px;
   left: 10px;
   padding: 4px 10px;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 999px;
   background: var(--turn-pr-card);
   font-family: var(--turn-pr-font-mono);
@@ -177,7 +183,7 @@
   inset: auto 60px 50% 60px;
   margin: 0;
   padding: 10px 12px;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 12px;
   background: var(--turn-pr-card);
   font-size: var(--turn-pr-type-spec);
@@ -407,7 +413,7 @@
   display: grid;
   gap: 12px;
   padding: 14px;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 12px;
   background: var(--turn-pr-card);
 }
@@ -641,7 +647,7 @@
 
 .garage-spec-meter i {
   height: 0.625rem;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 3px;
   background: var(--turn-pr-card);
 }
@@ -699,7 +705,7 @@
   width: 22.5px;
   height: 22.5px;
   margin: 0;
-  border: 4px solid var(--turn-ink);
+  border: 4px solid var(--turn-outline);
   border-radius: var(--turn-radius-micro, 4px);
   background-color: var(--turn-form-control-idle, var(--turn-surface-page));
   background-position: center;
@@ -920,7 +926,7 @@
   border-radius: var(--turn-pr-radius);
   background: var(--turn-pr-card);
   box-shadow: none;
-  color: var(--turn-ink);
+  color: var(--turn-text);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -1009,8 +1015,8 @@
 }
 
 .garage-car-card.is-selected .garage-car-ordinal {
-  background: var(--turn-ink);
-  color: var(--turn-paper, #fff8e8);
+  background: var(--turn-text);
+  color: var(--turn-surface-page);
 }
 
 /* Locked: the real car as an Ink line drawing on Paper, quieter, with its threshold. */

@@ -227,11 +227,11 @@
   min-height: var(--turn-pr-target, 44px);
   margin: 0;
   padding: 10px 12px;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 12px;
   background: var(--turn-pr-card, #fffcf2);
   box-shadow: none;
-  color: var(--turn-ink);
+  color: var(--turn-text);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -248,6 +248,16 @@
 .roadbook-goal.is-next {
   border-width: 3px;
   background: var(--turn-yellow-100, #fff0a8);
+}
+
+/* An earned, gated or next goal sits on a light semantic colour: its text and rules
+   stay Ink in both themes. */
+.roadbook-goal:is(.is-earned, .is-gated, .is-next) {
+  --turn-text: var(--turn-ink);
+  --turn-outline: var(--turn-ink);
+  --turn-pr-muted: rgb(8 9 10 / 0.68);
+  --turn-pr-faint: rgb(8 9 10 / 0.32);
+  color: var(--turn-ink);
 }
 
 /* A fixed size, as in ACHIEVEMENTS: larger text grows the words, not the icon. */

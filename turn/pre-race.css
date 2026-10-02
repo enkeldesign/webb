@@ -6,10 +6,10 @@
    width and usable height, never on device names. */
 
 :root {
-  --turn-pr-card: #fffcf2;
-  --turn-pr-muted: rgb(8 9 10 / 0.68);
-  --turn-pr-faint: rgb(8 9 10 / 0.32);
-  --turn-pr-rule: 3px solid var(--turn-ink, #08090a);
+  --turn-pr-card: var(--turn-surface-card);
+  --turn-pr-muted: var(--turn-text-muted);
+  --turn-pr-faint: var(--turn-text-faint);
+  --turn-pr-rule: 3px solid var(--turn-outline);
   --turn-pr-radius: 14px;
   --turn-pr-radius-sheet: 20px;
   /* Hard shadows come from design-scale.css: only the selected card (card level),
@@ -204,10 +204,10 @@ html body .turn-pr-app-logo {
   min-height: 1.5rem;
   padding: 0 0.5rem;
   box-sizing: border-box;
-  border: 2px solid var(--turn-ink);
+  border: 2px solid var(--turn-outline);
   border-radius: 999px;
   background: var(--turn-pr-card);
-  color: var(--turn-ink);
+  color: var(--turn-text);
   font-family: var(--turn-pr-font-mono);
   font-size: var(--turn-pr-type-meta);
   font-weight: 800;
@@ -221,6 +221,12 @@ html body .turn-pr-app-logo {
 .turn-pr-chip.is-medium { background: var(--turn-difficulty-medium, #ffe087); }
 .turn-pr-chip.is-advanced { background: var(--turn-difficulty-advanced, #ffb89f); }
 .turn-pr-chip.is-expert { background: var(--turn-difficulty-expert, #ff9b91); }
+
+/* A difficulty chip is a semantic colour: Ink on it in both themes. */
+.turn-pr-chip:is(.is-easy, .is-medium, .is-advanced, .is-expert) {
+  border-color: var(--turn-ink);
+  color: var(--turn-ink);
+}
 
 /* ---------- Card: ordinal tab · content · identity cell ---------- */
 
@@ -238,7 +244,7 @@ html body .turn-pr-app-logo {
   border-radius: var(--turn-pr-radius);
   background: var(--turn-pr-card);
   box-shadow: none;
-  color: var(--turn-ink);
+  color: var(--turn-text);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -341,8 +347,8 @@ html body .turn-pr-app-logo {
 }
 
 .turn-pr-card.is-selected .turn-pr-card-tab {
-  background: var(--turn-ink);
-  color: var(--turn-paper, #fff8e8);
+  background: var(--turn-text);
+  color: var(--turn-surface-page);
 }
 
 /* Locked: still inspectable, visibly quieter, with the trophy threshold. */
@@ -360,7 +366,7 @@ html body .turn-pr-app-logo {
 }
 
 .turn-pr-card.is-locked.is-selected .turn-pr-card-tab {
-  color: var(--turn-paper, #fff8e8);
+  color: var(--turn-surface-page);
 }
 
 .turn-pr-card.is-locked .turn-pr-card-art {
@@ -368,7 +374,7 @@ html body .turn-pr-app-logo {
 }
 
 .turn-pr-card.is-locked .turn-pr-route-line {
-  stroke: var(--turn-paper, #fff8e8);
+  stroke: var(--turn-surface-page);
 }
 
 .turn-pr-card.is-locked .turn-pr-route-outline {
@@ -444,7 +450,7 @@ html body .turn-pr-app-logo {
   border-radius: var(--turn-pr-radius);
   background: var(--turn-pr-card);
   box-shadow: none;
-  color: var(--turn-ink);
+  color: var(--turn-text);
   font-family: var(--turn-pr-font-display);
   font-size: 1.0625rem;
   font-weight: 800;

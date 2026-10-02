@@ -89,18 +89,18 @@ const semanticMappings = new Map([
   ['--turn-surface-raised', '--turn-white'],
   ['--turn-action-primary', '--turn-pink-500'],
   ['--turn-action-share', '--turn-pink-500'],
-  ['--turn-action-utility', '--turn-paper'],
+  ['--turn-action-utility', '--turn-surface-page'],
   ['--turn-action-information', '--turn-blue-500'],
   ['--turn-action-game', '--turn-blue-500'],
   ['--turn-action-success', '--turn-green-500'],
   ['--turn-action-warning', '--turn-yellow-400'],
   ['--turn-action-danger', '--turn-red-500'],
   ['--turn-action-navigation', '--turn-orange-500'],
-  ['--turn-form-control-idle', '--turn-paper'],
+  ['--turn-form-control-idle', '--turn-surface-page'],
   ['--turn-form-control-selected', '--turn-pink-500'],
   ['--turn-form-control-focus', '--turn-blue-500'],
   ['--turn-disclosure-trigger', '--turn-blue-300'],
-  ['--turn-disclosure-panel', '--turn-paper'],
+  ['--turn-disclosure-panel', '--turn-surface-page'],
   ['--turn-difficulty-easy', '--turn-green-200'],
   ['--turn-difficulty-medium', '--turn-yellow-200'],
   ['--turn-difficulty-advanced', '--turn-orange-200'],
@@ -257,6 +257,25 @@ assert.match(tokens, /@media \(color-gamut: p3\) \{\s*@supports \(color: color\(
 assert.match(tokens, /--turn-pink-500: #ea5da1;[\s\S]*--turn-pink-500: color\(display-p3 0\.852 0\.4 0\.623\)/,
   'The sRGB accent is declared first and remains the default');
 assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-scale"[\s\S]*no text below 11px/);
+// Themes (#1067): one resolver in index.html before any stylesheet; the dark theme
+// changes only neutral roles, never semantic colours; the THEME setting is a radio group.
+{
+  const head = index.slice(0, index.indexOf('<link rel="stylesheet"'));
+  assert.match(head, /globalThis\.__turnTheme = Object\.freeze\(/, 'the theme resolver runs before any stylesheet');
+  assert.match(head, /matchMedia\('\(prefers-color-scheme: dark\)'\)/, 'System follows the OS');
+  assert.match(head, /root\.dataset\.theme = theme/);
+  assert.match(head, /meta\[name="theme-color"\][\s\S]*meta\.content = HEADER\[theme\]/, 'the browser colour follows the header');
+  assert.match(head, /const HEADER = \{ light: '#ffbd12', dark: '#111214' \}/);
+  assert.equal((index.match(/<meta name="theme-color"/g) || []).length, 1, 'one theme-color meta, updated by the resolver');
+  const dark = tokens.match(/:root\[data-theme="dark"\] \{([\s\S]*?)\}/)?.[1] || '';
+  const darkNames = [...dark.matchAll(/(--[\w-]+):/g)].map((match) => match[1]).sort();
+  assert.deepEqual(darkNames, ['--turn-header', '--turn-outline', '--turn-shadow-color', '--turn-surface-bright', '--turn-surface-card', '--turn-surface-page', '--turn-surface-raised', '--turn-text', '--turn-text-faint', '--turn-text-muted'], 'the dark theme changes only neutral roles');
+  assert.match(tokens, /--turn-shadow-color: var\(--turn-ink\);/, 'hard shadows have their own colour');
+  const bar = await fs.readFile(new URL('../turn/ui/home-app-bar.js', import.meta.url), 'utf8');
+  assert.match(bar, /<legend>THEME<\/legend>/);
+  assert.match(bar, /type="radio" name="turn-theme"/, 'THEME is one radio group');
+}
+
 console.log('TURN current product-language design system, palette, gameplay, progression and dialog reference passed.');
 
 function escapeRegex(value) {

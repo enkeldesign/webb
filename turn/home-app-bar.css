@@ -66,6 +66,13 @@ html body .m8-home.turn-app-bar-layout .m8-home-head {
   background: var(--m8-yellow, #ffbd12);
 }
 
+/* Dark theme: a night header with a thin yellow rule, the COMPACT viewer's look; the
+   browser colour (theme-color) matches it. */
+html[data-theme="dark"] body .m8-home.turn-app-bar-layout .m8-home-head {
+  border-bottom: 4px solid var(--m8-yellow, #ffbd12);
+  background: var(--turn-header);
+}
+
 /* The logo is TURN's badge (pre-race.css .turn-pr-app-logo), hanging over the rule. */
 
 /* The pitch keeps its slot for the support challenge trigger; its tagline moves
@@ -396,6 +403,71 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-home-build {
 
   html body .turn-home-sheet .turn-home-sheet-footer .turn-viewport-readout {
     flex-basis: 100%;
+  }
+}
+
+/* THEME: one choice of three, as a segmented row of 44px radios. */
+html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 3px solid var(--turn-outline);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting[hidden] {
+  display: none;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting legend {
+  grid-column: 1 / -1;
+  float: left;
+  width: 100%;
+  margin: 0;
+  padding: 6px 10px 2px;
+  font-size: var(--turn-type-micro, 11px);
+  font-weight: 900;
+  letter-spacing: var(--turn-tracking-micro, 0.04em);
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting label {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting label + label {
+  border-left: 3px solid var(--turn-outline);
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting label:has(input:checked) {
+  background: var(--turn-form-control-selected, #ea5da1);
+  color: var(--turn-ink);
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting label:has(input:focus-visible) {
+  outline: 4px solid var(--turn-form-control-focus, #38d9ff);
+  outline-offset: -4px;
+}
+
+@media (forced-colors: active) {
+  html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting {
+    display: none;
   }
 }
 

@@ -36,11 +36,11 @@ assert.match(app, /m8-how-to-play-r126\.css\?revision=r220-overcharge-disclosure
 assert.match(app, /how-to-play-guide\.js\?revision=r241-learning-achievements/);
 
 for (const mapping of [
-  '--turn-form-control-idle: var(--turn-paper)',
+  '--turn-form-control-idle: var(--turn-surface-page)',
   '--turn-form-control-selected: var(--turn-pink-500)',
   '--turn-form-control-focus: var(--turn-blue-500)',
   '--turn-disclosure-trigger: var(--turn-blue-300)',
-  '--turn-disclosure-panel: var(--turn-paper)'
+  '--turn-disclosure-panel: var(--turn-surface-page)'
 ]) {
   assert.ok(tokens.includes(mapping), `Missing native component token ${mapping}`);
 }

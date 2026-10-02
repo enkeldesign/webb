@@ -62,7 +62,7 @@ assert.match(release.id, /^\d{4}\.\d{2}\.\d{2}-r\d+$/);
 assert.equal(release.cacheKey, release.id.replaceAll('.', ''));
 
 assert.match(productionIndex, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
-assert.match(productionIndex, /<meta name="theme-color" content="#08090a">/);
+assert.match(productionIndex, /<meta name="theme-color" content="#ffbd12">/);
 assert.match(
   productionIndex,
   new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-browser-consent(?:-[^"]+)?"`)
