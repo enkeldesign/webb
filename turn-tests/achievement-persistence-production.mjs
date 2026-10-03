@@ -44,6 +44,13 @@ const stored = (storage) => JSON.parse(storage.getItem(ACHIEVEMENT_STORAGE_KEY))
   assert.ok(a.grantBonus('support-thanks', 5, { reason: 'test' }));
   b.unlock('first-turn');
   assert.equal(stored(storage).bonuses['support-thanks']?.trophies, 5, 'A bonus survives a stale window');
+
+  // A reward is announced by the window that reaches it, and kept by a stale one.
+  a.unlock('an-army-of-me', { trackId: 'midnight-city' });
+  a.unlock('on-course-of-course', { trackId: 'harbor' });
+  assert.deepEqual(a.syncRewards().map(({ id }) => id), ['compact'], 'Reaching 300 trophies announces the Compact');
+  b.markAllSeen();
+  assert.ok(stored(storage).rewards.unlocked.includes('compact'), 'A stale window keeps the reward');
 }
 
 {

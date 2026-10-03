@@ -241,7 +241,15 @@ export function mergeAchievementState(target, source) {
 function readStoredState(storage) {
   try {
     const raw = storage?.getItem?.(ACHIEVEMENT_STORAGE_KEY);
-    return raw ? normalizeAchievementState(JSON.parse(raw)) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const stored = normalizeAchievementState(parsed);
+    // Only rewards actually stored merge in. Normalising also lists every reward the
+    // trophy total has reached, and taking those here would claim a reward before this
+    // window's syncRewards() announces it.
+    const kept = new Set([...normalizedStringArray(parsed?.rewards?.unlocked), ...stored.rewards.grandfathered]);
+    stored.rewards.unlocked = stored.rewards.unlocked.filter((id) => kept.has(id));
+    return stored;
   } catch (_) {
     // Unreadable: this copy stands.
     return null;

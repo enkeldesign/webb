@@ -1118,13 +1118,14 @@ Object.freeze({
     Object.freeze(['1.36.8 r369', 'If the screen turns while you race, the race pauses instead of driving on. Turn back and it continues after a quick 3, 2, 1, with steering centred; or choose RACE IN PORTRAIT or RACE IN LANDSCAPE to keep racing the new way round. On Android the screen stays locked while you race; pause to turn it.']),
     Object.freeze(['1.36.9 r370', 'Dark mode: the drive pad is calmer at night, with muted DRIFT, BOOST, GAS and BRAKE and cream labels. BOOST fills with its charge over the dark, like the boost bar.']),
     Object.freeze(['1.36.10 r371', 'THIS VISIT: PAUSED shows your laps, best lap and anything earned since you started this track. After LEAVE RACE, ROADBOOK shows the whole visit: laps, best lap and how much it beat your record, best DRIFT and FLOW, achievements, trophies, unlocks and what to try next.']),
-    Object.freeze(['1.36.11 r372', 'THIS VISIT keeps an achievement or unlock that lands just as you return to ROADBOOK.'])
+    Object.freeze(['1.36.11 r372', 'THIS VISIT keeps an achievement or unlock that lands just as you return to ROADBOOK.']),
+    Object.freeze(['1.36.12 r373', 'Your progress is safer. With TURN open twice, neither window can undo what the other saved: achievements, trophies and your fastest rival laps are kept from both, and resetting rivals in one window is not undone by the other. Rival replays take about a sixth of the space, so they can no longer fill the device and stop achievements from saving; if space does run out, other tracks keep their fastest lap and the new best lap is always kept.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.36.11',
-  build: '2026.10.03-r372',
-  note: 'THIS VISIT keeps awards that land as ROADBOOK opens.'
+  version: '1.36.12',
+  build: '2026.10.03-r373',
+  note: 'Progress is kept across two open windows; rival replays take far less space.'
 });

@@ -100,7 +100,7 @@ try {
   clearRivalsState(harbor);
   assert.equal(scheduled.size, 1, 'Resetting one track must preserve another track’s pending flush');
   runNext();
-  assert.deepEqual(JSON.parse(disk.get(key('harbor'))).laps, [], 'Idle persistence must not resurrect a reset');
+  assert.equal(disk.has(key('harbor')), false, 'Idle persistence must not resurrect a reset');
   assert.equal(disk.has(`turn-three-ghost-v4:${getTrackStorageRevision('harbor')}`), false,
     'Reset must remove the legacy ghost key as well as the current rival key');
   assert.equal(JSON.parse(disk.get(key('airport'))).laps[0].time, 12);
@@ -121,8 +121,7 @@ try {
   clearAllRivalsState(state('countryside', null));
   assert.equal(scheduled.size, 0);
   flushScheduledRivalsState();
-  assert.ok([...disk.values()].every((value) => JSON.parse(value).laps.length === 0),
-    'All-track reset includes pending tracks beyond the active track');
+  assert.deepEqual([...disk.keys()], ['turn-rival-resets-v1'], 'All-track reset includes pending tracks beyond the active track');
 
   reset();
   saveRivalsState(state('harbor', 20));
@@ -215,7 +214,9 @@ try {
   reset();
   const stale = state('harbor', 12);
   saveRivalsState(stale);
-  disk.set(key('harbor'), JSON.stringify({ version: 8, trackId: 'harbor', resetAt: Date.now() + 5, laps: [] }));
+  // Another window resets HARBOR.
+  disk.delete(key('harbor'));
+  disk.set('turn-rival-resets-v1', JSON.stringify({ [key('harbor')]: Date.now() + 5 }));
   saveRivalsState(stale);
   assert.deepEqual(JSON.parse(disk.get(key('harbor'))).laps, [], 'A reset in another window is not undone by a stale one');
   const after = state('harbor', 14);

@@ -16,9 +16,29 @@ const DEFAULT_TRACK_ID = 'countryside';
 const GHOST_KEY = 'turn-three-ghost-v4';
 const COMPETITOR_KEY = 'turn-personal-rivals-v1';
 const pendingRivalSaves = new Map();
-// When each track's rivals were last reset (from this window or a stored marker):
-// a lap recorded before it is never written back.
+// When each track's rivals were last reset, by any window: a lap recorded before it is
+// never written back. Kept under its own key, so a reset still removes the track's laps.
+const RESET_KEY = 'turn-rival-resets-v1';
 const rivalResetAt = new Map();
+
+function storedResetAt(key) {
+  let stored = 0;
+  try {
+    stored = Number(JSON.parse(localStorage.getItem(RESET_KEY))?.[key]) || 0;
+  } catch (_) {}
+  const known = Math.max(stored, rivalResetAt.get(key) || 0);
+  if (known) rivalResetAt.set(key, known);
+  return known;
+}
+
+function recordReset(key, resetAt) {
+  rivalResetAt.set(key, resetAt);
+  try {
+    const resets = JSON.parse(localStorage.getItem(RESET_KEY)) || {};
+    resets[key] = Math.max(Number(resets[key]) || 0, resetAt);
+    localStorage.setItem(RESET_KEY, JSON.stringify(resets));
+  } catch (_) {}
+}
 const bestLapSummaryCache = new Map();
 const RIVAL_RETRY_DELAYS = [1000, 4000, 16000];
 let pendingRivalFlush = null;
@@ -93,10 +113,7 @@ function pendingRivalPayload(trackId) {
 // A stored rivals payload with every lap's frames read back as plain frames.
 function readStoredRivals(key) {
   const saved = JSON.parse(localStorage.getItem(key));
-  if (!saved || typeof saved !== 'object') return saved;
-  const resetAt = Number(saved.resetAt);
-  if (Number.isFinite(resetAt) && resetAt > (rivalResetAt.get(key) || 0)) rivalResetAt.set(key, resetAt);
-  if (!Array.isArray(saved.laps)) return saved;
+  if (!saved || typeof saved !== 'object' || !Array.isArray(saved.laps)) return saved;
   return {
     ...saved,
     laps: saved.laps.map((lap) => (lap && typeof lap === 'object' ? { ...lap, frames: decodeReplayFrames(lap.frames) } : lap))
@@ -183,7 +200,7 @@ function mergedRivalValue(key, value) {
   } catch (_) {
     // Unreadable: this window's laps stand.
   }
-  const resetAt = Math.max(rivalResetAt.get(key) || 0, Number(stored?.resetAt) || 0);
+  const resetAt = storedResetAt(key);
   const sameFormat = Number(stored?.version) === RIVAL_STORAGE_VERSION;
   const candidates = [...value.laps, ...(sameFormat && Array.isArray(stored?.laps) ? stored.laps : [])];
   const seen = new Set();
@@ -193,7 +210,7 @@ function mergedRivalValue(key, value) {
     .filter((lap) => !seen.has(lapIdentity(lap)) && seen.add(lapIdentity(lap)))
     .sort((a, b) => a.time - b.time)
     .slice(0, RIVAL_LIMIT);
-  return resetAt ? { ...value, resetAt, laps } : { ...value, laps };
+  return { ...value, laps };
 }
 
 const encodedLap = (lap) => ({ ...lap, frames: encodeReplayFrames(lap.frames) });
@@ -444,20 +461,11 @@ function clearTrackRivalPersistence(trackId) {
     rivalRetryAttempt = 0;
   }
   rememberBestLapSummary(trackId, null);
-  // A marker rather than a removal: another open window holding older laps reads it
-  // and leaves them out when it next saves.
-  const resetAt = Date.now();
-  rivalResetAt.set(rivalKey(trackId), resetAt);
-  try {
-    localStorage.setItem(rivalKey(trackId), JSON.stringify({
-      version: RIVAL_STORAGE_VERSION,
-      trackId: normalizeTrackId(trackId),
-      trackRevision: storageTrackId(trackId),
-      resetAt,
-      laps: []
-    }));
-  } catch (_) {}
-  try { localStorage.removeItem(ghostKey(trackId)); } catch (_) {}
+  // Another open window still holding older laps reads this and leaves them out.
+  recordReset(rivalKey(trackId), Date.now());
+  for (const key of [rivalKey(trackId), ghostKey(trackId)]) {
+    try { localStorage.removeItem(key); } catch (_) {}
+  }
 }
 
 export function clearRivalsState(state, { trackId } = {}) {
