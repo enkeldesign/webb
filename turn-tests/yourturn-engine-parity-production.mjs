@@ -40,12 +40,18 @@ const turnImportMap = readImportMap(turnIndex, 'TURN');
 const yourTurnImportMap = readImportMap(yourTurnIndex, 'YOUR TURN');
 const motionSpecifier = '/turn/input/motion.js';
 
-// Production TURN adds its release key to the same revision (#1045).
+// Both pages route the module to its one release-keyed URL (#1045, #1099).
 assert.equal(
   yourTurnImportMap.imports?.[motionSpecifier],
-  turnImportMap.imports?.[motionSpecifier]?.replace(/&build=\d{8}-r\d+$/, ''),
+  turnImportMap.imports?.[motionSpecifier],
   'YOUR TURN must resolve the canonical motion input module through the exact production TURN route'
 );
+// TURN's main.js asks for the race session under a historical key: YOUR TURN routes it
+// to this release, as TURN does, so a cached copy from an older release cannot load.
+for (const specifier of ['/turn/race/session-orchestrator.js?source=20260729-r118-m8', '/turn/input/tilt-centring.js']) {
+  assert.equal(yourTurnImportMap.imports?.[specifier], turnImportMap.imports?.[specifier], `YOUR TURN routes ${specifier} as TURN does`);
+  assert.match(yourTurnImportMap.imports?.[specifier] || '', /[?&]build=\d{8}-r\d+$/, `${specifier} carries the release key in YOUR TURN`);
+}
 assert.match(
   yourTurnImportMap.imports?.[motionSpecifier] || '',
   /ipad-motion-profile/,

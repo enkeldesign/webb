@@ -189,7 +189,7 @@ test('timed lap pins the exact start frame and snapshots the physical position',
     d: 0.6,
     p: 0
   });
-  assert.equal(message, 'GO!');
+  assert.equal(message, '', 'No GO!: the lap starts when the player chooses to cross the line');
 });
 
 test('SAFETY uses the visible road edge and latches any excursion for the whole lap', () => {

@@ -604,6 +604,9 @@ function renderSharedResourceImports(source, release) {
     synchronizeNightSkyTargets(importMap, release);
     synchronizeTrackWorldTargets(importMap, release);
     removeRetiredModuleRoutes(importMap);
+    // YOUR TURN runs TURN's game modules: each gets its one URL for this release here
+    // too, so a cached module of another release cannot come back under an old key.
+    routeModuleGraph(source, importMap, release, (repositoryPath) => shippedSource(repositoryPath, release), '/yourturn/index.html');
     return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
   });
 }

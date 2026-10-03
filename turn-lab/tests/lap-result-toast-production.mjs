@@ -275,7 +275,7 @@ assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish on
 assert.match(lapSystem, /turn:lap-invalid/, 'Incomplete checkpoint chains must publish explicit invalid-lap feedback');
 assert.match(lapSystem, /crossedLaterCheckpointGate/, 'Crossing a later gate before the required one must detect an irrecoverably invalid attempt');
 assert.match(lapSystem, /state\.lapInvalid = true/, 'The invalid attempt must stay marked until the next lap begins');
-assert.match(lapSystem, /suppressNextLapStartMessage = true/, 'Invalid-lap feedback must not be obscured by a competing GO message');
+assert.doesNotMatch(lapSystem, /'GO!'/, 'Invalid-lap feedback must not be obscured by a competing GO message (GO! is retired, #1032)');
 assert.doesNotMatch(lapSystem, /crossedStartByProgress/, 'Start and finish must use only the swept physical line crossing');
 assert.match(lapSystem, /const completedLap = finishedTime > 5/, 'Result visibility must be separated from replay-save eligibility');
 assert.match(lapSystem, /const validLap = completedLap && state\.recording\.length > 20/, 'Ghost saving may still require a usable recording');

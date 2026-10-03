@@ -695,6 +695,11 @@ function playCueNow(name, options = {}) {
     case 'ui-back':
       playTone(390, 250, 0.12, 0.06, 'triangle', now);
       break;
+    // Tilt steering centred (#1032): two short level tones, neither rising nor falling.
+    case 'steering-centred':
+      playTone(520, 520, 0.06, 0.05, 'triangle', now);
+      playTone(520, 520, 0.06, 0.05, 'triangle', now + 0.1);
+      break;
     case 'car-select': {
       const pitch = clamp(Number(options.enginePitch) || 1, 0.55, 1.7);
       playTone(170 * pitch, 310 * pitch, 0.12, 0.052, 'square', now);

@@ -1,4 +1,5 @@
 import { showRaceOrientationRecommendation } from '../ui/race-orientation.js';
+import { START_PROVISIONAL_MS, centreTiltSteering, startTiltCentring } from '../input/tilt-centring.js';
 function requireFunction(value, name) {
   if (typeof value !== 'function') {
     throw new TypeError(`TURN race session requires ${name}().`);
@@ -70,6 +71,10 @@ export function createRaceSessionOrchestrator({
   const setTimer = typeof windowRef?.setTimeout === 'function'
     ? windowRef.setTimeout.bind(windowRef)
     : globalThis.setTimeout.bind(globalThis);
+  const clearTimer = typeof windowRef?.clearTimeout === 'function'
+    ? windowRef.clearTimeout.bind(windowRef)
+    : globalThis.clearTimeout.bind(globalThis);
+  let cancelTiltCentring = () => {};
 
   let phase = 'idle';
 
@@ -161,14 +166,15 @@ export function createRaceSessionOrchestrator({
     manualSteer.hidden = state.sensorMode;
     publish('race-started');
 
-    if (state.sensorMode) {
-      setTimer(() => {
-        state.neutralRoll = state.targetRoll;
-        state.horizonRollReference = state.targetRoll;
-        state.roll = state.targetRoll;
-        state.neutralPitch = state.targetPitch;
-        state.pitch = state.targetPitch;
-      }, 220);
+    // Tilt: the race pill asks for a comfortable driving position, then says
+    // STEERING CENTRED (#1032). There is no GO!: the player chooses when to start.
+    // Drive By Ear 101 starts its parts quietly and centres as before.
+    cancelTiltCentring();
+    cancelTiltCentring = () => {};
+    if (state.sensorMode && announceStart) {
+      cancelTiltCentring = startTiltCentring({ state, showMessage: announce, setTimer, clearTimer, environment });
+    } else if (state.sensorMode) {
+      setTimer(() => centreTiltSteering(state, { horizon: true }), START_PROVISIONAL_MS);
     }
 
     await fullscreenPromise;
@@ -176,7 +182,6 @@ export function createRaceSessionOrchestrator({
     resizeViewport();
     setTimer(resizeViewport, 300);
     setTimer(resizeViewport, 900);
-    if (announceStart) announce('GO!');
     phase = 'racing';
     return true;
   }

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
 import { createRaceSessionOrchestrator } from '../turn/race/session-orchestrator.js';
+import { announceSteeringCentred } from '../turn/input/tilt-centring.js';
 
 function element(hidden = false) {
   return { hidden, textContent: '' };
@@ -182,6 +183,81 @@ assert.equal(motion.state.neutralRoll, motion.state.targetRoll);
 assert.equal(motion.state.horizonRollReference, motion.state.targetRoll);
 assert.equal(motion.state.neutralPitch, motion.state.targetPitch);
 assert.deepEqual(motion.published, ['race-started']);
+
+// Tilt centring at the start (#1032): the race pill asks for a comfortable driving
+// position, takes the neutral once the phone keeps still, and says STEERING CENTRED.
+// There is no GO!: the player chooses when to start. Drive By Ear hears a level cue.
+const HOLD = 'message:Hold your device in a comfortable driving position.';
+const CENTRED = 'message:STEERING CENTRED';
+function runSamples(harness, eachSample = () => {}, limit = 40) {
+  let ran = 3;
+  for (let i = 0; i < limit && ran < harness.timers.length; i += 1, ran += 1) {
+    assert.equal(harness.timers[ran].delay, 100, 'The start samples the phone every 100 ms');
+    eachSample(i);
+    harness.timers[ran].callback();
+  }
+  return ran - 3;
+}
+assert.ok(motion.order.includes(HOLD), 'Tilt start asks for the driving grip');
+assert.equal(motion.order.includes('message:GO!'), false, 'No GO!: the player chooses when to start');
+motion.environment.__turnAudio = { cue(name) { motion.order.push(`cue:${name}`); } };
+motion.state.mode = 'staged';
+motion.state.speed = 0;
+motion.state.targetRoll = 0.1;
+motion.state.targetPitch = -0.05;
+const steadySamples = runSamples(motion);
+assert.ok(motion.order.includes(CENTRED), 'A steady phone is centred out loud');
+assert.ok(motion.order.indexOf(HOLD) < motion.order.indexOf(CENTRED));
+assert.ok(motion.order.includes('cue:steering-centred'), 'Drive By Ear hears the centring');
+assert.equal(motion.state.neutralRoll, 0.1, 'The neutral is the pose the phone settled in');
+assert.equal(motion.state.horizonRollReference, 0.1);
+assert.equal(motion.state.neutralPitch, -0.05);
+assert.ok(steadySamples >= 7 && steadySamples <= 9, `The hint stays up long enough to read (${steadySamples} samples)`);
+
+const driving = createHarness();
+await driving.orchestrator.requestMotion();
+driving.timers[0].callback();
+driving.state.mode = 'racing';
+driving.state.targetRoll = -0.3;
+runSamples(driving);
+assert.ok(driving.order.includes(CENTRED), 'Driving off early still says the steering is centred');
+assert.equal(driving.state.neutralRoll, 0.4, 'Once the car moves, the start neutral stays');
+
+const restless = createHarness();
+await restless.orchestrator.requestMotion();
+restless.timers[0].callback();
+restless.state.mode = 'staged';
+restless.state.speed = 0;
+const restlessSamples = runSamples(restless, (i) => { restless.state.targetRoll = i % 2 ? 0.2 : -0.2; });
+assert.ok(restless.order.includes(CENTRED), 'A phone that never keeps still is centred all the same');
+assert.equal(restless.state.neutralRoll, 0.4, 'Never steady: the start neutral stands, as before');
+assert.equal(restlessSamples, 14, 'The start gives up waiting after about a second and a half');
+assert.equal(restless.order.filter((entry) => entry === CENTRED).length, 1, 'Said once');
+
+// RECALIBRATE blinks with every STEERING CENTRED, and the blink ends by itself.
+{
+  const classes = new Set();
+  const blinkTimers = [];
+  const button = {
+    classList: { add: (name) => classes.add(name), remove: (name) => classes.delete(name) },
+    offsetWidth: 80
+  };
+  const said = [];
+  announceSteeringCentred({
+    showMessage: (text) => said.push(text),
+    environment: {
+      document: { querySelector: (selector) => (selector === '#calibrateButton' ? button : null) },
+      setTimeout: (callback, delay) => blinkTimers.push({ callback, delay }),
+      clearTimeout() {},
+      __turnDriveByEarEnabled: false
+    }
+  });
+  assert.deepEqual(said, ['STEERING CENTRED']);
+  assert.ok(classes.has('is-centred-blink'), 'RECALIBRATE blinks with STEERING CENTRED');
+  assert.equal(blinkTimers.length, 1);
+  blinkTimers[0].callback();
+  assert.equal(classes.has('is-centred-blink'), false, 'The blink ends by itself');
+}
 
 const cancelled = createHarness({ selection: null });
 assert.equal(await cancelled.orchestrator.useManualMode(), false);

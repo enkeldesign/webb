@@ -7,6 +7,7 @@ import { installKenneyWorld } from '/turn/world-assets.js';
 import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19&revision=r270-camera-hotpath';
 import { updateHudState } from '/turn/ui/hud.js?build=20261002-r363';
 import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from '/turn/input/motion.js';
+import { announceSteeringCentred, centreTiltSteering } from '/turn/input/tilt-centring.js';
 import { createKeyboardDrivingController } from '/turn/input/keyboard-driving-controls.js';
 import { updateVehiclePhysicsState } from '/turn/vehicle/physics.js?build=20260720-r19';
 import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from '/turn/race/game-state.js';
@@ -845,10 +846,9 @@ function handleMotion(event) {
   state.targetPitch = pose.pitch;
   const orientation = getScreenOrientationAngle();
   if (lastMotionOrientation !== null && orientation !== lastMotionOrientation) {
-    state.neutralRoll = state.roll = state.horizonRollReference = pose.roll;
-    state.neutralPitch = state.pitch = pose.pitch;
-    state.steering = 0;
-    state.steeringEngaged = false;
+    centreTiltSteering(state, { horizon: true });
+    // Mid-lap a rotation pauses the race, and its resume recalibrates out loud.
+    if (state.running && state.sensorMode && !state.lapActive) announceSteeringCentred({ showMessage });
   }
   lastMotionOrientation = orientation;
 }
@@ -892,13 +892,9 @@ globalThis.__turnNextRaceSession = raceSession;
 
 function calibrate() {
   if (state.sensorMode) {
-    state.neutralRoll = state.targetRoll;
-    state.roll = state.targetRoll;
-    state.neutralPitch = state.targetPitch;
-    state.pitch = state.targetPitch;
-    state.steering = 0;
+    centreTiltSteering(state);
     state.tiltDrive = 0;
-    showMessage('STEERING + TILT CENTERED');
+    announceSteeringCentred({ showMessage });
   } else {
     state.manualSteering = 0;
   }
