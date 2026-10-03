@@ -76,6 +76,11 @@ assert.match(guard, /stats\.skippedHighRefreshFrames \+= 1/,
     const result = drawn(hz, options);
     assert.ok(Math.abs(result.fps - 60) < 1 && result.longGaps === 0, `${hz} Hz ${JSON.stringify(options)}: held near 60 with no long gaps (${JSON.stringify(result)})`);
   }
+  // 72-80 Hz displays are faster than 60 too, so they are capped (Codex on #1101).
+  for (const hz of [72, 75, 80]) {
+    const result = drawn(hz, { jitter: 0.5, roundMs: true });
+    assert.ok(Math.abs(result.fps - 60) < 1, `${hz} Hz: held near 60 (${JSON.stringify(result)})`);
+  }
 }
 assert.match(guard, /callback\.call\(renderer, time, frame\)/, 'Visible delivered frames must preserve the original renderer callback context and arguments');
 assert.match(guard, /typeof callback !== 'function'/, 'Removing an animation loop must still delegate directly to Three.js');

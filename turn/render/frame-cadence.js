@@ -6,7 +6,11 @@
 // browsers' frame timestamps jitter (Safari rounds them to whole milliseconds), so a
 // strict 16.07 ms threshold dropped on-time frames, a 33 ms jump every second or two,
 // most visible at speed. Faster displays keep a 60 Hz grid with half a refresh of
-// tolerance: 120 Hz draws every other frame, 90 Hz two of every three.
+// tolerance: 120 Hz draws every other frame, 90 Hz two of every three, 72-80 Hz about
+// five of six.
+// Up to about 65 Hz (a period of 92% of 1/60 s or more) counts as a 60 Hz display:
+// enough for its jitter, not enough to let a 72, 75 or 80 Hz display past the cap.
+const PASS_THROUGH_SHARE = 0.92;
 const SAMPLE_COUNT = 15;
 const MIN_SAMPLES = 5;
 const MAX_SAMPLE_MS = 100;
@@ -44,7 +48,7 @@ export function createFrameCadence({ maxFps = 60 } = {}) {
       lastCallbackAt = time;
 
       const period = displayPeriod();
-      if (period >= interval * 0.75 || !Number.isFinite(lastDeliveredAt)) {
+      if (period >= interval * PASS_THROUGH_SHARE || !Number.isFinite(lastDeliveredAt)) {
         lastDeliveredAt = time;
         return true;
       }
