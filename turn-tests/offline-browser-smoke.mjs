@@ -237,6 +237,17 @@ try {
     await fresh.close();
   }
   {
+    // The main script itself cannot load: the page still offers RELOAD.
+    const { fresh, freshPage } = await startup();
+    failingPath = '/turn/app.js';
+    await freshPage.goto(`${origin}/turn/`);
+    await freshPage.waitForSelector('#turnStartFallback .turn-startup-reload', { timeout: 30000 });
+    failingPath = null;
+    await Promise.all([freshPage.waitForEvent('load'), freshPage.locator('.turn-startup-reload').click()]);
+    await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
+    await fresh.close();
+  }
+  {
     const { fresh, freshPage } = await startup({ denyStorage: true });
     await freshPage.goto(`${origin}/turn/`);
     await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });

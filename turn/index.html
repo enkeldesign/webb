@@ -477,7 +477,37 @@
   <script type="module" src="./testing/swoosh-listening-test.js?build=20261003-r374"></script>
   <script type="module" src="./testing/swoosh-sound-picker.js?build=20261003-r374"></script>
   <script type="module" src="./ui/low-graphics-setting.js?build=20261003-r374"></script>
-  <script type="module" src="./app.js?build=20261003-r374-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r420-music-warm-r426-loading-copy-r164-long-session-robustness-post-soak-r199-card-gap-rim-r518-landmark-framing-ground-layering-showroom-r200-pwa-color-r206-r532-countryside-nature-r221-trajectory-wheel-steering-30-r220-race-apex-guide-r224-modal-headings-r254-achievement-filter-rows"></script>
+  <script>
+    /* If TURN's main script cannot load or run (#1045), say so and offer RELOAD. Once
+       app.js is running, its LOADING card handles a failed start itself. No timer: in a
+       browser tab app.js first waits for the player to choose how to play. */
+    (() => {
+      const root = document.documentElement;
+      const fail = () => {
+        if (root.classList.contains('turn-startup-pending') || root.classList.contains('turn-home-ready')) return;
+        if (document.getElementById('turnStartFallback')) return;
+        const box = document.createElement('div');
+        box.id = 'turnStartFallback';
+        box.setAttribute('role', 'alert');
+        box.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:grid;place-content:center;gap:16px;padding:24px;text-align:center;font:800 1.1rem/1.4 system-ui,sans-serif;background:var(--turn-surface-page,#fff8e8);color:var(--turn-text,#08090a)';
+        const text = document.createElement('p');
+        text.style.margin = '0';
+        text.textContent = 'TURN could not start. Check your connection, then reload.';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'install-primary turn-startup-reload';
+        button.textContent = 'RELOAD';
+        button.addEventListener('click', () => location.reload());
+        box.append(text, button);
+        document.body.appendChild(box);
+      };
+      globalThis.__turnStartFailed = fail;
+      addEventListener('error', (event) => {
+        if (/\/turn\/app\.js/.test(event.filename || '')) fail();
+      });
+    })();
+  </script>
+  <script type="module" src="./app.js?build=20261003-r374-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r420-music-warm-r426-loading-copy-r164-long-session-robustness-post-soak-r199-card-gap-rim-r518-landmark-framing-ground-layering-showroom-r200-pwa-color-r206-r532-countryside-nature-r221-trajectory-wheel-steering-30-r220-race-apex-guide-r224-modal-headings-r254-achievement-filter-rows" onerror="globalThis.__turnStartFailed?.()"></script>
   <script type="module" src="./render/skid-continuity-r198.js?revision=r198-skid-continuity&build=20261003-r374"></script>
   <script type="module" src="./tracks/cliffside-village.js?build=20261003-r374"></script>
   <script type="module" src="./tracks/kenney-track-landmarks-r517.js?revision=r532-countryside-nature-polish&build=20261003-r374"></script>
