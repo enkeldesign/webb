@@ -499,7 +499,11 @@ function installStyles() {
       cursor: pointer;
     }
     .turn-support-challenge-actions [data-support-reroll] { background: var(--turn-blue-200, #bdefff); }
-    .turn-support-challenge-actions [data-support-close] { background: var(--turn-surface-page); }
+    /* CLOSE is the way back: navigation orange with Ink, in either theme. */
+    .turn-support-challenge-actions [data-support-close] {
+      background: var(--turn-action-navigation, var(--turn-orange-500, #ff7b54));
+      color: var(--turn-ink);
+    }
     .turn-support-bonus-toast {
       position: fixed;
       z-index: 12000;

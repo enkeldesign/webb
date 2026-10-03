@@ -510,6 +510,8 @@ try {
     await page.waitForSelector('#turnTrackSheet[open]');
     await page.setViewportSize({ width: 1180, height: 820 });
     await page.waitForFunction(() => !document.querySelector('#turnTrackSheet').open);
+    // The handoff follows the sheet's close a moment later; give a slow runner that moment.
+    await page.waitForFunction(() => document.activeElement?.id === 'roadbookOverviewTitle', null, { timeout: 2000 }).catch(() => {});
     const focus = await page.evaluate(() => ({
       id: document.activeElement?.id,
       sheetButtonHidden: document.querySelector('.roadbook-sheet-button').hidden
@@ -520,6 +522,7 @@ try {
     // replaces it, never to <body>.
     await page.setViewportSize({ width: 900, height: 820 });
     await page.waitForFunction(() => document.querySelector('.roadbook-overview').hidden);
+    await page.waitForFunction(() => document.activeElement?.classList.contains('roadbook-sheet-button'), null, { timeout: 2000 }).catch(() => {});
     assert.equal(await page.evaluate(() => document.activeElement?.classList.contains('roadbook-sheet-button')), true,
       'the overview hands focus to the Track sheet button when the screen shrinks out of it');
     await page.setViewportSize({ width: 1180, height: 820 });

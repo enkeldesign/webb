@@ -76,6 +76,26 @@ export function installHomeAppBar({ documentRef = document } = {}) {
     sync();
   }
 
+  // TURN MUSIC as the same kind of choice: OFF or ON. It drives the music module's own
+  // toggle, which stays in the sheet, hidden, and keeps the state.
+  const musicSetting = documentRef.createElement('fieldset');
+  musicSetting.className = 'turn-theme-setting turn-music-setting';
+  musicSetting.innerHTML = '<legend>TURN MUSIC</legend><div class="turn-theme-options">' + [['off', 'OFF'], ['on', 'ON']]
+    .map(([value, label]) => `<label><input type="radio" name="turn-music" value="${value}"><span>${label}</span></label>`).join('') + '</div>';
+  let musicToggle = null;
+  const syncMusic = () => {
+    const on = musicToggle?.dataset.musicEnabled === 'true';
+    musicSetting.hidden = !musicToggle;
+    for (const input of musicSetting.querySelectorAll('input')) input.checked = input.value === (on ? 'on' : 'off');
+  };
+  const musicObserver = new MutationObserver(syncMusic);
+  musicSetting.addEventListener('change', (event) => {
+    if (!(event.target instanceof HTMLInputElement) || !musicToggle) return;
+    if ((event.target.value === 'on') !== (musicToggle.dataset.musicEnabled === 'true')) musicToggle.click();
+    syncMusic();
+  });
+  sheet.addEventListener('toggle', syncMusic);
+
   function place() {
     // The status line stays on the page, where ROADBOOK's busy and error states read.
     relocate(home.querySelector('.m8-home-status'), main);
@@ -85,10 +105,16 @@ export function installHomeAppBar({ documentRef = document } = {}) {
     // MUSIC, build and ABOUT TURN live in the sheet footer.
     const music = home.querySelector('.turn-music-home-toggle');
     if (music && footer.firstElementChild !== music) footer.prepend(music);
-    if (themeSetting) {
-      const before = music && music.parentElement === footer ? music.nextElementSibling : footer.firstElementChild;
-      if (before !== themeSetting) footer.insertBefore(themeSetting, before);
+    if (music && music !== musicToggle) {
+      musicToggle = music;
+      musicToggle.hidden = true;
+      musicObserver.disconnect();
+      musicObserver.observe(musicToggle, { attributes: true, attributeFilter: ['data-music-enabled'] });
     }
+    const afterMusic = music && music.parentElement === footer ? music.nextElementSibling : footer.firstElementChild;
+    if (afterMusic !== musicSetting) footer.insertBefore(musicSetting, afterMusic);
+    if (themeSetting && musicSetting.nextElementSibling !== themeSetting) musicSetting.after(themeSetting);
+    syncMusic();
     relocate(home.querySelector('.m8-home-meta'), footer);
   }
 

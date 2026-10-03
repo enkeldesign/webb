@@ -1121,13 +1121,14 @@ Object.freeze({
     Object.freeze(['1.36.11 r372', 'THIS VISIT keeps an achievement or unlock that lands just as you return to ROADBOOK.']),
     Object.freeze(['1.36.12 r373', 'Your progress is safer. With TURN open twice, neither window can undo what the other saved: achievements, trophies and your fastest rival laps are kept from both, and resetting rivals in one window is not undone by the other. Rival replays take about a sixth of the space, so they can no longer fill the device and stop achievements from saving; if space does run out, other tracks keep their fastest lap and the new best lap is always kept.']),
     Object.freeze(['1.36.13 r374', 'TURN starts more reliably. If something stops it from loading, LOADING offers RELOAD instead of waiting for ever. With website data blocked in the browser, TURN still starts and plays; progress is then kept only for that visit. On a slow connection, the installed app starts from what it has already stored instead of waiting on the network file by file.']),
-    Object.freeze(['1.36.14 r375', 'Lighter on the battery: the race no longer draws itself behind ROADBOOK, and it stays at 60 frames a second on 120 Hz screens. Every 3D view gets the wider Display P3 colours where the screen has them. The steering ribbon sound no longer fails when music is playing.'])
+    Object.freeze(['1.36.14 r375', 'Lighter on the battery: the race no longer draws itself behind ROADBOOK, and it stays at 60 frames a second on 120 Hz screens. Every 3D view gets the wider Display P3 colours where the screen has them. The steering ribbon sound no longer fails when music is playing.']),
+    Object.freeze(['1.36.15 r376', 'The menu has a new look: TURN MUSIC is an OFF / ON choice beside COLOR THEME in landscape, and above it in portrait. Dark mode: the CHALLENGE dialog\'s CLOSE is orange and readable, RESTART LAP reads in black on orange during a race, and DRIFT and FLOW score callouts read in black on their colours.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.36.14',
-  build: '2026.10.03-r375',
-  note: 'The race stops drawing behind ROADBOOK and holds 60 fps; the steering sound works with music on.'
+  version: '1.36.15',
+  build: '2026.10.03-r376',
+  note: 'A new menu with TURN MUSIC OFF / ON, and dark-mode fixes for CLOSE, RESTART LAP and score callouts.'
 });
