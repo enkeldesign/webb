@@ -64,7 +64,6 @@ try {
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => {
-    if (error.message.includes('different audio context') && error.stack.includes('organic-ribbon')) return;
     errors.push(error.message);
   });
   const cdnThree = [];

@@ -131,7 +131,6 @@ async function responsiveRace(browser, name) {
   page.on('pageerror', (error) => {
     // Also reproduced on unchanged c7f7095c: existing organic audio cross-context
     // ribbon creation. Audio is outside this layout regression's scope (#905).
-    if (error.message.includes('different audio context') && error.stack.includes('organic-ribbon')) return;
     errors.push(error.message);
   });
   await page.route('https://cdn.jsdelivr.net/npm/three@0.184.0/**', async (route) => {

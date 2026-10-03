@@ -107,28 +107,49 @@ function uniqueAudioContextPrototypes() {
   return [...new Set(prototypes)];
 }
 
+// The game and the music each have their own audio context, and nodes from one cannot
+// connect to the other (#1045). The ribbon is decorated within the newest context that
+// holds all of its nodes, and counts as decorated only once that has worked.
+function ribbonNodesIn(context) {
+  const own = (node) => node.context === context;
+  const nodes = {
+    sliderTone: findOscillatorNear(390, 12, own),
+    sliderHarmonic: findOscillatorNear(585, 18, own),
+    sliderToneMix: findGainNear(0.78, 0.012, own),
+    sliderHarmonicMix: findGainNear(0.14, 0.012, own),
+    sliderFilter: CAPTURED.filters.find((filter) => (
+      own(filter)
+      && filter.type === 'lowpass'
+      && Math.abs(filter.frequency.value - 1050) < 80
+      && Math.abs(filter.Q.value - 0.42) < 0.16
+    ))
+  };
+  return Object.values(nodes).every(Boolean) ? nodes : null;
+}
+
 function decorateCapturedRibbon() {
   if (decorated) return true;
 
-  const context = CAPTURED.contexts.at(-1);
-  const sliderTone = findOscillatorNear(390, 12);
-  const sliderHarmonic = findOscillatorNear(585, 18);
-  const sliderToneMix = findGainNear(0.78, 0.012);
-  const sliderHarmonicMix = findGainNear(0.14, 0.012);
-  const sliderFilter = CAPTURED.filters.find((filter) => (
-    filter.type === 'lowpass'
-    && Math.abs(filter.frequency.value - 1050) < 80
-    && Math.abs(filter.Q.value - 0.42) < 0.16
-  ));
-
-  if (!context || !sliderTone || !sliderHarmonic || !sliderToneMix || !sliderHarmonicMix || !sliderFilter) {
+  const context = [...CAPTURED.contexts].reverse().find((candidate) => ribbonNodesIn(candidate));
+  if (!context) return false;
+  try {
+    buildOrganicVoices(context, ribbonNodesIn(context));
+  } catch (error) {
+    // Give up rather than retry every frame: the ribbon keeps its plain voice.
+    decorated = true;
+    console.warn('TURN: the steering ribbon keeps its plain voice.', error);
     return false;
+  } finally {
+    // Either way the capture has done its work.
+    restoreFactories?.();
+    restoreFactories = null;
   }
-
-  restoreFactories?.();
-  restoreFactories = null;
   decorated = true;
   organicContext = context;
+  return true;
+}
+
+function buildOrganicVoices(context, { sliderTone, sliderHarmonic, sliderToneMix, sliderHarmonicMix, sliderFilter }) {
 
   const warmWave = makeWarmPeriodicWave(context, [1, 0.23, 0.105, 0.048, 0.022, 0.01]);
   const softWave = makeWarmPeriodicWave(context, [1, 0.09, 0.035, 0.014]);
@@ -222,7 +243,6 @@ function decorateCapturedRibbon() {
   breathLfo.start();
   pitchLfo.start();
   colourLfo.start();
-  return true;
 }
 
 function updateOrganicVoices(frame) {
@@ -257,15 +277,15 @@ function retarget(parameter, value, now, timeConstant) {
   }
 }
 
-function findOscillatorNear(frequency, tolerance) {
+function findOscillatorNear(frequency, tolerance, accept = () => true) {
   return CAPTURED.oscillators.find((oscillator) => (
-    Math.abs(oscillator.frequency.value - frequency) <= tolerance
+    accept(oscillator) && Math.abs(oscillator.frequency.value - frequency) <= tolerance
   ));
 }
 
-function findGainNear(value, tolerance) {
+function findGainNear(value, tolerance, accept = () => true) {
   return CAPTURED.gains.find((gain) => (
-    Math.abs(gain.gain.value - value) <= tolerance
+    accept(gain) && Math.abs(gain.gain.value - value) <= tolerance
   ));
 }
 

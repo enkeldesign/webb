@@ -46,7 +46,6 @@ async function openRace({ width, height, handedness = 'right' }) {
   const page = await context.newPage();
   page.setDefaultTimeout(30000);
   page.on('pageerror', (error) => {
-    if (error.message.includes('different audio context') && error.stack.includes('organic-ribbon')) return;
     errors.push(error.message);
   });
   await page.addInitScript((hand) => {
