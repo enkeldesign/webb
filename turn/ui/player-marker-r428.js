@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import './player-marker-r427.js?revision=r427';
+import { createIdleFrameLoop } from './idle-frame-loop.js';
 
 const REFERENCE_CAR_LENGTH = 5.4;
 const AUTO_ACTIVATION_DIAMETER_CAR_LENGTHS = 3;
@@ -176,7 +177,7 @@ function installRuntime(runtime) {
 
   const marker = createMarkerElement();
   let rect = null;
-  let frame = 0;
+  let loop = null;
   let blankOverlay = null;
   let autoVisibleUntil = 0;
   let nextAutoCheckAt = 0;
@@ -214,14 +215,13 @@ function installRuntime(runtime) {
   }
 
   function render(now) {
-    frame = requestAnimationFrame(render);
     const active = raceActive();
     if (!active) {
       autoVisibleUntil = 0;
       autoNearby = false;
       nextAutoCheckAt = 0;
       marker.hidden = true;
-      return;
+      return false;
     }
 
     const mode = globalThis.__turnPlayerMarker?.getMode?.() || 'auto';
@@ -282,14 +282,17 @@ function installRuntime(runtime) {
 
   measure();
   refreshCarMetrics();
-  frame = requestAnimationFrame(render);
+  loop = createIdleFrameLoop(render);
 
   const controller = Object.freeze({
     marker,
     activationRadius: AUTO_ACTIVATION_RADIUS,
     markerGapPixels: MARKER_GAP_PX,
+    get idle() {
+      return loop.idle;
+    },
     stop() {
-      cancelAnimationFrame(frame);
+      loop.stop();
       marker.remove();
     }
   });

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { playerMarkerOutlineColor } from './player-marker-r428.js?revision=r227-night-marker-outline';
+import { createIdleFrameLoop } from './idle-frame-loop.js';
 
 const STYLE_ID = 'turn-minor-ux-polish-r229-styles';
 const FALLBACK_MARKER_COLOR = '#38d9ff';
@@ -131,7 +132,7 @@ function installSpectatePlayerMarker(runtime) {
   }
 
   const marker = createSpectateMarker();
-  let frame = 0;
+  let loop = null;
   let rect = null;
   let metricCar = null;
   let metricVisualKey = '';
@@ -142,11 +143,10 @@ function installSpectatePlayerMarker(runtime) {
   }
 
   function render() {
-    frame = requestAnimationFrame(render);
     const current = globalThis.__turnGetSpectateV3State?.();
     if (!current?.active) {
       marker.hidden = true;
-      return;
+      return false;
     }
 
     const car = runtime.competitorCars?.[current.index];
@@ -193,11 +193,14 @@ function installSpectatePlayerMarker(runtime) {
   globalThis.visualViewport?.addEventListener?.('resize', invalidateMeasurement, { passive: true });
 
   measure();
-  frame = requestAnimationFrame(render);
+  loop = createIdleFrameLoop(render);
   const api = Object.freeze({
     marker,
+    get idle() {
+      return loop.idle;
+    },
     stop() {
-      cancelAnimationFrame(frame);
+      loop.stop();
       marker.remove();
       globalThis.removeEventListener?.('resize', invalidateMeasurement);
       globalThis.removeEventListener?.('orientationchange', invalidateMeasurement);

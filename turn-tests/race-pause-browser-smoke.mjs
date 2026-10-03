@@ -268,6 +268,7 @@ try {
 
   // LEAVE RACE from PAUSED takes the usual way out, back to ROADBOOK.
   await startLap(page);
+  assert.equal(await page.evaluate(() => globalThis.__turnAchievements.sampling()), true, 'A running lap is sampled');
   await page.keyboard.up('ArrowUp');
   await page.locator('.turn-race-pause-button').click();
   await page.locator('.turn-race-pause-dialog [data-pause-action="leave"]').click();
@@ -283,6 +284,19 @@ try {
   assert.ok(covered.guardedLoops >= 1, 'The race renderer loop is guarded');
   assert.ok(covered.skippedCoveredMainFrames > 0, 'Frames behind ROADBOOK are skipped');
   assert.ok(await frames() - beforeHome <= 1, 'The race world does not draw behind ROADBOOK');
+  // #1045: a lap left mid-way stays marked active, but nothing samples or draws for it.
+  const behindHome = await page.evaluate(() => {
+    const runtime = globalThis.__turnRuntime;
+    return {
+      lapActive: runtime.state.lapActive,
+      sampling: globalThis.__turnAchievements.sampling(),
+      markers: [runtime.__playerMarkerR429Installed, runtime.__leaderMarkerR500Installed, runtime.__minorUxSpectateMarkerR229]
+        .map((marker) => marker?.idle)
+    };
+  });
+  assert.equal(behindHome.lapActive, true, 'The lap left mid-way is still marked active');
+  assert.equal(behindHome.sampling, false, 'Achievement sampling stops behind ROADBOOK');
+  assert.deepEqual(behindHome.markers, [true, true, true], 'The race markers stop drawing behind ROADBOOK');
 
   // No lap was completed: no THIS VISIT, in PAUSED or after.
   await page.waitForTimeout(400);
