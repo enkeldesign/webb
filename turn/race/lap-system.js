@@ -23,10 +23,9 @@ const CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 1.05;
 const START_GATE_HALF_WIDTH_FACTOR = 0.82;
 const GATE_EPSILON = 1e-6;
 
-export function beginTimedLapState({ state, samples, now, showMessage }) {
+// The lap starts when the car crosses the line, when the player chooses: no GO!.
+export function beginTimedLapState({ state, samples, now }) {
   const start = samples[0];
-  const suppressStartMessage = state.suppressNextLapStartMessage === true;
-  state.suppressNextLapStartMessage = false;
 
   state.lapActive = true;
   state.lapCheckpointIndex = 0;
@@ -46,7 +45,6 @@ export function beginTimedLapState({ state, samples, now, showMessage }) {
     p: 0
   }];
 
-  if (!suppressStartMessage) showMessage?.('GO!');
 }
 
 export function updateLapProgressState({
@@ -128,7 +126,6 @@ export function updateLapProgressState({
       completeLap(now);
     } else {
       publishLapInvalid({ reason: 'missed-checkpoint' });
-      state.suppressNextLapStartMessage = true;
       beginTimedLap(now);
     }
   }

@@ -35,6 +35,18 @@
   animation: turn-restart-invalid-pulse 680ms cubic-bezier(0.2, 0.85, 0.3, 1.2) 1;
 }
 
+/* STEERING CENTRED (#1032): RECALIBRATE blinks yellow twice with the message, so the
+   player sees where centring lives. Two blinks in a second, well under the flash
+   threshold; reduced motion holds a steady highlight instead. */
+.recalibrate-button.is-centred-blink {
+  animation: turn-recalibrate-centred 960ms linear 1;
+}
+
+@keyframes turn-recalibrate-centred {
+  0%, 24%, 50%, 74% { background-color: var(--yellow); color: var(--turn-ink); }
+  25%, 49%, 75%, 100% { background-color: var(--turn-surface-page); color: var(--turn-text); }
+}
+
 @keyframes turn-restart-invalid-pulse {
   0%, 100% { transform: scale(1); }
   36% { transform: scale(1.08); }
@@ -213,5 +225,11 @@
 @media (prefers-reduced-motion: reduce) {
   .back-to-start-button.is-lap-invalid-pulse {
     animation: none;
+  }
+
+  .recalibrate-button.is-centred-blink {
+    animation: none;
+    background-color: var(--yellow);
+    color: var(--turn-ink);
   }
 }

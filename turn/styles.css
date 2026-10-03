@@ -295,6 +295,7 @@ h1 {
   max-width: calc(100% - 24px);
   text-align: center;
   text-wrap: balance;
+  text-transform: uppercase;
   opacity: 0;
   transition: opacity 140ms ease;
 }

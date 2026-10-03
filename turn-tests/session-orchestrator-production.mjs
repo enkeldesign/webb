@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
 import { createRaceSessionOrchestrator } from '../turn/race/session-orchestrator.js';
+import { announceSteeringCentred } from '../turn/input/tilt-centring.js';
 
 function element(hidden = false) {
   return { hidden, textContent: '' };
@@ -183,10 +184,10 @@ assert.equal(motion.state.horizonRollReference, motion.state.targetRoll);
 assert.equal(motion.state.neutralPitch, motion.state.targetPitch);
 assert.deepEqual(motion.published, ['race-started']);
 
-// Tilt centring at the start (#1032): the GO! pill asks for the phone as the player
-// wants to drive, takes the neutral once it keeps still, and says STEERING CENTRED.
-// The start's own GO! gives way to it; Drive By Ear hears a level cue.
-const HOLD = 'message:HOLD THE PHONE THE WAY YOU WANT TO DRIVE';
+// Tilt centring at the start (#1032): the race pill asks for a comfortable driving
+// position, takes the neutral once the phone keeps still, and says STEERING CENTRED.
+// There is no GO!: the player chooses when to start. Drive By Ear hears a level cue.
+const HOLD = 'message:Hold your device in a comfortable driving position.';
 const CENTRED = 'message:STEERING CENTRED';
 function runSamples(harness, eachSample = () => {}, limit = 40) {
   let ran = 3;
@@ -198,7 +199,7 @@ function runSamples(harness, eachSample = () => {}, limit = 40) {
   return ran - 3;
 }
 assert.ok(motion.order.includes(HOLD), 'Tilt start asks for the driving grip');
-assert.equal(motion.order.includes('message:GO!'), false, 'The hint replaces the start GO!');
+assert.equal(motion.order.includes('message:GO!'), false, 'No GO!: the player chooses when to start');
 motion.environment.__turnAudio = { cue(name) { motion.order.push(`cue:${name}`); } };
 motion.state.mode = 'staged';
 motion.state.speed = 0;
@@ -232,6 +233,31 @@ assert.ok(restless.order.includes(CENTRED), 'A phone that never keeps still is c
 assert.equal(restless.state.neutralRoll, 0.4, 'Never steady: the start neutral stands, as before');
 assert.equal(restlessSamples, 14, 'The start gives up waiting after about a second and a half');
 assert.equal(restless.order.filter((entry) => entry === CENTRED).length, 1, 'Said once');
+
+// RECALIBRATE blinks with every STEERING CENTRED, and the blink ends by itself.
+{
+  const classes = new Set();
+  const blinkTimers = [];
+  const button = {
+    classList: { add: (name) => classes.add(name), remove: (name) => classes.delete(name) },
+    offsetWidth: 80
+  };
+  const said = [];
+  announceSteeringCentred({
+    showMessage: (text) => said.push(text),
+    environment: {
+      document: { querySelector: (selector) => (selector === '#calibrateButton' ? button : null) },
+      setTimeout: (callback, delay) => blinkTimers.push({ callback, delay }),
+      clearTimeout() {},
+      __turnDriveByEarEnabled: false
+    }
+  });
+  assert.deepEqual(said, ['STEERING CENTRED']);
+  assert.ok(classes.has('is-centred-blink'), 'RECALIBRATE blinks with STEERING CENTRED');
+  assert.equal(blinkTimers.length, 1);
+  blinkTimers[0].callback();
+  assert.equal(classes.has('is-centred-blink'), false, 'The blink ends by itself');
+}
 
 const cancelled = createHarness({ selection: null });
 assert.equal(await cancelled.orchestrator.useManualMode(), false);

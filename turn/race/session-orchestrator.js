@@ -166,9 +166,9 @@ export function createRaceSessionOrchestrator({
     manualSteer.hidden = state.sensorMode;
     publish('race-started');
 
-    // Tilt: the GO! pill asks for the phone as the player wants to drive, then says
-    // STEERING CENTRED (#1032). It replaces the start's GO!; crossing the line still
-    // says GO!. Drive By Ear 101 starts its parts quietly and centres as before.
+    // Tilt: the race pill asks for a comfortable driving position, then says
+    // STEERING CENTRED (#1032). There is no GO!: the player chooses when to start.
+    // Drive By Ear 101 starts its parts quietly and centres as before.
     cancelTiltCentring();
     cancelTiltCentring = () => {};
     if (state.sensorMode && announceStart) {
@@ -182,7 +182,6 @@ export function createRaceSessionOrchestrator({
     resizeViewport();
     setTimer(resizeViewport, 300);
     setTimer(resizeViewport, 900);
-    if (announceStart && !state.sensorMode) announce('GO!');
     phase = 'racing';
     return true;
   }

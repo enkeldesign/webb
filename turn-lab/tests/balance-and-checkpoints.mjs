@@ -263,9 +263,9 @@ state.position = new Vec3(2, 0, 0);
 run(1400);
 assert.equal(completed, 0, 'missing even one checkpoint must prevent lap completion');
 assert.equal(began, 1, 'an incomplete lap must immediately restart the timed attempt at the finish line');
-assert.equal(state.suppressNextLapStartMessage, true, 'invalid-lap restart must suppress a competing GO message');
+// GO! is retired (#1032), so nothing competes with the invalid-lap feedback.
+assert.equal(state.suppressNextLapStartMessage, undefined, 'invalid-lap restart has no GO message left to suppress');
 
-state.suppressNextLapStartMessage = false;
 state.lapInvalid = false;
 state.lastProgress = 0.4;
 state.progress = 0.4;

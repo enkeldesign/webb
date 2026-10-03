@@ -54,7 +54,7 @@
  * Category 2 race cues
  * -------------------------------------------------------------------------- */
 
-/* GO!, PATIENT ON BOARD and STEERING CENTRED already share #message,
+/* PATIENT ON BOARD and STEERING CENTRED already share #message,
  * which is a compact yellow TURN pill at 22% from the top. CHASE YOUR BEST is
  * already in the same visual lane at 20%. The blank-screen confirmation was
  * the remaining outlier: move only that existing surface into the same lane

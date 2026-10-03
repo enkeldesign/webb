@@ -15,14 +15,15 @@ import {
   LEARNING_FEEDBACK_READY_EVENT
 } from '../turn/achievements/learning-progress.js';
 
-const [training, view, css, fixedLayout, sessionOrchestrator, index, releaseSource] = await Promise.all([
+const [training, view, css, fixedLayout, sessionOrchestrator, index, releaseSource, lapSystem] = await Promise.all([
   fs.readFile(new URL('../turn/training/drive-by-ear-training.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/training/view.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/training/drive-by-ear-training.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/race/session-orchestrator.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/race/lap-system.js', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
 const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
@@ -105,19 +106,17 @@ assert.match(training, /dataset\.trainingTarget/);
 assert.match(
   sessionOrchestrator,
   /async function startGame\(fullscreenPromise = Promise\.resolve\(false\), \{ announceStart = true \} = \{\}\)/,
-  'The shared race session must let training suppress the ordinary GO announcement without changing normal races'
+  'The shared race session must let training start its parts without the race-start announcement'
 );
-assert.match(sessionOrchestrator, /if \(announceStart && !state\.sensorMode\) announce\('GO!'\)/);
+// GO! is retired (#1032): the player chooses when to start, so nothing says GO! at the
+// race start or the lap start, and training has nothing left to suppress.
+assert.doesNotMatch(sessionOrchestrator, /'GO!'/);
+assert.doesNotMatch(lapSystem, /'GO!'/);
 assert.match(sessionOrchestrator, /if \(state\.sensorMode && announceStart\) \{/, 'Training parts start without the tilt hint');
 assert.match(
   training,
   /raceSession\.startGame\(fullscreenPromise \|\| Promise\.resolve\(false\), \{ announceStart: false \}\)/,
-  'DBE 101 must suppress the ordinary race-session GO so its instructions can come first'
-);
-assert.match(
-  training,
-  /runtime\.state\.suppressNextLapStartMessage = true/,
-  'DBE 101 must also suppress the lap-system GO at each staged/restarted training start'
+  'DBE 101 must start its parts without the race-start announcement so its instructions come first'
 );
 assert.match(training, /function signalStageStarted\(\{ restarted = false \} = \{\}\)/);
 assert.match(training, /new CustomEvent\('turn:dbe-training-stage-started'/);
@@ -188,7 +187,7 @@ assert.match(css, /data-training-race-restart/);
 assert.match(css, /\.turn-dbe-training-race-nav\[hidden\]/);
 assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 
-console.log('TURN Drive By Ear 101 exact-stage instructions, single GO sequencing and device cue mapping passed.');
+console.log('TURN Drive By Ear 101 exact-stage instructions, quiet part starts and device cue mapping passed.');
 
 function assertCourseHasSpace(stage) {
   const points = stage.points.map(([x, z]) => ({ x, z }));

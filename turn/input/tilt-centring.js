@@ -1,10 +1,11 @@
 // Tilt steering's straight ahead (#1032). Device rotation steers relative to a neutral
 // pose: the race start, a screen rotation, switching to device rotation and
 // RECALIBRATE each take the phone as it is held now. Every one of them says so in the
-// GO! pill (#message, a live status, so screen readers hear it) with one wording, and
-// Drive By Ear adds a short level cue.
+// race pill (#message, a live status, so screen readers hear it) with one wording,
+// RECALIBRATE blinks, and Drive By Ear adds a short level cue.
 
-export const HOLD_PHONE_MESSAGE = 'HOLD THE PHONE THE WAY YOU WANT TO DRIVE';
+// The pill shows it in capitals; screen readers read the sentence.
+export const HOLD_PHONE_MESSAGE = 'Hold your device in a comfortable driving position.';
 export const STEERING_CENTRED_MESSAGE = 'STEERING CENTRED';
 
 // Race start: the provisional neutral comes at once, as before; the final one waits
@@ -27,9 +28,24 @@ export function centreTiltSteering(state, { horizon = false } = {}) {
   state.steeringEngaged = false;
 }
 
+const BLINK_CLASS = 'is-centred-blink';
+const BLINK_MS = 960;
+
 export function announceSteeringCentred({ showMessage, environment = globalThis } = {}) {
   showMessage?.(STEERING_CENTRED_MESSAGE);
+  blinkRecalibrate(environment);
   if (environment.__turnDriveByEarEnabled !== false) environment.__turnAudio?.cue?.('steering-centred');
+}
+
+// RECALIBRATE blinks with the message: that is where centring lives.
+function blinkRecalibrate(environment) {
+  const button = environment.document?.querySelector?.('#calibrateButton');
+  if (!button) return;
+  environment.clearTimeout?.(button.turnCentredBlinkTimer);
+  button.classList.remove(BLINK_CLASS);
+  void button.offsetWidth;
+  button.classList.add(BLINK_CLASS);
+  button.turnCentredBlinkTimer = environment.setTimeout?.(() => button.classList.remove(BLINK_CLASS), BLINK_MS);
 }
 
 // Runs the race-start sequence and returns a cancel function. Never holds the race:
