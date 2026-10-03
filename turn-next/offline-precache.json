@@ -1,5 +1,5 @@
 {
-  "release": "20261003-r372",
+  "release": "20261003-r373",
   "files": [
     "/turn-next/app.js",
     "/turn-next/challenge-codec.js",
@@ -330,6 +330,7 @@
     "/turn/race/mountain-bridge-guide.js",
     "/turn/race/race-clock.js",
     "/turn/race/race-pause.js",
+    "/turn/race/replay-codec.js",
     "/turn/race/replay-system.js",
     "/turn/race/rival-storage.js",
     "/turn/race/session-orchestrator.js",

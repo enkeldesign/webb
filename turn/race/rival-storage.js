@@ -1,4 +1,5 @@
 import { normalizeReplayFrames } from './replay-system.js';
+import { decodeReplayFrames, encodeReplayFrames } from './replay-codec.js';
 import {
   LEGACY_VEHICLE_ID,
   getVehicleDefaultColor,
@@ -15,6 +16,40 @@ const DEFAULT_TRACK_ID = 'countryside';
 const GHOST_KEY = 'turn-three-ghost-v4';
 const COMPETITOR_KEY = 'turn-personal-rivals-v1';
 const pendingRivalSaves = new Map();
+// When each track's rivals were last reset, by any window: a lap recorded before it is
+// never written back. Kept under its own key, so a reset still removes the track's laps.
+const RESET_KEY = 'turn-rival-resets-v1';
+const rivalResetAt = new Map();
+
+function storedResetAt(key) {
+  let stored = 0;
+  try {
+    stored = Number(JSON.parse(localStorage.getItem(RESET_KEY))?.[key]) || 0;
+  } catch (_) {}
+  const known = Math.max(stored, rivalResetAt.get(key) || 0);
+  // A reset later than now means the device clock has since moved back; it can no
+  // longer order laps, and keeping it would refuse every new lap.
+  if (known > Date.now() + 60000) {
+    rivalResetAt.delete(key);
+    try {
+      const resets = JSON.parse(localStorage.getItem(RESET_KEY)) || {};
+      delete resets[key];
+      localStorage.setItem(RESET_KEY, JSON.stringify(resets));
+    } catch (_) {}
+    return 0;
+  }
+  if (known) rivalResetAt.set(key, known);
+  return known;
+}
+
+function recordReset(key, resetAt) {
+  rivalResetAt.set(key, resetAt);
+  try {
+    const resets = JSON.parse(localStorage.getItem(RESET_KEY)) || {};
+    resets[key] = Math.max(Number(resets[key]) || 0, resetAt);
+    localStorage.setItem(RESET_KEY, JSON.stringify(resets));
+  } catch (_) {}
+}
 const bestLapSummaryCache = new Map();
 const RIVAL_RETRY_DELAYS = [1000, 4000, 16000];
 let pendingRivalFlush = null;
@@ -86,6 +121,16 @@ function pendingRivalPayload(trackId) {
   return pendingRivalSaves.get(rivalKey(trackId))?.value || null;
 }
 
+// A stored rivals payload with every lap's frames read back as plain frames.
+function readStoredRivals(key) {
+  const saved = JSON.parse(localStorage.getItem(key));
+  if (!saved || typeof saved !== 'object' || !Array.isArray(saved.laps)) return saved;
+  return {
+    ...saved,
+    laps: saved.laps.map((lap) => (lap && typeof lap === 'object' ? { ...lap, frames: decodeReplayFrames(lap.frames) } : lap))
+  };
+}
+
 function readBestLapRecord(trackId) {
   const activeTrackId = normalizeTrackId(trackId);
   const cacheKey = rivalKey(activeTrackId);
@@ -93,7 +138,7 @@ function readBestLapRecord(trackId) {
 
   try {
     const pending = pendingRivalPayload(activeTrackId);
-    const savedRivals = pending || JSON.parse(localStorage.getItem(cacheKey));
+    const savedRivals = pending || readStoredRivals(cacheKey);
     const sourceVersion = Number(savedRivals?.version) || 0;
     const bestLap = bestValidLap(savedRivals?.laps);
     if (bestLap) {
@@ -154,8 +199,113 @@ function rivalSavePayload(state, trackId) {
   };
 }
 
+const lapIdentity = (lap) => `${Number(lap.time)}|${lap.hitAt ?? ''}`;
+
+// Another window may have saved this track since this one loaded it. Writing merges
+// the stored laps first, so the fastest laps from both survive, and a reset recorded
+// by either window keeps every lap set before it from coming back.
+function mergedRivalValue(key, value) {
+  let stored = null;
+  try {
+    stored = readStoredRivals(key);
+  } catch (_) {
+    // Unreadable: this window's laps stand.
+  }
+  const resetAt = storedResetAt(key);
+  const sameFormat = Number(stored?.version) === RIVAL_STORAGE_VERSION;
+  const candidates = [...value.laps, ...(sameFormat && Array.isArray(stored?.laps) ? stored.laps : [])];
+  const seen = new Set();
+  const laps = candidates
+    .filter(isValidLap)
+    .filter((lap) => !resetAt || Number(lap.hitAt) >= resetAt)
+    .filter((lap) => !seen.has(lapIdentity(lap)) && seen.add(lapIdentity(lap)))
+    .sort((a, b) => a.time - b.time)
+    .slice(0, RIVAL_LIMIT);
+  return { ...value, laps };
+}
+
+const encodedLap = (lap) => ({ ...lap, frames: encodeReplayFrames(lap.frames) });
+
+function isQuotaError(error) {
+  return error?.name === 'QuotaExceededError'
+    || error?.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+    || error?.code === 22
+    || error?.code === 1014;
+}
+
+// Storage is shared with the rest of the site and can fill up. Rather than lose a
+// save (or let replays crowd out achievements), keep only each track's fastest lap
+// elsewhere and drop retired ghost copies, then try again.
+export function shedRivalStorage(exceptKey = '') {
+  let freed = false;
+  let keys = [];
+  try {
+    keys = Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index));
+  } catch (_) {
+    return false;
+  }
+  for (const key of keys) {
+    if (!key || key === exceptKey) continue;
+    try {
+      if (key.startsWith(GHOST_KEY)) {
+        localStorage.removeItem(key);
+        freed = true;
+      } else if (key.startsWith(COMPETITOR_KEY)) {
+        const stored = readStoredRivals(key);
+        const best = bestValidLap(stored?.laps);
+        if (!best || stored.laps.length <= 1) continue;
+        localStorage.setItem(key, JSON.stringify({ ...stored, laps: [encodedLap(best)] }));
+        freed = true;
+      }
+    } catch (_) {}
+  }
+  return freed;
+}
+
+// What this window last wrote for each track, so a save from another window at the
+// same moment that left out one of its laps can be repaired (see the storage event).
+const rivalWrites = new Map();
+
+function repairRivalKey(key) {
+  const ours = rivalWrites.get(key);
+  if (!ours) return;
+  let stored = null;
+  try {
+    stored = readStoredRivals(key);
+  } catch (_) {}
+  const identities = (laps) => (Array.isArray(laps) ? laps.map(lapIdentity).join(',') : '');
+  if (identities(mergedRivalValue(key, ours).laps) === identities(stored?.laps)) return;
+  try {
+    writeRivalPayload({ key, value: ours });
+  } catch (_) {}
+}
+
 function writeRivalPayload(payload) {
-  localStorage.setItem(payload.key, JSON.stringify(payload.value));
+  const value = mergedRivalValue(payload.key, payload.value);
+  const write = (laps) => localStorage.setItem(payload.key, JSON.stringify({ ...value, laps: laps.map(encodedLap) }));
+  try {
+    write(value.laps);
+  } catch (error) {
+    if (!isQuotaError(error)) throw error;
+    // Make room elsewhere first; then, if still needed, keep fewer of this track's laps,
+    // fastest first. The best lap is the last thing given up.
+    shedRivalStorage(payload.key);
+    for (let keep = value.laps.length; keep >= 1; keep -= 1) {
+      try {
+        write(value.laps.slice(0, keep));
+        break;
+      } catch (retryError) {
+        if (!isQuotaError(retryError) || keep === 1) throw retryError;
+      }
+    }
+  }
+  rivalWrites.set(payload.key, value);
+  const best = bestValidLap(value.laps);
+  rememberBestLapSummary(
+    value.trackId,
+    bestLapSummaryFromStoredLap(best, RIVAL_STORAGE_VERSION),
+    { shareable: Boolean(best) }
+  );
 }
 
 function cancelScheduledRivalFlush() {
@@ -211,6 +361,8 @@ function ensurePersistenceLifecycle() {
     if (!key || key.startsWith(COMPETITOR_KEY) || key.startsWith(GHOST_KEY)) {
       bestLapSummaryCache.clear();
     }
+    // Two windows saving the same track at once can each miss the other's lap.
+    if (key.startsWith(COMPETITOR_KEY)) repairRivalKey(key);
   });
   globalThis.document?.addEventListener?.('visibilitychange', () => {
     if (globalThis.document?.visibilityState === 'hidden') {
@@ -276,7 +428,7 @@ export function loadRivalsState({ state, samples, findNearestTrack, trackId }) {
 
   try {
     const pending = pendingRivalPayload(activeTrackId);
-    const savedRivals = pending || JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
+    const savedRivals = pending || readStoredRivals(rivalKey(activeTrackId));
     let laps = Array.isArray(savedRivals?.laps) ? savedRivals.laps : [];
     let sourceVersion = Number(savedRivals?.version) || 0;
 
@@ -341,6 +493,9 @@ function clearTrackRivalPersistence(trackId) {
     rivalRetryAttempt = 0;
   }
   rememberBestLapSummary(trackId, null);
+  rivalWrites.delete(rivalKey(trackId));
+  // Another open window still holding older laps reads this and leaves them out.
+  recordReset(rivalKey(trackId), Date.now());
   for (const key of [rivalKey(trackId), ghostKey(trackId)]) {
     try { localStorage.removeItem(key); } catch (_) {}
   }
@@ -385,7 +540,7 @@ export function getStoredBestReplayLap(trackId = DEFAULT_TRACK_ID) {
 
   try {
     const pending = pendingRivalPayload(activeTrackId);
-    const savedRivals = pending || JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
+    const savedRivals = pending || readStoredRivals(rivalKey(activeTrackId));
     const sourceVersion = Number(savedRivals?.version) || 0;
     const bestLap = Array.isArray(savedRivals?.laps)
       ? savedRivals.laps

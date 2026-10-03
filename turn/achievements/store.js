@@ -24,6 +24,7 @@ const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;
 function defaultStoredState() {
   return {
     version: STORAGE_VERSION,
+    generation: 0,
     unlocked: {},
     bonuses: {},
     seen: [],
@@ -168,8 +169,11 @@ export function normalizeAchievementState(value) {
     .filter((id) => unlockedRewards.includes(id));
   const seenRewards = [...new Set([...storedSeenRewards, ...migratedRewardIds])];
 
+  const generation = Number(value.generation);
+
   return {
     version: STORAGE_VERSION,
+    generation: Number.isInteger(generation) && generation > 0 ? generation : 0,
     unlocked,
     bonuses,
     seen: normalizedStringArray(value.seen).filter((id) => Boolean(unlocked[id])),
@@ -186,6 +190,70 @@ export function normalizeAchievementState(value) {
       tracks: legacyTrackIds
     }
   };
+}
+
+const union = (a, b) => [...new Set([...(a || []), ...(b || [])])];
+
+function earlierRecords(target, source, stamp) {
+  let changed = false;
+  for (const [id, record] of Object.entries(source)) {
+    const current = target[id];
+    if (current && !(record[stamp] < current[stamp])) continue;
+    target[id] = { ...record };
+    changed = true;
+  }
+  return changed;
+}
+
+function mergeList(owner, key, source) {
+  const merged = union(owner[key], source);
+  if (merged.length === (owner[key] || []).length) return false;
+  owner[key] = merged;
+  return true;
+}
+
+// Several TURN windows can share this storage, each holding its own copy. A save
+// merges the stored copy first, so one window never erases progress another has
+// saved: achievements, bonuses, progress and rewards only accumulate, keeping the
+// earliest unlock. A deliberate rewrite (the admin profile) raises `generation`;
+// a copy from an older generation adopts the stored one instead of merging.
+// Returns true when `target` changed.
+export function mergeAchievementState(target, source) {
+  if (!source) return false;
+  if (source.generation < target.generation) return false;
+  if (source.generation > target.generation) {
+    for (const key of Object.keys(target)) delete target[key];
+    Object.assign(target, JSON.parse(JSON.stringify(source)));
+    return true;
+  }
+  let changed = earlierRecords(target.unlocked, source.unlocked, 'unlockedAt');
+  changed = earlierRecords(target.bonuses, source.bonuses, 'grantedAt') || changed;
+  changed = mergeList(target, 'seen', source.seen) || changed;
+  for (const key of Object.keys(source.progress)) {
+    changed = mergeList(target.progress, key, source.progress[key]) || changed;
+  }
+  for (const key of ['unlocked', 'seen', 'grandfathered', 'tracks']) {
+    changed = mergeList(target.rewards, key, source.rewards[key]) || changed;
+  }
+  return changed;
+}
+
+function readStoredState(storage) {
+  try {
+    const raw = storage?.getItem?.(ACHIEVEMENT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const stored = normalizeAchievementState(parsed);
+    // Only rewards actually stored merge in. Normalising also lists every reward the
+    // trophy total has reached, and taking those here would claim a reward before this
+    // window's syncRewards() announces it.
+    const kept = new Set([...normalizedStringArray(parsed?.rewards?.unlocked), ...stored.rewards.grandfathered]);
+    stored.rewards.unlocked = stored.rewards.unlocked.filter((id) => kept.has(id));
+    return stored;
+  } catch (_) {
+    // Unreadable: this copy stands.
+    return null;
+  }
 }
 
 export function loadAchievementState(storage = globalThis.localStorage) {
@@ -208,6 +276,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   let savePending = false;
 
   function save() {
+    mergeAchievementState(state, readStoredState(storage));
     try {
       storage?.setItem?.(ACHIEVEMENT_STORAGE_KEY, JSON.stringify(state));
       return true;
@@ -363,6 +432,19 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   }
 
   save();
+
+  // Another window saved: take in what it earned, so this one shows it and keeps it.
+  // Two saves at the same moment can each miss the other's progress; whichever window
+  // still holds something the stored copy lacks writes it back, so both end up whole.
+  if (storage && storage === globalThis.localStorage) {
+    globalThis.addEventListener?.('storage', (event) => {
+      if (event.key !== ACHIEVEMENT_STORAGE_KEY) return;
+      const stored = readStoredState(storage);
+      if (!stored) return;
+      mergeAchievementState(state, stored);
+      if (mergeAchievementState(JSON.parse(JSON.stringify(stored)), state)) save();
+    });
+  }
 
   return Object.freeze({
     state,

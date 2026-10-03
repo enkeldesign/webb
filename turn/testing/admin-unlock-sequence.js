@@ -90,6 +90,8 @@ export function createAdminRewardState(existing, legacyAdminTimestamp = null) {
     snapshot.progress.blankTracks = [];
   }
 
+  // A deliberate rewrite: other open windows adopt it rather than merge their copies back.
+  snapshot.generation += 1;
   snapshot.rewards.unlocked = [...rewardIds];
   snapshot.rewards.seen = [...rewardIds];
   snapshot.rewards.grandfathered = [];
@@ -122,12 +124,10 @@ function copyStateIntoLiveStore(snapshot) {
   const liveState = globalThis.__turnAchievements?.store?.state;
   if (!liveState) return;
   liveState.version = snapshot.version;
+  liveState.generation = snapshot.generation;
   liveState.unlocked = { ...snapshot.unlocked };
   liveState.seen = [...snapshot.seen];
-  liveState.progress = {
-    tracks: [...snapshot.progress.tracks],
-    blankTracks: [...snapshot.progress.blankTracks]
-  };
+  liveState.progress = JSON.parse(JSON.stringify(snapshot.progress));
   liveState.rewards = {
     unlocked: [...snapshot.rewards.unlocked],
     seen: [...snapshot.rewards.seen],

@@ -127,6 +127,9 @@ jobs:
       - name: Run score persistence and finish-line storage regression
         run: node turn-tests/score-persistence-production.mjs
 
+      - name: Run achievement persistence across windows regression
+        run: node turn-tests/achievement-persistence-production.mjs
+
       - name: Run car visual ownership and preview lifecycle regression
         run: node turn-tests/car-visual-lifecycle-production.mjs
 
