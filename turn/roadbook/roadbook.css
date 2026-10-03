@@ -276,7 +276,8 @@
 }
 
 .roadbook-goal.is-earned .roadbook-goal-icon { background: var(--turn-action-success, #8ce99a); }
-.roadbook-goal.is-progress .roadbook-goal-icon { background: var(--turn-blue-200, #8ed8ff); }
+/* On a coloured tile the symbol stays Ink in both themes. */
+.roadbook-goal.is-progress .roadbook-goal-icon { background: var(--turn-blue-200, #8ed8ff); color: var(--turn-ink); }
 .roadbook-goal.is-gated .roadbook-goal-icon { background: var(--turn-muted, #d6d0c2); }
 
 .roadbook-goal-meta {

@@ -103,6 +103,14 @@ async function safeAreas() {
     assert.ok(track.belowStatusBar && track.onScreen, `Portrait Track sheet clears the status bar (${JSON.stringify(track.at)})`);
     assert.equal(track.at.bottom, IPHONE_PORTRAIT.height, 'Portrait Track sheet is a bottom sheet');
     assert.equal(await page.locator('#turnTrackSheet .turn-sheet-grabber').count(), 1, 'A bottom sheet carries a grabber');
+    // The grabber takes its tone from what it sits on: the Track sheet's yellow head
+    // keeps an Ink grabber in DARK too.
+    const grabberTone = () => page.evaluate(() => document.querySelector('#turnTrackSheet .turn-sheet-grabber').dataset.surface);
+    assert.equal(await grabberTone(), 'light', 'The grabber on the yellow head is Ink');
+    await page.evaluate(() => globalThis.__turnTheme.set('dark'));
+    await settle(page, 100);
+    assert.equal(await grabberTone(), 'light', 'In DARK the grabber on the yellow head stays Ink');
+    await page.evaluate(() => globalThis.__turnTheme.set('system'));
     await page.keyboard.press('Escape');
     await page.locator('.m8-track-continue').click();
     await page.waitForSelector('.garage');

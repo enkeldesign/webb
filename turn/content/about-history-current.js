@@ -1125,13 +1125,14 @@ Object.freeze({
     Object.freeze(['1.36.15 r376', 'The menu has a new look: TURN MUSIC is an OFF / ON choice beside COLOR THEME in landscape, and above it in portrait. Dark mode: the CHALLENGE dialog\'s CLOSE is orange and readable, RESTART LAP reads in black on orange during a race, and DRIFT and FLOW score callouts read in black on their colours.']),
     Object.freeze(['1.36.16 r377', 'Updates arrive cleanly. While TURN is open, a new version downloads in the background without mixing into the game you are playing; it takes over when you restart. Each part of the game also loads only once.']),
     Object.freeze(['1.36.17 r378', 'Lighter on the battery: race markers and achievement tracking stop working behind ROADBOOK and other screens, instead of running every frame.']),
-    Object.freeze(['1.36.18 r379', 'TURN NEXT, the test version of TURN, is retired: its address now opens TURN, and a device that installed it clears its stored copy.'])
+    Object.freeze(['1.36.18 r379', 'TURN NEXT, the test version of TURN, is retired: its address now opens TURN, and a device that installed it clears its stored copy.']),
+    Object.freeze(['1.36.19 r380', 'Dark mode: the CHALLENGE dialog\'s trophy reward is a yellow outline with yellow text instead of cream on yellow, and a goal\'s blue IN PROGRESS tile shows its symbol in Ink. The grabber at the top of a sheet takes its colour from what it sits on, so it shows on the yellow head of a track sheet and ALL CARS, and it is darker in light mode too.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.36.18',
-  build: '2026.10.03-r379',
-  note: 'TURN NEXT is retired; its address opens TURN.'
+  version: '1.36.19',
+  build: '2026.10.03-r380',
+  note: 'Dark mode: readable challenge reward, goal tiles and sheet grabbers.'
 });

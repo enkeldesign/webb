@@ -315,14 +315,61 @@ export function installAppNavigation({ windowRef = globalThis, documentRef = glo
     return null;
   }
 
+  // An opaque background colour as sRGB 0-1 channels, else null. Computed colours come
+  // as rgb()/rgba() or, for Display P3 tokens, color(display-p3 r g b / a).
+  function opaqueColour(element) {
+    const value = windowRef.getComputedStyle(element).backgroundColor || '';
+    const numbers = (value.replace(/^color\(\s*[\w-]+/, '').match(/-?[\d.]+%?/g) || []).map((part) => (part.endsWith('%') ? Number.parseFloat(part) / 100 : Number(part)));
+    const unit = value.startsWith('color(') ? 1 : value.startsWith('rgb') ? 255 : 0;
+    if (!unit || numbers.length < 3 || (numbers.length > 3 && numbers[3] < 0.5)) return null;
+    return numbers.slice(0, 3).map((channel) => channel / unit);
+  }
+
+  // The surface the grabber sits on: the deepest box under its centre that paints a
+  // colour (a sheet's yellow head, a night card). Measured from the boxes, not by hit
+  // testing, so it holds while the sheet is still sliding in.
+  function toneGrabber(grabber) {
+    const panel = grabber.parentElement;
+    if (!panel) return;
+    const box = grabber.getBoundingClientRect();
+    const x = box.left + box.width / 2;
+    const y = box.top + box.height / 2;
+    let colour = null;
+    for (let node = panel; node && !colour; node = node.parentElement) colour = opaqueColour(node);
+    let node = panel;
+    descend: while (node) {
+      for (const child of [...node.children].reverse()) {
+        if (child === grabber) continue;
+        const rect = child.getBoundingClientRect();
+        if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) continue;
+        colour = opaqueColour(child) || colour;
+        node = child;
+        continue descend;
+      }
+      break;
+    }
+    if (!colour) {
+      delete grabber.dataset.surface;
+      return;
+    }
+    const linear = colour.map((channel) => (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4));
+    const luminance = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+    // Above about 0.18, Ink stands out more than cream does.
+    grabber.dataset.surface = luminance > 0.18 ? 'light' : 'dark';
+  }
+
   function addGrabber(dialog) {
     const shape = presentation(dialog);
-    if (!shape || shape.axis !== 'y' || shape.panel.querySelector(':scope > .turn-sheet-grabber')) return;
-    if (windowRef.getComputedStyle(shape.panel).position === 'static') shape.panel.classList.add('turn-sheet-anchor');
-    const grabber = documentRef.createElement('span');
-    grabber.className = 'turn-sheet-grabber';
-    grabber.setAttribute('aria-hidden', 'true');
-    shape.panel.prepend(grabber);
+    if (!shape || shape.axis !== 'y') return;
+    let grabber = shape.panel.querySelector(':scope > .turn-sheet-grabber');
+    if (!grabber) {
+      if (windowRef.getComputedStyle(shape.panel).position === 'static') shape.panel.classList.add('turn-sheet-anchor');
+      grabber = documentRef.createElement('span');
+      grabber.className = 'turn-sheet-grabber';
+      grabber.setAttribute('aria-hidden', 'true');
+      shape.panel.prepend(grabber);
+    }
+    toneGrabber(grabber);
   }
 
   const grabberObserver = new MutationObserver((records) => {
@@ -331,6 +378,10 @@ export function installAppNavigation({ windowRef = globalThis, documentRef = glo
     }
   });
   grabberObserver.observe(documentRef.documentElement, { subtree: true, attributes: true, attributeFilter: ['open'] });
+  // A THEME change under an open sheet changes what the grabber sits on.
+  windowRef.__turnTheme?.subscribe?.(() => windowRef.requestAnimationFrame(() => {
+    for (const grabber of documentRef.querySelectorAll('dialog[open] .turn-sheet-grabber')) toneGrabber(grabber);
+  }));
 
   function startSheetDrag(event, dialog) {
     const touch = event.changedTouches[0];

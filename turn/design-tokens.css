@@ -251,7 +251,7 @@
 :root[data-theme="dark"] :is(
   .turn-pr-chip:is(.is-easy, .is-medium, .is-advanced, .is-expert), .garage-perk-chip,
   .roadbook-goal-pill, .roadbook-goal-tag.is-hidden, .turn-achievement-tag:is([data-achievement-tag="hidden"], [data-achievement-tag="new"]),
-  .m8-guide-card-number, .m8-guide-wide > strong, .garage-car-card.is-selected .garage-car-ordinal
+  .turn-support-challenge-topline > b, .m8-guide-card-number, .m8-guide-wide > strong, .garage-car-card.is-selected .garage-car-ordinal
 ):not(:is(
   /* Coloured controls */
   .turn-pr-button:is(.is-primary, .is-sheet):not(.is-locked), .garage-back, .garage-step,
