@@ -44,6 +44,9 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Syntax-check TURN modules
+        run: find turn turn-tests turn-lab/tests turn-lab/scripts turn-lab/build-a-car turn-lab/tracks turn-lab/race -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+
       - name: Lint TURN domain modules
         run: npx --yes eslint@9.39.1
 
