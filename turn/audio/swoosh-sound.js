@@ -160,6 +160,7 @@ export function swooshLengths(variant) {
 }
 
 const reverbBuffers = new WeakMap();
+const rooms = new WeakMap();
 
 // A small, dark room: 0.4 s of decaying, smoothed noise.
 function reverbBuffer(context) {
@@ -175,6 +176,36 @@ function reverbBuffer(context) {
   }
   reverbBuffers.set(context, buffer);
   return buffer;
+}
+
+// The small room, one per side for each output, shared by every cue. A ConvolverNode
+// prepares its room on the main thread when its buffer is set: about 3 ms on a fast
+// phone and 12-70 ms on a CPU four times slower, so a room per cue stalled the race at
+// every bend. Each cue sends its wet signal into the room on its own side.
+function roomFor(context, destination, fullSide) {
+  let sides = rooms.get(destination);
+  if (!sides || sides.context !== context) {
+    sides = { context };
+    rooms.set(destination, sides);
+  }
+  if (!sides[fullSide]) {
+    const room = context.createConvolver();
+    const panner = context.createStereoPanner();
+    room.buffer = reverbBuffer(context);
+    panner.pan.value = fullSide;
+    room.connect(panner).connect(destination);
+    sides[fullSide] = room;
+  }
+  return sides[fullSide];
+}
+
+/** Builds the shared rooms and buffers ahead of the first cue (at the race start). */
+export function prepareSwooshVoices(context, destination) {
+  if (!context || !destination) return;
+  noiseBuffer(context);
+  if (typeof context.createConvolver !== 'function') return;
+  roomFor(context, destination, -1);
+  roomFor(context, destination, 1);
 }
 
 // Envelope shapes over the cue's length, as raised-cosine curves at 1 ms resolution, so
@@ -267,7 +298,7 @@ function startVoiceSwoosh(context, destination, {
   panner.pan.linearRampToValueAtTime(fullSide, at + durationSeconds * (voice.travelShare ?? SWOOSH_TUNING.travelShare));
   panner.connect(destination);
 
-  // Dry and a small room, both on the cue's side.
+  // Dry, and the shared small room on the cue's side.
   const tone = track(context.createBiquadFilter());
   tone.type = 'lowpass';
   tone.frequency.value = voice.lowpassHz;
@@ -275,11 +306,9 @@ function startVoiceSwoosh(context, destination, {
   tone.connect(panner);
   let tail = 0;
   if (voice.reverb > 0 && typeof context.createConvolver === 'function') {
-    const room = track(context.createConvolver());
     const wet = track(context.createGain());
-    room.buffer = reverbBuffer(context);
     wet.gain.value = voice.reverb;
-    tone.connect(room).connect(wet).connect(panner);
+    tone.connect(wet).connect(roomFor(context, destination, fullSide));
     tail = 0.4;
   }
 
