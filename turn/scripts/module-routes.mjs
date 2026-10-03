@@ -1,12 +1,13 @@
 // One URL per module (#1045). A module the page reaches under two URLs runs twice,
 // with two copies of its state, and a URL without the release key can bring back a
-// module of another release. release.mjs walks TURN's module graph from its entry
-// page and routes every URL the code asks for to the module's one URL for the
-// release: the import map for imports, the release key on the entry page's tags.
+// module of another release. release.mjs walks the module graph from an entry page
+// (TURN, and YOUR TURN, which runs TURN's game modules) and routes every URL the code
+// asks for to the module's one URL for the release: the import map for imports, the
+// release key on the entry page's tags.
 import path from 'node:path';
 
 const ORIGIN = 'https://enkel.design';
-const DOCUMENT_URL = new URL('/turn/index.html', ORIGIN);
+const TURN_DOCUMENT = '/turn/index.html';
 const LOCAL = /^(?:[./]|https?:)/;
 
 // Modules under these paths are versioned by their path (three.js) or belong to
@@ -15,10 +16,10 @@ function routed(pathname) {
   return pathname.startsWith('/turn/') && !pathname.startsWith('/turn/vendor/') && /\.m?js$/.test(pathname);
 }
 
-function normalizedEntries(imports) {
+function normalizedEntries(imports, documentUrl) {
   return Object.entries(imports).map(([specifier, target]) => [
-    LOCAL.test(specifier) ? new URL(specifier, DOCUMENT_URL).href : specifier,
-    LOCAL.test(target) ? new URL(target, DOCUMENT_URL).href : target
+    LOCAL.test(specifier) ? new URL(specifier, documentUrl).href : specifier,
+    LOCAL.test(target) ? new URL(target, documentUrl).href : target
   ]).sort(([left], [right]) => right.length - left.length);
 }
 
@@ -76,10 +77,12 @@ function withRelease(build, release) {
 }
 
 // Routes every URL the module graph asks for to the module's one URL. `read` returns a
-// repository file's source as it ships (null when missing).
-export function routeModuleGraph(document, importMap, release, read) {
+// repository file's source as it ships (null when missing). `documentPath` is the
+// entry page the import map belongs to.
+export function routeModuleGraph(document, importMap, release, read, documentPath = TURN_DOCUMENT) {
+  const DOCUMENT_URL = new URL(documentPath, ORIGIN);
   const imports = importMap.imports ||= {};
-  const entries = normalizedEntries(imports);
+  const entries = normalizedEntries(imports, DOCUMENT_URL);
   const canonical = new Map();
   const asked = new Map();
   const queue = [];
