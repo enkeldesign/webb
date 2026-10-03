@@ -450,8 +450,8 @@ async function responsiveRace(browser, name) {
         });
         assert.deepEqual(spill, [], `${width}x${height} ${handedness}: DRIFT and FLOW text stays inside its panel`);
         // Portrait with device rotation: no steering pad, so DRIFT above FLOW take its
-        // place, clear of the drive pad's bubbles and above the menu row, mirrored with
-        // the pad.
+        // place, gauges together between them, clear of the drive pad's bubbles and above
+        // the menu row, mirrored with the pad.
         if (height > width && width > 304 && height > 480) {
           await page.evaluate(() => { document.querySelector('.manual-steer').hidden = true; });
           await settle(page);
@@ -463,7 +463,10 @@ async function responsiveRace(browser, name) {
           const menu = await bounds(page, '.utility-group');
           within(drift, width, height, `${label} DRIFT`);
           within(flow, width, height, `${label} FLOW`);
-          assert.ok(gauge.bottom <= flow.y, `${label}: DRIFT and its gauge sit above FLOW`);
+          const flowGauge = await bounds(page, '.score-feedback-gauge-shell[data-score-channel="flow"]');
+          // The two gauges meet between the cards: DRIFT's under its card, FLOW's on top of its own.
+          assert.ok(gauge.y >= drift.bottom - 4 && gauge.bottom <= flowGauge.y, `${label}: DRIFT's gauge hangs under DRIFT, above FLOW's`);
+          assert.ok(flowGauge.width > 20 && flowGauge.bottom >= flow.y && flowGauge.bottom <= flow.y + 4, `${label}: FLOW's gauge sits on top of FLOW`);
           assert.ok(Math.abs(drift.x - flow.x) < 1, `${label}: DRIFT and FLOW share a column`);
           for (const card of [drift, flow]) {
             assert.ok(handedness === 'right' ? card.right <= stack.x : card.x >= stack.right, `${label}: clear of the drive pad and its bubbles`);
