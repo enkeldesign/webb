@@ -16,7 +16,6 @@ const FAILED_TEXT = 'Offline copy incomplete. TURN will try again.';
 const FAILED_VISIBLE_MS = 6000;
 
 function scopeFor(pathname) {
-  if (pathname.startsWith('/turn-next/')) return '/turn-next/';
   if (pathname.startsWith('/turn/')) return '/turn/';
   return null;
 }

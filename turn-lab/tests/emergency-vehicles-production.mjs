@@ -60,7 +60,6 @@ const [
   trackRegistry,
   license,
   index,
-  nextIndex,
   releaseSource
 ] = await Promise.all([
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8'),
@@ -78,7 +77,6 @@ const [
   fs.readFile(path.join(turnDir, 'tracks/registry.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'assets/cars/KENNEY-CAR-KIT.md'), 'utf8'),
   fs.readFile(path.join(turnDir, 'index.html'), 'utf8'),
-  fs.readFile(path.join(root, 'turn-next/index.html'), 'utf8'),
   fs.readFile(path.join(turnDir, 'release.json'), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
@@ -272,8 +270,7 @@ assert.match(maydayAudio, /__turnAudioPreferences\?\.getSettings/,
   'The supplemental rescue audio must respect TURN audio-off preferences');
 
 for (const [html, target] of [
-  [index, `/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=${release.cacheKey}`],
-  [nextIndex, `/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=${release.cacheKey}`]
+  [index, `/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=${release.cacheKey}`]
 ]) {
   assert.match(
     html,

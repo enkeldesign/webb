@@ -3,9 +3,8 @@
     window.matchMedia('(display-mode: standalone)').matches ||
     window.matchMedia('(display-mode: fullscreen)').matches ||
     navigator.standalone === true;
-  const isNextDeployment = document.documentElement.dataset.turnDeployment === 'next';
-  const appName = isNextDeployment ? 'TURN NEXT' : 'TURN';
-  const gamePath = isNextDeployment ? '/turn-next/' : '/turn/';
+  const appName = 'TURN';
+  const gamePath = '/turn/';
   const gameAddress = new URL(gamePath, window.location.href).href;
 
   function detectBrowserContext() {

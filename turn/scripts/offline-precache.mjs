@@ -1,4 +1,4 @@
-// Offline precache lists (#1030). For each installable entry page (TURN, TURN NEXT),
+// Offline precache lists (#1030). For each installable entry page (TURN),
 // every same-origin file the page can load: found by crawling its HTML, import map,
 // modules, stylesheets and web manifest, plus the asset folders that code reaches
 // through computed paths (car models, stills, scenery). release.mjs writes the lists
@@ -11,8 +11,7 @@ const repositoryRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.u
 const ORIGIN = 'https://enkel.design';
 
 export const OFFLINE_ENTRIES = Object.freeze([
-  Object.freeze({ scope: '/turn/', entry: 'turn/index.html', list: 'turn/offline-precache.json' }),
-  Object.freeze({ scope: '/turn-next/', entry: 'turn-next/index.html', list: 'turn-next/offline-precache.json' })
+  Object.freeze({ scope: '/turn/', entry: 'turn/index.html', list: 'turn/offline-precache.json' })
 ]);
 
 // Folders whose files code loads by computed paths (`${id}.glb`, `${carId}.webp`).
@@ -24,7 +23,7 @@ const FILE_EXTENSION = /\.(?:m?js|css|html|json|webmanifest|glb|gltf|bin|obj|web
 function repositoryPathFor(url) {
   if (url.origin !== ORIGIN) return null;
   const pathname = decodeURIComponent(url.pathname);
-  if (!/^\/turn(?:-next)?\//.test(pathname) || pathname.includes('..')) return null;
+  if (!/^\/turn\//.test(pathname) || pathname.includes('..')) return null;
   return pathname.endsWith('/') ? `${pathname.slice(1)}index.html` : pathname.slice(1);
 }
 
@@ -93,7 +92,7 @@ function references(source, fileUrl, extension, importMap) {
     // Module specifiers, bare ones included (resolved through the import map).
     for (const [, value] of source.matchAll(/\b(?:from|import)\s*\(?\s*["']([^"']+)["']/g)) add(value);
     // Path-like string literals: URLs built with new URL(), fetch(), withBuild() and loaders.
-    for (const [, , value] of source.matchAll(/(["'`])((?:\.{1,2}\/|\/turn(?:-next)?\/)[^"'`\s]+?)\1/g)) {
+    for (const [, , value] of source.matchAll(/(["'`])((?:\.{1,2}\/|\/turn\/)[^"'`\s]+?)\1/g)) {
       if (FILE_EXTENSION.test(value.replace(/[?#].*$/, ''))) add(value);
     }
   }

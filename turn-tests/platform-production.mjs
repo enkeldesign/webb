@@ -199,7 +199,6 @@ assert.equal(await unavailablePlatform.display.requestFullscreen(), false);
 assert.equal(await unavailablePlatform.display.lockLandscape(), false);
 
 const productionApp = fs.readFileSync(new URL('../turn/app.js', import.meta.url), 'utf8');
-const nextApp = fs.readFileSync(new URL('../turn-next/app.js', import.meta.url), 'utf8');
 const motionBridgeSource = fs.readFileSync(new URL('../turn/motion-lifecycle-bridge.js', import.meta.url), 'utf8');
 const displayBridgeSource = fs.readFileSync(new URL('../turn/display-lifecycle-bridge.js', import.meta.url), 'utf8');
 const webPlatformSource = fs.readFileSync(new URL('../turn/platform/web-platform.js', import.meta.url), 'utf8');
@@ -212,8 +211,6 @@ const releaseIdentity = JSON.parse(fs.readFileSync(new URL('../turn/release.json
 const canonicalPlatformContext = '/turn/platform/platform-context.js?build=' + releaseIdentity.cacheKey;
 for (const [shellName, shellPath] of [
   ['TURN', '../turn/index.html'],
-  ['TURN NEXT', '../turn-next/index.html'],
-  ['TURN LAB', '../turn-lab/index.html'],
   ['YOUR TURN', '../yourturn/index.html']
 ]) {
   const shellSource = fs.readFileSync(new URL(shellPath, import.meta.url), 'utf8');
@@ -237,8 +234,6 @@ assert.ok(
   productionApp.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })')
     < productionApp.indexOf("withBuild('./main.js')")
 );
-assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
-assert.doesNotMatch(nextApp, /installMotionLifecycleBridge|installDisplayLifecycleBridge/);
 assert.match(motionBridgeSource, /await motion\.requestPermission\(\);[\s\S]*return 'granted';/);
 assert.match(motionBridgeSource, /motion\.subscribe\(listener\)/);
 assert.match(displayBridgeSource, /display\.requestFullscreen\(root\)/);

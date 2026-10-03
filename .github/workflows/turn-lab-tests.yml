@@ -7,7 +7,6 @@ on:
     paths:
       # This is the canonical full static suite, so broad TURN paths are intentional.
       - 'turn/**'
-      - 'turn-next/**'
       - 'turn-tests/**'
       - 'turn-lab/**'
       # Lifecycle tests use the vendored production Three version without network I/O.
@@ -20,7 +19,6 @@ on:
     paths:
       # Keep main verification equivalent to pull requests after merges.
       - 'turn/**'
-      - 'turn-next/**'
       - 'turn-tests/**'
       - 'turn-lab/**'
       - 'postal/vendor/three*.js'
@@ -46,9 +44,6 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Syntax-check TURN modules
-        run: find turn turn-next turn-tests turn-lab/tests turn-lab/scripts turn-lab/build-a-car turn-lab/tracks turn-lab/race -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
-
       - name: Lint TURN domain modules
         run: npx --yes eslint@9.39.1
 
@@ -60,18 +55,6 @@ jobs:
 
       - name: Verify active release composition
         run: node turn-tests/release-composition-production.mjs
-
-      - name: Verify TURN NEXT generated parity bootstrap
-        run: node turn-next/scripts/build-parity-app.mjs --check
-
-      - name: Verify TURN NEXT generated parity main
-        run: node turn-next/scripts/build-parity-main.mjs --check
-
-      - name: Verify TURN NEXT generated parity entry
-        run: node turn-next/scripts/build-parity-entry.mjs --check
-
-      - name: Run TURN NEXT isolation and identity regression
-        run: node turn-tests/turn-next-entry-production.mjs
 
       - name: Run web platform and motion composition regression
         run: node turn-tests/platform-production.mjs

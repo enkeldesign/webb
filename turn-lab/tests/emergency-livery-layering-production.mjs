@@ -9,7 +9,6 @@ const [
   carModels,
   catalogSource,
   productionEntry,
-  labEntry,
   yourTurnEntry
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/emergency-livery-models.js', import.meta.url), 'utf8'),
@@ -18,7 +17,6 @@ const [
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../yourturn/index.html', import.meta.url), 'utf8')
 ]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
@@ -165,18 +163,13 @@ const expectedEmergencyTargets = [
   ['./vehicle/car-models.js?build=20260720-r22', `/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi&build=${release.cacheKey}`]
 ];
 
-for (const [name, source] of [['production', productionEntry], ['TURN LAB', labEntry]]) {
+for (const [name, source] of [['production', productionEntry]]) {
   const imports = importMapFrom(source);
   for (const [specifier, target] of [...expectedCatalogTargets, ...expectedEmergencyTargets]) {
     assert.equal(imports[specifier], target, `${name} must route ${specifier} to the canonical changed vehicle module`);
   }
 }
 
-assert.deepEqual(
-  importMapFrom(labEntry),
-  importMapFrom(productionEntry),
-  'TURN LAB must retain the exact production import map'
-);
 
 const yourTurnImports = importMapFrom(yourTurnEntry);
 for (const specifier of [

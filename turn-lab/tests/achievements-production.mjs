@@ -55,8 +55,7 @@ const [
   fixedLayout,
   app,
   workflow,
-  productionEntry,
-  labEntry
+  productionEntry
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/achievements/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/catalog-base.js', import.meta.url), 'utf8'),
@@ -79,8 +78,7 @@ const [
   fs.readFile(new URL('../../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../index.html', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8')
 ]);
 
 assert.equal(ACHIEVEMENT_STORAGE_KEY, 'turn-achievements-v1');
@@ -541,17 +539,17 @@ assert.match(timeTrialSource, /targetSeconds: 47/);
 assert.match(timeTrialSource, /targetSeconds: 24/);
 assert.match(timeTrialSource, /targetSeconds: 33/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
-for (const entry of [productionEntry, labEntry]) {
+for (const entry of [productionEntry]) {
   const release = JSON.parse(await fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'));
   const map = JSON.parse(entry.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1]);
   for (const suffix of ['', '?revision=r166-bella-records', '?revision=r224-sprint-targets']) {
     assert.equal(map.imports[`/turn/achievements/time-trials.js${suffix}`],
       `/turn/achievements/time-trials.js?build=${release.cacheKey}`,
-      'Production and Lab must route cached achievement imports to the current Sprint targets');
+      'Production must route cached achievement imports to the current Sprint targets');
   }
   assert.equal(map.imports['/turn/achievements/view.js?revision=r166-bella-records'],
     `/turn/achievements/view.js?build=${release.cacheKey}`,
-    'Production and Lab must route cached achievement views to the current release presenter');
+    'Production must route cached achievement views to the current release presenter');
   assert.equal(
     map.imports['/turn/achievements/catalog-base.js?revision=r222-awd-label'],
     `/turn/achievements/catalog-base.js?build=${release.cacheKey}`,
@@ -586,7 +584,7 @@ assert.match(challengeSource, /turn:lap-result/);
 assert.match(challengeSource, /turn:lap-invalid/);
 assert.match(challengeSource, /turn:achievements-updated/);
 assert.match(challengeSource, /reason === 'lap-started'/);
-for (const entry of [productionEntry, labEntry]) {
+for (const entry of [productionEntry]) {
   assert.match(
     entry,
     /"\/turn\/achievements\/challenge-expansion-r166\.js\?revision=r166-bella-records": "\/turn\/achievements\/challenge-expansion-r166\.js\?revision=r256-achievement-polling&build=\d{8}-r\d+"/,

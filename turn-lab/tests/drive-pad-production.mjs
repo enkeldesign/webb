@@ -157,7 +157,6 @@ class Vec3 {
 
 const [
   index,
-  nextIndex,
   releaseSource,
   app,
   controls,
@@ -172,7 +171,6 @@ const [
   mainSource
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
@@ -195,8 +193,6 @@ assert.match(index, new RegExp(`gameplay-v2\\.css\\?build=${release.cacheKey}&re
   'The Boost gradient fix must bypass stale production CSS caches');
 assert.match(index, new RegExp(`drive-pad\\.css\\?build=${release.cacheKey}&revision=r217-drift-lock-design`),
   'The connected LOCK geometry must bypass stale production CSS caches');
-assert.match(nextIndex, new RegExp(`gameplay-v2\\.css\\?build=${release.cacheKey}&revision=r217-drift-lock-design`));
-assert.match(nextIndex, new RegExp(`drive-pad\\.css\\?build=${release.cacheKey}&revision=r217-drift-lock-design`));
 assert.match(index, new RegExp(`position-hud-r83\\.css\\?build=${release.cacheKey}`));
 assert.ok(
   index.indexOf('gameplay-v2.css') < index.indexOf('position-hud-r83.css'),

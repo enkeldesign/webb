@@ -203,9 +203,7 @@ assert.equal(steeringLimitAnnouncement(null), 'Steering limit reached.');
 const [
   safeZoneSource,
   productionIndex,
-  nextIndex,
   productionApp,
-  nextApp,
   orientationCompat,
   orientationGuardCss,
   warningRuntime,
@@ -213,9 +211,7 @@ const [
 ] = await Promise.all([
   fs.readFile(new URL('../turn/motion-safe-zone.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-compat.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/steering-limit-warning.js', import.meta.url), 'utf8'),
@@ -228,7 +224,7 @@ assert.match(safeZoneSource, /feedbackHardRearmDegrees: 22/);
 assert.match(safeZoneSource, /feedbackClearDegrees: 17\.5/);
 assert.match(safeZoneSource, /directionalFeedback: true/);
 
-for (const indexSource of [productionIndex, nextIndex]) {
+for (const indexSource of [productionIndex]) {
   assert.match(indexSource, /motion-safe-zone\.js\?build=/);
   assert.ok(
     indexSource.indexOf('./motion-safe-zone.js') < indexSource.indexOf('./orientation-compat.js'),
@@ -242,10 +238,6 @@ assert.ok(
   productionApp.indexOf('installSteeringLimitWarning()') < productionApp.indexOf("withBuild('./main.js')"),
   'The canonical warning must install before the race core starts'
 );
-assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
-assert.doesNotMatch(nextApp, /installSteeringLimitWarning|steering-limit-warning\.css/);
-
-assert.doesNotMatch(nextIndex, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
 assert.match(orientationCompat, /feedbackNearDegrees/);
 assert.match(orientationCompat, /feedbackHardDegrees/);
 assert.match(orientationCompat, /feedbackHardRearmDegrees/);
@@ -267,18 +259,7 @@ assert.match(warningCss, /transition: none/);
 assert.doesNotMatch(warningCss, /transition-duration|animation|@keyframes|is-flashing/);
 assert.doesNotMatch(orientationGuardCss, /\.hud::before|turn-steering-limit-pulse|@keyframes/);
 
-for (const removedPath of [
-  '../turn-next/safe-zone-bootstrap.js',
-  '../turn-next/steering-limit-warning.js',
-  '../turn-next/steering-limit-warning.css',
-  '../turn-next/orientation-preflight.js',
-  '../turn-next/orientation-freeze.js',
-  '../turn-next/orientation-freeze.css'
-]) {
-  await assert.rejects(fs.access(new URL(removedPath, import.meta.url)), undefined, `${removedPath} must remain absent`);
-}
-
 if (previousConfiguration === undefined) delete globalThis.__TURN_MOTION_SAFE_ZONE__;
 else globalThis.__TURN_MOTION_SAFE_ZONE__ = previousConfiguration;
 
-console.log('Canonical TURN 24-degree safe zone, low-speed horizon dead zone and smoothing, inertial warning and NEXT wrapper passed.');
+console.log('Canonical TURN 24-degree safe zone, low-speed horizon dead zone and smoothing, and inertial warning passed.');
