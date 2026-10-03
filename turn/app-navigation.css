@@ -19,7 +19,9 @@
   position: relative;
 }
 
-/* The grabber says "drag me down" on touch screens, as on any phone sheet. */
+/* The grabber says "drag me down" on touch screens, as on any phone sheet. It takes
+   its tone from the surface behind it (data-surface, set by ui/app-navigation.js): Ink
+   on a light or coloured head, cream on a night one, each at 3:1 or more. */
 .turn-sheet-grabber {
   position: absolute;
   z-index: 3;
@@ -29,12 +31,17 @@
   height: 5px;
   margin-left: -18px;
   border-radius: 3px;
-  background: rgb(8 9 10 / 0.32);
+  background: rgb(8 9 10 / 0.5);
   pointer-events: none;
 }
 
-:root[data-theme="dark"] .turn-sheet-grabber {
+:root[data-theme="dark"] .turn-sheet-grabber,
+:root .turn-sheet-grabber[data-surface="dark"] {
   background: rgb(255 248 232 / 0.42);
+}
+
+:root .turn-sheet-grabber[data-surface="light"] {
+  background: rgb(8 9 10 / 0.5);
 }
 
 @media (pointer: fine), (hover: hover) {

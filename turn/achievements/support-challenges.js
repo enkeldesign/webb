@@ -463,10 +463,12 @@ function installStyles() {
       letter-spacing: .08em;
     }
     .turn-support-challenge-topline b {
+      --turn-pill: var(--turn-yellow-500, #ffd43b);
       padding: 3.75px 6px;
-      border: 2.25px solid currentColor;
+      border: 2.25px solid var(--turn-outline);
       border-radius: 749.25px;
-      background: var(--turn-yellow-500, #ffd43b);
+      background: var(--turn-pill);
+      color: var(--turn-ink);
       white-space: nowrap;
     }
     .turn-support-challenge-dialog h2 {
