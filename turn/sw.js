@@ -5,15 +5,16 @@
      release.mjs), eight at a time, resuming if a previous install stopped midway.
      A file that fails fails the install, so the previous release stays in charge.
      The first install tells open pages how far it has come (turn-offline-progress).
-   - Online, TURN behaves as before: the network answers first, so a new build shows
-     up at once, and each answer is kept (by its exact URL, build key included).
+   - A file of this release that is already stored is answered from the store at once.
+   - Otherwise the network answers first, so a new build shows up at once, and each
+     answer is kept (by its exact URL, build key included).
    - Offline, on a network that stalls, or when the server answers with an error: the
      kept answer for the exact URL, else the release's precached file for that path.
    - Third-party models pinned to a commit never change: cache first, kept for good.
    - Other pages in the app come from the network; offline, one never opened says so.
    - Activate: drop the previous release's caches and take over open pages. */
 
-const RELEASE = '20261003-r373';
+const RELEASE = '20261003-r374';
 const SCOPE = new URL(self.registration.scope).pathname;
 const NAME = SCOPE.replace(/\//g, '') || 'turn';
 const PRECACHE = `${NAME}-precache-${RELEASE}`;
@@ -126,7 +127,17 @@ async function fromCaches(request, url) {
   return caches.match(request, { ignoreSearch: true });
 }
 
+// A file of this very release that is already stored is that build: answer from the
+// store at once. Waiting on a slow network for it first made startup take minutes on
+// a poor connection, one file after another (#1045).
+async function currentRelease(url) {
+  if (url.searchParams.get('build')?.split('-').slice(0, 2).join('-') !== RELEASE) return null;
+  return (await caches.open(PRECACHE)).match(url.pathname);
+}
+
 async function sameOrigin(request, url) {
+  const stored = await currentRelease(url);
+  if (stored) return stored;
   const network = fetch(request);
   const first = await race(network, RESOURCE_TIMEOUT_MS);
   const answered = first !== FAILED && first !== TIMED_OUT;
