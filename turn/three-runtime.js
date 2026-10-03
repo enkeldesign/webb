@@ -16,12 +16,21 @@ export class PointLight extends NativeThree.PointLight {
   }
 }
 
+// three.js gives each renderer its own methods (setAnimationLoop, setSize, …) in its
+// constructor, so a policy patched onto the prototype never runs (#1045). A policy
+// registers here instead and wraps each renderer TURN creates from then on.
+const rendererHooks = [];
+export function onWebGLRendererCreated(hook) {
+  if (typeof hook === 'function') rendererHooks.push(hook);
+}
+
 export class WebGLRenderer extends NativeThree.WebGLRenderer {
   constructor(parameters = {}) {
     const rendererParameters = graphicsProfile.lowGraphics
       ? { ...parameters, antialias: true }
       : parameters;
     super(rendererParameters);
+    for (const hook of rendererHooks) hook(this);
 
     if (!graphicsProfile.lowGraphics) return;
 

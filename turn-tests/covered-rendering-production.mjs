@@ -33,11 +33,10 @@ assert.ok(
   'The guard must wrap WebGLRenderer before main.js registers its animation loop'
 );
 
-assert.match(guard, /THREE\.WebGLRenderer\.prototype/, 'The guard must cover the renderer loop at its shared registration boundary');
-assert.match(guard, /PAUSE_CLASSES = Object\.freeze\(\[\s*'turn-runtime-paused'\s*\]\)/,
-  'The renderer guard pauses for deliberate modal pauses (the track-select overlay is retired)');
-assert.match(guard, /PAUSE_CLASSES\.some\(\(className\) => document\.body\?\.classList\.contains\(className\)\)/,
-  'Covered frames must be detected from the declared pause lifecycle classes');
+assert.match(guard, /THREE\.onWebGLRendererCreated\(/,
+  'The guard wraps each renderer as it is created; three.js sets setAnimationLoop per instance (#1045)');
+assert.doesNotMatch(guard, /PAUSE_CLASSES = Object\.freeze\(\[\s*'turn-runtime-paused'/,
+  'The race PAUSE keeps its own paused-frame redraw in main.js');
 assert.match(guard, /MAIN_RENDERER_PAUSE_CLASSES[\s\S]*turn-home-open/,
   'The opaque Home screen must declare the main race renderer covered');
 assert.match(guard, /renderer === globalThis\.__turnRuntime\?\.renderer/,
@@ -46,7 +45,6 @@ assert.match(guard, /stats\.skippedCoveredMainFrames \+= 1/,
   'Main-world frames saved while Home is open must remain measurable');
 assert.match(guard, /lastDeliveredAt = -Infinity/,
   'Returning from a long covered Home stay must reset the high-refresh delivery cadence');
-assert.match(guard, /stats\.skippedFrames \+= 1/, 'Skipped covered frames must remain measurable through diagnostics');
 assert.match(guard, /MAX_RENDER_FPS = 60/, 'No WebGL surface should render above the game’s 60 Hz simulation ceiling');
 assert.match(guard, /RENDER_INTERVAL_MS = 1000 \/ MAX_RENDER_FPS/);
 assert.match(guard, /stats\.skippedHighRefreshFrames \+= 1/,
