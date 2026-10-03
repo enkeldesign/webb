@@ -490,4 +490,52 @@ assert.match(menu, /A warm organic hum guides your steering/);
 assert.match(menu, /Off road, centred gravel marks the surface/);
 assert.match(menu, /nearby-rival warnings are directional/);
 
+// Performance (Erik's stutter, 1.36.23; performance comes before beautiful notes). A
+// ConvolverNode prepares its room on the main thread when its buffer is set (12-70 ms on
+// a CPU four times slower) and convolves on the audio thread while it rings. The race
+// sound is dry, so a race builds no room at all; a picker voice with a room shares one
+// per side, built before its first cue.
+{
+  const { SWOOSH_VOICES, prepareSwooshVoices, startSwoosh } = await import('../../turn/audio/swoosh-sound.js');
+  resetSwooshDelivery('performance test');
+  const routeAudio = createRouteAudio();
+  const { context } = routeAudio;
+  const rooms = [];
+  context.createConvolver = () => {
+    const room = context.node({ buffer: null });
+    rooms.push(room);
+    return room;
+  };
+  const runtime = trackRuntime('countryside');
+  Object.assign(runtime.state, { nearestTrackIndex: 0, speed: 0, velocity: { x: 0, z: 0 } });
+  updateSwooshPaceNotes(runtime, { active: true }, routeAudio);
+  const { played } = drive(runtime, routeAudio, { seconds: 90 });
+  assert.ok(played.length >= 8, `a lap plays its pace notes (${played.length})`);
+  assert.equal(SWOOSH_VOICES[SWOOSH_PACE_TUNING.variant].reverb, 0, 'the race sound is dry');
+  assert.equal(rooms.length, 0, `a race builds no room (${rooms.length} for ${played.length} notes)`);
+  resetSwooshDelivery('performance test done');
+
+  // CHIME (picker) keeps its room: one per side for the output, shared by every cue.
+  const outputs = [];
+  const { createGain } = context;
+  context.createGain = () => { const node = createGain(); outputs.push(node); return node; };
+  prepareSwooshVoices(context, routeAudio.destination, 'voice-chime');
+  context.createGain = createGain;
+  assert.equal(rooms.length, 2, 'a voice with a room has both rooms built before its first cue');
+  const [leftRoom] = outputs;
+  const handles = [];
+  for (let index = 0; index < 12; index += 1) {
+    handles.push(startSwoosh(context, routeAudio.destination, { side: index % 2 ? 1 : -1, variant: 'voice-chime', at: index, durationSeconds: 0.3 }));
+  }
+  assert.equal(rooms.length, 2, `twelve cues share the two rooms (${rooms.length})`);
+  assert.ok(rooms.every((room) => room.buffer), 'each room has its sound set once');
+  // Stopping a cue (pause, reset) closes its room at once: no tail rings on. The next
+  // cue on that side opens it again from its own start.
+  context.currentTime = 10.2;
+  handles[10].stop();
+  assert.deepEqual(leftRoom.gain.events.at(-1), ['set', 0, 10.2], 'a stopped cue silences its room at once');
+  startSwoosh(context, routeAudio.destination, { side: -1, variant: 'voice-chime', at: 11, durationSeconds: 0.3 });
+  assert.deepEqual(leftRoom.gain.events.at(-1), ['set', 1, 11], 'the next cue on that side opens its room again');
+}
+
 console.log(`TURN ${release.id} SWOOSH pace notes: every bend on every track and DRIVE BY EAR 101, timed, linked, on its side, ducked, and yielding off road and the wrong way.`);

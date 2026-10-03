@@ -129,8 +129,9 @@ export const SWOOSH_VOICES = Object.freeze({
   // has faded by the time the swipe reaches the full side, so the side it lands on is
   // the quietest part. Each variant tries one remedy, so the race can tell which works:
   // A slower decay: the ring lives on out to the full side. The race sound since 1.35.5,
-  // in three lengths (Erik).
-  'voice-chime-ring': Object.freeze({ ...CHIME, name: 'CHIME RING', decay: 1.1, release: 0.05, gain: 0.561, lengths: Object.freeze({ short: 0.2, medium: 0.4, long: 0.6 }) }),
+  // in three lengths (Erik). Dry since 1.36.23: the room cost about a third of each
+  // note's audio work, and the race comes first (Erik). Its long ring carries it.
+  'voice-chime-ring': Object.freeze({ ...CHIME, name: 'CHIME RING', decay: 1.1, release: 0.05, reverb: 0, gain: 0.573, lengths: Object.freeze({ short: 0.2, medium: 0.4, long: 0.6 }) }),
   // The same strike, but the swipe reaches the full side within its first 30%.
   'voice-chime-early': Object.freeze({ ...CHIME, name: 'CHIME EARLY', travelShare: 0.3 }),
   // The strike carries tightness; a soft wind at the same pitch rises behind it and
@@ -160,6 +161,7 @@ export function swooshLengths(variant) {
 }
 
 const reverbBuffers = new WeakMap();
+const rooms = new WeakMap();
 
 // A small, dark room: 0.4 s of decaying, smoothed noise.
 function reverbBuffer(context) {
@@ -175,6 +177,40 @@ function reverbBuffer(context) {
   }
   reverbBuffers.set(context, buffer);
   return buffer;
+}
+
+// The small room, one per side for each output, shared by every cue. A ConvolverNode
+// prepares its room on the main thread when its buffer is set: about 3 ms on a fast
+// phone and 12-70 ms on a CPU four times slower, so a room per cue stalled the race at
+// every bend. Each cue sends its wet signal into the room on its own side; stopping a
+// cue (pause, reset) closes the room's output at once, so no tail rings on, and the next
+// cue on that side opens it again from its own start.
+function roomFor(context, destination, fullSide) {
+  let sides = rooms.get(destination);
+  if (!sides || sides.context !== context) {
+    sides = { context };
+    rooms.set(destination, sides);
+  }
+  if (!sides[fullSide]) {
+    const room = context.createConvolver();
+    const output = context.createGain();
+    const panner = context.createStereoPanner();
+    room.buffer = reverbBuffer(context);
+    panner.pan.value = fullSide;
+    room.connect(output).connect(panner).connect(destination);
+    sides[fullSide] = { room, output };
+  }
+  return sides[fullSide];
+}
+
+/** Builds what a variant's cues share (rooms, noise) ahead of the first cue (at the race start). */
+export function prepareSwooshVoices(context, destination, variant) {
+  if (!context || !destination) return;
+  const voice = Object.hasOwn(SWOOSH_VOICES, variant) ? SWOOSH_VOICES[variant] : null;
+  if (!voice || voice.noise || voice.layer?.noise) noiseBuffer(context);
+  if (!voice || !(voice.reverb > 0) || typeof context.createConvolver !== 'function') return;
+  roomFor(context, destination, -1);
+  roomFor(context, destination, 1);
 }
 
 // Envelope shapes over the cue's length, as raised-cosine curves at 1 ms resolution, so
@@ -267,19 +303,21 @@ function startVoiceSwoosh(context, destination, {
   panner.pan.linearRampToValueAtTime(fullSide, at + durationSeconds * (voice.travelShare ?? SWOOSH_TUNING.travelShare));
   panner.connect(destination);
 
-  // Dry and a small room, both on the cue's side.
+  // Dry, and the shared small room on the cue's side.
   const tone = track(context.createBiquadFilter());
   tone.type = 'lowpass';
   tone.frequency.value = voice.lowpassHz;
   tone.Q.value = 0.5;
   tone.connect(panner);
   let tail = 0;
+  let room = null;
   if (voice.reverb > 0 && typeof context.createConvolver === 'function') {
-    const room = track(context.createConvolver());
     const wet = track(context.createGain());
-    room.buffer = reverbBuffer(context);
+    room = roomFor(context, destination, fullSide);
     wet.gain.value = voice.reverb;
-    tone.connect(room).connect(wet).connect(panner);
+    tone.connect(wet).connect(room.room);
+    room.output.gain.cancelScheduledValues(at);
+    room.output.gain.setValueAtTime(1, at);
     tail = 0.4;
   }
 
@@ -326,6 +364,10 @@ function startVoiceSwoosh(context, destination, {
   return Object.freeze({
     endsAt: end,
     stop() {
+      if (room) {
+        room.output.gain.cancelScheduledValues(context.currentTime);
+        room.output.gain.setValueAtTime(0, context.currentTime);
+      }
       for (const node of [...sources, timer]) {
         try {
           node.stop();

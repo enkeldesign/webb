@@ -21,7 +21,7 @@
 // Output goes through the engine's route channel (globalThis.__turnRouteAudio): Drive
 // By Ear's balance and on/off apply, and the car sounds and music duck underneath.
 import { routeForSamples, routeSegmentAt, upcomingRouteSegments } from './route-geometry.js';
-import { SWOOSH_LENGTHS, SWOOSH_VOICES, VOICE_VARIANTS, startSwoosh, swooshLengths } from './swoosh-sound.js';
+import { SWOOSH_LENGTHS, SWOOSH_VOICES, VOICE_VARIANTS, prepareSwooshVoices, startSwoosh, swooshLengths } from './swoosh-sound.js';
 
 export const SWOOSH_PACE_TUNING = Object.freeze({
   // The race sound: CHIME RING, Erik's choice from the admin sound picker (1.35.4), in
@@ -249,6 +249,10 @@ export function updateSwooshPaceNotes(runtime, frame = {}, routeAudio = globalTh
     cancelLive('paused');
     lastDistance = null;
     return [];
+  }
+  // Whatever the cues share is built while the car still stands, not at the first bend.
+  if (routeAudio?.ready && routeAudio.destination) {
+    prepareSwooshVoices(routeAudio.context, routeAudio.destination, SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant);
   }
 
   const index = Math.max(0, Math.round(Number(state.nearestTrackIndex) || 0)) % runtime.samples.length;
