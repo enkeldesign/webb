@@ -516,13 +516,26 @@ assert.match(menu, /nearby-rival warnings are directional/);
   resetSwooshDelivery('performance test done');
 
   // CHIME (picker) keeps its room: one per side for the output, shared by every cue.
+  const outputs = [];
+  const { createGain } = context;
+  context.createGain = () => { const node = createGain(); outputs.push(node); return node; };
   prepareSwooshVoices(context, routeAudio.destination, 'voice-chime');
+  context.createGain = createGain;
   assert.equal(rooms.length, 2, 'a voice with a room has both rooms built before its first cue');
+  const [leftRoom] = outputs;
+  const handles = [];
   for (let index = 0; index < 12; index += 1) {
-    startSwoosh(context, routeAudio.destination, { side: index % 2 ? 1 : -1, variant: 'voice-chime', at: index, durationSeconds: 0.3 });
+    handles.push(startSwoosh(context, routeAudio.destination, { side: index % 2 ? 1 : -1, variant: 'voice-chime', at: index, durationSeconds: 0.3 }));
   }
   assert.equal(rooms.length, 2, `twelve cues share the two rooms (${rooms.length})`);
   assert.ok(rooms.every((room) => room.buffer), 'each room has its sound set once');
+  // Stopping a cue (pause, reset) closes its room at once: no tail rings on. The next
+  // cue on that side opens it again from its own start.
+  context.currentTime = 10.2;
+  handles[10].stop();
+  assert.deepEqual(leftRoom.gain.events.at(-1), ['set', 0, 10.2], 'a stopped cue silences its room at once');
+  startSwoosh(context, routeAudio.destination, { side: -1, variant: 'voice-chime', at: 11, durationSeconds: 0.3 });
+  assert.deepEqual(leftRoom.gain.events.at(-1), ['set', 1, 11], 'the next cue on that side opens its room again');
 }
 
 console.log(`TURN ${release.id} SWOOSH pace notes: every bend on every track and DRIVE BY EAR 101, timed, linked, on its side, ducked, and yielding off road and the wrong way.`);
