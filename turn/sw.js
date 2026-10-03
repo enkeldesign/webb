@@ -14,7 +14,7 @@
    - Other pages in the app come from the network; offline, one never opened says so.
    - Activate: drop the previous release's caches and take over open pages. */
 
-const RELEASE = '20261003-r374';
+const RELEASE = '20261003-r375';
 const SCOPE = new URL(self.registration.scope).pathname;
 const NAME = SCOPE.replace(/\//g, '') || 'turn';
 const PRECACHE = `${NAME}-precache-${RELEASE}`;
