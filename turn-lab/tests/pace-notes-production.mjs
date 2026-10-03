@@ -490,36 +490,39 @@ assert.match(menu, /A warm organic hum guides your steering/);
 assert.match(menu, /Off road, centred gravel marks the surface/);
 assert.match(menu, /nearby-rival warnings are directional/);
 
-// Performance (Erik's stutter, 1.36.23): a ConvolverNode prepares its room on the main
-// thread when its buffer is set (12-70 ms on a CPU four times slower), so the room is
-// built once per side and shared, and built while the car stands, before the first bend.
+// Performance (Erik's stutter, 1.36.23; performance comes before beautiful notes). A
+// ConvolverNode prepares its room on the main thread when its buffer is set (12-70 ms on
+// a CPU four times slower) and convolves on the audio thread while it rings. The race
+// sound is dry, so a race builds no room at all; a picker voice with a room shares one
+// per side, built before its first cue.
 {
+  const { SWOOSH_VOICES, prepareSwooshVoices, startSwoosh } = await import('../../turn/audio/swoosh-sound.js');
   resetSwooshDelivery('performance test');
   const routeAudio = createRouteAudio();
   const { context } = routeAudio;
   const rooms = [];
-  let firstCueRooms = null;
   context.createConvolver = () => {
     const room = context.node({ buffer: null });
     rooms.push(room);
     return room;
   };
   const runtime = trackRuntime('countryside');
-  const { createOscillator } = context;
-  context.createOscillator = () => {
-    firstCueRooms ??= rooms.length;
-    return createOscillator();
-  };
-  // Standing at the start: nothing plays, but the rooms are made ready.
   Object.assign(runtime.state, { nearestTrackIndex: 0, speed: 0, velocity: { x: 0, z: 0 } });
   updateSwooshPaceNotes(runtime, { active: true }, routeAudio);
-  assert.equal(rooms.length, 2, 'both rooms are built while the car stands, before any pace note');
   const { played } = drive(runtime, routeAudio, { seconds: 90 });
   assert.ok(played.length >= 8, `a lap plays its pace notes (${played.length})`);
-  assert.equal(firstCueRooms, 2, 'the first pace note finds its room ready');
-  assert.equal(rooms.length, 2, `one shared room per side for every pace note (${rooms.length} rooms for ${played.length} notes)`);
-  assert.ok(rooms.every((room) => room.buffer), 'each room has its sound set once');
+  assert.equal(SWOOSH_VOICES[SWOOSH_PACE_TUNING.variant].reverb, 0, 'the race sound is dry');
+  assert.equal(rooms.length, 0, `a race builds no room (${rooms.length} for ${played.length} notes)`);
   resetSwooshDelivery('performance test done');
+
+  // CHIME (picker) keeps its room: one per side for the output, shared by every cue.
+  prepareSwooshVoices(context, routeAudio.destination, 'voice-chime');
+  assert.equal(rooms.length, 2, 'a voice with a room has both rooms built before its first cue');
+  for (let index = 0; index < 12; index += 1) {
+    startSwoosh(context, routeAudio.destination, { side: index % 2 ? 1 : -1, variant: 'voice-chime', at: index, durationSeconds: 0.3 });
+  }
+  assert.equal(rooms.length, 2, `twelve cues share the two rooms (${rooms.length})`);
+  assert.ok(rooms.every((room) => room.buffer), 'each room has its sound set once');
 }
 
 console.log(`TURN ${release.id} SWOOSH pace notes: every bend on every track and DRIVE BY EAR 101, timed, linked, on its side, ducked, and yielding off road and the wrong way.`);

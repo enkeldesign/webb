@@ -250,8 +250,10 @@ export function updateSwooshPaceNotes(runtime, frame = {}, routeAudio = globalTh
     lastDistance = null;
     return [];
   }
-  // The rooms and buffers are built while the car still stands, not at the first bend.
-  if (routeAudio?.ready && routeAudio.destination) prepareSwooshVoices(routeAudio.context, routeAudio.destination);
+  // Whatever the cues share is built while the car still stands, not at the first bend.
+  if (routeAudio?.ready && routeAudio.destination) {
+    prepareSwooshVoices(routeAudio.context, routeAudio.destination, SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant);
+  }
 
   const index = Math.max(0, Math.round(Number(state.nearestTrackIndex) || 0)) % runtime.samples.length;
   const distance = index * route.sampleSpacing;

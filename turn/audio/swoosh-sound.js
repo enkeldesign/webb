@@ -129,8 +129,9 @@ export const SWOOSH_VOICES = Object.freeze({
   // has faded by the time the swipe reaches the full side, so the side it lands on is
   // the quietest part. Each variant tries one remedy, so the race can tell which works:
   // A slower decay: the ring lives on out to the full side. The race sound since 1.35.5,
-  // in three lengths (Erik).
-  'voice-chime-ring': Object.freeze({ ...CHIME, name: 'CHIME RING', decay: 1.1, release: 0.05, gain: 0.561, lengths: Object.freeze({ short: 0.2, medium: 0.4, long: 0.6 }) }),
+  // in three lengths (Erik). Dry since 1.36.23: the room cost about a third of each
+  // note's audio work, and the race comes first (Erik). Its long ring carries it.
+  'voice-chime-ring': Object.freeze({ ...CHIME, name: 'CHIME RING', decay: 1.1, release: 0.05, reverb: 0, gain: 0.573, lengths: Object.freeze({ short: 0.2, medium: 0.4, long: 0.6 }) }),
   // The same strike, but the swipe reaches the full side within its first 30%.
   'voice-chime-early': Object.freeze({ ...CHIME, name: 'CHIME EARLY', travelShare: 0.3 }),
   // The strike carries tightness; a soft wind at the same pitch rises behind it and
@@ -199,11 +200,12 @@ function roomFor(context, destination, fullSide) {
   return sides[fullSide];
 }
 
-/** Builds the shared rooms and buffers ahead of the first cue (at the race start). */
-export function prepareSwooshVoices(context, destination) {
+/** Builds what a variant's cues share (rooms, noise) ahead of the first cue (at the race start). */
+export function prepareSwooshVoices(context, destination, variant) {
   if (!context || !destination) return;
-  noiseBuffer(context);
-  if (typeof context.createConvolver !== 'function') return;
+  const voice = Object.hasOwn(SWOOSH_VOICES, variant) ? SWOOSH_VOICES[variant] : null;
+  if (!voice || voice.noise || voice.layer?.noise) noiseBuffer(context);
+  if (!voice || !(voice.reverb > 0) || typeof context.createConvolver !== 'function') return;
   roomFor(context, destination, -1);
   roomFor(context, destination, 1);
 }
