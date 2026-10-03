@@ -434,10 +434,15 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   save();
 
   // Another window saved: take in what it earned, so this one shows it and keeps it.
+  // Two saves at the same moment can each miss the other's progress; whichever window
+  // still holds something the stored copy lacks writes it back, so both end up whole.
   if (storage && storage === globalThis.localStorage) {
     globalThis.addEventListener?.('storage', (event) => {
       if (event.key !== ACHIEVEMENT_STORAGE_KEY) return;
-      mergeAchievementState(state, readStoredState(storage));
+      const stored = readStoredState(storage);
+      if (!stored) return;
+      mergeAchievementState(state, stored);
+      if (mergeAchievementState(JSON.parse(JSON.stringify(stored)), state)) save();
     });
   }
 

@@ -27,6 +27,17 @@ function storedResetAt(key) {
     stored = Number(JSON.parse(localStorage.getItem(RESET_KEY))?.[key]) || 0;
   } catch (_) {}
   const known = Math.max(stored, rivalResetAt.get(key) || 0);
+  // A reset later than now means the device clock has since moved back; it can no
+  // longer order laps, and keeping it would refuse every new lap.
+  if (known > Date.now() + 60000) {
+    rivalResetAt.delete(key);
+    try {
+      const resets = JSON.parse(localStorage.getItem(RESET_KEY)) || {};
+      delete resets[key];
+      localStorage.setItem(RESET_KEY, JSON.stringify(resets));
+    } catch (_) {}
+    return 0;
+  }
   if (known) rivalResetAt.set(key, known);
   return known;
 }
@@ -251,6 +262,24 @@ export function shedRivalStorage(exceptKey = '') {
   return freed;
 }
 
+// What this window last wrote for each track, so a save from another window at the
+// same moment that left out one of its laps can be repaired (see the storage event).
+const rivalWrites = new Map();
+
+function repairRivalKey(key) {
+  const ours = rivalWrites.get(key);
+  if (!ours) return;
+  let stored = null;
+  try {
+    stored = readStoredRivals(key);
+  } catch (_) {}
+  const identities = (laps) => (Array.isArray(laps) ? laps.map(lapIdentity).join(',') : '');
+  if (identities(mergedRivalValue(key, ours).laps) === identities(stored?.laps)) return;
+  try {
+    writeRivalPayload({ key, value: ours });
+  } catch (_) {}
+}
+
 function writeRivalPayload(payload) {
   const value = mergedRivalValue(payload.key, payload.value);
   const write = (laps) => localStorage.setItem(payload.key, JSON.stringify({ ...value, laps: laps.map(encodedLap) }));
@@ -270,6 +299,7 @@ function writeRivalPayload(payload) {
       }
     }
   }
+  rivalWrites.set(payload.key, value);
   const best = bestValidLap(value.laps);
   rememberBestLapSummary(
     value.trackId,
@@ -331,6 +361,8 @@ function ensurePersistenceLifecycle() {
     if (!key || key.startsWith(COMPETITOR_KEY) || key.startsWith(GHOST_KEY)) {
       bestLapSummaryCache.clear();
     }
+    // Two windows saving the same track at once can each miss the other's lap.
+    if (key.startsWith(COMPETITOR_KEY)) repairRivalKey(key);
   });
   globalThis.document?.addEventListener?.('visibilitychange', () => {
     if (globalThis.document?.visibilityState === 'hidden') {
@@ -461,6 +493,7 @@ function clearTrackRivalPersistence(trackId) {
     rivalRetryAttempt = 0;
   }
   rememberBestLapSummary(trackId, null);
+  rivalWrites.delete(rivalKey(trackId));
   // Another open window still holding older laps reads this and leaves them out.
   recordReset(rivalKey(trackId), Date.now());
   for (const key of [rivalKey(trackId), ghostKey(trackId)]) {

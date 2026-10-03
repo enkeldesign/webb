@@ -68,6 +68,34 @@ const stored = (storage) => JSON.parse(storage.getItem(ACHIEVEMENT_STORAGE_KEY))
 }
 
 {
+  // Two saves at the same moment: one lands on the copy the other read first. The window
+  // that lost something hears the other's save and writes it back.
+  const { Event, EventTarget } = globalThis;
+  const events = new EventTarget();
+  const storage = sharedStorage();
+  const originals = [Object.getOwnPropertyDescriptor(globalThis, 'localStorage'), globalThis.addEventListener];
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, writable: true, value: storage });
+  globalThis.addEventListener = events.addEventListener.bind(events);
+  try {
+    const a = createAchievementStore();
+    const b = createAchievementStore();
+    const before = storage.getItem(ACHIEVEMENT_STORAGE_KEY);
+    a.unlock('first-turn');
+    storage.setItem(ACHIEVEMENT_STORAGE_KEY, before);
+    b.unlock('new-wheels');
+    assert.equal(stored(storage).unlocked['first-turn'], undefined, 'The racing save left FIRST TURN out');
+    events.dispatchEvent(Object.assign(new Event('storage'), { key: ACHIEVEMENT_STORAGE_KEY }));
+    assert.deepEqual(Object.keys(stored(storage).unlocked).sort(), ['first-turn', 'new-wheels'],
+      'Hearing the other save, the window writes its progress back');
+  } finally {
+    if (originals[0]) Object.defineProperty(globalThis, 'localStorage', originals[0]);
+    else delete globalThis.localStorage;
+    if (originals[1]) globalThis.addEventListener = originals[1];
+    else delete globalThis.addEventListener;
+  }
+}
+
+{
   // Unreadable stored data: this window's copy stands.
   const storage = sharedStorage();
   const a = createAchievementStore(storage);
@@ -76,4 +104,4 @@ const stored = (storage) => JSON.parse(storage.getItem(ACHIEVEMENT_STORAGE_KEY))
   assert.ok(stored(storage).unlocked['first-turn'], 'A corrupt stored copy is replaced, not fatal');
 }
 
-console.log('Achievement persistence: two windows merge achievements, bonuses, progress and rewards, keep the earliest unlock, adopt a deliberate rewrite and survive an unreadable stored copy.');
+console.log('Achievement persistence: two windows merge achievements, bonuses, progress and rewards, keep the earliest unlock, adopt a deliberate rewrite, repair a racing save and survive an unreadable stored copy.');

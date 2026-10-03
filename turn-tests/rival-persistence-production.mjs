@@ -224,6 +224,23 @@ try {
   saveRivalsState(after);
   assert.deepEqual(JSON.parse(disk.get(key('harbor'))).laps.map((lap) => lap.time), [14], 'A lap set after the reset is kept');
 
+  // Two windows save HARBOR at the same moment: the other's write lands on the copy this
+  // window read, leaving out its lap. Hearing that save, this window writes the lap back.
+  reset();
+  saveRivalsState(state('harbor', 16));
+  const racing = { version: 8, trackId: 'harbor', laps: [{ ...state('harbor', 18).competitorLaps[0], hitAt: Date.now() + 2 }] };
+  disk.set(key('harbor'), JSON.stringify(racing));
+  windowEvents.dispatchEvent(Object.assign(new Event('storage'), { key: key('harbor') }));
+  assert.deepEqual(JSON.parse(disk.get(key('harbor'))).laps.map((lap) => lap.time), [16, 18],
+    'A lap lost to a racing save is written back');
+
+  // A reset dated after now (the device clock has since moved back) cannot refuse new laps.
+  reset();
+  disk.set('turn-rival-resets-v1', JSON.stringify({ [key('harbor')]: Date.now() + 3600000 }));
+  saveRivalsState(state('harbor', 13));
+  assert.deepEqual(JSON.parse(disk.get(key('harbor'))).laps.map((lap) => lap.time), [13],
+    'After a clock rollback, new laps are kept');
+
   // Replays are stored compactly and read back as frames; older plain saves still load.
   reset();
   const plainFrames = state('harbor', 10).competitorLaps[0].frames;
