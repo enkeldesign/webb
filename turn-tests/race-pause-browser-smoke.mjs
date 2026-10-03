@@ -314,6 +314,15 @@ try {
     await visitPage.keyboard.up('ArrowUp');
     await visitPage.locator('.turn-race-pause-button').click();
     assert.match(await visitPage.locator('.turn-race-pause-visit').textContent(), /2\sLAPS/, 'RESTART LAP keeps the visit');
+    // An award that lands while ROADBOOK paints, before the sheet has opened (#1045 A6).
+    const handoff = await visitPage.evaluate(async () => {
+      const { ACHIEVEMENTS } = await import('/turn/achievements/catalog.js');
+      const achievement = ACHIEVEMENTS.filter((entry) => !entry.hidden)[3];
+      globalThis.addEventListener('turn:home-shown', () => {
+        globalThis.dispatchEvent(new globalThis.CustomEvent('turn:achievements-updated', { detail: { unlocked: [achievement.id] } }));
+      }, { once: true });
+      return { title: achievement.title, trophies: achievement.trophies };
+    });
     await visitPage.locator('.turn-race-pause-dialog [data-pause-action="leave"]').click();
     await visitPage.waitForSelector('.turn-visit-summary-dialog[open]');
     await visitPage.waitForTimeout(200);
@@ -332,13 +341,13 @@ try {
     assert.equal(sheet.modal, true, 'The summary opens over ROADBOOK');
     assert.equal(sheet.home, true);
     assert.equal(sheet.focus, 'turnVisitSummaryTitle', 'Focus starts on its heading');
-    assert.equal(sheet.spoken, 'This visit: 2 laps, new best lap, 1.750 seconds faster, 1 earned.');
+    assert.equal(sheet.spoken, 'This visit: 2 laps, new best lap, 1.750 seconds faster, 2 earned.');
     assert.equal(sheet.rows.LAPS, '2');
     assert.equal(sheet.rows['BEST LAP'], '1:08.250 NEW BEST −1.750 s');
     assert.equal(sheet.rows['BEST DRIFT'], '900 NEW BEST');
     assert.equal(sheet.rows['BEST FLOW'], undefined, 'No FLOW score, no FLOW row');
-    assert.equal(sheet.rows.EARNED, award.title);
-    assert.equal(sheet.rows.TROPHIES, `+${award.trophies}`);
+    assert.equal(sheet.rows.EARNED, `${award.title}${handoff.title}`, 'An award during the handoff to ROADBOOK still counts');
+    assert.equal(sheet.rows.TROPHIES, `+${award.trophies + handoff.trophies}`);
     assert.ok(sheet.rows['NEXT UP'], 'NEXT UP names a goal on this track');
     // An award settled a moment after the last lap still joins the open summary.
     const late = await visitPage.evaluate(async () => {

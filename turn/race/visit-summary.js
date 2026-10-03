@@ -173,8 +173,15 @@ export function installVisitSummary({ windowRef = window, documentRef = document
     if (!pending) return;
     const summary = pending;
     pending = null;
-    // After ROADBOOK has painted and taken focus.
-    windowRef.requestAnimationFrame(() => windowRef.requestAnimationFrame(() => showSheet(summary)));
+    // The sheet owns the summary from here, so awards that land while ROADBOOK paints
+    // still count. It opens after ROADBOOK has painted and taken focus, unless a new
+    // race has begun by then.
+    shown = summary;
+    windowRef.requestAnimationFrame(() => windowRef.requestAnimationFrame(() => {
+      if (shown !== summary) return;
+      if (visit) shown = null;
+      else showSheet(summary);
+    }));
   });
 
   windowRef.addEventListener('turn:lap-result', (event) => {
