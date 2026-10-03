@@ -1119,13 +1119,14 @@ Object.freeze({
     Object.freeze(['1.36.9 r370', 'Dark mode: the drive pad is calmer at night, with muted DRIFT, BOOST, GAS and BRAKE and cream labels. BOOST fills with its charge over the dark, like the boost bar.']),
     Object.freeze(['1.36.10 r371', 'THIS VISIT: PAUSED shows your laps, best lap and anything earned since you started this track. After LEAVE RACE, ROADBOOK shows the whole visit: laps, best lap and how much it beat your record, best DRIFT and FLOW, achievements, trophies, unlocks and what to try next.']),
     Object.freeze(['1.36.11 r372', 'THIS VISIT keeps an achievement or unlock that lands just as you return to ROADBOOK.']),
-    Object.freeze(['1.36.12 r373', 'Your progress is safer. With TURN open twice, neither window can undo what the other saved: achievements, trophies and your fastest rival laps are kept from both, and resetting rivals in one window is not undone by the other. Rival replays take about a sixth of the space, so they can no longer fill the device and stop achievements from saving; if space does run out, other tracks keep their fastest lap and the new best lap is always kept.'])
+    Object.freeze(['1.36.12 r373', 'Your progress is safer. With TURN open twice, neither window can undo what the other saved: achievements, trophies and your fastest rival laps are kept from both, and resetting rivals in one window is not undone by the other. Rival replays take about a sixth of the space, so they can no longer fill the device and stop achievements from saving; if space does run out, other tracks keep their fastest lap and the new best lap is always kept.']),
+    Object.freeze(['1.36.13 r374', 'TURN starts more reliably. If something stops it from loading, LOADING offers RELOAD instead of waiting for ever. With website data blocked in the browser, TURN still starts and plays; progress is then kept only for that visit. On a slow connection, the installed app starts from what it has already stored instead of waiting on the network file by file.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.36.12',
-  build: '2026.10.03-r373',
-  note: 'Progress is kept across two open windows; rival replays take far less space.'
+  version: '1.36.13',
+  build: '2026.10.03-r374',
+  note: 'Startup recovers: RELOAD when loading fails, and faster starts on a slow connection.'
 });
