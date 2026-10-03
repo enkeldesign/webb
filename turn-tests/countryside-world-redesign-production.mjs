@@ -117,10 +117,10 @@ assert.match(worldRender, /track-identity\.js\?revision=r532-countryside-nature-
 assert.match(worldRender, /section-intensity\.js\?revision=r532-countryside-nature-polish/);
 assert.doesNotMatch(worldRender, /countryside-scenery-r177\.js/, 'Obsolete contour recolouring is no longer loaded');
 assert.match(app, /render\/world\.js\?revision=r532-countryside-nature-polish/);
-assert.match(index, new RegExp(`world-assets\\.js\\?build=${release.cacheKey}&revision=r532-countryside-nature-polish`));
+assert.match(index, new RegExp(`world-assets\\.js\\?build=${release.cacheKey}"`));
 assert.match(index, /kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish/);
 assert.match(index, /app\.js\?build=[^"']*-r532-countryside-nature/);
-assert.match(labIndex, new RegExp(`world-assets\\.js\\?build=${release.cacheKey}&revision=r532-countryside-nature-polish`));
+assert.match(labIndex, new RegExp(`world-assets\\.js\\?build=${release.cacheKey}"`));
 
 assert.equal(sha256(bella), 'cb5ec217470485f36336e8089d1924ea93ab10356345160b42abbc6dc9f8875a',
   'BELLA and her rescue tree must stay at the reviewed baseline after retiring shadow flags and contour shells');

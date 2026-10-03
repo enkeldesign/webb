@@ -47,8 +47,8 @@ function escapeRegex(value) {
 
 const productionImports = importMap(index);
 const labImports = importMap(labIndex);
-const optimizedWorldAssetTarget = `./world-assets.js?build=${release.cacheKey}&revision=r532-countryside-nature-polish`;
-const optimizedHarborTarget = `./tracks/harbor-world-r82.js?build=${release.cacheKey}&revision=r164-long-session-robustness`;
+const optimizedWorldAssetTarget = `./world-assets.js?build=${release.cacheKey}`;
+const optimizedHarborTarget = `./tracks/harbor-world-r82.js?build=${release.cacheKey}`;
 
 assert.equal(
   productionImports['./world-assets.js'],

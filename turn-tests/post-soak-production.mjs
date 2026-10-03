@@ -168,7 +168,7 @@ for (const index of [productionIndex, labIndex]) {
   assert.match(index, /app\.js\?build=[^"']*r164-long-session-robustness-post-soak/);
   assert.match(
     index,
-    /"\/turn\/input\/motion\.js": "\/turn\/input\/motion\.js\?revision=r164-ipad-motion-profile"/,
+    /"\/turn\/input\/motion\.js": "\/turn\/input\/motion\.js\?revision=r164-ipad-motion-profile&build=\d{8}-r\d+"/,
     'Production and LAB must route the race core to the fresh iPad-aware motion module'
   );
 }

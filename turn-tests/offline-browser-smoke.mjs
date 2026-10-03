@@ -24,6 +24,14 @@ const types = {
 // the server away entirely: offline mode in the browser alone does not reach a service
 // worker's own requests, so airplane mode here also means no server at all.
 let nextRelease = null;
+let currentRelease = null;
+// Small modules without side effects, each marked with the release that served it.
+// The update check loads two the page has not loaded yet.
+const PROBES = [
+  '/turn/garage/garage-selection.js', '/turn/race/replay-codec.js', '/turn/achievements/filter-state.js',
+  '/turn/audio/music/drum-kits.js', '/turn/audio/music/arp-voices.js', '/turn/audio/music/lead-voices.js',
+  '/turn/audio/music/bass-voices.js', '/turn/assets/cars/supercar-data-1.js', '/turn/assets/cars/supercar-data-2.js'
+];
 let serverDown = false;
 let serverError = false;
 let failingPath = null;
@@ -46,6 +54,14 @@ const server = http.createServer(async (request, response) => {
     if (nextRelease && pathname === '/turn/sw.js') {
       body = Buffer.from(body.toString('utf8').replace(/const RELEASE = '[^']+';/, `const RELEASE = '${nextRelease}';`));
     }
+    // The next release's entry page and modules differ from this one's.
+    if (nextRelease && pathname === '/turn/index.html') {
+      body = Buffer.from(body.toString('utf8').replaceAll(currentRelease, nextRelease));
+    }
+    if (PROBES.includes(pathname)) {
+      body = Buffer.concat([body, Buffer.from(
+        `\nglobalThis.__turnProbe = { ...globalThis.__turnProbe, '${pathname}': '${nextRelease ? 'next' : 'current'}' };\n`)]);
+    }
     response.writeHead(200, { 'content-type': types[path.extname(filename).toLowerCase()] || 'application/octet-stream' });
     response.end(body);
   } catch (_) {
@@ -56,6 +72,7 @@ const server = http.createServer(async (request, response) => {
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const origin = `http://127.0.0.1:${server.address().port}`;
 const precache = JSON.parse(await fs.readFile(new URL('../turn/offline-precache.json', import.meta.url), 'utf8'));
+currentRelease = precache.release;
 
 const browser = await chromium.launch();
 try {
@@ -158,7 +175,7 @@ try {
   serverDown = false;
   await page.locator('.back-to-lot-button').click();
   await ready();
-  nextRelease = `${precache.release}-next`;
+  nextRelease = precache.release.replace(/r(\d+)$/, (_, revision) => `r${Number(revision) + 1}`);
   const updateOutcome = () => page.evaluate(async () => {
     const registration = await globalThis.navigator.serviceWorker.getRegistration('/turn/');
     await registration.update();
@@ -182,10 +199,33 @@ try {
   assert.equal(await page.locator('.turn-offline-progress').count(), 0, 'An update downloads quietly');
   await page.waitForSelector('.turn-update-toast', { timeout: 120000 });
   assert.equal((await page.locator('.turn-update-toast-text').textContent()).trim(), 'New TURN version ready');
+
+  // Until then the open page keeps its own release: a module it loads now is its own
+  // build, online and offline, though the server and the new worker have the next one.
+  const probe = (file, release) => page.evaluate(async ([path, key]) => {
+    await import(`${path}?build=${key}`);
+    return globalThis.__turnProbe?.[path];
+  }, [file, release]);
+  const unloaded = await page.evaluate((paths) => {
+    const loaded = new Set(globalThis.performance.getEntriesByType('resource').map((entry) => new URL(entry.name).pathname));
+    return paths.filter((path) => !loaded.has(path) && !globalThis.__turnProbe?.[path]);
+  }, PROBES);
+  assert.ok(unloaded.length >= 2, `Two probe modules are not loaded yet (${unloaded})`);
+  assert.equal(await probe(unloaded[0], currentRelease), 'current', 'Online, the open page loads its own release\'s module');
+  await context.setOffline(true);
+  serverDown = true;
+  assert.equal(await probe(unloaded[1], currentRelease), 'current', 'Offline, the open page loads its own release\'s module');
+  await context.setOffline(false);
+  serverDown = false;
+
   await Promise.all([page.waitForEvent('load'), page.locator('.turn-update-toast-restart').click()]);
   await ready();
   const after = await offlineStatus();
   assert.equal(after.release, nextRelease, 'After RESTART the new release is in charge');
+  assert.equal(await probe(unloaded[0], nextRelease), 'next', 'After RESTART the page loads the new release\'s modules');
+  // With no page left on it, the earlier release's files go.
+  await page.waitForFunction((release) => globalThis.caches.keys().then((keys) => !keys.some((key) => key.endsWith(release))),
+    currentRelease, { timeout: 15000 });
 
   // TURN NEXT stores its own list (its page resolves against <base href="/turn/">) and starts offline.
   const next = await context.newPage();
@@ -255,7 +295,7 @@ try {
       'With website data blocked, TURN starts and keeps progress for this visit');
     await fresh.close();
   }
-  console.log(`Offline: ${status.files} files stored; airplane-mode ROADBOOK, GARAGE and race; server errors; incomplete and complete updates; TURN NEXT (${nextStatus.files} files); a failed start offers RELOAD; blocked website data still starts passed.`);
+  console.log(`Offline: ${status.files} files stored; airplane-mode ROADBOOK, GARAGE and race; server errors; incomplete and complete updates (an open page keeps its release); TURN NEXT (${nextStatus.files} files); a failed start offers RELOAD; blocked website data still starts passed.`);
 } finally {
   await browser.close();
   server.close();

@@ -46,8 +46,8 @@ assert.equal(productionImports[musicSpecifier], `/turn/audio/racing-music-v5.js?
 assert.equal(labImports[musicSpecifier], `/turn/audio/racing-music-v5.js?build=${release.cacheKey}`);
 assert.equal(productionImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
 assert.equal(labImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
-assert.equal(productionImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
-assert.equal(labImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
+assert.equal(productionImports[instrumentBankSpecifier], `/turn/audio/music/instrument-bank.js?revision=r197-audio-mix&build=${release.cacheKey}`);
+assert.equal(labImports[instrumentBankSpecifier], `/turn/audio/music/instrument-bank.js?revision=r197-audio-mix&build=${release.cacheKey}`);
 assert.equal(productionImports[songbookSpecifier], `/turn/audio/music/songbook.js?build=${release.cacheKey}`);
 assert.equal(labImports[songbookSpecifier], `/turn/audio/music/songbook.js?build=${release.cacheKey}`);
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/);

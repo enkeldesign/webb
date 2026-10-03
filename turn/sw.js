@@ -12,9 +12,12 @@
      kept answer for the exact URL, else the release's precached file for that path.
    - Third-party models pinned to a commit never change: cache first, kept for good.
    - Other pages in the app come from the network; offline, one never opened says so.
-   - Activate: drop the previous release's caches and take over open pages. */
+   - Activate: take over open pages. A page that is already open keeps its own release
+     until it restarts: every file it asks for carries its release key, and that
+     release's stored files answer it, so an update never mixes two releases in one
+     page. A release's caches go once no open page runs it (#1045). */
 
-const RELEASE = '20261003-r376';
+const RELEASE = '20261003-r377';
 const SCOPE = new URL(self.registration.scope).pathname;
 const NAME = SCOPE.replace(/\//g, '') || 'turn';
 const PRECACHE = `${NAME}-precache-${RELEASE}`;
@@ -24,6 +27,7 @@ const STATUS_KEY = `${SCOPE}__offline-status`;
 const NAVIGATION_TIMEOUT_MS = 4000;
 const RESOURCE_TIMEOUT_MS = 8000;
 const BATCH = 8;
+const RELEASE_QUERY_MS = 1000;
 const PINNED_EXTERNAL = [
   /^https:\/\/cdn\.jsdelivr\.net\/gh\/[^/]+\/[^/@]+@[0-9a-f]{40}\//,
   /^https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[0-9a-f]{40}\//
@@ -71,16 +75,51 @@ async function report(progress) {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
-    for (const key of await caches.keys()) {
-      const ours = key.startsWith(`${NAME}-precache-`) || key.startsWith(`${NAME}-runtime-`);
-      if (ours && key !== PRECACHE && key !== RUNTIME) await caches.delete(key);
-    }
     await self.clients.claim();
+    await dropUnusedReleases();
   })());
 });
 
-// The page asks how ready offline play is: { release, files, failed } or null.
+// The release a cache or a request belongs to: "20261003-r376" (a key may carry a
+// suffix, "20261003-r376-social-browser").
+const releaseOf = (value) => value?.match(/\d{8}-r\d+/)?.[0] || null;
+const revision = (release) => Number(release.split('-r')[1]);
+
+// Which release each open page runs. A page that cannot say (one in the background
+// that the browser has frozen, or one from before pages could answer) counts as
+// running the newest earlier release.
+async function releasesInUse() {
+  const windows = await self.clients.matchAll({ type: 'window' });
+  return Promise.all(windows.map((client) => new Promise((resolve) => {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = (event) => resolve(releaseOf(event.data?.release));
+    client.postMessage({ type: 'turn-release-query' }, [channel.port2]);
+    setTimeout(resolve, RELEASE_QUERY_MS, null);
+  })));
+}
+
+async function dropUnusedReleases() {
+  const answers = await releasesInUse();
+  const keys = (await caches.keys()).filter((key) =>
+    key.startsWith(`${NAME}-precache-`) || key.startsWith(`${NAME}-runtime-`));
+  const older = [...new Set(keys.map(releaseOf))].filter((release) => release && revision(release) < revision(RELEASE))
+    .sort((a, b) => revision(b) - revision(a));
+  const keep = new Set([RELEASE, ...answers.filter(Boolean)]);
+  if (answers.includes(null) && older.length) keep.add(older[0]);
+  for (const key of keys) {
+    const release = releaseOf(key);
+    // A newer release may be storing its files right now.
+    if (!keep.has(release) && revision(release) < revision(RELEASE)) await caches.delete(key);
+  }
+}
+
 self.addEventListener('message', (event) => {
+  // A page has started (or restarted): earlier releases may have no page left.
+  if (event.data?.type === 'turn-page-release') {
+    event.waitUntil(dropUnusedReleases());
+    return;
+  }
+  // The page asks how ready offline play is: { release, files, failed } or null.
   if (event.data?.type !== 'turn-offline-status' || !event.ports?.[0]) return;
   event.waitUntil((async () => {
     const response = await (await caches.open(PRECACHE)).match(STATUS_KEY);
@@ -127,16 +166,20 @@ async function fromCaches(request, url) {
   return caches.match(request, { ignoreSearch: true });
 }
 
-// A file of this very release that is already stored is that build: answer from the
-// store at once. Waiting on a slow network for it first made startup take minutes on
-// a poor connection, one file after another (#1045).
-async function currentRelease(url) {
-  if (url.searchParams.get('build')?.split('-').slice(0, 2).join('-') !== RELEASE) return null;
-  return (await caches.open(PRECACHE)).match(url.pathname);
+// A file of a stored release is that build: answer from the store at once. For this
+// release, waiting on a slow network first made startup take minutes on a poor
+// connection, one file after another. For a page still running an earlier release,
+// the network (or this release's store) would hand it this release's file instead.
+async function storedRelease(url) {
+  const release = releaseOf(url.searchParams.get('build'));
+  if (!release) return null;
+  const name = `${NAME}-precache-${release}`;
+  if (release !== RELEASE && !(await caches.has(name))) return null;
+  return (await caches.open(name)).match(url.pathname);
 }
 
 async function sameOrigin(request, url) {
-  const stored = await currentRelease(url);
+  const stored = await storedRelease(url);
   if (stored) return stored;
   const network = fetch(request);
   const first = await race(network, RESOURCE_TIMEOUT_MS);

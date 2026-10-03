@@ -95,8 +95,11 @@ export function installOffline({ windowRef = globalThis, documentRef = globalThi
     windowRef.setTimeout(() => finished.remove(), visibleMs);
   }
 
+  // The worker keeps the files of every release an open page runs: this page says which.
+  const release = windowRef.__TURN_BUILD__?.cacheKey || '';
   nav.serviceWorker.addEventListener('message', (event) => {
     if (event.data?.type === 'turn-offline-progress') showProgress(event.data);
+    if (event.data?.type === 'turn-release-query') event.ports?.[0]?.postMessage({ release });
   });
   nav.serviceWorker.startMessages?.();
 
@@ -117,6 +120,8 @@ export function installOffline({ windowRef = globalThis, documentRef = globalThi
     nav.serviceWorker.register(`${scope}sw.js`, { scope })
       .then((value) => {
         registration = value;
+        // Earlier releases may have no open page left now.
+        nav.serviceWorker.controller?.postMessage({ type: 'turn-page-release', release });
       })
       .catch(() => {});
     nav.storage?.persist?.().catch?.(() => {});

@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderParityEntry } from '../../turn-next/scripts/build-parity-entry.mjs';
 import { buildTurnNextApp } from '../../turn-next/scripts/build-parity-app.mjs';
 import { OFFLINE_ENTRIES, buildPrecacheList, renderPrecacheList } from './offline-precache.mjs';
+import { bindEntryTags, routeModuleGraph } from './module-routes.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const turnDir = path.resolve(scriptDir, '..');
@@ -688,6 +690,8 @@ export function renderReleaseIndex(source, release) {
       `$1&build=${release.cacheKey}"`
     );
 
+  output = bindEntryTags(output, release);
+  const document = output;
   output = output.replace(
     /<script type="importmap">\s*([\s\S]*?)\s*<\/script>/,
     (match, jsonText) => {
@@ -701,11 +705,25 @@ export function renderReleaseIndex(source, release) {
         importMap.imports[specifier] = `.${url.pathname.slice('/turn'.length)}${url.search}`;
       }
       removeRetiredModuleRoutes(importMap);
+      routeModuleGraph(document, importMap, release, (repositoryPath) => shippedSource(repositoryPath, release));
       return `<script type="importmap">\n${indentJson(importMap, 4)}\n  </script>`;
     }
   );
 
   return output;
+}
+
+// A repository file as this release ships it: release companions carry its key.
+function shippedSource(repositoryPath, release) {
+  let source;
+  try {
+    source = readFileSync(path.resolve(turnDir, '..', repositoryPath), 'utf8');
+  } catch {
+    return null;
+  }
+  return companionPaths.includes(repositoryPath) && repositoryPath !== 'turn-next/app.js'
+    ? renderReleaseCompanion(repositoryPath, source, release)
+    : source;
 }
 
 export function renderLabReleaseIndex(source, productionIndex, release) {
