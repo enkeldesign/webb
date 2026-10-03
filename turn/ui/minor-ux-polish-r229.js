@@ -150,9 +150,10 @@ function installSpectatePlayerMarker(runtime) {
     }
 
     const car = runtime.competitorCars?.[current.index];
+    // The watched car is out of sight: check again soon instead of every frame.
     if (!car?.visible) {
       marker.hidden = true;
-      return;
+      return 100;
     }
 
     if (!rect?.width || !rect?.height) measure();

@@ -1,7 +1,8 @@
 // A frame loop for something drawn only in a race (#1045). While there is nothing to
-// draw (ROADBOOK, GARAGE, PAUSED settings, no rival nearby) it checks four times a
-// second instead of every frame, and wakes at once when the race state changes.
-// `render(now)` returns false when there is nothing to draw.
+// draw (ROADBOOK, GARAGE, PAUSED settings) it checks four times a second instead of
+// every frame, and wakes at once when the race state changes. `render(now)` returns
+// false when there is nothing to draw, or how many milliseconds to wait before the
+// next check (a race with nothing to show yet checks sooner).
 
 const IDLE_CHECK_MS = 250;
 
@@ -13,7 +14,9 @@ export function createIdleFrameLoop(render, { windowRef = window } = {}) {
   function tick(now) {
     frame = 0;
     if (stopped) return;
-    if (render(now) === false) timer = windowRef.setTimeout(wake, IDLE_CHECK_MS);
+    const result = render(now);
+    if (result === false) timer = windowRef.setTimeout(wake, IDLE_CHECK_MS);
+    else if (typeof result === 'number') timer = windowRef.setTimeout(wake, result);
     else frame = windowRef.requestAnimationFrame(tick);
   }
 

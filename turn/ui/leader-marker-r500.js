@@ -10,6 +10,7 @@ const LEADER_VISUAL_RANGE_SHOW_PX = 6;
 const LEADER_VISUAL_RANGE_HIDE_PX = 9;
 const LEADER_PROGRESS_EPSILON = 0.002;
 const LEADER_CHECK_INTERVAL_MS = 50;
+const RACE_IDLE_CHECK_MS = 100;
 const FALLBACK_ROOF_HEIGHT = 1.8;
 const FALLBACK_MARKER_COLOR = '#38d9ff';
 const DARK_MARKER_OUTLINE = '#08090a';
@@ -266,9 +267,10 @@ function installRuntime(runtime) {
 
     refreshLeader(now);
     const car = leader?.car;
+    // Nothing to draw in this race yet: check again soon instead of every frame.
     if (!leader || !car?.visible || !car.position) {
       hide();
-      return;
+      return RACE_IDLE_CHECK_MS;
     }
 
     if (!rect?.width || !rect?.height) measure();
@@ -285,7 +287,7 @@ function installRuntime(runtime) {
 
     visualHelpActive = leaderMarkerNeedsHelp(pose.apparentRoofPixels, visualHelpActive);
     marker.hidden = !visualHelpActive;
-    if (!visualHelpActive) return;
+    if (!visualHelpActive) return RACE_IDLE_CHECK_MS;
 
     const color = leaderMarkerColor(leader.lap, car, leader.index);
     if (color !== lastColor) {

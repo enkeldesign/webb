@@ -8,6 +8,7 @@ const AUTO_ACTIVATION_RADIUS = REFERENCE_CAR_LENGTH * AUTO_ACTIVATION_DIAMETER_C
 const AUTO_ACTIVATION_RADIUS_SQUARED = AUTO_ACTIVATION_RADIUS * AUTO_ACTIVATION_RADIUS;
 const AUTO_EXIT_GRACE_MS = 220;
 const AUTO_CHECK_INTERVAL_MS = 50;
+const RACE_IDLE_CHECK_MS = 100;
 const MARKER_GAP_PX = 20;
 const MARKER_SIZE_VIEWPORT_RATIO = 0.045;
 const MARKER_SIZE_MIN_PX = 17;
@@ -238,7 +239,8 @@ function installRuntime(runtime) {
 
     if (mode === 'off') visible = false;
     marker.hidden = !visible;
-    if (!visible) return;
+    // Nothing to draw in this race yet: check again soon instead of every frame.
+    if (!visible) return mode === 'off' ? false : RACE_IDLE_CHECK_MS;
 
     if (!rect?.width || !rect?.height) measure();
     if (!rect?.width || !rect?.height) {
