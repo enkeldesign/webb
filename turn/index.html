@@ -5,6 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no">
   <meta name="theme-color" content="#ffbd12">
   <script>
+    /* Website data blocked (#1045): with storage denied (Safari's "Block all cookies"),
+       reading localStorage throws and TURN could not start. A stand-in that lasts for
+       this visit keeps it playable; nothing is saved, and data-turn-storage says so. */
+    (() => {
+      try {
+        const probe = globalThis.localStorage;
+        probe.getItem('turn-storage-probe');
+        return;
+      } catch (_) {}
+      const items = new Map();
+      const memory = {
+        get length() { return items.size; },
+        key: (index) => [...items.keys()][index] ?? null,
+        getItem: (key) => (items.has(String(key)) ? items.get(String(key)) : null),
+        setItem: (key, value) => { items.set(String(key), String(value)); },
+        removeItem: (key) => { items.delete(String(key)); },
+        clear: () => items.clear()
+      };
+      try {
+        Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: memory });
+        document.documentElement.dataset.turnStorage = 'memory';
+      } catch (_) {}
+    })();
+  </script>
+  <script>
     /* Theme (#1067): the one resolver for the first paint and the THEME setting
        (ui/home-app-bar.js). System follows prefers-color-scheme; an explicit Light or
        Dark wins. It sets data-theme on <html> and the browser colour

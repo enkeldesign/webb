@@ -107,8 +107,35 @@ function installStartupCover() {
   scheduleStatus(10000, 'Still loading TURN. First start can take a little longer.');
   scheduleStatus(20000, 'Still loading TURN. The game will open as soon as it is ready.');
 
+  // A start that fails (a file that would not load, an error while starting) or stalls
+  // offers RELOAD instead of loading for ever (#1045). A normal start raises no error.
+  let reloadButton = null;
+  const offerReload = (text) => {
+    if (!gate.classList.contains('turn-startup-loading')) return;
+    for (const timer of statusTimers) globalThis.clearTimeout(timer);
+    if (copy) copy.textContent = text;
+    if (!reloadButton && card) {
+      reloadButton = document.createElement('button');
+      reloadButton.type = 'button';
+      reloadButton.className = 'install-primary turn-startup-reload';
+      reloadButton.textContent = 'RELOAD';
+      reloadButton.addEventListener('click', () => globalThis.location.reload());
+      card.appendChild(reloadButton);
+    }
+  };
+  const startFailed = () => offerReload('TURN could not start. Check your connection, then reload.');
+  globalThis.addEventListener('error', startFailed);
+  globalThis.addEventListener('unhandledrejection', startFailed);
+  statusTimers.push(globalThis.setTimeout(
+    () => offerReload('TURN is taking longer than usual. Reloading may help.'),
+    45000
+  ));
+
   return Object.freeze({
     finish() {
+      globalThis.removeEventListener('error', startFailed);
+      globalThis.removeEventListener('unhandledrejection', startFailed);
+      reloadButton?.remove();
       for (const timer of statusTimers) globalThis.clearTimeout(timer);
       if (copy) copy.textContent = 'TURN is ready.';
       gate.setAttribute('aria-busy', 'false');

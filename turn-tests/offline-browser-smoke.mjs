@@ -203,7 +203,48 @@ try {
   await next.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
   assert.equal(await next.locator('.roadbook-card').count() > 0, true, 'Offline, TURN NEXT lists the tracks');
   assert.deepEqual(errors, [], 'no page errors');
-  console.log(`Offline: ${status.files} files stored; airplane-mode ROADBOOK, GARAGE and race; server errors; incomplete and complete updates; TURN NEXT (${nextStatus.files} files) passed.`);
+
+  // #1045: a file that cannot load offers RELOAD instead of loading for ever, and blocked
+  // website data still starts TURN (kept for this visit only).
+  serverDown = false;
+  const startup = async ({ denyStorage = false } = {}) => {
+    const fresh = await browser.newContext({ viewport: { width: 852, height: 393 }, serviceWorkers: 'block' });
+    await fresh.addInitScript((deny) => {
+      Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
+      if (deny) {
+        Object.defineProperty(globalThis, 'localStorage', {
+          configurable: true,
+          get() { throw new globalThis.DOMException('The operation is insecure.', 'SecurityError'); }
+        });
+      } else {
+        globalThis.localStorage.setItem('turn-low-graphics-v1', '1');
+      }
+    }, denyStorage);
+    const freshPage = await fresh.newPage();
+    freshPage.setDefaultTimeout(30000);
+    return { fresh, freshPage };
+  };
+  {
+    const { fresh, freshPage } = await startup();
+    failingPath = '/turn/ui/toast-region.js';
+    await freshPage.goto(`${origin}/turn/`);
+    await freshPage.waitForSelector('.turn-startup-reload', { timeout: 30000 });
+    assert.match(await freshPage.locator('.install-copy').textContent(), /could not start/, 'A failed start says so');
+    failingPath = null;
+    await Promise.all([freshPage.waitForEvent('load'), freshPage.locator('.turn-startup-reload').click()]);
+    await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
+    assert.equal(await freshPage.locator('.turn-startup-reload').count(), 0, 'RELOAD starts TURN once the file loads');
+    await fresh.close();
+  }
+  {
+    const { fresh, freshPage } = await startup({ denyStorage: true });
+    await freshPage.goto(`${origin}/turn/`);
+    await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
+    assert.equal(await freshPage.evaluate(() => document.documentElement.dataset.turnStorage), 'memory',
+      'With website data blocked, TURN starts and keeps progress for this visit');
+    await fresh.close();
+  }
+  console.log(`Offline: ${status.files} files stored; airplane-mode ROADBOOK, GARAGE and race; server errors; incomplete and complete updates; TURN NEXT (${nextStatus.files} files); a failed start offers RELOAD; blocked website data still starts passed.`);
 } finally {
   await browser.close();
   server.close();
