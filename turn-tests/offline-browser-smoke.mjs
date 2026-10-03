@@ -226,9 +226,10 @@ try {
   };
   {
     const { fresh, freshPage } = await startup();
-    failingPath = '/turn/ui/toast-region.js';
+    // A file loaded before the race world starts, so no 3D competes with the check.
+    failingPath = '/turn/ui/lap-result-toast.js';
     await freshPage.goto(`${origin}/turn/`);
-    await freshPage.waitForSelector('.turn-startup-reload', { timeout: 30000 });
+    await freshPage.waitForFunction(() => Boolean(document.querySelector('.turn-startup-reload')), null, { timeout: 30000 });
     assert.match(await freshPage.locator('.install-copy').textContent(), /could not start/, 'A failed start says so');
     failingPath = null;
     await Promise.all([freshPage.waitForEvent('load'), freshPage.locator('.turn-startup-reload').click()]);
@@ -241,7 +242,7 @@ try {
     const { fresh, freshPage } = await startup();
     failingPath = '/turn/app.js';
     await freshPage.goto(`${origin}/turn/`);
-    await freshPage.waitForSelector('#turnStartFallback .turn-startup-reload', { timeout: 30000 });
+    await freshPage.waitForFunction(() => Boolean(document.querySelector('#turnStartFallback .turn-startup-reload')), null, { timeout: 30000 });
     failingPath = null;
     await Promise.all([freshPage.waitForEvent('load'), freshPage.locator('.turn-startup-reload').click()]);
     await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
