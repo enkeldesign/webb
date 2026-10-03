@@ -367,6 +367,8 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-home-meta {
 
 html body .turn-home-sheet .turn-home-sheet-footer .m8-home-build {
   display: block !important;
+  /* Level with ABOUT TURN's text, whose 44px target is taller. */
+  align-self: center;
   margin: 0;
   padding: 0;
   font-size: var(--turn-type-micro, 11px);
@@ -397,15 +399,14 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-home-build {
     padding-top: 8px;
   }
 
-  /* TURN MUSIC OFF sits level with the COLOR THEME choices beside it, which keep the
-     room their labels need; the build line takes the row below. */
-  html body .turn-home-sheet .turn-home-sheet-footer .turn-music-home-toggle {
-    align-self: flex-end;
+  /* TURN MUSIC and COLOR THEME side by side; the build line and ABOUT TURN share the
+     row below. */
+  html body .turn-home-sheet .turn-home-sheet-footer .turn-music-setting {
+    flex: 2 1 9rem;
   }
 
-  html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting {
-    flex: 1 1 15rem;
-    max-width: 22rem;
+  html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting:not(.turn-music-setting) {
+    flex: 3 1 13rem;
   }
 
   html body .turn-home-sheet .turn-home-sheet-footer .m8-home-meta {
@@ -430,12 +431,13 @@ html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting[hidden] {
   display: none;
 }
 
-/* COLOR THEME reads like TURN MUSIC OFF above it. */
+/* TURN MUSIC and COLOR THEME: a label, then the choices. */
 html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting legend {
   float: left;
   width: 100%;
   margin: 0 0 10px;
   padding: 0 4px;
+  text-align: left;
   color: var(--turn-text);
   font-size: 14px;
   font-weight: 950;
@@ -444,20 +446,41 @@ html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting legend {
 }
 
 /* One closed segmented control: a full outline, dividers between the choices. */
+/* Equal choices; at large text sizes a choice that no longer fits wraps to a new row
+   rather than being cut off. */
 html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-options {
   clear: both;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   border: 3px solid var(--turn-outline);
   border-radius: 12px;
   overflow: hidden;
 }
 
+/* OFF / ON: two choices. Stacked in portrait, it keeps a compact width. */
+html body .turn-home-sheet .turn-home-sheet-footer .turn-music-setting {
+  width: min(100%, 13rem);
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  html body .turn-home-sheet .turn-home-sheet-footer .turn-music-setting {
+    width: auto;
+  }
+}
+
+/* The music module's own toggle stays in the sheet, hidden; TURN MUSIC drives it. */
+html body .turn-home-sheet .turn-home-sheet-footer .turn-music-home-toggle[hidden] {
+  display: none !important;
+}
+
 html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting label {
   position: relative;
   display: grid;
+  flex: 1 0 0;
+  min-width: fit-content;
   place-items: center;
   min-height: 44px;
+  padding-inline: 0.5em;
   font-weight: 800;
   cursor: pointer;
 }
