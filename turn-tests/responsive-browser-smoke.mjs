@@ -449,6 +449,29 @@ async function responsiveRace(browser, name) {
           });
         });
         assert.deepEqual(spill, [], `${width}x${height} ${handedness}: DRIFT and FLOW text stays inside its panel`);
+        // Portrait with device rotation: no steering pad, so DRIFT above FLOW take its
+        // place, clear of the drive pad's bubbles and above the menu row, mirrored with
+        // the pad.
+        if (height > width && width > 304 && height > 480) {
+          await page.evaluate(() => { document.querySelector('.manual-steer').hidden = true; });
+          await settle(page);
+          const label = `${width}x${height} ${handedness} tilt`;
+          const drift = await bounds(page, '[data-score-feedback-drift-readout]');
+          const flow = await bounds(page, '[data-score-feedback-flow-readout]');
+          const gauge = await bounds(page, '.score-feedback-gauge-shell[data-score-channel="drift"]');
+          const stack = await bounds(page, '.drive-stack');
+          const menu = await bounds(page, '.utility-group');
+          within(drift, width, height, `${label} DRIFT`);
+          within(flow, width, height, `${label} FLOW`);
+          assert.ok(gauge.bottom <= flow.y, `${label}: DRIFT and its gauge sit above FLOW`);
+          assert.ok(Math.abs(drift.x - flow.x) < 1, `${label}: DRIFT and FLOW share a column`);
+          for (const card of [drift, flow]) {
+            assert.ok(handedness === 'right' ? card.right <= stack.x : card.x >= stack.right, `${label}: clear of the drive pad and its bubbles`);
+            assert.ok(card.bottom <= menu.y, `${label}: above the menu row`);
+          }
+          await page.evaluate(() => { document.querySelector('.manual-steer').hidden = false; });
+          await settle(page);
+        }
       }
       // The lap banner fits its text with no scores yet, and with DRIFT and FLOW records
       // (#1037): nothing clipped, cut short or outside the yellow paper.

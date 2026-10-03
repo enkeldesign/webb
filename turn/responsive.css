@@ -122,6 +122,28 @@
   :root body .message { top: 22%; max-width: calc(100% - 24px); }
 }
 
+/* Portrait with device rotation (Erik): no steering pad, so DRIFT above FLOW stand in
+   its place, level with RESTART LAP, instead of either side of the car. They stay
+   clear of the LOCK, SHIFT and R bubbles beside the drive pad, and handedness
+   mirrors them with the pad. Steering-pad play keeps the panels above. Each card's
+   gauge hangs 19px below it, hence the gap. */
+@media (orientation: portrait) and (min-width: 19.01em) and (min-height: 30.01em) {
+  :root:has(.manual-steer[hidden]) body #scoreFeedback {
+    --turn-score-stack-gap: 30px;
+    bottom: var(--turn-race-bottom); left: var(--turn-edge); right: auto;
+    width: min(max(calc((100vw - 2 * var(--turn-edge)) * .32), 114px), 180px, calc(100vw - 2 * var(--turn-edge) - var(--turn-race-pad-width) - 46px));
+    height: auto; flex-direction: column; justify-content: flex-end; gap: var(--turn-score-stack-gap);
+  }
+  :root.turn-left-handed-controls:has(.manual-steer[hidden]) body #scoreFeedback { left: auto; right: var(--turn-edge); flex-direction: column; }
+  :root:has(.manual-steer[hidden]) body .score-feedback-row { flex: 0 0 auto; width: 100%; }
+  :root:has(.manual-steer[hidden]) body #scoreFeedback .score-feedback-callout,
+  :root.turn-left-handed-controls:has(.manual-steer[hidden]) body #scoreFeedback .score-feedback-callout { inset: auto auto 4px 4px; max-width: calc(100% - 8px); }
+  /* DRIFT's callout sits on the DRIFT card, above FLOW when FLOW shows. */
+  :root:has(.manual-steer[hidden]) body #scoreFeedback:has(> .score-feedback-flow-row:not([hidden])) .score-feedback-callout[data-channel="drift"] {
+    bottom: calc(var(--turn-score-panel-height) + var(--turn-score-stack-gap) + 4px);
+  }
+}
+
 /* Emergency sizes: trade decoration/spacing before touch targets or content. */
 @media (max-width: 22em) and (orientation: portrait) {
   :root { --turn-edge: max(8px, env(safe-area-inset-left), env(safe-area-inset-right)); --turn-race-pad-width: 136px; }
