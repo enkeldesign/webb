@@ -511,6 +511,11 @@ html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting label:has
   html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting {
     display: none;
   }
+
+  /* Without the colour choices, music keeps its own plain toggle. */
+  html body .turn-home-sheet .turn-home-sheet-footer .turn-music-home-toggle[hidden] {
+    display: inline-flex !important;
+  }
 }
 
 /* Tester-only viewport numbers (ui/viewport-readout.js). */
