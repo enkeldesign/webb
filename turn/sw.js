@@ -16,7 +16,7 @@
      release's stored files answer it, so an update never mixes two releases in one
      page. A release's caches go once no open page runs it (#1045). */
 
-const RELEASE = '20261003-r381';
+const RELEASE = '20261003-r382';
 const SCOPE = new URL(self.registration.scope).pathname;
 const NAME = SCOPE.replace(/\//g, '') || 'turn';
 const PRECACHE = `${NAME}-precache-${RELEASE}`;
