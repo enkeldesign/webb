@@ -5,7 +5,6 @@ import { DEVELOPMENT_HISTORY } from '../turn/content/about-history-current.js';
 const [
   releaseSource,
   productionEntry,
-  nextEntry,
   bootstrapEntry,
   bootstrap,
   browserInstallCss,
@@ -19,7 +18,6 @@ const [
 ] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/about-history-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/about-history-bootstrap-r165.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/browser-install-r165.css', import.meta.url), 'utf8'),
@@ -40,8 +38,6 @@ assert.ok(
   productionEntry.indexOf('about-history-bootstrap-r165.js') < productionEntry.indexOf('./app.js?build='),
   'Website About must load before the game module waits for explicit browser launch'
 );
-assert.match(nextEntry, /about-history-bootstrap\.js\?revision=r164-design-navigation/,
-  'TURN NEXT may continue through the stable shared About entry module');
 assert.match(bootstrapEntry, /about-history-bootstrap-r165\.js\?revision=r165-browser-about/,
   'The stable About entry must route to the browser-aware implementation');
 

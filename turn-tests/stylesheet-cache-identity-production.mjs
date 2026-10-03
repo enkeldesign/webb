@@ -42,7 +42,7 @@ function check(file, url, bound, how) {
 }
 
 // Entry HTML: every stylesheet link carries the current build.
-const entries = ['turn/index.html', 'turn-lab/index.html', 'yourturn/index.html', 'turn-next/index.html'];
+const entries = ['turn/index.html', 'yourturn/index.html'];
 for (const file of entries) {
   const html = await fs.readFile(path.join(root, file), 'utf8');
   const base = /<base href="\/turn\/">/.test(html) ? 'turn/index.html' : file;
@@ -81,7 +81,7 @@ for (const file of await walk('turn', /\.js$/)) {
   if (new RegExp(`\\.href = '[^']+\\.css\\?${build}'`).test(source)) literalLoaders.push(`/${file}`);
 }
 assert.ok(literalLoaders.length >= 3, 'The literal stylesheet loaders are found');
-for (const file of ['turn/index.html', 'turn-lab/index.html', 'yourturn/index.html']) {
+for (const file of ['turn/index.html', 'yourturn/index.html']) {
   const html = await fs.readFile(path.join(root, file), 'utf8');
   const imports = JSON.parse(html.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1]).imports;
   for (const loader of literalLoaders) {

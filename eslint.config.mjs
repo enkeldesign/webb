@@ -22,8 +22,6 @@ export default [
   },
   {
     files: [
-      'turn-next/world-data.js',
-      'turn-next/world-mode.js',
       'turn/input/motion.js',
       'turn/motion-safe-zone.js',
       'turn/platform/*.js',

@@ -6,19 +6,16 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const turnRoot = path.resolve(here, '../../turn');
-const turnNextRoot = path.resolve(here, '../../turn-next');
 
 const index = fs.readFileSync(path.join(turnRoot, 'index.html'), 'utf8');
-const nextIndex = fs.readFileSync(path.join(turnNextRoot, 'index.html'), 'utf8');
 const homeSource = fs.readFileSync(path.join(turnRoot, 'm8-home.js'), 'utf8');
 const appBar = fs.readFileSync(path.join(turnRoot, 'home-app-bar.css'), 'utf8');
 const release = JSON.parse(fs.readFileSync(path.join(turnRoot, 'release.json'), 'utf8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(turnRoot, 'site.webmanifest'), 'utf8'));
-const nextManifest = JSON.parse(fs.readFileSync(path.join(turnNextRoot, 'site.webmanifest'), 'utf8'));
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 
-for (const source of [index, nextIndex]) {
+for (const source of [index]) {
   assert.match(source, /<link rel="icon" href="\.\/TURNicon\.PNG\?icon=20260803-profile-512" type="image\/png" sizes="512x512">/);
   assert.match(source, /<link rel="apple-touch-icon" href="\.\/TURNicon\.PNG\?icon=20260803-profile-512" sizes="512x512">/);
   assert.match(source, /<img class="install-icon" src="\.\/TURNicon\.PNG\?icon=20260803-profile-512" alt="">/);
@@ -34,7 +31,6 @@ assert.match(preRace, /html body \.turn-pr-app-logo \{[^}]*width: var\(--turn-pr
 assert.doesNotMatch(appBar, /\.m8-home-logo \{[^}]*width: \d+px/, 'The app bar leaves the logo size to the badge');
 
 assert.match(index, new RegExp(`<link rel="manifest" href="\\.\\/site\\.webmanifest\\?build=${release.cacheKey}-icon-20260803-profile-512">`));
-assert.match(nextIndex, new RegExp(`<link rel="manifest" href="\\/turn-next\\/site\\.webmanifest\\?source=${release.cacheKey}-icon-20260803-profile-512-m8\\.5">`));
 
 const expectedIcons = [
   {
@@ -45,11 +41,8 @@ const expectedIcons = [
   }
 ];
 assert.deepEqual(manifest.icons, expectedIcons);
-assert.deepEqual(nextManifest.icons, expectedIcons);
 assert.equal(manifest.background_color, '#08090a');
 assert.equal(manifest.theme_color, '#08090a');
-assert.equal(nextManifest.background_color, '#08090a');
-assert.equal(nextManifest.theme_color, '#08090a');
 
 const icon = fs.readFileSync(path.join(turnRoot, 'TURNicon.PNG'));
 assert.deepEqual(

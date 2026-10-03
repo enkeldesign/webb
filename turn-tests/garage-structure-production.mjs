@@ -15,7 +15,7 @@ const [home, garage, viewer] = await Promise.all([
 for (const module of ['training-car-guide', 'showroom-viewer', 'garage-cars', 'garage-selection', 'garage-catalog']) {
   assert.match(garage, new RegExp(`from '\\./${module}\\.js';`), `${module}.js is imported by its release-bound path`);
 }
-const importMaps = await Promise.all(['../turn/index.html', '../turn-next/index.html', '../yourturn/index.html']
+const importMaps = await Promise.all(['../turn/index.html', '../yourturn/index.html']
   .map((entry) => fs.readFile(new URL(entry, import.meta.url), 'utf8')));
 for (const entry of importMaps) {
   assert.match(entry, /"\/turn\/garage\/training-car-guide\.js": "\/turn\/garage\/training-car-guide\.js\?build=/);

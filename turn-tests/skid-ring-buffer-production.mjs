@@ -4,10 +4,9 @@ import vm from 'node:vm';
 import * as THREE from '../postal/vendor/three.module.min.js';
 import { installAssetWheelRig } from '../turn/vehicle/wheel-animation-rig.js';
 
-const [releaseSource, index, labIndex, main, continuity] = await Promise.all([
+const [releaseSource, index, main, continuity] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/render/skid-continuity-r198.js', import.meta.url), 'utf8')
 ]);
@@ -16,8 +15,6 @@ const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`render/skid-continuity-r198\\.js\\?revision=r198-skid-continuity&build=${release.cacheKey}`),
   'Production TURN must load the fresh skid continuity renderer');
-assert.match(labIndex, new RegExp(`render/skid-continuity-r198\\.js\\?revision=r198-skid-continuity&build=${release.cacheKey}`),
-  'TURN LAB must exercise the same skid continuity renderer as production');
 
 const declarations = section(main, 'const SKID_HISTORY_CAPACITY', '\nconst smokePool');
 assert.match(declarations, /SKID_HISTORY_CAPACITY = 90/, 'Skid history must preserve the previous 90 sample pairs');

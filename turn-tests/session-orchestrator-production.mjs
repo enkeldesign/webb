@@ -244,9 +244,7 @@ assert.throws(() => createRaceSessionOrchestrator(), /requires state/);
 assert.throws(() => createRaceSessionOrchestrator({ state: {} }), /elements\.intro/);
 
 const productionMain = await fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8');
-const nextMain = await fs.readFile(new URL('../turn-next/main.js', import.meta.url), 'utf8');
 const productionApp = await fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8');
-const nextApp = await fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8');
 
 assert.match(productionMain, /createRaceSessionOrchestrator/);
 assert.match(productionMain, /showRaceSetup: showGarageSetup/);
@@ -254,14 +252,11 @@ assert.match(productionMain, /motionButton\.addEventListener\('click', raceSessi
 assert.match(productionMain, /manualButton\.addEventListener\('click', raceSession\.useManualMode\)/);
 assert.match(productionMain, /openGarage: raceSession\.openGarageFromRace/);
 assert.doesNotMatch(productionMain, /async function requestMotion\(|async function openGarageFromRace\(|async function startGame\(/);
-assert.equal(nextMain, productionMain, 'TURN NEXT main must mirror canonical production main');
 assert.match(productionApp, /turnSessionLifecycle = 'orchestrator-m7'/);
 assert.match(productionApp, /installM8HomeNavigation\(\)/);
 assert.ok(
   productionApp.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })')
     < productionApp.indexOf("withBuild('./main.js')")
 );
-assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
-assert.doesNotMatch(nextApp, /createRaceSessionOrchestrator|installM8HomeNavigation/);
 
-console.log('TURN production M7 race-session orchestration and NEXT parity passed.');
+console.log('TURN production M7 race-session orchestration passed.');

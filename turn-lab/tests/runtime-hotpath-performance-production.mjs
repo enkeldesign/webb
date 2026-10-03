@@ -14,7 +14,6 @@ const [
   mainSource,
   cameraSource,
   spectateSource,
-  nextMainSource,
   labMainSource,
   rivalOnboarding,
   trackRegistry,
@@ -32,7 +31,6 @@ const [
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/render/camera.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn-next/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/rival-onboarding.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
@@ -188,11 +186,9 @@ assert.match(spectateHotPath, /desiredCamera\.copy\(focus\)\.addScaledVector/);
 assert.match(spectateHotPath, /desiredTarget\.copy\(focus\)\.addScaledVector/);
 
 // HUD/minimap/race-position ownership lives in turn/ui/hud.js. Do not reintroduce the
-// superseded local implementation into canonical TURN, its NEXT mirror, or the static LAB core.
-assert.equal(nextMainSource, mainSource, 'TURN NEXT main must remain a byte-for-byte mirror of canonical TURN main');
+// superseded local implementation into canonical TURN or the static LAB core.
 for (const [label, runtimeSource] of [
   ['TURN', mainSource],
-  ['TURN NEXT', nextMainSource],
   ['TURN LAB', labMainSource]
 ]) {
   assert.doesNotMatch(runtimeSource, /\nconst mapBounds = \(\(\) => \{/,

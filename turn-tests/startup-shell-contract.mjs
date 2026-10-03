@@ -1,10 +1,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [release, index, labIndex] = await Promise.all([
+const [release, index] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8').then(JSON.parse),
-  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8')
 ]);
 
 const requiredLegacyHooks = [
@@ -16,7 +15,7 @@ const requiredLegacyHooks = [
   'brakeButton'
 ];
 
-for (const [label, source] of [['TURN', index], ['TURN LAB', labIndex]]) {
+for (const [label, source] of [['TURN', index]]) {
   for (const id of requiredLegacyHooks) {
     assert.match(source, new RegExp(`id=["']${id}["']`), `${label} must retain #${id} until main.js no longer depends on the legacy compatibility shell`);
   }
@@ -50,6 +49,5 @@ for (const script of requiredProductionBootstraps) {
 }
 
 assert.match(index, new RegExp(`app\\.js\\?build=${release.cacheKey}`), 'Production app.js must be cache-bound to the current TURN build');
-assert.match(labIndex, new RegExp(`app\\.js\\?build=${release.cacheKey}`), 'TURN LAB app.js must be cache-bound to the current TURN build');
 
 console.log(`TURN startup shell contract verified for ${release.id}.`);

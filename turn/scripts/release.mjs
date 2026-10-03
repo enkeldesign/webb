@@ -3,8 +3,6 @@ import fs from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderParityEntry } from '../../turn-next/scripts/build-parity-entry.mjs';
-import { buildTurnNextApp } from '../../turn-next/scripts/build-parity-app.mjs';
 import { OFFLINE_ENTRIES, buildPrecacheList, renderPrecacheList } from './offline-precache.mjs';
 import { bindEntryTags, routeModuleGraph } from './module-routes.mjs';
 
@@ -12,7 +10,6 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const turnDir = path.resolve(scriptDir, '..');
 const releasePath = path.join(turnDir, 'release.json');
 const indexPath = path.join(turnDir, 'index.html');
-const labIndexPath = path.resolve(turnDir, '../turn-lab/index.html');
 const RACING_MUSIC_SPECIFIER_PATTERN = /^\/turn\/audio\/racing-music-v2\.js\?build=\d{8}-r\d+-racing-music-warm-v2$/;
 const AUDIO_PREFERENCES_SPECIFIER_PATTERN = /^\/turn\/audio\/audio-preferences\.js\?build=\d{8}-r\d+$/;
 const COVERED_RENDERING_SPECIFIER_PATTERN = /^\/turn\/render\/covered-rendering\.js\?build=\d{8}-r\d+$/;
@@ -37,8 +34,6 @@ const STYLESHEET_LINK_COMPANIONS = Object.freeze([
   'turn/content/about-turn.js'
 ]);
 const companionPaths = Object.freeze([
-  'turn-next/index.html',
-  'turn-next/app.js',
   'yourturn/index.html',
   'turn/ui/about-history-bootstrap-r165.js',
   'turn/content/about-history-current.js',
@@ -50,7 +45,6 @@ const companionPaths = Object.freeze([
   'turn/stats/stats.js',
   'turn/tracks/registry.js',
   'turn/sw.js',
-  'turn-next/sw.js',
   ...CSS_IMPORT_COMPANIONS,
   ...STYLESHEET_LINK_COMPANIONS
 ]);
@@ -721,54 +715,13 @@ function shippedSource(repositoryPath, release) {
   } catch {
     return null;
   }
-  return companionPaths.includes(repositoryPath) && repositoryPath !== 'turn-next/app.js'
+  return companionPaths.includes(repositoryPath)
     ? renderReleaseCompanion(repositoryPath, source, release)
     : source;
 }
 
-export function renderLabReleaseIndex(source, productionIndex, release) {
-  validateReleaseDefinition(release);
-  const productionImportMap = productionIndex.match(/<script type="importmap">[\s\S]*?<\/script>/)?.[0];
-  assert.ok(productionImportMap, 'Production TURN must expose an import map before TURN LAB can be synchronized');
-  const revision = release.id.match(/-r(\d+)$/)?.[1] || '';
-
-  return source
-    .replace(
-      /(<!-- TURN LAB [^>]*Runtime source: production TURN )\d{4}\.\d{2}\.\d{2}-r\d+(\. -->)/,
-      `$1${release.id}$2`
-    )
-    .replace(
-      /globalThis\.__TURN_BUILD__ = Object\.freeze\(\{[\s\S]*?\}\);/,
-      `globalThis.__TURN_BUILD__ = Object.freeze({\n      version: '${release.version}',\n      id: '${release.id}',\n      cacheKey: '${release.cacheKey}'\n    });`
-    )
-    .replace(
-      /runtime: 'production TURN \d{4}\.\d{2}\.\d{2}-r\d+'/g,
-      `runtime: 'production TURN ${release.id}'`
-    )
-    .replace(
-      /TURN LAB · production TURN \d+\.\d+\.\d+ r\d+/g,
-      `TURN LAB · production TURN ${release.version} r${revision}`
-    )
-    .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
-    .replace(
-      /(src="\.\/achievements\/chromatic-camouflage-r183\.js\?revision=r184-idle-summary-check)(?:&build=\d{8}-r\d+)?"/,
-      `$1&build=${release.cacheKey}"`
-    )
-    .replace(
-      /(src="\.\/render\/skid-continuity-r198\.js\?revision=r198-skid-continuity)(?:&build=\d{8}-r\d+)?"/,
-      `$1&build=${release.cacheKey}"`
-    )
-    .replace(
-      /(src="\.\/tracks\/kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish)(?:&build=\d{8}-r\d+)?"/,
-      `$1&build=${release.cacheKey}"`
-    )
-    .replace(/<script type="importmap">[\s\S]*?<\/script>/, productionImportMap);
-}
-
 export function renderReleaseCompanion(repositoryPath, source, release) {
   validateReleaseDefinition(release);
-  if (repositoryPath === 'turn-next/index.html') return renderSharedResourceImports(renderParityEntry(source, release), release);
-  if (repositoryPath === 'turn-next/app.js') return buildTurnNextApp(release);
   if (repositoryPath === 'yourturn/index.html') {
     return renderSharedResourceImports(source.replace(/((?:href|src)="\/(?:turn|yourturn)\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`), release);
   }
@@ -811,9 +764,6 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
   if (repositoryPath === 'turn/sw.js') {
     return source.replace(/(const RELEASE = ')\d{8}-r\d+(';)/, `$1${release.cacheKey}$2`);
   }
-  if (repositoryPath === 'turn-next/sw.js') {
-    return source.replace(/(\/turn\/sw\.js\?build=)\d{8}-r\d+/, `$1${release.cacheKey}`);
-  }
   if (repositoryPath === 'turn/tracks/registry.js') {
     return source
       .replace(
@@ -830,20 +780,18 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
 }
 
 export async function checkReleaseFiles({ write = false } = {}) {
-  const [release, source, labSource, companions] = await Promise.all([
+  // TURN LAB is frozen (#1045): its page keeps the release it was last given.
+  const [release, source, companions] = await Promise.all([
     loadReleaseDefinition(),
     fs.readFile(indexPath, 'utf8'),
-    fs.readFile(labIndexPath, 'utf8'),
     Promise.all(companionPaths.map(async (repositoryPath) => [
       repositoryPath,
       await fs.readFile(path.resolve(turnDir, '..', repositoryPath), 'utf8')
     ]))
   ]);
   const expected = renderReleaseIndex(source, release);
-  const expectedLab = renderLabReleaseIndex(labSource, expected, release);
   const files = [
     ['turn/index.html', source, expected],
-    ['turn-lab/index.html', labSource, expectedLab],
     ...companions.map(([repositoryPath, content]) => [
       repositoryPath, content, renderReleaseCompanion(repositoryPath, content, release)
     ])

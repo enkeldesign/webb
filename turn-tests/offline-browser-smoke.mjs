@@ -11,7 +11,7 @@ import { chromium } from 'playwright';
 // TURN's own origin. The first download shows its progress and then that TURN is
 // ready to play offline. A server answering with errors falls back to the stored copies.
 // A new release's worker takes over quietly and asks to restart, and one that could
-// not store every file leaves the previous release in charge. TURN NEXT, too.
+// not store every file leaves the previous release in charge.
 // Chromium only: Playwright drives service workers and offline mode there.
 const root = fileURLToPath(new URL('../', import.meta.url));
 const types = {
@@ -87,7 +87,6 @@ try {
   context.on('request', (request) => {
     if (/cdn\.jsdelivr\.net\/npm\/three@/.test(request.url())) cdnThree.push(request.url());
   });
-  // For TURN and for TURN NEXT, whose storage reads its keys under "turn-next:".
   await context.addInitScript(() => {
     const settings = {
       'turn-offline-under-test': '1',
@@ -98,7 +97,6 @@ try {
     };
     for (const [key, value] of Object.entries(settings)) {
       globalThis.Storage.prototype.setItem.call(localStorage, key, value);
-      globalThis.Storage.prototype.setItem.call(localStorage, `turn-next:${key}`, value);
     }
     Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
   });
@@ -227,20 +225,11 @@ try {
   await page.waitForFunction((release) => globalThis.caches.keys().then((keys) => !keys.some((key) => key.endsWith(release))),
     currentRelease, { timeout: 15000 });
 
-  // TURN NEXT stores its own list (its page resolves against <base href="/turn/">) and starts offline.
+  // TURN NEXT is retired: its address leads to TURN.
   const next = await context.newPage();
-  next.setDefaultTimeout(30000);
-  next.on('pageerror', (error) => errors.push(`TURN NEXT: ${error.message}`));
   await next.goto(`${origin}/turn-next/`);
-  await next.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
-  const nextStatus = await installed(next);
-  const nextList = JSON.parse(await fs.readFile(new URL('../turn-next/offline-precache.json', import.meta.url), 'utf8'));
-  assert.equal(nextStatus?.files, nextList.files.length, 'TURN NEXT stores every listed file');
-  await context.setOffline(true);
-  serverDown = true;
-  await next.reload();
-  await next.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
-  assert.equal(await next.locator('.roadbook-card').count() > 0, true, 'Offline, TURN NEXT lists the tracks');
+  await next.waitForURL(`${origin}/turn/`);
+  await next.close();
   assert.deepEqual(errors, [], 'no page errors');
 
   // #1045: a file that cannot load offers RELOAD instead of loading for ever, and blocked
@@ -295,7 +284,7 @@ try {
       'With website data blocked, TURN starts and keeps progress for this visit');
     await fresh.close();
   }
-  console.log(`Offline: ${status.files} files stored; airplane-mode ROADBOOK, GARAGE and race; server errors; incomplete and complete updates (an open page keeps its release); TURN NEXT (${nextStatus.files} files); a failed start offers RELOAD; blocked website data still starts passed.`);
+  console.log(`Offline: ${status.files} files stored; airplane-mode ROADBOOK, GARAGE and race; server errors; incomplete and complete updates (an open page keeps its release); TURN NEXT leads to TURN; a failed start offers RELOAD; blocked website data still starts passed.`);
 } finally {
   await browser.close();
   server.close();

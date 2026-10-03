@@ -1124,13 +1124,14 @@ Object.freeze({
     Object.freeze(['1.36.14 r375', 'Lighter on the battery: the race no longer draws itself behind ROADBOOK, and it stays at 60 frames a second on 120 Hz screens. Every 3D view gets the wider Display P3 colours where the screen has them. The steering ribbon sound no longer fails when music is playing.']),
     Object.freeze(['1.36.15 r376', 'The menu has a new look: TURN MUSIC is an OFF / ON choice beside COLOR THEME in landscape, and above it in portrait. Dark mode: the CHALLENGE dialog\'s CLOSE is orange and readable, RESTART LAP reads in black on orange during a race, and DRIFT and FLOW score callouts read in black on their colours.']),
     Object.freeze(['1.36.16 r377', 'Updates arrive cleanly. While TURN is open, a new version downloads in the background without mixing into the game you are playing; it takes over when you restart. Each part of the game also loads only once.']),
-    Object.freeze(['1.36.17 r378', 'Lighter on the battery: race markers and achievement tracking stop working behind ROADBOOK and other screens, instead of running every frame.'])
+    Object.freeze(['1.36.17 r378', 'Lighter on the battery: race markers and achievement tracking stop working behind ROADBOOK and other screens, instead of running every frame.']),
+    Object.freeze(['1.36.18 r379', 'TURN NEXT, the test version of TURN, is retired: its address now opens TURN, and a device that installed it clears its stored copy.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.36.17',
-  build: '2026.10.03-r378',
-  note: 'Lighter on the battery behind ROADBOOK and other screens.'
+  version: '1.36.18',
+  build: '2026.10.03-r379',
+  note: 'TURN NEXT is retired; its address opens TURN.'
 });

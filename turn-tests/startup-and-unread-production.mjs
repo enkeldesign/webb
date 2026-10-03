@@ -8,7 +8,6 @@ import {
 const [
   releaseSource,
   index,
-  nextIndex,
   app,
   fixedLayout,
   unreadMarkers,
@@ -17,7 +16,6 @@ const [
 ] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/unread-markers.js', import.meta.url), 'utf8'),
@@ -50,8 +48,6 @@ assert.ok(
   index.indexOf('<h1 id="installTitle">TURN</h1>') < index.indexOf('<span class="install-kicker">TURN v'),
   'Install-page reading order must expose the H1 and primary content before release/About information'
 );
-assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${escapedVersion} · Build ${escapedId}`));
-assert.match(nextIndex, new RegExp(`turn-next\\/app\\.js\\?source=${escapedCacheKey}-browser-consent-r166-bella-records`));
 
 assert.match(app, /function installStartupCover\(\)/);
 assert.match(app, /title\.textContent = 'LOADING'/,

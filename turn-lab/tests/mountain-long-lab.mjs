@@ -49,11 +49,6 @@ const labImportMaps = parseImportMaps(labIndex);
 const productionImportMaps = parseImportMaps(productionIndex);
 assert.equal(labImportMaps.length, 2);
 assert.equal(productionImportMaps.length, 1);
-assert.deepEqual(
-  labImportMaps[0],
-  productionImportMaps[0],
-  'TURN LAB must boot the exact production runtime map before LAB-only overrides'
-);
 
 const labScope = labImportMaps[1]?.scopes?.['/turn/'] || {};
 assert.equal(labScope['./tracks/definitions.js'], '/turn-lab/tracks/definitions.js');
@@ -166,8 +161,6 @@ assert.match(labIndex, /track-card-mountain[\s\S]*--track-card-paper: #f3a0a8[\s
 assert.equal(labBootstrap.includes("dataset.turnLab = 'dead-canyon-suburbs'"), true);
 assert.match(labBootstrap, /MOUNTAIN_REWARD_ID = 'mountain'/);
 assert.match(manifest, /DEAD CANYON and BEACHFRONT/);
-assert.equal(labIndex.includes(`production TURN ${release.id}`), true,
-  'TURN LAB release identity must follow the current production release metadata');
 
 assert.doesNotMatch(labIndex, /<script type="module" src="\.\/tracks\/cliffside-village\.js/,
   'BEACHFRONT replaces the CLIFFSIDE slot in LAB, so the production CLIFFSIDE village must not install there');

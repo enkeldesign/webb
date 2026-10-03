@@ -87,7 +87,6 @@ const [
   storageBootstrap,
   workflow,
   turnIndex,
-  nextIndex,
   labIndex,
   yourTurnIndex
 ] = await Promise.all([
@@ -101,7 +100,6 @@ const [
   fs.readFile(new URL('../yourturn/storage-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8')
 ]);
@@ -209,7 +207,6 @@ assert.match(peripheralCss, /env\(safe-area-inset-bottom\)/);
 const peripheralStylesheet = /peripheral-hud-r261\.css\?build=\d{8}-r\d+/;
 for (const [deployment, markup] of [
   ['TURN', turnIndex],
-  ['TURN NEXT', nextIndex],
   ['TURN LAB', labIndex],
   ['YOUR TURN', yourTurnIndex]
 ]) {
@@ -217,7 +214,6 @@ for (const [deployment, markup] of [
 }
 for (const [deployment, markup] of [
   ['TURN', turnIndex],
-  ['TURN NEXT', nextIndex],
   ['TURN LAB', labIndex]
 ]) {
   assert.ok(

@@ -13,8 +13,6 @@ const [
   orientationGuardCss,
   productionApp,
   productionMain,
-  nextApp,
-  nextMain,
   orchestrator,
   retrySource
 ] = await Promise.all([
@@ -27,8 +25,6 @@ const [
   fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/race/session-orchestrator.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/motion-permission-cancel-recovery.js', import.meta.url), 'utf8')
 ]);
@@ -45,9 +41,6 @@ assert.ok(productionApp.indexOf('installM8HomeNavigation()') < productionApp.ind
 assert.match(productionApp, /turnHomeLifecycle = 'home-m8'/);
 assert.match(productionApp, /retireLegacyStartPanel\(\)/);
 assert.match(productionMain, /createRaceSessionOrchestrator/);
-assert.equal(nextMain, productionMain, 'TURN NEXT must run the canonical M7 main runtime');
-assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
-assert.doesNotMatch(nextApp, /installM8HomeNavigation|installM8HomeFixedLayout|m8-home-card-scroll/);
 
 for (const requiredCopy of ['ROADBOOK', 'Choose your track', 'CHOOSE CAR', 'Track sheet']) {
   assert.ok(roadbookSource.includes(requiredCopy), `ROADBOOK must contain ${requiredCopy}`);
@@ -267,4 +260,4 @@ assert.match(orchestrator, /function leaveRace\(\)/);
 assert.match(orchestrator, /publish\('home-open'\)/);
 assert.match(orchestrator, /phase = 'home'/);
 
-console.log('TURN production M8 Home, prepared showroom entry, fresh-document motion permission recovery, stable record-card layout, native scrollbar divider and NEXT wrapper contracts passed.');
+console.log('TURN production M8 Home, prepared showroom entry, fresh-document motion permission recovery, stable record-card layout, and native scrollbar divider contracts passed.');

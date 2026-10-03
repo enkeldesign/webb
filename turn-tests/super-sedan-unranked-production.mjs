@@ -7,11 +7,10 @@ import { getCarDefinition, isSportsSedanEasterEgg } from '../turn/vehicle/catalo
 // Release-cache assertions must follow the canonical build instead of pinning one release forever.
 const release = JSON.parse(await fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'));
 
-const [runtimeSource, chromaticSource, productionIndex, labIndex, easterEggUi, secretCatalog] = await Promise.all([
+const [runtimeSource, chromaticSource, productionIndex, easterEggUi, secretCatalog] = await Promise.all([
   fs.readFile(new URL('../turn/achievements/runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/chromatic-camouflage-r183.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/garage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/secret-catalog.js', import.meta.url), 'utf8')
 ]);
@@ -168,7 +167,7 @@ assert.match(runtimeSource, /detail\?\.ranked === false[\s\S]*?qualifyingTimeTri
   'Time-trial achievements must explicitly reject unranked lap-result events');
 assert.match(chromaticSource, /getStoredBestLap/,
   'Chromatic Camouflage must continue to use the centrally filtered ranked best lap');
-for (const index of [productionIndex, labIndex]) {
+for (const index of [productionIndex]) {
   assert.match(index, new RegExp(`lap-system-r86\\.js\\?build=${release.cacheKey}&revision=r262-forgiving-lap-void`),
     'Prod and TURN LAB must route the lap runtime through the fresh track-aware module URL');
   assert.match(index, new RegExp(`rival-storage\\.js\\?build=${release.cacheKey}&revision=r224-finish-line-summary`),

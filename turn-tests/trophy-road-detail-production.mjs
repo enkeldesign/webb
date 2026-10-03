@@ -35,7 +35,6 @@ const [
   showcase,
   styles,
   productionIndex,
-  labIndex,
   homeRewardReplay,
   trophyRoadPerksFacade,
   garageSource,
@@ -47,7 +46,6 @@ const [
   fs.readFile(new URL('../turn/achievements/trophy-road-showcase.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/progression/trophy-road.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/home-reward-replay-r225.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/progression/trophy-road.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/garage.js', import.meta.url), 'utf8'),
@@ -161,7 +159,7 @@ for (const rewardId of ['medium-tracks', 'advanced-tracks', 'expert-tracks']) {
 }
 
 const release = JSON.parse(await fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'));
-for (const document of [productionIndex, labIndex]) {
+for (const document of [productionIndex]) {
   const imports = JSON.parse(document.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)[1]).imports;
   for (const pathname of ['/turn/achievements/catalog.js', '/turn/progression/trophy-road.js']) {
     assert.equal(imports[pathname], `${pathname}?build=${release.cacheKey}`,

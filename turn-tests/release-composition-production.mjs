@@ -328,8 +328,6 @@ const turnWorkflowPaths = (await fs.readdir(path.join(repositoryRoot, '.github',
 
 const [
   headGraph,
-  labDocument,
-  nextDocument,
   yourTurnDocument,
   aboutBootstrap,
   aboutHistory,
@@ -338,8 +336,6 @@ const [
   workflowEntries
 ] = await Promise.all([
   buildProductionGraph(currentReader),
-  currentReader('turn-lab/index.html'),
-  currentReader('turn-next/index.html'),
   currentReader('yourturn/index.html'),
   currentReader('turn/ui/about-history-bootstrap-r165.js'),
   currentReader('turn/content/about-history-current.js'),
@@ -349,21 +345,16 @@ const [
 ]);
 
 assert.ok(
-  labDocument && nextDocument && yourTurnDocument && aboutBootstrap && aboutHistory && designMain && designDialogs,
+  yourTurnDocument && aboutBootstrap && aboutHistory && designMain && designDialogs,
   'TURN deployment and release-facing documents must exist'
 );
-const labImportMap = parseImportMap(labDocument);
-const nextImportMap = parseImportMap(nextDocument);
 const yourTurnImportMap = parseImportMap(yourTurnDocument);
 
-assert.deepEqual(labImportMap, headGraph.importMap, 'TURN LAB must use the exact production import map');
 assertRouteTargets(headGraph.importMap, criticalReleaseTargets, 'Production TURN');
 assertRouteTargets(headGraph.importMap, crossDeploymentCompatibilityRoutes, 'Production TURN');
-assertRouteTargets(nextImportMap, criticalReleaseTargets, 'TURN NEXT');
-assertRouteTargets(nextImportMap, crossDeploymentCompatibilityRoutes, 'TURN NEXT');
 assertRouteTargets(yourTurnImportMap, criticalReleaseTargets, 'YOUR TURN');
 assertRouteTargets(yourTurnImportMap, crossDeploymentCompatibilityRoutes, 'YOUR TURN');
-for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['TURN NEXT', nextImportMap], ['YOUR TURN', yourTurnImportMap]]) {
+for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['YOUR TURN', yourTurnImportMap]]) {
   // One canonical module each: no revision aliases, and nothing routes to a retired layer.
   for (const [specifier, target] of Object.entries(importMap.imports || {})) {
     for (const value of [specifier, String(target)]) {
@@ -375,7 +366,6 @@ for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['TU
 
 await Promise.all([
   assertLocalImportTargetsExist(headGraph.importMap, 'Production TURN'),
-  assertLocalImportTargetsExist(nextImportMap, 'TURN NEXT'),
   assertLocalImportTargetsExist(yourTurnImportMap, 'YOUR TURN')
 ]);
 
@@ -399,8 +389,6 @@ for (const source of [designMain, designDialogs]) {
   assert.match(source, new RegExp(`Build ${escapedReleaseId}`),
     'Design references must identify the current release build');
 }
-assert.match(nextDocument, new RegExp(`Source TURN v${escapedVersion} · Build ${escapedReleaseId}`),
-  'TURN NEXT must identify the current production release');
 for (const bootstrap of ['motion-safe-zone.js', 'orientation-compat.js']) {
   assert.match(yourTurnDocument, new RegExp(`/turn/${bootstrap.replace('.', '\\.')}\\?build=${headGraph.release.cacheKey}`),
     `YOUR TURN must load ${bootstrap} through the current production release`);
@@ -431,7 +419,7 @@ assertSingleActiveIdentity(
 for (const file of ['car-models.js', 'car-visual-resources.js', 'learner-car-livery.js', 'supercar-kenney-wheels.js']) {
   assertSingleActiveIdentity(headGraph, `turn/vehicle/${file}`, 'Production TURN visual ownership');
 }
-for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['TURN NEXT', nextImportMap], ['YOUR TURN', yourTurnImportMap]]) {
+for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['YOUR TURN', yourTurnImportMap]]) {
   const catalogTarget = `/turn/vehicle/catalog.js?build=${headGraph.release.cacheKey}`;
   assert.equal(importMap.imports['/turn/vehicle/catalog.js'], catalogTarget,
     `${label} must route the canonical vehicle catalog through the current release build`);
@@ -451,7 +439,7 @@ for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['TU
 
 for (const file of ['drift-records.js', 'flow-records.js', 'score-record-store.js']) {
   assertSingleActiveIdentity(headGraph, `turn/scoring/${file}`, 'Production TURN score storage');
-  for (const [label, importMap] of [['TURN', headGraph.importMap], ['NEXT', nextImportMap], ['YOUR TURN', yourTurnImportMap]]) {
+  for (const [label, importMap] of [['TURN', headGraph.importMap], ['YOUR TURN', yourTurnImportMap]]) {
     const pathname = `/turn/scoring/${file}`;
     const suffixes = file === 'score-record-store.js' ? ['']
       : ['', '?revision=r206-home-track-records', '?revision=r219-record-paint'];

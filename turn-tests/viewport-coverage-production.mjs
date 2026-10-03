@@ -3,28 +3,24 @@ import fs from 'node:fs/promises';
 
 const [
   index,
-  nextIndex,
   labIndex,
   releaseSource,
   main,
   styles,
   usableViewport,
   productionManifestSource,
-  nextManifestSource,
   labManifestSource,
   labBootstrap,
   labDiagnostics,
   labRepair
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/styles.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/pwa-usable-viewport-r181.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/site.webmanifest', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/site.webmanifest', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/site.webmanifest', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/lab-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/viewport-diagnostics.js', import.meta.url), 'utf8'),
@@ -33,14 +29,7 @@ const [
 
 const release = JSON.parse(releaseSource);
 const productionManifest = JSON.parse(productionManifestSource);
-const nextManifest = JSON.parse(nextManifestSource);
 const labManifest = JSON.parse(labManifestSource);
-
-function importMap(source) {
-  const text = source.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
-  assert.ok(text, 'Expected an import map');
-  return JSON.parse(text).imports;
-}
 
 assert.match(
   index,
@@ -90,9 +79,8 @@ assert.match(viewportGap, /html\[data-theme="dark"\]\.\$\{CLASS\}:has\(\.install
   'Dark: the strip while loading is the dusk sky\'s green end');
 assert.match(viewportGap, /html\[data-theme="dark"\]\.\$\{CLASS\} \.install-gate\.turn-startup-loading \{[\s\S]*?#12323d 0 45%, #18321f 100%/,
   'Dark: the installed app loads on the dusk sky, never the light one');
-assert.match(nextIndex, /pwa-usable-viewport-r181\.js\?revision=r181-usable-web-layer/);
 
-for (const manifest of [productionManifest, nextManifest]) {
+for (const manifest of [productionManifest]) {
   assert.equal(manifest.display, 'standalone', 'iOS must use the stable standalone presentation mode');
   assert.deepEqual(manifest.display_override, ['standalone']);
   assert.equal(manifest.orientation, 'any');
@@ -140,14 +128,10 @@ assert.match(
   new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`)
 );
 
-// TURN LAB is a deployed isolated experiment shell around the exact current production runtime.
+// TURN LAB is an experiment shell around production TURN, frozen at the release it was
+// last given (#1045).
 assert.match(labIndex, /<base href="\/turn\/">/,
   'TURN LAB must resolve all ordinary game assets from the current production TURN tree');
-assert.deepEqual(importMap(labIndex), importMap(index),
-  'TURN LAB must use the exact production import-map graph so experiments exercise current TURN code');
-assert.match(labIndex, new RegExp(`version: '${release.version.replaceAll('.', '\\.')}'`));
-assert.match(labIndex, new RegExp(`id: '${release.id.replaceAll('.', '\\.')}'`));
-assert.match(labIndex, new RegExp(`cacheKey: '${release.cacheKey}'`));
 assert.ok(
   labIndex.indexOf('/turn-lab/lab-bootstrap.js') < labIndex.indexOf('pwa-usable-viewport-r181.js'),
   'LAB storage isolation and standalone detection must exist before production viewport setup'

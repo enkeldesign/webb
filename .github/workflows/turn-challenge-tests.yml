@@ -6,7 +6,6 @@ on:
     branches:
       - main
     paths:
-      - 'turn-next/**'
       - 'yourturn/**'
       - 'turn/ui/r411-race-controls.js'
       - 'turn/social/**'
@@ -25,7 +24,6 @@ on:
     branches:
       - main
     paths:
-      - 'turn-next/**'
       - 'yourturn/**'
       - 'turn/ui/r411-race-controls.js'
       - 'turn/social/**'
@@ -62,15 +60,9 @@ jobs:
 
       - name: Syntax-check challenge modules
         run: |
-          find turn-next yourturn -maxdepth 1 -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          find yourturn -maxdepth 1 -type f -name '*.js' -print0 | xargs -0 -n1 node --check
           find turn/social turn/telemetry turn/stats -type f -name '*.js' -print0 | xargs -0 -n1 node --check
           node --check turn/ui/r411-race-controls.js
-
-      - name: Run Race My Ghost contract
-        run: node turn-tests/challenge-mode-production.mjs
-
-      - name: Run challenge dialog state-safety regression
-        run: node turn-tests/challenge-dialog-state-production.mjs
 
       - name: Run YOUR TURN recipient contract
         run: node turn-tests/yourturn-production.mjs
@@ -102,5 +94,3 @@ jobs:
       - name: Run private telemetry and privacy contract
         run: node turn-tests/telemetry-production.mjs
 
-      - name: Verify TURN NEXT parity wrapper
-        run: node turn-next/scripts/build-parity-app.mjs --check

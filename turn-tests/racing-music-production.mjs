@@ -2,11 +2,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { TRACK_IDS } from '../turn/tracks/definitions.js';
 
-const [index, labIndex, trackerIndex, releaseSource, homeLayout, engine, songbookSource, songToolsSource,
+const [index, trackerIndex, releaseSource, homeLayout, engine, songbookSource, songToolsSource,
   toneRuntime, drumRuntime, leadVoicesSource, bassVoicesSource, arpVoicesSource,
   drumKitsSource] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/audio/music/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
@@ -40,16 +39,11 @@ const audioPreferencesSpecifier = `/turn/audio/audio-preferences.js?build=${rele
 const instrumentBankSpecifier = '/turn/audio/music/instrument-bank.js?revision=r184-score-v2';
 const songbookSpecifier = '/turn/audio/music/songbook.js?revision=r197-audio-mix';
 const productionImports = importMapImports(index);
-const labImports = importMapImports(labIndex);
 const trackerImports = importMapImports(trackerIndex);
 assert.equal(productionImports[musicSpecifier], `/turn/audio/racing-music-v5.js?build=${release.cacheKey}`);
-assert.equal(labImports[musicSpecifier], `/turn/audio/racing-music-v5.js?build=${release.cacheKey}`);
 assert.equal(productionImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
-assert.equal(labImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
 assert.equal(productionImports[instrumentBankSpecifier], `/turn/audio/music/instrument-bank.js?revision=r197-audio-mix&build=${release.cacheKey}`);
-assert.equal(labImports[instrumentBankSpecifier], `/turn/audio/music/instrument-bank.js?revision=r197-audio-mix&build=${release.cacheKey}`);
 assert.equal(productionImports[songbookSpecifier], `/turn/audio/music/songbook.js?build=${release.cacheKey}`);
-assert.equal(labImports[songbookSpecifier], `/turn/audio/music/songbook.js?build=${release.cacheKey}`);
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/);
 assert.match(engine, /music\/songbook\.js\?revision=r197-audio-mix/);
 assert.equal(

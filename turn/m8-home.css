@@ -147,10 +147,6 @@ html[data-theme="dark"] .m8-home-build {
   display: none !important;
 }
 
-.turn-home-open .turn-next-badge {
-  display: none;
-}
-
 .garage-race-status {
   min-height: 1.25em;
   margin: 0 0 6px;

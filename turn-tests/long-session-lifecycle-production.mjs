@@ -3,7 +3,6 @@ import fs from 'node:fs/promises';
 
 const [
   index,
-  labIndex,
   releaseSource,
   app,
   fixedLayout,
@@ -18,7 +17,6 @@ const [
   harborOptimized
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
@@ -46,7 +44,6 @@ function escapeRegex(value) {
 }
 
 const productionImports = importMap(index);
-const labImports = importMap(labIndex);
 const optimizedWorldAssetTarget = `./world-assets.js?build=${release.cacheKey}`;
 const optimizedHarborTarget = `./tracks/harbor-world-r82.js?build=${release.cacheKey}`;
 
@@ -56,19 +53,9 @@ assert.equal(
   'Production must request the tree-optimized shared world assets under a fresh module identity'
 );
 assert.equal(
-  labImports['./world-assets.js'],
-  optimizedWorldAssetTarget,
-  'TURN LAB must exercise the same tree-optimized world asset module as production'
-);
-assert.equal(
   productionImports['./tracks/harbor-world.js'],
   optimizedHarborTarget,
   'Production Harbor must use the draw-call-batched container-yard layer'
-);
-assert.equal(
-  labImports['./tracks/harbor-world.js'],
-  optimizedHarborTarget,
-  'TURN LAB must use the same optimized Harbor world as production'
 );
 assert.match(
   app,

@@ -357,11 +357,10 @@ assert.equal(
   '0'
 );
 
-const [source, css, index, nextIndex, labIndex, main] = await Promise.all([
+const [source, css, index, labIndex, main] = await Promise.all([
   fs.readFile(new URL('../turn/scoring/score-feedback.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/scoring/score-feedback.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8')
 ]);
@@ -391,7 +390,6 @@ assert.match(css, /background: linear-gradient\(\s*to right,/,
   'The channel colour also travels along the x-axis');
 for (const [mountName, markup] of [
   ['TURN', index],
-  ['TURN NEXT', nextIndex],
   ['TURN LAB', labIndex]
 ]) {
   assert.match(
@@ -453,8 +451,6 @@ assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.score-feedback-gauge-shell,[\s\S]*?transition: none;/,
   'Reduced-motion mode removes gauge extension and retraction transitions');
 assert.match(index, /id="scoreFeedback"/);
-assert.match(nextIndex, /id="scoreFeedback"/,
-  'TURN NEXT must provide the fixed ScoreFeedback DOM expected by the canonical runtime');
 assert.match(labIndex, /id="scoreFeedback"/,
   'TURN LAB must provide the fixed ScoreFeedback DOM expected by the canonical runtime');
 assert.match(index, /data-score-feedback-announcer role="status" aria-live="polite"/);

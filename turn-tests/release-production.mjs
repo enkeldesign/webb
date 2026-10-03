@@ -15,8 +15,6 @@ const [
   main,
   manifest,
   workflow,
-  nextApp,
-  nextIndex,
   installGate,
   installGateCss,
   orientationGuardCss,
@@ -31,8 +29,6 @@ const [
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/site.webmanifest', import.meta.url), 'utf8'),
   fs.readFile(new URL('../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/install-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/install-gate.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
@@ -86,7 +82,7 @@ assert.doesNotMatch(installGate, /Not inside a social media app|Open in your dev
 assert.match(installGate, /data-copy-game-address/);
 assert.match(installGate, /navigator\.clipboard\?\.writeText/);
 assert.match(installGate, /document\.execCommand\?\.\('copy'\)/);
-assert.match(installGate, /const gamePath = isNextDeployment \? '\/turn-next\/' : '\/turn\/'/);
+assert.match(installGate, /const gamePath = '\/turn\/'/);
 assert.match(installGateCss, /\.install-gate \{[\s\S]*z-index: 2000/);
 assert.match(installGateCss, /\.install-copy-address \{/);
 assert.match(installGateCss, /\.install-guide-card \{[\s\S]*max-height: 100%[\s\S]*overflow: auto/);
@@ -162,7 +158,7 @@ for (const [specifier, target] of Object.entries(futureImports)) {
   }
 }
 for (const repositoryPath of [
-  'turn-next/index.html', 'turn-next/app.js', 'yourturn/index.html',
+  'yourturn/index.html',
   'turn/ui/about-history-bootstrap-r165.js', 'turn/content/about-history-current.js',
   'turn/design.html', 'turn/design-dialogs.html'
 ]) {
@@ -228,19 +224,6 @@ assert.ok(
   manifestData.icons.some((icon) => String(icon.purpose || '').split(/\s+/).includes('maskable')),
   'Production manifest must provide a maskable-capable icon'
 );
-
-assert.match(nextIndex, new RegExp(`TURN NEXT · Source ${escapeRegExp(visibleBuild)}`));
-assert.match(nextIndex, new RegExp(`/turn-next/app\\.js\\?source=${escapeRegExp(release.cacheKey)}-browser-consent`));
-assert.match(nextIndex, new RegExp(`install-gate\\.js\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
-assert.match(nextIndex, new RegExp(`install-gate\\.css\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
-assert.match(nextIndex, new RegExp(`live-steering-setting\\.js\\?build=${escapeRegExp(release.cacheKey)}-live-steering`));
-assert.doesNotMatch(nextIndex, /m8-menu-font-fix\.css/);
-assert.doesNotMatch(nextIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
-assert.doesNotMatch(nextIndex, /Return to landscape/);
-assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
-assert.match(nextApp, /browser-consent/);
-assert.match(nextApp, /await import\(url\.href\)/);
-assert.doesNotMatch(nextApp, /installM8HomeNavigation|installMotionLifecycleBridge/);
 
 assert.match(workflow, /node turn\/scripts\/release\.mjs --check/);
 assert.match(workflow, /node turn-tests\/release-production\.mjs/);
