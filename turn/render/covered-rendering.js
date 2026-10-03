@@ -1,9 +1,8 @@
 import * as THREE from 'three';
+import { createFrameCadence } from './frame-cadence.js';
 
 const INSTALL_FLAG = Symbol.for('turn.covered-rendering-installed');
 const MAX_RENDER_FPS = 60;
-const RENDER_INTERVAL_MS = 1000 / MAX_RENDER_FPS;
-const FRAME_TOLERANCE_MS = 0.6;
 // The race's own PAUSE is not skipped here: main.js keeps the paused frame and redraws
 // it after a viewport change (race/race-pause.js).
 const MAIN_RENDERER_PAUSE_CLASSES = Object.freeze([
@@ -29,33 +28,22 @@ export function installCoveredRenderingGuard() {
         return originalSetAnimationLoop.call(renderer, callback);
       }
 
-      let lastDeliveredAt = -Infinity;
+      // No more than 60 frames a second on a faster display, every frame on a 60 Hz one
+      // (render/frame-cadence.js).
+      const cadence = createFrameCadence({ maxFps: MAX_RENDER_FPS });
       const guardedCallback = (time, frame) => {
         const mainRendererCovered = renderer === globalThis.__turnRuntime?.renderer
           && MAIN_RENDERER_PAUSE_CLASSES.some((className) => document.body?.classList.contains(className));
         if (mainRendererCovered) {
           stats.skippedCoveredMainFrames += 1;
-          // Reset the delivery clock so returning from Home does not inherit a
-          // stale accumulated cadence from minutes of intentionally skipped work.
-          lastDeliveredAt = -Infinity;
+          // Start the cadence afresh on return, not from minutes of skipped frames.
+          cadence.reset();
           return;
         }
 
-        if (Number.isFinite(lastDeliveredAt)) {
-          const elapsed = time - lastDeliveredAt;
-          if (elapsed < RENDER_INTERVAL_MS - FRAME_TOLERANCE_MS) {
-            stats.skippedHighRefreshFrames += 1;
-            return;
-          }
-
-          // Advance by fixed 60 Hz slots instead of assigning `time`. On 90 Hz
-          // displays this produces a 60-ish Hz 2/3 cadence rather than collapsing
-          // to 45 Hz, while a long pause snaps back to the current timestamp.
-          const slots = Math.max(1, Math.floor((elapsed + FRAME_TOLERANCE_MS) / RENDER_INTERVAL_MS));
-          lastDeliveredAt += slots * RENDER_INTERVAL_MS;
-          if (time - lastDeliveredAt > RENDER_INTERVAL_MS * 2) lastDeliveredAt = time;
-        } else {
-          lastDeliveredAt = time;
+        if (!cadence.shouldDraw(time)) {
+          stats.skippedHighRefreshFrames += 1;
+          return;
         }
 
         callback.call(renderer, time, frame);

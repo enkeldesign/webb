@@ -1,5 +1,5 @@
 {
-  "release": "20261003-r384",
+  "release": "20261003-r385",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -326,6 +326,7 @@
     "/turn/render/camera.js",
     "/turn/render/car-shadows.js",
     "/turn/render/covered-rendering.js",
+    "/turn/render/frame-cadence.js",
     "/turn/render/skid-continuity-r198.js",
     "/turn/render/track-intro-camera.js",
     "/turn/render/world.js",

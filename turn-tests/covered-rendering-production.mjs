@@ -43,14 +43,40 @@ assert.match(guard, /renderer === globalThis\.__turnRuntime\?\.renderer/,
   'Home coverage must pause only the main race renderer, not Trophy Road or other foreground 3D surfaces');
 assert.match(guard, /stats\.skippedCoveredMainFrames \+= 1/,
   'Main-world frames saved while Home is open must remain measurable');
-assert.match(guard, /lastDeliveredAt = -Infinity/,
+assert.match(guard, /cadence\.reset\(\)/,
   'Returning from a long covered Home stay must reset the high-refresh delivery cadence');
 assert.match(guard, /MAX_RENDER_FPS = 60/, 'No WebGL surface should render above the game’s 60 Hz simulation ceiling');
-assert.match(guard, /RENDER_INTERVAL_MS = 1000 \/ MAX_RENDER_FPS/);
+assert.match(guard, /createFrameCadence\(\{ maxFps: MAX_RENDER_FPS \}\)/, 'Each renderer loop keeps its own cadence');
 assert.match(guard, /stats\.skippedHighRefreshFrames \+= 1/,
   'High-refresh frames skipped for thermal headroom must remain measurable');
-assert.match(guard, /lastDeliveredAt \+= slots \* RENDER_INTERVAL_MS/,
-  '90 Hz displays must use accumulated 60 Hz slots instead of falling to a simple 45 Hz every-other-frame cadence');
+
+// The cadence itself (Erik's stutter): frames from a display at a given rate, with the
+// timestamp jitter and whole-millisecond rounding real browsers give. No frame of a 60 Hz
+// display is dropped; faster displays are held near 60 with no long gaps.
+{
+  const { createFrameCadence } = await import('../turn/render/frame-cadence.js');
+  const drawn = (hz, { jitter = 0, roundMs = false, seconds = 20 } = {}) => {
+    const cadence = createFrameCadence({ maxFps: 60 });
+    const times = [];
+    let seed = 7;
+    const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let index = 0; index < seconds * hz; index += 1) {
+      let time = 54321.123 + index * (1000 / hz) + (random() * 2 - 1) * jitter;
+      if (roundMs) time = Math.floor(time);
+      if (cadence.shouldDraw(time)) times.push(time);
+    }
+    const gaps = times.slice(1).map((time, index) => time - times[index]);
+    return { fps: times.length / seconds, longGaps: gaps.filter((gap) => gap > 25).length };
+  };
+  for (const [hz, options] of [[60, {}], [60, { jitter: 2 }], [59.94, { roundMs: true }], [60, { jitter: 0.5, roundMs: true }]]) {
+    const result = drawn(hz, options);
+    assert.ok(result.fps > hz - 0.5 && result.longGaps === 0, `${hz} Hz ${JSON.stringify(options)}: every frame drawn (${JSON.stringify(result)})`);
+  }
+  for (const [hz, options] of [[120, {}], [120, { jitter: 2, roundMs: true }], [90, { jitter: 0.5 }]]) {
+    const result = drawn(hz, options);
+    assert.ok(Math.abs(result.fps - 60) < 1 && result.longGaps === 0, `${hz} Hz ${JSON.stringify(options)}: held near 60 with no long gaps (${JSON.stringify(result)})`);
+  }
+}
 assert.match(guard, /callback\.call\(renderer, time, frame\)/, 'Visible delivered frames must preserve the original renderer callback context and arguments');
 assert.match(guard, /typeof callback !== 'function'/, 'Removing an animation loop must still delegate directly to Three.js');
 assert.match(guard, /Symbol\.for\('turn\.covered-rendering-installed'\)/, 'Installation must be idempotent across app reload paths');
