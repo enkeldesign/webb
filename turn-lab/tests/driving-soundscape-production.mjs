@@ -99,10 +99,10 @@ assert.match(organic, /captureAudioFactories\(\)/,
   'The decorator must observe the existing graph rather than recreating it');
 assert.match(organic, /restoreFactories\?\.\(\);[\s\S]*organicRoot = context\.createOscillator\(\)/,
   'Temporary AudioContext factory hooks must be restored before organic voices are added');
-assert.match(organic, /findOscillatorNear\(390, 12\)/);
-assert.match(organic, /findOscillatorNear\(585, 18\)/);
-assert.match(organic, /findGainNear\(0\.78, 0\.012\)/);
-assert.match(organic, /findGainNear\(0\.14, 0\.012\)/,
+assert.match(organic, /findOscillatorNear\(390, 12[,)]/);
+assert.match(organic, /findOscillatorNear\(585, 18[,)]/);
+assert.match(organic, /findGainNear\(0\.78, 0\.012[,)]/);
+assert.match(organic, /findGainNear\(0\.14, 0\.012[,)]/,
   'The harmonic node signature must not confuse BOOST gain with the ribbon');
 assert.match(organic, /context\.createPeriodicWave/,
   'The hum must have an organic harmonic spectrum rather than one bare sine');

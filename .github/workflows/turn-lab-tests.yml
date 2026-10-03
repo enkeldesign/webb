@@ -130,6 +130,9 @@ jobs:
       - name: Run achievement persistence across windows regression
         run: node turn-tests/achievement-persistence-production.mjs
 
+      - name: Run steering ribbon audio-context regression
+        run: node turn-tests/organic-ribbon-production.mjs
+
       - name: Run car visual ownership and preview lifecycle regression
         run: node turn-tests/car-visual-lifecycle-production.mjs
 

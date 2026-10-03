@@ -100,8 +100,8 @@ assert.match(shareSource, /freezeRaceClock\(\)[\s\S]*thawRaceClock\(\)/,
   'Time spent composing or sharing must not count against the lap: the race clock holds still');
 assert.match(shareSource, /__turnAudio\?\.silence\?\.\(\)/,
   'A hard-paused share composer must not leave the engine/audio state running behind it');
-assert.match(coveredRendering, /turn-runtime-paused/,
-  'The renderer guard must honour the sharing modal pause class');
+assert.match(coveredRendering, /main\.js keeps the paused frame/,
+  'A paused race, sharing included, keeps its frozen frame through main.js (the race clock holds still)');
 
 assert.doesNotMatch(shareCss, /\.turn-yourturn-track-(?:share|slot)/, 'The old track-card SHARE overlay is gone');
 assert.match(shareCss, /\.lap-result-yourturn-share/);

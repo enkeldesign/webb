@@ -64,15 +64,18 @@ export function configureRendererWideGamut(renderer) {
   return supportsDisplayP3();
 }
 
+// Each renderer created from now on outputs Display P3 where the screen has it. three.js
+// gives each renderer its own setSize, so this wraps the instance (#1045).
 export function installWideGamutRendererPatch() {
-  const prototype = THREE.WebGLRenderer?.prototype;
-  if (!prototype || prototype[RENDERER_PATCH]) return false;
-  const originalSetSize = prototype.setSize;
-  prototype.setSize = function turnWideGamutSetSize(...args) {
-    configureRendererWideGamut(this);
-    return originalSetSize.apply(this, args);
-  };
-  Object.defineProperty(prototype, RENDERER_PATCH, { value: true });
+  if (globalThis[RENDERER_PATCH] || typeof THREE.onWebGLRendererCreated !== 'function') return false;
+  THREE.onWebGLRendererCreated((renderer) => {
+    const originalSetSize = renderer.setSize;
+    renderer.setSize = function turnWideGamutSetSize(...args) {
+      configureRendererWideGamut(renderer);
+      return originalSetSize.apply(renderer, args);
+    };
+  });
+  Object.defineProperty(globalThis, RENDERER_PATCH, { value: true });
   return true;
 }
 

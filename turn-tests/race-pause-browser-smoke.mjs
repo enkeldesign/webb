@@ -46,7 +46,6 @@ async function openRace({ width, height, handedness = 'right' }) {
   const page = await context.newPage();
   page.setDefaultTimeout(30000);
   page.on('pageerror', (error) => {
-    if (error.message.includes('different audio context') && error.stack.includes('organic-ribbon')) return;
     errors.push(error.message);
   });
   await page.addInitScript((hand) => {
@@ -274,6 +273,15 @@ try {
   now = await race(page);
   assert.equal(now.paused, false, 'LEAVE RACE ends the pause');
   assert.equal(await page.evaluate(() => document.body.classList.contains('turn-runtime-paused')), false);
+  // #1045: the race world stops drawing behind ROADBOOK; its loop is guarded.
+  const frames = () => page.evaluate(() => globalThis.__turnRuntime.renderer.info.render.frame);
+  const beforeHome = await frames();
+  await page.waitForTimeout(1000);
+  const covered = await page.evaluate(() => globalThis.__turnCoveredRendering.snapshot());
+  assert.ok(covered.guardedLoops >= 1, 'The race renderer loop is guarded');
+  assert.ok(covered.skippedCoveredMainFrames > 0, 'Frames behind ROADBOOK are skipped');
+  assert.ok(await frames() - beforeHome <= 1, 'The race world does not draw behind ROADBOOK');
+
   // No lap was completed: no THIS VISIT, in PAUSED or after.
   await page.waitForTimeout(400);
   assert.equal(await page.evaluate(() => document.querySelector('.turn-visit-summary-dialog').open), false,
