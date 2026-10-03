@@ -41,7 +41,9 @@ const storage = {
     if (failWrites) throw new Error('Simulated storage failure');
     disk.set(key, value);
   },
-  removeItem: (key) => disk.delete(key)
+  removeItem: (key) => disk.delete(key),
+  get length() { return disk.size; },
+  key: (index) => [...disk.keys()][index] ?? null
 };
 const replacements = {
   localStorage: storage,
@@ -63,7 +65,7 @@ function state(trackId = 'harbor', time = 10) {
   return {
     trackId,
     competitorLaps: time == null ? [] : [{
-      time, hitAt: 123456, carId: 'sedan',
+      time, hitAt: Date.now(), carId: 'sedan',
       carColor: '#123456', carSecondaryColor: '#654321', factoryPaint: false,
       frames: samples.map((_, i) => ({ t: i * time / 24, x: i, z: 0, h: 0, p: i / 24 }))
     }]
@@ -98,7 +100,7 @@ try {
   clearRivalsState(harbor);
   assert.equal(scheduled.size, 1, 'Resetting one track must preserve another track’s pending flush');
   runNext();
-  assert.equal(disk.has(key('harbor')), false, 'Idle persistence must not resurrect a reset');
+  assert.deepEqual(JSON.parse(disk.get(key('harbor'))).laps, [], 'Idle persistence must not resurrect a reset');
   assert.equal(disk.has(`turn-three-ghost-v4:${getTrackStorageRevision('harbor')}`), false,
     'Reset must remove the legacy ghost key as well as the current rival key');
   assert.equal(JSON.parse(disk.get(key('airport'))).laps[0].time, 12);
@@ -119,7 +121,8 @@ try {
   clearAllRivalsState(state('countryside', null));
   assert.equal(scheduled.size, 0);
   flushScheduledRivalsState();
-  assert.equal(disk.size, 0, 'All-track reset includes pending tracks beyond the active track');
+  assert.ok([...disk.values()].every((value) => JSON.parse(value).laps.length === 0),
+    'All-track reset includes pending tracks beyond the active track');
 
   reset();
   saveRivalsState(state('harbor', 20));
@@ -195,7 +198,72 @@ try {
   assert.equal(scheduled.values().next().value.delay, 32, 'Browsers without idle callbacks retain the deferred timer path');
   runNext();
   assert.equal(JSON.parse(disk.get(key('harbor'))).laps[0].time, 10);
-  console.log('TURN rival persistence: reset, pending precedence, Home/share/reload, bounded retries and lifecycle recovery passed.');
+  globalThis.requestIdleCallback = replacements.requestIdleCallback;
+
+  // #1045: another window shares this storage. Its faster lap survives this window's
+  // save; its reset wins over this window's older laps.
+  reset();
+  saveRivalsState(state('harbor', 20));
+  const other = JSON.parse(disk.get(key('harbor')));
+  other.laps = [{ ...state('harbor', 8).competitorLaps[0], hitAt: Date.now() + 1 }];
+  disk.set(key('harbor'), JSON.stringify(other));
+  saveRivalsState(state('harbor', 15));
+  assert.deepEqual(JSON.parse(disk.get(key('harbor'))).laps.map((lap) => lap.time), [8, 15],
+    'A stale window keeps the faster lap another window saved');
+  assert.equal(getStoredBestLap('harbor').time, 8, 'and Home shows it');
+
+  reset();
+  const stale = state('harbor', 12);
+  saveRivalsState(stale);
+  disk.set(key('harbor'), JSON.stringify({ version: 8, trackId: 'harbor', resetAt: Date.now() + 5, laps: [] }));
+  saveRivalsState(stale);
+  assert.deepEqual(JSON.parse(disk.get(key('harbor'))).laps, [], 'A reset in another window is not undone by a stale one');
+  const after = state('harbor', 14);
+  after.competitorLaps[0].hitAt = Date.now() + 10;
+  saveRivalsState(after);
+  assert.deepEqual(JSON.parse(disk.get(key('harbor'))).laps.map((lap) => lap.time), [14], 'A lap set after the reset is kept');
+
+  // Replays are stored compactly and read back as frames; older plain saves still load.
+  reset();
+  const plainFrames = state('harbor', 10).competitorLaps[0].frames;
+  saveRivalsState(state('harbor', 10));
+  const storedLap = JSON.parse(disk.get(key('harbor'))).laps[0];
+  assert.equal(storedLap.frames.codec, 'q1', 'Frames are stored compactly');
+  const loaded = reload('harbor');
+  assert.equal(loaded.competitorLaps[0].frames.length, plainFrames.length);
+  assert.equal(loaded.competitorLaps[0].frames.at(-1).x, plainFrames.at(-1).x, 'and read back as the same frames');
+  assert.equal(getStoredBestReplayLap('harbor').frames.length, plainFrames.length);
+  flushScheduledRivalsState();
+  disk.set(key('harbor'), JSON.stringify({ version: 8, laps: [state('harbor', 11).competitorLaps[0]] }));
+  invalidateSummaries();
+  assert.equal(reload('harbor').bestTime, 11, 'A plain save from an earlier version still loads');
+
+  // Full storage: other tracks keep only their fastest lap so this save fits, and the
+  // best lap is the last thing given up.
+  reset();
+  const lapsFor = (trackId, times) => times.map((time) => state(trackId, time).competitorLaps[0]);
+  const airport = state('airport', 10);
+  airport.competitorLaps = lapsFor('airport', [10, 11, 12, 13]);
+  saveRivalsState(airport);
+  const quota = Math.max(...[...disk.values()].map((value) => value.length)) * 1.6;
+  const quotaSetItem = storage.setItem;
+  storage.setItem = (itemKey, value) => {
+    const total = [...disk].reduce((sum, [k, v]) => sum + (k === itemKey ? 0 : v.length), 0) + value.length;
+    if (total > quota) throw Object.assign(new Error('full'), { name: 'QuotaExceededError' });
+    return quotaSetItem(itemKey, value);
+  };
+  try {
+    const harborFull = state('harbor', 9);
+    harborFull.competitorLaps = lapsFor('harbor', [9, 10, 11, 12]);
+    assert.equal(saveRivalsState(harborFull), true, 'A save fits after making room');
+    assert.equal(JSON.parse(disk.get(key('harbor'))).laps[0].time, 9, 'The new best lap is kept');
+    assert.deepEqual(JSON.parse(disk.get(key('airport'))).laps.map((lap) => lap.time), [10],
+      'Another track keeps its fastest lap');
+  } finally {
+    storage.setItem = quotaSetItem;
+  }
+
+  console.log('TURN rival persistence: reset, pending precedence, Home/share/reload, bounded retries, lifecycle recovery, two-window merge and reset, compact replays and full storage passed.');
 } finally {
   reset();
   for (const [name, descriptor] of originals) {

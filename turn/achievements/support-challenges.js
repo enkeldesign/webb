@@ -9,6 +9,7 @@ import {
   isVehicleUnlocked
 } from '../progression/trophy-road.js';
 import { completeTrackOrder, getTrackStorageRevision } from '../tracks/definitions.js';
+import { storedReplayFrameCount } from '../race/replay-codec.js';
 
 export const SUPPORT_CHALLENGE_STORAGE_KEY = 'turn-support-challenges-v1';
 export const SUPPORT_CHALLENGE_CONFIG_CACHE_KEY = 'turn-support-challenge-config-cache-v1';
@@ -191,10 +192,10 @@ function saveSupportState(state, storage = globalThis.localStorage) {
   }
 }
 
+// A race lap or a stored one (its frames may be stored compactly, race/replay-codec.js).
 function validStoredRival(lap) {
   return Number.isFinite(Number(lap?.time))
-    && Array.isArray(lap?.frames)
-    && lap.frames.length > 20;
+    && storedReplayFrameCount(lap?.frames) > 20;
 }
 
 function rivalStorageKey(trackId) {
