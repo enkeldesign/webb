@@ -387,6 +387,11 @@
   line-height: 1;
 }
 
+/* Every event colour is a light colour surface: Ink, in either theme. */
+.score-feedback-callout[data-event] {
+  color: var(--turn-ink);
+}
+
 .score-feedback-callout[data-event="bank"] {
   background: var(--turn-green-500, #8ce99a);
 }
