@@ -131,6 +131,8 @@ try {
   await page.evaluate(() => document.querySelector('.turn-race-pause-button').click());
   const pausedAtMs = Date.now();
   await page.waitForTimeout(120);
+  // The live region is cleared, then filled a moment later so it is read out again.
+  await page.waitForFunction(() => document.querySelector('.turn-race-pause-status')?.textContent, null, { timeout: 2000 }).catch(() => {});
   const paused = await race(page);
   assert.equal(paused.paused, true);
   assert.equal(paused.reason, 'player');
