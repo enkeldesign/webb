@@ -86,8 +86,8 @@ const releaseOf = (value) => value?.match(/\d{8}-r\d+/)?.[0] || null;
 const revision = (release) => Number(release.split('-r')[1]);
 
 // Which release each open page runs. A page that cannot say (one in the background
-// that the browser has frozen, or one from before pages could answer) counts as
-// running the newest earlier release.
+// that the browser has frozen, or one from before pages could answer) may run any
+// earlier release: then every release stays until all open pages can say.
 async function releasesInUse() {
   const windows = await self.clients.matchAll({ type: 'window' });
   return Promise.all(windows.map((client) => new Promise((resolve) => {
@@ -100,12 +100,10 @@ async function releasesInUse() {
 
 async function dropUnusedReleases() {
   const answers = await releasesInUse();
+  if (answers.includes(null)) return;
   const keys = (await caches.keys()).filter((key) =>
     key.startsWith(`${NAME}-precache-`) || key.startsWith(`${NAME}-runtime-`));
-  const older = [...new Set(keys.map(releaseOf))].filter((release) => release && revision(release) < revision(RELEASE))
-    .sort((a, b) => revision(b) - revision(a));
-  const keep = new Set([RELEASE, ...answers.filter(Boolean)]);
-  if (answers.includes(null) && older.length) keep.add(older[0]);
+  const keep = new Set([RELEASE, ...answers]);
   for (const key of keys) {
     const release = releaseOf(key);
     // A newer release may be storing its files right now.
