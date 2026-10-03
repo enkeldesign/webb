@@ -1,5 +1,5 @@
 {
-  "release": "20261003-r377",
+  "release": "20261003-r378",
   "files": [
     "/turn-next/app.js",
     "/turn-next/challenge-codec.js",
@@ -458,6 +458,7 @@
     "/turn/ui/home-rival-reset.js",
     "/turn/ui/how-to-play-guide.js",
     "/turn/ui/hud.js",
+    "/turn/ui/idle-frame-loop.js",
     "/turn/ui/in-game-menu-state.js",
     "/turn/ui/in-game-menu.js",
     "/turn/ui/lap-result-toast.js",

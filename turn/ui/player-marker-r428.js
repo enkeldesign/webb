@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import './player-marker-r427.js?revision=r427';
+import { createIdleFrameLoop } from './idle-frame-loop.js';
 
 const REFERENCE_CAR_LENGTH = 5.4;
 const AUTO_ACTIVATION_DIAMETER_CAR_LENGTHS = 3;
@@ -7,6 +8,7 @@ const AUTO_ACTIVATION_RADIUS = REFERENCE_CAR_LENGTH * AUTO_ACTIVATION_DIAMETER_C
 const AUTO_ACTIVATION_RADIUS_SQUARED = AUTO_ACTIVATION_RADIUS * AUTO_ACTIVATION_RADIUS;
 const AUTO_EXIT_GRACE_MS = 220;
 const AUTO_CHECK_INTERVAL_MS = 50;
+const RACE_IDLE_CHECK_MS = 100;
 const MARKER_GAP_PX = 20;
 const MARKER_SIZE_VIEWPORT_RATIO = 0.045;
 const MARKER_SIZE_MIN_PX = 17;
@@ -176,7 +178,7 @@ function installRuntime(runtime) {
 
   const marker = createMarkerElement();
   let rect = null;
-  let frame = 0;
+  let loop = null;
   let blankOverlay = null;
   let autoVisibleUntil = 0;
   let nextAutoCheckAt = 0;
@@ -214,14 +216,13 @@ function installRuntime(runtime) {
   }
 
   function render(now) {
-    frame = requestAnimationFrame(render);
     const active = raceActive();
     if (!active) {
       autoVisibleUntil = 0;
       autoNearby = false;
       nextAutoCheckAt = 0;
       marker.hidden = true;
-      return;
+      return false;
     }
 
     const mode = globalThis.__turnPlayerMarker?.getMode?.() || 'auto';
@@ -238,7 +239,8 @@ function installRuntime(runtime) {
 
     if (mode === 'off') visible = false;
     marker.hidden = !visible;
-    if (!visible) return;
+    // Nothing to draw in this race yet: check again soon instead of every frame.
+    if (!visible) return mode === 'off' ? false : RACE_IDLE_CHECK_MS;
 
     if (!rect?.width || !rect?.height) measure();
     if (!rect?.width || !rect?.height) {
@@ -282,14 +284,17 @@ function installRuntime(runtime) {
 
   measure();
   refreshCarMetrics();
-  frame = requestAnimationFrame(render);
+  loop = createIdleFrameLoop(render);
 
   const controller = Object.freeze({
     marker,
     activationRadius: AUTO_ACTIVATION_RADIUS,
     markerGapPixels: MARKER_GAP_PX,
+    get idle() {
+      return loop.idle;
+    },
     stop() {
-      cancelAnimationFrame(frame);
+      loop.stop();
       marker.remove();
     }
   });

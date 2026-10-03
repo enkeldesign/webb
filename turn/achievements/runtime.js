@@ -436,10 +436,12 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
   }
 
   // A paused race (race/race-pause.js) samples nothing: no achievement time passes.
+  // Nor does a race left for ROADBOOK mid-lap, whose lap stays marked active (#1045).
   function syncDrivingSampler() {
     const state = runtime?.state;
     const active = (state?.running === true || state?.lapActive === true)
-      && globalThis.__turnRacePause?.paused !== true;
+      && globalThis.__turnRacePause?.paused !== true
+      && !document.body.classList.contains('turn-home-open');
     if (active && document.visibilityState !== 'hidden') startDrivingSampler();
     else stopDrivingSampler();
   }
@@ -607,6 +609,8 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
   });
 
   document.addEventListener('visibilitychange', syncDrivingSampler, { passive: true });
+  window.addEventListener('turn:home-shown', syncDrivingSampler);
+  window.addEventListener('turn:home-hidden', syncDrivingSampler);
 
   const menuObserver = typeof MutationObserver === 'function'
     ? new MutationObserver(syncRaceTriggerVisibility)
@@ -636,6 +640,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     hideRewardToast: view.hideRewardToast,
     showRewardToastBatch: (batch) => queueRewards(batch),
     getTrophies: () => store.trophyTotal(),
+    sampling: () => Boolean(session.samplingTimer),
     getState: () => normalizeAchievementState(store.state)
   });
   globalThis.__turnAchievements = api;
