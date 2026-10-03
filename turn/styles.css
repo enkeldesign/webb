@@ -289,6 +289,12 @@ h1 {
   color: var(--turn-ink);
   box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.5625rem, 2vw, 0.75rem));
+  /* A longer line (the tilt hint, #1032) takes the screen's width before it wraps,
+     and then wraps into even lines. */
+  width: max-content;
+  max-width: calc(100% - 24px);
+  text-align: center;
+  text-wrap: balance;
   opacity: 0;
   transition: opacity 140ms ease;
 }

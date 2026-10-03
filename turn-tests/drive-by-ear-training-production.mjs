@@ -107,7 +107,8 @@ assert.match(
   /async function startGame\(fullscreenPromise = Promise\.resolve\(false\), \{ announceStart = true \} = \{\}\)/,
   'The shared race session must let training suppress the ordinary GO announcement without changing normal races'
 );
-assert.match(sessionOrchestrator, /if \(announceStart\) announce\('GO!'\)/);
+assert.match(sessionOrchestrator, /if \(announceStart && !state\.sensorMode\) announce\('GO!'\)/);
+assert.match(sessionOrchestrator, /if \(state\.sensorMode && announceStart\) \{/, 'Training parts start without the tilt hint');
 assert.match(
   training,
   /raceSession\.startGame\(fullscreenPromise \|\| Promise\.resolve\(false\), \{ announceStart: false \}\)/,

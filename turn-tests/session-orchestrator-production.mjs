@@ -183,6 +183,56 @@ assert.equal(motion.state.horizonRollReference, motion.state.targetRoll);
 assert.equal(motion.state.neutralPitch, motion.state.targetPitch);
 assert.deepEqual(motion.published, ['race-started']);
 
+// Tilt centring at the start (#1032): the GO! pill asks for the phone as the player
+// wants to drive, takes the neutral once it keeps still, and says STEERING CENTRED.
+// The start's own GO! gives way to it; Drive By Ear hears a level cue.
+const HOLD = 'message:HOLD THE PHONE THE WAY YOU WANT TO DRIVE';
+const CENTRED = 'message:STEERING CENTRED';
+function runSamples(harness, eachSample = () => {}, limit = 40) {
+  let ran = 3;
+  for (let i = 0; i < limit && ran < harness.timers.length; i += 1, ran += 1) {
+    assert.equal(harness.timers[ran].delay, 100, 'The start samples the phone every 100 ms');
+    eachSample(i);
+    harness.timers[ran].callback();
+  }
+  return ran - 3;
+}
+assert.ok(motion.order.includes(HOLD), 'Tilt start asks for the driving grip');
+assert.equal(motion.order.includes('message:GO!'), false, 'The hint replaces the start GO!');
+motion.environment.__turnAudio = { cue(name) { motion.order.push(`cue:${name}`); } };
+motion.state.mode = 'staged';
+motion.state.speed = 0;
+motion.state.targetRoll = 0.1;
+motion.state.targetPitch = -0.05;
+const steadySamples = runSamples(motion);
+assert.ok(motion.order.includes(CENTRED), 'A steady phone is centred out loud');
+assert.ok(motion.order.indexOf(HOLD) < motion.order.indexOf(CENTRED));
+assert.ok(motion.order.includes('cue:steering-centred'), 'Drive By Ear hears the centring');
+assert.equal(motion.state.neutralRoll, 0.1, 'The neutral is the pose the phone settled in');
+assert.equal(motion.state.horizonRollReference, 0.1);
+assert.equal(motion.state.neutralPitch, -0.05);
+assert.ok(steadySamples >= 7 && steadySamples <= 9, `The hint stays up long enough to read (${steadySamples} samples)`);
+
+const driving = createHarness();
+await driving.orchestrator.requestMotion();
+driving.timers[0].callback();
+driving.state.mode = 'racing';
+driving.state.targetRoll = -0.3;
+runSamples(driving);
+assert.ok(driving.order.includes(CENTRED), 'Driving off early still says the steering is centred');
+assert.equal(driving.state.neutralRoll, 0.4, 'Once the car moves, the start neutral stays');
+
+const restless = createHarness();
+await restless.orchestrator.requestMotion();
+restless.timers[0].callback();
+restless.state.mode = 'staged';
+restless.state.speed = 0;
+const restlessSamples = runSamples(restless, (i) => { restless.state.targetRoll = i % 2 ? 0.2 : -0.2; });
+assert.ok(restless.order.includes(CENTRED), 'A phone that never keeps still is centred all the same');
+assert.equal(restless.state.neutralRoll, 0.4, 'Never steady: the start neutral stands, as before');
+assert.equal(restlessSamples, 14, 'The start gives up waiting after about a second and a half');
+assert.equal(restless.order.filter((entry) => entry === CENTRED).length, 1, 'Said once');
+
 const cancelled = createHarness({ selection: null });
 assert.equal(await cancelled.orchestrator.useManualMode(), false);
 assert.equal(cancelled.orchestrator.getPhase(), 'idle');

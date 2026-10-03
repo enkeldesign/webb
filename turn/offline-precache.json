@@ -1,5 +1,5 @@
 {
-  "release": "20261003-r382",
+  "release": "20261003-r383",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -276,6 +276,7 @@
     "/turn/input/qe-drive-controls-bootstrap.js",
     "/turn/input/qe-drive-controls.js",
     "/turn/input/shift-toggle.js",
+    "/turn/input/tilt-centring.js",
     "/turn/install-gate.css",
     "/turn/install-gate.js",
     "/turn/ios-viewport-gap.js",

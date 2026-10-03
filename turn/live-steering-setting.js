@@ -41,6 +41,8 @@
       state.neutralPitch = state.targetPitch;
       state.pitch = state.targetPitch;
       state.steering = 0;
+      // RECALIBRATE says STEERING CENTRED, as every tilt centring does (#1032).
+      document.querySelector('#calibrateButton')?.click();
     }, 220);
   }
 

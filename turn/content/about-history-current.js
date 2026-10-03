@@ -1128,13 +1128,14 @@ Object.freeze({
     Object.freeze(['1.36.18 r379', 'TURN NEXT, the test version of TURN, is retired: its address now opens TURN, and a device that installed it clears its stored copy.']),
     Object.freeze(['1.36.19 r380', 'Dark mode: the CHALLENGE dialog\'s trophy reward is a yellow outline with yellow text instead of cream on yellow, and a goal\'s blue IN PROGRESS tile shows its symbol in Ink. The grabber at the top of a sheet takes its colour from what it sits on, so it shows on the yellow head of a track sheet and ALL CARS, and it is darker in light mode too.']),
     Object.freeze(['1.36.20 r381', 'Portrait with device rotation: DRIFT and FLOW move out of the road, one above the other where the steering pad would be, level with RESTART LAP, so they never cover the car. Left-handed controls mirror them with the drive pad. With the steering pad they stay where they were.']),
-    Object.freeze(['1.36.21 r382', 'Portrait with device rotation: the DRIFT and FLOW gauges sit together between the two cards, DRIFT\'s under its card and FLOW\'s on top of its own.'])
+    Object.freeze(['1.36.21 r382', 'Portrait with device rotation: the DRIFT and FLOW gauges sit together between the two cards, DRIFT\'s under its card and FLOW\'s on top of its own.']),
+    Object.freeze(['1.36.22 r383', 'Steering by device rotation tells you when it centres. At the start the GO! pill says HOLD THE PHONE THE WAY YOU WANT TO DRIVE, then STEERING CENTRED once the phone keeps still, without holding up the start. Turning the screen, switching to device rotation and RECALIBRATE say STEERING CENTRED too, screen readers hear it, and Drive By Ear plays a short level cue.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.36.21',
-  build: '2026.10.03-r382',
-  note: 'Portrait with device rotation: DRIFT and FLOW gauges sit together between the cards.'
+  version: '1.36.22',
+  build: '2026.10.03-r383',
+  note: 'Device rotation steering says when it centres.'
 });
