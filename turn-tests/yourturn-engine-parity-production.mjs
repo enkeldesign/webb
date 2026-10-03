@@ -40,9 +40,10 @@ const turnImportMap = readImportMap(turnIndex, 'TURN');
 const yourTurnImportMap = readImportMap(yourTurnIndex, 'YOUR TURN');
 const motionSpecifier = '/turn/input/motion.js';
 
+// Production TURN adds its release key to the same revision (#1045).
 assert.equal(
   yourTurnImportMap.imports?.[motionSpecifier],
-  turnImportMap.imports?.[motionSpecifier],
+  turnImportMap.imports?.[motionSpecifier]?.replace(/&build=\d{8}-r\d+$/, ''),
   'YOUR TURN must resolve the canonical motion input module through the exact production TURN route'
 );
 assert.match(

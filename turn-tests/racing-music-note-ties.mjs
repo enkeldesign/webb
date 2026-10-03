@@ -22,11 +22,13 @@ function importsOf(source) {
 const toneSpecifier = '/turn/audio/music/tone-runtime.js?revision=r184-score-v2';
 const toneTarget = '/turn/audio/music/tone-runtime-ties.js?revision=r186-note-ties';
 const songTarget = '/turn/audio/music/song-tools.js?revision=r186-note-ties';
+// The release key beside the revision is the release's own (#1045).
+const withoutBuild = (target) => target?.replace(/&build=\d{8}-r\d+$/, '');
 for (const source of [index, labIndex]) {
   const imports = importsOf(source);
-  assert.equal(imports[toneSpecifier], toneTarget, 'The established engine must resolve to the tie-aware tone adapter');
-  assert.equal(imports['/turn/audio/music/song-tools.js?revision=r184-score-v2'], songTarget);
-  assert.equal(imports['/turn/audio/music/song-tools.js?revision=r185-menu-orchestration'], songTarget);
+  assert.equal(withoutBuild(imports[toneSpecifier]), toneTarget, 'The established engine must resolve to the tie-aware tone adapter');
+  assert.equal(withoutBuild(imports['/turn/audio/music/song-tools.js?revision=r184-score-v2']), songTarget);
+  assert.equal(withoutBuild(imports['/turn/audio/music/song-tools.js?revision=r185-menu-orchestration']), songTarget);
 }
 
 const tied = bars('D5 = = = G5 = - - A5 = = - C6 - - -');

@@ -241,9 +241,22 @@ async function buildProductionGraph(readText) {
   return { document, identities, importMap, release };
 }
 
+// The file and its release key decide which module runs; a revision tag beside the
+// key does not (production TURN drops them, #1045).
+function routeIdentity(target) {
+  if (typeof target !== 'string') return target;
+  const url = new URL(target, productionDocumentUrl);
+  return `${url.pathname}?build=${url.searchParams.get('build') || ''}`;
+}
+
 function assertRouteTargets(importMap, expectedRoutes, label) {
   for (const [specifier, target] of Object.entries(expectedRoutes)) {
-    assert.equal(importMap.imports?.[specifier], target, `${label} must route ${specifier} to the current release graph`);
+    const actual = importMap.imports?.[specifier];
+    // A route pinned without a key may since have gained the release key.
+    const keyless = !new URL(target, productionDocumentUrl).searchParams.has('build');
+    assert.equal(keyless ? routeIdentity(actual)?.split('?')[0] : routeIdentity(actual),
+      keyless ? routeIdentity(target).split('?')[0] : routeIdentity(target),
+      `${label} must route ${specifier} to the current release graph`);
   }
 }
 
@@ -397,6 +410,18 @@ for (const repositoryPath of requiredActiveModules) {
   assert.ok(headGraph.identities.has(repositoryPath), `${repositoryPath} must remain represented in the production module graph`);
 }
 
+// One URL per module, carrying the release key (#1045): a module under two URLs runs
+// twice, and one without the key can come from another release. Three.js is
+// versioned by its path.
+const strayIdentities = [];
+for (const [repositoryPath, identities] of headGraph.identities) {
+  if (!/^turn\/.*\.m?js$/.test(repositoryPath) || repositoryPath.startsWith('turn/vendor/')) continue;
+  const keyed = [...identities].every((identity) =>
+    new URL(identity, productionDocumentUrl).searchParams.get('build')?.startsWith(headGraph.release.cacheKey));
+  if (identities.size !== 1 || !keyed) strayIdentities.push(`${repositoryPath}: ${[...identities].join(' | ')}`);
+}
+assert.deepEqual(strayIdentities, [], `Every TURN module must load under one release-keyed URL:\n${strayIdentities.join('\n')}`);
+
 assertSingleActiveIdentity(
   headGraph,
   'turn/race/rival-storage.js',
@@ -437,12 +462,8 @@ for (const file of ['drift-records.js', 'flow-records.js', 'score-record-store.j
   }
 }
 
-const rivalRoute = Object.entries(headGraph.importMap.imports || {}).find(([specifier]) =>
-  /^\/turn\/ui\/rival-onboarding\.js\?build=\d{8}-r\d+$/.test(specifier)
-);
-assert.ok(rivalRoute, 'Production TURN must retain the release-bound rival onboarding route');
-assert.match(rivalRoute[1], /[?&]revision=r277-main-rival-gpu-warmup(?:&|$)/,
-  'Rival onboarding must publish the main-renderer GPU warm-up identity');
+// Rival onboarding (with the main-renderer GPU warm-up) loads as the release's own module.
+assertSingleActiveIdentity(headGraph, 'turn/ui/rival-onboarding.js', 'Production TURN');
 
 const workflows = Object.fromEntries(workflowEntries);
 for (const [workflowPath, source] of Object.entries(workflows)) {

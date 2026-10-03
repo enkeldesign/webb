@@ -47,6 +47,9 @@ async function openHome(browserType, { width, height, isMobile = true, textSize 
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => {
+    // A notice, not a failure: a layout that settles over two frames (WebKit reports it
+    // as an error while a reload is under way).
+    if (/^ResizeObserver loop/.test(error.message)) return;
     errors.push(error.message);
   });
   await page.route('https://cdn.jsdelivr.net/npm/three@0.184.0/**', async (route) => {
