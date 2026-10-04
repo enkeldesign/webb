@@ -49,6 +49,25 @@ export function vehicleIgnoresOffRoadPenalty(vehicleId) {
   return OFFROAD_CAPABLE_VEHICLE_IDS.has(String(vehicleId || ''));
 }
 
+// On walled tracks the soft shoulder is the off-road ground players drive on,
+// so its drag follows the same car rules: OVERSIZED ignores it and TRACTION
+// softens it by depth, exactly as on open off-road ground.
+export function resolveVehicleShoulderDragScale({
+  vehicleId = '',
+  perkUnlocked = false,
+  trackDistance = 0,
+  trackWidth = 1
+} = {}) {
+  if (vehicleIgnoresOffRoadPenalty(vehicleId)) return 0;
+  return resolveVehicleOffRoadPenalty({
+    vehicleId,
+    perkUnlocked,
+    offRoad: true,
+    trackDistance,
+    trackWidth
+  });
+}
+
 export function vehicleHasOverdrive(vehicleId) {
   return String(vehicleId || '') === OVERDRIVE_VEHICLE_ID;
 }
@@ -491,6 +510,12 @@ function updateVehiclePhysicsStateCore({
     trackId: state.trackId,
     nearestTrack: nearestAfter,
     collisionProfile: currentCollisionProfile(),
+    shoulderDragScale: resolveVehicleShoulderDragScale({
+      vehicleId: state.vehicleId,
+      perkUnlocked: state.vehiclePerkUnlocked,
+      trackDistance: nearestAfter.distance,
+      trackWidth
+    }),
     dt
   });
   state.collided = collision.collided === true;

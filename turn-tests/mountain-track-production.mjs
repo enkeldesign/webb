@@ -20,6 +20,9 @@ import { MOUNTAIN_LONG_CHECKPOINTS } from '../turn/race/lap-system-r86.js';
 import { TROPHY_ROAD_REWARDS, rewardForTrack } from '../turn/progression/trophy-road.js';
 import { TRACK_COLOR_CUES } from '../turn/accessibility/color-cues.js';
 import { TRACK_COLOR_RULES } from '../turn/achievements/chromatic-camouflage-r183.js';
+import { resolveWorldCollisionState } from '../turn/race/world-collision.js';
+import { resolveVehicleShoulderDragScale } from '../turn/vehicle/physics.js';
+import { TRACTION_MIN_OFFROAD_PENALTY } from '../turn/vehicle/perk-runtime.js';
 
 const [
   definitions,
@@ -82,6 +85,43 @@ assert.deepEqual(
   'Smoothed route must keep the negative-side bridge guide aligned to the same visible rails'
 );
 assert.deepEqual(TRACK_PLACEHOLDERS, []);
+
+// #1110: MOUNTAIN's off-road ground is its soft shoulder, so OVERSIZED must
+// ignore the shoulder drag and TRACTION must soften it like open off-road.
+const shoulderDistance = 15.4;
+const shoulderScale = (vehicleId, perkUnlocked = false) => resolveVehicleShoulderDragScale({
+  vehicleId,
+  perkUnlocked,
+  trackDistance: shoulderDistance,
+  trackWidth: 27
+});
+assert.equal(shoulderScale('monster-truck'), 0, 'OVERSIZED: going off-road does not slow the Monster Truck');
+assert.equal(shoulderScale('sedan'), 1, 'Ordinary cars keep the full shoulder drag');
+assert.equal(shoulderScale('convertible'), 1, 'TRACTION applies only once it is unlocked');
+assert.equal(shoulderScale('convertible', true), TRACTION_MIN_OFFROAD_PENALTY,
+  'TRACTION: shallow off-road causes much less slowdown on the shoulder too');
+const shoulderSpeedAfterOneSecond = (shoulderDragScale) => {
+  const state = { position: { x: shoulderDistance, y: 0, z: 0 }, velocity: { x: 0, y: 0, z: 40 }, speed: 40 };
+  for (let frame = 0; frame < 60; frame += 1) {
+    resolveWorldCollisionState({
+      state,
+      trackId: 'mountain',
+      nearestTrack: {
+        index: 0,
+        distance: Math.abs(state.position.x),
+        sample: { point: { x: 0, y: 0, z: state.position.z }, tangent: { x: 0, y: 0, z: 1 } }
+      },
+      collisionProfile: mountain.collisionProfile,
+      shoulderDragScale,
+      dt: 1 / 60
+    });
+  }
+  return state.velocity.z;
+};
+assert.equal(shoulderSpeedAfterOneSecond(0), 40, 'The Monster Truck keeps all its speed on the MOUNTAIN shoulder');
+assert.ok(shoulderSpeedAfterOneSecond(1) < 15, 'Ordinary cars still slow down on the MOUNTAIN shoulder');
+assert.ok(shoulderSpeedAfterOneSecond(TRACTION_MIN_OFFROAD_PENALTY) > 28,
+  'TRACTION loses far less speed on the shoulder');
 
 for (const baseTrack of BASE_TRACK_DEFINITIONS) {
   if (baseTrack.id === 'mountain') continue;
