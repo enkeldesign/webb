@@ -14,6 +14,7 @@ export function resolveMountainBridgeGuideState({
   nearestTrack = null,
   guide = null,
   baselineLimit = Infinity,
+  offRoadDragScale = 1,
   dt = DEFAULT_SECONDS
 } = {}) {
   if (
@@ -116,7 +117,9 @@ export function resolveMountainBridgeGuideState({
   if (assisted) {
     // Match TURN's ordinary off-road drag while the rail guide is engaged. This
     // slows a scrape without destroying the route-tangential component.
-    const drag = nonNegativeNumber(guide.offRoadDrag, 0.34);
+    // It follows the car's off-road rules, so OVERSIZED keeps its speed here too.
+    const drag = nonNegativeNumber(guide.offRoadDrag, 0.34)
+      * Math.min(1, nonNegativeNumber(offRoadDragScale, 1));
     const damping = Math.exp(-drag * influence * seconds);
     state.velocity.x *= damping;
     state.velocity.z *= damping;
