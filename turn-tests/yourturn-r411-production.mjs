@@ -10,7 +10,8 @@ const [
   turnIndex,
   turnControls,
   minorUx,
-  yourTurnSession
+  yourTurnSession,
+  screenReaderSource
 ] = await Promise.all([
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/race-controls-r411.js', import.meta.url), 'utf8'),
@@ -19,7 +20,8 @@ const [
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/r411-race-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/minor-ux-polish-r229.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/session.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../yourturn/session.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/startup-screen-reader-handoff-r529.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r602\b/);
@@ -54,6 +56,10 @@ assert.match(yourTurnSession, /openSettings\(\{ onClose: \(\) => showChallengeMe
   'Closing Settings returns to THE CHALLENGE menu, with the race still paused');
 assert.match(yourTurnControls, /id="yourTurnLeftHanded"[\s\S]*saveControlHandedness\(/,
   'YOUR TURN Settings keeps TURN’s Left-handed controls');
+assert.match(yourTurnControls, /id="yourTurnAudioBalance"[\s\S]*id="yourTurnAudioBalanceValue"/);
+assert.match(screenReaderSource, /const BALANCE_SLIDERS = '#m8AudioBalance, #yourTurnAudioBalance';/,
+  'TURN’s screen-reader module speaks the YOUR TURN Sound balance value too (Codex on #1113)');
+assert.match(screenReaderSource, /document\.getElementById\(`\$\{slider\.id\}Value`\)/);
 assert.match(yourTurnControls, /installQeDriveControls\(\);/,
   'YOUR TURN keeps TURN’s Q and E keys for DRIFT and BOOST');
 assert.match(yourTurnSession, /recordFunnel\('challenge_open'\);\s*if \(request\.reply/,

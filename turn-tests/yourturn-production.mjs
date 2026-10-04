@@ -43,7 +43,19 @@ const [
 
 assert.match(indexSource, /<title>YOUR TURN<\/title>/);
 assert.match(indexSource, /\/yourturn\/storage-bootstrap\.js/);
-assert.match(indexSource, /\/yourturn\/app\.js\?revision=r600-no-blank-screen/);
+assert.match(indexSource, /\/yourturn\/app\.js\?revision=r601-launch-recovery/);
+// Every ui.* call must exist on the YOUR TURN UI. A stale ui.hideRotate() in app.js's
+// launch recovery threw before CHALLENGE UNAVAILABLE could show (Codex on #1111).
+{
+  const uiApi = uiSource.match(/return Object\.freeze\(\{([\s\S]*?)\}\);\s*\}\s*export function aboutTurnHtml/)?.[1] || '';
+  const methods = new Set(uiApi.split(',').map((name) => name.trim()).filter(Boolean));
+  assert.ok(methods.has('showModal') && methods.has('hideRaceChrome'), 'The UI API list must be readable');
+  for (const [file, source] of [['app.js', appSource], ['session.js', sessionSource]]) {
+    for (const [, method] of source.matchAll(/\bui\.([A-Za-z]+)\(/g)) {
+      assert.ok(methods.has(method), `yourturn/${file} calls ui.${method}(), which the YOUR TURN UI does not provide`);
+    }
+  }
+}
 assert.match(indexSource, /growing-challenge\.css/);
 assert.match(indexSource, /racer-labels-bootstrap\.js/);
 // TURN's race runtime (main.js) refuses to start without its score feedback root, so

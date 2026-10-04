@@ -366,16 +366,19 @@
     return `${dbe}% Drive By Ear, ${other}% other sounds${balance}`;
   }
 
+  // TURN's Settings slider and YOUR TURN's: each has a matching <id>Value output.
+  const BALANCE_SLIDERS = '#m8AudioBalance, #yourTurnAudioBalance';
+
   function prepareBalanceSlider(node = document) {
-    const slider = node?.matches?.('#m8AudioBalance')
+    const slider = node?.matches?.(BALANCE_SLIDERS)
       ? node
-      : node?.querySelector?.('#m8AudioBalance');
+      : node?.querySelector?.(BALANCE_SLIDERS);
     if (!slider || slider.dataset.turnSrAccessibleBalance === 'true') return;
 
     slider.dataset.turnSrAccessibleBalance = 'true';
     slider.removeAttribute('aria-describedby');
     if (!slider.hasAttribute('aria-label')) slider.setAttribute('aria-label', 'Sound balance');
-    const output = document.querySelector('#m8AudioBalanceValue');
+    const output = document.getElementById(`${slider.id}Value`);
     output?.setAttribute('aria-hidden', 'true');
 
     const sync = () => slider.setAttribute('aria-valuetext', balanceValueText(slider));
@@ -383,7 +386,8 @@
     slider.addEventListener('input', () => queueMicrotask(sync));
     slider.addEventListener('change', () => {
       sync();
-      const status = slider.closest('.m8-settings-dialog')?.querySelector('.m8-settings-status');
+      const status = slider.closest('.m8-settings-dialog, .yourturn-settings-dialog')
+        ?.querySelector('.m8-settings-status, .yourturn-settings-status');
       queueMicrotask(() => {
         if (status?.textContent?.startsWith('Sound balance:')) status.textContent = '';
       });
