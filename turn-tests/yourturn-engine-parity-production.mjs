@@ -149,7 +149,7 @@ assert.match(
 );
 assert.match(
   yourTurnImportMap.imports?.['/yourturn/session.js?revision=r3'] || '',
-  /r601-challenge-menu/,
+  /r602-funnel/,
   'YOUR TURN must cache-bust the canonical-motion session handoff while preserving canonical TURN steering ownership'
 );
 

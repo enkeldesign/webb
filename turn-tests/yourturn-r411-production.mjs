@@ -22,7 +22,7 @@ const [
   fs.readFile(new URL('../yourturn/session.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r601\b/);
+assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r602\b/);
 assert.match(yourTurnIndex, /track-map-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /r411\.css\?build=\d{8}-r\d+/);
 assert.match(turnIndex, /ui\/r411-race-controls\.js\?build=\d{8}-r\d+/,
@@ -56,6 +56,16 @@ assert.match(yourTurnControls, /id="yourTurnLeftHanded"[\s\S]*saveControlHandedn
   'YOUR TURN Settings keeps TURN’s Left-handed controls');
 assert.match(yourTurnControls, /installQeDriveControls\(\);/,
   'YOUR TURN keeps TURN’s Q and E keys for DRIFT and BOOST');
+assert.match(yourTurnSession, /recordFunnel\('challenge_open'\);\s*if \(request\.reply/,
+  'The YOUR TURN funnel counts a challenge opening once, when it loads');
+assert.match(yourTurnSession, /function getTheGame\(\) \{\s*recordFunnel\('get_game'\);\s*openFullTurn\(\);/,
+  'GET THE GAME is counted before going to TURN');
+assert.doesNotMatch(yourTurnSession, /label: 'GET THE GAME', game: true, action: openFullTurn/,
+  'Every GET THE GAME in the menus is counted');
+assert.match(yourTurnControls, /fullGameButton\.addEventListener\('click', \(\) => session\.getTheGame\(\)\)/,
+  'The start-line Get the game is counted too');
+assert.match(yourTurnSession, /telemetry\.flush\(\);\s*telemetry\.record\(event\);\s*telemetry\.flush\(\);/,
+  'Funnel events travel in their own batch, so an older Worker cannot drop other events with them');
 assert.doesNotMatch(yourTurnControls, /RESET RIVALS|Personal rivals/,
   'YOUR TURN Settings must not expose Reset Rivals');
 assert.match(yourTurnControls, /restartButton\.hidden = true/,

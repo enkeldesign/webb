@@ -58,7 +58,7 @@ assert.match(indexSource, /<aside class="score-feedback" id="scoreFeedback"/, 'Y
   assert.doesNotMatch(head, /localStorage/, 'YOUR TURN has no stored theme choice');
   assert.doesNotMatch(indexSource, /theme-contrast/, 'YOUR TURN\'s dark theme is CSS only');
 }
-assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r601-challenge-menu/,
+assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r602-funnel/,
   'The page must cache-bust the current YOUR TURN session while app.js stays on canonical TURN runtime modules');
 assert.match(indexSource, /Your name in the challenge/);
 assert.match(indexSource, /id="yourTurnChallengeButton"[\s\S]*>THE CHALLENGE<\/button>/);

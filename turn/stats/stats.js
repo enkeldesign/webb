@@ -1,4 +1,4 @@
-import { TRACK_DEFINITIONS } from '../tracks/definitions.js?build=20261004-r393';
+import { TRACK_DEFINITIONS } from '../tracks/definitions.js?build=20261004-r394';
 
 const STATS_ENDPOINT = 'https://turn-challenges.erik-jansson-ux.workers.dev/v1/stats';
 const DEVELOPER_STORAGE_KEY = 'turn.telemetry.developer.v1';
@@ -166,6 +166,7 @@ function renderStats(stats) {
   renderRanking(document.querySelector('#carRanking'), cars);
 
   renderModes(stats);
+  renderYourTurnFunnel(stats.yourTurn || {});
   renderLapTimes(stats.lapTimes || []);
   renderScoreDistributions(stats.scoreDistributions || {});
 
@@ -249,6 +250,20 @@ function renderModes(stats) {
   rows.push(['Drive By Ear races', dbe.get('1') || 0]);
   rows.push(['Blank-screen finished laps', blank.get('1') || 0]);
   renderDefinitionList(document.querySelector('#modeBreakdown'), rows, (value) => formatCount(value));
+}
+
+// Did the stunt work? Each step as a count and as a share of challenges opened.
+function renderYourTurnFunnel(funnel) {
+  const opened = Number(funnel.opened) || 0;
+  const step = (value) => {
+    const count = Number(value) || 0;
+    return opened ? `${formatCount(count)} · ${formatPercent(count / opened)}` : formatCount(count);
+  };
+  renderDefinitionList(document.querySelector('#yourTurnFunnel'), [
+    ['Challenges opened', formatCount(opened)],
+    ['Raced (play sessions)', step(funnel.raced)],
+    ['GET THE GAME chosen', step(funnel.gotGame)]
+  ], (value) => value);
 }
 
 function renderLapTimes(sourceRows) {

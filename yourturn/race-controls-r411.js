@@ -265,7 +265,7 @@ function install() {
   fullGameButton.className = 'utility yourturn-full-game-button';
   fullGameButton.textContent = 'Get the game';
   fullGameButton.setAttribute('aria-label', 'Get the full game, TURN');
-  fullGameButton.addEventListener('click', () => { globalThis.location.href = '/turn/'; });
+  fullGameButton.addEventListener('click', () => session.getTheGame());
 
   utilityGroup.append(spectateButton, fullGameButton);
   const settings = createSettingsDialog({ runtime, raceSession });

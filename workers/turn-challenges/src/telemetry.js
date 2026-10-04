@@ -8,7 +8,10 @@ const TELEMETRY_EVENTS = new Set([
   'lap_complete',
   'lap_invalid',
   'drift_score',
-  'flow_score'
+  'flow_score',
+  // YOUR TURN funnel: a shared challenge opened, and GET THE GAME chosen.
+  'challenge_open',
+  'get_game'
 ]);
 const SCORE_EVENTS = new Set(['drift_score', 'flow_score']);
 const SCORE_BAND_SIZE = 500;
@@ -184,6 +187,7 @@ async function loadStats(db, days, audience) {
     blankRows,
     lapTimeRows,
     scoreRows,
+    yourTurnRows,
     lastRow
   ] = await Promise.all([
     allRows(db.prepare(`
@@ -249,8 +253,19 @@ async function loadStats(db, days, audience) {
       GROUP BY event, track_id, score_band
       ORDER BY event, track_id, score_band
     `).bind(sinceDay)),
+    allRows(db.prepare(`
+      SELECT event, SUM(count) AS count
+      FROM ${source}
+      WHERE day >= ?1 AND surface = 'yourturn'
+        AND event IN ('challenge_open', 'play_session', 'get_game')
+      GROUP BY event
+    `).bind(sinceDay)),
     db.prepare(`SELECT MAX(last_at) AS last_at FROM ${source} WHERE day >= ?1`).bind(sinceDay).first()
   ]);
+  const yourTurn = Object.fromEntries(yourTurnRows.map((row) => [
+    String(row.event || ''),
+    Number(row.count) || 0
+  ]));
 
   const totals = Object.fromEntries(totalsRows.map((row) => [
     String(row.event || ''),
@@ -282,7 +297,12 @@ async function loadStats(db, days, audience) {
       count: Number(row.count) || 0,
       average: Number(row.count) > 0 ? (Number(row.value_sum) || 0) / Number(row.count) : 0
     })),
-    scoreDistributions: normalizeScoreDistributions(scoreRows)
+    scoreDistributions: normalizeScoreDistributions(scoreRows),
+    yourTurn: {
+      opened: yourTurn.challenge_open || 0,
+      raced: yourTurn.play_session || 0,
+      gotGame: yourTurn.get_game || 0
+    }
   };
 }
 

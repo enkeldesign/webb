@@ -21,7 +21,7 @@ There is intentionally no update or delete API for challenge snapshots. Two peop
 - `GET /v1/stats?days=30&audience=players` — returns anonymous aggregate statistics to the private dashboard after bearer-key authentication. `audience` can be `players`, `developer` or `all`; omitted/invalid values preserve the legacy `all` behavior.
 - D1 stores daily aggregate counts and coarse score distributions only. It does not store player IDs, page-session IDs or raw gameplay-event histories.
 
-TURN does not create an analytics cookie or persistent analytics identifier. A random page-session identifier exists only in browser memory and is never written to D1. Telemetry starts only after a race actually starts and is event-driven rather than frame-driven. Devices explicitly marked from the private dashboard store a local developer yes/no marker; that shared boolean is not unique to a device or person.
+TURN does not create an analytics cookie or persistent analytics identifier. A random page-session identifier exists only in browser memory and is never written to D1. Telemetry starts only after a race actually starts, except two YOUR TURN funnel counts (a shared challenge opened, GET THE GAME chosen), and is event-driven rather than frame-driven. Devices explicitly marked from the private dashboard store a local developer yes/no marker; that shared boolean is not unique to a device or person.
 
 Current event types are deliberately small:
 
@@ -31,6 +31,8 @@ Current event types are deliberately small:
 - `lap_invalid`
 - `drift_score`
 - `flow_score`
+- `challenge_open` (YOUR TURN: a shared challenge opened)
+- `get_game` (YOUR TURN: GET THE GAME chosen)
 
 Dimensions are limited to product surface, build, track, car, steering mode, browser/installed web app, Drive By Ear state, blank-screen state, developer yes/no, lap time, lap score and invalid-lap reason. Score events are retained only as per-day, per-track 500-point bands with count, sum, minimum and maximum. Names, challenge IDs/links, replay data, driving paths, control streams, exact per-session score histories and precise location are not part of the analytics payload.
 

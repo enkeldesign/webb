@@ -43,6 +43,15 @@ assert.match(about, /<summary>PRIVACY &amp; USAGE STATISTICS<\/summary>/);
 assert.match(about, /no analytics cookie and creates no persistent analytics identifier/i);
 assert.match(about, /developer yes\/no flag/i);
 assert.match(about, /DRIFT or FLOW lap scores/i);
+assert.match(about, /YOUR TURN also counts when a shared challenge opens and when GET THE GAME is chosen/,
+  'The privacy text must name the two YOUR TURN funnel counts sent outside a race');
+assert.match(workerTelemetry, /'challenge_open',\s*'get_game'/,
+  'The Worker accepts the YOUR TURN funnel counts');
+assert.match(workerTelemetry, /yourTurn: \{\s*opened: yourTurn\.challenge_open \|\| 0,\s*raced: yourTurn\.play_session \|\| 0,\s*gotGame: yourTurn\.get_game \|\| 0/,
+  'The stats endpoint reports the YOUR TURN funnel');
+assert.match(statsHtml, /id="yourTurnFunnel"/);
+assert.match(statsJs, /renderYourTurnFunnel\(stats\.yourTurn \|\| \{\}\)/,
+  'The private dashboard shows challenges opened, raced and GET THE GAME');
 assert.match(about, /same local yes\/no marker used by every developer device/i);
 assert.match(about, /does not include your name, challenge name, challenge link or ID, replay, driving path, control inputs/i);
 assert.match(about, /private developer dashboard/i);
