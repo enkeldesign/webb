@@ -342,8 +342,11 @@ try {
     const handoff = await visitPage.evaluate(async () => {
       const { ACHIEVEMENTS } = await import('/turn/achievements/catalog.js');
       const achievement = ACHIEVEMENTS.filter((entry) => !entry.hidden)[3];
+      const { getTrophyRoadReward } = await import('/turn/progression/trophy-road.js');
       globalThis.addEventListener('turn:home-shown', () => {
         globalThis.dispatchEvent(new globalThis.CustomEvent('turn:achievements-updated', { detail: { unlocked: [achievement.id] } }));
+        // A Trophy Road reward's reprise at ROADBOOK, as the Home replay queues it.
+        globalThis.__turnAchievements.showRewardToastBatch([getTrophyRoadReward('drift-attack')]);
       }, { once: true });
       return { title: achievement.title, trophies: achievement.trophies };
     });
@@ -359,12 +362,14 @@ try {
         focus: document.activeElement?.id,
         home: document.body.classList.contains('turn-home-open'),
         spoken: dialog.querySelector('#turnVisitSummarySpoken').textContent,
+        rewardBanner: !document.querySelector('.turn-trophy-reward-toast').hidden,
         rows
       };
     });
     assert.equal(sheet.modal, true, 'The summary opens over ROADBOOK');
     assert.equal(sheet.home, true);
     assert.equal(sheet.focus, 'turnVisitSummaryTitle', 'Focus starts on its heading');
+    assert.equal(sheet.rewardBanner, false, 'A reward banner waits while the summary is up');
     assert.equal(sheet.spoken, 'This visit: 2 laps, new best lap, 1.750 seconds faster, 2 earned.');
     assert.equal(sheet.rows.LAPS, '2');
     assert.equal(sheet.rows['BEST LAP'], '1:08.250 NEW BEST −1.750 s');
@@ -385,6 +390,20 @@ try {
     await visitPage.locator('.turn-visit-summary-close').click();
     await visitPage.waitForSelector('.turn-visit-summary-dialog:not([open])', { state: 'attached' });
     assert.equal(await visitPage.evaluate(() => document.activeElement?.id), 'm8HomeTitle', 'CLOSE returns focus to ROADBOOK');
+    // Then the reward banner, whole: its HOW TO PLAY line, and a tap to the Trophy Road.
+    await visitPage.waitForSelector('.turn-trophy-reward-toast.is-visible', { timeout: 5000 });
+    const banner = await visitPage.evaluate(() => {
+      const toast = document.querySelector('.turn-trophy-reward-toast');
+      return {
+        title: toast.querySelector('[data-achievement-toast-title]').textContent,
+        howToPlay: !toast.querySelector('[data-trophy-reward-guide]').hidden,
+        focus: document.activeElement?.id
+      };
+    });
+    assert.deepEqual(banner, { title: 'DRIFT ATTACK', howToPlay: true, focus: 'm8HomeTitle' },
+      'After CLOSE the reward banner shows, with HOW TO PLAY, without taking focus');
+    await visitPage.locator('.turn-trophy-reward-toast').click();
+    await visitPage.waitForFunction(() => globalThis.__turnAchievements.dialog.open);
     await opened.context.close();
   }
 
@@ -523,7 +542,7 @@ try {
   }
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Race pause: Ⅱ beside RESTART LAP during a lap; frozen car, lap time, BOOST and race clock; released controls; Settings, Escape, back, background, RESTART LAP and LEAVE RACE; landscape, portrait (turned while paused) and left-handed; a running lap locks the screen where the platform can; a rotation mid-lap pauses as SCREEN ROTATED and resumes after 3-2-1; THIS VISIT in PAUSED and over ROADBOOK after LEAVE RACE passed.');
+  console.log('Race pause: Ⅱ beside RESTART LAP during a lap; frozen car, lap time, BOOST and race clock; released controls; Settings, Escape, back, background, RESTART LAP and LEAVE RACE; landscape, portrait (turned while paused) and left-handed; a running lap locks the screen where the platform can; a rotation mid-lap pauses as SCREEN ROTATED and resumes after 3-2-1; THIS VISIT in PAUSED and over ROADBOOK after LEAVE RACE, with reward banners after it closes, passed.');
 } finally {
   await browser.close();
   server.close();

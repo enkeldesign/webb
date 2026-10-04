@@ -12,6 +12,11 @@ import { getAchievement } from '/turn/achievements/catalog.js';
 import { getTrophyRoadReward } from '/turn/progression/trophy-road.js';
 
 const INSTALL_KEY = '__turnVisitSummary';
+// Trophy Road reward banners (a reward's reprise at ROADBOOK, or one that lands now)
+// wait while the summary is up: it would cover them, their HOW TO PLAY and their way
+// to the Trophy Road. They show once it closes.
+const REWARD_HOLD = 'visit-summary';
+const REWARD_RELEASE_DELAY_MS = 220;
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -101,6 +106,9 @@ export function installVisitSummary({ windowRef = window, documentRef = document
   const spokenLine = dialog.querySelector('#turnVisitSummarySpoken');
   let returnFocus = null;
 
+  const holdRewards = () => windowRef.__turnAchievements?.holdRewardPresentation?.(REWARD_HOLD);
+  const releaseRewards = () => windowRef.__turnAchievements?.releaseRewardPresentation?.(REWARD_HOLD, { delay: REWARD_RELEASE_DELAY_MS });
+
   function row(label, value, mark = '') {
     return `<div class="turn-visit-summary-row"><dt>${label}</dt><dd>${value}${mark ? ` <em class="turn-visit-summary-mark">${mark}</em>` : ''}</dd></div>`;
   }
@@ -154,6 +162,7 @@ export function installVisitSummary({ windowRef = window, documentRef = document
 
   dialog.addEventListener('close', () => {
     shown = null;
+    releaseRewards();
     const target = returnFocus?.isConnected ? returnFocus : documentRef.querySelector('#m8HomeTitle');
     returnFocus = null;
     target?.focus?.();
@@ -177,10 +186,13 @@ export function installVisitSummary({ windowRef = window, documentRef = document
     // still count. It opens after ROADBOOK has painted and taken focus, unless a new
     // race has begun by then.
     shown = summary;
+    holdRewards();
     windowRef.requestAnimationFrame(() => windowRef.requestAnimationFrame(() => {
       if (shown !== summary) return;
-      if (visit) shown = null;
-      else showSheet(summary);
+      if (visit) {
+        shown = null;
+        releaseRewards();
+      } else showSheet(summary);
     }));
   });
 
