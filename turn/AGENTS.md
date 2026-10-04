@@ -23,5 +23,6 @@
 - The changelog (`turn/content/about-history.js`) lists lasting milestones only, by completion date. Add an entry only for a new player-facing capability. Fixes and refinements to an existing milestone get none.
 - Before pushing, run `node turn-tests/release-composition-production.mjs --base origin/main` and `npx --yes eslint@9.39.1 turn turn-tests` (0 errors).
 - Squash-merge. Never merge #997.
-- Post a short summary of each merged release on issue #928.
+- Post a short summary of each merged release on issue #928. List what still needs checking on a device under **Verify on device**.
+- A fix for something seen on a device is finished when the reporter confirms it there, not when it merges.
 - When a change alters how others work (release steps, sources of truth), say so in its PR and in #928.
