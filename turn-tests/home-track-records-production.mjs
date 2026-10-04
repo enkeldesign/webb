@@ -62,6 +62,8 @@ assert.match(roadbook, /count\.textContent = `\$\{rivals\.length\} \/ \$\{RIVAL_
 assert.match(roadbook, /<section class="roadbook-rivals" aria-labelledby="\$\{idPrefix\}RivalsTitle">/);
 assert.match(roadbook, /No rivals yet\. Your \$\{RIVAL_LIMIT\} fastest laps here become the rivals you race\./);
 assert.match(roadbook, /const rivals = getStoredRivalSummaries\(track\.id\);/);
+assert.match(roadbook, /renderBestCarThumbnail\(rival, \{ ghost: true \}\)/,
+  'Rivals on the Track sheet wear the rival paint they race in, not the player\'s');
 assert.match(roadbook, /Reset \$\{escapeHtml\(name\)\} rivals<\/button>/);
 assert.match(roadbook, /await onResetRivals\(track\.id\);[\s\S]*refreshRecords\(\);/, 'A reset refreshes the sheet');
 assert.match(home, /async onResetRivals\(trackId\) \{\s*await activateTrack\(normalizeTrackId\(trackId\), runtime\);\s*globalThis\.__turnResetRivals\?\.\(\);/,
