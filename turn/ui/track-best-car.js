@@ -42,7 +42,9 @@ async function waitForHomeThumbnailSlot() {
   await waitForIdleSlot();
 }
 
-export function renderBestCarThumbnail(bestLap) {
+// A rival is drawn as it races: the ghost paint (its colours mixed toward white), so it
+// keeps its hue without reading as the player's car.
+export function renderBestCarThumbnail(bestLap, { ghost = false } = {}) {
   const car = getCarDefinition(bestLap?.carId);
   const color = normalizeVehicleColor(
     bestLap?.carColor,
@@ -52,13 +54,14 @@ export function renderBestCarThumbnail(bestLap) {
     bestLap?.carSecondaryColor,
     getVehicleDefaultSecondaryColor(car.id)
   );
-  const cacheKey = `${car.id}:${color}:${secondaryColor}`;
+  const cacheKey = `${car.id}:${color}:${secondaryColor}${ghost ? ':ghost' : ''}`;
 
   if (!thumbnailCache.has(cacheKey)) {
     const task = renderQueue.then(() => renderThumbnail({
       carId: car.id,
       color,
-      secondaryColor
+      secondaryColor,
+      ghost
     }));
     renderQueue = task.catch(() => {});
     thumbnailCache.set(cacheKey, task);
@@ -68,7 +71,7 @@ export function renderBestCarThumbnail(bestLap) {
   return thumbnailCache.get(cacheKey);
 }
 
-async function renderThumbnail({ carId, color, secondaryColor }) {
+async function renderThumbnail({ carId, color, secondaryColor, ghost }) {
   // Record-car thumbnails are decorative Home enhancements. They used to instantiate a
   // WebGL renderer and start car-model GLB downloads while the startup cover was still
   // blocking the player. Let Home become interactive first, then fill these in lazily.
@@ -111,6 +114,7 @@ async function renderThumbnail({ carId, color, secondaryColor }) {
       carId,
       color,
       secondaryColor,
+      ghost,
       targetLength: 6.4,
       outline: true
     });

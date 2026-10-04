@@ -333,7 +333,7 @@ let thumbnailGeneration = 0;
 // renderer the rest of TURN uses, one thumbnail at a time, after the text is in.
 // ---------- Rivals ----------
 // The saved rivals of a track, without starting a race there: how many on the map, and
-// each one's car, in its paint, with its lap time.
+// each one's car as it races (rival paint) with its lap time.
 
 let rivalThumbnailGeneration = 0;
 
@@ -360,7 +360,7 @@ function fillRivals(container, track) {
   void (async () => {
     for (const [index, rival] of rivals.entries()) {
       try {
-        const source = await renderBestCarThumbnail(rival);
+        const source = await renderBestCarThumbnail(rival, { ghost: true });
         if (generation !== rivalThumbnailGeneration || !images[index].isConnected) return;
         images[index].src = source;
         images[index].hidden = false;
