@@ -10,7 +10,8 @@ const [
   turnIndex,
   turnControls,
   minorUx,
-  yourTurnSession
+  yourTurnSession,
+  screenReaderSource
 ] = await Promise.all([
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/race-controls-r411.js', import.meta.url), 'utf8'),
@@ -19,10 +20,11 @@ const [
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/r411-race-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/minor-ux-polish-r229.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/session.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../yourturn/session.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/startup-screen-reader-handoff-r529.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r601\b/);
+assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r602\b/);
 assert.match(yourTurnIndex, /track-map-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /r411\.css\?build=\d{8}-r\d+/);
 assert.match(turnIndex, /ui\/r411-race-controls\.js\?build=\d{8}-r\d+/,
@@ -54,8 +56,22 @@ assert.match(yourTurnSession, /openSettings\(\{ onClose: \(\) => showChallengeMe
   'Closing Settings returns to THE CHALLENGE menu, with the race still paused');
 assert.match(yourTurnControls, /id="yourTurnLeftHanded"[\s\S]*saveControlHandedness\(/,
   'YOUR TURN Settings keeps TURN’s Left-handed controls');
+assert.match(yourTurnControls, /id="yourTurnAudioBalance"[\s\S]*id="yourTurnAudioBalanceValue"/);
+assert.match(screenReaderSource, /const BALANCE_SLIDERS = '#m8AudioBalance, #yourTurnAudioBalance';/,
+  'TURN’s screen-reader module speaks the YOUR TURN Sound balance value too (Codex on #1113)');
+assert.match(screenReaderSource, /document\.getElementById\(`\$\{slider\.id\}Value`\)/);
 assert.match(yourTurnControls, /installQeDriveControls\(\);/,
   'YOUR TURN keeps TURN’s Q and E keys for DRIFT and BOOST');
+assert.match(yourTurnSession, /recordFunnel\('challenge_open'\);[\s\S]*event\.detail\?\.reason !== 'lap-started'[\s\S]*recordFunnel\('challenge_race'\);[\s\S]*if \(request\.reply/,
+  'The YOUR TURN funnel counts a challenge opening when it loads, and its first lap');
+assert.match(yourTurnSession, /function getTheGame\(\) \{\s*recordFunnel\('get_game'\);\s*openFullTurn\(\);/,
+  'GET THE GAME is counted before going to TURN');
+assert.doesNotMatch(yourTurnSession, /label: 'GET THE GAME', game: true, action: openFullTurn/,
+  'Every GET THE GAME in the menus is counted');
+assert.match(yourTurnControls, /fullGameButton\.addEventListener\('click', \(\) => session\.getTheGame\(\)\)/,
+  'The start-line Get the game is counted too');
+assert.match(yourTurnSession, /telemetry\.flush\(\);\s*telemetry\.record\(event\);\s*telemetry\.flush\(\);/,
+  'Funnel events travel in their own batch, so an older Worker cannot drop other events with them');
 assert.doesNotMatch(yourTurnControls, /RESET RIVALS|Personal rivals/,
   'YOUR TURN Settings must not expose Reset Rivals');
 assert.match(yourTurnControls, /restartButton\.hidden = true/,

@@ -197,6 +197,25 @@ await test('accepts eligible DRIFT and FLOW scores into anonymous calibration ba
   assert.ok(rows.every((row) => !Object.hasOwn(row, 'session')));
 });
 
+await test('counts the YOUR TURN funnel: a challenge opened, raced and GET THE GAME chosen', async () => {
+  const DB = new FakeD1();
+  const ANALYTICS = new FakeAnalytics();
+  const response = await handleTelemetryRoute(post([
+    event({ event: 'challenge_open', surface: 'yourturn' }),
+    event({ event: 'challenge_race', surface: 'yourturn' }),
+    event({ event: 'get_game', surface: 'yourturn' })
+  ]), { DB, ANALYTICS });
+
+  assert.equal(response.status, 202);
+  const rows = [...DB.rows.values()];
+  assert.deepEqual(rows.map((row) => [row.event, row.surface, row.count]), [
+    ['challenge_open', 'yourturn', 1],
+    ['challenge_race', 'yourturn', 1],
+    ['get_game', 'yourturn', 1]
+  ]);
+  assert.ok(rows.every((row) => !Object.hasOwn(row, 'session')));
+});
+
 await test('rejects telemetry writes outside enkel.design', async () => {
   const response = await handleTelemetryRoute(post([event()], 'https://example.com'), {
     DB: new FakeD1(),

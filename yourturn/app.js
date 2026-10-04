@@ -92,7 +92,6 @@ try {
   console.error('YOUR TURN could not open the challenge.', error);
   document.body.classList.add('yourturn-active');
   ui.hideRaceChrome();
-  ui.hideRotate();
   ui.showModal({
     titleText: 'CHALLENGE UNAVAILABLE',
     copyHtml: escapeHtml(error instanceof Error ? error.message : 'This challenge could not be opened.'),

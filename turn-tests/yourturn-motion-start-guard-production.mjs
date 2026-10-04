@@ -10,9 +10,9 @@ const [index, app, session, orientationCompat] = await Promise.all([
 
 assert.doesNotMatch(index, /start-axis-guard\.js/,
   'YOUR TURN must not load a challenge-specific motion-axis guard');
-assert.match(index, /\/yourturn\/app\.js\?revision=r600-no-blank-screen/,
+assert.match(index, /\/yourturn\/app\.js\?revision=r601-launch-recovery/,
   'YOUR TURN must cache-bust the canonical-motion app handoff');
-assert.match(index, /\/yourturn\/session\.js\?revision=r601-challenge-menu/,
+assert.match(index, /\/yourturn\/session\.js\?revision=r602-funnel/,
   'YOUR TURN must load the post-landscape recalibration session under a fresh cache identity');
 
 assert.match(app, /installMotionLifecycleBridge/,

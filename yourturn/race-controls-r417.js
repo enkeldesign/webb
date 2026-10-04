@@ -55,7 +55,7 @@ async function install() {
 
   if (FilteredMutationObserver) globalThis.MutationObserver = FilteredMutationObserver;
   try {
-    await import('/yourturn/race-controls-r411.js?revision=r601-challenge-menu');
+    await import('/yourturn/race-controls-r411.js?revision=r602-funnel');
   } finally {
     if (NativeMutationObserver) globalThis.MutationObserver = NativeMutationObserver;
   }

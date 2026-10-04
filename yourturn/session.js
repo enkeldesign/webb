@@ -115,6 +115,14 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     state.scene.setPhase(state.phase);
     syncTarget();
 
+    recordFunnel('challenge_open');
+    // Raced: the first lap this page starts. Counted by the same clients that count
+    // opens, so the funnel compares like with like.
+    window.addEventListener('turn:ui-state-change', function countFirstLap(event) {
+      if (event.detail?.reason !== 'lap-started') return;
+      window.removeEventListener('turn:ui-state-change', countFirstLap);
+      recordFunnel('challenge_race');
+    });
     if (request.reply === 'give-up') showReceivedLegacyGiveUp();
     else showInvitation();
   }
@@ -357,7 +365,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
       actionList: [
         { label: 'SHARE YOUR TURN', share: true, action: () => void shareContribution(candidate) },
         { label: 'RACE AGAIN', action: raceAgain },
-        { label: 'GET THE GAME', game: true, action: openFullTurn },
+        { label: 'GET THE GAME', game: true, action: getTheGame },
         { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(() => showShareResult(candidate)) }
       ]
     });
@@ -425,7 +433,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
       actionList: [
         { label: 'RACE THIS CHALLENGE', primary: true, action: () => void acceptWithMotion() },
         { label: 'SHARE', share: true, action: () => void shareExistingChallenge() },
-        { label: 'GET THE GAME', game: true, action: openFullTurn },
+        { label: 'GET THE GAME', game: true, action: getTheGame },
         { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(showReceivedLegacyGiveUp) }
       ]
     });
@@ -453,7 +461,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
         { label: 'SHARE', share: true, action: shareFromChallengeMenu },
         { label: 'SETTINGS', action: () => openSettingsFromMenu(reason) },
         ...(controls()?.canSpectate() ? [{ label: 'SPECTATE', action: spectateFromMenu }] : []),
-        { label: 'GET THE GAME', game: true, action: openFullTurn },
+        { label: 'GET THE GAME', game: true, action: getTheGame },
         { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(() => showChallengeMenuView(reason)) }
       ]
     });
@@ -567,7 +575,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
       className: 'about',
       actionList: [
         { label: 'BACK', back: true, action: returnAction },
-        { label: 'GET THE GAME', game: true, action: openFullTurn }
+        { label: 'GET THE GAME', game: true, action: getTheGame }
       ]
     });
   }
@@ -654,7 +662,23 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     globalThis.location.href = '/turn/';
   }
 
-  return Object.freeze({ launch, getState: () => state });
+  function getTheGame() {
+    recordFunnel('get_game');
+    openFullTurn();
+  }
+
+  // Anonymous YOUR TURN funnel: a challenge opened, raced and GET THE GAME chosen.
+  // The new event names travel in their own batch, so a Worker that does not know
+  // them yet cannot take other gameplay events down with them.
+  function recordFunnel(event) {
+    const telemetry = globalThis.__turnTelemetry;
+    if (!telemetry) return;
+    telemetry.flush();
+    telemetry.record(event);
+    telemetry.flush();
+  }
+
+  return Object.freeze({ launch, getTheGame, getState: () => state });
 }
 
 function racerToLap(racer, challenge) {
