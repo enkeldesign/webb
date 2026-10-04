@@ -262,6 +262,26 @@
   font-weight: 950;
 }
 
+.turn-changelog-archive {
+  max-width: 82ch;
+}
+
+.turn-changelog-archive > summary {
+  min-height: var(--turn-target-min, 44px);
+  padding: 12px 0;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.turn-changelog-archive > summary:focus-visible {
+  outline: 3px solid var(--turn-outline);
+  outline-offset: 3px;
+}
+
+.turn-changelog-archive[open] > summary {
+  margin-bottom: 12px;
+}
+
 @media (max-height: 420px) and (orientation: landscape) {
   .turn-history-dialog {
     --turn-dialog-inline-size: calc(100vw - 7.5px);
