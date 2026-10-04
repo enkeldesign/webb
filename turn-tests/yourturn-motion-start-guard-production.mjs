@@ -12,7 +12,7 @@ assert.doesNotMatch(index, /start-axis-guard\.js/,
   'YOUR TURN must not load a challenge-specific motion-axis guard');
 assert.match(index, /\/yourturn\/app\.js\?revision=r600-no-blank-screen/,
   'YOUR TURN must cache-bust the canonical-motion app handoff');
-assert.match(index, /\/yourturn\/session\.js\?revision=r600-turn-start-centring/,
+assert.match(index, /\/yourturn\/session\.js\?revision=r601-challenge-menu/,
   'YOUR TURN must load the post-landscape recalibration session under a fresh cache identity');
 
 assert.match(app, /installMotionLifecycleBridge/,

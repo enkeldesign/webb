@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { beginTimedLapState } from '/turn/race/lap-system.js';
 import { trackPitch, trackSurfaceY } from '/turn/tracks/elevation.js?build=20260725-r67';
+import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19&revision=r270-camera-hotpath';
+import { keyboardDriveActionForEvent } from '/turn/input/keyboard-driving-controls.js';
+import { createKeyboardDriveOwnership } from '/turn/input/keyboard-drive-ownership.js';
+import { qeDriveZoneForEvent } from '/turn/input/qe-drive-controls.js';
 
 const GRID_SPACING = 3.4;
 const LAUNCH_BLEND_SECONDS = 0.9;
@@ -50,6 +54,15 @@ function installStartIntent(runtime, session) {
 
   document.addEventListener('pointerdown', startFromControl, { capture: true });
   document.addEventListener('click', startFromControl, { capture: true });
+
+  // The keyboard starts the race too: GAS (Up or W), DRIFT (Q) or BOOST (E), as in
+  // TURN. It only listens; TURN's own keyboard controls still drive the car.
+  const ownership = createKeyboardDriveOwnership({ getState: () => runtime.state });
+  document.addEventListener('keydown', (event) => {
+    if (event.repeat || !ownership.accepts(event)) return;
+    const forward = keyboardDriveActionForEvent(event) === 'gas' || Boolean(qeDriveZoneForEvent(event));
+    if (forward) startRace(runtime, session);
+  }, { capture: true });
 }
 
 function startRace(runtime, session) {
@@ -114,12 +127,15 @@ function renderStartGrid(runtime, sessionState, dt) {
     z: runtime.state.position.z
   };
 
+  // The car waits on its grid slot, but tilt reads exactly as in TURN while it
+  // stands still: the front wheels and body follow the steering, and TURN's
+  // race camera keeps the horizon level.
   const playerCar = runtime.playerCar;
   playerCar.visible = true;
   playerCar.position.copy(runtime.state.position);
   playerCar.rotation.x = surfacePitch;
   playerCar.rotation.y = heading + Math.PI;
-  playerCar.rotation.z = 0;
+  playerCar.rotation.z = -runtime.state.steering * 0.035;
   runtime.animateWheels(playerCar, runtime.state.steering, 0, dt);
 
   for (let index = 0; index < runtime.competitorCars.length; index += 1) {
@@ -138,7 +154,17 @@ function renderStartGrid(runtime, sessionState, dt) {
     runtime.animateWheels(car, 0, 0, dt);
   }
 
-  renderGridCamera(runtime, start, heading, dt);
+  updateRaceCameraState({
+    state: runtime.state,
+    camera: runtime.camera,
+    cameraPosition: runtime.cameraPosition,
+    cameraTarget: runtime.cameraTarget,
+    getForward: runtime.getForward,
+    getRight: runtime.getRight,
+    samples: runtime.samples,
+    maxSpeed: runtime.maxSpeed,
+    dt
+  });
 }
 
 function prepareRivalLaunchLanes(runtime, rivalOffsets) {
@@ -175,23 +201,6 @@ function startLayout(rivalCount) {
     playerOffset: offsets[playerSlot] || 0,
     rivalOffsets: offsets.filter((_, index) => index !== playerSlot)
   };
-}
-
-function renderGridCamera(runtime, start, heading, dt) {
-  const forward = new THREE.Vector3(Math.sin(heading), 0, Math.cos(heading));
-  const focus = start.point.clone();
-  focus.y = trackSurfaceY(start);
-
-  const desiredCamera = focus.clone().addScaledVector(forward, -20);
-  desiredCamera.y += 9;
-  runtime.cameraPosition.lerp(desiredCamera, 1 - Math.exp(-dt * 10));
-  runtime.camera.position.copy(runtime.cameraPosition);
-
-  const desiredTarget = focus.clone().addScaledVector(forward, 10);
-  desiredTarget.y += 1.8;
-  runtime.cameraTarget.lerp(desiredTarget, 1 - Math.exp(-dt * 11));
-  runtime.camera.up.set(0, 1, 0);
-  runtime.camera.lookAt(runtime.cameraTarget);
 }
 
 function normalFromTangent(tangent) {
