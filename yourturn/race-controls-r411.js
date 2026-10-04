@@ -211,10 +211,9 @@ function install() {
   const session = globalThis.__yourTurnSession;
   const utilityGroup = document.querySelector('#controls .utility-group');
   const challengeButton = document.querySelector('#yourTurnChallengeButton');
-  const blankButton = document.querySelector('.turn-screen-blank-control');
   const recalibrateButton = document.querySelector('#calibrateButton');
   const restartButton = document.querySelector('#resetButton');
-  if (!runtime || !raceSession || !session || !utilityGroup || !challengeButton || !blankButton || !recalibrateButton || !restartButton) {
+  if (!runtime || !raceSession || !session || !utilityGroup || !challengeButton || !recalibrateButton || !restartButton) {
     return false;
   }
   if (utilityGroup.dataset.r411YourTurnControls === 'true') return true;
@@ -234,7 +233,15 @@ function install() {
   spectateButton.textContent = 'Spectate';
   spectateButton.setAttribute('aria-label', 'Spectate a run to learn the track');
 
-  utilityGroup.append(settingsButton, spectateButton);
+  // The way on to the full game, at the start line (THE CHALLENGE has it during a lap).
+  const fullGameButton = document.createElement('button');
+  fullGameButton.type = 'button';
+  fullGameButton.className = 'utility yourturn-full-game-button';
+  fullGameButton.textContent = 'Get the game';
+  fullGameButton.setAttribute('aria-label', 'Get the full game, TURN');
+  fullGameButton.addEventListener('click', () => { globalThis.location.href = '/turn/'; });
+
+  utilityGroup.append(settingsButton, spectateButton, fullGameButton);
   const settings = createSettingsDialog({ runtime, raceSession, trigger: settingsButton });
   let spectating = false;
   let syncing = false;
@@ -266,6 +273,7 @@ function install() {
       if (!accepted) {
         settingsButton.hidden = true;
         spectateButton.hidden = true;
+        fullGameButton.hidden = true;
         return;
       }
 
@@ -273,7 +281,7 @@ function install() {
         challengeButton.hidden = true;
         recalibrateButton.hidden = true;
         settingsButton.hidden = true;
-        if (blankButton.dataset.state !== 'active') blankButton.hidden = true;
+        fullGameButton.hidden = true;
         spectateButton.hidden = false;
         spectateButton.textContent = 'Stop Spectating';
         spectateButton.setAttribute('aria-label', 'Stop spectating and return to the starting line');
@@ -284,24 +292,24 @@ function install() {
       spectateButton.textContent = 'Spectate';
       spectateButton.setAttribute('aria-label', 'Spectate a run to learn the track');
       challengeButton.hidden = false;
-      recalibrateButton.hidden = false;
 
+      // During a lap only THE CHALLENGE: it holds RESUME, RESTART LAP and GET THE GAME.
+      // RECALIBRATE belongs to the start line.
       if (activeLap) {
+        recalibrateButton.hidden = true;
         settingsButton.hidden = true;
         spectateButton.hidden = true;
-        if (blankButton.dataset.state !== 'active') blankButton.hidden = true;
-        reorder([challengeButton, recalibrateButton]);
+        fullGameButton.hidden = true;
+        reorder([challengeButton]);
         return;
       }
 
       if (state.phase === 'staged') {
+        recalibrateButton.hidden = false;
         settingsButton.hidden = false;
         spectateButton.hidden = false;
-        if (blankButton.dataset.state !== 'active') blankButton.hidden = false;
-        const ordered = [challengeButton];
-        if (blankButton.dataset.state !== 'active') ordered.push(blankButton);
-        ordered.push(recalibrateButton, settingsButton, spectateButton);
-        reorder(ordered);
+        fullGameButton.hidden = false;
+        reorder([challengeButton, recalibrateButton, settingsButton, spectateButton, fullGameButton]);
       }
     } finally {
       syncing = false;
@@ -366,9 +374,10 @@ function install() {
   return true;
 }
 
-function bootstrap(attempt = 0) {
+// TURN can take many seconds to load on a slower device: keep waiting, never give up.
+function bootstrap() {
   if (install()) return;
-  if (attempt < 300) requestAnimationFrame(() => bootstrap(attempt + 1));
+  globalThis.setTimeout(bootstrap, 100);
 }
 
 if (document.readyState === 'loading') {

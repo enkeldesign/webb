@@ -79,9 +79,6 @@ const { installWideGamutRuntime } = await import(withBuild('/turn/vehicle/wide-g
 installWideGamutRuntime(runtime);
 await import(withBuild('/turn/render/world.js?revision=r175-bella-broad-rear-zone'));
 
-const { installScreenBlanking } = await import(withBuild('/turn/ui/screen-blanking.js?revision=r143-temporary-dbe-position'));
-installScreenBlanking(runtime);
-
 const ui = createYourTurnUi();
 const request = readYourTurnRequest();
 const session = createYourTurnSession({ runtime, raceSession, ui, animation, request });

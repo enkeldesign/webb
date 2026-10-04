@@ -53,6 +53,15 @@
   width: clamp(84px, 13vw, 109.5px);
 }
 
+/* POSITION is the longest label in the row: the chip fits it, never narrower than its
+   neighbours (it overflowed into TIME on a phone in landscape). */
+.stats .chip.race-position-hud {
+  flex-shrink: 0;
+  width: auto;
+  min-width: clamp(51px, 8vw, 67.5px);
+  white-space: nowrap;
+}
+
 .stats .race-position-hud.position-pop {
   z-index: 2;
   animation: turn-position-pop 360ms cubic-bezier(.16,.82,.24,1);

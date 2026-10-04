@@ -78,7 +78,18 @@ export function createRaceSessionOrchestrator({
 
   let phase = 'idle';
 
+  // iPad Safari honours page fullscreen but shows it empty, and the player has to leave
+  // it before racing, missing the steering centring (Erik, iPad 9). iPhone Safari has no
+  // page fullscreen, and installed TURN already runs full screen: Apple touch devices are
+  // not asked.
+  function appleTouchDevice() {
+    const nav = environment.navigator || windowRef?.navigator;
+    return /iPad|iPhone|iPod/.test(String(nav?.userAgent || ''))
+      || (nav?.platform === 'MacIntel' && Number(nav?.maxTouchPoints) > 1);
+  }
+
   function requestGameFullscreen() {
+    if (appleTouchDevice()) return Promise.resolve(false);
     const root = documentRef?.documentElement;
     const request = root?.requestFullscreen || root?.webkitRequestFullscreen;
     if (!request || documentRef?.fullscreenElement || documentRef?.webkitFullscreenElement) {

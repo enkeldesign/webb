@@ -125,7 +125,7 @@ assert.match(storageBootstrap, /LEGACY_RACER_NAME_KEY[\s\S]*SHARED_RACER_NAME_KE
 assert.match(storageBootstrap, /storageNamespace: LOCAL_PREFIX/,
   'YOUR TURN gameplay storage remains isolated');
 assert.match(yourTurnIndex, /storage-bootstrap\.js\?revision=r2/);
-assert.match(yourTurnIndex, /ui\.js\?revision=r3[^\n]*ui\.js\?revision=r10/);
+assert.match(yourTurnIndex, /ui\.js\?revision=r3[^\n]*ui\.js\?revision=r11/);
 
 assert.match(yourTurnUi, /loadSocialRacerProfile\(\)\.name/,
   'YOUR TURN share composers must prefill the last deliberately entered social name');

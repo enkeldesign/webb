@@ -1,23 +1,23 @@
 const NativeMutationObserver = globalThis.MutationObserver;
 
-function nextFrame() {
-  return new Promise((resolve) => requestAnimationFrame(resolve));
+function nextTick() {
+  return new Promise((resolve) => globalThis.setTimeout(resolve, 100));
 }
 
+// TURN can take many seconds to load on a slower device (an iPad 9 took longer than
+// the 300 frames this used to allow, leaving TURN's default race buttons in place).
+// Keep waiting; a timer keeps polling where animation frames are throttled.
 async function waitForControlRuntime() {
-  for (let attempt = 0; attempt < 300; attempt += 1) {
+  for (;;) {
     const utilityGroup = document.querySelector('#controls .utility-group');
-    const blankButton = document.querySelector('.turn-screen-blank-control');
     if (globalThis.__turnRuntime
         && globalThis.__turnRaceSession
         && globalThis.__yourTurnSession
-        && utilityGroup
-        && blankButton) {
+        && utilityGroup) {
       return utilityGroup;
     }
-    await nextFrame();
+    await nextTick();
   }
-  throw new Error('YOUR TURN r417 could not find the race-control runtime.');
 }
 
 function makeFilteredMutationObserver(utilityGroup) {
@@ -55,7 +55,7 @@ async function install() {
 
   if (FilteredMutationObserver) globalThis.MutationObserver = FilteredMutationObserver;
   try {
-    await import('/yourturn/race-controls-r411.js?revision=r417-observer-loop-fix');
+    await import('/yourturn/race-controls-r411.js?revision=r600-one-owner');
   } finally {
     if (NativeMutationObserver) globalThis.MutationObserver = NativeMutationObserver;
   }

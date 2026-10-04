@@ -67,7 +67,7 @@ async function copyEmailAddress(button, status) {
 function attributionMarkup() {
   return `
     <p>TURN is shaped by inclusive and universal design so everyone can play, regardless of ability or how they interact with the game.</p>
-    <p>© 2026 <a href="https://enkel.design/" target="_blank" rel="noreferrer">enkel.design</a>. Created by Erik Jansson, aided by OpenAI Codex. Drive By Ear™ is inspired by <a href="https://ceal.cs.columbia.edu/rad/" target="_blank" rel="noreferrer">RAD – Racing Auditory Display</a>.</p>`;
+    <p>© 2026 <a href="https://enkel.design/" target="_blank" rel="noreferrer">enkel.design</a>. Created by Erik Jansson, aided by OpenAI Codex and Claude Opus. Drive By Ear™ is inspired by <a href="https://ceal.cs.columbia.edu/rad/" target="_blank" rel="noreferrer">RAD – Racing Auditory Display</a>.</p>`;
 }
 
 function createFeedbackDialog() {

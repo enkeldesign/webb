@@ -88,7 +88,7 @@ assert.match(feedback, /inclusive and universal design so everyone can play/);
 assert.match(feedback, /regardless of ability or how they interact with the game/);
 assert.doesNotMatch(feedback, /accessibility built into the game from the start/);
 assert.match(feedback, /© 2026/);
-assert.match(feedback, /Created by Erik Jansson, aided by OpenAI Codex/);
+assert.match(feedback, /Created by Erik Jansson, aided by OpenAI Codex and Claude Opus\./);
 assert.match(feedback, /Drive By Ear™ is inspired by/);
 assert.match(feedback, /https:\/\/ceal\.cs\.columbia\.edu\/rad\//);
 assert.match(feedback, /RAD – Racing Auditory Display/);

@@ -308,60 +308,6 @@ html[data-turn-deployment="yourturn"] #intro {
   border-color: #ff7f50;
 }
 
-.yourturn-rotate {
-  position: fixed;
-  z-index: 6000;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding:
-    max(20px, env(safe-area-inset-top))
-    max(20px, env(safe-area-inset-right))
-    max(20px, env(safe-area-inset-bottom))
-    max(20px, env(safe-area-inset-left));
-  background: #38d9ff;
-  color: var(--turn-ink);
-}
-
-.yourturn-rotate[hidden] {
-  display: none;
-}
-
-.yourturn-rotate-card {
-  display: grid;
-  justify-items: center;
-  gap: 12px;
-  width: min(420px, 92vw);
-  padding: clamp(16.5px, 5vw, 30px);
-  border: 3.75px solid var(--turn-outline);
-  border-radius: 21px;
-  background: var(--turn-surface-page);
-  box-shadow: 9px 9px 0 var(--turn-shadow-color);
-  text-align: center;
-}
-
-.yourturn-rotate-card strong {
-  font-size: max(var(--turn-text-floor, 11px), clamp(1.0875rem, 5vw, 2.025rem));
-  line-height: 0.95;
-  letter-spacing: -0.035em;
-}
-
-.yourturn-rotate-card p {
-  margin: 0;
-  max-width: 34ch;
-  font-weight: 750;
-  line-height: 1.3;
-}
-
-.yourturn-phone {
-  width: 54px;
-  height: 88.5px;
-  border: 4.5px solid var(--turn-outline);
-  border-radius: 12px;
-  background: #ffd43b;
-  transform: rotate(90deg);
-}
-
 .yourturn-target-chip {
   min-width: clamp(127.5px, 22vw, 210px);
   background: var(--turn-surface-page) !important;
@@ -533,13 +479,25 @@ body.yourturn-racing #resetButton {
   }
 }
 
+/* Portrait races as well as landscape. The target ("BEAT SOL · 0:13.500") gets a full
+   line under TIME rather than half of one, and the start line's buttons, more than fit
+   across a phone, scroll sideways instead of running off the screen. */
+@media (orientation: portrait) {
+  :root body.yourturn-racing .stats > .chip.yourturn-target-chip {
+    grid-column: 1 / -1;
+  }
+
+  :root body.yourturn-racing #controls .utility-group {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .yourturn-dialog::backdrop {
     backdrop-filter: none;
-  }
-
-  .yourturn-phone {
-    transform: rotate(90deg);
   }
 
   *,
@@ -552,10 +510,10 @@ body.yourturn-racing #resetButton {
   }
 }
 
-/* Dark theme (#1067): YOUR TURN follows the device. The full-screen loading and
-   rotate screens are the dusk sky TURN's own loading screen uses, the challenge card is
-   a night surface, and every colour on it keeps Ink, as in light. */
-:root[data-theme="dark"] :is(.yourturn-loading, .yourturn-rotate) {
+/* Dark theme (#1067): YOUR TURN follows the device. The full-screen loading screen is
+   the dusk sky TURN's own loading screen uses, the challenge card is a night surface,
+   and every colour on it keeps Ink, as in light. */
+:root[data-theme="dark"] .yourturn-loading {
   background:
     radial-gradient(circle at 12% 20%, rgb(255 212 59 / 0.42) 0 7%, transparent 7.5%),
     radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.38) 0 10%, transparent 10.5%),
