@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import { DEVELOPMENT_HISTORY } from '../turn/content/about-history-current.js';
+import { CHANGELOG, CURRENT_RELEASE, DEVELOPMENT_HISTORY } from '../turn/content/about-history-current.js';
 
 const [
   releaseSource,
@@ -8,7 +8,6 @@ const [
   bootstrapEntry,
   bootstrap,
   browserInstallCss,
-  content,
   currentContent,
   dialogCss,
   historyCss,
@@ -21,7 +20,6 @@ const [
   fs.readFile(new URL('../turn/ui/about-history-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/about-history-bootstrap-r165.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/browser-install-r165.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/content/about-history.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/content/about-history-current.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/dialog-system-r163.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/about-history-r163.css', import.meta.url), 'utf8'),
@@ -58,8 +56,12 @@ assert.match(bootstrap, /focusDialogHeading\(dialog\);/,
   'Opening About and History dialogs must focus the labelled heading rather than the close button');
 assert.doesNotMatch(bootstrap, /querySelector\('\[data-dialog-close\]'\)\?\.focus/,
   'Initial dialog focus must not be forced to Close');
-assert.match(bootstrap, /return \[\.\.\.CHANGELOG\]\.reverse\(\)\.map\(/,
+assert.match(bootstrap, /const releases = \[\.\.\.CHANGELOG\]\.reverse\(\)/,
   'The changelog must render newest entries first without mutating its source data');
+assert.match(bootstrap, /<details class="turn-changelog-archive">[\s\S]*<summary>Earlier milestones<\/summary>/,
+  'Earlier milestones must use a native, initially collapsed disclosure');
+assert.match(historyCss, /\.turn-changelog-archive > summary[\s\S]*min-height: var\(--turn-target-min, 44px\)/,
+  'The archive disclosure must retain a full touch target');
 assert.match(bootstrap, /const INSTALL_NOTE[\s\S]*Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
 assert.match(bootstrap, /function installWebsiteAbout\(\)/);
 assert.match(bootstrap, /id = 'installAboutButton'/);
@@ -110,46 +112,46 @@ assert.match(browserInstallCss, /\.install-guide-card[\s\S]*width: min\(420px, 1
 assert.match(browserInstallCss, /\.install-about-trigger[\s\S]*text-decoration: underline/);
 assert.match(browserInstallCss, /@media \(max-height: 375px\) and \(orientation: landscape\)[\s\S]*minmax\(0, 1fr\)/);
 
-const historyEntries = (content.match(/period:/g) || []).length;
-const changelogDays = (content.match(/date:/g) || []).length;
-assert.ok(historyEntries >= 11, `Expected at least eleven development-history periods, found ${historyEntries}`);
-assert.ok(changelogDays >= 20, `Expected at least twenty changelog dates, found ${changelogDays}`);
-assert.match(content, /18–19 July 2026/);
-assert.match(content, /Stabilization and progression/);
-assert.match(content, /YOUR TURN makes personal rivals social/);
-assert.match(content, /18 July 2026/);
-assert.match(content, /8 August/);
-assert.match(content, /TURN 1\.5\.1/,
-  'History must retain the previous 1.5.1 milestone');
-assert.match(content, /Cloudflare Worker and D1 snapshot store/,
-  'History must explain the short-link transport introduced with YOUR TURN');
-assert.match(content, /one oh one/);
-assert.match(content, /28 achievements and 1,700 available trophies/);
-assert.match(content, /SAVE BELLA!/);
-assert.match(content, /AN ARMY OF ME/);
-assert.match(content, /ON COURSE, OF COURSE/);
-assert.match(content, /Paintjob MutationObserver/);
-assert.match(content, /Playtesting reshapes the driving feel/);
-assert.match(content, /Visible front-wheel steering tied to player input/);
-assert.match(content, /Standard binary DRIFT LOCK/);
-assert.match(content, /29–31 August/);
-assert.match(content, /Long MOUNTAIN reaches production and difficulty gets clearer/);
-assert.match(content, /EASY \/ MEDIUM \/ ADVANCED \/ EXPERT/);
-assert.match(content, /MIDNIGHT CITY/);
-assert.match(content, /≈4\.7 km/);
-assert.match(content, /≈3\.8 km/);
-assert.doesNotMatch(content, /MOUNTAIN at 1,000 trophies/);
+// Guard readability and chronology rather than requiring old implementation
+// details or a minimum number of entries. Milestones are intentionally curated.
+const wordCount = (text) => text.trim().split(/\s+/).length;
+const historyText = DEVELOPMENT_HISTORY.flatMap((entry) => [entry.title, ...entry.paragraphs, ...entry.milestones]).join(' ');
+const changelogText = CHANGELOG.flatMap((entry) => entry.entries.flat()).join(' ');
+assert.ok(DEVELOPMENT_HISTORY.length > 0 && DEVELOPMENT_HISTORY.length <= 12,
+  'History must stay within twelve short chapters; consolidate before extending it');
+assert.ok(wordCount(historyText) <= 1000, 'History must remain a short read');
+assert.ok(wordCount(changelogText) <= 1000, 'The complete changelog, including the archive, must remain a short read');
+assert.doesNotMatch(changelogText, /admin|tester|prototype|reverted|hotfix|regression|revision=|\br\d{2,}\b/i,
+  'The changelog must describe lasting features, not the testing or release machinery');
+
+let previousDate = -Infinity;
+const featureNames = new Set();
+for (const milestone of CHANGELOG) {
+  assert.match(milestone.date, /^\d{1,2} [A-Z][a-z]+ \d{4}$/,
+    'Every milestone must have its own explicit date and year');
+  const timestamp = Date.parse(milestone.date);
+  assert.ok(Number.isFinite(timestamp) && timestamp > previousDate,
+    'Milestone dates must be valid, unique and in ascending order');
+  previousDate = timestamp;
+  assert.ok(milestone.entries.length > 0, 'Empty release groups must be removed');
+  for (const [feature, description] of milestone.entries) {
+    assert.ok(feature && description, 'Each milestone must name a feature and explain its outcome');
+    assert.ok(!featureNames.has(feature), 'Related feature revisions must be consolidated');
+    featureNames.add(feature);
+    assert.ok(wordCount(description) <= 40, 'A feature description must stay concise');
+  }
+}
+for (const chapter of DEVELOPMENT_HISTORY) {
+  assert.ok(chapter.period && chapter.title && chapter.paragraphs.length > 0,
+    'Each History chapter must retain its period, heading and story');
+}
+assert.deepEqual(CURRENT_RELEASE, { version: release.version, build: release.id },
+  'Curating historical milestones must not replace the current release identity');
 
 assert.match(currentContent, new RegExp(`version: '${escapeRegex(release.version)}'`),
   'The current History facade must name the canonical release version');
 assert.match(currentContent, new RegExp(`build: '${escapeRegex(release.id)}'`),
   'The current History facade must name the canonical release build');
-assert.match(currentContent, /PERK gets one visual language/);
-assert.match(currentContent, /1\.19\.3 r217/);
-assert.match(currentContent, /circuit-board icon/);
-assert.ok(DEVELOPMENT_HISTORY.some((entry) => entry.title === 'PERK gets one visual language'
-  && entry.paragraphs.some((paragraph) => paragraph.includes('Trophy Road') && paragraph.includes('The Lot'))),
-  'Later releases must preserve the PERK history describing both Trophy Road and The Lot');
 
 for (const size of ['compact', 'standard', 'wide', 'reader']) {
   assert.match(dialogCss, new RegExp(`\\.turn-dialog--${size}`),

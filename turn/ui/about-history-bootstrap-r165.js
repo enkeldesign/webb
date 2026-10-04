@@ -2,7 +2,7 @@ import {
   CHANGELOG,
   CURRENT_RELEASE,
   DEVELOPMENT_HISTORY
-} from '../content/about-history-current.js?build=20261004-r386';
+} from '../content/about-history-current.js?build=20261004-r387';
 import { aboutTurnHtml } from '../content/about-turn.js?revision=r1';
 
 const REVISION = 'r165-browser-about';
@@ -73,19 +73,30 @@ function historyMarkup() {
       <span>${escapeMarkup(entry.period)}</span>
       <h3>${escapeMarkup(entry.title)}</h3>
       ${entry.paragraphs.map((paragraph) => `<p>${escapeMarkup(paragraph)}</p>`).join('')}
-      <ul>${entry.milestones.map((milestone) => `<li>${escapeMarkup(milestone)}</li>`).join('')}</ul>
+      ${entry.milestones.length ? `<ul>${entry.milestones.map((milestone) => `<li>${escapeMarkup(milestone)}</li>`).join('')}</ul>` : ''}
+    </article>`).join('');
+}
+
+function changelogReleasesMarkup(releases) {
+  return releases.map((release) => `
+    <article class="turn-changelog-release">
+      <h3><time>${escapeMarkup(release.date)}</time></h3>
+      <ul>${release.entries.map(([feature, description]) => `
+        <li><strong>${escapeMarkup(feature)}:</strong> ${escapeMarkup(description)}</li>`).join('')}
+      </ul>
     </article>`).join('');
 }
 
 function changelogMarkup() {
-  return [...CHANGELOG].reverse().map((release) => `
-    <article class="turn-changelog-release">
-      <time>${escapeMarkup(release.date)}</time>
-      <h3>${escapeMarkup(release.entries[0]?.[0] || release.date)}</h3>
-      <ul>${release.entries.map(([version, description]) => `
-        <li><strong>${escapeMarkup(version)}:</strong> ${escapeMarkup(description)}</li>`).join('')}
-      </ul>
-    </article>`).join('');
+  const releases = [...CHANGELOG].reverse();
+  const recent = changelogReleasesMarkup(releases.slice(0, 6));
+  const earlier = releases.slice(6);
+  if (!earlier.length) return recent;
+  return `${recent}
+    <details class="turn-changelog-archive">
+      <summary>Earlier milestones</summary>
+      ${changelogReleasesMarkup(earlier)}
+    </details>`;
 }
 
 function createHistoryDialog(scope = 'game') {
@@ -135,7 +146,7 @@ function createHistoryDialog(scope = 'game') {
             tabindex="0"
             data-history-panel="development"
           >
-            <p class="turn-history-intro">TURN grew from a one-day sensor experiment into a six-track racing PWA with personal rivals, a fifteen-car garage, Drive By Ear, assistive-technology support and Trophy Road progression. This is the development story rather than a raw list of commits.</p>
+            <p class="turn-history-intro">From a steering experiment to a game about tilt, drift and flow. The milestones and decisions that shaped TURN.</p>
             ${historyMarkup()}
           </section>
 
@@ -148,7 +159,7 @@ function createHistoryDialog(scope = 'game') {
             data-history-panel="changelog"
             hidden
           >
-            <p class="turn-history-intro">Meaningful player-facing, accessibility, architecture, performance and content changes are consolidated by date. Reverted experiments remain visible because they explain the product decisions that followed.</p>
+            <p class="turn-history-intro">The features that became part of TURN. Dates mark their settled form, with related changes grouped together.</p>
             ${changelogMarkup()}
           </section>
         </div>
