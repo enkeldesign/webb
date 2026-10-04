@@ -19,6 +19,7 @@ export function resolveWorldCollisionState({
   nearestTrack = null,
   collisionProfile = null,
   carRadius = DEFAULT_CAR_RADIUS,
+  shoulderDragScale = 1,
   dt = 1 / 60
 }) {
   if (!state?.position || !state?.velocity) {
@@ -40,7 +41,8 @@ export function resolveWorldCollisionState({
       distance: nearestTrack.distance,
       limit,
       start: positiveNumber(collisionProfile?.shoulderStartDistance, Infinity),
-      drag: nonNegativeNumber(collisionProfile?.shoulderDrag, 0),
+      drag: nonNegativeNumber(collisionProfile?.shoulderDrag, 0)
+        * clamp(nonNegativeNumber(shoulderDragScale, 1), 0, 1),
       dt
     });
     boundary = resolveTrackEnvelopeBoundary({
