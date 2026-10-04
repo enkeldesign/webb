@@ -24,7 +24,7 @@ const [
 ]);
 
 // One source for each record, as before.
-assert.match(roadbook, /import \{ getStoredBestLap \} from '\/turn\/race\/rival-storage\.js\?source=20260729-r118-m8';/);
+assert.match(roadbook, /import \{ RIVAL_LIMIT, getStoredBestLap, getStoredRivalSummaries \} from '\/turn\/race\/rival-storage\.js\?source=20260729-r118-m8';/);
 assert.match(roadbook, /import \{ getBestDriftRecord \} from '\/turn\/scoring\/drift-records\.js\?revision=r206-home-track-records';/);
 assert.match(roadbook, /import \{ getBestFlowRecord \} from '\/turn\/scoring\/flow-records\.js\?revision=r206-home-track-records';/);
 assert.match(roadbook, /kind: 'time', label: 'TIME', featureId: null, read: getStoredBestLap/);
@@ -54,6 +54,21 @@ assert.match(home, /function showHome\(\{ focus = false \} = \{\}\) \{[\s\S]*roa
 assert.match(home, /async onRivalsReset\(\) \{[\s\S]*roadbook\.refreshRecords\(\);/);
 assert.doesNotMatch(rivalReset, /data-track-best|track-card-record/, 'Rival reset no longer edits Home record markup');
 
+// Rivals without starting a race: the count on the map, each rival's car and lap time
+// at the bottom, and a confirmed reset for that track alone (Erik's Track sheet mockup).
+assert.match(roadbook, /<span class="turn-pr-detail-rivals"><\/span>/);
+assert.match(roadbook, /mapCount\.textContent = `Rivals: \$\{rivals\.length\}`/);
+assert.match(roadbook, /count\.textContent = `\$\{rivals\.length\} \/ \$\{RIVAL_LIMIT\}`/);
+assert.match(roadbook, /<section class="roadbook-rivals" aria-labelledby="\$\{idPrefix\}RivalsTitle">/);
+assert.match(roadbook, /No rivals yet\. Your \$\{RIVAL_LIMIT\} fastest laps here become the rivals you race\./);
+assert.match(roadbook, /const rivals = getStoredRivalSummaries\(track\.id\);/);
+assert.match(roadbook, /Reset \$\{escapeHtml\(name\)\} rivals<\/button>/);
+assert.match(roadbook, /await onResetRivals\(track\.id\);[\s\S]*refreshRecords\(\);/, 'A reset refreshes the sheet');
+assert.match(home, /async onResetRivals\(trackId\) \{\s*await activateTrack\(normalizeTrackId\(trackId\), runtime\);\s*globalThis\.__turnResetRivals\?\.\(\);/,
+  'The Track sheet resets the shown track the way Settings does');
+assert.doesNotMatch(detail.slice(detail.indexOf('roadbook-rivals'), detail.indexOf('</section>', detail.indexOf('roadbook-rivals'))),
+  /<button\b/i, 'The reset control is added only when there are rivals to reset');
+
 // The retired toggle and its remembered state are gone everywhere.
 for (const [label, source] of [['m8-home.js', home], ['roadbook.js', roadbook], ['app.js', app]]) {
   assert.doesNotMatch(source, /m8-track-bests-toggle|turn-track-records-expanded-v1|is-showing-track-bests/,
@@ -70,4 +85,4 @@ assert.match(preRaceCss, /\.turn-pr-record\.is-time \{ --turn-pr-record-accent/)
 assert.match(preRaceCss, /\.turn-pr-record\.is-drift \{ --turn-pr-record-accent/);
 assert.match(preRaceCss, /\.turn-pr-record\.is-flow \{ --turn-pr-record-accent/);
 
-console.log('TURN Home records: TIME, DRIFT and FLOW per track in the Track sheet, locked and empty states explicit.');
+console.log('TURN Home records: TIME, DRIFT and FLOW per track in the Track sheet, locked and empty states explicit, rivals counted and listed.');

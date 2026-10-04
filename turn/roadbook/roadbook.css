@@ -460,7 +460,139 @@
 
 /* Short landscape: the sheet's two columns, the achievements across both below them. */
 @media (orientation: landscape) and (max-height: 500px) {
-  .turn-pr-sheet-body .roadbook-goals {
+  .turn-pr-sheet-body :is(.roadbook-goals, .roadbook-rivals) {
     grid-column: 1 / -1;
   }
+}
+
+/* ---------- Rivals ----------
+   How many rivals a track has, on the map card opposite its length, and each one at the
+   bottom of the sheet: car, car name and lap time, fastest first. */
+.turn-pr-detail-route .turn-pr-detail-rivals {
+  position: absolute;
+  z-index: 1;
+  right: 12px;
+  bottom: 10px;
+  color: var(--turn-text);
+  font-family: var(--turn-pr-font-body);
+  font-size: var(--turn-pr-type-spec);
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.roadbook-rivals {
+  display: grid;
+  gap: 8px;
+}
+
+.roadbook-rivals-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+}
+
+.roadbook-rivals-title:focus-visible {
+  outline: 3px solid var(--turn-outline);
+  outline-offset: 3px;
+}
+
+.roadbook-rivals-count {
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.roadbook-rival-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 5rem), 1fr));
+  gap: 12px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Car, name, time. Cards in a row share its height and the time keeps to the bottom, so
+   times line up and a one-line name leaves its gap below. */
+.roadbook-rival {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 2px;
+  min-width: 0;
+  font-family: var(--turn-pr-font-body);
+  overflow-wrap: anywhere;
+}
+
+.roadbook-rival-car {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+}
+
+/* The picture's place is kept while it renders, so the names do not jump. */
+.roadbook-rival-car[hidden] {
+  display: block;
+  visibility: hidden;
+}
+
+.roadbook-rival-name {
+  align-self: start;
+  font-size: var(--turn-pr-type-spec);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.roadbook-rival-time {
+  color: var(--turn-text-muted);
+  font-size: var(--turn-pr-type-spec);
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+}
+
+.roadbook-rivals-empty {
+  margin: 0;
+  color: var(--turn-text-muted);
+  font-family: var(--turn-pr-font-body);
+}
+
+.roadbook-rivals-reset {
+  display: grid;
+  justify-items: start;
+}
+
+.roadbook-rivals-reset-button {
+  background: var(--turn-action-reset);
+  color: var(--turn-ink);
+}
+
+.roadbook-rivals-confirm {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  border: 3px dashed var(--turn-outline);
+  border-radius: var(--turn-pr-radius);
+}
+
+.roadbook-rivals-confirm[hidden] {
+  display: none;
+}
+
+.roadbook-rivals-confirm p {
+  margin: 0;
+  font-family: var(--turn-pr-font-body);
+  font-weight: 750;
+}
+
+.roadbook-rivals-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.roadbook-rivals-confirm-button {
+  background: var(--turn-action-reset);
+  color: var(--turn-ink);
 }

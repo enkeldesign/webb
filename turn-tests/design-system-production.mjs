@@ -95,6 +95,7 @@ const semanticMappings = new Map([
   ['--turn-action-success', '--turn-green-500'],
   ['--turn-action-warning', '--turn-yellow-400'],
   ['--turn-action-danger', '--turn-red-500'],
+  ['--turn-action-reset', '--turn-red-200'],
   ['--turn-action-navigation', '--turn-orange-500'],
   ['--turn-form-control-idle', '--turn-surface-page'],
   ['--turn-form-control-selected', '--turn-pink-500'],

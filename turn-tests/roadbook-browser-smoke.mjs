@@ -279,6 +279,23 @@ async function phoneFlow(browserType, name) {
     assert.deepEqual(goals.rows.filter((row) => row.next).map((row) => row.id), [goals.rows[0].id], `${name}: one goal to go for, first`);
     assert.equal(goals.rows[0].id, 'cliffside-winner', `${name}: a new profile's next goal is the first open one`);
 
+    // RIVALS: the count on the map and at the bottom, without racing there first. A new
+    // profile has none, says how they come, and has nothing to reset.
+    const rivals = await page.evaluate(() => {
+      const dialog = document.querySelector('#turnTrackSheet');
+      const section = dialog.querySelector('.roadbook-rivals');
+      return {
+        map: dialog.querySelector('.turn-pr-detail-route .turn-pr-detail-rivals').textContent,
+        labelled: section.getAttribute('aria-labelledby') === 'turnTrackSheetRivalsTitle',
+        count: section.querySelector('.roadbook-rivals-count').textContent,
+        rows: section.querySelectorAll('.roadbook-rival').length,
+        empty: !section.querySelector('.roadbook-rivals-empty').hidden,
+        reset: Boolean(section.querySelector('.roadbook-rivals-reset button'))
+      };
+    });
+    assert.deepEqual(rivals, { map: 'Rivals: 0', labelled: true, count: '0 / 4', rows: 0, empty: true, reset: false },
+      `${name}: the Track sheet counts the track's rivals`);
+
     // A goal opens ACHIEVEMENTS on the track's achievements, at that goal; the chip
     // shows every track again, and closing returns to the goal.
     await page.locator('#turnTrackSheet .roadbook-goal[data-achievement-id="cliffside-safety"]').click();

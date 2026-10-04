@@ -5,7 +5,7 @@
 
 .m8-settings-dialog .m8-reset-rivals.is-all-tracks,
 .m8-settings-dialog .m8-reset-confirm-button.is-all-tracks {
-  background: #ff9b91 !important;
+  background: var(--turn-action-reset) !important;
 }
 
 .utility-group .reset-rivals-button,

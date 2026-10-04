@@ -1,5 +1,5 @@
 import { normalizeReplayFrames } from './replay-system.js';
-import { decodeReplayFrames, encodeReplayFrames } from './replay-codec.js';
+import { decodeReplayFrames, encodeReplayFrames, storedReplayFrameCount } from './replay-codec.js';
 import {
   LEGACY_VEHICLE_ID,
   getVehicleDefaultColor,
@@ -592,6 +592,40 @@ function normalizeStoredLapPaint(lap, sourceVersion) {
   }, {
     migrateReplacedFactoryPaint: sourceVersion < RIVAL_STORAGE_VERSION
   });
+}
+
+// A track's saved rivals for display (the Track sheet): time, car and paint, fastest
+// first, as a race would load them. Their replays are counted, not decoded.
+export function getStoredRivalSummaries(trackId = DEFAULT_TRACK_ID) {
+  const activeTrackId = normalizeTrackId(trackId);
+  try {
+    const saved = pendingRivalPayload(activeTrackId) || JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
+    const sourceVersion = Number(saved?.version) || 0;
+    let laps = Array.isArray(saved?.laps) ? saved.laps : [];
+    if (sourceVersion < RIVAL_STORAGE_VERSION && !laps.length && activeTrackId === DEFAULT_TRACK_ID) {
+      const oldGhost = JSON.parse(localStorage.getItem(ghostKey(activeTrackId)));
+      if (Number.isFinite(oldGhost?.bestTime) && Array.isArray(oldGhost.frames)) {
+        laps = [{ time: oldGhost.bestTime, carId: LEGACY_VEHICLE_ID, frames: oldGhost.frames }];
+      }
+    }
+    return laps
+      .filter((lap) => Number.isFinite(lap?.time)
+        && storedReplayFrameCount(lap.frames) > 20
+        && !isSportsSedanEasterEgg({ carId: lap.carId, secondaryColor: lap.carSecondaryColor }))
+      .map((lap) => {
+        const paint = normalizeStoredLapPaint(lap, sourceVersion);
+        return Object.freeze({
+          time: Number(lap.time),
+          carId: paint.carId,
+          carColor: paint.color,
+          carSecondaryColor: paint.secondaryColor
+        });
+      })
+      .sort((a, b) => a.time - b.time)
+      .slice(0, RIVAL_LIMIT);
+  } catch (_) {
+    return [];
+  }
 }
 
 export function getStoredBestTime(trackId = DEFAULT_TRACK_ID) {

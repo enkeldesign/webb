@@ -412,7 +412,12 @@ export async function installM8HomeNavigation() {
     onSelectTrack(trackId) {
       selectedTrackId = normalizeTrackId(trackId);
     },
-    onChooseCar: () => continueToTrack()
+    onChooseCar: () => continueToTrack(),
+    // The Track sheet's reset: the same steps as Settings, for the track shown.
+    async onResetRivals(trackId) {
+      await activateTrack(normalizeTrackId(trackId), runtime);
+      globalThis.__turnResetRivals?.();
+    }
   });
   const continueButton = roadbook.chooseButton;
 
