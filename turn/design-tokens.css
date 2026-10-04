@@ -57,6 +57,7 @@
   --turn-action-success: var(--turn-green-500);
   --turn-action-warning: var(--turn-yellow-400);
   --turn-action-danger: var(--turn-red-500);
+  --turn-action-reset: var(--turn-red-200);
   --turn-action-navigation: var(--turn-orange-500);
 
   /* Native form and disclosure roles. */

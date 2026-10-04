@@ -202,7 +202,8 @@ assert.match(roadbook, /if \(generation !== thumbnailGeneration \|\| !model\.isC
 assert.doesNotMatch(homeReset, /activateTrack/, 'Resetting rivals must never change tracks behind the player');
 
 assert.match(resetCss, /\.m8-reset-rivals\.is-all-tracks/);
-assert.match(resetCss, /#ff9b91/, 'RESET ALL RIVALS must use a light warning red');
+assert.match(resetCss, /\.m8-reset-confirm-button\.is-all-tracks \{\s*background: var\(--turn-action-reset\) !important;/,
+  'RESET ALL RIVALS uses the reset role, a light warning red');
 assert.match(resetCss, /\.m8-settings-dialog \.m8-reset-rivals,[\s\S]*background: var\(--m8-yellow\) !important/, 'The active-track Settings action must retain the standard yellow treatment');
 assert.match(resetCss, /\.utility-group \.reset-rivals-button,[\s\S]*#ffd43b/, 'The direct start-line reset action must also remain yellow');
 

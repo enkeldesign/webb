@@ -512,9 +512,11 @@
   list-style: none;
 }
 
+/* Car, name, time. Cards in a row share its height and the time keeps to the bottom, so
+   times line up and a one-line name leaves its gap below. */
 .roadbook-rival {
   display: grid;
-  align-content: start;
+  grid-template-rows: auto 1fr auto;
   gap: 2px;
   min-width: 0;
   font-family: var(--turn-pr-font-body);
@@ -535,6 +537,7 @@
 }
 
 .roadbook-rival-name {
+  align-self: start;
   font-size: var(--turn-pr-type-spec);
   font-weight: 800;
   line-height: 1.2;
@@ -559,7 +562,7 @@
 }
 
 .roadbook-rivals-reset-button {
-  background: var(--turn-difficulty-advanced, #ffb89f);
+  background: var(--turn-action-reset);
   color: var(--turn-ink);
 }
 
@@ -590,6 +593,6 @@
 }
 
 .roadbook-rivals-confirm-button {
-  background: var(--turn-action-danger, #ff6b6b);
+  background: var(--turn-action-reset);
   color: var(--turn-ink);
 }
