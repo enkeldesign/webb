@@ -43,8 +43,8 @@ assert.match(about, /<summary>PRIVACY &amp; USAGE STATISTICS<\/summary>/);
 assert.match(about, /no analytics cookie and creates no persistent analytics identifier/i);
 assert.match(about, /developer yes\/no flag/i);
 assert.match(about, /DRIFT or FLOW lap scores/i);
-assert.match(about, /YOUR TURN also counts when a shared challenge opens, when it is raced and when GET THE GAME is chosen/,
-  'The privacy text must name the YOUR TURN funnel counts, two of them sent outside a race');
+assert.match(about, /after a race starts[^<]*The one exception is YOUR TURN: [^<]*counts when a shared challenge opens and when GET THE GAME is chosen, which can happen before a race, and when the challenge is raced\./,
+  'The privacy text names the YOUR TURN funnel counts as the one exception to "after a race starts", so it never contradicts itself');
 assert.match(workerTelemetry, /'challenge_open',\s*'challenge_race',\s*'get_game'/,
   'The Worker accepts the YOUR TURN funnel counts');
 assert.match(workerTelemetry, /yourTurn: \{\s*opened: yourTurn\.challenge_open \|\| 0,\s*raced: yourTurn\.challenge_race \|\| 0,\s*gotGame: yourTurn\.get_game \|\| 0/,
