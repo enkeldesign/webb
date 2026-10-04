@@ -210,3 +210,10 @@
     padding: 11.25px;
   }
 }
+
+/* YOUR TURN has no Reset Rivals and no direct Restart Lap: THE CHALLENGE holds
+   RESTART LAP. Hidden here rather than by script, so a slow load cannot bring them
+   back into the race row. */
+:root[data-turn-deployment="yourturn"] :is(.reset-rivals-button, #resetButton) {
+  display: none !important;
+}

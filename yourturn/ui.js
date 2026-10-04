@@ -30,14 +30,13 @@ export function createYourTurnUi() {
   const nameField = dialog?.querySelector('.yourturn-name-field');
   const nameInput = nameField?.querySelector('input');
   const motionToggle = dialog?.querySelector('#yourTurnMotionToggle');
-  const rotate = document.querySelector('#yourTurnRotate');
   const targetChip = document.querySelector('#yourTurnTargetChip');
   const targetOpponent = document.querySelector('#yourTurnTargetOpponent');
   const targetTime = document.querySelector('#yourTurnTargetTime');
   const challengeButton = document.querySelector('#yourTurnChallengeButton');
 
   if (!dialog || !card || !kicker || !title || !details || !copy || !extra || !actions || !status
-      || !nameField || !nameInput || !motionToggle || !rotate || !targetChip || !targetOpponent || !targetTime || !challengeButton) {
+      || !nameField || !nameInput || !motionToggle || !targetChip || !targetOpponent || !targetTime || !challengeButton) {
     throw new Error('YOUR TURN could not find its complete interface.');
   }
 
@@ -224,17 +223,6 @@ export function createYourTurnUi() {
     document.body.classList.remove('yourturn-racing');
   }
 
-  function showRotate() {
-    rotate.hidden = false;
-    document.body.classList.add('yourturn-awaiting-landscape');
-    rotate.querySelector('strong')?.focus?.();
-  }
-
-  function hideRotate() {
-    rotate.hidden = true;
-    document.body.classList.remove('yourturn-awaiting-landscape');
-  }
-
   function bindChallengeMenu(handler) {
     challengeButton.addEventListener('click', handler);
   }
@@ -259,8 +247,6 @@ export function createYourTurnUi() {
     setTarget,
     showRaceChrome,
     hideRaceChrome,
-    showRotate,
-    hideRotate,
     bindChallengeMenu,
     bindMotionToggle,
     setMotionPaused
@@ -274,7 +260,7 @@ export function aboutTurnHtml() {
 export function newcomerAssistiveText(challengerName) {
   return `
     <span class="visually-hidden">
-      New to TURN: ${escapeHtml(challengerName)} has sent you a racing challenge. TURN is normally steered by rotating your phone like a steering wheel. The race includes spatial audio guidance and supports screen readers. After you accept, your browser may ask for motion access, then you will be asked to rotate the phone to landscape.
+      New to TURN: ${escapeHtml(challengerName)} has sent you a racing challenge. TURN is normally steered by rotating your phone like a steering wheel. The race includes spatial audio guidance and supports screen readers. After you accept, your browser may ask for motion access.
     </span>`;
 }
 

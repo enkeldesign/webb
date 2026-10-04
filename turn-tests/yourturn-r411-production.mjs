@@ -20,7 +20,7 @@ const [
   fs.readFile(new URL('../turn/ui/minor-ux-polish-r229.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r417/);
+assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r600\b/);
 assert.match(yourTurnIndex, /track-map-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /r411\.css\?build=\d{8}-r\d+/);
 assert.match(turnIndex, /ui\/r411-race-controls\.js\?build=\d{8}-r\d+/,
@@ -45,8 +45,13 @@ assert.doesNotMatch(yourTurnControls, /RESET RIVALS|Personal rivals/,
 assert.match(yourTurnControls, /restartButton\.hidden = true/,
   'YOUR TURN must keep the direct Restart Lap control hidden');
 assert.match(yourTurnControls,
-  /const ordered = \[challengeButton\];[\s\S]*ordered\.push\(blankButton\);[\s\S]*ordered\.push\(recalibrateButton, settingsButton, spectateButton\)/,
-  'YOUR TURN staged controls must follow THE CHALLENGE, Blank Screen, Recalibrate, Settings, Spectate');
+  /reorder\(\[challengeButton, recalibrateButton, settingsButton, spectateButton, fullGameButton\]\)/,
+  'YOUR TURN staged controls: THE CHALLENGE, Recalibrate, Settings, Spectate, Get the game');
+assert.match(yourTurnControls, /if \(activeLap\) \{\s*recalibrateButton\.hidden = true;[\s\S]*reorder\(\[challengeButton\]\);/,
+  'During a lap only THE CHALLENGE shows: RECALIBRATE belongs to the start line');
+assert.doesNotMatch(yourTurnControls, /blankButton|turn-screen-blank-control/, 'YOUR TURN has no blank screen');
+assert.match(yourTurnCss, /:root\[data-turn-deployment="yourturn"\] :is\(\.reset-rivals-button, #resetButton\) \{\s*display: none !important;/,
+  'RESET RIVALS and the direct RESTART LAP never show in YOUR TURN, whatever loads first');
 assert.match(yourTurnControls, /state\.scene\?\.setPhase\('preview'\)/,
   'YOUR TURN Spectate must use the existing challenge replay scene to teach the track');
 assert.match(yourTurnControls, /classList\.toggle\('is-lap-invalid', invalid\)/,

@@ -10,9 +10,9 @@ const [index, app, session, orientationCompat] = await Promise.all([
 
 assert.doesNotMatch(index, /start-axis-guard\.js/,
   'YOUR TURN must not load a challenge-specific motion-axis guard');
-assert.match(index, /\/yourturn\/app\.js\?revision=r593-canonical-motion/,
+assert.match(index, /\/yourturn\/app\.js\?revision=r600-no-blank-screen/,
   'YOUR TURN must cache-bust the canonical-motion app handoff');
-assert.match(index, /\/yourturn\/session\.js\?revision=r595-landscape-recalibrate/,
+assert.match(index, /\/yourturn\/session\.js\?revision=r600-turn-start-centring/,
   'YOUR TURN must load the post-landscape recalibration session under a fresh cache identity');
 
 assert.match(app, /installMotionLifecycleBridge/,
@@ -44,23 +44,21 @@ assert.ok(previewModePublish >= 0 && previewRunningEnable >= 0,
 assert.ok(previewModePublish < previewRunningEnable,
   'YOUR TURN must publish its preview mode while running is still false so TURN does not lock portrait orientation as gameplay');
 
-assert.match(session, /await nextPaint\(\);[\s\S]*return startAcceptedRace\(\);/,
-  'YOUR TURN may wait for the landscape UI to paint before handing off to TURN');
+assert.match(session, /async function startWhenPainted\(\) \{\s*ui\.closeModal\(\);\s*await nextPaint\(\);\s*return startAcceptedRace\(\);/,
+  'YOUR TURN starts in whichever orientation the device is held: no rotate requirement');
 assert.match(session, /await raceSession\.startGame\(access\.fullscreenPromise\)/,
   'YOUR TURN must hand race start directly to TURN’s canonical race session');
-assert.match(session, /const POST_LANDSCAPE_RECALIBRATE_DELAY_MS = 360/,
-  'YOUR TURN must allow fresh landscape sensor readings after TURN finishes fullscreen/orientation locking');
 
+// TURN's own start centring (input/tilt-centring.js) waits for the device to keep still
+// and says so. A timed RECALIBRATE press on top of it centred an iPad while the player
+// was still leaving fullscreen (Erik, iPad 9), and clearing the race message hid TURN's
+// "Hold your device" prompt.
 const startBlock = session.match(/async function startAcceptedRace\(\) \{([\s\S]*?)\n  function handleLapResult/)?.[1] || '';
-const canonicalStart = startBlock.indexOf('await raceSession.startGame(access.fullscreenPromise)');
-const settleDelay = startBlock.indexOf('POST_LANDSCAPE_RECALIBRATE_DELAY_MS');
-const canonicalRecalibrate = startBlock.indexOf("document.querySelector('#calibrateButton')?.click()");
-const controlsVisible = startBlock.indexOf('ui.showRaceChrome()');
-assert.ok(canonicalStart >= 0 && settleDelay >= 0 && canonicalRecalibrate >= 0 && controlsVisible >= 0,
-  'YOUR TURN motion start must include canonical start, landscape settling, canonical recalibration and control reveal');
-assert.ok(canonicalStart < settleDelay && settleDelay < canonicalRecalibrate && canonicalRecalibrate < controlsVisible,
-  'YOUR TURN must recalibrate only after landscape start settles and before controls become interactive');
-assert.match(startBlock, /if \(access\.mode === 'motion' && runtime\.state\.sensorMode\)/,
-  'Automatic post-landscape recalibration must run only for motion steering');
+assert.ok(startBlock.includes('await raceSession.startGame(access.fullscreenPromise)') && startBlock.includes('ui.showRaceChrome()'),
+  'YOUR TURN motion start must include canonical start and control reveal');
+assert.doesNotMatch(startBlock, /calibrateButton|POST_LANDSCAPE_RECALIBRATE/,
+  'YOUR TURN leaves steering centring to TURN: no timed RECALIBRATE press');
+assert.doesNotMatch(startBlock, /querySelector\('#message'\)/,
+  'YOUR TURN keeps TURN’s centring message on screen');
 
-console.log('YOUR TURN canonical motion ownership, preview orientation-lock and landscape recalibration contract passed.');
+console.log('YOUR TURN canonical motion ownership, preview orientation-lock and TURN start-centring contract passed.');

@@ -161,6 +161,12 @@ assert.equal(await motion.orchestrator.requestMotion(), true);
 assert.equal(motion.orchestrator.route, 'session-orchestrator');
 assert.equal(motion.orchestrator.getPhase(), 'racing');
 assert.equal(motion.fullscreenRequests, 1);
+
+// iPad Safari shows page fullscreen empty: Apple touch devices are not asked.
+const iPad = createHarness();
+iPad.environment.navigator = { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15', platform: 'MacIntel', maxTouchPoints: 5 };
+assert.equal(await iPad.orchestrator.requestMotion(), true);
+assert.equal(iPad.fullscreenRequests, 0, 'An iPad never gets the empty page fullscreen');
 assert.equal(motion.orientationLocks, 0, 'Starting a race preserves the chosen orientation');
 assert.equal(motion.boostRefills, 1, 'Every successful race start must refill Boost exactly once');
 assert.deepEqual(motion.motionListener.options, { passive: true });

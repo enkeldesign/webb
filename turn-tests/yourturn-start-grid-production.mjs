@@ -16,7 +16,8 @@ const [
   uiSource,
   mockSource,
   startGateSource,
-  socialProtocolSource
+  socialProtocolSource,
+  sessionSource
 ] = await Promise.all([
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/racer-labels.js', import.meta.url), 'utf8'),
@@ -26,11 +27,13 @@ const [
   fs.readFile(new URL('../yourturn/ui.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/mock-challenges.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/start-gate.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/protocol-social.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../yourturn/protocol-social.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/session.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(indexSource, /start-gate\.js\?revision=r1/);
-assert.match(indexSource, /Press Gas, Drift or Boost to start the race\./);
+assert.match(sessionSource, /const START_HINT = 'Press Gas, Drift or Boost to start the race\.';[\s\S]*share the challenge on\.`\} \$\{START_HINT\}`/,
+  'The invitation says how to start, before the race');
 assert.match(startGateSource, /sessionState\.phase === 'staged'/);
 assert.match(startGateSource, /renderStartGrid/);
 assert.match(startGateSource, /const playerSlot = Math\.floor\(\(totalCars - 1\) \/ 2\)/,

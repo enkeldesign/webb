@@ -28,7 +28,6 @@ import { createChallengeScene } from '/yourturn/scene.js?revision=r1';
 import { aboutTurnHtml, escapeHtml, newcomerAssistiveText } from '/yourturn/ui.js?revision=r3';
 
 const RACER_ID_KEY = 'yourturn-racer-id-v1';
-const POST_LANDSCAPE_RECALIBRATE_DELAY_MS = 360;
 
 export function readYourTurnRequest(locationRef = globalThis.location) {
   const query = new URLSearchParams(locationRef?.search || '');
@@ -45,6 +44,9 @@ export function readYourTurnRequest(locationRef = globalThis.location) {
     hasChallenge: Boolean(mockId || snapshotId || encoded)
   });
 }
+
+// The start line holds the car until a forward control: say so before the race.
+const START_HINT = 'Press Gas, Drift or Boost to start the race.';
 
 export function createYourTurnSession({ runtime, raceSession, ui, animation, request }) {
   const state = {
@@ -91,7 +93,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
 
     // The invitation preview needs TURN's render loop, but it is not gameplay.
     // Publish STAGED while running is still false so TURN's orientation guard stays
-    // unlocked through the portrait invitation and portrait -> landscape rotation.
+    // unlocked through the invitation, in whichever orientation the player holds it.
     // The canonical race-started event is the first running:true state event and is
     // therefore the only point where TURN locks the gameplay steering orientation.
     runtime.setGameMode(GAME_MODE.STAGED);
@@ -217,9 +219,9 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
       detailsHtml: `
         <strong>${escapeHtml(track.name.toUpperCase())}</strong>
         <span>${escapeHtml(car.name)} · fastest ${escapeHtml(leader.name)} ${formatChallengeTime(leader.time)}</span>`,
-      copyHtml: count === 1
+      copyHtml: `${count === 1
         ? `Beat ${escapeHtml(leader.name)}’s car, or add your best lap and share the challenge on.`
-        : `Race ${escapeHtml(joinRacerNames(challenge.racers))}. Beat ${escapeHtml(leader.name)} to take the lead, or add your best lap and share the challenge on.`,
+        : `Race ${escapeHtml(joinRacerNames(challenge.racers))}. Beat ${escapeHtml(leader.name)} to take the lead, or add your best lap and share the challenge on.`} ${START_HINT}`,
       extraHtml: `${racerSummaryHtml(challenge)}${newcomerAssistiveText(sender.name)}`,
       className: 'invitation',
       actionList: [
@@ -238,7 +240,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     try {
       state.pendingAccess = await raceSession.prepareMotionAccess();
       state.authorizing = false;
-      await awaitLandscapeAndStart();
+      await startWhenPainted();
     } catch (error) {
       state.authorizing = false;
       showMotionProblem(error);
@@ -263,31 +265,14 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
 
   async function acceptWithManual() {
     state.pendingAccess = raceSession.prepareManualAccess();
-    await awaitLandscapeAndStart();
+    await startWhenPainted();
   }
 
-  async function awaitLandscapeAndStart() {
+  // The race starts in whichever orientation the player holds the device: TURN races in
+  // portrait and landscape alike. Let the closed modal paint before handing control to
+  // TURN; YOUR TURN does not sample or rewrite motion steering state.
+  async function startWhenPainted() {
     ui.closeModal();
-    ui.showRotate();
-    if (isLandscape()) {
-      await nextPaint();
-      return startAcceptedRace();
-    }
-
-    await new Promise((resolve) => {
-      let settled = false;
-      const check = () => {
-        if (settled || !isLandscape()) return;
-        settled = true;
-        window.removeEventListener('resize', check);
-        window.removeEventListener('orientationchange', check);
-        resolve();
-      };
-      window.addEventListener('resize', check, { passive: true });
-      window.addEventListener('orientationchange', check, { passive: true });
-    });
-    // Let the landscape viewport paint before handing control to TURN. This is a UI
-    // transition only; YOUR TURN does not sample or rewrite motion steering state.
     await nextPaint();
     return startAcceptedRace();
   }
@@ -296,7 +281,6 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     state.accepted = true;
     state.paused = false;
     animation.pause();
-    ui.hideRotate();
     document.body.classList.remove('yourturn-preview');
     document.body.classList.add('yourturn-racing');
     state.phase = 'staged';
@@ -306,23 +290,14 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     document.querySelector('#resetButton')?.click();
     useChallengeField();
     const access = state.pendingAccess || raceSession.prepareManualAccess();
+    // TURN centres tilt steering itself: it asks the player to hold the device in a
+    // comfortable driving position, waits for it to keep still, then says STEERING
+    // CENTRED (input/tilt-centring.js). Its message stays on screen.
     await raceSession.startGame(access.fullscreenPromise);
-
-    // TURN's built-in 220 ms start centering can run while YOUR TURN is still
-    // completing its portrait -> landscape fullscreen/orientation handoff. Keep the
-    // staged scene paused, let fresh landscape motion readings arrive, then invoke
-    // TURN's existing RECALIBRATE control once before the player can start driving.
-    if (access.mode === 'motion' && runtime.state.sensorMode) {
-      await new Promise((resolve) => setTimeout(resolve, POST_LANDSCAPE_RECALIBRATE_DELAY_MS));
-      document.querySelector('#calibrateButton')?.click();
-    }
 
     runtime.setGameMode(GAME_MODE.STAGED);
     runtime.state.velocity.set(0, 0, 0);
     stopDrivingInputs();
-    const message = document.querySelector('#message');
-    message?.classList.remove('show');
-    if (message) message.textContent = '';
     runtime.state.lastFrame = performance.now();
     ui.showRaceChrome();
     animation.resume();
@@ -476,6 +451,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
         { label: 'RESUME', primary: true, action: resumeRace },
         { label: 'RESTART LAP', action: restartFromPause },
         { label: 'SHARE', share: true, action: shareFromChallengeMenu },
+        { label: 'GET THE GAME', game: true, action: openFullTurn },
         { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(() => showChallengeMenuView(reason)) }
       ]
     });
@@ -721,11 +697,6 @@ function hideRaceUi() {
   document.querySelector('#hud')?.setAttribute('hidden', '');
   document.querySelector('#controls')?.setAttribute('hidden', '');
   document.querySelector('#manualSteer')?.setAttribute('hidden', '');
-}
-
-function isLandscape() {
-  return globalThis.matchMedia?.('(orientation: landscape)').matches
-    || globalThis.innerWidth > globalThis.innerHeight;
 }
 
 function nextPaint() {

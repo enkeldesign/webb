@@ -23,7 +23,6 @@ const [
   growingCssSource,
   labelsSource,
   labelBootstrapSource,
-  nonVisualSource,
   storageSource,
   mockSource,
   productionApp
@@ -37,7 +36,6 @@ const [
   fs.readFile(new URL('../yourturn/growing-challenge.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/racer-labels.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/racer-labels-bootstrap.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/nonvisual.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/storage-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/mock-challenges.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8')
@@ -45,7 +43,7 @@ const [
 
 assert.match(indexSource, /<title>YOUR TURN<\/title>/);
 assert.match(indexSource, /\/yourturn\/storage-bootstrap\.js/);
-assert.match(indexSource, /\/yourturn\/app\.js\?revision=r593-canonical-motion/);
+assert.match(indexSource, /\/yourturn\/app\.js\?revision=r600-no-blank-screen/);
 assert.match(indexSource, /growing-challenge\.css/);
 assert.match(indexSource, /racer-labels-bootstrap\.js/);
 // TURN's race runtime (main.js) refuses to start without its score feedback root, so
@@ -60,11 +58,11 @@ assert.match(indexSource, /<aside class="score-feedback" id="scoreFeedback"/, 'Y
   assert.doesNotMatch(head, /localStorage/, 'YOUR TURN has no stored theme choice');
   assert.doesNotMatch(indexSource, /theme-contrast/, 'YOUR TURN\'s dark theme is CSS only');
 }
-assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r595-landscape-recalibrate/,
+assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r600-turn-start-centring/,
   'The page must cache-bust the current YOUR TURN session while app.js stays on canonical TURN runtime modules');
 assert.match(indexSource, /Your name in the challenge/);
 assert.match(indexSource, /id="yourTurnChallengeButton"[\s\S]*>THE CHALLENGE<\/button>/);
-assert.match(indexSource, /Press Gas, Drift or Boost to start the race\./);
+assert.match(sessionSource, /const START_HINT = 'Press Gas, Drift or Boost to start the race\.';/);
 assert.doesNotMatch(indexSource, /manifest|install-gate/i,
   'YOUR TURN remains browser-first rather than a PWA install gate');
 
@@ -81,7 +79,10 @@ assert.doesNotMatch(appSource, /__turnMotionLifecycle\?\.uninstall|__turnMotionL
   'YOUR TURN must not tear down TURN’s canonical motion lifecycle');
 assert.match(appSource, /installStartLineFormationAdapter/);
 assert.match(appSource, /formation\.rivalDistance = Math\.min\(formation\.rivalDistance, playerDistance\)/);
-assert.match(appSource, /installScreenBlanking/);
+assert.doesNotMatch(appSource, /installScreenBlanking/,
+  'YOUR TURN has no blank screen: it was a way to try driving blind, not an accessibility feature (Erik)');
+assert.doesNotMatch(indexSource, /nonvisual\.(js|css)/, 'The blank-screen intro is gone from YOUR TURN');
+assert.doesNotMatch(indexSource, /yourTurnRotate|ROTATE YOUR DEVICE/, 'YOUR TURN races in portrait and landscape: no rotate requirement');
 assert.match(appSource, /installRaceSpeech/);
 
 assert.match(sessionSource, /challengeLaps: \[\]/,
@@ -144,9 +145,6 @@ assert.match(sceneSource, /PREVIEW_START_DELAY_MS = 650/);
 assert.match(sceneSource, /STAGED_IMITATION_DELAY_MS = 650/);
 assert.match(sceneSource, /prefers-reduced-motion/);
 assert.match(cssSource, /background: rgb\(255 248 232 \/ 0\.9\)/);
-assert.match(nonVisualSource, /Drive By Ear 101 training/);
-assert.match(nonVisualSource, /yourTurnDbeBalance/);
-assert.match(nonVisualSource, /removeRivalResetUi/);
 assert.match(storageSource, /const LOCAL_PREFIX = 'yourturn:';/);
 assert.match(mockSource, /'sol-countryside-r1'/);
 assert.match(mockSource, /'friends-countryside-r1'/,
