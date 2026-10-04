@@ -265,6 +265,9 @@ export function createRaceSessionOrchestrator({
     phase = 'home';
     state.running = false;
     stopDrivingInputs();
+    // The engine and the other driving sounds stop with the race. ROADBOOK covers the
+    // frame loop that would otherwise fade them, so their last level would hum on.
+    environment.__turnAudio?.silence?.();
     intro.hidden = true;
     hud.hidden = true;
     controls.hidden = true;
