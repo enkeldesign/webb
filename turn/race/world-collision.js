@@ -21,6 +21,7 @@ export function resolveWorldCollisionState(options = {}) {
     nearestTrack = null,
     collisionProfile = null,
     carRadius = DEFAULT_CAR_RADIUS,
+    shoulderDragScale = 1,
     dt = 1 / 60
   } = options;
 
@@ -40,6 +41,7 @@ export function resolveWorldCollisionState(options = {}) {
     nearestTrack,
     guide: collisionProfile?.bridgeGuide,
     baselineLimit,
+    offRoadDragScale: shoulderDragScale,
     dt
   }) || INACTIVE_BRIDGE_GUIDE;
 

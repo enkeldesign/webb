@@ -516,6 +516,8 @@ function updateVehiclePhysicsStateCore({
       trackDistance: nearestAfter.distance,
       trackWidth
     }),
+    // OVERSIZED slides along a track edge without losing speed (#1110).
+    edgeSlide: vehicleIgnoresOffRoadPenalty(state.vehicleId),
     dt
   });
   state.collided = collision.collided === true;

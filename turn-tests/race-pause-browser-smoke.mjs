@@ -66,8 +66,12 @@ async function openRace({ width, height, handedness = 'right' }) {
   return { context, page };
 }
 
-// Hold GAS until the car crosses the start line and the timed lap begins.
+// Hold GAS until the car crosses the start line and the timed lap begins. Keyboard GAS
+// only drives once focus has left the buttons and no dialog is open, as for a player;
+// pressing mid-transition (just after RESTART LAP) was ignored and never sent again.
 async function startLap(page) {
+  await page.waitForFunction(() => !document.querySelector('dialog[open]')
+    && !document.activeElement?.closest?.('button, input, select, textarea, a, [role="dialog"]'));
   await page.keyboard.down('ArrowUp');
   await page.waitForFunction(() => globalThis.__turnRuntime.state.mode === 'racing', null, { timeout: 30000 });
   await page.waitForTimeout(800);

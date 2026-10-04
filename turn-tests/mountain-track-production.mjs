@@ -122,6 +122,24 @@ assert.equal(shoulderSpeedAfterOneSecond(0), 40, 'The Monster Truck keeps all it
 assert.ok(shoulderSpeedAfterOneSecond(1) < 15, 'Ordinary cars still slow down on the MOUNTAIN shoulder');
 assert.ok(shoulderSpeedAfterOneSecond(TRACTION_MIN_OFFROAD_PENALTY) > 28,
   'TRACTION loses far less speed on the shoulder');
+// #1110 (b): OVERSIZED also slides along MOUNTAIN's edge without losing speed.
+const edgeSpeed = (edgeSlide) => {
+  const state = { position: { x: 16.2, y: 0, z: 0 }, velocity: { x: 6, y: 0, z: 60 }, speed: Math.hypot(6, 60) };
+  const result = resolveWorldCollisionState({
+    state,
+    trackId: 'mountain',
+    nearestTrack: { index: 0, distance: 16.2, sample: { point: { x: 0, y: 0, z: 0 }, tangent: { x: 0, y: 0, z: 1 } } },
+    collisionProfile: mountain.collisionProfile,
+    shoulderDragScale: edgeSlide ? 0 : 1,
+    edgeSlide,
+    dt: 1 / 60
+  });
+  assert.equal(result.boundary, true, 'The car past the edge meets MOUNTAIN’s boundary');
+  assert.ok(state.position.x <= 15.6 + 1e-9, 'Every car is still kept on the course');
+  return state.velocity.z;
+};
+assert.equal(edgeSpeed(true), 60, 'The Monster Truck keeps all its along-the-edge speed');
+assert.ok(edgeSpeed(false) < 60, 'Other cars still lose speed scraping the edge');
 
 for (const baseTrack of BASE_TRACK_DEFINITIONS) {
   if (baseTrack.id === 'mountain') continue;

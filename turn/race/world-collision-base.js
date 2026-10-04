@@ -20,6 +20,7 @@ export function resolveWorldCollisionState({
   collisionProfile = null,
   carRadius = DEFAULT_CAR_RADIUS,
   shoulderDragScale = 1,
+  edgeSlide = false,
   dt = 1 / 60
 }) {
   if (!state?.position || !state?.velocity) {
@@ -50,7 +51,8 @@ export function resolveWorldCollisionState({
       nearestTrack,
       limit,
       bounce: boundedNumber(collisionProfile?.boundaryBounce, COLLISION_BOUNCE, 0, 1),
-      tangentRetention: boundedNumber(
+      // A car that slides along edges keeps all of its along-the-edge speed.
+      tangentRetention: edgeSlide === true ? 1 : boundedNumber(
         collisionProfile?.boundaryTangentRetention,
         COLLISION_TANGENT_RETENTION,
         0,
