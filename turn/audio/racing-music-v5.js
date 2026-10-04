@@ -11,6 +11,10 @@ const DEFAULT_VOLUME = 100;
 const STEPS_PER_BEAT = 4;
 const LOOKAHEAD_MS = 25;
 const SCHEDULE_AHEAD_SECONDS = 0.12;
+// A step this late is skipped, not played. After a stall (opening GARAGE on a phone can
+// block the page for most of a second) every missed step would otherwise start at once:
+// a burst of all the notes the stall skipped (Erik, 1.36.27). The song keeps its place.
+const MAX_LATE_SECONDS = 0.05;
 const DESIGNED_MASTER_GAIN = 0.54;
 // SWOOSH pace notes (#909) duck the music while they play, on its own gain so the
 // player's volume is never touched.
@@ -119,7 +123,9 @@ function advanceStep() {
 }
 function scheduler() {
   if (!playing || !context || context.state !== 'running') return;
-  while (playing && nextStepTime < context.currentTime + SCHEDULE_AHEAD_SECONDS) { scheduleStep(currentStep, nextStepTime); advanceStep(); }
+  const now = context.currentTime;
+  while (playing && nextStepTime < now - MAX_LATE_SECONDS) advanceStep();
+  while (playing && nextStepTime < now + SCHEDULE_AHEAD_SECONDS) { scheduleStep(currentStep, nextStepTime); advanceStep(); }
   schedulerTimer = globalThis.setTimeout(scheduler, LOOKAHEAD_MS);
 }
 function clearScheduler() { globalThis.clearTimeout(schedulerTimer); schedulerTimer = 0; }
@@ -207,7 +213,7 @@ function installMusicStylesheet() {
   const link = document.createElement('link');
   link.id = 'turn-racing-music-stylesheet';
   link.rel = 'stylesheet';
-  link.href = '/turn/audio/music/music-controls.css?build=20261004-r389';
+  link.href = '/turn/audio/music/music-controls.css?build=20261004-r390';
   document.head.appendChild(link);
 }
 

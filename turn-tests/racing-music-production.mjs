@@ -172,4 +172,10 @@ assert.match(engine, /tones\?\.playBass/);
 assert.match(engine, /tones\?\.playArp/);
 assert.match(engine, /drums\?\.play/);
 
+// After a stall (opening GARAGE on a phone), missed steps are skipped, not all started at
+// once: scheduled in the past they played together as one loud burst (1.36.28).
+assert.match(engine, /const MAX_LATE_SECONDS = 0\.05;/);
+assert.match(engine, /while \(playing && nextStepTime < now - MAX_LATE_SECONDS\) advanceStep\(\);\s*while \(playing && nextStepTime < now \+ SCHEDULE_AHEAD_SECONDS\) \{ scheduleStep/,
+  'The scheduler skips the steps a stall missed before scheduling what is due');
+
 console.log('TURN generated racing music regression passed.');
