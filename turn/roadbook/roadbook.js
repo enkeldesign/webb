@@ -17,7 +17,7 @@ import {
   rewardForTrack,
   showTrophyUnlockNotice
 } from '/turn/progression/trophy-road.js';
-import { getStoredBestLap } from '/turn/race/rival-storage.js?source=20260729-r118-m8';
+import { RIVAL_LIMIT, getStoredBestLap, getStoredRivalSummaries } from '/turn/race/rival-storage.js?source=20260729-r118-m8';
 import { getCarDefinition } from '/turn/vehicle/catalog.js?source=20260729-r118-m8';
 import { renderBestCarThumbnail } from '/turn/ui/track-best-car.js?revision=r253-supercar-release';
 import { getBestDriftRecord } from '/turn/scoring/drift-records.js?revision=r206-home-track-records';
@@ -73,9 +73,12 @@ function titleCase(name) {
 
 export function formatRecordTime(seconds) {
   if (!Number.isFinite(seconds)) return '';
-  const minutes = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-  const ms = Math.floor((seconds % 1) * 1000).toString().padStart(3, '0');
+  // Whole milliseconds, cut, not rounded; the epsilon keeps 39.812 from reading 39.811
+  // (it is stored as 39.81199…).
+  const total = Math.floor(seconds * 1000 + 1e-6);
+  const minutes = Math.floor(total / 60000);
+  const secs = Math.floor((total % 60000) / 1000).toString().padStart(2, '0');
+  const ms = (total % 1000).toString().padStart(3, '0');
   return `${minutes}:${secs}.${ms}`;
 }
 
@@ -183,6 +186,7 @@ function renderDetail(track, { idPrefix }) {
       <span class="turn-pr-icon is-large" aria-hidden="true">${trackIconMarkup(track.id)}</span>
       ${routeMarkup(track.id)}
       <span class="turn-pr-detail-length">Length: ${(getTrackLengthMetres(track.id) / 1000).toFixed(1)} km</span>
+      ${lock ? '' : '<span class="turn-pr-detail-rivals"></span>'}
     </div>
     <p class="turn-pr-detail-description">${escapeHtml(track.description)}</p>
     ${lock ? `
@@ -200,7 +204,16 @@ function renderDetail(track, { idPrefix }) {
         <span>Track achievements</span><span class="roadbook-goals-count"></span>
       </h3>
       <ol class="roadbook-goal-list"></ol>
-    </section>`;
+    </section>
+    ${lock ? '' : `
+    <section class="roadbook-rivals" aria-labelledby="${idPrefix}RivalsTitle">
+      <h3 class="turn-pr-section-title roadbook-rivals-title" id="${idPrefix}RivalsTitle" tabindex="-1">
+        <span>Rivals</span><span class="roadbook-rivals-count"></span>
+      </h3>
+      <ul class="roadbook-rival-list"></ul>
+      <p class="roadbook-rivals-empty" hidden>No rivals yet. Your ${RIVAL_LIMIT} fastest laps here become the rivals you race.</p>
+      <div class="roadbook-rivals-reset"></div>
+    </section>`}`;
 }
 
 // ---------- Goals (#1031) ----------
@@ -318,6 +331,47 @@ let thumbnailGeneration = 0;
 
 // Fill the record rows of a rendered detail. Car artwork comes from the same
 // renderer the rest of TURN uses, one thumbnail at a time, after the text is in.
+// ---------- Rivals ----------
+// The saved rivals of a track, without starting a race there: how many on the map, and
+// each one's car, in its paint, with its lap time.
+
+let rivalThumbnailGeneration = 0;
+
+function fillRivals(container, track) {
+  const section = container.querySelector('.roadbook-rivals');
+  const mapCount = container.querySelector('.turn-pr-detail-rivals');
+  if (!section) return [];
+  const rivals = getStoredRivalSummaries(track.id);
+  if (mapCount) mapCount.textContent = `Rivals: ${rivals.length}`;
+  const count = section.querySelector('.roadbook-rivals-count');
+  count.textContent = `${rivals.length} / ${RIVAL_LIMIT}`;
+  count.setAttribute('aria-label', `${rivals.length} of ${RIVAL_LIMIT}`);
+  section.querySelector('.roadbook-rivals-empty').hidden = rivals.length > 0;
+  const list = section.querySelector('.roadbook-rival-list');
+  list.hidden = !rivals.length;
+  list.innerHTML = rivals.map((rival) => `
+    <li class="roadbook-rival">
+      <img class="roadbook-rival-car" alt="" draggable="false" hidden>
+      <span class="roadbook-rival-name">${escapeHtml(getCarDefinition(rival.carId)?.name || '')}</span>
+      <span class="roadbook-rival-time">${formatRecordTime(rival.time)}</span>
+    </li>`).join('');
+  const generation = ++rivalThumbnailGeneration;
+  const images = [...list.querySelectorAll('.roadbook-rival-car')];
+  void (async () => {
+    for (const [index, rival] of rivals.entries()) {
+      try {
+        const source = await renderBestCarThumbnail(rival);
+        if (generation !== rivalThumbnailGeneration || !images[index].isConnected) return;
+        images[index].src = source;
+        images[index].hidden = false;
+      } catch (error) {
+        console.warn('TURN: could not render a rival car.', error);
+      }
+    }
+  })();
+  return rivals;
+}
+
 function fillRecords(container, track) {
   const generation = ++thumbnailGeneration;
   const requests = [];
@@ -365,6 +419,7 @@ export function installRoadbook({
   getSelectedTrackId,
   onSelectTrack,
   onChooseCar,
+  onResetRivals = null,
   documentRef = document,
   windowRef = window
 }) {
@@ -464,11 +519,58 @@ export function installRoadbook({
     actions.appendChild(button);
   }
 
+  // Reset this track's rivals, after a confirmation in place. Their laps are the best
+  // time too, so that goes with them; other tracks keep theirs.
+  function rivalResetSlot(container, track, rivals, idPrefix) {
+    const slot = container.querySelector('.roadbook-rivals-reset');
+    if (!slot) return;
+    slot.replaceChildren();
+    if (!rivals.length || typeof onResetRivals !== 'function') return;
+    const name = titleCase(track.name);
+    const confirmId = `${idPrefix}RivalsConfirm`;
+    slot.innerHTML = `
+      <button type="button" class="turn-pr-button is-compact roadbook-rivals-reset-button" aria-expanded="false" aria-controls="${confirmId}">Reset ${escapeHtml(name)} rivals</button>
+      <div class="roadbook-rivals-confirm" id="${confirmId}" role="group" aria-labelledby="${confirmId}Text" hidden>
+        <p id="${confirmId}Text">Remove the ${rivals.length === 1 ? 'saved rival' : `${rivals.length} saved rivals`} on ${escapeHtml(name)}? Your best time there goes with ${rivals.length === 1 ? 'it' : 'them'}. Other tracks keep theirs.</p>
+        <div class="roadbook-rivals-confirm-actions">
+          <button type="button" class="turn-pr-button is-compact roadbook-rivals-cancel">Cancel</button>
+          <button type="button" class="turn-pr-button is-compact roadbook-rivals-confirm-button">Reset rivals</button>
+        </div>
+      </div>`;
+    const resetButton = slot.querySelector('.roadbook-rivals-reset-button');
+    const confirm = slot.querySelector('.roadbook-rivals-confirm');
+    const confirmButton = slot.querySelector('.roadbook-rivals-confirm-button');
+    const showConfirm = (shown) => {
+      confirm.hidden = !shown;
+      resetButton.hidden = shown;
+      resetButton.setAttribute('aria-expanded', String(shown));
+    };
+    resetButton.addEventListener('click', () => {
+      showConfirm(true);
+      confirmButton.focus();
+    });
+    slot.querySelector('.roadbook-rivals-cancel').addEventListener('click', () => {
+      showConfirm(false);
+      resetButton.focus();
+    });
+    confirmButton.addEventListener('click', async () => {
+      confirmButton.disabled = true;
+      try {
+        await onResetRivals(track.id);
+      } finally {
+        refreshRecords();
+        const title = documentRef.getElementById(`${idPrefix}RivalsTitle`);
+        title?.focus({ preventScroll: false });
+      }
+    });
+  }
+
   function renderDetailInto(container, track, idPrefix) {
     container.innerHTML = renderDetail(track, { idPrefix });
     fillRecords(container, track);
     shareSlot(container, track);
     fillGoals(container, track);
+    rivalResetSlot(container, track, fillRivals(container, track), idPrefix);
   }
 
   // A goal opens ACHIEVEMENTS on that track's achievements, at the one chosen; closing

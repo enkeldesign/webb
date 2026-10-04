@@ -1131,13 +1131,14 @@ Object.freeze({
     Object.freeze(['1.36.21 r382', 'Portrait with device rotation: the DRIFT and FLOW gauges sit together between the two cards, DRIFT\'s under its card and FLOW\'s on top of its own.']),
     Object.freeze(['1.36.22 r383', 'Steering by device rotation tells you when it centres. At the start the race pill says HOLD YOUR DEVICE IN A COMFORTABLE DRIVING POSITION, then STEERING CENTRED once the device keeps still, without holding up the start. Turning the screen, switching to device rotation and RECALIBRATE say STEERING CENTRED too, and RECALIBRATE blinks with it; screen readers hear it, and Drive By Ear plays a short level cue. GO! is gone: you choose when to start.']),
     Object.freeze(['1.36.23 r384', 'Smoother racing with pace notes. Each pace note used to build its own small echo room as the bend came up, which could make the race stutter for a moment on an older phone or tablet. The race pace note is now dry, with no echo room: it costs a fraction of the work and keeps its long ring, pitch and swipe. Sounds in the admin sound picker that keep a room share one, built before the race.']),
-    Object.freeze(['1.36.24 r385', 'Smoother racing at speed. The frame limiter added in 1.36.14 could drop a frame now and then on ordinary 60 Hz screens, which showed as a jerk when drifting or boosting. It now measures the screen: every frame is drawn on a 60 Hz screen, and faster screens stay at an even 60 frames a second.'])
+    Object.freeze(['1.36.24 r385', 'Smoother racing at speed. The frame limiter added in 1.36.14 could drop a frame now and then on ordinary 60 Hz screens, which showed as a jerk when drifting or boosting. It now measures the screen: every frame is drawn on a 60 Hz screen, and faster screens stay at an even 60 frames a second.']),
+    Object.freeze(['1.36.25 r386', 'The Track sheet shows a track\'s rivals without racing there first: how many on its map, and each one at the bottom with its car, in its paint, and its lap time. A button there resets that track\'s rivals, after asking.'])
   ])
 })
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.36.24',
-  build: '2026.10.03-r385',
-  note: 'Smoother racing at speed: no dropped frames on 60 Hz screens.'
+  version: '1.36.25',
+  build: '2026.10.04-r386',
+  note: 'The Track sheet shows each track\'s rivals.'
 });

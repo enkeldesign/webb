@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   clearAllRivalsState, clearRivalsState, flushScheduledRivalsState,
-  getStoredBestLap, getStoredBestReplayLap, hasStoredBestReplayLap,
+  getStoredBestLap, getStoredBestReplayLap, getStoredRivalSummaries, hasStoredBestReplayLap,
   loadRivalsState, saveRivalsState, scheduleRivalsStateSave
 } from '../turn/race/rival-storage.js';
 import { getTrackStorageRevision } from '../turn/tracks/definitions.js';
@@ -281,7 +281,28 @@ try {
     storage.setItem = quotaSetItem;
   }
 
-  console.log('TURN rival persistence: reset, pending precedence, Home/share/reload, bounded retries, lifecycle recovery, two-window merge and reset, compact replays and full storage passed.');
+  // The Track sheet lists a track's rivals without starting a race: fastest first, at
+  // most four, each with its car and paint, never its replay; pending laps count, and a
+  // reset empties the list.
+  reset();
+  const rivals = state('harbor', 12);
+  rivals.competitorLaps = lapsFor('harbor', [12, 9, 11]);
+  rivals.competitorLaps[1].carId = 'truck';
+  saveRivalsState(rivals);
+  const listed = getStoredRivalSummaries('harbor');
+  assert.deepEqual(listed.map((rival) => rival.time), [9, 11, 12], 'Rivals are listed fastest first');
+  assert.deepEqual({ ...listed[0] }, { time: 9, carId: 'truck', carColor: '#123456', carSecondaryColor: '#654321' },
+    'Each rival brings its car and paint, not its replay');
+  assert.deepEqual(getStoredRivalSummaries('airport'), [], 'Another track has none of them');
+  const more = state('harbor', 8);
+  more.competitorLaps = lapsFor('harbor', [8, 9, 10, 11, 12]);
+  scheduleRivalsStateSave(more);
+  assert.deepEqual(getStoredRivalSummaries('harbor').map((rival) => rival.time), [8, 9, 10, 11],
+    'A lap not yet on disk counts, and the list stops at four');
+  clearRivalsState(more);
+  assert.deepEqual(getStoredRivalSummaries('harbor'), [], 'A reset empties the list');
+
+  console.log('TURN rival persistence: reset, pending precedence, Home/share/reload, bounded retries, lifecycle recovery, two-window merge and reset, compact replays, full storage and the Track sheet’s rival list passed.');
 } finally {
   reset();
   for (const [name, descriptor] of originals) {
