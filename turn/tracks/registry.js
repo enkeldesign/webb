@@ -32,7 +32,9 @@ const WORLD_INSTALLER_LOADERS = Object.freeze({
     return installBeachfrontWorld({ scene, samples, trackWidth, runtime });
   },
   async harbor({ scene, samples, trackWidth }) {
-    const { installHarborWorld } = await import('./harbor-world.js');
+    // Use the complete world explicitly: its quay clearance and batching must
+    // not depend on entry-page aliases of the unpatched base world.
+    const { installHarborWorld } = await import('./harbor-world-r82.js');
     return installHarborWorld({ scene, samples, trackWidth });
   },
   async 'dead-canyon'({ scene, samples, trackWidth, runtime }) {
@@ -41,7 +43,7 @@ const WORLD_INSTALLER_LOADERS = Object.freeze({
   },
   async 'midnight-city'({ scene, samples, trackWidth, runtime }) {
     const { installMidnightCityWorld } = await import(
-      './midnight-city-world.js?build=20261004-r395'
+      './midnight-city-world.js?build=20261004-r396'
     );
     return installMidnightCityWorld({ scene, samples, trackWidth, runtime });
   },
