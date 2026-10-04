@@ -152,7 +152,8 @@ assert.match(cueCssSource, /data-turn-color-cues='on'/);
 assert.match(cueCssSource, /html\[data-turn-color-cues='on'\] \.turn-color-cue \{\s*display: inline-flex;/,
   'Every colour cue, GARAGE included, appears only while Color cues is on');
 
-assert.match(historySource, /native HTML color input/i);
+assert.match(historySource, /optional Color Cues/i,
+  'Curated History must retain the player-facing accessibility feature; native-input behavior is verified above');
 assert.doesNotMatch(historySource, /native paint activation bridge|assistive-technology bridge/i,
   'Current release history must not claim an activation bridge that no longer exists');
 
