@@ -9,8 +9,10 @@ const TELEMETRY_EVENTS = new Set([
   'lap_invalid',
   'drift_score',
   'flow_score',
-  // YOUR TURN funnel: a shared challenge opened, and GET THE GAME chosen.
+  // YOUR TURN funnel: a shared challenge opened, raced (a lap started) and
+  // GET THE GAME chosen. All three come from the same clients, so they compare.
   'challenge_open',
+  'challenge_race',
   'get_game'
 ]);
 const SCORE_EVENTS = new Set(['drift_score', 'flow_score']);
@@ -257,7 +259,7 @@ async function loadStats(db, days, audience) {
       SELECT event, SUM(count) AS count
       FROM ${source}
       WHERE day >= ?1 AND surface = 'yourturn'
-        AND event IN ('challenge_open', 'play_session', 'get_game')
+        AND event IN ('challenge_open', 'challenge_race', 'get_game')
       GROUP BY event
     `).bind(sinceDay)),
     db.prepare(`SELECT MAX(last_at) AS last_at FROM ${source} WHERE day >= ?1`).bind(sinceDay).first()
@@ -300,7 +302,7 @@ async function loadStats(db, days, audience) {
     scoreDistributions: normalizeScoreDistributions(scoreRows),
     yourTurn: {
       opened: yourTurn.challenge_open || 0,
-      raced: yourTurn.play_session || 0,
+      raced: yourTurn.challenge_race || 0,
       gotGame: yourTurn.get_game || 0
     }
   };

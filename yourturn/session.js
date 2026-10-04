@@ -116,6 +116,13 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     syncTarget();
 
     recordFunnel('challenge_open');
+    // Raced: the first lap this page starts. Counted by the same clients that count
+    // opens, so the funnel compares like with like.
+    window.addEventListener('turn:ui-state-change', function countFirstLap(event) {
+      if (event.detail?.reason !== 'lap-started') return;
+      window.removeEventListener('turn:ui-state-change', countFirstLap);
+      recordFunnel('challenge_race');
+    });
     if (request.reply === 'give-up') showReceivedLegacyGiveUp();
     else showInvitation();
   }
@@ -660,9 +667,9 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     openFullTurn();
   }
 
-  // Anonymous YOUR TURN funnel: a challenge opened and GET THE GAME chosen (races are
-  // already counted). The new event names travel in their own batch, so a Worker that
-  // does not know them yet cannot take other gameplay events down with them.
+  // Anonymous YOUR TURN funnel: a challenge opened, raced and GET THE GAME chosen.
+  // The new event names travel in their own batch, so a Worker that does not know
+  // them yet cannot take other gameplay events down with them.
   function recordFunnel(event) {
     const telemetry = globalThis.__turnTelemetry;
     if (!telemetry) return;

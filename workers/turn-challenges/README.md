@@ -32,6 +32,7 @@ Current event types are deliberately small:
 - `drift_score`
 - `flow_score`
 - `challenge_open` (YOUR TURN: a shared challenge opened)
+- `challenge_race` (YOUR TURN: that challenge's first lap started)
 - `get_game` (YOUR TURN: GET THE GAME chosen)
 
 Dimensions are limited to product surface, build, track, car, steering mode, browser/installed web app, Drive By Ear state, blank-screen state, developer yes/no, lap time, lap score and invalid-lap reason. Score events are retained only as per-day, per-track 500-point bands with count, sum, minimum and maximum. Names, challenge IDs/links, replay data, driving paths, control streams, exact per-session score histories and precise location are not part of the analytics payload.

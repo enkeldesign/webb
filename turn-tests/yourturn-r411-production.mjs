@@ -62,8 +62,8 @@ assert.match(screenReaderSource, /const BALANCE_SLIDERS = '#m8AudioBalance, #you
 assert.match(screenReaderSource, /document\.getElementById\(`\$\{slider\.id\}Value`\)/);
 assert.match(yourTurnControls, /installQeDriveControls\(\);/,
   'YOUR TURN keeps TURN’s Q and E keys for DRIFT and BOOST');
-assert.match(yourTurnSession, /recordFunnel\('challenge_open'\);\s*if \(request\.reply/,
-  'The YOUR TURN funnel counts a challenge opening once, when it loads');
+assert.match(yourTurnSession, /recordFunnel\('challenge_open'\);[\s\S]*event\.detail\?\.reason !== 'lap-started'[\s\S]*recordFunnel\('challenge_race'\);[\s\S]*if \(request\.reply/,
+  'The YOUR TURN funnel counts a challenge opening when it loads, and its first lap');
 assert.match(yourTurnSession, /function getTheGame\(\) \{\s*recordFunnel\('get_game'\);\s*openFullTurn\(\);/,
   'GET THE GAME is counted before going to TURN');
 assert.doesNotMatch(yourTurnSession, /label: 'GET THE GAME', game: true, action: openFullTurn/,

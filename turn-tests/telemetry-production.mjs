@@ -43,12 +43,12 @@ assert.match(about, /<summary>PRIVACY &amp; USAGE STATISTICS<\/summary>/);
 assert.match(about, /no analytics cookie and creates no persistent analytics identifier/i);
 assert.match(about, /developer yes\/no flag/i);
 assert.match(about, /DRIFT or FLOW lap scores/i);
-assert.match(about, /YOUR TURN also counts when a shared challenge opens and when GET THE GAME is chosen/,
-  'The privacy text must name the two YOUR TURN funnel counts sent outside a race');
-assert.match(workerTelemetry, /'challenge_open',\s*'get_game'/,
+assert.match(about, /YOUR TURN also counts when a shared challenge opens, when it is raced and when GET THE GAME is chosen/,
+  'The privacy text must name the YOUR TURN funnel counts, two of them sent outside a race');
+assert.match(workerTelemetry, /'challenge_open',\s*'challenge_race',\s*'get_game'/,
   'The Worker accepts the YOUR TURN funnel counts');
-assert.match(workerTelemetry, /yourTurn: \{\s*opened: yourTurn\.challenge_open \|\| 0,\s*raced: yourTurn\.play_session \|\| 0,\s*gotGame: yourTurn\.get_game \|\| 0/,
-  'The stats endpoint reports the YOUR TURN funnel');
+assert.match(workerTelemetry, /yourTurn: \{\s*opened: yourTurn\.challenge_open \|\| 0,\s*raced: yourTurn\.challenge_race \|\| 0,\s*gotGame: yourTurn\.get_game \|\| 0/,
+  'All three funnel steps come from the same clients, so shares never compare different cohorts (Codex on #1114)');
 assert.match(statsHtml, /id="yourTurnFunnel"/);
 assert.match(statsJs, /renderYourTurnFunnel\(stats\.yourTurn \|\| \{\}\)/,
   'The private dashboard shows challenges opened, raced and GET THE GAME');

@@ -261,7 +261,7 @@ function renderYourTurnFunnel(funnel) {
   };
   renderDefinitionList(document.querySelector('#yourTurnFunnel'), [
     ['Challenges opened', formatCount(opened)],
-    ['Raced (play sessions)', step(funnel.raced)],
+    ['Raced a lap', step(funnel.raced)],
     ['GET THE GAME chosen', step(funnel.gotGame)]
   ], (value) => value);
 }
