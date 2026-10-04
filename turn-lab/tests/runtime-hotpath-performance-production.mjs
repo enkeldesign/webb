@@ -134,7 +134,7 @@ assert.doesNotMatch(lapSystem, /state\.recording\.map\(/,
 for (const worldModule of [
   'airport-world-r56.js',
   'cliffside-world.js',
-  'harbor-world.js',
+  'harbor-world-r82.js',
   'midnight-city-world.js',
   'mountain-world.js'
 ]) {
