@@ -47,6 +47,9 @@ on:
       - 'turn/scoring/flow-runtime.js'
       - 'turn/scoring/drift-attack-runtime.js'
       - 'turn-tests/race-pause-browser-smoke.mjs'
+      - 'turn-tests/harbor-surface-browser-smoke.mjs'
+      - 'turn/tracks/harbor-world*.js'
+      - 'turn/tracks/registry.js'
       - '.github/workflows/turn-support-feedback-browser.yml'
   push:
     branches:
@@ -96,6 +99,9 @@ on:
       - 'turn/scoring/flow-runtime.js'
       - 'turn/scoring/drift-attack-runtime.js'
       - 'turn-tests/race-pause-browser-smoke.mjs'
+      - 'turn-tests/harbor-surface-browser-smoke.mjs'
+      - 'turn/tracks/harbor-world*.js'
+      - 'turn/tracks/registry.js'
       - '.github/workflows/turn-support-feedback-browser.yml'
 
 concurrency:
@@ -133,6 +139,7 @@ jobs:
           - shard: navigation
             tests: >-
               turn-tests/app-navigation-browser-smoke.mjs
+              turn-tests/harbor-surface-browser-smoke.mjs
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
