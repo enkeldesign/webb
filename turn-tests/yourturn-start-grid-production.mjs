@@ -31,7 +31,7 @@ const [
   fs.readFile(new URL('../yourturn/session.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(indexSource, /start-gate\.js\?revision=r1/);
+assert.match(indexSource, /start-gate\.js\?revision=r2-turn-camera/);
 assert.match(sessionSource, /const START_HINT = 'Press Gas, Drift or Boost to start the race\.';[\s\S]*share the challenge on\.`\} \$\{START_HINT\}`/,
   'The invitation says how to start, before the race');
 assert.match(startGateSource, /sessionState\.phase === 'staged'/);
@@ -44,6 +44,16 @@ assert.match(startGateSource, /#gasButton, \.drive-drift-zone, \.drive-boost-zon
   'Gas, Drift and Boost are the explicit race-start intents');
 assert.match(startGateSource, /beginTimedLapState/,
   'The first forward control must start canonical lap timing immediately');
+assert.match(startGateSource, /updateRaceCameraState\(\{\s*state: runtime\.state,/,
+  'On the grid, tilt reads as in TURN: TURN’s race camera keeps the horizon level');
+assert.doesNotMatch(startGateSource, /renderGridCamera/,
+  'No separate grid camera: the view does not jump when the race starts');
+assert.match(startGateSource, /playerCar\.rotation\.z = -runtime\.state\.steering \* 0\.035/,
+  'The waiting car leans with the steering as it does in TURN');
+assert.match(startGateSource, /keyboardDriveActionForEvent\(event\) === 'gas' \|\| Boolean\(qeDriveZoneForEvent\(event\)\)/,
+  'GAS (Up or W), DRIFT (Q) and BOOST (E) on a keyboard start the race too');
+assert.match(startGateSource, /event\.repeat \|\| !ownership\.accepts\(event\)/,
+  'Keys typed into a field or a dialog never start the race');
 assert.match(startGateSource, /LAUNCH_BLEND_SECONDS = 0\.9/,
   'Rivals should merge smoothly from their side-by-side start slots into recorded trajectories');
 

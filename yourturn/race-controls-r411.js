@@ -1,5 +1,12 @@
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js';
 import {
+  CONTROL_HANDEDNESS,
+  controlHandednessDescription,
+  loadControlHandedness,
+  saveControlHandedness
+} from '/turn/ui/control-handedness.js';
+import { installQeDriveControls } from '/turn/input/qe-drive-controls.js';
+import {
   loadColorCuesEnabled,
   saveColorCuesEnabled
 } from '/turn/accessibility/color-cues.js?revision=r163';
@@ -21,7 +28,7 @@ function balanceLabel(value) {
   return 'Balanced';
 }
 
-function createSettingsDialog({ runtime, raceSession, trigger }) {
+function createSettingsDialog({ runtime, raceSession }) {
   const dialog = document.createElement('dialog');
   dialog.className = 'yourturn-settings-dialog';
   dialog.setAttribute('aria-labelledby', 'yourTurnSettingsTitle');
@@ -36,7 +43,8 @@ function createSettingsDialog({ runtime, raceSession, trigger }) {
         <fieldset class="yourturn-setting-card yourturn-steering-setting">
           <legend>Steering</legend>
           <label><input type="radio" name="yourTurnSteering" value="motion"><span><strong>Device rotation</strong><small>Turn the whole device like a steering wheel.</small></span></label>
-          <label><input type="radio" name="yourTurnSteering" value="manual"><span><strong>On-screen steering</strong><small>Use the steering control on the left.</small></span></label>
+          <label><input type="radio" name="yourTurnSteering" value="manual"><span><strong>On-screen steering</strong><small>Use the steering control or a keyboard.</small></span></label>
+          <label class="yourturn-toggle-row"><input id="yourTurnLeftHanded" type="checkbox" aria-describedby="yourTurnLeftHandedDescription"><span><strong>Left-handed controls</strong><small id="yourTurnLeftHandedDescription"></small></span></label>
           <p class="yourturn-motion-note" hidden>Device rotation is not available in this browser.</p>
         </fieldset>
 
@@ -63,6 +71,8 @@ function createSettingsDialog({ runtime, raceSession, trigger }) {
   const motionRadio = dialog.querySelector('input[value="motion"]');
   const manualRadio = dialog.querySelector('input[value="manual"]');
   const motionNote = dialog.querySelector('.yourturn-motion-note');
+  const leftHandedToggle = dialog.querySelector('#yourTurnLeftHanded');
+  const leftHandedDescription = dialog.querySelector('#yourTurnLeftHandedDescription');
   const soundToggle = dialog.querySelector('#yourTurnAudioEnabled');
   const dbeToggle = dialog.querySelector('#yourTurnDbeEnabled');
   const balanceSlider = dialog.querySelector('#yourTurnAudioBalance');
@@ -80,6 +90,9 @@ function createSettingsDialog({ runtime, raceSession, trigger }) {
     motionRadio.checked = runtime.state.sensorMode === true;
     manualRadio.checked = runtime.state.sensorMode !== true;
     motionNote.hidden = motionAvailable;
+    const handedness = loadControlHandedness();
+    leftHandedToggle.checked = handedness === CONTROL_HANDEDNESS.LEFT;
+    leftHandedDescription.textContent = controlHandednessDescription(handedness);
 
     const audio = audioPreferences()?.getSettings?.() || {
       audioEnabled: true,
@@ -145,6 +158,16 @@ function createSettingsDialog({ runtime, raceSession, trigger }) {
   manualRadio.addEventListener('change', () => {
     if (manualRadio.checked) void setSteering(STEERING_MODE.MANUAL);
   });
+  leftHandedToggle.addEventListener('change', () => {
+    const handedness = saveControlHandedness(
+      leftHandedToggle.checked ? CONTROL_HANDEDNESS.LEFT : CONTROL_HANDEDNESS.RIGHT
+    );
+    leftHandedToggle.checked = handedness === CONTROL_HANDEDNESS.LEFT;
+    leftHandedDescription.textContent = controlHandednessDescription(handedness);
+    status.textContent = handedness === CONTROL_HANDEDNESS.LEFT
+      ? 'Left-handed controls on.'
+      : 'Left-handed controls off.';
+  });
   soundToggle.addEventListener('change', () => {
     const enabled = audioPreferences()?.setAudioEnabled?.(soundToggle.checked) ?? soundToggle.checked;
     soundToggle.checked = enabled;
@@ -179,10 +202,14 @@ function createSettingsDialog({ runtime, raceSession, trigger }) {
     status.textContent = `Color cues ${enabled ? 'on' : 'off'}.`;
   });
 
+  // Settings opens from THE CHALLENGE menu and closes back to it.
+  let onClose = null;
   function close() {
     if (typeof dialog.close === 'function' && dialog.open) dialog.close();
     else dialog.removeAttribute('open');
-    trigger.focus({ preventScroll: true });
+    const returnTo = onClose;
+    onClose = null;
+    returnTo?.();
   }
 
   closeButton.addEventListener('click', close);
@@ -195,7 +222,8 @@ function createSettingsDialog({ runtime, raceSession, trigger }) {
   });
 
   return Object.freeze({
-    open() {
+    open({ onClose: returnTo = null } = {}) {
+      onClose = typeof returnTo === 'function' ? returnTo : null;
       sync();
       if (typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
       else dialog.setAttribute('open', '');
@@ -220,20 +248,18 @@ function install() {
   utilityGroup.dataset.r411YourTurnControls = 'true';
 
   restartButton.hidden = true;
+  // TURN's Q and E keys (DRIFT and BOOST), installed once the drive pad exists.
+  installQeDriveControls();
 
-  const settingsButton = document.createElement('button');
-  settingsButton.type = 'button';
-  settingsButton.className = 'utility yourturn-settings-button';
-  settingsButton.textContent = 'Settings';
-  settingsButton.setAttribute('aria-label', 'Open YOUR TURN settings');
-
+  // Settings and Spectate live in THE CHALLENGE menu; this button only shows
+  // while spectating, to stop.
   const spectateButton = document.createElement('button');
   spectateButton.type = 'button';
   spectateButton.className = 'utility yourturn-spectate-button';
   spectateButton.textContent = 'Spectate';
   spectateButton.setAttribute('aria-label', 'Spectate a run to learn the track');
 
-  // The way on to the full game, at the start line (THE CHALLENGE has it during a lap).
+  // The way on to the full game, at the start line (THE CHALLENGE has it too).
   const fullGameButton = document.createElement('button');
   fullGameButton.type = 'button';
   fullGameButton.className = 'utility yourturn-full-game-button';
@@ -241,8 +267,8 @@ function install() {
   fullGameButton.setAttribute('aria-label', 'Get the full game, TURN');
   fullGameButton.addEventListener('click', () => { globalThis.location.href = '/turn/'; });
 
-  utilityGroup.append(settingsButton, spectateButton, fullGameButton);
-  const settings = createSettingsDialog({ runtime, raceSession, trigger: settingsButton });
+  utilityGroup.append(spectateButton, fullGameButton);
+  const settings = createSettingsDialog({ runtime, raceSession });
   let spectating = false;
   let syncing = false;
   let syncQueued = false;
@@ -271,7 +297,6 @@ function install() {
       const accepted = state.accepted === true;
 
       if (!accepted) {
-        settingsButton.hidden = true;
         spectateButton.hidden = true;
         fullGameButton.hidden = true;
         return;
@@ -280,7 +305,6 @@ function install() {
       if (spectating) {
         challengeButton.hidden = true;
         recalibrateButton.hidden = true;
-        settingsButton.hidden = true;
         fullGameButton.hidden = true;
         spectateButton.hidden = false;
         spectateButton.textContent = 'Stop Spectating';
@@ -289,16 +313,13 @@ function install() {
         return;
       }
 
-      spectateButton.textContent = 'Spectate';
-      spectateButton.setAttribute('aria-label', 'Spectate a run to learn the track');
+      spectateButton.hidden = true;
       challengeButton.hidden = false;
 
-      // During a lap only THE CHALLENGE: it holds RESUME, RESTART LAP and GET THE GAME.
-      // RECALIBRATE belongs to the start line.
+      // During a lap only THE CHALLENGE: it holds RESUME, RESTART LAP, SETTINGS and
+      // GET THE GAME. RECALIBRATE belongs to the start line.
       if (activeLap) {
         recalibrateButton.hidden = true;
-        settingsButton.hidden = true;
-        spectateButton.hidden = true;
         fullGameButton.hidden = true;
         reorder([challengeButton]);
         return;
@@ -306,10 +327,8 @@ function install() {
 
       if (state.phase === 'staged') {
         recalibrateButton.hidden = false;
-        settingsButton.hidden = false;
-        spectateButton.hidden = false;
         fullGameButton.hidden = false;
-        reorder([challengeButton, recalibrateButton, settingsButton, spectateButton, fullGameButton]);
+        reorder([challengeButton, recalibrateButton, fullGameButton]);
       }
     } finally {
       syncing = false;
@@ -325,9 +344,13 @@ function install() {
     });
   }
 
+  function canSpectate() {
+    return !spectating && session.getState().phase === 'staged' && !runtime.state.lapActive;
+  }
+
   function startSpectating() {
     const state = session.getState();
-    if (spectating || state.phase !== 'staged' || runtime.state.lapActive) return;
+    if (!canSpectate()) return;
     spectating = true;
     runtime.state.velocity.set(0, 0, 0);
     runtime.state.speed = 0;
@@ -348,10 +371,12 @@ function install() {
     queueSync();
   }
 
-  settingsButton.addEventListener('click', () => settings.open());
-  spectateButton.addEventListener('click', () => {
-    if (spectating) stopSpectating();
-    else startSpectating();
+  spectateButton.addEventListener('click', stopSpectating);
+
+  globalThis.__yourTurnControls = Object.freeze({
+    openSettings: settings.open,
+    canSpectate,
+    startSpectating
   });
 
   window.addEventListener('turn:ui-state-change', () => {

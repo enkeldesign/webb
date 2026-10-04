@@ -451,10 +451,30 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
         { label: 'RESUME', primary: true, action: resumeRace },
         { label: 'RESTART LAP', action: restartFromPause },
         { label: 'SHARE', share: true, action: shareFromChallengeMenu },
+        { label: 'SETTINGS', action: () => openSettingsFromMenu(reason) },
+        ...(controls()?.canSpectate() ? [{ label: 'SPECTATE', action: spectateFromMenu }] : []),
         { label: 'GET THE GAME', game: true, action: openFullTurn },
         { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(() => showChallengeMenuView(reason)) }
       ]
     });
+  }
+
+  // Settings and Spectate live here, keeping the start line to THE CHALLENGE,
+  // RECALIBRATE and GET THE GAME (race-controls-r411.js).
+  function controls() {
+    return globalThis.__yourTurnControls || null;
+  }
+
+  function openSettingsFromMenu(reason) {
+    const yourTurnControls = controls();
+    if (!yourTurnControls) return;
+    ui.closeModal();
+    yourTurnControls.openSettings({ onClose: () => showChallengeMenuView(reason) });
+  }
+
+  function spectateFromMenu() {
+    resumeRace();
+    controls()?.startSpectating();
   }
 
   function shareFromChallengeMenu() {

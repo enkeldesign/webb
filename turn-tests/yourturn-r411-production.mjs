@@ -9,7 +9,8 @@ const [
   yourTurnCss,
   turnIndex,
   turnControls,
-  minorUx
+  minorUx,
+  yourTurnSession
 ] = await Promise.all([
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/race-controls-r411.js', import.meta.url), 'utf8'),
@@ -17,10 +18,11 @@ const [
   fs.readFile(new URL('../yourturn/r411.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/r411-race-controls.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/ui/minor-ux-polish-r229.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/ui/minor-ux-polish-r229.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/session.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r600\b/);
+assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r601\b/);
 assert.match(yourTurnIndex, /track-map-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /r411\.css\?build=\d{8}-r\d+/);
 assert.match(turnIndex, /ui\/r411-race-controls\.js\?build=\d{8}-r\d+/,
@@ -38,15 +40,29 @@ for (const track of TRACK_DEFINITIONS) {
     `Track ${track.id} must not require a YOUR TURN-specific geometry branch`);
 }
 
-assert.match(yourTurnControls, /className = 'utility yourturn-settings-button'/);
-assert.match(yourTurnControls, /className = 'utility yourturn-spectate-button'/);
+assert.doesNotMatch(yourTurnControls, /yourturn-settings-button/,
+  'Settings lives in THE CHALLENGE menu, not on the start line');
+assert.match(yourTurnControls, /className = 'utility yourturn-spectate-button'/,
+  'The start line only shows a Stop Spectating control while spectating');
+assert.match(yourTurnControls, /globalThis\.__yourTurnControls = Object\.freeze\(\{\s*openSettings: settings\.open,\s*canSpectate,\s*startSpectating/,
+  'THE CHALLENGE menu opens Settings and Spectate through one controls API');
+assert.match(yourTurnSession, /\{ label: 'SETTINGS', action: \(\) => openSettingsFromMenu\(reason\) \}/,
+  'THE CHALLENGE menu offers SETTINGS');
+assert.match(yourTurnSession, /controls\(\)\?\.canSpectate\(\) \? \[\{ label: 'SPECTATE', action: spectateFromMenu \}\]/,
+  'THE CHALLENGE menu offers SPECTATE on the start line');
+assert.match(yourTurnSession, /openSettings\(\{ onClose: \(\) => showChallengeMenuView\(reason\) \}\)/,
+  'Closing Settings returns to THE CHALLENGE menu, with the race still paused');
+assert.match(yourTurnControls, /id="yourTurnLeftHanded"[\s\S]*saveControlHandedness\(/,
+  'YOUR TURN Settings keeps TURN’s Left-handed controls');
+assert.match(yourTurnControls, /installQeDriveControls\(\);/,
+  'YOUR TURN keeps TURN’s Q and E keys for DRIFT and BOOST');
 assert.doesNotMatch(yourTurnControls, /RESET RIVALS|Personal rivals/,
   'YOUR TURN Settings must not expose Reset Rivals');
 assert.match(yourTurnControls, /restartButton\.hidden = true/,
   'YOUR TURN must keep the direct Restart Lap control hidden');
 assert.match(yourTurnControls,
-  /reorder\(\[challengeButton, recalibrateButton, settingsButton, spectateButton, fullGameButton\]\)/,
-  'YOUR TURN staged controls: THE CHALLENGE, Recalibrate, Settings, Spectate, Get the game');
+  /reorder\(\[challengeButton, recalibrateButton, fullGameButton\]\)/,
+  'YOUR TURN start line: THE CHALLENGE, Recalibrate, Get the game');
 assert.match(yourTurnControls, /if \(activeLap\) \{\s*recalibrateButton\.hidden = true;[\s\S]*reorder\(\[challengeButton\]\);/,
   'During a lap only THE CHALLENGE shows: RECALIBRATE belongs to the start line');
 assert.doesNotMatch(yourTurnControls, /blankButton|turn-screen-blank-control/, 'YOUR TURN has no blank screen');
