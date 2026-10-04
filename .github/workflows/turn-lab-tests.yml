@@ -374,6 +374,9 @@ jobs:
       - name: Run Harbor production regression
         run: node turn-tests/harbor-production.mjs
 
+      - name: Run Harbor surface browser smoke regression
+        run: node turn-tests/harbor-surface-browser-smoke.mjs
+
       - name: Run Kenney track landmark regression
         run: node turn-tests/kenney-track-landmarks-production.mjs
 
