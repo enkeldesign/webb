@@ -197,8 +197,10 @@ async function sameOrigin(request, url) {
   const stored = await storedRelease(url);
   if (stored) return stored;
   const requested = releaseOf(url.searchParams.get('build'));
-  // A missing old-build asset must fail explicitly, never receive current bytes.
-  if (requested) return new Response('TURN release unavailable', { status: 503 });
+  // An unavailable earlier build must fail explicitly: an old open page must never
+  // receive current game bytes. Current-release resources that are intentionally not
+  // in the game precache (for example /turn/stats/) still use network/runtime caching.
+  if (requested && requested !== RELEASE) return new Response('TURN release unavailable', { status: 503 });
   const network = fetch(request);
   const first = await race(network, RESOURCE_TIMEOUT_MS);
   const answered = first !== FAILED && first !== TIMED_OUT;
