@@ -2,6 +2,6 @@ export { CHANGELOG, DEVELOPMENT_HISTORY } from './about-history.js';
 
 // Release identity is generated from release.json; editorial dates stay fixed.
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.36.35',
-  build: '2026.10.05-r397'
+  version: '1.36.36',
+  build: '2026.10.05-r398'
 });

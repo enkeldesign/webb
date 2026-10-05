@@ -1,5 +1,5 @@
 {
-  "release": "20261005-r397",
+  "release": "20261005-r398",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -291,7 +291,6 @@
     "/turn/motion-lifecycle-bridge.js",
     "/turn/motion-permission-dialog-r134.css",
     "/turn/motion-safe-zone.js",
-    "/turn/offline.css",
     "/turn/orientation-compat.js",
     "/turn/orientation-guard.css",
     "/turn/performance-monitor.js",
@@ -357,6 +356,7 @@
     "/turn/styles.css",
     "/turn/support-challenges.json",
     "/turn/surfaces.css",
+    "/turn/sw.js",
     "/turn/telemetry/client.js",
     "/turn/testing/admin-unlock-sequence.js",
     "/turn/testing/route-test-hud.js",
@@ -502,6 +502,9 @@
     "/turn/vertical-drive.css",
     "/turn/world-art-pass.js",
     "/turn/world-assets.js",
-    "/turn/world-beauty.js"
+    "/turn/world-beauty.js",
+    "/yourturn/challenge-store.js",
+    "/yourturn/protocol-social.js",
+    "/yourturn/protocol.js"
   ]
 }

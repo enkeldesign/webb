@@ -49,16 +49,17 @@ assert.ok(
   'Install-page reading order must expose the H1 and primary content before release/About information'
 );
 
-assert.match(app, /function installStartupCover\(\)/);
-assert.match(app, /title\.textContent = 'LOADING'/,
+assert.ok(index.includes('import(`./ui/offline.js?build=${globalThis.__TURN_BUILD__.cacheKey}`)'), 'The coordinator must use the document release identity');
+assert.match(index, /function installStartupCover\(\)/);
+assert.match(index, /title\.textContent = 'LOADING'/,
   'The startup cover heading must read LOADING');
-assert.match(app, /copy\.textContent = 'YOU’LL BE RACING IN NO TIME'/,
+assert.match(index, /normal: 'YOU’LL BE RACING IN NO TIME'/,
   'The startup cover status copy must reassure the player that racing is imminent');
-assert.match(app, /turn-startup-spinner/);
-assert.match(app, /prefers-reduced-motion: reduce/);
-assert.match(app, /\.m8-home\.m8-home-fixed-layout[\s\S]*height: auto !important/);
-assert.match(app, /document\.documentElement\.classList\.add\('turn-home-ready'\)/);
-assert.match(app, /document\.dispatchEvent\(new CustomEvent\('turn:home-ready'\)\)/);
+assert.match(index, /turn-startup-spinner/);
+assert.match(index, /prefers-reduced-motion: reduce/);
+assert.match(index, /\.m8-home\.m8-home-fixed-layout[\s\S]*height: auto !important/);
+assert.match(index, /document\.documentElement\.classList\.add\('turn-home-ready'\)/);
+assert.match(index, /document\.dispatchEvent\(new CustomEvent\('turn:home-ready'\)\)/);
 assert.ok(
   app.indexOf("turnHomeLifecycle = 'home-m8'") < app.indexOf('startupCover.finish()'),
   'The loading cover must remain above the early Countryside frame until Home is complete'

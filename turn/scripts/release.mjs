@@ -745,8 +745,13 @@ export function renderReleaseCompanion(repositoryPath, source, release) {
     );
   }
   if (repositoryPath === 'turn/stats/index.html') {
+    // Both build-tagged files go with the release: TURN's worker refuses another
+    // release's key rather than mixing builds, so a stale key would lose the styles.
     return source.replace(
       /(stats\.js\?build=)\d{8}-r\d+/,
+      `$1${release.cacheKey}`
+    ).replace(
+      /(design-tokens\.css\?build=)\d{8}-r\d+/,
       `$1${release.cacheKey}`
     );
   }
