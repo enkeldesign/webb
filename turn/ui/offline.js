@@ -15,7 +15,7 @@ async function bounded(promise, ms, code = 'preparation') {
   } finally { clearTimeout(timer); }
 }
 
-export function installOffline({ windowRef = globalThis, documentRef = globalThis.document, startup } = {}) {
+export function installOffline({ windowRef = globalThis, startup } = {}) {
   if (windowRef.__turnOffline) return windowRef.__turnOffline;
   const nav = windowRef.navigator;
   const local = /^(?:localhost|127\.0\.0\.1|\[::1\])$/.test(windowRef.location?.hostname || '');
@@ -27,7 +27,6 @@ export function installOffline({ windowRef = globalThis, documentRef = globalThi
   let preparing = true;
   let recovering = false;
   let preparingFirst = false;
-  let progressNode;
   let preparationFailure;
 
   async function completeReleases() {
@@ -66,16 +65,7 @@ export function installOffline({ windowRef = globalThis, documentRef = globalThi
     if (!preparing) return;
     if (data.failed) { preparationFailure = data.reason; return; }
     startup.setState(recovering ? 'recover' : preparingFirst ? 'install' : 'update');
-    if (!progressNode) {
-      progressNode = documentRef.createElement('progress');
-      progressNode.className = 'turn-startup-progress';
-      progressNode.setAttribute('aria-label', 'Getting TURN ready');
-      progressNode.style.cssText = 'display:block;width:100%;accent-color:var(--turn-action-information)';
-      documentRef.querySelector('#installGate .install-card')?.append(progressNode);
-    }
-    progressNode.max = data.total;
-    progressNode.value = data.stored;
-    progressNode.setAttribute('aria-valuetext', `${data.stored} of ${data.total} files ready`);
+    startup.setProgress(data.stored, data.total);
   }
   nav.serviceWorker.addEventListener('message', (event) => {
     if (event.data?.type === 'turn-release-query') event.ports?.[0]?.postMessage({ release });
@@ -175,7 +165,6 @@ export function installOffline({ windowRef = globalThis, documentRef = globalThi
     if (!complete.length) throw problem || failure(nav.onLine === false ? 'offline' : 'preparation');
     if (complete[0].release !== release) return switchRelease(complete[0].release);
     preparing = false;
-    progressNode?.remove();
     startup.setState('normal');
     startup.arm();
     nav.serviceWorker.controller?.postMessage({ type: 'turn-page-release', release });
