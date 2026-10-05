@@ -26,6 +26,7 @@ await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const origin = `http://127.0.0.1:${server.address().port}`;
 let browser;
 const results = [];
+const otherSurfaces = [];
 try {
   browser = await chromium.launch({ headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] });
   for (const entry of ['turn', 'yourturn']) {
@@ -98,6 +99,55 @@ try {
       await page.screenshot({ path: path.join(process.env.TURN_HARBOR_SCREENSHOT_DIR, `${entry}-harbor.png`) });
     }
     results.push({ entry, ...result, errors });
+    if (entry === 'turn') {
+      otherSurfaces.push(...await page.evaluate(async () => {
+        const THREE = await import('three');
+        const { getTrackRuntimeEntry } = await import('/turn/tracks/registry.js');
+        const checked = [];
+        // Follow the HARBOR report across the other two reproduced overlaps.
+        // These use real world geometry and locally shipped snow models.
+        for (const id of ['dead-canyon', 'mountain']) {
+          const track = getTrackRuntimeEntry(id);
+          const { samples } = track.createRuntime();
+          const scene = new THREE.Scene();
+          const world = await track.installWorld({ scene, samples, trackWidth: 27 });
+          await world.ready;
+          world.updateMatrixWorld(true);
+          const road = world.getObjectByName(id === 'dead-canyon' ? 'Dead Canyon asphalt' : 'Mountain asphalt road r3');
+          const surfaces = [];
+          world.traverse((node) => {
+            if (id === 'dead-canyon' && /^(Dead Canyon route terrain|Dead Canyon shoulder)$/.test(node.name)) surfaces.push(node);
+            if (id === 'mountain' && /^Mountain Kenney (irregular|overlapping) roadside snow/.test(node.name)) surfaces.push(node);
+          });
+          const rays = new THREE.Raycaster();
+          const downward = new THREE.Vector3(0, -1, 0);
+          let checkedRoadPoints = 0;
+          let coveredRoadPoints = 0;
+          let missingRoadPoints = 0;
+          const examples = [];
+          for (let index = 0; index < samples.length; index++) {
+            // Full-course sampling plus every sample through the two reported sites.
+            if (index % 6 !== 0 && (index < 1240 || index > 1360)) continue;
+            for (const fraction of [-0.95, -0.85, -0.5, 0, 0.5, 0.85, 0.95]) {
+              const sample = samples[index];
+              const point = sample.point.clone().addScaledVector(sample.normal, fraction * 27 / 2);
+              point.y += 30;
+              rays.set(point, downward);
+              const asphalt = rays.intersectObject(road, false)[0];
+              const cover = rays.intersectObjects(surfaces, true)[0];
+              checkedRoadPoints++;
+              if (!asphalt) missingRoadPoints++;
+              if (cover && asphalt && cover.distance < asphalt.distance - 0.005) {
+                coveredRoadPoints++;
+                if (examples.length < 4) examples.push({ index, fraction, surface: cover.object.name });
+              }
+            }
+          }
+          checked.push({ id, surfaceCount: surfaces.length, checkedRoadPoints, coveredRoadPoints, missingRoadPoints, examples });
+        }
+        return checked;
+      }));
+    }
     await context.close();
   }
 } finally {
@@ -105,6 +155,7 @@ try {
   await new Promise((resolve) => server.close(resolve));
 }
 console.log(JSON.stringify(results, null, 2));
+console.log(JSON.stringify(otherSurfaces, null, 2));
 for (const result of results) {
   assert.deepEqual(result.errors, [], `${result.entry}: no runtime errors`);
   assert.ok(result.quayTop < result.roadY, `${result.entry}: quay concrete must remain below asphalt`);
@@ -114,4 +165,10 @@ for (const result of results) {
   assert.ok(result.batching?.shells > 0 && result.batching.drawGroups < 10,
     `${result.entry}: preserve container batching`);
 }
-console.log('HARBOR surface browser smoke passed for TURN and YOUR TURN.');
+for (const result of otherSurfaces) {
+  assert.ok(result.surfaceCount >= (result.id === 'mountain' ? 20 : 3), `${result.id}: include the real scenery`);
+  assert.ok(result.checkedRoadPoints > 3000, `${result.id}: cover the course and the reported overlap`);
+  assert.equal(result.missingRoadPoints, 0, `${result.id}: all probes hit the road`);
+  assert.equal(result.coveredRoadPoints, 0, `${result.id}: scenery must not cover asphalt: ${JSON.stringify(result.examples)}`);
+}
+console.log('HARBOR (TURN/YOUR TURN), DEAD CANYON and MOUNTAIN surface browser smoke passed.');

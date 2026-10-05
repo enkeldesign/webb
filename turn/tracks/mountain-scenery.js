@@ -47,6 +47,7 @@ function groundImportedAsset(root, {
   scale = 1,
   terrainHeightAt,
   sink = 0.04,
+  roadClearance = null,
   world,
   name
 }) {
@@ -56,6 +57,20 @@ function groundImportedAsset(root, {
   root.updateWorldMatrix(true, true);
   const before = new THREE.Box3().setFromObject(root, true);
   if (before.isEmpty()) return null;
+  if (roadClearance) {
+    const { samples, trackWidth, outward } = roadClearance;
+    const center = before.getCenter(new THREE.Vector3());
+    const radius = Math.hypot(before.max.x - before.min.x, before.max.z - before.min.z) / 2;
+    // Test the final rotated/scaled footprint after jitter, not the unscaled
+    // template's nominal radius. Move snow clear; omit it if no safe site fits.
+    for (let step = 0; nearestTrackDistanceXZ(center, samples, 1) < trackWidth / 2 + radius + 1.4; step++) {
+      if (step === 16) return null;
+      root.position.addScaledVector(outward, 2);
+      center.addScaledVector(outward, 2);
+    }
+    x = root.position.x;
+    z = root.position.z;
+  }
   const groundY = terrainHeightAt(x, z);
   root.position.y += groundY - before.min.y - sink;
   root.updateWorldMatrix(true, true);
@@ -562,6 +577,7 @@ async function loadVillageAndRoadsideAssets(
         z: point.z + (random() - 0.5) * 3.2,
         yaw: random() * Math.PI * 2,
         scale: 4.0 + random() * 4.8,
+        roadClearance: { samples, trackWidth, outward: samples[index].normal.clone().multiplyScalar(side) },
         terrainHeightAt, world, sink: 0.18 + random() * 0.16,
         name: 'Mountain Kenney irregular roadside snow r3'
       });
@@ -571,6 +587,7 @@ async function loadVillageAndRoadsideAssets(
           z: point.z + (random() - 0.5) * 5.5,
           yaw: random() * Math.PI * 2,
           scale: 2.8 + random() * 3.4,
+          roadClearance: { samples, trackWidth, outward: samples[index].normal.clone().multiplyScalar(side) },
           terrainHeightAt, world, sink: 0.22,
           name: 'Mountain Kenney overlapping roadside snow r3'
         });
