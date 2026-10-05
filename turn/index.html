@@ -1362,6 +1362,17 @@ function installStartupCover() {
         stroke: var(--turn-surface-page);
         stroke-width: 7;
       }
+      /* Outline the segment ends as well as the ring. Its extent stays visible
+         even where the information colour is close to the light page surface. */
+      .turn-startup-ring-edge {
+        stroke: var(--turn-outline);
+        stroke-width: 7;
+        stroke-linecap: square;
+        stroke-dasharray: var(--turn-startup-progress) 100;
+      }
+      .turn-startup-indicator[aria-valuenow="0"] .turn-startup-ring-edge {
+        visibility: hidden;
+      }
       .turn-startup-ring-fill {
         stroke: var(--turn-action-information);
         stroke-width: 7;
@@ -1370,9 +1381,11 @@ function installStartupCover() {
       .turn-startup-indicator[data-state="indeterminate"] .turn-startup-spinner {
         animation: turn-startup-spin 1800ms linear infinite;
       }
+      .turn-startup-indicator[data-state="error"] :is(.turn-startup-ring-edge, .turn-startup-ring-fill) {
+        stroke-dasharray: 100 100;
+      }
       .turn-startup-indicator[data-state="error"] .turn-startup-ring-fill {
         stroke: var(--turn-action-danger);
-        stroke-dasharray: 100 100;
       }
       .turn-startup-error-mark {
         position: absolute;
@@ -1485,6 +1498,7 @@ function installStartupCover() {
     <svg class="turn-startup-spinner" viewBox="0 0 72 72" aria-hidden="true" focusable="false">
       <circle class="turn-startup-ring-outline" cx="36" cy="36" r="28" />
       <circle class="turn-startup-ring-track" cx="36" cy="36" r="28" />
+      <circle class="turn-startup-ring-edge" cx="36" cy="36" r="28" pathLength="100" />
       <circle class="turn-startup-ring-fill" cx="36" cy="36" r="28" pathLength="100" />
     </svg>
     <span class="turn-startup-error-mark" aria-hidden="true" hidden>!</span>`;
