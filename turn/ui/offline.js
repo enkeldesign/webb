@@ -23,48 +23,12 @@ export function installOffline({ windowRef = globalThis, documentRef = globalThi
   try { optedIn ||= windowRef.localStorage.getItem('turn-offline-under-test') === '1'; } catch { /* Storage blocked. */ }
   if (!nav?.serviceWorker || !windowRef.isSecureContext || !optedIn) return null;
   const release = windowRef.__TURN_BUILD__?.cacheKey;
-  const startupFailure = windowRef.__turnStartFailed;
   let registration;
   let preparing = true;
   let recovering = false;
   let preparingFirst = false;
   let progressNode;
   let preparationFailure;
-  let startupFailuresSuspended = false;
-  let startupRuntimeFailure;
-
-  // Registration/update failures are handled explicitly by prepare() and may be expected
-  // while a complete stored release is still perfectly playable (for example when the
-  // origin answers with 5xx). Do not let those browser-level failures look like a broken
-  // game module graph and start a recovery reload.
-  function suspendStartupFailures() {
-    if (!startupFailure || startupFailuresSuspended) return;
-    windowRef.removeEventListener('error', startupFailure);
-    windowRef.removeEventListener('unhandledrejection', startupFailure);
-    startupFailuresSuspended = true;
-  }
-
-  function resumeStartupFailures() {
-    if (!startupFailure || !startupFailuresSuspended) return;
-    // Browsers may surface failed automatic service-worker update checks as generic
-    // resource errors after prepare() has already selected a complete stored release.
-    // Those are not game bootstrap failures. Startup module tags have their own explicit
-    // error hooks; this window listener is only for actual JavaScript runtime errors.
-    startupRuntimeFailure = (event) => {
-      if (event?.type === 'error') {
-        const runtimeError = typeof windowRef.ErrorEvent === 'function' && event instanceof windowRef.ErrorEvent;
-        if (!runtimeError) return;
-      }
-      startupFailure(event);
-    };
-    windowRef.addEventListener('error', startupRuntimeFailure);
-    windowRef.addEventListener('unhandledrejection', startupFailure);
-    documentRef.addEventListener('turn:home-ready', () => {
-      if (startupRuntimeFailure) windowRef.removeEventListener('error', startupRuntimeFailure);
-      startupRuntimeFailure = null;
-    }, { once: true });
-    startupFailuresSuspended = false;
-  }
 
   async function completeReleases() {
     const releases = [];
@@ -187,40 +151,35 @@ export function installOffline({ windowRef = globalThis, documentRef = globalThi
   }
 
   async function prepare() {
-    suspendStartupFailures();
-    try {
-      let complete;
-      try { complete = await completeReleases(); }
-      catch { throw failure('storage'); }
-      preparingFirst = complete.length === 0 && !nav.serviceWorker.controller;
-      startup.setState(preparingFirst ? 'install' : 'normal');
-      const url = new URL(windowRef.location.href);
-      const recoveryTarget = url.searchParams.get('turn-recovery') && url.searchParams.get('turn-release');
-      if (recoveryTarget === release && complete.some((value) => value.release === release)) {
-        preparing = false;
-        startup.arm();
-        return;
-      }
-      let problem;
-      if (nav.onLine !== false) {
-        for (let attempt = 0; attempt < 2; attempt += 1) {
-          try { await install(); problem = null; break; }
-          catch (error) { problem = error; }
-        }
-        await repairIncomplete().catch(() => {});
-        complete = await completeReleases();
-      }
-      if (!complete.length) throw problem || failure(nav.onLine === false ? 'offline' : 'preparation');
-      if (complete[0].release !== release) return switchRelease(complete[0].release);
+    let complete;
+    try { complete = await completeReleases(); }
+    catch { throw failure('storage'); }
+    preparingFirst = complete.length === 0 && !nav.serviceWorker.controller;
+    startup.setState(preparingFirst ? 'install' : 'normal');
+    const url = new URL(windowRef.location.href);
+    const recoveryTarget = url.searchParams.get('turn-recovery') && url.searchParams.get('turn-release');
+    if (recoveryTarget === release && complete.some((value) => value.release === release)) {
       preparing = false;
-      progressNode?.remove();
-      startup.setState('normal');
       startup.arm();
-      nav.serviceWorker.controller?.postMessage({ type: 'turn-page-release', release });
-      nav.storage?.persist?.().catch?.(() => {});
-    } finally {
-      resumeStartupFailures();
+      return;
     }
+    let problem;
+    if (nav.onLine !== false) {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try { await install(); problem = null; break; }
+        catch (error) { problem = error; }
+      }
+      await repairIncomplete().catch(() => {});
+      complete = await completeReleases();
+    }
+    if (!complete.length) throw problem || failure(nav.onLine === false ? 'offline' : 'preparation');
+    if (complete[0].release !== release) return switchRelease(complete[0].release);
+    preparing = false;
+    progressNode?.remove();
+    startup.setState('normal');
+    startup.arm();
+    nav.serviceWorker.controller?.postMessage({ type: 'turn-page-release', release });
+    nav.storage?.persist?.().catch?.(() => {});
   }
 
   async function recover(attempts) {
