@@ -16,11 +16,19 @@ function routed(pathname) {
   return pathname.startsWith('/turn/') && !pathname.startsWith('/turn/vendor/') && /\.m?js$/.test(pathname);
 }
 
-function normalizedEntries(imports, documentUrl) {
-  return Object.entries(imports).map(([specifier, target]) => [
-    LOCAL.test(specifier) ? new URL(specifier, documentUrl).href : specifier,
-    LOCAL.test(target) ? new URL(target, documentUrl).href : target
-  ]).sort(([left], [right]) => right.length - left.length);
+export function normalizedModuleRoutes(imports, documentUrl, { rejectConflicts = false } = {}) {
+  const entries = new Map();
+  for (const [specifier, target] of Object.entries(imports)) {
+    const key = LOCAL.test(specifier) ? new URL(specifier, documentUrl).href : specifier;
+    const value = LOCAL.test(target) ? new URL(target, documentUrl).href : target;
+    if (rejectConflicts && entries.has(key) && entries.get(key) !== value) {
+      throw new Error(`Conflicting import-map routes for ${key}: ${entries.get(key)} and ${value}`);
+    }
+    // Relative and absolute keys can normalize to the same URL. The browser
+    // keeps the last entry, not the first raw spelling in the JSON object.
+    entries.set(key, value);
+  }
+  return [...entries].sort(([left], [right]) => right.length - left.length);
 }
 
 // What the browser asks for (before the import map) and where the map sends it.
@@ -37,11 +45,11 @@ function resolve(specifier, importerUrl, entries) {
 // dynamic imports, and the build-keyed helpers (withBuild, installStylesheet).
 function references(source, importerUrl, release, entries) {
   const found = [];
-  const add = (specifier, keyed = false) => {
+  const add = (specifier, build = null) => {
     let value = specifier;
-    if (keyed) {
+    if (build) {
       const url = new URL(specifier, importerUrl);
-      url.searchParams.set('build', release.cacheKey);
+      url.searchParams.set('build', build);
       value = url.href;
     }
     const resolved = resolve(value, importerUrl, entries);
@@ -54,10 +62,13 @@ function references(source, importerUrl, release, entries) {
     const value = specifier.replaceAll('${buildKey}', release.cacheKey);
     if (!value.includes('${')) add(value);
   }
-  for (const [, specifier] of code.matchAll(/\bwithBuild\(\s*['"]([^'"]+)['"]\s*\)/g)) add(specifier, true);
+  for (const [, specifier] of code.matchAll(/\bwithBuild\(\s*['"]([^'"]+)['"]\s*\)/g)) add(specifier, release.cacheKey);
+  for (const [, specifier] of code.matchAll(/\bmoduleUrl\(\s*['"]([^'"]+)['"]\s*\)/g)) {
+    add(specifier, importerUrl.searchParams.get('build'));
+  }
   // car-models.js: assetUrl('./assets/…') is relative to /turn/.
   for (const [, specifier] of code.matchAll(/\bassetUrl\(\s*['"]([^'"]+\.m?js)['"]\s*\)/g)) {
-    add(`../${specifier.replace(/^\.\//, '')}`, true);
+    add(`../${specifier.replace(/^\.\//, '')}`, release.cacheKey);
   }
   return found;
 }
@@ -82,7 +93,16 @@ function withRelease(build, release) {
 export function routeModuleGraph(document, importMap, release, read, documentPath = TURN_DOCUMENT) {
   const DOCUMENT_URL = new URL(documentPath, ORIGIN);
   const imports = importMap.imports ||= {};
-  const entries = normalizedEntries(imports, DOCUMENT_URL);
+  // release.mjs updates some named routes before this graph pass. Bind all
+  // local targets first, so a normal build bump is not a routing conflict.
+  for (const [specifier, target] of Object.entries(imports)) {
+    if (!LOCAL.test(target)) continue;
+    const url = new URL(target, DOCUMENT_URL);
+    if (url.origin !== ORIGIN || !routed(url.pathname)) continue;
+    url.searchParams.set('build', withRelease(url.searchParams.get('build'), release));
+    imports[specifier] = `${target.split(/[?#]/)[0]}?${url.searchParams}${url.hash}`;
+  }
+  const entries = normalizedModuleRoutes(imports, DOCUMENT_URL, { rejectConflicts: true });
   const canonical = new Map();
   const asked = new Map();
   const queue = [];

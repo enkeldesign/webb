@@ -46,6 +46,7 @@ export function installDeadCanyonWorld({ scene, samples, trackWidth = 27, runtim
   makeTerrainSkirts(world, samples, trackWidth);
   makeRoad(world, samples, trackWidth);
   makeShoulders(world, samples, trackWidth);
+  keepTerrainBelowRoad(world, trackWidth);
   makeRoadEdgeLines(world, samples, trackWidth);
   makeCenterDashes(world, samples);
   makeStartLine(world, samples, trackWidth);
@@ -244,6 +245,82 @@ function makeShoulders(world, samples, trackWidth) {
     shoulder.name = 'Dead Canyon shoulder';
     world.add(shoulder);
   }
+}
+
+// At a descending hairpin, an earlier strip of shoulder/terrain can fold over
+// the later road. Lower only triangles that actually cross above the asphalt.
+// This runs once when the world is built; it adds no draw calls or race work.
+function keepTerrainBelowRoad(world, trackWidth) {
+  const road = world.getObjectByName('Dead Canyon asphalt').geometry;
+  const cellSize = trackWidth * 2;
+  const cells = new Map();
+  const readTriangle = (geometry, offset) => Array.from({ length: 3 }, (_, corner) => (
+    new THREE.Vector3().fromBufferAttribute(geometry.attributes.position, geometry.index.getX(offset + corner))
+  ));
+  const bounds = (points) => ({
+    x0: Math.min(...points.map((p) => p.x)), x1: Math.max(...points.map((p) => p.x)),
+    z0: Math.min(...points.map((p) => p.z)), z1: Math.max(...points.map((p) => p.z))
+  });
+  const keys = function* (box) {
+    for (let x = Math.floor(box.x0 / cellSize); x <= Math.floor(box.x1 / cellSize); x++) {
+      for (let z = Math.floor(box.z0 / cellSize); z <= Math.floor(box.z1 / cellSize); z++) yield `${x},${z}`;
+    }
+  };
+  for (let offset = 0; offset < road.index.count; offset += 3) {
+    const points = readTriangle(road, offset);
+    const plane = new THREE.Plane().setFromCoplanarPoints(...points);
+    if (Math.abs(plane.normal.y) < 1e-6) continue;
+    const triangle = { points, plane, bounds: bounds(points), minY: Math.min(...points.map((p) => p.y)) };
+    for (const key of keys(triangle.bounds)) {
+      if (!cells.has(key)) cells.set(key, []);
+      cells.get(key).push(triangle);
+    }
+  }
+  for (const mesh of world.children.filter((node) => /^(Dead Canyon route terrain|Dead Canyon shoulder)$/.test(node.name))) {
+    const geometry = mesh.geometry;
+    const positions = geometry.attributes.position;
+    for (let offset = 0; offset < geometry.index.count; offset += 3) {
+      const points = readTriangle(geometry, offset);
+      const box = bounds(points);
+      const candidates = new Set();
+      for (const key of keys(box)) for (const triangle of cells.get(key) || []) candidates.add(triangle);
+      for (const triangle of candidates) {
+        const other = triangle.bounds;
+        if (box.x1 < other.x0 || box.x0 > other.x1 || box.z1 < other.z0 || box.z0 > other.z1) continue;
+        if (points.every((point) => point.y <= triangle.minY - 0.02)) continue;
+        const overlap = clipToRoadTriangle(points, triangle.points);
+        const { normal, constant } = triangle.plane;
+        if (!overlap.some((point) => point.y > -(normal.x * point.x + normal.z * point.z + constant) / normal.y - 0.02 + 1e-5)) continue;
+        for (let corner = 0; corner < 3; corner++) {
+          points[corner].y = Math.min(points[corner].y, triangle.minY - 0.04);
+          positions.setY(geometry.index.getX(offset + corner), points[corner].y);
+        }
+      }
+    }
+    positions.needsUpdate = true;
+    geometry.computeVertexNormals();
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
+  }
+}
+
+function clipToRoadTriangle(points, road) {
+  const cross = (a, b, p) => (b.x - a.x) * (p.z - a.z) - (b.z - a.z) * (p.x - a.x);
+  const winding = Math.sign(cross(road[0], road[1], road[2]));
+  if (!winding) return [];
+  let polygon = points;
+  for (let edge = 0; edge < 3 && polygon.length; edge++) {
+    const a = road[edge], b = road[(edge + 1) % 3];
+    const clipped = [];
+    for (let index = 0; index < polygon.length; index++) {
+      const start = polygon[index], end = polygon[(index + 1) % polygon.length];
+      const from = winding * cross(a, b, start), to = winding * cross(a, b, end);
+      if (from >= 0) clipped.push(start);
+      if ((from >= 0) !== (to >= 0)) clipped.push(start.clone().lerp(end, from / (from - to)));
+    }
+    polygon = clipped;
+  }
+  return polygon;
 }
 
 function makeRoadEdgeLines(world, samples, trackWidth) {

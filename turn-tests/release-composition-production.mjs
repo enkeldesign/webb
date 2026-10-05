@@ -5,6 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import { normalizedModuleRoutes, routeModuleGraph } from '../turn/scripts/module-routes.mjs';
 
 const execFileAsync = promisify(execFile);
 const repositoryRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -65,6 +66,13 @@ const requiredActiveModules = Object.freeze([
   'turn/progression/trophy-road.js',
   'turn/garage/garage.js',
   'turn/garage/showroom-viewer.js',
+  'turn/world-beauty.js',
+  'turn/world-art-pass.js',
+  'turn/track-identity.js',
+  'turn/section-intensity.js',
+  'turn/tracks/countryside-bella-r166.js',
+  'turn/tracks/countryside-bella-final-r172.js',
+  'turn/tracks/countryside-bella-rescue-r524.js',
   'turn/assets/cars/supercar-model-data.js'
 ]);
 
@@ -89,16 +97,7 @@ function parseImportMap(document) {
 }
 
 function normalizedImportMap(importMap, documentUrl = productionDocumentUrl) {
-  const entries = Object.entries(importMap.imports || {}).map(([specifier, target]) => {
-    const normalizedSpecifier = /^[./]|^https?:/.test(specifier)
-      ? new URL(specifier, documentUrl).href
-      : specifier;
-    const normalizedTarget = /^[./]|^https?:/.test(target)
-      ? new URL(target, documentUrl).href
-      : target;
-    return [normalizedSpecifier, normalizedTarget];
-  });
-  return entries.sort(([left], [right]) => right.length - left.length);
+  return normalizedModuleRoutes(importMap.imports || {}, documentUrl);
 }
 
 function resolveModuleSpecifier(specifier, importerUrl, importMapEntries) {
@@ -119,13 +118,14 @@ function resolveModuleSpecifier(specifier, importerUrl, importMapEntries) {
 
 function moduleReferences(source, importerUrl, release, importMapEntries) {
   const references = [];
-  const add = (specifier, cacheBust = false) => {
-    let resolved = resolveModuleSpecifier(specifier, importerUrl, importMapEntries);
-    if (!resolved) return;
-    if (cacheBust && release.cacheKey) {
-      resolved.searchParams.set('build', release.cacheKey);
-      resolved = resolveModuleSpecifier(resolved.href, importerUrl, importMapEntries) || resolved;
+  const add = (specifier, build = null) => {
+    if (build) {
+      const constructed = new URL(specifier, importerUrl);
+      constructed.searchParams.set('build', build);
+      specifier = constructed.href;
     }
+    const resolved = resolveModuleSpecifier(specifier, importerUrl, importMapEntries);
+    if (!resolved) return;
     references.push(resolved);
   };
 
@@ -143,10 +143,13 @@ function moduleReferences(source, importerUrl, release, importMapEntries) {
     const specifier = match[1] === 'assetUrl'
       ? `../${match[2].replace(/^\.\//, '')}`
       : match[2];
-    add(specifier, true);
+    add(specifier, release.cacheKey);
+  }
+  for (const match of withoutComments.matchAll(/\bmoduleUrl\(\s*['"]([^'"]+)['"]\s*\)/g)) {
+    add(match[1], importerUrl.searchParams.get('build'));
   }
   for (const match of withoutComments.matchAll(/\binstallStylesheet\(\s*['"]([^'"]+)['"]/g)) {
-    add(match[1], true);
+    add(match[1], release.cacheKey);
   }
   for (const match of withoutComments.matchAll(/\bimport\s*\(\s*`([^`]*)`\s*\)/g)) {
     const specifier = match[1].replaceAll('${buildKey}', release.cacheKey);
@@ -319,6 +322,36 @@ function verifyIdentityGuard() {
   const freshGraph = { identities: new Map([['turn/example.js', new Set(['/turn/example.js?revision=r2'])]]) };
   assert.throws(() => assertNoUnchangedActiveIdentities(changed, baseGraph, staleGraph));
   assert.doesNotThrow(() => assertNoUnchangedActiveIdentities(changed, baseGraph, freshGraph));
+
+  const conflicting = { imports: {
+    './tracks/example.js': './tracks/fixed.js',
+    '/turn/tracks/example.js': '/turn/tracks/base.js'
+  } };
+  assert.equal(resolveModuleSpecifier('./tracks/example.js', productionDocumentUrl,
+    normalizedImportMap(conflicting)).pathname, '/turn/tracks/base.js', 'Normalized duplicate keys follow browser order');
+  assert.throws(() => normalizedModuleRoutes(conflicting.imports, productionDocumentUrl, { rejectConflicts: true }),
+    /Conflicting import-map routes/, 'New releases reject the conflict that hid the HARBOR fix');
+  assert.throws(() => routeModuleGraph('', globalThis.structuredClone(conflicting), currentRelease, () => ''), /Conflicting import-map routes/);
+
+  const build = currentRelease.cacheKey;
+  const importer = new URL(`/turn/render/world.js?build=${build}`, productionDocumentUrl);
+  const source = "import(moduleUrl('../deferred.js?revision=legacy'));";
+  const fixtureMap = { imports: {
+    '/turn/deferred.js?revision=legacy': `/turn/wrong.js?build=${build}`,
+    [`/turn/deferred.js?revision=legacy&build=${build}`]: `/turn/deferred.js?build=${build}`
+  } };
+  assert.deepEqual(moduleReferences(source, importer, currentRelease, normalizedImportMap(fixtureMap)).map((url) => url.href),
+    [new URL(`/turn/deferred.js?build=${build}`, productionDocumentUrl).href],
+    'moduleUrl constructs the build URL before the browser applies import-map routes');
+  const fixtureFiles = new Map([
+    ['turn/render/world.js', source],
+    ['turn/deferred.js', "import './state.js?revision=legacy';"],
+    ['turn/state.js', 'export const state = {};']
+  ]);
+  const routed = routeModuleGraph(`<script type="module" src="${importer.pathname}${importer.search}"></script>`,
+    fixtureMap, currentRelease, (file) => fixtureFiles.get(file) ?? null);
+  assert.equal(routed.imports['/turn/state.js?revision=legacy'], `/turn/state.js?build=${build}`,
+    'Release routing traverses the dependencies of deferred world modules');
 }
 
 const turnWorkflowPaths = (await fs.readdir(path.join(repositoryRoot, '.github', 'workflows')))
@@ -349,6 +382,8 @@ assert.ok(
   'TURN deployment and release-facing documents must exist'
 );
 const yourTurnImportMap = parseImportMap(yourTurnDocument);
+normalizedModuleRoutes(headGraph.importMap.imports, productionDocumentUrl, { rejectConflicts: true });
+normalizedModuleRoutes(yourTurnImportMap.imports, new URL('/yourturn/index.html', productionDocumentUrl), { rejectConflicts: true });
 
 assertRouteTargets(headGraph.importMap, criticalReleaseTargets, 'Production TURN');
 assertRouteTargets(headGraph.importMap, crossDeploymentCompatibilityRoutes, 'Production TURN');
