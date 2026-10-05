@@ -241,7 +241,7 @@ async function buildProductionGraph(readText) {
   }
 
   assert.deepEqual(missingModules, [], `Active module URLs must point to repository files:\n${missingModules.join('\n')}`);
-  return { document, identities, importMap, release };
+  return { document, identities, importMap, release, moduleUrls: [...visited] };
 }
 
 // The file and its release key decide which module runs; a revision tag beside the
@@ -397,6 +397,23 @@ for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['YO
         `${label} must not route ${specifier} through a retired achievements or Trophy Road layer`);
     }
   }
+}
+
+// #1117: a complete stored release starts TURN without the origin. Every same-origin
+// module TURN's graph loads, the YOUR TURN sharing modules included, is keyed to this
+// release and stored with it, so an outage or offline start never depends on a file
+// only the origin has, and never mixes in another build.
+{
+  const precache = JSON.parse(await currentReader('turn/offline-precache.json'));
+  const stored = new Set(precache.files);
+  const outsideRelease = headGraph.moduleUrls.map((href) => new URL(href)).filter((url) =>
+    url.origin === productionDocumentUrl.origin && /\.m?js$/.test(url.pathname) && !url.pathname.startsWith('/turn/vendor/')
+    && (!stored.has(url.pathname) || !url.searchParams.get('build')?.startsWith(headGraph.release.cacheKey)))
+    .map((url) => `${url.pathname}${url.search}`);
+  assert.deepEqual(outsideRelease, [],
+    `Every module TURN loads must be stored with its release and keyed to it:\n${outsideRelease.join('\n')}`);
+  assert.ok(stored.has('/yourturn/protocol-social.js') && stored.has('/yourturn/challenge-store.js'),
+    'TURN\'s release stores the YOUR TURN sharing modules its game imports');
 }
 
 await Promise.all([

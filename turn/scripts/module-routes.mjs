@@ -11,9 +11,12 @@ const TURN_DOCUMENT = '/turn/index.html';
 const LOCAL = /^(?:[./]|https?:)/;
 
 // Modules under these paths are versioned by their path (three.js) or belong to
-// another page (YOUR TURN): left as they are.
-function routed(pathname) {
-  return pathname.startsWith('/turn/') && !pathname.startsWith('/turn/vendor/') && /\.m?js$/.test(pathname);
+// another page (YOUR TURN): left as they are. The YOUR TURN modules that TURN's own
+// game imports (sharing) are part of TURN's release in TURN's document: a stored
+// release must be able to start without the origin, and never mix in another build.
+function routed(pathname, documentPath = TURN_DOCUMENT) {
+  if (!/\.m?js$/.test(pathname) || pathname.startsWith('/turn/vendor/')) return false;
+  return pathname.startsWith('/turn/') || (documentPath === TURN_DOCUMENT && pathname.startsWith('/yourturn/'));
 }
 
 export function normalizedModuleRoutes(imports, documentUrl, { rejectConflicts = false } = {}) {
@@ -98,7 +101,7 @@ export function routeModuleGraph(document, importMap, release, read, documentPat
   for (const [specifier, target] of Object.entries(imports)) {
     if (!LOCAL.test(target)) continue;
     const url = new URL(target, DOCUMENT_URL);
-    if (url.origin !== ORIGIN || !routed(url.pathname)) continue;
+    if (url.origin !== ORIGIN || !routed(url.pathname, documentPath)) continue;
     url.searchParams.set('build', withRelease(url.searchParams.get('build'), release));
     imports[specifier] = `${target.split(/[?#]/)[0]}?${url.searchParams}${url.hash}`;
   }
@@ -109,7 +112,7 @@ export function routeModuleGraph(document, importMap, release, read, documentPat
 
   for (const [, src] of document.matchAll(/<script\b[^>]*\btype="module"[^>]*\bsrc="([^"]+)"/g)) {
     const url = new URL(src, DOCUMENT_URL);
-    if (routed(url.pathname)) canonical.set(url.pathname, `${url.pathname}${url.search}`);
+    if (routed(url.pathname, documentPath)) canonical.set(url.pathname, `${url.pathname}${url.search}`);
     queue.push(url);
   }
 
@@ -135,10 +138,10 @@ export function routeModuleGraph(document, importMap, release, read, documentPat
     if (source === null) continue;
     for (const reference of references(source, url, release, entries)) {
       const pathname = reference.url.pathname;
-      if (reference.url.origin === ORIGIN && routed(pathname) && !canonical.has(pathname)) {
+      if (reference.url.origin === ORIGIN && routed(pathname, documentPath) && !canonical.has(pathname)) {
         canonical.set(pathname, preferredTarget(pathname));
       }
-      if (reference.url.origin === ORIGIN && routed(pathname) && /^https?:/.test(reference.asked)) {
+      if (reference.url.origin === ORIGIN && routed(pathname, documentPath) && /^https?:/.test(reference.asked)) {
         const askedUrl = new URL(reference.asked);
         if (askedUrl.origin === ORIGIN && askedUrl.pathname === pathname) {
           if (!asked.has(pathname)) asked.set(pathname, new Set());

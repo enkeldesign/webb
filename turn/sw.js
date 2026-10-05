@@ -145,7 +145,8 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET' || request.headers.has('range')) return;
   const url = new URL(request.url);
   if (url.origin === self.location.origin) {
-    if (!url.pathname.startsWith(SCOPE) && !url.pathname.startsWith('/turn/')) return;
+    // TURN's release includes the YOUR TURN modules its game imports (sharing).
+    if (!url.pathname.startsWith(SCOPE) && !url.pathname.startsWith('/turn/') && !url.pathname.startsWith('/yourturn/')) return;
     if (request.mode === 'navigate') {
       if (url.pathname === SCOPE || url.pathname === `${SCOPE}index.html`) event.respondWith(navigate(request));
       else if (url.pathname.startsWith(SCOPE)) event.respondWith(otherPage(request));

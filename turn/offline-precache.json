@@ -502,6 +502,9 @@
     "/turn/vertical-drive.css",
     "/turn/world-art-pass.js",
     "/turn/world-assets.js",
-    "/turn/world-beauty.js"
+    "/turn/world-beauty.js",
+    "/yourturn/challenge-store.js",
+    "/yourturn/protocol-social.js",
+    "/yourturn/protocol.js"
   ]
 }

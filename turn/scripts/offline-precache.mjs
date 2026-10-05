@@ -23,7 +23,10 @@ const FILE_EXTENSION = /\.(?:m?js|css|html|json|webmanifest|glb|gltf|bin|obj|web
 function repositoryPathFor(url) {
   if (url.origin !== ORIGIN) return null;
   const pathname = decodeURIComponent(url.pathname);
-  if (!/^\/turn\//.test(pathname) || pathname.includes('..')) return null;
+  if (pathname.includes('..')) return null;
+  // The YOUR TURN modules TURN's game imports (sharing) belong to TURN's release;
+  // the YOUR TURN page and its other files do not.
+  if (!/^\/turn\//.test(pathname) && !/^\/yourturn\/.+\.m?js$/.test(pathname)) return null;
   return pathname.endsWith('/') ? `${pathname.slice(1)}index.html` : pathname.slice(1);
 }
 

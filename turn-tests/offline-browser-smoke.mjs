@@ -63,8 +63,11 @@ const server = http.createServer(async (request, response) => {
     if (nextRelease && pathname === '/turn/sw.js') {
       body = Buffer.from(body.toString('utf8').replace(/const RELEASE = '[^']+';/, `const RELEASE = '${nextRelease}';`));
     }
-    // The next release's entry page and modules differ from this one's.
-    if (nextRelease && pathname === '/turn/index.html') {
+    // The next release's entry page and modules differ from this one's. A real release
+    // carries its key in every file that names one (entry page, worker, modules and
+    // stylesheets), so the simulated next release does too: a file left naming the
+    // current key would ask a fresh install for a release it does not have.
+    if (nextRelease && /\.(?:html|m?js|css|json|webmanifest)$/.test(pathname)) {
       body = Buffer.from(body.toString('utf8').replaceAll(currentRelease, nextRelease));
     }
     if (PROBES.includes(pathname)) {
@@ -151,11 +154,21 @@ try {
       headers: { 'content-type': 'text/html' }
     }));
   }, currentRelease);
-  // Online, but the server answers every request with an error: TURN still starts.
+  // Online, but the server answers every request with an error: TURN still starts, in
+  // one document load. The stored release includes every module TURN's game imports,
+  // the YOUR TURN sharing modules too (#1117): one only the server had failed startup
+  // and sent TURN through recovery into a terminal failure.
   serverError = true;
+  let loads = 0;
+  const countLoad = () => { loads += 1; };
+  page.on('load', countLoad);
   await page.reload();
   await ready();
+  page.off('load', countLoad);
   assert.equal(await page.locator('.roadbook-card').count() > 0, true, 'With server errors, TURN starts from its stored copies');
+  assert.equal(loads, 1, 'With a complete stored release, a server error is not a startup failure: no recovery restart');
+  assert.equal(await page.evaluate(async () => typeof (await import('/yourturn/protocol-social.js?revision=r1')).makeChallengeUrl), 'function',
+    'TURN\'s YOUR TURN sharing modules come from the stored release');
   serverError = false;
 
   // Airplane mode: TURN starts, ROADBOOK and GARAGE show, a race starts.
