@@ -35,6 +35,8 @@ const PROBES = [
 let serverDown = false;
 let serverError = false;
 let failingPath = null;
+let failOnce = null;
+let slowPath = null;
 const server = http.createServer(async (request, response) => {
   if (serverDown) {
     request.socket.destroy();
@@ -42,7 +44,9 @@ const server = http.createServer(async (request, response) => {
   }
   try {
     let pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
-    if (serverError || pathname === failingPath) {
+    if (pathname === slowPath) await new Promise((resolve) => globalThis.setTimeout(resolve, 12000));
+    if (serverError || pathname === failingPath || pathname === failOnce) {
+      if (pathname === failOnce) failOnce = null;
       response.writeHead(500);
       response.end();
       return;
@@ -51,6 +55,11 @@ const server = http.createServer(async (request, response) => {
     const filename = path.resolve(root, `.${pathname}`);
     if (!filename.startsWith(root)) throw new Error('Outside fixture root');
     let body = await fs.readFile(filename);
+    if (nextRelease && pathname === '/turn/offline-precache.json') {
+      const list = JSON.parse(body.toString());
+      list.release = nextRelease;
+      body = Buffer.from(JSON.stringify(list));
+    }
     if (nextRelease && pathname === '/turn/sw.js') {
       body = Buffer.from(body.toString('utf8').replace(/const RELEASE = '[^']+';/, `const RELEASE = '${nextRelease}';`));
     }
@@ -74,7 +83,7 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 const precache = JSON.parse(await fs.readFile(new URL('../turn/offline-precache.json', import.meta.url), 'utf8'));
 currentRelease = precache.release;
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] });
 try {
   const context = await browser.newContext({ viewport: { width: 852, height: 393 }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
   const page = await context.newPage();
@@ -100,15 +109,20 @@ try {
     }
     Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
   });
-  const ready = () => page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
+  const ready = () => page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 120000 }).catch(async (error) => {
+    console.error(await page.evaluate(() => ({ copy: document.querySelector('.install-copy')?.textContent, url: globalThis.location.href, release: globalThis.__TURN_BUILD__, progress: document.querySelector('progress')?.value })), errors);
+    throw error;
+  });
 
-  // Online: the worker installs and stores the whole release, showing how far it has come.
-  await page.goto(`${origin}/turn/`);
+  // Fresh installation is identified from storage/controller state, before Home.
+  const started = Date.now();
+  await page.goto(`${origin}/turn/`, { waitUntil: 'commit' });
+  await page.waitForSelector('[data-startup-state="install"]');
+  assert.equal(await page.locator('html.turn-home-ready').count(), 0);
   await ready();
-  await page.waitForFunction(() => document.querySelector('.turn-offline-progress-text')?.textContent === 'Ready to play offline',
-    null, { timeout: 120000 });
-  assert.equal(await page.locator('.turn-offline-progress [role="progressbar"]').getAttribute('aria-valuenow'), '100',
-    'The first download ends with a full progress bar');
+  console.log(`Fresh installation and Home: ${Date.now() - started} ms`);
+  assert.equal(await page.locator('.turn-offline-progress, .turn-update-toast').count(), 0,
+    'No second preparation surface after Home');
   const offlineStatus = (target = page) => target.evaluate(async () => {
     const offline = globalThis.__turnOffline;
     if (!offline || !globalThis.navigator.serviceWorker.controller) return null;
@@ -129,6 +143,14 @@ try {
   assert.equal(status.failed, 0, 'No listed file failed to store');
   assert.deepEqual(cdnThree, [], 'Three.js comes from TURN\'s own origin, not the CDN');
 
+  // The prior worker persisted a newer network document in an older runtime store.
+  // Even with that poisoned entry surviving, navigation must select the complete release.
+  await page.evaluate(async (release) => {
+    const cache = await globalThis.caches.open(`turn-runtime-${release}`);
+    await cache.put('/turn/index.html', new globalThis.Response('<script>throw new Error("poisoned runtime document")</script>', {
+      headers: { 'content-type': 'text/html' }
+    }));
+  }, currentRelease);
   // Online, but the server answers every request with an error: TURN still starts.
   serverError = true;
   await page.reload();
@@ -192,11 +214,10 @@ try {
   assert.equal(await page.locator('.turn-update-toast').count(), 0, 'No update toast for an incomplete release');
   failingPath = null;
 
-  // Complete, it takes over and asks to restart. An update downloads without a progress bar.
+  // Complete, it takes over silently. The open game keeps its release until next launch.
   assert.equal(await updateOutcome(), 'activated', 'A complete release is installed');
   assert.equal(await page.locator('.turn-offline-progress').count(), 0, 'An update downloads quietly');
-  await page.waitForSelector('.turn-update-toast', { timeout: 120000 });
-  assert.equal((await page.locator('.turn-update-toast-text').textContent()).trim(), 'New TURN version ready');
+  assert.equal(await page.locator('.turn-update-toast').count(), 0, 'Routine updates offer no player choice');
 
   // Until then the open page keeps its own release: a module it loads now is its own
   // build, online and offline, though the server and the new worker have the next one.
@@ -216,14 +237,31 @@ try {
   await context.setOffline(false);
   serverDown = false;
 
-  await Promise.all([page.waitForEvent('load'), page.locator('.turn-update-toast-restart').click()]);
+  await page.reload();
   await ready();
   const after = await offlineStatus();
   assert.equal(after.release, nextRelease, 'After RESTART the new release is in charge');
   assert.equal(await probe(unloaded[0], nextRelease), 'next', 'After RESTART the page loads the new release\'s modules');
-  // With no page left on it, the earlier release's files go.
-  await page.waitForFunction((release) => globalThis.caches.keys().then((keys) => !keys.some((key) => key.endsWith(release))),
-    currentRelease, { timeout: 15000 });
+  assert.equal(await page.evaluate((release) => globalThis.caches.has(`turn-precache-${release}`), currentRelease), true,
+    'Keep the previous complete release for recovery');
+  const warmStart = Date.now();
+  await page.reload();
+  await ready();
+  console.log(`Warm startup: ${Date.now() - warmStart} ms`);
+  await page.evaluate(async (release) => {
+    const cache = await globalThis.caches.open(`turn-precache-${release}`);
+    await cache.delete('/turn/platform/web-platform.js');
+  }, nextRelease);
+  await page.reload();
+  await ready();
+  assert.equal(await page.evaluate(async (release) => Boolean(await (await globalThis.caches.open(`turn-precache-${release}`)).match('/turn/platform/web-platform.js')), nextRelease), true,
+    'Partial eviction is repaired before bootstrapping the game');
+  // Terminate the document, then relaunch with the same worker and storage.
+  const relaunched = await context.newPage();
+  await relaunched.goto(`${origin}/turn/`);
+  await relaunched.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'));
+  assert.equal(await relaunched.evaluate(() => globalThis.__TURN_BUILD__.cacheKey), nextRelease);
+  await relaunched.close();
 
   // TURN NEXT is retired: its address leads to TURN.
   const next = await context.newPage();
@@ -232,7 +270,7 @@ try {
   await next.close();
   assert.deepEqual(errors, [], 'no page errors');
 
-  // #1045: a file that cannot load offers RELOAD instead of loading for ever, and blocked
+  // Bounded automatic recovery precedes a meaningful action; blocked
   // website data still starts TURN (kept for this visit only).
   serverDown = false;
   const startup = async ({ denyStorage = false } = {}) => {
@@ -258,7 +296,11 @@ try {
     failingPath = '/turn/ui/lap-result-toast.js';
     await freshPage.goto(`${origin}/turn/`);
     await freshPage.waitForFunction(() => Boolean(document.querySelector('.turn-startup-reload')), null, { timeout: 30000 });
-    assert.match(await freshPage.locator('.install-copy').textContent(), /could not start/, 'A failed start says so');
+    assert.match(await freshPage.locator('.install-copy').textContent(), /could not start/, 'A failed start says so after automatic recovery');
+    assert.equal(new URL(freshPage.url()).searchParams.get('turn-recovery'), '2', 'Automatic retries are bounded');
+    await freshPage.reload();
+    await freshPage.waitForSelector('.turn-startup-reload');
+    assert.equal(new URL(freshPage.url()).searchParams.get('turn-recovery'), '2', 'Reload cannot restart the retry loop');
     failingPath = null;
     await Promise.all([freshPage.waitForEvent('load'), freshPage.locator('.turn-startup-reload').click()]);
     await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
@@ -270,7 +312,7 @@ try {
     const { fresh, freshPage } = await startup();
     failingPath = '/turn/app.js';
     await freshPage.goto(`${origin}/turn/`);
-    await freshPage.waitForFunction(() => Boolean(document.querySelector('#turnStartFallback .turn-startup-reload')), null, { timeout: 30000 });
+    await freshPage.waitForFunction(() => Boolean(document.querySelector('#installGate .turn-startup-reload')), null, { timeout: 30000 });
     failingPath = null;
     await Promise.all([freshPage.waitForEvent('load'), freshPage.locator('.turn-startup-reload').click()]);
     await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
@@ -284,7 +326,45 @@ try {
       'With website data blocked, TURN starts and keeps progress for this visit');
     await fresh.close();
   }
-  console.log(`Offline: ${status.files} files stored; airplane-mode ROADBOOK, GARAGE and race; server errors; incomplete and complete updates (an open page keeps its release); TURN NEXT leads to TURN; a failed start offers RELOAD; blocked website data still starts passed.`);
+  {
+    const { fresh, freshPage } = await startup();
+    failOnce = '/turn/ui/lap-result-toast.js';
+    await freshPage.goto(`${origin}/turn/`);
+    await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
+    assert.equal(await freshPage.locator('.turn-startup-reload').count(), 0, 'Transient failure recovers without a button');
+    await fresh.close();
+  }
+  {
+    const { fresh, freshPage } = await startup();
+    slowPath = '/turn/app.js';
+    await freshPage.goto(`${origin}/turn/`, { waitUntil: 'commit' });
+    await freshPage.waitForSelector('[data-startup-state="slow"]');
+    assert.match(await freshPage.locator('.install-copy').textContent(), /TAKING A LITTLE LONGER/);
+    await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
+    assert.equal(await freshPage.locator('.turn-startup-reload').count(), 0, 'Slow successful startup is not a failure');
+    slowPath = null;
+    await fresh.close();
+  }
+  {
+    const fresh = await browser.newContext({ viewport: { width: 852, height: 393 } });
+    await fresh.addInitScript(() => {
+      Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
+      localStorage.setItem('turn-offline-under-test', '1');
+      localStorage.setItem('turn-player-preservation-probe', 'keep me');
+    });
+    const freshPage = await fresh.newPage();
+    failingPath = precache.files.find((file) => file.endsWith('.glb'));
+    await freshPage.goto(`${origin}/turn/`);
+    await freshPage.waitForSelector('.turn-startup-reload', { timeout: 120000 });
+    assert.equal(await freshPage.locator('html.turn-home-ready').count(), 0, 'Incomplete first preparation does not promise playability');
+    assert.equal(await freshPage.evaluate(() => localStorage.getItem('turn-player-preservation-probe')), 'keep me');
+    failingPath = null;
+    await freshPage.locator('.turn-startup-reload').click();
+    await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 120000 });
+    assert.equal(await freshPage.locator('.turn-offline-progress').count(), 0);
+    await fresh.close();
+  }
+  console.log(`Offline: ${status.files} files; fresh/warm/offline/slow starts, release isolation, retained rollback, silent update, relaunch, automatic recovery, persistent failure and interrupted preparation passed.`);
 } finally {
   await browser.close();
   server.close();
