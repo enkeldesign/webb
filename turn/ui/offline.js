@@ -31,12 +31,12 @@ export function installOffline({ windowRef = globalThis, documentRef = globalThi
   let progressNode;
   let preparationFailure;
   let startupFailuresSuspended = false;
+  let startupRuntimeFailure;
 
   // Registration/update failures are handled explicitly by prepare() and may be expected
   // while a complete stored release is still perfectly playable (for example when the
   // origin answers with 5xx). Do not let those browser-level failures look like a broken
-  // game module graph and start a recovery reload. Re-arm the bootstrap listeners before
-  // the game modules are released so real app startup failures still recover normally.
+  // game module graph and start a recovery reload.
   function suspendStartupFailures() {
     if (!startupFailure || startupFailuresSuspended) return;
     windowRef.removeEventListener('error', startupFailure);
@@ -46,8 +46,23 @@ export function installOffline({ windowRef = globalThis, documentRef = globalThi
 
   function resumeStartupFailures() {
     if (!startupFailure || !startupFailuresSuspended) return;
-    windowRef.addEventListener('error', startupFailure);
+    // Browsers may surface failed automatic service-worker update checks as generic
+    // resource errors after prepare() has already selected a complete stored release.
+    // Those are not game bootstrap failures. Startup module tags have their own explicit
+    // error hooks; this window listener is only for actual JavaScript runtime errors.
+    startupRuntimeFailure = (event) => {
+      if (event?.type === 'error') {
+        const runtimeError = typeof windowRef.ErrorEvent === 'function' && event instanceof windowRef.ErrorEvent;
+        if (!runtimeError) return;
+      }
+      startupFailure(event);
+    };
+    windowRef.addEventListener('error', startupRuntimeFailure);
     windowRef.addEventListener('unhandledrejection', startupFailure);
+    documentRef.addEventListener('turn:home-ready', () => {
+      if (startupRuntimeFailure) windowRef.removeEventListener('error', startupRuntimeFailure);
+      startupRuntimeFailure = null;
+    }, { once: true });
     startupFailuresSuspended = false;
   }
 
