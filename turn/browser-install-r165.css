@@ -121,8 +121,8 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   display: none;
 }
 
-/* Preserve the Wikimedia mark's original blue in light mode; the semantic token
-   maps it to TURN blue-300 in dark mode for legibility on the night surface. */
+/* Preserve the Wikimedia mark's original blue in light mode. Dark mode uses TURN's
+   lighter blue locally so the global theme remains limited to neutral roles. */
 .install-accessibility::before {
   content: "";
   display: block;
@@ -131,6 +131,10 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   background: var(--turn-accessibility-mark);
   -webkit-mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
   mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
+}
+
+:root[data-theme="dark"] .install-accessibility::before {
+  background: var(--turn-blue-300);
 }
 
 .install-accessibility-title {
