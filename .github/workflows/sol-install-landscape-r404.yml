@@ -1,0 +1,64 @@
+name: SOL temporary TURN r404 generator
+
+on:
+  push:
+    branches:
+      - sol/install-landscape-r404
+    paths:
+      - 'turn/scripts/sol-install-landscape-r404.mjs'
+      - '.github/workflows/sol-install-landscape-r404.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repair branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Apply focused repair
+        run: node turn/scripts/sol-install-landscape-r404.mjs
+
+      - name: Synchronize release surfaces
+        run: |
+          node turn/scripts/release.mjs --write
+          node turn/scripts/release.mjs --check
+          node turn-tests/about-history-production.mjs
+          node turn-tests/release-composition-production.mjs --base origin/main
+
+      - name: Install browser test runtime
+        timeout-minutes: 12
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install-deps chromium webkit
+          timeout 180 npx playwright install chromium webkit \
+            || timeout 180 npx playwright install chromium webkit
+
+      - name: Verify browser install page in Chromium and WebKit
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/turn-r404-http.log 2>&1 &
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:8000/ >/dev/null && break
+            sleep 0.5
+          done
+          timeout 180 node turn-tests/install-page-browser-smoke.mjs
+
+      - name: Commit verified repair
+        run: |
+          git rm .github/workflows/sol-install-landscape-r404.yml turn/scripts/sol-install-landscape-r404.mjs
+          git add -A
+          git diff --cached --check
+          git config user.name 'SOL'
+          git config user.email 'solavatar@openai.com'
+          git commit -m 'TURN 1.36.42 r404: stabilize browser install landscape' -m 'Prevent short-landscape grid tracks from stretching install actions in Safari/WebKit, render the accessibility mark from the semantic information role, and add dedicated Chromium/WebKit install-page regression coverage.' -m 'Co-authored-by: SOL <solavatar@openai.com>' -m 'Co-authored-by: ASTRA <astraavatar@ai-assistant.local>'
+          git push origin HEAD:sol/install-landscape-r404
