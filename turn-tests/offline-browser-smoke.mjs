@@ -8,10 +8,9 @@ import { chromium } from 'playwright';
 
 // Offline play (#1030): after one online launch, TURN in airplane mode starts, shows
 // ROADBOOK and GARAGE with their car pictures and races, with three.js served from
-// TURN's own origin. The first download shows its progress and then that TURN is
-// ready to play offline. A server answering with errors falls back to the stored copies.
-// A new release's worker takes over quietly and asks to restart, and one that could
-// not store every file leaves the previous release in charge.
+// TURN's own origin. First preparation reports real progress in the startup ring.
+// A server answering with errors falls back to the stored copies. A complete update
+// is adopted on the next launch; an incomplete one leaves the old release in charge.
 // Chromium only: Playwright drives service workers and offline mode there.
 const root = fileURLToPath(new URL('../', import.meta.url));
 const types = {
@@ -113,7 +112,7 @@ try {
     Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
   });
   const ready = () => page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 120000 }).catch(async (error) => {
-    console.error(await page.evaluate(() => ({ copy: document.querySelector('.install-copy')?.textContent, url: globalThis.location.href, release: globalThis.__TURN_BUILD__, progress: document.querySelector('progress')?.value })), errors);
+    console.error(await page.evaluate(() => ({ copy: document.querySelector('.install-copy')?.textContent, url: globalThis.location.href, release: globalThis.__TURN_BUILD__, progress: document.querySelector('.turn-startup-indicator')?.getAttribute('aria-valuetext') })), errors);
     throw error;
   });
 
@@ -121,8 +120,31 @@ try {
   const started = Date.now();
   await page.goto(`${origin}/turn/`, { waitUntil: 'commit' });
   await page.waitForSelector('[data-startup-state="install"]');
+  // Capture the actual worker counts and the UI after its message handler runs.
+  await page.evaluate(() => {
+    globalThis.__startupProgress = [];
+    globalThis.navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data?.type !== 'turn-offline-progress' || event.data.failed) return;
+      const ring = document.querySelector('.turn-startup-indicator');
+      globalThis.__startupProgress.push({
+        stored: event.data.stored, total: event.data.total,
+        state: ring?.dataset.state,
+        now: ring?.getAttribute('aria-valuenow'), max: ring?.getAttribute('aria-valuemax'),
+        fill: ring?.style.getPropertyValue('--turn-startup-progress')
+      });
+    });
+  });
   assert.equal(await page.locator('html.turn-home-ready').count(), 0);
   await ready();
+  const progress = await page.evaluate(() => globalThis.__startupProgress);
+  assert.ok(progress.length > 0, 'First preparation supplies actual file-level progress');
+  for (const sample of progress) {
+    assert.equal(sample.state, 'determinate');
+    assert.equal(Number(sample.now), sample.stored);
+    assert.equal(Number(sample.max), sample.total);
+    assert.equal(Number(sample.fill), 100 * sample.stored / sample.total);
+  }
+  assert.equal(await page.locator('#installGate progress').count(), 0, 'There is no second progress bar');
   console.log(`Fresh installation and Home: ${Date.now() - started} ms`);
   assert.equal(await page.locator('.turn-offline-progress, .turn-update-toast').count(), 0,
     'No second preparation surface after Home');
@@ -310,6 +332,67 @@ try {
     await freshPage.goto(`${origin}/turn/`);
     await freshPage.waitForFunction(() => Boolean(document.querySelector('.turn-startup-reload')), null, { timeout: 30000 });
     assert.match(await freshPage.locator('.install-copy').textContent(), /could not start/, 'A failed start says so after automatic recovery');
+    assert.equal(await freshPage.locator('#installTitle').textContent(), 'COULD NOT START');
+    assert.equal(await freshPage.locator('.turn-startup-indicator').getAttribute('data-state'), 'error');
+    assert.equal(await freshPage.locator('.turn-startup-error-mark').isVisible(), true);
+    assert.equal(await freshPage.locator('.turn-startup-spinner').evaluate((node) => globalThis.getComputedStyle(node).animationName), 'none');
+    assert.equal(await freshPage.locator('#installGate [role="progressbar"]').count(), 0);
+    await freshPage.evaluate(() => {
+      globalThis.__turnStartup.setState('update');
+      globalThis.__turnStartup.setProgress(3, 10);
+    });
+    assert.equal(await freshPage.locator('.turn-startup-indicator').getAttribute('data-state'), 'error',
+      'Late preparation messages cannot revive a terminal loader');
+    assert.equal(await freshPage.locator('.install-copy').evaluate((node) => Boolean(node.closest('[aria-busy="true"]'))), false,
+      'Status updates are not withheld by a busy ancestor');
+    const copyEmail = freshPage.getByRole('button', { name: 'COPY EMAIL ADDRESS' });
+    await freshPage.evaluate(() => {
+      Object.defineProperty(globalThis.navigator, 'clipboard', { configurable: true, value: {
+        writeText: async (text) => { globalThis.__copiedEmail = text; }
+      } });
+    });
+    await copyEmail.click();
+    await freshPage.waitForFunction(() => document.querySelector('.turn-startup-feedback-status').textContent.startsWith('Email address copied:'));
+    assert.equal(await freshPage.evaluate(() => globalThis.__copiedEmail), 'erik@enkel.design');
+    await freshPage.evaluate(() => {
+      globalThis.navigator.clipboard.writeText = async () => { throw new Error('Clipboard unavailable'); };
+      document.execCommand = () => { throw new Error('Selection copying unavailable'); };
+    });
+    await copyEmail.click();
+    await freshPage.waitForFunction(() => document.querySelector('.turn-startup-feedback-status').textContent.startsWith('Could not copy automatically.'));
+    assert.match(await freshPage.locator('.turn-startup-feedback-status').textContent(), /erik@enkel.design/);
+    assert.equal(await copyEmail.evaluate((node) => document.activeElement === node), true, 'Clipboard fallback restores focus');
+    for (const theme of ['light', 'dark']) {
+      await freshPage.evaluate((value) => globalThis.__turnTheme.set(value), theme);
+      for (const viewport of [{ width: 320, height: 568 }, { width: 393, height: 852 }, { width: 852, height: 393 }, { width: 1024, height: 768 }]) {
+        await freshPage.setViewportSize(viewport);
+        const layout = await freshPage.evaluate(() => {
+          const gate = document.querySelector('#installGate');
+          const card = gate.querySelector('.install-card');
+          const controls = [...gate.querySelectorAll('.turn-startup-recovery-actions :is(button, a)')];
+          const rects = controls.map((node) => {
+            const rect = node.getBoundingClientRect();
+            return { x: rect.x, y: rect.y, right: rect.right, height: rect.height, width: rect.width };
+          });
+          return {
+            overflow: gate.scrollWidth > gate.clientWidth,
+            background: globalThis.getComputedStyle(gate).backgroundImage,
+            border: globalThis.getComputedStyle(card).borderTopWidth,
+            shadow: globalThis.getComputedStyle(card).boxShadow,
+            rects
+          };
+        });
+        assert.equal(layout.overflow, false, `${theme} ${viewport.width}: no horizontal overflow`);
+        assert.equal(layout.background, 'none', 'Startup has no decorative backgrounds');
+        assert.equal(layout.border, '0px', 'Startup has no card border');
+        assert.equal(layout.shadow, 'none', 'Startup has no card shadow');
+        for (const rect of layout.rects) {
+          assert.ok(rect.x >= 0 && rect.right <= viewport.width && rect.height >= 44 && rect.width >= 44,
+            `${theme} ${viewport.width}: recovery actions retain visible 44px targets`);
+        }
+        if (viewport.width === 320) assert.ok(layout.rects[2].y > layout.rects[1].y, 'Narrow secondary actions stack');
+      }
+    }
     assert.equal(new URL(freshPage.url()).searchParams.get('turn-recovery'), '2', 'Automatic retries are bounded');
     await freshPage.reload();
     await freshPage.waitForSelector('.turn-startup-reload');
@@ -353,6 +436,11 @@ try {
     await freshPage.goto(`${origin}/turn/`, { waitUntil: 'commit' });
     await freshPage.waitForSelector('[data-startup-state="slow"]');
     assert.match(await freshPage.locator('.install-copy').textContent(), /TAKING A LITTLE LONGER/);
+    assert.equal(await freshPage.locator('.turn-startup-indicator').getAttribute('data-state'), 'indeterminate');
+    assert.equal(await freshPage.locator('#installGate [role="progressbar"]').count(), 0, 'Unknown progress exposes no invented percentage');
+    assert.equal(await freshPage.locator('.turn-startup-spinner').evaluate((node) => globalThis.getComputedStyle(node).animationDuration), '1.8s');
+    await freshPage.emulateMedia({ reducedMotion: 'reduce' });
+    assert.equal(await freshPage.locator('.turn-startup-spinner').evaluate((node) => globalThis.getComputedStyle(node).animationName), 'none');
     await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
     assert.equal(await freshPage.locator('.turn-startup-reload').count(), 0, 'Slow successful startup is not a failure');
     slowPath = null;
