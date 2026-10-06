@@ -325,9 +325,25 @@ function clipToRoadTriangle(points, road) {
 
 function makeRoadEdgeLines(world, samples, trackWidth) {
   const half = trackWidth / 2;
+  // The inside offset collapses through the 60% hairpin because the centreline
+  // radius is tighter than half the rendered road. Drawing that decorative edge
+  // across the cusp creates a fake pale line through the asphalt. The asphalt,
+  // shoulder, route and collision geometry stay unchanged; only omit the edge
+  // where it is no longer a real boundary.
+  const hairpinGapStart = Math.floor(samples.length * 0.592);
+  const hairpinGapEnd = Math.ceil(samples.length * 0.61);
   for (const side of [-1, 1]) {
     const center = side * (half - 0.45);
-    const line = makeRibbon(samples, center - 0.22, center + 0.22, ROAD_HEIGHT + 0.035);
+    const skipSegment = side === 1
+      ? (index) => index >= hairpinGapStart && index <= hairpinGapEnd
+      : null;
+    const line = makeRibbon(
+      samples,
+      center - 0.22,
+      center + 0.22,
+      ROAD_HEIGHT + 0.035,
+      skipSegment
+    );
     line.material = new THREE.MeshBasicMaterial({ color: ROAD_EDGE, side: THREE.DoubleSide });
     line.name = 'Dead Canyon pale road edge';
     world.add(line);
@@ -1162,7 +1178,7 @@ function normalizeHeight(object, targetHeight) {
   object.position.y -= scaledBounds.min.y;
 }
 
-function makeRibbon(samples, leftOffset, rightOffset, lift = 0) {
+function makeRibbon(samples, leftOffset, rightOffset, lift = 0, skipSegment = null) {
   const positions = [];
   const indices = [];
   for (let index = 0; index <= samples.length; index += 1) {
@@ -1174,6 +1190,7 @@ function makeRibbon(samples, leftOffset, rightOffset, lift = 0) {
     positions.push(left.x, left.y, left.z, right.x, right.y, right.z);
   }
   for (let index = 0; index < samples.length; index += 1) {
+    if (skipSegment?.(index)) continue;
     const a = index * 2;
     const b = a + 1;
     const c = a + 2;

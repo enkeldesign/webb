@@ -8,8 +8,11 @@ export const MOUNTAIN_LONG_CHECKPOINTS = Object.freeze(
 export const BEACHFRONT_CHECKPOINTS = Object.freeze(
   Array.from({ length: 20 }, (_, index) => (index + 1) / 21)
 );
+// The uniform 60% gate lands on DEAD CANYON's hairpin cusp. A legal
+// inside line can pass the apex without crossing that finite gate, then meet the
+// 64% gate and be marked LAP VOID. Move only that gate just before the cusp.
 export const DEAD_CANYON_CHECKPOINTS = Object.freeze(
-  Array.from({ length: 24 }, (_, index) => (index + 1) / 25)
+  Array.from({ length: 24 }, (_, index) => (index === 14 ? 0.59 : (index + 1) / 25))
 );
 // Track-specific checkpoint sets; every other track uses LAP_CHECKPOINTS.
 const TRACK_CHECKPOINTS = Object.freeze({

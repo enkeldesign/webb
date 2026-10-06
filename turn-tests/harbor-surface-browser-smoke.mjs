@@ -115,8 +115,10 @@ try {
           world.updateMatrixWorld(true);
           const road = world.getObjectByName(id === 'dead-canyon' ? 'Dead Canyon asphalt' : 'Mountain asphalt road r3');
           const surfaces = [];
+          const roadEdges = [];
           world.traverse((node) => {
             if (id === 'dead-canyon' && /^(Dead Canyon route terrain|Dead Canyon shoulder)$/.test(node.name)) surfaces.push(node);
+            if (id === 'dead-canyon' && node.name === 'Dead Canyon pale road edge') roadEdges.push(node);
             if (id === 'mountain' && /^Mountain Kenney (irregular|overlapping) roadside snow/.test(node.name)) surfaces.push(node);
           });
           const rays = new THREE.Raycaster();
@@ -125,6 +127,9 @@ try {
           let coveredRoadPoints = 0;
           let missingRoadPoints = 0;
           const examples = [];
+          let checkedHairpinInterior = 0;
+          let hairpinEdgeIntrusions = 0;
+          const hairpinEdgeExamples = [];
           for (let index = 0; index < samples.length; index++) {
             // Full-course sampling plus every sample through the two reported sites.
             if (index % 6 !== 0 && (index < 1240 || index > 1360)) continue;
@@ -143,7 +148,28 @@ try {
               }
             }
           }
-          checked.push({ id, surfaceCount: surfaces.length, checkedRoadPoints, coveredRoadPoints, missingRoadPoints, examples });
+          if (id === 'dead-canyon') {
+            for (let index = 1240; index <= 1380; index += 1) {
+              for (let step = -15; step <= 15; step += 1) {
+                const fraction = step / 20;
+                const sample = samples[index];
+                const point = sample.point.clone().addScaledVector(sample.normal, fraction * 27 / 2);
+                point.y += 30;
+                rays.set(point, downward);
+                const asphalt = rays.intersectObject(road, false)[0];
+                const edge = rays.intersectObjects(roadEdges, true)[0];
+                checkedHairpinInterior += 1;
+                if (edge && asphalt && edge.distance < asphalt.distance - 0.005) {
+                  hairpinEdgeIntrusions += 1;
+                  if (hairpinEdgeExamples.length < 4) hairpinEdgeExamples.push({ index, fraction });
+                }
+              }
+            }
+          }
+          checked.push({
+            id, surfaceCount: surfaces.length, checkedRoadPoints, coveredRoadPoints, missingRoadPoints, examples,
+            checkedHairpinInterior, hairpinEdgeIntrusions, hairpinEdgeExamples
+          });
         }
         return checked;
       }));
@@ -170,5 +196,10 @@ for (const result of otherSurfaces) {
   assert.ok(result.checkedRoadPoints > 3000, `${result.id}: cover the course and the reported overlap`);
   assert.equal(result.missingRoadPoints, 0, `${result.id}: all probes hit the road`);
   assert.equal(result.coveredRoadPoints, 0, `${result.id}: scenery must not cover asphalt: ${JSON.stringify(result.examples)}`);
+  if (result.id === 'dead-canyon') {
+    assert.ok(result.checkedHairpinInterior > 4000, 'dead-canyon: densely probe the hairpin interior');
+    assert.equal(result.hairpinEdgeIntrusions, 0,
+      `dead-canyon: decorative road edge must not cut across the hairpin: ${JSON.stringify(result.hairpinEdgeExamples)}`);
+  }
 }
 console.log('HARBOR (TURN/YOUR TURN), DEAD CANYON and MOUNTAIN surface browser smoke passed.');
