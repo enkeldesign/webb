@@ -41,7 +41,7 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   padding: var(--turn-space-12) 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: var(--turn-space-8);
   align-items: start;
   border: 0;
@@ -380,33 +380,39 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
     min-height: calc(100dvh - var(--turn-gutter) - var(--turn-gutter));
     padding-block: var(--turn-space-6);
     grid-template-columns: minmax(104px, 0.32fr) minmax(0, 1fr);
-    grid-template-rows: auto;
+    grid-template-rows: minmax(min-content, 1fr) auto;
+    grid-template-areas:
+      "art card"
+      "kicker kicker";
     gap: var(--turn-space-12);
     align-items: center;
   }
 
   html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-art {
-    align-self: center;
+    grid-area: art;
+    align-self: start;
+    justify-items: start;
   }
 
   html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-icon {
-    width: 104px;
+    width: 156px;
   }
 
   html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-card {
     min-height: 0;
+    grid-area: card;
+    align-self: start;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "copy"
       "accessibility"
-      "actions"
-      "kicker";
+      "actions";
     column-gap: var(--turn-space-8);
     row-gap: var(--turn-space-3);
     grid-auto-rows: max-content;
     align-content: start;
-    align-items: center;
+    align-items: start;
   }
 
   html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-copy {
@@ -446,10 +452,16 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
 
   html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-kicker {
     grid-area: kicker;
-    margin-top: var(--turn-space-1);
+    width: 100%;
+    align-self: end;
+    margin-top: 0;
     padding-top: 0;
-    gap: var(--turn-space-1);
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--turn-space-3) var(--turn-space-6);
     font-size: var(--turn-type-micro);
+    text-align: left;
   }
 }
 
@@ -460,10 +472,9 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-card {
     grid-template-columns: minmax(0, 1fr) minmax(220px, 0.95fr);
     /* The feature list spans two rows; its height must not stretch the actions. */
-    grid-template-rows: max-content max-content max-content;
+    grid-template-rows: max-content max-content;
     grid-template-areas:
       "copy accessibility"
-      "actions accessibility"
-      "kicker kicker";
+      "actions accessibility";
   }
 }
