@@ -70,15 +70,11 @@ assert.match(viewportGap, /:has\(body:is\(\.turn-home-open, \.turn-garage-open\)
   'The strip under Home and The Lot is Paper, set on body');
 assert.match(viewportGap, /:has\(body\.turn-race-active\) body \{[\s\S]*?var\(--turn-ink\)/,
   'The strip under a race is Ink, set on body');
-// The loading class alone: standalone iOS shows the gate while it keeps [hidden].
-assert.match(viewportGap, /:has\(\.install-gate\.turn-startup-loading\) body \{[\s\S]*?#8ce99a/,
-  'The strip while loading is the artwork green, set on body');
-assert.match(viewportGap, /install-gate\.turn-startup-loading[\s\S]*linear-gradient\(to bottom, transparent calc\(100% - 120px\), #8ce99a\)/,
-  'While loading, the artwork resolves into the green the strip continues in');
-assert.match(viewportGap, /html\[data-theme="dark"\]\.\$\{CLASS\}:has\(\.install-gate\.turn-startup-loading\) body \{\s*background: #18321f !important;/,
-  'Dark: the strip while loading is the dusk sky\'s green end');
-assert.match(viewportGap, /html\[data-theme="dark"\]\.\$\{CLASS\} \.install-gate\.turn-startup-loading \{[\s\S]*?#12323d 0 45%, #18321f 100%/,
-  'Dark: the installed app loads on the dusk sky, never the light one');
+// Startup owns both backgrounds before/after gap detection, including failure.
+assert.match(viewportGap, /html:has\(#installGate\.turn-startup-loading\),\s*html:has\(#installGate\.turn-startup-loading\) body \{\s*background: var\(--turn-surface-page\) !important;/,
+  'The startup strip matches the semantic page surface in both themes');
+assert.doesNotMatch(viewportGap, /gradient\(|#8ce99a|#18321f/,
+  'The viewport workaround cannot restore the retired loading artwork');
 
 for (const manifest of [productionManifest]) {
   assert.equal(manifest.display, 'standalone', 'iOS must use the stable standalone presentation mode');

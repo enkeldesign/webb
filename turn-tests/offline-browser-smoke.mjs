@@ -85,6 +85,42 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 const precache = JSON.parse(await fs.readFile(new URL('../turn/offline-precache.json', import.meta.url), 'utf8'));
 currentRelease = precache.release;
 
+async function assertStartupBackground(page) {
+  const samples = await page.evaluate(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    const gate = document.querySelector('#installGate');
+    const theme = globalThis.__turnTheme.choice;
+    const gap = root.classList.contains('turn-viewport-gap');
+    const bodyClasses = body.className;
+    const samples = [];
+    try {
+      for (const theme of ['light', 'dark']) {
+        globalThis.__turnTheme.set(theme);
+        for (const detected of [false, true]) {
+          root.classList.toggle('turn-viewport-gap', detected);
+          // Home can initialize behind the cover; a previous screen must not
+          // decide the strip colour while loading or recovery is visible.
+          for (const screen of ['', 'turn-home-open', 'turn-garage-open', 'turn-race-active']) {
+            body.className = screen;
+            const color = (node) => globalThis.getComputedStyle(node).backgroundColor;
+            samples.push({ theme, detected, screen, page: color(gate), body: color(body), root: color(root) });
+          }
+        }
+      }
+    } finally {
+      body.className = bodyClasses;
+      root.classList.toggle('turn-viewport-gap', gap);
+      globalThis.__turnTheme.set(theme);
+    }
+    return samples;
+  });
+  for (const sample of samples) {
+    assert.equal(sample.body, sample.page, `Startup body matches the visible cover: ${JSON.stringify(sample)}`);
+    assert.equal(sample.root, sample.page, `Startup root matches the visible cover: ${JSON.stringify(sample)}`);
+  }
+}
+
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] });
 try {
   const context = await browser.newContext({ viewport: { width: 852, height: 393 }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
@@ -333,6 +369,7 @@ try {
     await freshPage.waitForFunction(() => Boolean(document.querySelector('.turn-startup-reload')), null, { timeout: 30000 });
     assert.match(await freshPage.locator('.install-copy').textContent(), /could not start/, 'A failed start says so after automatic recovery');
     assert.equal(await freshPage.locator('#installTitle').textContent(), 'COULD NOT START');
+    await assertStartupBackground(freshPage);
     assert.equal(await freshPage.locator('.turn-startup-indicator').getAttribute('data-state'), 'error');
     assert.equal(await freshPage.locator('.turn-startup-error-mark').isVisible(), true);
     assert.equal(await freshPage.locator('.turn-startup-spinner').evaluate((node) => globalThis.getComputedStyle(node).animationName), 'none');
@@ -435,6 +472,7 @@ try {
     slowPath = '/turn/app.js';
     await freshPage.goto(`${origin}/turn/`, { waitUntil: 'commit' });
     await freshPage.waitForSelector('[data-startup-state="slow"]');
+    await assertStartupBackground(freshPage);
     assert.match(await freshPage.locator('.install-copy').textContent(), /TAKING A LITTLE LONGER/);
     assert.equal(await freshPage.locator('.turn-startup-indicator').getAttribute('data-state'), 'indeterminate');
     assert.equal(await freshPage.locator('#installGate [role="progressbar"]').count(), 0, 'Unknown progress exposes no invented percentage');
