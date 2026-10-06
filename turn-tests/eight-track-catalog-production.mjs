@@ -139,7 +139,7 @@ assert.equal(DEAD_CANYON_CHECKPOINTS.length, 24);
 assert.deepEqual(LAP_VOID_DISABLED_TRACKS, ['cliffside']);
 assert.notStrictEqual(DEAD_CANYON_CHECKPOINTS, MOUNTAIN_LONG_CHECKPOINTS);
 
-function driveLap(trackId, { skip = null } = {}) {
+function driveLap(trackId, { skip = null, lateralOffset = 0 } = {}) {
   const definition = TRACK_DEFINITIONS.find((track) => track.id === trackId);
   const { samples } = createTrackRuntime(trackId, definition.sampleCount);
   const state = {
@@ -159,7 +159,7 @@ function driveLap(trackId, { skip = null } = {}) {
     const sample = samples[index % samples.length];
     state.lapPreviousPosition = { x: state.position.x, z: state.position.z };
     if (index === 4) state.lapPreviousPosition = null;
-    state.position.copy(sample.point);
+    state.position.copy(sample.point).addScaledVector(sample.normal, lateralOffset);
     state.velocity.copy(sample.tangent).multiplyScalar(30);
     updateLapProgressState({
       state,
@@ -183,6 +183,12 @@ for (const [trackId, checkpoints] of [['beachfront', BEACHFRONT_CHECKPOINTS], ['
   assert.equal(shortcut.completed, 0, `${trackId}: a shortcut never completes a lap`);
   assert.ok(checkpoints !== LAP_CHECKPOINTS);
 }
+assert.equal(DEAD_CANYON_CHECKPOINTS[14], 0.59, 'DEAD CANYON moves the hairpin gate off the 60% cusp');
+const deadCanyonInsideHairpin = driveLap('dead-canyon', { lateralOffset: 27 / 2 });
+assert.equal(deadCanyonInsideHairpin.state.lapInvalid, false,
+  'DEAD CANYON: the legal inside road edge through the hairpin must not become LAP VOID');
+assert.equal(deadCanyonInsideHairpin.completed, 1,
+  'DEAD CANYON: the inside hairpin line still completes the ordered checkpoint chain');
 
 // World sources: production modules with production assets, no LAB paths.
 const [registrySource, beachfrontWorld, deadCanyonWorld] = await Promise.all([
