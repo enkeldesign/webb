@@ -24,6 +24,18 @@ await write(releasePath, `${JSON.stringify({
   cacheKey: '20261006-r405'
 }, null, 2)}\n`);
 
+const tokensPath = 'turn/design-tokens.css';
+let tokens = await read(tokensPath);
+tokens = replaceOnce(tokens,
+  `  --turn-action-information: var(--turn-blue-500);\n  --turn-action-game: var(--turn-blue-500);`,
+  `  --turn-action-information: var(--turn-blue-500);\n  --turn-accessibility-mark: #154F91;\n  --turn-action-game: var(--turn-blue-500);`,
+  'light accessibility mark token');
+tokens = replaceOnce(tokens,
+  `:root[data-theme="dark"] {\n  --turn-surface-page: #1c1d20;`,
+  `:root[data-theme="dark"] {\n  --turn-accessibility-mark: var(--turn-blue-300);\n  --turn-surface-page: #1c1d20;`,
+  'dark accessibility mark token');
+await write(tokensPath, tokens);
+
 const cssPath = 'turn/browser-install-r165.css';
 let css = await read(cssPath);
 css = replaceOnce(css, `/* Keep the original Commons geometry; its visible colour follows TURN's semantic
@@ -37,31 +49,25 @@ css = replaceOnce(css, `/* Keep the original Commons geometry; its visible colou
   -webkit-mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
   mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
 }
-`, `/* Preserve the Wikimedia mark's original blue on the light install page. In dark
-   mode the same geometry uses TURN's lighter blue so the symbol remains legible. */
+`, `/* Preserve the Wikimedia mark's original blue in light mode; the semantic token
+   maps it to TURN blue-300 in dark mode for legibility on the night surface. */
 .install-accessibility::before {
   content: "";
   display: block;
   width: calc(var(--turn-space-12) + var(--turn-space-12));
   aspect-ratio: 1;
-  background: #154F91;
+  background: var(--turn-accessibility-mark);
   -webkit-mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
   mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
 }
-
-:root[data-theme="dark"] .install-accessibility::before {
-  background: var(--turn-blue-300);
-}
-`, 'theme-specific accessibility mark colours');
+`, 'theme-specific accessibility mark colour');
 await write(cssPath, css);
 
 const aboutTestPath = 'turn-tests/about-history-production.mjs';
 let aboutTest = await read(aboutTestPath);
 aboutTest = replaceOnce(aboutTest, `assert.match(browserInstallCss, /\\.install-accessibility::before[\\s\\S]*background: var\\(--turn-action-information\\)[\\s\\S]*assets\\/icons\\/accessibility\\.svg/,
-  'Both themes must colour the Wikimedia accessibility mark with the semantic information token');`, `assert.match(browserInstallCss, /\\.install-accessibility::before[\\s\\S]*background: #154F91[\\s\\S]*assets\\/icons\\/accessibility\\.svg/,
-  'Light mode must preserve the Wikimedia accessibility mark original blue');
-assert.match(browserInstallCss, /:root\\[data-theme="dark"\\] \\.install-accessibility::before[\\s\\S]*background: var\\(--turn-blue-300\\)/,
-  'Dark mode must recolour the accessibility mark with TURN blue-300');`, 'accessibility mark colour regression');
+  'Both themes must colour the Wikimedia accessibility mark with the semantic information token');`, `assert.match(browserInstallCss, /\\.install-accessibility::before[\\s\\S]*background: var\\(--turn-accessibility-mark\\)[\\s\\S]*assets\\/icons\\/accessibility\\.svg/,
+  'The Wikimedia accessibility mark must use its dedicated theme-aware semantic token');`, 'accessibility mark colour regression');
 await write(aboutTestPath, aboutTest);
 
 const responsivePath = 'turn-tests/responsive-browser-smoke.mjs';
