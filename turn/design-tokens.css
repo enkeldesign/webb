@@ -49,8 +49,8 @@
   --turn-shadow-color: var(--turn-ink);
 
   /* Semantic UI roles. */
-  --turn-action-primary: var(--turn-pink-500);
-  --turn-action-share: var(--turn-pink-500);
+  --turn-action-primary: var(--turn-pink-200);
+  --turn-action-share: var(--turn-pink-200);
   --turn-action-utility: var(--turn-surface-page);
   --turn-action-information: var(--turn-blue-500);
   --turn-action-game: var(--turn-blue-500);
@@ -118,12 +118,12 @@
   --ink: var(--turn-ink);
   --paper: var(--turn-paper);
   --cyan: var(--turn-blue-500);
-  --pink: var(--turn-pink-500);
+  --pink: var(--turn-pink-200);
   --yellow: var(--turn-yellow-400);
   --lime: var(--turn-green-500);
   --m8-ink: var(--turn-ink);
   --m8-cream: var(--turn-paper);
-  --m8-pink: var(--turn-pink-500);
+  --m8-pink: var(--turn-pink-200);
   --m8-yellow: var(--turn-yellow-600);
   --m8-blue: var(--turn-blue-300);
 }
