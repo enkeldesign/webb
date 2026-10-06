@@ -53,6 +53,7 @@
   --turn-action-share: var(--turn-pink-200);
   --turn-action-utility: var(--turn-surface-page);
   --turn-action-information: var(--turn-blue-500);
+  --turn-accessibility-mark: #154F91;
   --turn-action-game: var(--turn-blue-500);
   --turn-action-success: var(--turn-green-500);
   --turn-action-warning: var(--turn-yellow-400);
@@ -135,6 +136,7 @@
    Paper cream; a locked or disabled control keeps a muted cream, never grey (Erik).
    Text on the page is 16:1, outlines 16:1 and muted outlines 11:1. */
 :root[data-theme="dark"] {
+  --turn-accessibility-mark: var(--turn-blue-300);
   --turn-surface-page: #1c1d20;
   --turn-surface-raised: #26282c;
   --turn-surface-bright: #2e3035;

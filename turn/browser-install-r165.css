@@ -121,14 +121,14 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   display: none;
 }
 
-/* Keep the original Commons geometry; its visible colour follows TURN's semantic
-   information role in both themes, independently of the SVG's source fill. */
+/* Preserve the Wikimedia mark's original blue in light mode; the semantic token
+   maps it to TURN blue-300 in dark mode for legibility on the night surface. */
 .install-accessibility::before {
   content: "";
   display: block;
   width: calc(var(--turn-space-12) + var(--turn-space-12));
   aspect-ratio: 1;
-  background: var(--turn-action-information);
+  background: var(--turn-accessibility-mark);
   -webkit-mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
   mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
 }
