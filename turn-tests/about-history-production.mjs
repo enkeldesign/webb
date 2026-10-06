@@ -63,7 +63,7 @@ assert.match(bootstrap, /<details class="turn-changelog-archive">[\s\S]*<summary
 assert.match(historyCss, /\.turn-changelog-archive > summary[\s\S]*min-height: var\(--turn-target-min, 44px\)/,
   'The archive disclosure must retain a full touch target');
 assert.match(bootstrap, /const INSTALL_NOTE[\s\S]*Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
-assert.match(bootstrap, /const INSTALL_PITCH = 'TURN is a motion-controlled arcade drift racer\.'/,
+assert.match(bootstrap, /const INSTALL_PITCH = 'TURN is an accessible motion-controlled arcade drift racer\.'/,
   'The browser install page must use the concise product pitch from the approved mockup');
 assert.match(bootstrap, /ACCESSIBILITY_SYMBOL_URL = new URL\('\.\.\/assets\/icons\/accessibility\.svg', import\.meta\.url\)/,
   'The original Wikimedia accessibility SVG must be available without a third-party request');
@@ -134,10 +134,10 @@ assert.match(browserInstallCss, /\.install-icon[\s\S]*border-width: var\(--turn-
   'The TURN app mark must use the same tokenized treatment as the startup/loading screen');
 assert.match(browserInstallCss, /\.install-card[\s\S]*border: 0[\s\S]*background: transparent[\s\S]*box-shadow: none/,
   'The inner install card must stay out of the visual hierarchy');
-assert.match(browserInstallCss, /\.install-accessibility-symbol[\s\S]*width: calc\(var\(--turn-space-12\) \+ var\(--turn-space-12\)\)/,
+assert.match(browserInstallCss, /\.install-accessibility::before[\s\S]*width: calc\(var\(--turn-space-12\) \+ var\(--turn-space-12\)\)/,
   'The accessibility mark size must use the spacing scale');
-assert.match(browserInstallCss, /data-theme="dark"[\s\S]*\.install-accessibility::before[\s\S]*background: var\(--turn-blue-200\)[\s\S]*assets\/icons\/accessibility\.svg/,
-  'Dark mode must recolour the Wikimedia accessibility mark with TURN light blue');
+assert.match(browserInstallCss, /\.install-accessibility::before[\s\S]*background: var\(--turn-action-information\)[\s\S]*assets\/icons\/accessibility\.svg/,
+  'Both themes must colour the Wikimedia accessibility mark with the semantic information token');
 assert.match(browserInstallCss, /\.install-accessibility-list[\s\S]*font-size: var\(--turn-type-small\)[\s\S]*text-align: left/,
   'Accessibility bullets must use the type scale and retain the available inline reading width');
 assert.match(browserInstallCss, /\.install-actions button[\s\S]*border: var\(--turn-border-control\) solid var\(--turn-outline\)[\s\S]*border-radius: var\(--turn-radius-control\)[\s\S]*font-size: var\(--turn-type-body\)/,

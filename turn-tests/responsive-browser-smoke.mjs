@@ -93,6 +93,96 @@ function within(rect, width, height, label) {
   assert.ok(rect.y >= -1 && rect.bottom <= height + 1, `${label}: vertical bounds ${JSON.stringify(rect)}`);
 }
 
+async function responsiveInstall(browser, name) {
+  const context = await browser.newContext({ viewport: { width: 393, height: 852 }, isMobile: true, hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1' });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  const installSizes = [[393, 852], [852, 393], [568, 320], [759, 393], [760, 393], [320, 568]];
+  const typeTokens = ['--turn-type-micro', '--turn-type-small', '--turn-type-body', '--turn-type-title'];
+  try {
+    await page.goto(`${origin}/turn/`);
+    await page.waitForFunction(() => Boolean(globalThis.__turnWebsiteAbout));
+    await page.evaluate(() => document.fonts.ready);
+    assert.equal(await page.locator('.install-copy').textContent(), 'TURN is an accessible motion-controlled arcade drift racer.');
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate((value) => globalThis.__turnTheme.set(value), theme);
+      for (const [width, height] of installSizes) {
+        await page.setViewportSize({ width, height });
+        for (const enlarged of (width > height ? [false, true] : [false])) {
+          if (enlarged) {
+            // TURN's type scale uses px/clamp, so changing only the root em would
+            // not enlarge this text. Resolve and double the actual type tokens.
+            await page.evaluate((tokens) => {
+              const probe = document.createElement('span');
+              document.body.append(probe);
+              const sizes = tokens.map((token) => {
+                probe.style.fontSize = `var(${token})`;
+                return parseFloat(globalThis.getComputedStyle(probe).fontSize);
+              });
+              probe.remove();
+              tokens.forEach((token, index) => document.documentElement.style.setProperty(token, `${sizes[index] * 2}px`));
+            }, typeTokens);
+          }
+          await page.evaluate(() => { document.querySelector('#installGate').scrollTop = 0; });
+          await settle(page);
+          const label = `${name} install ${theme} ${width}x${height}${enlarged ? ' at 200% text' : ''}`;
+          const facts = await page.evaluate(() => {
+            const gate = document.querySelector('#installGate');
+            const mark = globalThis.getComputedStyle(document.querySelector('.install-accessibility'), '::before');
+            const probe = document.createElement('span');
+            probe.style.backgroundColor = 'var(--turn-action-information)';
+            gate.append(probe);
+            const information = globalThis.getComputedStyle(probe).backgroundColor;
+            probe.remove();
+            return { clientWidth: gate.clientWidth, scrollWidth: gate.scrollWidth,
+              markColor: mark.backgroundColor, information, mask: mark.webkitMaskImage || mark.maskImage,
+              imageDisplay: globalThis.getComputedStyle(document.querySelector('.install-accessibility-symbol')).display,
+              titleSize: parseFloat(globalThis.getComputedStyle(document.querySelector('.install-copy')).fontSize) };
+          });
+          assert.ok(facts.scrollWidth <= facts.clientWidth + 1, `${label}: no horizontal overflow`);
+          assert.equal(facts.markColor, facts.information, `${label}: the mark follows the semantic information colour`);
+          assert.equal(facts.imageDisplay, 'none', `${label}: the source SVG colour does not override the token`);
+          assert.match(facts.mask, /accessibility\.svg/, `${label}: the original local SVG supplies the mark geometry`);
+          assert.ok((await bounds(page, '.install-copy')).y >= -1, `${label}: opening copy is reachable at the top`);
+          if (enlarged) assert.ok(facts.titleSize >= 41.9, `${label}: the rendered title really is enlarged`);
+          for (const selector of ['#installTurnButton', '#playBrowserButton', '#installAboutButton']) {
+            const rect = await bounds(page, selector);
+            assert.ok(rect.width >= 44 && rect.height >= 44, `${label} ${selector}: full touch target`);
+            assert.ok(rect.x >= -1 && rect.right <= width + 1 && rect.scrollWidth <= rect.clientWidth + 1,
+              `${label} ${selector}: labels reflow within the control`);
+            if (!enlarged && width > height && selector !== '#installAboutButton') {
+              assert.ok(rect.height <= 96, `${label} ${selector}: content-sized action, got ${rect.height}px`);
+            }
+          }
+          if (!enlarged && width === 852) {
+            for (const selector of ['.install-icon', '.install-accessibility', '.install-kicker']) {
+              within(await bounds(page, selector), width, height, `${label} ${selector}`);
+            }
+          }
+          // Short landscapes and enlarged text may scroll, but both ends must remain reachable.
+          await page.locator('#installAboutButton').scrollIntoViewIfNeeded();
+          within(await bounds(page, '#installAboutButton'), width, height, `${label} reachable About`);
+          // Enlarged copy can exceed the viewport height. Check each end by scrolling,
+          // without requiring all of a long paragraph to fit on screen at once.
+          for (const block of ['start', 'end']) {
+            await page.locator('.install-copy').evaluate((node, value) => node.scrollIntoView({ block: value }), block);
+            const copy = await bounds(page, '.install-copy');
+            const edge = block === 'start' ? copy.y : copy.bottom;
+            assert.ok(edge >= -1 && edge <= height + 1, `${label}: ${block} of copy remains reachable`);
+          }
+          await page.evaluate((tokens) => tokens.forEach((token) => document.documentElement.style.removeProperty(token)), typeTokens);
+        }
+      }
+    }
+    assert.deepEqual(errors, [], `${name}: no install-page runtime errors`);
+    console.log(`${name}: install portrait/landscape rotation, compact actions, semantic mark in both themes, and 200% text passed.`);
+  } finally {
+    await context.close();
+  }
+}
+
 async function orientationTransitions(browser) {
   for (const portrait of [true, false]) {
     const context = await browser.newContext({ viewport: portrait ? { width: 393, height: 852 } : { width: 852, height: 393 } });
@@ -551,6 +641,7 @@ try {
     const browser = await ({ chromium, webkit })[name].launch({ headless: true,
       ...(name === 'chromium' ? { args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] } : {}) });
     try {
+      await responsiveInstall(browser, name);
       await orientationTransitions(browser);
       await responsiveRace(browser, name);
     } finally {
