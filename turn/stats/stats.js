@@ -1,4 +1,4 @@
-import { TRACK_DEFINITIONS } from '../tracks/definitions.js?build=20261005-r399';
+import { TRACK_DEFINITIONS } from '../tracks/definitions.js?build=20261006-r400';
 
 const STATS_ENDPOINT = 'https://turn-challenges.erik-jansson-ux.workers.dev/v1/stats';
 const DEVELOPER_STORAGE_KEY = 'turn.telemetry.developer.v1';

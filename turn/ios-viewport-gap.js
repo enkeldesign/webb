@@ -5,7 +5,7 @@
 // pwa-short-viewport-repair-r184.js does not recover this case, and iOS draws no
 // page content in the strip, so it takes the colour of the screen above it:
 // Paper under ROADBOOK and GARAGE (their docks are Paper), Ink under a race, and
-// the loading artwork's green end while loading.
+// the page surface while loading or showing a startup error.
 (() => {
   const root = document.documentElement;
   const isStandalone =
@@ -29,37 +29,18 @@
   const style = document.createElement('style');
   style.id = 'turn-viewport-gap-style';
   style.textContent = `
-    /* Loading: the artwork's 145deg cyan-to-green gradient has no single bottom
-       colour, so it resolves into its own green end over its last 120px, and the
-       strip continues in that green. (Layers repeat install-gate.css.) The class
-       alone marks loading: in the installed app the gate keeps its hidden
-       attribute while app.js shows it, and Home opens underneath before it ends. */
-    html.${CLASS}:has(.install-gate.turn-startup-loading) body {
-      background: #8ce99a !important;
-    }
-    html.${CLASS} .install-gate.turn-startup-loading {
-      background:
-        linear-gradient(to bottom, transparent calc(100% - 120px), #8ce99a),
-        radial-gradient(circle at 12% 20%, rgb(255 212 59 / 0.95) 0 7%, transparent 7.5%),
-        radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.9) 0 10%, transparent 10.5%),
-        linear-gradient(145deg, #38d9ff 0 45%, #8ce99a 100%);
-    }
-    /* Dark theme: the dusk sky of install-gate.css, resolving into its own green end. */
-    html[data-theme="dark"].${CLASS}:has(.install-gate.turn-startup-loading) body {
-      background: #18321f !important;
-    }
-    html[data-theme="dark"].${CLASS} .install-gate.turn-startup-loading {
-      background:
-        linear-gradient(to bottom, transparent calc(100% - 120px), #18321f),
-        radial-gradient(circle at 12% 20%, rgb(255 212 59 / 0.42) 0 7%, transparent 7.5%),
-        radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.38) 0 10%, transparent 10.5%),
-        linear-gradient(145deg, #12323d 0 45%, #18321f 100%);
-    }
     html.${CLASS}:has(body.turn-race-active) body {
       background: var(--turn-ink) !important;
     }
     html.${CLASS}:has(body:is(.turn-home-open, .turn-garage-open)) body {
       background: var(--turn-modal-paper, var(--turn-surface-page)) !important;
+    }
+    /* Match the startup surface in both themes, even before gap measurements
+       settle. The cover wins while Home opens underneath, including terminal
+       failure, and releases the background when startup removes its class. */
+    html:has(#installGate.turn-startup-loading),
+    html:has(#installGate.turn-startup-loading) body {
+      background: var(--turn-surface-page) !important;
     }
   `;
   document.head.appendChild(style);
