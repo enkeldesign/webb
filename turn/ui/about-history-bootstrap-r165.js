@@ -8,6 +8,15 @@ import { aboutTurnHtml } from '../content/about-turn.js?revision=r1';
 const REVISION = 'r165-browser-about';
 const INSTALL_NOTE =
   'Install TURN as a home screen web app for the best fullscreen experience. You can also play here, but it is not recommended.';
+const INSTALL_PITCH = 'TURN is a motion-controlled arcade drift racer.';
+const ACCESSIBILITY_SYMBOL_URL =
+  'https://upload.wikimedia.org/wikipedia/commons/0/0f/Accessibility.svg';
+const ACCESSIBILITY_FEATURES = Object.freeze([
+  'Fun and inclusive racing game – play your way!',
+  'Non-visual access with Drive By Ear',
+  'Enhanced screen reader experience design',
+  'Supports one-handed play and assistive tech'
+]);
 
 let gameInstalled = false;
 let websiteInstalled = false;
@@ -281,6 +290,41 @@ function createWebsiteAboutDialog() {
   return dialog;
 }
 
+function ensureAccessibilitySummary(gate, actions) {
+  let summary = gate.querySelector('.install-accessibility');
+  if (summary) return summary;
+
+  summary = document.createElement('section');
+  summary.className = 'install-accessibility';
+  summary.setAttribute('aria-labelledby', 'installAccessibilityTitle');
+
+  const symbol = document.createElement('img');
+  symbol.className = 'install-accessibility-symbol';
+  symbol.src = ACCESSIBILITY_SYMBOL_URL;
+  symbol.alt = '';
+  symbol.width = 512;
+  symbol.height = 512;
+  symbol.decoding = 'async';
+  symbol.referrerPolicy = 'no-referrer';
+
+  const title = document.createElement('h2');
+  title.id = 'installAccessibilityTitle';
+  title.className = 'install-accessibility-title';
+  title.textContent = 'Accessibility in TURN';
+
+  const list = document.createElement('ul');
+  list.className = 'install-accessibility-list';
+  for (const feature of ACCESSIBILITY_FEATURES) {
+    const item = document.createElement('li');
+    item.textContent = feature;
+    list.append(item);
+  }
+
+  summary.append(symbol, title, list);
+  actions.before(summary);
+  return summary;
+}
+
 function syncInstallGatePresentation() {
   const gate = document.querySelector('#installGate');
   const kicker = gate?.querySelector('.install-kicker');
@@ -288,9 +332,27 @@ function syncInstallGatePresentation() {
   const installButton = gate?.querySelector('#installTurnButton');
   const browserButton = gate?.querySelector('#playBrowserButton');
   const note = gate?.querySelector('#installNote');
-  if (!gate || !kicker || !actions || !installButton || !browserButton || !note) return null;
+  const copy = gate?.querySelector('.install-copy');
+  if (!gate || !kicker || !actions || !installButton || !browserButton || !note || !copy) return null;
+
+  copy.textContent = INSTALL_PITCH;
+  ensureAccessibilitySummary(gate, actions);
 
   note.textContent = INSTALL_NOTE;
+  note.setAttribute('role', 'status');
+  note.setAttribute('aria-live', 'polite');
+  note.setAttribute('aria-atomic', 'true');
+
+  installButton.textContent = 'INSTALL TURN';
+  browserButton.replaceChildren();
+  const browserLabel = document.createElement('span');
+  browserLabel.className = 'install-browser-label';
+  browserLabel.textContent = 'PLAY IN BROWSER';
+  const recommendation = document.createElement('small');
+  recommendation.className = 'install-browser-recommendation';
+  recommendation.textContent = '(NOT RECOMMENDED)';
+  browserButton.append(browserLabel, recommendation);
+
   actions.append(installButton, note, browserButton);
   return { gate, kicker, note };
 }
