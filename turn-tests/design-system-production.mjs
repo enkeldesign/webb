@@ -87,8 +87,8 @@ for (const [token, value] of primitivePalette) {
 const semanticMappings = new Map([
   ['--turn-surface-page', '--turn-paper'],
   ['--turn-surface-raised', '--turn-white'],
-  ['--turn-action-primary', '--turn-pink-500'],
-  ['--turn-action-share', '--turn-pink-500'],
+  ['--turn-action-primary', '--turn-pink-200'],
+  ['--turn-action-share', '--turn-pink-200'],
   ['--turn-action-utility', '--turn-surface-page'],
   ['--turn-action-information', '--turn-blue-500'],
   ['--turn-action-game', '--turn-blue-500'],
@@ -136,12 +136,12 @@ const compatibilityAliases = new Map([
   ['--ink', '--turn-ink'],
   ['--paper', '--turn-paper'],
   ['--cyan', '--turn-blue-500'],
-  ['--pink', '--turn-pink-500'],
+  ['--pink', '--turn-pink-200'],
   ['--yellow', '--turn-yellow-400'],
   ['--lime', '--turn-green-500'],
   ['--m8-ink', '--turn-ink'],
   ['--m8-cream', '--turn-paper'],
-  ['--m8-pink', '--turn-pink-500'],
+  ['--m8-pink', '--turn-pink-200'],
   ['--m8-yellow', '--turn-yellow-600'],
   ['--m8-blue', '--turn-blue-300']
 ]);
