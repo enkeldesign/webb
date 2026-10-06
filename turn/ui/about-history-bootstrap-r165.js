@@ -2,13 +2,13 @@ import {
   CHANGELOG,
   CURRENT_RELEASE,
   DEVELOPMENT_HISTORY
-} from '../content/about-history-current.js?build=20261006-r403';
+} from '../content/about-history-current.js?build=20261006-r404';
 import { aboutTurnHtml } from '../content/about-turn.js?revision=r1';
 
 const REVISION = 'r165-browser-about';
 const INSTALL_NOTE =
   'Install TURN as a home screen web app for the best fullscreen experience. You can also play here, but it is not recommended.';
-const INSTALL_PITCH = 'TURN is a motion-controlled arcade drift racer.';
+const INSTALL_PITCH = 'TURN is an accessible motion-controlled arcade drift racer.';
 // Unmodified Wikimedia Accessibility.svg, shipped locally with its existing About credit.
 const ACCESSIBILITY_SYMBOL_URL = new URL('../assets/icons/accessibility.svg', import.meta.url).href;
 const ACCESSIBILITY_FEATURES = Object.freeze([

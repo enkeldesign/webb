@@ -118,23 +118,17 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
 }
 
 .install-accessibility-symbol {
-  display: block;
-  width: calc(var(--turn-space-12) + var(--turn-space-12));
-  height: auto;
-}
-
-/* The Commons SVG is a one-colour mark. In dark mode use it as a mask so its visible
-   fill comes from TURN's light-blue token instead of retaining the dark source blue. */
-:root[data-theme="dark"] .install-accessibility-symbol {
   display: none;
 }
 
-:root[data-theme="dark"] .install-accessibility::before {
+/* Keep the original Commons geometry; its visible colour follows TURN's semantic
+   information role in both themes, independently of the SVG's source fill. */
+.install-accessibility::before {
   content: "";
   display: block;
   width: calc(var(--turn-space-12) + var(--turn-space-12));
   aspect-ratio: 1;
-  background: var(--turn-blue-200);
+  background: var(--turn-action-information);
   -webkit-mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
   mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
 }
@@ -170,7 +164,9 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
 html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-actions {
   width: min(100%, var(--turn-content-max));
   margin-top: var(--turn-space-12);
-  display: grid;
+  /* A simple stack avoids stale intrinsic grid-row heights after WebKit reflow. */
+  display: flex;
+  flex-direction: column;
   gap: var(--turn-space-4);
   align-items: stretch;
 }
@@ -182,8 +178,10 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   overflow-wrap: anywhere;
   min-height: calc(var(--turn-control-height) + var(--turn-space-8));
   padding: var(--turn-space-4) var(--turn-space-6);
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   border: var(--turn-border-control) solid var(--turn-outline);
   border-radius: var(--turn-radius-control);
   box-shadow: none;
@@ -402,6 +400,8 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
       "kicker";
     column-gap: var(--turn-space-8);
     row-gap: var(--turn-space-3);
+    grid-auto-rows: max-content;
+    align-content: start;
     align-items: center;
   }
 
@@ -416,8 +416,7 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
     margin-top: 0;
   }
 
-  .install-accessibility-symbol,
-  :root[data-theme="dark"] .install-accessibility::before {
+  .install-accessibility::before {
     width: calc(var(--turn-space-12) + var(--turn-space-6));
   }
 
@@ -432,6 +431,7 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
     width: 100%;
     margin-top: 0;
     gap: var(--turn-space-2);
+    align-self: start;
   }
 
   html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-actions button {
@@ -455,6 +455,8 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
 @media (max-height: 520px) and (min-width: 760px) {
   html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-card {
     grid-template-columns: minmax(0, 1fr) minmax(220px, 0.95fr);
+    /* The feature list spans two rows; its height must not stretch the actions. */
+    grid-template-rows: max-content max-content max-content;
     grid-template-areas:
       "copy accessibility"
       "actions accessibility"
