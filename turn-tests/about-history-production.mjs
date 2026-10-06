@@ -63,6 +63,28 @@ assert.match(bootstrap, /<details class="turn-changelog-archive">[\s\S]*<summary
 assert.match(historyCss, /\.turn-changelog-archive > summary[\s\S]*min-height: var\(--turn-target-min, 44px\)/,
   'The archive disclosure must retain a full touch target');
 assert.match(bootstrap, /const INSTALL_NOTE[\s\S]*Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
+assert.match(bootstrap, /const INSTALL_PITCH = 'TURN is a motion-controlled arcade drift racer\.'/,
+  'The browser install page must use the concise product pitch from the approved mockup');
+assert.match(bootstrap, /ACCESSIBILITY_SYMBOL_URL[\s\S]*upload\.wikimedia\.org\/wikipedia\/commons\/0\/0f\/Accessibility\.svg/,
+  'The install page must use the requested Wikimedia accessibility SVG');
+for (const copy of [
+  'Fun and inclusive racing game – play your way!',
+  'Non-visual access with Drive By Ear',
+  'Enhanced screen reader experience design',
+  'Supports one-handed play and assistive tech'
+]) {
+  assert.ok(bootstrap.includes(copy), `Install accessibility summary must include: ${copy}`);
+}
+assert.match(bootstrap, /function ensureAccessibilitySummary\(gate, actions\)/,
+  'The accessibility summary must be a reusable browser-install presentation layer');
+assert.match(bootstrap, /summary\.setAttribute\('aria-labelledby', 'installAccessibilityTitle'\)/,
+  'Accessibility features must have a real section label for assistive technology');
+assert.match(bootstrap, /symbol\.alt = ''/,
+  'The accessibility logo is decorative beside equivalent semantic copy');
+assert.match(bootstrap, /note\.setAttribute\('role', 'status'\)/,
+  'Browser-specific install guidance remains available as a status message when visually quiet');
+assert.match(bootstrap, /recommendation\.textContent = '\(NOT RECOMMENDED\)'/,
+  'Browser play must retain the explicit secondary recommendation in the control itself');
 assert.match(bootstrap, /function installWebsiteAbout\(\)/);
 assert.match(bootstrap, /id = 'installAboutButton'/);
 assert.match(bootstrap, /aria-haspopup', 'dialog'/);
@@ -70,7 +92,7 @@ assert.match(bootstrap, /className = 'm8-dialog m8-about-dialog install-about-di
 assert.match(bootstrap, /aria-labelledby', 'turnWebsiteAboutTitle'/);
 assert.match(bootstrap, /<h2 id="turnWebsiteAboutTitle">ABOUT TURN<\/h2>/);
 assert.match(bootstrap, /actions\.append\(installButton, note, browserButton\)/,
-  'The browser-only note must sit between Install TURN and Play in browser anyway');
+  'The browser-only status node stays between the two actions in DOM order');
 assert.match(bootstrap, /trigger\.addEventListener\('click', \(\) => openDialog\(aboutDialog, trigger\)\)/);
 assert.match(bootstrap, /aboutDialog\.addEventListener\('close', restoreTrigger\)/,
   'Closing website About must return focus to the version-strip trigger');
@@ -103,14 +125,32 @@ assert.match(bootstrap, /installStylesheet\('\.\.\/browser-install-r165\.css/);
 assert.doesNotMatch(bootstrap, /setInterval|@keyframes|animation:/,
   'History and dialog behaviour must not add timing loops or decorative animation');
 
-assert.match(browserInstallCss, /html\.turn-browser:not\(\.turn-browser-launched\)[\s\S]*overflow-x: clip/);
-assert.match(browserInstallCss, /\.install-gate[\s\S]*justify-items: center[\s\S]*overflow-x: clip/);
-assert.match(browserInstallCss, /\.install-shell[\s\S]*width: min\(690px, 100%\)/);
-assert.match(browserInstallCss, /\.install-shell[\s\S]*grid-template-columns: minmax\(0, 0\.75fr\) minmax\(0, 1\.25fr\)/);
-assert.match(browserInstallCss, /\.install-art,[\s\S]*\.install-card[\s\S]*min-width: 0/);
+assert.match(browserInstallCss, /html\.turn-browser:not\(\.turn-browser-launched\) #installGate:not\(\.turn-startup-loading\)[\s\S]*background: var\(--turn-surface-page\)/,
+  'The browser install page must use the same semantic page surface as startup');
+assert.match(browserInstallCss, /\.install-shell[\s\S]*border: var\(--turn-border-heavy\) solid var\(--turn-outline\)[\s\S]*border-radius: clamp\(30px, 7vw, 52px\)/,
+  'The install experience must use the approved large rounded page frame');
+assert.match(browserInstallCss, /\.install-icon[\s\S]*border: 0[\s\S]*box-shadow: none[\s\S]*transform: none/,
+  'The TURN icon must sit calmly without the retired tilted-card treatment');
+assert.match(browserInstallCss, /\.install-card[\s\S]*border: 0[\s\S]*background: transparent[\s\S]*box-shadow: none/,
+  'The inner install card must be removed from the visual hierarchy');
+assert.match(browserInstallCss, /\.install-accessibility-symbol[\s\S]*width: clamp\(64px, 11vw, 86px\)/,
+  'The accessibility mark must have a stable responsive size');
+assert.match(browserInstallCss, /\.install-accessibility-list[\s\S]*text-align: left/,
+  'Accessibility bullets must remain easy to scan');
+assert.match(browserInstallCss, /\.install-primary[\s\S]*background: var\(--turn-action-primary\)/,
+  'Install TURN remains the semantic primary action');
+assert.match(browserInstallCss, /\.install-secondary[\s\S]*border-color: var\(--turn-outline\)[\s\S]*background: var\(--turn-surface-page\)[\s\S]*opacity: 1/,
+  'Browser play must be a real outlined secondary action rather than a faint text link');
+assert.match(browserInstallCss, /\.install-kicker[\s\S]*flex-direction: column[\s\S]*background: transparent/,
+  'Build identity and About must form the quiet stacked footer from the mockup');
+assert.match(browserInstallCss, /#installGate\.turn-startup-loading \.install-accessibility \{\s*display: none !important;/,
+  'Browser-only accessibility content must leave the DOM presentation when startup takes over');
+assert.match(browserInstallCss, /@media \(max-height: 520px\) and \(min-width: 560px\)[\s\S]*grid-template-columns: minmax\(110px, 0\.32fr\) minmax\(0, 1fr\)/,
+  'Short landscape viewports must recompose rather than shrink the mockup until it is unreadable');
 assert.match(browserInstallCss, /\.install-guide-card[\s\S]*width: min\(420px, 100%\)/);
 assert.match(browserInstallCss, /\.install-about-trigger[\s\S]*text-decoration: underline/);
-assert.match(browserInstallCss, /@media \(max-height: 375px\) and \(orientation: landscape\)[\s\S]*minmax\(0, 1fr\)/);
+assert.doesNotMatch(browserInstallCss, /radial-gradient|linear-gradient/,
+  'The retired decorative install gradient must not return');
 
 // Guard readability and chronology rather than requiring old implementation
 // details or a minimum number of entries. Milestones are intentionally curated.
