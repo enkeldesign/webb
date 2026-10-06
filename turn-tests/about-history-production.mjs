@@ -136,8 +136,10 @@ assert.match(browserInstallCss, /\.install-card[\s\S]*border: 0[\s\S]*background
   'The inner install card must stay out of the visual hierarchy');
 assert.match(browserInstallCss, /\.install-accessibility::before[\s\S]*width: calc\(var\(--turn-space-12\) \+ var\(--turn-space-12\)\)/,
   'The accessibility mark size must use the spacing scale');
-assert.match(browserInstallCss, /\.install-accessibility::before[\s\S]*background: var\(--turn-action-information\)[\s\S]*assets\/icons\/accessibility\.svg/,
-  'Both themes must colour the Wikimedia accessibility mark with the semantic information token');
+assert.match(browserInstallCss, /\.install-accessibility::before[\s\S]*background: var\(--turn-accessibility-mark\)[\s\S]*assets\/icons\/accessibility\.svg/,
+  'Light mode must preserve the Wikimedia accessibility mark source-blue token');
+assert.match(browserInstallCss, /:root\[data-theme="dark"\] \.install-accessibility::before[\s\S]*background: var\(--turn-blue-300\)/,
+  'Dark mode must recolour the accessibility mark with TURN blue-300');
 assert.match(browserInstallCss, /\.install-accessibility-list[\s\S]*font-size: var\(--turn-type-small\)[\s\S]*text-align: left/,
   'Accessibility bullets must use the type scale and retain the available inline reading width');
 assert.match(browserInstallCss, /\.install-actions button[\s\S]*border: var\(--turn-border-control\) solid var\(--turn-outline\)[\s\S]*border-radius: var\(--turn-radius-control\)[\s\S]*font-size: var\(--turn-type-body\)/,

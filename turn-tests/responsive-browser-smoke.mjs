@@ -132,17 +132,18 @@ async function responsiveInstall(browser, name) {
             const gate = document.querySelector('#installGate');
             const mark = globalThis.getComputedStyle(document.querySelector('.install-accessibility'), '::before');
             const probe = document.createElement('span');
-            probe.style.backgroundColor = 'var(--turn-action-information)';
+            probe.style.backgroundColor = document.documentElement.dataset.theme === 'dark'
+              ? 'var(--turn-blue-300)' : '#154F91';
             gate.append(probe);
-            const information = globalThis.getComputedStyle(probe).backgroundColor;
+            const expectedMarkColor = globalThis.getComputedStyle(probe).backgroundColor;
             probe.remove();
             return { clientWidth: gate.clientWidth, scrollWidth: gate.scrollWidth,
-              markColor: mark.backgroundColor, information, mask: mark.webkitMaskImage || mark.maskImage,
+              markColor: mark.backgroundColor, expectedMarkColor, mask: mark.webkitMaskImage || mark.maskImage,
               imageDisplay: globalThis.getComputedStyle(document.querySelector('.install-accessibility-symbol')).display,
               titleSize: parseFloat(globalThis.getComputedStyle(document.querySelector('.install-copy')).fontSize) };
           });
           assert.ok(facts.scrollWidth <= facts.clientWidth + 1, `${label}: no horizontal overflow`);
-          assert.equal(facts.markColor, facts.information, `${label}: the mark follows the semantic information colour`);
+          assert.equal(facts.markColor, facts.expectedMarkColor, `${label}: the mark uses the theme-specific accessibility colour`);
           assert.equal(facts.imageDisplay, 'none', `${label}: the source SVG colour does not override the token`);
           assert.match(facts.mask, /accessibility\.svg/, `${label}: the original local SVG supplies the mark geometry`);
           assert.ok((await bounds(page, '.install-copy')).y >= -1, `${label}: opening copy is reachable at the top`);
@@ -177,7 +178,7 @@ async function responsiveInstall(browser, name) {
       }
     }
     assert.deepEqual(errors, [], `${name}: no install-page runtime errors`);
-    console.log(`${name}: install portrait/landscape rotation, compact actions, semantic mark in both themes, and 200% text passed.`);
+    console.log(`${name}: install portrait/landscape rotation, compact actions, theme-specific accessibility mark colours, and 200% text passed.`);
   } finally {
     await context.close();
   }

@@ -53,6 +53,7 @@
   --turn-action-share: var(--turn-pink-200);
   --turn-action-utility: var(--turn-surface-page);
   --turn-action-information: var(--turn-blue-500);
+  --turn-accessibility-mark: #154F91;
   --turn-action-game: var(--turn-blue-500);
   --turn-action-success: var(--turn-green-500);
   --turn-action-warning: var(--turn-yellow-400);
