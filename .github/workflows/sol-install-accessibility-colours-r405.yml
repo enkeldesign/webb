@@ -39,7 +39,7 @@ jobs:
       - name: Install browser test runtime
         timeout-minutes: 12
         run: |
-          npm install --no-save --package-lock=false playwright@1.55.0
+          npm install --no-save --package-lock=false playwright@1.55.0 three@0.184.0
           npx playwright install-deps chromium webkit
           timeout 180 npx playwright install chromium webkit \
             || timeout 180 npx playwright install chromium webkit
