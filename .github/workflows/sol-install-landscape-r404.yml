@@ -55,7 +55,6 @@ jobs:
 
       - name: Commit verified repair
         run: |
-          git rm .github/workflows/sol-install-landscape-r404.yml turn/scripts/sol-install-landscape-r404.mjs
           git add -A
           git diff --cached --check
           git config user.name 'SOL'
