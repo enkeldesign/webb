@@ -65,8 +65,9 @@ assert.match(historyCss, /\.turn-changelog-archive > summary[\s\S]*min-height: v
 assert.match(bootstrap, /const INSTALL_NOTE[\s\S]*Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
 assert.match(bootstrap, /const INSTALL_PITCH = 'TURN is a motion-controlled arcade drift racer\.'/,
   'The browser install page must use the concise product pitch from the approved mockup');
-assert.match(bootstrap, /ACCESSIBILITY_SYMBOL_URL[\s\S]*upload\.wikimedia\.org\/wikipedia\/commons\/0\/0f\/Accessibility\.svg/,
-  'The install page must use the requested Wikimedia accessibility SVG');
+assert.match(bootstrap, /ACCESSIBILITY_SYMBOL_URL = new URL\('\.\.\/assets\/icons\/accessibility\.svg', import\.meta\.url\)/,
+  'The original Wikimedia accessibility SVG must be available without a third-party request');
+await fs.access(new URL('../turn/assets/icons/accessibility.svg', import.meta.url));
 for (const copy of [
   'Fun and inclusive racing game – play your way!',
   'Non-visual access with Drive By Ear',
@@ -135,7 +136,7 @@ assert.match(browserInstallCss, /\.install-card[\s\S]*border: 0[\s\S]*background
   'The inner install card must stay out of the visual hierarchy');
 assert.match(browserInstallCss, /\.install-accessibility-symbol[\s\S]*width: calc\(var\(--turn-space-12\) \+ var\(--turn-space-12\)\)/,
   'The accessibility mark size must use the spacing scale');
-assert.match(browserInstallCss, /data-theme="dark"[\s\S]*\.install-accessibility::before[\s\S]*background: var\(--turn-blue-200\)[\s\S]*Accessibility\.svg/,
+assert.match(browserInstallCss, /data-theme="dark"[\s\S]*\.install-accessibility::before[\s\S]*background: var\(--turn-blue-200\)[\s\S]*assets\/icons\/accessibility\.svg/,
   'Dark mode must recolour the Wikimedia accessibility mark with TURN light blue');
 assert.match(browserInstallCss, /\.install-accessibility-list[\s\S]*font-size: var\(--turn-type-small\)[\s\S]*text-align: left/,
   'Accessibility bullets must use the type scale and retain the available inline reading width');
@@ -157,6 +158,10 @@ assert.match(browserInstallCss, /@media \(max-height: 520px\) and \(min-width: 5
   'Short landscape viewports must recompose without changing to a second local type scale');
 assert.match(browserInstallCss, /\.install-guide-card[\s\S]*width: min\(420px, 100%\)/);
 assert.match(browserInstallCss, /\.install-about-trigger[\s\S]*text-decoration: underline/);
+assert.match(browserInstallCss, /\.install-about-trigger[\s\S]*min-height: var\(--turn-target-min\)/,
+  'The quiet About link must keep the shared minimum touch target');
+assert.match(browserInstallCss, /@media \(max-height: 520px\) and \(min-width: 760px\)/,
+  'The three-column install composition requires enough width for its actions');
 assert.doesNotMatch(browserInstallCss, /radial-gradient|linear-gradient/,
   'The retired decorative install gradient must not return');
 

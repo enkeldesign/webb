@@ -275,6 +275,7 @@
     const guideClose = document.querySelector('#installGuideClose');
     const guideTitle = document.querySelector('#installGuideTitle');
     const guideSteps = document.querySelector('#installSteps');
+    const shell = gate?.querySelector('.install-shell');
 
     if (
       !gate || !installButton || !browserButton || !note || !guide ||
@@ -311,6 +312,17 @@
       steps += manualInstallSteps(nextStep);
       guideSteps.innerHTML = steps;
       guide.hidden = false;
+      if (shell) shell.inert = true;
+      guideTitle.tabIndex = -1;
+      guideTitle.focus({ preventScroll: true });
+      guide.scrollTop = 0;
+      guide.querySelector('.install-guide-card').scrollTop = 0;
+    }
+
+    function closeManualGuide() {
+      guide.hidden = true;
+      if (shell) shell.inert = false;
+      installButton.focus({ preventScroll: true });
     }
 
     async function requestInstall() {
@@ -343,9 +355,29 @@
       const copyButton = event.target.closest('[data-copy-game-address]');
       if (copyButton) copyGameAddress(copyButton);
     });
-    guideClose.addEventListener('click', () => { guide.hidden = true; });
+    guideClose.addEventListener('click', closeManualGuide);
     guide.addEventListener('click', (event) => {
-      if (event.target === guide) guide.hidden = true;
+      if (event.target === guide) closeManualGuide();
+    });
+    guide.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        closeManualGuide();
+      } else if (event.key === 'Tab') {
+        const controls = [...guide.querySelectorAll('button:not(:disabled), input:not(:disabled), a[href]')]
+          .filter((control) => control.getClientRects().length);
+        const first = controls[0];
+        const last = controls.at(-1);
+        const active = document.activeElement;
+        if (event.shiftKey && (active === first || !controls.includes(active))) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && (active === last || !controls.includes(active))) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
     });
 
     document.addEventListener('turn-install-ready', () => {
