@@ -1,5 +1,5 @@
 {
-  "release": "20261006-r402",
+  "release": "20261006-r403",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -100,6 +100,7 @@
     "/turn/assets/cars/truck.glb",
     "/turn/assets/cars/van.glb",
     "/turn/assets/cars/vintage-racer.glb",
+    "/turn/assets/icons/accessibility.svg",
     "/turn/assets/lot-bricks/brick-prop-01.glb",
     "/turn/assets/lot-bricks/brick-prop-02.glb",
     "/turn/assets/lot-bricks/brick-prop-03.glb",

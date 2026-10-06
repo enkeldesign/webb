@@ -37,6 +37,7 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   min-height: calc(100vh - var(--turn-gutter) - var(--turn-gutter));
   min-height: calc(100dvh - var(--turn-gutter) - var(--turn-gutter));
   margin-inline: auto;
+  align-self: start;
   padding: var(--turn-space-12) 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -134,8 +135,8 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   width: calc(var(--turn-space-12) + var(--turn-space-12));
   aspect-ratio: 1;
   background: var(--turn-blue-200);
-  -webkit-mask: url("https://upload.wikimedia.org/wikipedia/commons/0/0f/Accessibility.svg") center / contain no-repeat;
-  mask: url("https://upload.wikimedia.org/wikipedia/commons/0/0f/Accessibility.svg") center / contain no-repeat;
+  -webkit-mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
+  mask: url("./assets/icons/accessibility.svg") center / contain no-repeat;
 }
 
 .install-accessibility-title {
@@ -176,7 +177,9 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
 
 html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-actions button {
   box-sizing: border-box;
+  min-width: 0;
   width: 100%;
+  overflow-wrap: anywhere;
   min-height: calc(var(--turn-control-height) + var(--turn-space-8));
   padding: var(--turn-space-4) var(--turn-space-6);
   display: grid;
@@ -265,8 +268,11 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
 
 .install-about-trigger {
   appearance: none;
-  min-height: auto;
-  padding: 0;
+  min-height: var(--turn-target-min);
+  padding: 0 var(--turn-space-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -305,6 +311,7 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
 }
 
 .install-guide {
+  position: fixed;
   box-sizing: border-box;
   overflow-x: clip;
 }
@@ -312,6 +319,28 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
 .install-guide-card {
   width: min(420px, 100%);
   max-width: 100%;
+  padding: var(--turn-space-6);
+  border: var(--turn-border-dialog) solid var(--turn-outline);
+  border-radius: var(--turn-radius-dialog);
+  box-shadow: var(--turn-shadow-dialog);
+}
+
+.install-guide-head {
+  gap: var(--turn-space-4);
+}
+
+.install-guide h2 {
+  font-size: var(--turn-type-heading);
+  line-height: var(--turn-leading-title);
+  overflow-wrap: anywhere;
+}
+
+.install-guide .install-close {
+  width: var(--turn-target-min);
+  height: var(--turn-target-min);
+  flex-basis: var(--turn-target-min);
+  border-radius: var(--turn-radius-circle);
+  box-shadow: var(--turn-shadow-control);
 }
 
 .install-about-dialog {
@@ -349,7 +378,7 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
     min-height: calc(100dvh - var(--turn-gutter) - var(--turn-gutter));
     padding-block: var(--turn-space-6);
     grid-template-columns: minmax(104px, 0.32fr) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
+    grid-template-rows: auto;
     gap: var(--turn-space-12);
     align-items: center;
   }
@@ -365,11 +394,12 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-card {
     min-height: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.95fr);
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      "copy accessibility"
-      "actions accessibility"
-      "kicker kicker";
+      "copy"
+      "accessibility"
+      "actions"
+      "kicker";
     column-gap: var(--turn-space-8);
     row-gap: var(--turn-space-3);
     align-items: center;
@@ -416,5 +446,18 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
     padding-top: 0;
     gap: var(--turn-space-1);
     font-size: var(--turn-type-micro);
+  }
+}
+
+/* Three columns need room for the two action labels as well as the feature list.
+   A narrow landscape phone keeps the content in one column beside the app mark;
+   the auto-sized row can grow and scroll without centering text above the viewport. */
+@media (max-height: 520px) and (min-width: 760px) {
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-card {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.95fr);
+    grid-template-areas:
+      "copy accessibility"
+      "actions accessibility"
+      "kicker kicker";
   }
 }
