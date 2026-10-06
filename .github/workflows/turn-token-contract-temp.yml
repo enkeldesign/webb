@@ -1,0 +1,61 @@
+name: TURN temporary token contract sync
+
+on:
+  push:
+    branches:
+      - astra/install-page-token-polish
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: ${{ !contains(github.event.head_commit.message, '[token-contract]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: astra/install-page-token-polish
+          fetch-depth: 0
+
+      - name: Align the design reference with current tokens
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const updates = [
+            ['turn/design.html', [
+              ['data-semantic="--turn-action-primary"><td><span class="mapping-preview" style="--mapping:var(--turn-action-primary)"></span><code>--turn-action-primary</code></td><td><code>var(--turn-pink-500)</code>', 'data-semantic="--turn-action-primary"><td><span class="mapping-preview" style="--mapping:var(--turn-action-primary)"></span><code>--turn-action-primary</code></td><td><code>var(--turn-pink-200)</code>'],
+              ['data-semantic="--turn-action-share"><td><span class="mapping-preview" style="--mapping:var(--turn-action-share)"></span><code>--turn-action-share</code></td><td><code>var(--turn-pink-500)</code>', 'data-semantic="--turn-action-share"><td><span class="mapping-preview" style="--mapping:var(--turn-action-share)"></span><code>--turn-action-share</code></td><td><code>var(--turn-pink-200)</code>'],
+              ['<tr><td><code>--pink</code></td><td><code>var(--turn-pink-500)</code></td></tr>', '<tr><td><code>--pink</code></td><td><code>var(--turn-pink-200)</code></td></tr>'],
+              ['<tr><td><code>--m8-pink</code></td><td><code>var(--turn-pink-500)</code></td></tr>', '<tr><td><code>--m8-pink</code></td><td><code>var(--turn-pink-200)</code></td></tr>']
+            ]],
+            ['turn-tests/design-system-production.mjs', [
+              ["['--turn-action-primary', '--turn-pink-500']", "['--turn-action-primary', '--turn-pink-200']"],
+              ["['--turn-action-share', '--turn-pink-500']", "['--turn-action-share', '--turn-pink-200']"],
+              ["['--pink', '--turn-pink-500']", "['--pink', '--turn-pink-200']"],
+              ["['--m8-pink', '--turn-pink-500']", "['--m8-pink', '--turn-pink-200']"]
+            ]]
+          ];
+          for (const [path, replacements] of updates) {
+            let source = fs.readFileSync(path, 'utf8');
+            for (const [from, to] of replacements) {
+              if (!source.includes(from)) throw new Error(`${path}: missing expected token contract: ${from}`);
+              source = source.replace(from, to);
+            }
+            fs.writeFileSync(path, source);
+          }
+          NODE
+          node turn-tests/design-system-production.mjs
+          node turn/scripts/release.mjs --check
+
+      - name: Commit synchronized token contract
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn/design.html turn-tests/design-system-production.mjs
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Align design reference with current pink token [token-contract]" -m "Co-authored-by: SOL <solavatar@openai.com>" -m "Co-authored-by: ASTRA <astraavatar@ai-assistant.local>"
+          git push origin HEAD:astra/install-page-token-polish
