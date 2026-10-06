@@ -1,54 +1,252 @@
-/* Browser installation page refinements and website-only About trigger. */
+/* Browser installation page: the quiet semantic startup language from #1122/#1123,
+   adapted to the richer decision content needed before TURN is installed. */
 
 html.turn-browser:not(.turn-browser-launched),
 html.turn-browser:not(.turn-browser-launched) body {
   max-width: 100%;
+  min-height: 100%;
   overflow-x: clip;
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
 }
 
-.install-gate {
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) {
+  position: fixed;
+  inset: 0;
   box-sizing: border-box;
+  display: grid !important;
   justify-items: center;
+  align-items: stretch;
   overflow-x: clip;
   overflow-y: auto;
+  padding:
+    max(10px, env(safe-area-inset-top))
+    max(10px, env(safe-area-inset-right))
+    max(10px, env(safe-area-inset-bottom))
+    max(10px, env(safe-area-inset-left));
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
 }
 
-.install-shell {
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-shell {
   box-sizing: border-box;
-  width: min(690px, 100%);
-  max-width: 100%;
+  width: min(100%, 760px);
   min-width: 0;
+  min-height: calc(100vh - 20px);
+  min-height: calc(100dvh - 20px);
   margin-inline: auto;
-  padding: 0 10.5px 10.5px;
-  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+  padding: clamp(28px, 6vw, 58px) clamp(20px, 6vw, 58px) clamp(22px, 5vw, 46px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(24px, 5vh, 48px);
+  align-items: start;
+  border: var(--turn-border-heavy) solid var(--turn-outline);
+  border-radius: clamp(30px, 7vw, 52px);
+  background: var(--turn-surface-page);
+  box-shadow: none;
+  text-align: center;
 }
 
-.install-art,
-.install-card {
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) :is(.install-art, .install-card) {
   min-width: 0;
   max-width: 100%;
 }
 
-.install-card {
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-art {
+  display: grid;
+  place-items: center;
+  align-self: end;
+}
+
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-icon {
+  width: clamp(116px, 23vw, 176px);
+  max-width: 100%;
+  max-height: none;
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 22%;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-card {
   box-sizing: border-box;
   width: 100%;
-}
-
-.install-icon {
-  max-width: 100%;
-}
-
-.install-kicker {
-  display: inline-flex;
-  max-width: 100%;
-  flex-wrap: wrap;
+  min-height: 100%;
+  max-width: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.36em;
-  line-height: 1.25;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
-.install-kicker-separator {
-  opacity: 0.72;
+/* Keep the document's real H1 for the region label and for the startup cover, but the
+   browser landing page uses the app icon rather than a second giant TURN wordmark. */
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-card h1 {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-copy {
+  max-width: 40ch;
+  margin: 0;
+  font-size: max(var(--turn-text-floor, 11px), clamp(1rem, 2.5vw, 1.35rem));
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--turn-text);
+}
+
+.install-accessibility {
+  width: min(100%, 38rem);
+  margin-top: clamp(28px, 5vh, 48px);
+  display: grid;
+  justify-items: center;
+}
+
+.install-accessibility-symbol {
+  display: block;
+  width: clamp(64px, 11vw, 86px);
+  height: auto;
+}
+
+.install-accessibility-title {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.install-accessibility-list {
+  box-sizing: border-box;
+  width: min(100%, 34rem);
+  margin: clamp(14px, 2.5vh, 22px) 0 0;
+  padding-left: clamp(24px, 5vw, 34px);
+  color: var(--turn-text);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.9rem, 2.1vw, 1.1rem));
+  font-weight: 650;
+  line-height: 1.32;
+  text-align: left;
+}
+
+.install-accessibility-list li + li {
+  margin-top: 0.16em;
+}
+
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-actions {
+  width: min(100%, 35rem);
+  margin-top: clamp(34px, 6vh, 56px);
+  display: grid;
+  gap: clamp(14px, 2.5vh, 22px);
+  align-items: stretch;
+}
+
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-actions button {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 72px;
+  padding: 13px 18px;
+  display: grid;
+  place-items: center;
+  border: var(--turn-border-heavy) solid var(--turn-outline);
+  border-radius: var(--turn-radius-hero);
+  box-shadow: none;
+  color: var(--turn-text);
+  font: inherit;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.92rem, 2.4vw, 1.18rem));
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: 0.015em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-primary {
+  background: var(--turn-action-primary);
+  color: var(--turn-ink);
+}
+
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-secondary {
+  min-height: 82px;
+  border-color: var(--turn-outline);
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
+  opacity: 1;
+}
+
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-secondary:active {
+  transform: none;
+  box-shadow: none;
+}
+
+.install-browser-label,
+.install-browser-recommendation {
+  display: block;
+}
+
+.install-browser-recommendation {
+  margin-top: 0.2em;
+  font-size: 0.7em;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+
+/* Browser-specific install guidance still updates this live status node. It is useful
+   to assistive technology but deliberately not part of the quiet visual composition. */
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-note {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-kicker {
+  max-width: 100%;
+  margin: auto 0 0;
+  padding: clamp(38px, 7vh, 68px) 0 0;
+  display: inline-flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--turn-text);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.72rem, 1.8vw, 0.92rem));
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-kicker-separator {
+  display: none;
 }
 
 .install-about-trigger {
@@ -80,27 +278,16 @@ html.turn-browser:not(.turn-browser-launched) body {
   box-shadow: none;
 }
 
-.install-about-trigger:focus-visible {
-  outline: 4px solid var(--turn-form-control-focus, var(--cyan));
-  outline-offset: 3px;
+.install-about-trigger:focus-visible,
+html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-actions button:focus-visible {
+  outline: var(--turn-border-default) solid var(--turn-form-control-focus, var(--cyan));
+  outline-offset: var(--turn-space-1, 3px);
 }
 
-.install-actions {
-  align-items: stretch;
-}
-
-.install-actions .install-note {
-  margin: 3px auto 0;
-  max-width: 52ch;
-  min-height: 0;
-  text-align: center;
-}
-
-.install-actions .install-secondary {
-  justify-self: center;
-  width: fit-content;
-  min-height: 33px;
-  margin-top: 0;
+/* The browser-only context must disappear when PLAY IN BROWSER hands the same DOM to
+   the startup cover. #1122/#1123 remain the sole loading/recovery composition. */
+#installGate.turn-startup-loading .install-accessibility {
+  display: none !important;
 }
 
 .install-guide {
@@ -117,33 +304,134 @@ html.turn-browser:not(.turn-browser-launched) body {
   z-index: 2200;
 }
 
-@media (orientation: portrait) {
-  .install-shell {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .install-card {
-    margin-inline: auto;
-  }
-}
-
-@media (max-height: 375px) and (orientation: landscape) {
-  .install-shell {
-    grid-template-columns: minmax(90px, 112.5px) minmax(0, 1fr);
-    gap: clamp(13.5px, 3vw, 19.5px);
-  }
-
-  .install-actions .install-note {
-    font-size: max(var(--turn-text-floor, 11px), 0.51rem);
-  }
-}
-
 @media (max-width: 465px) {
-  .install-shell {
-    padding-inline: 6px;
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) {
+    padding:
+      max(7px, env(safe-area-inset-top))
+      max(7px, env(safe-area-inset-right))
+      max(7px, env(safe-area-inset-bottom))
+      max(7px, env(safe-area-inset-left));
   }
 
-  .install-kicker {
-    justify-content: center;
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-shell {
+    min-height: calc(100vh - 14px);
+    min-height: calc(100dvh - 14px);
+    padding: 28px 20px 24px;
+    border-radius: 34px;
+    gap: 24px;
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-actions button {
+    min-height: 66px;
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-secondary {
+    min-height: 76px;
+  }
+}
+
+@media (max-height: 700px) {
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-shell {
+    padding-top: 22px;
+    padding-bottom: 20px;
+    gap: 18px;
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-icon {
+    width: clamp(92px, 18vh, 124px);
+  }
+
+  .install-accessibility {
+    margin-top: 20px;
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-actions {
+    margin-top: 24px;
+    gap: 12px;
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-kicker {
+    padding-top: 28px;
+  }
+}
+
+@media (max-height: 520px) and (min-width: 560px) {
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-shell {
+    width: min(100%, 980px);
+    min-height: calc(100vh - 14px);
+    min-height: calc(100dvh - 14px);
+    padding: 20px 28px;
+    grid-template-columns: minmax(110px, 0.32fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: clamp(24px, 5vw, 48px);
+    align-items: center;
+    border-radius: 30px;
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-art {
+    align-self: center;
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-icon {
+    width: min(100%, 132px);
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-card {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.95fr);
+    grid-template-areas:
+      "copy accessibility"
+      "actions accessibility"
+      "kicker kicker";
+    column-gap: clamp(18px, 3vw, 30px);
+    row-gap: 12px;
+    align-items: center;
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-copy {
+    grid-area: copy;
+    justify-self: stretch;
+    font-size: max(var(--turn-text-floor, 11px), 0.88rem);
+  }
+
+  .install-accessibility {
+    grid-area: accessibility;
+    margin-top: 0;
+  }
+
+  .install-accessibility-symbol {
+    width: 54px;
+  }
+
+  .install-accessibility-list {
+    margin-top: 8px;
+    font-size: max(var(--turn-text-floor, 11px), 0.72rem);
+    line-height: 1.22;
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-actions {
+    grid-area: actions;
+    width: 100%;
+    margin-top: 0;
+    gap: 8px;
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-actions button {
+    min-height: 50px;
+    padding-block: 8px;
+    font-size: max(var(--turn-text-floor, 11px), 0.76rem);
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-secondary {
+    min-height: 56px;
+  }
+
+  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-kicker {
+    grid-area: kicker;
+    margin-top: 2px;
+    padding-top: 0;
+    gap: 4px;
+    font-size: max(var(--turn-text-floor, 11px), 0.62rem);
   }
 }
