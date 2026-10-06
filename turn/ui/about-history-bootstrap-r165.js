@@ -2,7 +2,7 @@ import {
   CHANGELOG,
   CURRENT_RELEASE,
   DEVELOPMENT_HISTORY
-} from '../content/about-history-current.js?build=20261006-r405';
+} from '../content/about-history-current.js?build=20261006-r406';
 import { aboutTurnHtml } from '../content/about-turn.js?revision=r1';
 
 const REVISION = 'r165-browser-about';
@@ -354,6 +354,8 @@ function syncInstallGatePresentation() {
   browserButton.append(browserLabel, recommendation);
 
   actions.append(installButton, note, browserButton);
+  // The build/About footer belongs to the full composition, including the logo column.
+  gate.querySelector('.install-shell')?.append(kicker);
   return { gate, kicker, note };
 }
 
