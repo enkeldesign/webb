@@ -127,26 +127,34 @@ assert.doesNotMatch(bootstrap, /setInterval|@keyframes|animation:/,
 
 assert.match(browserInstallCss, /html\.turn-browser:not\(\.turn-browser-launched\) #installGate:not\(\.turn-startup-loading\)[\s\S]*background: var\(--turn-surface-page\)/,
   'The browser install page must use the same semantic page surface as startup');
-assert.match(browserInstallCss, /\.install-shell[\s\S]*border: var\(--turn-border-heavy\) solid var\(--turn-outline\)[\s\S]*border-radius: clamp\(30px, 7vw, 52px\)/,
-  'The install experience must use the approved large rounded page frame');
-assert.match(browserInstallCss, /\.install-icon[\s\S]*border: 0[\s\S]*box-shadow: none[\s\S]*transform: none/,
-  'The TURN icon must sit calmly without the retired tilted-card treatment');
+assert.match(browserInstallCss, /\.install-shell[\s\S]*border: 0;[\s\S]*border-radius: 0;/,
+  'The install shell must not draw the phone/frame from the visual mockup');
+assert.match(browserInstallCss, /\.install-icon[\s\S]*border-width: var\(--turn-border-default\);[\s\S]*box-shadow: var\(--turn-shadow-action\);/,
+  'The TURN app mark must use the same tokenized treatment as the startup/loading screen');
 assert.match(browserInstallCss, /\.install-card[\s\S]*border: 0[\s\S]*background: transparent[\s\S]*box-shadow: none/,
-  'The inner install card must be removed from the visual hierarchy');
-assert.match(browserInstallCss, /\.install-accessibility-symbol[\s\S]*width: clamp\(64px, 11vw, 86px\)/,
-  'The accessibility mark must have a stable responsive size');
-assert.match(browserInstallCss, /\.install-accessibility-list[\s\S]*text-align: left/,
-  'Accessibility bullets must remain easy to scan');
+  'The inner install card must stay out of the visual hierarchy');
+assert.match(browserInstallCss, /\.install-accessibility-symbol[\s\S]*width: calc\(var\(--turn-space-12\) \+ var\(--turn-space-12\)\)/,
+  'The accessibility mark size must use the spacing scale');
+assert.match(browserInstallCss, /data-theme="dark"[\s\S]*\.install-accessibility::before[\s\S]*background: var\(--turn-blue-200\)[\s\S]*Accessibility\.svg/,
+  'Dark mode must recolour the Wikimedia accessibility mark with TURN light blue');
+assert.match(browserInstallCss, /\.install-accessibility-list[\s\S]*font-size: var\(--turn-type-small\)[\s\S]*text-align: left/,
+  'Accessibility bullets must use the type scale and retain the available inline reading width');
+assert.match(browserInstallCss, /\.install-actions button[\s\S]*border: var\(--turn-border-control\) solid var\(--turn-outline\)[\s\S]*border-radius: var\(--turn-radius-control\)[\s\S]*font-size: var\(--turn-type-body\)/,
+  'Both install actions must share the standard control geometry and type tokens');
 assert.match(browserInstallCss, /\.install-primary[\s\S]*background: var\(--turn-action-primary\)/,
   'Install TURN remains the semantic primary action');
 assert.match(browserInstallCss, /\.install-secondary[\s\S]*border-color: var\(--turn-outline\)[\s\S]*background: var\(--turn-surface-page\)[\s\S]*opacity: 1/,
-  'Browser play must be a real outlined secondary action rather than a faint text link');
-assert.match(browserInstallCss, /\.install-kicker[\s\S]*flex-direction: column[\s\S]*background: transparent/,
-  'Build identity and About must form the quiet stacked footer from the mockup');
+  'Browser play must remain a real outlined secondary action');
+assert.match(browserInstallCss, /text-size-adjust: 100%/,
+  'iOS rotation must not trigger browser text autosizing on the install page');
+assert.doesNotMatch(browserInstallCss, /font-size: max\(var\(--turn-text-floor/,
+  'Install-page typography must come from the shared type scale rather than local viewport formulas');
+assert.match(browserInstallCss, /\.install-kicker[\s\S]*flex-direction: column[\s\S]*background: transparent[\s\S]*font-size: var\(--turn-type-small\)/,
+  'Build identity and About must form the quiet tokenized stacked footer');
 assert.match(browserInstallCss, /#installGate\.turn-startup-loading \.install-accessibility \{\s*display: none !important;/,
   'Browser-only accessibility content must leave the DOM presentation when startup takes over');
-assert.match(browserInstallCss, /@media \(max-height: 520px\) and \(min-width: 560px\)[\s\S]*grid-template-columns: minmax\(110px, 0\.32fr\) minmax\(0, 1fr\)/,
-  'Short landscape viewports must recompose rather than shrink the mockup until it is unreadable');
+assert.match(browserInstallCss, /@media \(max-height: 520px\) and \(min-width: 560px\)[\s\S]*grid-template-columns: minmax\(104px, 0\.32fr\) minmax\(0, 1fr\)/,
+  'Short landscape viewports must recompose without changing to a second local type scale');
 assert.match(browserInstallCss, /\.install-guide-card[\s\S]*width: min\(420px, 100%\)/);
 assert.match(browserInstallCss, /\.install-about-trigger[\s\S]*text-decoration: underline/);
 assert.doesNotMatch(browserInstallCss, /radial-gradient|linear-gradient/,
