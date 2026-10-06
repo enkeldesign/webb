@@ -53,11 +53,18 @@ jobs:
           done
           timeout 240 node turn-tests/responsive-browser-smoke.mjs
 
-      - name: Commit verified production change
+      - name: Stage verified production change
         run: |
+          git status --short
           git add -A
           git diff --cached --check
+          git diff --cached --stat
+
+      - name: Commit verified production change
+        run: |
           git config user.name 'SOL'
           git config user.email 'solavatar@openai.com'
           git commit -m 'TURN 1.36.43 r405: restore install accessibility colours' -m 'Preserve the Wikimedia accessibility symbol original #154F91 in light mode and use TURN blue-300 in dark mode. Extend the static and Chromium/WebKit regressions and synchronize all release bindings.' -m 'Co-authored-by: SOL <solavatar@openai.com>' -m 'Co-authored-by: ASTRA <astraavatar@ai-assistant.local>'
-          git push origin HEAD:sol/install-accessibility-colours-r405
+
+      - name: Push verified production change
+        run: git push origin HEAD:sol/install-accessibility-colours-r405
