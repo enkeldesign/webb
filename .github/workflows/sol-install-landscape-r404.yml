@@ -57,7 +57,9 @@ jobs:
         run: |
           git add -A
           git diff --cached --check
+          git restore --staged .github/workflows/turn-support-feedback-browser.yml
+          git restore .github/workflows/turn-support-feedback-browser.yml
           git config user.name 'SOL'
           git config user.email 'solavatar@openai.com'
-          git commit -m 'TURN 1.36.42 r404: stabilize browser install landscape' -m 'Prevent short-landscape grid tracks from stretching install actions in Safari/WebKit, render the accessibility mark from the semantic information role, and add dedicated Chromium/WebKit install-page regression coverage.' -m 'Co-authored-by: SOL <solavatar@openai.com>' -m 'Co-authored-by: ASTRA <astraavatar@ai-assistant.local>'
+          git commit -m 'TURN 1.36.42 r404: stabilize browser install landscape' -m 'Prevent short-landscape grid tracks from stretching install actions in Safari/WebKit, render the accessibility mark from the semantic information role, use the approved accessible product pitch, and add dedicated Chromium/WebKit install-page regression coverage.' -m 'Co-authored-by: SOL <solavatar@openai.com>' -m 'Co-authored-by: ASTRA <astraavatar@ai-assistant.local>'
           git push origin HEAD:sol/install-landscape-r404
