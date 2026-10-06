@@ -24,6 +24,16 @@ await write(releasePath, `${JSON.stringify({
   cacheKey: '20261006-r404'
 }, null, 2)}\n`);
 
+const bootstrapPath = 'turn/ui/about-history-bootstrap-r165.js';
+let bootstrap = await read(bootstrapPath);
+bootstrap = replaceOnce(
+  bootstrap,
+  "const INSTALL_PITCH = 'TURN is a motion-controlled arcade drift racer.';",
+  "const INSTALL_PITCH = 'TURN is an accessible motion-controlled arcade drift racer.';",
+  'approved accessible install pitch'
+);
+await write(bootstrapPath, bootstrap);
+
 const cssPath = 'turn/browser-install-r165.css';
 let css = await read(cssPath);
 css = replaceOnce(css, `.install-accessibility-symbol {
@@ -117,6 +127,14 @@ await write(cssPath, css);
 
 const aboutTestPath = 'turn-tests/about-history-production.mjs';
 let aboutTest = await read(aboutTestPath);
+aboutTest = replaceOnce(
+  aboutTest,
+  "assert.match(bootstrap, /const INSTALL_PITCH = 'TURN is a motion-controlled arcade drift racer\\.'/,
+  'The browser install page must use the concise product pitch from the approved mockup');",
+  "assert.match(bootstrap, /const INSTALL_PITCH = 'TURN is an accessible motion-controlled arcade drift racer\\.'/,
+  'The browser install page must use the approved accessible product pitch');",
+  'install pitch regression'
+);
 aboutTest = replaceOnce(aboutTest, `assert.match(browserInstallCss, /data-theme="dark"[\\s\\S]*\\.install-accessibility::before[\\s\\S]*background: var\\(--turn-blue-200\\)[\\s\\S]*assets\\/icons\\/accessibility\\.svg/,
   'Dark mode must recolour the Wikimedia accessibility mark with TURN light blue');`, `assert.match(browserInstallCss, /\\.install-accessibility::before[\\s\\S]*background: var\\(--turn-action-information\\)[\\s\\S]*assets\\/icons\\/accessibility\\.svg/,
   'The Wikimedia accessibility mark must render through the semantic information colour in every theme');`, 'install accessibility semantic-token regression');
