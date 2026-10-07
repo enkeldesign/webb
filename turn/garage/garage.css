@@ -975,6 +975,7 @@ html[data-theme="dark"] .garage-bar {
 
 .garage-car-name {
   min-width: 0;
+  color: var(--turn-text-heading);
   font-family: var(--turn-pr-font-display);
   font-size: 1.0625rem;
   font-weight: 900;
@@ -1034,12 +1035,12 @@ html[data-theme="dark"] .garage-bar {
 
 /* Locked: the real car as an Ink line drawing on Paper, quieter, with its threshold. */
 .garage-car-card.is-locked {
-  border-color: var(--turn-pr-faint);
+  border-color: var(--turn-outline-muted);
   background: transparent;
 }
 
 .garage-car-card.is-locked .garage-car-art {
-  border-color: var(--turn-pr-faint);
+  border-color: var(--turn-outline-muted);
   background: var(--turn-surface-page);
 }
 
@@ -1052,12 +1053,16 @@ html[data-theme="dark"] .garage-bar {
   filter: invert(1);
 }
 
-.garage-car-card.is-locked :is(.garage-car-name, .garage-car-state) {
+.garage-car-card.is-locked .garage-car-state {
   color: var(--turn-pr-muted);
 }
 
+.garage-car-card.is-locked .garage-car-name {
+  color: var(--turn-text-heading-muted);
+}
+
 .garage-car-card.is-locked .garage-car-ordinal {
-  border-color: var(--turn-pr-faint);
+  border-color: var(--turn-outline-muted);
   color: var(--turn-pr-muted);
 }
 

@@ -7,6 +7,8 @@
   --turn-white: #fffdf6;
   --turn-road: #44494f;
   --turn-muted: #d6d0c2;
+  --turn-warm-grey-300: #cba;
+  --turn-warm-grey-500: #90887f;
 
   --turn-yellow-600: #ffbd12;
   --turn-yellow-400: #ffd43b;
@@ -42,10 +44,12 @@
   --turn-surface-bright: #ffffff;
   --turn-surface-card: #fffcf2;
   --turn-text: var(--turn-ink);
+  --turn-text-heading: var(--turn-ink);
+  --turn-text-heading-muted: var(--turn-text-muted);
   --turn-text-muted: rgb(8 9 10 / 0.68);
   --turn-text-faint: rgb(8 9 10 / 0.32);
   --turn-outline: var(--turn-ink);
-  --turn-outline-muted: var(--turn-outline);
+  --turn-outline-muted: var(--turn-text-faint);
   --turn-shadow-color: var(--turn-ink);
 
   /* Semantic UI roles. */
@@ -132,21 +136,36 @@
 /* Dark theme (#1067), set by the theme resolver in index.html. Neutral surfaces become
    warm night greys and the ink on them becomes cream; semantic colours (actions,
    accents, the --turn-ink on them) keep their values. Hard shadows go darker than any
-   surface, so they still read as elevation rather than glow. Active outlines are
-   Paper cream; a locked or disabled control keeps a muted cream, never grey (Erik).
-   Text on the page is 16:1, outlines 16:1 and muted outlines 11:1. */
+   surface, so they still read as elevation rather than glow. Large headings and
+   active outlines use warm grey; inactive outlines use its quieter shade. Smaller
+   text keeps Paper cream. Against the brightest neutral surface (#2e3035), headings
+   and active outlines exceed 7:1; inactive outlines exceed 3:1. */
 :root[data-theme="dark"] {
   --turn-surface-page: #1c1d20;
   --turn-surface-raised: #26282c;
   --turn-surface-bright: #2e3035;
   --turn-surface-card: #26282c;
   --turn-text: #fff8e8;
+  --turn-text-heading: var(--turn-warm-grey-300);
+  --turn-text-heading-muted: var(--turn-warm-grey-300);
   --turn-text-muted: rgb(255 248 232 / 0.72);
   --turn-text-faint: rgb(255 248 232 / 0.42);
-  --turn-outline: #fff8e8;
-  --turn-outline-muted: #d6cdb9;
+  --turn-outline: var(--turn-warm-grey-300);
+  --turn-outline-muted: var(--turn-warm-grey-500);
   --turn-shadow-color: #000000;
   --turn-header: #111214;
+}
+
+/* Heading colour is independent of body copy. Component titles can use the same
+   role; small section labels with their own text role keep that role. */
+:where(h1, h2) {
+  color: var(--turn-text-heading);
+}
+
+/* These display-sized labels use the text role in their component styles. Scope
+   that role to heading ink without changing neighbouring body copy. */
+:where(.track-intro-name, .install-copy) {
+  --turn-text: var(--turn-text-heading);
 }
 
 /* An inactive control (locked or disabled) keeps the muted outline in the dark theme. */
@@ -156,7 +175,7 @@
 
 /* Colour surfaces (#1067). A component painted in a semantic colour carries the light
    theme with it: its text is Ink and every role inside it is the light one, exactly as
-   in light. Its own outline stays the dark theme's cream against the night around it;
+   in light. Its own outline stays the dark theme's warm grey against the night around it;
    the outlines inside it are Ink. This one list names every such component. */
 :root[data-theme="dark"] :is(
   /* Coloured controls */
@@ -202,6 +221,8 @@
   --turn-form-control-idle: var(--turn-surface-page);
   --turn-disclosure-panel: var(--turn-surface-page);
   --turn-text: var(--turn-ink);
+  --turn-text-heading: var(--turn-ink);
+  --turn-text-heading-muted: var(--turn-text-muted);
   --turn-text-muted: rgb(8 9 10 / 0.68);
   --turn-text-faint: rgb(8 9 10 / 0.32);
   --turn-pr-muted: var(--turn-text-muted);

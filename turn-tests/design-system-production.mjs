@@ -270,7 +270,7 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.equal((index.match(/<meta name="theme-color"/g) || []).length, 1, 'one theme-color meta, updated by the resolver');
   const dark = tokens.match(/:root\[data-theme="dark"\] \{([\s\S]*?)\}/)?.[1] || '';
   const darkNames = [...dark.matchAll(/(--[\w-]+):/g)].map((match) => match[1]).sort();
-  assert.deepEqual(darkNames, ['--turn-header', '--turn-outline', '--turn-outline-muted', '--turn-shadow-color', '--turn-surface-bright', '--turn-surface-card', '--turn-surface-page', '--turn-surface-raised', '--turn-text', '--turn-text-faint', '--turn-text-muted'], 'the dark theme changes only neutral roles');
+  assert.deepEqual(darkNames, ['--turn-header', '--turn-outline', '--turn-outline-muted', '--turn-shadow-color', '--turn-surface-bright', '--turn-surface-card', '--turn-surface-page', '--turn-surface-raised', '--turn-text', '--turn-text-faint', '--turn-text-heading', '--turn-text-heading-muted', '--turn-text-muted'], 'the dark theme changes only neutral roles');
   assert.match(tokens, /--turn-shadow-color: var\(--turn-ink\);/, 'hard shadows have their own colour');
   const bar = await fs.readFile(new URL('../turn/ui/home-app-bar.js', import.meta.url), 'utf8');
   assert.match(bar, /<legend>COLOR THEME<\/legend>/);
@@ -279,9 +279,10 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.doesNotMatch(index, /theme-contrast/, 'the dark theme is CSS only: no runtime contrast guard');
   assert.doesNotMatch(tokens, /data-turn-(on|edge|pill)/);
   assert.doesNotMatch(head, /turn-admin-unlock/, 'every player can choose a theme');
-  assert.match(dark, /--turn-outline: #fff8e8;/, 'active dark outlines are Paper cream');
+  assert.match(dark, /--turn-outline: var\(--turn-warm-grey-300\);/, 'active dark outlines use the warm grey palette');
+  assert.match(dark, /--turn-text-heading: var\(--turn-warm-grey-300\);/, 'dark headings share the softer neutral palette');
   // Colour surfaces: one list of components painted in a semantic colour carries the
-  // light roles (Ink text); outlines inside them are Ink, their own outline stays cream.
+  // light roles (Ink text); outlines inside them are Ink, their own outline stays warm grey.
   const surfaces = tokens.match(/:root\[data-theme="dark"\] :is\(\s*\/\* Coloured controls \*\/([\s\S]*?)\) \{([\s\S]*?)\n\}/);
   assert.ok(surfaces, 'one colour-surface list in design-tokens.css');
   assert.match(surfaces[2], /--turn-text: var\(--turn-ink\);[\s\S]*--turn-surface-page: var\(--turn-paper\)|--turn-surface-page: var\(--turn-paper\);[\s\S]*--turn-text: var\(--turn-ink\);/, 'a colour surface carries the light roles');
@@ -304,7 +305,7 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
     const css = await fs.readFile(new URL(`../turn/${file}`, import.meta.url), 'utf8');
     assert.doesNotMatch(css, /(?:^|[\s;{])border[a-z-]*:[^;]*var\(--turn-ink\)/m, `${file}: an Ink outline in light is the cream outline in dark (--turn-outline)`);
   }
-  assert.match(dark, /--turn-outline-muted: #d6cdb9;/, 'inactive dark outlines are a muted cream, never grey');
+  assert.match(dark, /--turn-outline-muted: var\(--turn-warm-grey-500\);/, 'inactive dark outlines use the quieter warm grey palette');
   assert.match(tokens, /:root\[data-theme="dark"\] :is\(button, \[role="button"\]\):is\(:disabled, \[aria-disabled="true"\], \.is-locked\)[^{]*\{\s*border-color: var\(--turn-outline-muted\);/, 'a locked or disabled control keeps the muted outline');
 }
 
