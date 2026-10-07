@@ -362,8 +362,12 @@ html body .turn-pr-app-logo {
   border-color: var(--turn-outline-muted);
 }
 
-.turn-pr-card.is-locked :is(.turn-pr-card-tab, .turn-pr-card-name) {
+.turn-pr-card.is-locked .turn-pr-card-tab {
   color: var(--turn-pr-muted);
+}
+
+.turn-pr-card.is-locked .turn-pr-card-name {
+  color: var(--turn-text-heading-muted);
 }
 
 .turn-pr-card.is-locked.is-selected .turn-pr-card-tab {

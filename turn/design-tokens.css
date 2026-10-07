@@ -45,6 +45,7 @@
   --turn-surface-card: #fffcf2;
   --turn-text: var(--turn-ink);
   --turn-text-heading: var(--turn-ink);
+  --turn-text-heading-muted: var(--turn-text-muted);
   --turn-text-muted: rgb(8 9 10 / 0.68);
   --turn-text-faint: rgb(8 9 10 / 0.32);
   --turn-outline: var(--turn-ink);
@@ -146,6 +147,7 @@
   --turn-surface-card: #26282c;
   --turn-text: #fff8e8;
   --turn-text-heading: var(--turn-warm-grey-300);
+  --turn-text-heading-muted: var(--turn-warm-grey-300);
   --turn-text-muted: rgb(255 248 232 / 0.72);
   --turn-text-faint: rgb(255 248 232 / 0.42);
   --turn-outline: var(--turn-warm-grey-300);
@@ -220,6 +222,7 @@
   --turn-disclosure-panel: var(--turn-surface-page);
   --turn-text: var(--turn-ink);
   --turn-text-heading: var(--turn-ink);
+  --turn-text-heading-muted: var(--turn-text-muted);
   --turn-text-muted: rgb(8 9 10 / 0.68);
   --turn-text-faint: rgb(8 9 10 / 0.32);
   --turn-pr-muted: var(--turn-text-muted);
