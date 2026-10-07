@@ -49,7 +49,7 @@
 
 .turn-pr-display {
   margin: 0;
-  color: var(--turn-text);
+  color: var(--turn-text-heading);
   /* ROADBOOK and GARAGE are titled in the TURN font, like LOADING (#1040). */
   font-family: var(--turn-pr-font-brand);
   /* Enlarged text grows the heading until it would outgrow the screen. */
@@ -318,6 +318,7 @@ html body .turn-pr-app-logo {
 
 .turn-pr-card-name {
   min-width: 0;
+  color: var(--turn-text-heading);
   font-family: var(--turn-pr-font-display);
   font-size: var(--turn-pr-type-title);
   font-weight: 900;
@@ -353,12 +354,12 @@ html body .turn-pr-app-logo {
 
 /* Locked: still inspectable, visibly quieter, with the trophy threshold. */
 .turn-pr-card.is-locked:not(.is-selected) {
-  border-color: var(--turn-pr-faint);
+  border-color: var(--turn-outline-muted);
   background: transparent;
 }
 
 .turn-pr-card.is-locked:not(.is-selected) :is(.turn-pr-card-tab, .turn-pr-card-art) {
-  border-color: var(--turn-pr-faint);
+  border-color: var(--turn-outline-muted);
 }
 
 .turn-pr-card.is-locked :is(.turn-pr-card-tab, .turn-pr-card-name) {
@@ -378,13 +379,13 @@ html body .turn-pr-app-logo {
 }
 
 .turn-pr-card.is-locked .turn-pr-route-outline {
-  stroke: var(--turn-pr-faint);
+  stroke: var(--turn-outline-muted);
 }
 
 .turn-pr-card.is-coming-soon {
   grid-template-columns: 3.25rem minmax(0, 1fr);
   border-style: dashed;
-  border-color: var(--turn-pr-faint);
+  border-color: var(--turn-outline-muted);
   background: transparent;
   color: var(--turn-pr-muted);
   cursor: default;
@@ -392,7 +393,7 @@ html body .turn-pr-app-logo {
 
 .turn-pr-card.is-coming-soon .turn-pr-card-tab {
   border-right-style: dashed;
-  border-color: var(--turn-pr-faint);
+  border-color: var(--turn-outline-muted);
 }
 
 .turn-pr-card:focus-visible {
