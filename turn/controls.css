@@ -79,7 +79,7 @@
     .nuke-ghosts-button, .nuke-confirm, .garage-shift-cancel, .garage-shift-save,
     .m8-feedback-email, .m8-feedback-copy,
     .turn-yourturn-share-submit, .turn-yourturn-share-back, .turn-yourturn-share-close,
-    .lap-result-yourturn-share, .turn-support-challenge-trigger,
+    .lap-result-yourturn-share, .turn-support-challenge-trigger, .turn-support-challenge-actions button,
     .turn-dbe-training-actions button, .turn-dbe-training-how button, .turn-dbe-training-settings button,
     .turn-dbe-training-race-nav button[data-training-race-restart],
     .turn-achievements-filters button[aria-pressed="true"],
@@ -113,7 +113,7 @@
     .garage-shift-cancel, .garage-shift-save, .m8-feedback-email, .m8-feedback-copy,
     .turn-dbe-training-how button, .turn-dbe-training-settings button, .turn-dbe-training-actions button,
     .turn-dbe-training-race-nav button, .turn-race-pause-resume, .turn-update-toast-restart,
-    .turn-support-challenge-trigger, .turn-achievements-filters button
+    .turn-support-challenge-trigger, .turn-support-challenge-actions button, .turn-achievements-filters button
   ) {
     --turn-control-rest-shadow: var(--turn-shadow-control);
   }
@@ -138,6 +138,7 @@
     .m8-achievements-button, .utility-group > button, .m8-reset-rivals,
     .m8-reset-cancel, .m8-reset-confirm-button, .garage-shift-cancel,
     .garage-shift-save, .m8-feedback-email, .m8-feedback-copy, .turn-race-pause-resume,
+    .turn-support-challenge-actions button,
     .turn-dbe-training-how button, .turn-dbe-training-settings button, .turn-dbe-training-actions button, .turn-dbe-training-race-nav button
   ) {
     --turn-control-pressed-shadow: var(--turn-shadow-press);
