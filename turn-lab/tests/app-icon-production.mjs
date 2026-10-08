@@ -18,12 +18,12 @@ assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} 
 for (const source of [index]) {
   assert.match(source, /<link rel="icon" href="\.\/TURNicon\.PNG\?icon=20260803-profile-512" type="image\/png" sizes="512x512">/);
   assert.match(source, /<link rel="apple-touch-icon" href="\.\/TURNicon\.PNG\?icon=20260803-profile-512" sizes="512x512">/);
-  assert.match(source, /<img class="install-icon" src="\.\/TURNicon\.PNG\?icon=20260803-profile-512" alt="">/);
+  assert.match(source, /<span class="install-icon turn-logo-frame"><img src="\.\/TURNicon\.PNG\?icon=20260803-profile-512" alt=""><\/span>/);
   assert.doesNotMatch(source, /favicon-r45|apple-touch-icon-r45|icon-512-r45/);
 }
 
 // The app bar carries TURN's badge: the start screen's framed icon.
-assert.match(homeSource, /<img class="m8-home-logo turn-pr-app-logo" src="\/turn\/TURNicon\.PNG\?icon=\$\{ICON_REVISION\}" alt="TURN">/);
+assert.match(homeSource, /<span class="m8-home-logo turn-pr-app-logo turn-logo-frame"><img src="\/turn\/TURNicon\.PNG\?icon=\$\{ICON_REVISION\}" alt="TURN"><\/span>/);
 assert.match(homeSource, /ICON_REVISION = '20260803-profile-512'/);
 // Framed and tilted like the start screen's icon, hanging over the bar's rule.
 const preRace = fs.readFileSync(new URL('../../turn/pre-race.css', import.meta.url), 'utf8');
