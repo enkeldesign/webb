@@ -45,3 +45,149 @@
   min-height: var(--turn-target-min);
   padding: 0;
 }
+
+/* Coloured controls compose their decorative inset and existing elevation as
+   independent roles. The important declaration in this named layer owns only
+   box-shadow: older component/pressed declarations cannot drop the hairline.
+   Focus remains on outline; neutral controls/cards and driving-pad/SHIFT feedback are
+   outside this component model. */
+:root {
+  --turn-control-shadow-flat: 0 0 0 0 transparent;
+  --turn-control-shadow-legacy: 3.75px 3.75px 0 var(--turn-shadow-color);
+  --turn-control-shadow-small: 2.25px 2.25px 0 var(--turn-shadow-color);
+  --turn-control-shadow-legacy-press: 1.5px 1.5px 0 var(--turn-shadow-color);
+  --turn-control-shadow-dialog-press: 0.75px 0.75px 0 var(--turn-shadow-color);
+  --turn-control-shadow-dismiss: 5.25px 5.25px 0 var(--turn-shadow-color);
+}
+
+@layer turn-coloured-controls {
+  :where(
+    .turn-pr-button:is(.is-primary, .is-sheet):not(.is-locked),
+    .garage-back, .garage-step, .garage .garage-shift.is-active,
+    .turn-home-sheet-close, .turn-pr-close, .m8-dialog-head > button,
+    .garage-shift-close, .turn-trophy-road-detail-close,
+    .install-primary, .install-close, .install-copy-address,
+    .m8-achievements-button, .turn-race-achievements-button,
+    .m8-reset-rivals, .m8-reset-cancel, .m8-reset-confirm-button,
+    .roadbook-rivals-reset-button, .roadbook-rivals-confirm-button,
+    .back-to-lot-button, .sound-guide-close, .audio-settings-close,
+    .spectate-button, .spectate-close, .spectate-next,
+    .utility-group > :is(.sound-guide-button, .audio-settings-button, .reset-rivals-button),
+    .back-to-start-button.is-lap-invalid, .utility-group[data-menu-state="racing"] .back-to-start-button,
+    [data-turn-navigation-action], .turn-race-pause-resume, .turn-race-pause-leave,
+    .turn-visit-summary-close, .turn-update-toast-restart, .turn-update-toast-later,
+    .nuke-ghosts-button, .nuke-confirm, .garage-shift-cancel, .garage-shift-save,
+    .m8-feedback-email, .m8-feedback-copy,
+    .turn-yourturn-share-submit, .turn-yourturn-share-back, .turn-yourturn-share-close,
+    .lap-result-yourturn-share, .turn-support-challenge-trigger,
+    .turn-dbe-training-actions button, .turn-dbe-training-how button, .turn-dbe-training-settings button,
+    .turn-dbe-training-race-nav button[data-training-race-restart],
+    .turn-achievements-filters button[aria-pressed="true"],
+    .turn-history-tabs button[aria-selected="true"],
+    .m8-guide-disclosure > summary, .m8-dbe-guide > summary,
+    .turn-theme-setting label:has(input:checked),
+    .m8-setting-card input:is([type="radio"], [type="checkbox"]):checked,
+    .garage-spec-explain input[type="checkbox"]:checked
+  ) {
+    --turn-control-rest-shadow: var(--turn-control-shadow-legacy);
+    --turn-control-pressed-shadow: var(--turn-control-shadow-legacy-press);
+    --turn-control-current-shadow: var(--turn-control-rest-shadow);
+    box-shadow: var(--turn-shadow-control-inner), var(--turn-control-current-shadow) !important;
+  }
+
+  /* Existing flat controls, standard raised controls, primary actions and round
+     dismiss controls retain their elevation levels. */
+  :where(
+    .turn-pr-button.is-sheet, .turn-pr-close, .garage-back, .garage-step,
+    .garage .garage-shift.is-active, .turn-race-pause-leave, .turn-visit-summary-close,
+    .roadbook-rivals-reset-button, .roadbook-rivals-confirm-button,
+    .m8-guide-disclosure > summary, .m8-dbe-guide > summary,
+    .turn-theme-setting label, .m8-setting-card input, .garage-spec-explain input
+  ) {
+    --turn-control-rest-shadow: var(--turn-control-shadow-flat);
+  }
+  :where(
+    .m8-achievements-button, .turn-race-achievements-button, .utility-group > button,
+    .spectate-close, .spectate-next, .install-close, .turn-yourturn-share-close, .lap-result-yourturn-share,
+    .m8-reset-rivals, .m8-reset-cancel, .m8-reset-confirm-button,
+    .garage-shift-cancel, .garage-shift-save, .m8-feedback-email, .m8-feedback-copy,
+    .turn-dbe-training-how button, .turn-dbe-training-settings button, .turn-dbe-training-actions button,
+    .turn-dbe-training-race-nav button, .turn-race-pause-resume, .turn-update-toast-restart,
+    .turn-support-challenge-trigger, .turn-achievements-filters button
+  ) {
+    --turn-control-rest-shadow: var(--turn-shadow-control);
+  }
+  :where(.install-copy-address) {
+    --turn-control-rest-shadow: var(--turn-control-shadow-small);
+  }
+  :where(.turn-pr-button.is-primary) {
+    --turn-control-rest-shadow: var(--turn-shadow-action);
+    --turn-control-pressed-shadow: var(--turn-shadow-press);
+  }
+  :where(
+    .turn-home-sheet-close, .garage-shift-close, .m8-dialog-head > button,
+    .turn-trophy-road-detail-close, .turn-history-tabs button
+  ) {
+    --turn-control-rest-shadow: var(--turn-control-shadow-dismiss);
+  }
+
+  :where(.m8-dialog button, .turn-history-tabs button, .lap-result-yourturn-share, .turn-support-challenge-trigger) {
+    --turn-control-pressed-shadow: var(--turn-control-shadow-dialog-press);
+  }
+  :where(
+    .m8-achievements-button, .utility-group > button, .m8-reset-rivals,
+    .m8-reset-cancel, .m8-reset-confirm-button, .garage-shift-cancel,
+    .garage-shift-save, .m8-feedback-email, .m8-feedback-copy, .turn-race-pause-resume,
+    .turn-dbe-training-how button, .turn-dbe-training-settings button, .turn-dbe-training-actions button, .turn-dbe-training-race-nav button
+  ) {
+    --turn-control-pressed-shadow: var(--turn-shadow-press);
+  }
+  :where(.turn-home-sheet-close, .garage-shift-close) {
+    --turn-control-pressed-shadow: var(--turn-control-shadow-dismiss);
+  }
+  :where(.install-close, .spectate-close, .spectate-next) {
+    --turn-control-pressed-shadow: var(--turn-shadow-control);
+  }
+  :where(.turn-yourturn-share-submit, .turn-yourturn-share-back) {
+    --turn-control-pressed-shadow: var(--turn-control-shadow-legacy);
+  }
+  :where(
+    .turn-theme-setting label, .m8-setting-card input, .garage-spec-explain input,
+    .m8-guide-disclosure > summary, .m8-dbe-guide > summary,
+    .garage .garage-shift.is-active, .turn-race-pause-leave, .turn-visit-summary-close
+  ) {
+    --turn-control-pressed-shadow: var(--turn-control-shadow-flat);
+  }
+  /* The race menu moves the same controls into its action-height composition. */
+  :where(.turn-race-sheet .turn-race-menu > button) {
+    --turn-control-rest-shadow: var(--turn-shadow-action);
+    --turn-control-pressed-shadow: var(--turn-shadow-press);
+  }
+  :where(button, a, summary, [role="button"]):is(:active, .is-down):not(:disabled) {
+    --turn-control-current-shadow: var(--turn-control-pressed-shadow);
+  }
+
+  /* The browser install composition intentionally has flat actions. */
+  :where(html.turn-browser:not(.turn-browser-launched) #installGate .install-primary) {
+    --turn-control-rest-shadow: var(--turn-control-shadow-flat);
+  }
+
+  /* Segment fills follow the inside corners of the existing shared frame. */
+  :where(.turn-theme-options > label:first-child) {
+    border-start-start-radius: calc(var(--turn-radius-control) - var(--turn-border-control));
+    border-end-start-radius: calc(var(--turn-radius-control) - var(--turn-border-control));
+  }
+  :where(.turn-theme-options > label:last-child) {
+    border-start-end-radius: calc(var(--turn-radius-control) - var(--turn-border-control));
+    border-end-end-radius: calc(var(--turn-radius-control) - var(--turn-border-control));
+  }
+}
+
+/* In forced colours the UA drops decorative shadows. Native radio/check marks
+   retain selected-state visibility when authored fills/gradients are suppressed. */
+@media (forced-colors: active) {
+  :root body :is(.m8-setting-card, .garage-spec-explain) input:is([type="radio"], [type="checkbox"]) {
+    appearance: auto;
+    background: revert;
+  }
+}

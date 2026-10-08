@@ -270,7 +270,7 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.equal((index.match(/<meta name="theme-color"/g) || []).length, 1, 'one theme-color meta, updated by the resolver');
   const dark = tokens.match(/:root\[data-theme="dark"\] \{([\s\S]*?)\}/)?.[1] || '';
   const darkNames = [...dark.matchAll(/(--[\w-]+):/g)].map((match) => match[1]).sort();
-  assert.deepEqual(darkNames, ['--turn-header', '--turn-outline', '--turn-outline-muted', '--turn-shadow-color', '--turn-surface-bright', '--turn-surface-card', '--turn-surface-page', '--turn-surface-raised', '--turn-text', '--turn-text-faint', '--turn-text-heading', '--turn-text-heading-muted', '--turn-text-muted'], 'the dark theme changes only neutral roles');
+  assert.deepEqual(darkNames, ['--turn-control-inner-edge-color', '--turn-header', '--turn-outline', '--turn-outline-muted', '--turn-shadow-color', '--turn-surface-bright', '--turn-surface-card', '--turn-surface-page', '--turn-surface-raised', '--turn-text', '--turn-text-faint', '--turn-text-heading', '--turn-text-heading-muted', '--turn-text-muted'], 'the dark theme changes only neutral roles');
   assert.match(tokens, /--turn-shadow-color: var\(--turn-ink\);/, 'hard shadows have their own colour');
   const bar = await fs.readFile(new URL('../turn/ui/home-app-bar.js', import.meta.url), 'utf8');
   assert.match(bar, /<legend>COLOR THEME<\/legend>/);
