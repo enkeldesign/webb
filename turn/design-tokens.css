@@ -51,9 +51,9 @@
   --turn-outline: var(--turn-ink);
   --turn-outline-muted: var(--turn-text-faint);
   --turn-shadow-color: var(--turn-ink);
-  /* Decorative separation inside a coloured control; focus stays on outline. */
-  --turn-control-inner-edge-color: rgb(8 9 10 / 0.18);
-  --turn-shadow-control-inner: inset 0 0 0 1px var(--turn-control-inner-edge-color);
+  /* Decorative separation inside a coloured frame; focus stays on outline. */
+  --turn-frame-inner-edge-color: rgb(8 9 10 / 0.18);
+  --turn-shadow-frame-inner: inset 0 0 0 1px var(--turn-frame-inner-edge-color);
 
   /* Semantic UI roles. */
   --turn-action-primary: var(--turn-pink-200);
@@ -156,7 +156,7 @@
   --turn-outline: var(--turn-warm-grey-300);
   --turn-outline-muted: var(--turn-warm-grey-500);
   --turn-shadow-color: #000000;
-  --turn-control-inner-edge-color: rgb(0 0 0 / 0.42);
+  --turn-frame-inner-edge-color: rgb(0 0 0 / 0.42);
   --turn-header: #111214;
 }
 

@@ -176,7 +176,7 @@ async function phoneFlow(browserType, name) {
       const heading = document.querySelector('.roadbook .turn-pr-display').getBoundingClientRect();
       const box = logo.getBoundingClientRect();
       return {
-        alt: logo.alt,
+        alt: logo.querySelector('img')?.alt,
         overhangs: box.bottom > bar.bottom + 8,
         clearOfHeading: box.bottom < heading.top,
         slimBar: bar.height <= 64,

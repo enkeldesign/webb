@@ -92,7 +92,7 @@
     --turn-control-rest-shadow: var(--turn-control-shadow-legacy);
     --turn-control-pressed-shadow: var(--turn-control-shadow-legacy-press);
     --turn-control-current-shadow: var(--turn-control-rest-shadow);
-    box-shadow: var(--turn-shadow-control-inner), var(--turn-control-current-shadow) !important;
+    box-shadow: var(--turn-shadow-frame-inner), var(--turn-control-current-shadow) !important;
   }
 
   /* Existing flat controls, standard raised controls, primary actions and round
@@ -163,6 +163,9 @@
     --turn-control-rest-shadow: var(--turn-shadow-action);
     --turn-control-pressed-shadow: var(--turn-shadow-press);
   }
+  :where(.turn-trophy-road-detail-close:hover) {
+    --turn-control-current-shadow: var(--turn-control-shadow-legacy-press);
+  }
   :where(button, a, summary, [role="button"]):is(:active, .is-down):not(:disabled) {
     --turn-control-current-shadow: var(--turn-control-pressed-shadow);
   }
@@ -170,6 +173,11 @@
   /* The browser install composition intentionally has flat actions. */
   :where(html.turn-browser:not(.turn-browser-launched) #installGate .install-primary) {
     --turn-control-rest-shadow: var(--turn-control-shadow-flat);
+  }
+
+  /* Before app boot, History uses its own smaller elevation. */
+  :where(html.turn-browser:not(.turn-browser-launched) .turn-history-tabs button) {
+    --turn-control-rest-shadow: var(--turn-shadow-control);
   }
 
   /* Segment fills follow the inside corners of the existing shared frame. */
@@ -190,4 +198,35 @@
     appearance: auto;
     background: revert;
   }
+}
+
+
+/* A replaced image paints above its own inset shadow. A shared frame puts the
+   same decorative edge above the artwork without changing its size or alt text. */
+.turn-logo-frame {
+  --turn-logo-frame-border: var(--turn-border-default);
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+.install-icon.turn-logo-frame {
+  --turn-logo-frame-border: calc(2 * var(--turn-border-default));
+}
+:is(html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading), #installGate.turn-startup-loading) .install-icon.turn-logo-frame {
+  --turn-logo-frame-border: var(--turn-border-default);
+}
+.turn-logo-frame > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.turn-logo-frame::after {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--turn-logo-frame-border));
+  border: var(--turn-logo-frame-border) solid transparent;
+  border-radius: inherit;
+  box-shadow: var(--turn-shadow-frame-inner);
+  pointer-events: none;
 }

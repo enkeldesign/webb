@@ -1519,7 +1519,7 @@
 </head><body>
   <section class="install-gate" id="installGate" aria-labelledby="installTitle">
     <div class="install-shell">
-      <div class="install-art" aria-hidden="true"><img class="install-icon" src="./TURNicon.PNG?icon=20260803-profile-512" alt=""></div>
+      <div class="install-art" aria-hidden="true"><span class="install-icon turn-logo-frame"><img src="./TURNicon.PNG?icon=20260803-profile-512" alt=""></span></div>
       <div class="install-card">
         <h1 id="installTitle">TURN</h1>
         <p class="install-copy">TURN is a motion-controlled arcade drift racer. Turn your device to steer and race your own best laps.</p>
@@ -1698,9 +1698,15 @@ function installStartupCover() {
         visibility: hidden;
       }
       .turn-startup-ring-fill {
+        /* An SVG inset follows the arc and both ends; the structural strokes and
+           measured progress stay unchanged. It shares the framed-surface token. */
+        filter: url(#turnStartupInnerEdge);
         stroke: var(--turn-action-information);
         stroke-width: 7;
         stroke-dasharray: var(--turn-startup-progress) 100;
+      }
+      .turn-startup-inner-edge-colour {
+        flood-color: var(--turn-frame-inner-edge-color);
       }
       .turn-startup-indicator[data-state="indeterminate"] .turn-startup-spinner {
         animation: turn-startup-spin 1800ms linear infinite;
@@ -1776,6 +1782,7 @@ function installStartupCover() {
           font-size: var(--turn-type-heading);
         }
         .turn-startup-indicator { width: 48px; height: 48px; }
+        .turn-startup-ring-fill { filter: url(#turnStartupInnerEdgeCompact); }
         .turn-startup-error-mark { font-size: 28px; }
         .turn-startup-recovery-actions { margin-top: var(--turn-space-6); }
       }
@@ -1783,6 +1790,9 @@ function installStartupCover() {
         .turn-startup-indicator[data-state="indeterminate"] .turn-startup-spinner {
           animation: none;
         }
+      }
+      @media (forced-colors: active) {
+        .turn-startup-ring-fill { filter: none; }
       }
       /* A fixed inset is more reliable than an early 100dvh measurement in
          standalone iOS landscape. The stale dynamic viewport caused the
@@ -1820,6 +1830,24 @@ function installStartupCover() {
   indicator.className = 'turn-startup-indicator';
   indicator.innerHTML = `
     <svg class="turn-startup-spinner" viewBox="0 0 72 72" aria-hidden="true" focusable="false">
+      <defs>
+        <!-- One CSS pixel in the 72-unit viewBox at the 64px / 48px indicator sizes. -->
+        <filter id="turnStartupInnerEdge" filterUnits="userSpaceOnUse" x="0" y="0" width="72" height="72" color-interpolation-filters="sRGB">
+          <feMorphology in="SourceAlpha" operator="erode" radius="1.125" result="inner" />
+          <feComposite in="SourceAlpha" in2="inner" operator="out" result="edge" />
+          <feFlood class="turn-startup-inner-edge-colour" />
+          <feComposite in2="edge" operator="in" />
+          <feMerge><feMergeNode in="SourceGraphic" /><feMergeNode /></feMerge>
+        </filter>
+        <!-- One CSS pixel in the 72-unit viewBox at the 64px / 48px indicator sizes. -->
+        <filter id="turnStartupInnerEdgeCompact" filterUnits="userSpaceOnUse" x="0" y="0" width="72" height="72" color-interpolation-filters="sRGB">
+          <feMorphology in="SourceAlpha" operator="erode" radius="1.5" result="inner" />
+          <feComposite in="SourceAlpha" in2="inner" operator="out" result="edge" />
+          <feFlood class="turn-startup-inner-edge-colour" />
+          <feComposite in2="edge" operator="in" />
+          <feMerge><feMergeNode in="SourceGraphic" /><feMergeNode /></feMerge>
+        </filter>
+      </defs>
       <circle class="turn-startup-ring-outline" cx="36" cy="36" r="28" />
       <circle class="turn-startup-ring-track" cx="36" cy="36" r="28" />
       <circle class="turn-startup-ring-edge" cx="36" cy="36" r="28" pathLength="100" />
