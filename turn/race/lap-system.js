@@ -25,6 +25,7 @@ const GATE_EPSILON = 1e-6;
 
 // The lap starts when the car crosses the line, when the player chooses: no GO!.
 export function beginTimedLapState({ state, samples, now }) {
+  if (state.rewardPreview?.completedLaps >= state.rewardPreview?.maxCompletedLaps) return;
   const start = samples[0];
 
   state.lapActive = true;
@@ -61,6 +62,7 @@ export function updateLapProgressState({
   completeLap,
   recordGhostFrame
 }) {
+  if (state.rewardPreview?.completedLaps >= state.rewardPreview?.maxCompletedLaps) return;
   const currentPosition = snapshotPosition(state.position);
   const previousPosition = state.lapPreviousPosition || currentPosition;
   const checkpointGateHalfWidth = trackWidth * checkpointGateHalfWidthFactor;
@@ -155,6 +157,9 @@ export function completeLapState({
   const completedLap = finishedTime > 5;
   const validLap = completedLap && state.recording.length > 20;
   const rankedLap = ranked !== false;
+  const preview = state.rewardPreview;
+  if (completedLap && preview) preview.completedLaps += 1;
+  const previewEnded = Boolean(preview && preview.completedLaps >= preview.maxCompletedLaps);
   const onCourseThroughout = state.lapCourseViolation !== true;
   let finishingPosition = null;
   let finishingTotal = null;
@@ -246,8 +251,9 @@ export function completeLapState({
   state.lapInvalid = false;
   state.courseSafetyOffRoad = false;
   state.lapCourseViolation = false;
-  state.lapActive = true;
-  state.lap += 1;
+  state.lapActive = !previewEnded;
+  if (previewEnded) state.running = false;
+  else state.lap += 1;
   state.lapStartedAt = now;
   state.lapElapsed = 0;
   state.recording = [];
@@ -255,6 +261,7 @@ export function completeLapState({
   return {
     finishedTime,
     completedLap,
+    previewEnded,
     validLap,
     savedLap,
     ranked: rankedLap,

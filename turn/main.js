@@ -22,6 +22,7 @@ import {
   DEFAULT_VEHICLE_SECONDARY_COLOR,
   getCarDefinition,
   loadVehicleSelection,
+  normalizeVehicleSelection,
   saveVehicleSelection
 } from '/turn/vehicle/catalog.js?build=20260720-r19';
 import { createCarVisual, disposeCarVisual } from '/turn/vehicle/car-models.js?build=20260720-r19';
@@ -544,8 +545,8 @@ async function installCarVisual(root, { carId, color, secondaryColor, ghost = fa
   }
 }
 
-async function applyVehicleSelection(selection) {
-  const saved = saveVehicleSelection(selection);
+async function applyVehicleSelection(selection, { persist = true } = {}) {
+  const saved = persist ? saveVehicleSelection(selection) : normalizeVehicleSelection(selection);
   const definition = getCarDefinition(saved.carId);
   state.vehicleId = saved.carId;
   state.vehicleColor = saved.color;
@@ -1042,7 +1043,7 @@ function recordGhostFrame() {
 }
 
 function completeLap(now) {
-  completeLapState({
+  const result = completeLapState({
     state,
     samples,
     now,
@@ -1081,6 +1082,7 @@ function completeLap(now) {
   });
   syncCompetitorVisuals();
   publishUiState('lap-completed');
+  if (result.previewEnded) void turnRuntime.openHome();
 }
 
 function saveGhost() {

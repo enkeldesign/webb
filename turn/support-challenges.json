@@ -4,7 +4,7 @@
   "offerAfterValidLapsWithoutTrophy": 6,
   "rerollAfterAdditionalValidLaps": 10,
   "stopAtTrophies": 2300,
-  "priority": ["winner", "learning", "safety", "drift"],
+  "priority": ["winner", "safety", "drift"],
   "trackOrder": ["countryside", "cliffside", "airport", "beachfront", "harbor", "dead-canyon", "midnight-city", "mountain"],
   "winner": {
     "enabled": true,
@@ -25,6 +25,10 @@
     "title": "DID YOU READ ALL OF IT?",
     "rewardPerPart": 5,
     "description": "Open every part of HOW TO PLAY."
+  },
+  "patrol": {
+    "enabled": true,
+    "reward": 25
   },
   "safety": {
     "enabled": true,

@@ -1,5 +1,5 @@
 {
-  "release": "20261008-r409",
+  "release": "20261008-r410",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -317,6 +317,7 @@
     "/turn/race/race-pause.js",
     "/turn/race/replay-codec.js",
     "/turn/race/replay-system.js",
+    "/turn/race/reward-preview.js",
     "/turn/race/rival-storage.js",
     "/turn/race/session-orchestrator.js",
     "/turn/race/track-spatial-index.js",

@@ -102,6 +102,14 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
       "The Track sheet also gained a rival overview: cars, colours and lap times together before entering the track. The growing game became easier to inspect without starting a race."
     ],
     "milestones": []
+  },
+  {
+    "period": "8 October",
+    "title": "A taste of the next reward",
+    "paragraphs": [
+      "PATROL follows the HOW TO PLAY challenge with a temporary drive through MIDNIGHT CITY in the POLICE CAR. One valid lap completes it, with an optional second lap before returning Home. Unfinished attempts can be retried while normal Trophy Road unlocks stay in charge."
+    ],
+    "milestones": []
   }
 ]);
 // Oldest first; the reader shows recent dates first and folds earlier milestones.
@@ -343,6 +351,15 @@ export const CHANGELOG = Object.freeze([
       [
         "Rival overview",
         "Inspect a track’s saved rival cars, paint and lap times on the Track sheet, and reset that track’s rivals there."
+      ]
+    ]
+  },
+  {
+    "date": "8 October 2026",
+    "entries": [
+      [
+        "PATROL reward preview",
+        "Try MIDNIGHT CITY and the POLICE CAR before unlocking them. Complete one valid lap to clear PATROL, with up to two completed laps per preview and retries for unfinished attempts."
       ]
     ]
   }
