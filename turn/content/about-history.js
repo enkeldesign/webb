@@ -365,6 +365,10 @@ export const CHANGELOG = Object.freeze([
       [
         "TURN TUTORIAL",
         "New players start with one lap of COUNTRYSIDE in the LEARNER CAR that teaches DRIVE, BOOST, DRIFT and reading the road by ear. At the line, that lap becomes the first rival. Replay it from HOW TO PLAY."
+      ],
+      [
+        "Tutorial steering help",
+        "A setting for players who cannot steer on their own: TURN steers the TURN TUTORIAL lap through the bends while you keep GAS, BOOST and DRIFT. Switch it in SETTINGS, also from PAUSED mid-lap."
       ]
     ]
   }

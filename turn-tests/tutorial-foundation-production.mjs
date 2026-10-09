@@ -394,7 +394,7 @@ test('course rescue leaves ordinary off-road driving alone and stops a big mista
   }
   assert.equal(applyCourseRescue({ state: car(40, 0), samples: [], trackWidth: 27, dt: 0.1 }), 'none', 'No sample, no rescue');
   const prompt = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/tutorial/tutorial-prompt.js', import.meta.url), 'utf8'));
-  assert.match(prompt, /if \(!graduated && dt > 0\) \{\s*applyCourseRescue/, 'Only on the teaching lap');
+  assert.match(prompt, /if \(!graduated && dt > 0\) \{\n(?:\s{8}.*\n)*?\s{8}const rescue = applyCourseRescue\(/, 'Only on the teaching lap');
 });
 
 test('TURN TUTORIAL earns 25 trophies in Ways to play, outside Getting started', async () => {
@@ -531,6 +531,72 @@ test('a drifted bend completes DRIFT and the physics honour the lesson cap', asy
   assert.equal(coach.outcome().drift, 'done');
   const physics = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8'));
   assert.match(physics, /Math\.min\(speedLimit, sessionSpeedCap\)/, 'The lesson cap limits the vehicle speed');
+});
+
+test('Tutorial steering help aims at the road ahead and the player still steers', async () => {
+  const help = await import('../turn/tutorial/steering-help.js');
+  const { updateMotionInputState } = await import('../turn/input/motion.js');
+  // A straight road heading +z (heading 0); samples 2 m apart.
+  const samples = Array.from({ length: 60 }, (_, i) => ({ point: { x: 0, z: i * 2 } }));
+  const car = (x, heading, speed = 20) => ({
+    nearestTrackIndex: 5, position: { x, z: 10 }, heading,
+    velocity: { x: Math.sin(heading) * speed, z: Math.cos(heading) * speed }
+  });
+  const target = (state) => help.steeringHelpTarget({ state, samples });
+  assert.ok(Math.abs(target(car(0, 0))) < 1e-9, 'On the line and pointing along it: no correction');
+  // Positive steering raises the heading (vehicle/physics.js), turning towards +x.
+  assert.ok(target(car(-4, 0)) > 0 && target(car(4, 0)) < 0, 'Off to one side, it aims back at the road');
+  assert.ok(target(car(0, -0.3)) > 0 && target(car(0, 0.3)) < 0, 'Pointing away, it turns back');
+  assert.ok(Math.abs(target(car(0, Math.PI / 2))) === 1, 'Never past full lock');
+  assert.equal(target(car(0, 0, -5)), null, 'Not while reversing');
+  assert.equal(help.steeringHelpTarget({ state: car(0, 0), samples: [] }), null);
+
+  // input/motion.js blends it in: the player's own steering still counts, at half strength.
+  const steer = (manualSteering, sessionSteeringTarget) => {
+    const state = { sensorMode: false, steering: 0, manualSteering, sessionSteeringTarget };
+    for (let i = 0; i < 60; i += 1) updateMotionInputState({ state, dt: 1 / 60, maxSteerRoll: 0.4 });
+    return state.steering;
+  };
+  assert.ok(Math.abs(steer(1, null) + 1) < 1e-3, 'Help off: steering is the player\'s alone');
+  assert.ok(Math.abs(steer(0, 0.6) - 0.6) < 1e-3, 'Help on, hands off: TURN steers');
+  assert.ok(Math.abs(steer(1, 0.6) - 0.1) < 1e-3, 'Help on: the player still moves the car');
+  assert.ok(Math.abs(steer(-1, 0.9) - 1) < 1e-3, 'Clamped to full lock');
+});
+
+test('Tutorial steering help is a saved SETTINGS choice that works mid-lap', async () => {
+  const help = await import('../turn/tutorial/steering-help.js');
+  memory.delete(help.STEERING_HELP_STORAGE_KEY);
+  assert.equal(help.loadSteeringHelp(), false, 'Off unless chosen');
+  let heard = null;
+  const listener = (event) => { heard = event.detail.enabled; };
+  globalThis.addEventListener(help.STEERING_HELP_CHANGED_EVENT, listener);
+  assert.equal(help.saveSteeringHelp(true), true);
+  assert.equal(heard, true, 'A running tutorial hears the change at once: no restart');
+  assert.equal(help.loadSteeringHelp(), true);
+  help.saveSteeringHelp(false);
+  assert.equal(heard, false);
+  globalThis.removeEventListener(help.STEERING_HELP_CHANGED_EVENT, listener);
+  const broken = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
+  help.saveSteeringHelp(true, broken, null);
+  assert.equal(help.loadSteeringHelp(broken), true, 'Without storage the choice holds for this visit');
+  help.saveSteeringHelp(false, broken, null);
+
+  const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
+  const home = await read('../turn/m8-home.js');
+  assert.match(home, /<legend>Steering<\/legend>[\s\S]*id="m8SteeringHelp"[\s\S]*<strong>Tutorial steering help<\/strong>[\s\S]*<\/fieldset>/,
+    'SETTINGS has it with the other steering choices (also opened from PAUSED)');
+  const prompt = await read('../turn/tutorial/tutorial-prompt.js');
+  assert.match(prompt, /if \(!graduated && dt > 0\) \{[\s\S]*state\.sessionSteeringTarget = steeringHelp \? steeringHelpTarget/,
+    'It only steers the teaching lap');
+  assert.match(prompt, /function onGraduated\(\) \{\s*graduated = true;\s*state\.sessionSteeringTarget = null;/, 'It ends at the line');
+  assert.match(prompt, /stopped = true;\s*cancelAnimationFrame\(frame\);\s*state\.sessionSteeringTarget = null;/,
+    'And whenever the run stops (leave, Home, GARAGE)');
+  const lessons = await import('../turn/tutorial/turn-tutorial-lessons.js');
+  assert.match(lessons.TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'drive').assistedPrompt, /Steering help is on/,
+    'The DRIVE lesson says when TURN is steering');
+  assert.match(lessons.TUTORIAL_GRADUATION_WITH_HELP_MESSAGE, /Steering help ends here/,
+    'Help never passes for the player\'s own steering');
+  assert.match(lessons.STEERING_HELP_HINT.text, /PAUSED|Pause/, 'Repeated rescues point to it, reachable mid-lap');
 });
 
 let failed = 0;

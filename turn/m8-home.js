@@ -11,6 +11,7 @@ import { TURN_TUTORIAL, createTutorialProgress } from './tutorial/tutorial-progr
 import { createTutorialSession } from './tutorial/tutorial-session.js';
 import { installTutorialEntry } from './tutorial/tutorial-entry.js';
 import { startTurnTutorialCoach } from './tutorial/tutorial-prompt.js';
+import { loadSteeringHelp, saveSteeringHelp } from './tutorial/steering-help.js';
 import { trackIconMarkup } from '/turn/ui/track-icons.js';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';
 import {
@@ -151,6 +152,7 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
           <label><input type="radio" name="m8Steering" value="motion"><span><strong>Device rotation</strong><small>Turn the whole device like a steering wheel.</small></span></label>
           <label><input type="radio" name="m8Steering" value="manual"><span><strong>On-screen steering</strong><small>Use the steering control or a keyboard.</small></span></label>
           <label class="m8-toggle-row m8-handedness-setting"><input id="m8LeftHanded" type="checkbox" aria-describedby="m8LeftHandedDescription"><span><strong>Left-handed controls</strong><small id="m8LeftHandedDescription"></small></span></label>
+          <label class="m8-toggle-row m8-steering-help-setting"><input id="m8SteeringHelp" type="checkbox"><span><strong>Tutorial steering help</strong><small>In TURN TUTORIAL, TURN steers through the bends while you keep GAS, BOOST and DRIFT.</small></span></label>
           <p class="m8-motion-note" hidden>Device rotation is not available in this browser.</p>
         </fieldset>
 
@@ -196,6 +198,7 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
   const leftHandedToggle = dialog.querySelector('#m8LeftHanded');
   const leftHandedDescription = dialog.querySelector('#m8LeftHandedDescription');
   const motionNote = dialog.querySelector('.m8-motion-note');
+  const steeringHelpToggle = dialog.querySelector('#m8SteeringHelp');
   const soundToggle = dialog.querySelector('#m8AudioEnabled');
   const dbeToggle = dialog.querySelector('#m8DbeEnabled');
   const balanceSlider = dialog.querySelector('#m8AudioBalance');
@@ -226,6 +229,7 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
     leftHandedToggle.checked = handedness === CONTROL_HANDEDNESS.LEFT;
     leftHandedDescription.textContent = controlHandednessDescription(handedness);
     motionNote.hidden = motionAvailable();
+    steeringHelpToggle.checked = loadSteeringHelp();
 
     const audio = audioPreferences()?.getSettings?.() || {
       audioEnabled: true,
@@ -267,6 +271,12 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
     status.textContent = handedness === CONTROL_HANDEDNESS.LEFT
       ? 'Left-handed controls on.'
       : 'Left-handed controls off.';
+  });
+
+  // Takes effect at once, so it can be switched from PAUSED mid-lap.
+  steeringHelpToggle.addEventListener('change', () => {
+    steeringHelpToggle.checked = saveSteeringHelp(steeringHelpToggle.checked);
+    status.textContent = `Tutorial steering help ${steeringHelpToggle.checked ? 'on' : 'off'}.`;
   });
 
   soundToggle.addEventListener('change', () => {

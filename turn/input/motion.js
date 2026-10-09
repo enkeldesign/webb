@@ -71,6 +71,16 @@ export function resolveSteeringRollLimit(
   return Number.isFinite(fallback) && fallback > 0 ? fallback : degToRad(14);
 }
 
+// Tutorial steering help (tutorial/steering-help.js) aims the car while it is on, as
+// state.sessionSteeringTarget. The player's own steering still counts, at half strength.
+const PLAYER_SHARE_WITH_STEERING_HELP = 0.5;
+
+function withSteeringHelp(state, desired) {
+  const target = state.sessionSteeringTarget;
+  if (typeof target !== 'number' || !Number.isFinite(target)) return desired;
+  return clamp(target + desired * PLAYER_SHARE_WITH_STEERING_HELP, -1, 1);
+}
+
 export function updateMotionInputState({
   state,
   dt,
@@ -80,7 +90,7 @@ export function updateMotionInputState({
   if (!state.sensorMode) {
     // Manual input is expressed in screen space (left = -1, right = +1), while
     // TURN's vehicle yaw convention uses the opposite sign.
-    state.steering = lerp(state.steering, -state.manualSteering, Math.min(1, dt * 10));
+    state.steering = lerp(state.steering, withSteeringHelp(state, -state.manualSteering), Math.min(1, dt * 10));
     state.tiltDrive = 0;
     return;
   }
@@ -120,6 +130,7 @@ export function updateMotionInputState({
     const easedSteer = curvedSteer * curvedSteer * (3 - 2 * curvedSteer);
     desiredSteering = -Math.sign(steeringRoll) * easedSteer;
   }
+  desiredSteering = withSteeringHelp(state, desiredSteering);
 
   const steeringResponseRate = state.steeringEngaged
     ? steeringProfile.steeringResponseRate

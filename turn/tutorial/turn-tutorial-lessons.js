@@ -12,6 +12,8 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     id: 'drive',
     title: 'DRIVE',
     prompt: 'Steer into the bend and hold GAS.',
+    // With Tutorial steering help on (steering-help.js).
+    assistedPrompt: 'Steering help is on: TURN steers. Hold GAS.',
     from: 0,
     to: 0.12,
     speedCap: 0.3,
@@ -53,3 +55,10 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
 ]);
 
 export const TUTORIAL_GRADUATION_MESSAGE = 'Tutorial complete. Your lap is now the rival ahead. Catch it!';
+// Help never pretends to be the player's own steering: it ends at the line, and says so.
+export const TUTORIAL_GRADUATION_WITH_HELP_MESSAGE = 'Tutorial complete. Steering help ends here. Your lap is now the rival ahead. Catch it!';
+// After repeated rescues with help off: where the stronger help is.
+export const STEERING_HELP_HINT = Object.freeze({
+  title: 'STEERING HELP',
+  text: 'Want TURN to steer? Pause, open SETTINGS and turn on Tutorial steering help.'
+});

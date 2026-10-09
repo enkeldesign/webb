@@ -9,13 +9,13 @@ import { TROPHY_ROAD_STORAGE_VERSION } from '../turn/progression/trophy-road.js'
 const target = process.env.TURN_SUPPORT_FEEDBACK_URL || 'http://127.0.0.1:8000/';
 const browser = await chromium.launch({ headless: true });
 
-async function openTurn({ played = false, launch = false } = {}) {
+async function openTurn({ played = false, launch = false, steeringHelp = false } = {}) {
   const context = await browser.newContext({ viewport: { width: 844, height: 390 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.addInitScript(({ played, launch, storageVersion }) => {
+  await page.addInitScript(({ played, launch, steeringHelp, storageVersion }) => {
     if (globalThis.sessionStorage.getItem('turn-tutorial-smoke-seeded')) return;
     globalThis.sessionStorage.setItem('turn-tutorial-smoke-seeded', '1');
     localStorage.setItem('turn-low-graphics-v1', '1');
@@ -23,13 +23,14 @@ async function openTurn({ played = false, launch = false } = {}) {
     localStorage.setItem('turn-audio-enabled-v1', 'off');
     localStorage.setItem('turn-racing-music-volume-v1', '0');
     if (launch) localStorage.setItem('turn-tutorial-launch-under-test', '1');
+    if (steeringHelp) localStorage.setItem('turn-tutorial-steering-help-v1', 'on');
     if (played) {
       localStorage.setItem('turn-achievements-v1', JSON.stringify({
         version: storageVersion,
         unlocked: { 'first-turn': { unlockedAt: Date.now() } }
       }));
     }
-  }, { played, launch, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
+  }, { played, launch, steeringHelp, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
   await page.addInitScript(() => {
     Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
   });
@@ -242,6 +243,60 @@ try {
     assert.equal(current.active, false);
     assert.equal(current.policy, 'normal');
     assert.equal(current.card, false, 'A completed tutorial does not start again');
+  });
+
+  // Tutorial steering help (#1133): chosen in SETTINGS, it steers the teaching lap.
+  await run('Tutorial steering help', { steeringHelp: true }, async (page) => {
+    await showLaunchCard(page);
+    await page.locator('[data-tutorial-start]').click();
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.running && !document.querySelector('dialog[open]'));
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * 0.04)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(10);
+    });
+    await page.waitForFunction(() => /Steering help is on/.test(document.querySelector('.turn-tutorial-prompt')?.textContent || ''));
+    // Hands off the steering with GAS held, into COUNTRYSIDE's first long bend.
+    const drive = await page.evaluate(async () => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * 0.12)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(15);
+      state.manualSteering = 0;
+      state.touchGas = true;
+      const from = state.progress;
+      let offRoad = 0;
+      const until = globalThis.performance.now() + 6000;
+      while (globalThis.performance.now() < until) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        if (state.offRoad) offRoad += 1;
+      }
+      state.touchGas = false;
+      return { offRoad, travelled: state.progress - from };
+    });
+    assert.equal(drive.offRoad, 0, 'TURN steers the teaching lap through the bend');
+    assert.ok(drive.travelled > 0.08, `The car drove on (${drive.travelled.toFixed(3)} of the lap)`);
+
+    // Mid-lap, from PAUSED: SETTINGS switches it off at once, no restart.
+    await page.evaluate(() => globalThis.__turnRacePause.pause('player'));
+    await page.locator('[data-pause-action="settings"]').click();
+    await page.locator('label.m8-steering-help-setting').click();
+    assert.equal(await page.locator('#m8SteeringHelp').isChecked(), false);
+    assert.equal(await page.locator('.m8-settings-status').textContent(), 'Tutorial steering help off.');
+    await page.evaluate(() => {
+      for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
+      globalThis.__turnRacePause.resume();
+    });
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.sessionSteeringTarget === null);
+
+    await crossFinish(page);
+    assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /Steering help ends here/,
+      'The line says help was used, and that it ends there');
+    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.sessionSteeringTarget), null);
+    assert.equal((await inspect(page)).tutorialAchievement, true, 'Finishing with help still completes TURN TUTORIAL');
   });
 
   await run('existing player', { played: true, launch: true }, async (page) => {
