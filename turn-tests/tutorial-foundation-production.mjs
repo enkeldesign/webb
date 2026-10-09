@@ -30,7 +30,7 @@ const {
   hasPlayedBefore
 } = await import('../turn/tutorial/tutorial-progress.js');
 const { createTutorialSession } = await import('../turn/tutorial/tutorial-session.js');
-const { createTurnTutorialCoach } = await import('../turn/tutorial/turn-tutorial-coach.js');
+const { createTurnTutorialCoach, readTutorialSignals } = await import('../turn/tutorial/turn-tutorial-coach.js');
 const { TURN_TUTORIAL_LESSONS } = await import('../turn/tutorial/turn-tutorial-lessons.js');
 
 const tests = [];
@@ -401,6 +401,41 @@ test('READ THE ROAD is done when the pace note for the next bend plays', () => {
   assert.equal(withoutCues.outcome().read, 'skipped', 'With DRIVE BY EAR off there is nothing to hear: no prompt to listen');
   assert.equal(quiet.at(-1).kind, 'idle', 'The missed DRIFT prompt does not linger');
   assert.equal(quietState.sessionSpeedCap, null);
+
+  // Sound or DRIVE BY EAR turned off in SETTINGS while READ THE ROAD waits.
+  const switched = [];
+  const switchedState = { sessionSpeedCap: null };
+  input = { ...input, progress: 0.65, routeCues: true, paceNotes: 9 };
+  const midLesson = createTurnTutorialCoach({ state: switchedState, maxSpeed: 88, signals: () => input, present: (view) => switched.push(view) });
+  midLesson.update(0.1);
+  assert.equal(switched.at(-1).id, 'read');
+  assert.ok(switchedState.sessionSpeedCap > 0);
+  input = { ...input, routeCues: false };
+  midLesson.update(0.1);
+  assert.equal(midLesson.outcome().read, 'skipped', 'Cues turned off mid-lesson end the lesson');
+  assert.equal(switched.at(-1).kind, 'idle', 'The listening prompt goes away');
+  assert.equal(switchedState.sessionSpeedCap, null, 'and so does its speed cap');
+});
+
+test('pace notes count as available only when they can actually play', () => {
+  const saved = Object.fromEntries(['__turnSwooshPaceNotes', '__turnRouteAudio', '__turnDriveByEarEnabled', '__turnAudioPreferences']
+    .map((key) => [key, globalThis[key]]));
+  try {
+    globalThis.__turnSwooshPaceNotes = { counts: { fired: 4 } };
+    globalThis.__turnDriveByEarEnabled = true;
+    globalThis.__turnAudioPreferences = { getSettings: () => ({ audioEnabled: true, dbeEnabled: true }) };
+    globalThis.__turnRouteAudio = { ready: true, destination: {} };
+    assert.deepEqual([readTutorialSignals({}).routeCues, readTutorialSignals({}).paceNotes], [true, 4]);
+    globalThis.__turnRouteAudio = { ready: false, destination: null };
+    assert.equal(readTutorialSignals({}).routeCues, false, 'No ready route channel (no Web Audio, or a suspended context): no cue can play');
+    globalThis.__turnRouteAudio = { ready: true, destination: {} };
+    globalThis.__turnAudioPreferences = { getSettings: () => ({ audioEnabled: true, dbeEnabled: false }) };
+    assert.equal(readTutorialSignals({}).routeCues, false, 'DRIVE BY EAR off');
+    globalThis.__turnAudioPreferences = { getSettings: () => ({ audioEnabled: false, dbeEnabled: true }) };
+    assert.equal(readTutorialSignals({}).routeCues, false, 'Sound off');
+  } finally {
+    Object.assign(globalThis, saved);
+  }
 });
 
 test('a drifted bend completes DRIFT and the physics honour the lesson cap', async () => {

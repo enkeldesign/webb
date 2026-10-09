@@ -10,10 +10,13 @@ const DONE_MESSAGE_SECONDS = 1.4;
 // Long enough to read, or hear, a lesson's doneText.
 const DONE_TEXT_SECONDS = 4;
 
-// Pace notes play only with sound and DRIVE BY EAR on (swoosh-pace-notes.js).
+// Pace notes play only with sound and DRIVE BY EAR on, through a route channel that is
+// ready to play (swoosh-pace-notes.js).
 function routeCuesOn() {
   const settings = globalThis.__turnAudioPreferences?.getSettings?.();
+  const routeAudio = globalThis.__turnRouteAudio;
   return Boolean(globalThis.__turnSwooshPaceNotes)
+    && Boolean(routeAudio?.ready && routeAudio.destination)
     && globalThis.__turnDriveByEarEnabled !== false
     && settings?.audioEnabled !== false
     && settings?.dbeEnabled !== false;
@@ -94,6 +97,8 @@ export function createTurnTutorialCoach({
       if (zoned.needs === 'routeCues' && !input.routeCues) skip(zoned);
       else begin(zoned, input);
     }
+    // Cues can stop mid-lesson (SETTINGS during a pause): nothing is left to listen for.
+    if (current?.needs === 'routeCues' && outcome.get(current.id) === 'pending' && !input.routeCues) skip(current);
 
     if (current && outcome.get(current.id) === 'pending') {
       if (input.gas) progress.gasSeconds += dt;
