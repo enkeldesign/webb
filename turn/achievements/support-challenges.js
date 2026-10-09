@@ -17,6 +17,7 @@ export const SUPPORT_CHALLENGE_CONFIG_CACHE_KEY = 'turn-support-challenge-config
 export const SUPPORT_CHALLENGE_CONFIG_URL = '/turn/support-challenges.json';
 
 const STATE_VERSION = 1;
+const EXPERT_TRACKS_REWARD_ID = 'expert-tracks';
 const RIVAL_STORAGE_KEY = 'turn-personal-rivals-v1';
 const RIVAL_LIMIT = 4;
 const STYLE_ID = 'turn-support-challenge-styles';
@@ -297,13 +298,14 @@ export function selectSupportChallenge({
   // An existing procedural challenge survives an upgrade, but its reroll must
   // not select another procedural challenge ahead of the pending fixed sequence.
   if (learning && !blocked.has(learning.key)) return includeFixed ? learning : null;
-  if (config.patrol.enabled && !blocked.has(PATROL_CHALLENGE.key)) {
+  const previewOffered = !rewardPreviewRetired(achievements);
+  if (previewOffered && config.patrol.enabled && !blocked.has(PATROL_CHALLENGE.key)) {
     return includeFixed ? { ...PATROL_CHALLENGE, reward: config.patrol.reward } : null;
   }
   // The first procedural challenge occupies slot three. Rerolls replace that
   // challenge; they do not complete the slot or put EXCURSION in the reroll pool.
   const proceduralCompleted = stringArray(completed).some((key) => /^(winner|safety|drift):/.test(key));
-  if (config.excursion.enabled && proceduralCompleted && !blocked.has(EXCURSION_CHALLENGE.key)) {
+  if (previewOffered && config.excursion.enabled && proceduralCompleted && !blocked.has(EXCURSION_CHALLENGE.key)) {
     return includeFixed ? { ...EXCURSION_CHALLENGE, reward: config.excursion.reward } : null;
   }
   if (achievements.store.trophyTotal() >= config.stopAtTrophies) return null;
@@ -317,6 +319,12 @@ export function selectSupportChallenge({
     }
   }
   return null;
+}
+
+// PATROL and EXCURSION preview the EXPERT TRACKS reward. Once it is unlocked there is
+// nothing left to preview, so neither is offered and an active one is withdrawn.
+function rewardPreviewRetired(achievements) {
+  return achievements.store.isRewardUnlocked(EXPERT_TRACKS_REWARD_ID);
 }
 
 function trackName(trackId) {
@@ -359,7 +367,7 @@ function challengePresentation(active, config, achievements) {
       eyebrow: 'REWARD PREVIEW',
       reward: `+${config[active.type].reward} TROPHIES`,
       objective: `Complete one valid lap of ${track} using the ${car}.`,
-      explanation: `Try ${track} and the ${car} before you unlock them for normal play. This temporary preview ends after two completed laps. Leave whenever you like; if you haven’t completed a valid lap, you can try again.`,
+      explanation: `Try ${track} and the ${car} before you unlock them for normal play. This temporary preview ends after two completed laps and earns no records or achievements. Leave whenever you like; if you haven’t completed a valid lap, you can try again.`,
       startLabel: `START ${title}`
     };
   }
@@ -673,6 +681,7 @@ export async function installSupportChallenges({
     const active = state.active;
     if (!active || !activeChallengeIsConfigured(active, config)) return null;
     if (active.sourceAchievementId && achievements.store.isUnlocked(active.sourceAchievementId)) return null;
+    if (getRewardPreviewChallenge(active) && rewardPreviewRetired(achievements)) return null;
     if (active.type !== 'learning' && !getRewardPreviewChallenge(active)
       && achievements.store.trophyTotal() >= config.stopAtTrophies) return null;
     return active;

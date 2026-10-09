@@ -153,6 +153,40 @@ assert.equal(select({ config: normalizeSupportChallengeConfig({ ...rawConfig, ex
   excluded: firstThree, completed: firstThree }).type, 'safety', 'Live rules can disable EXCURSION');
 assert.equal(isRaceSupportBonusId(`support:${EXCURSION_CHALLENGE.key}`), true);
 
+// PATROL and EXCURSION preview EXPERT TRACKS: once it is unlocked neither is offered,
+// and an active one is withdrawn.
+const expertStore = { ...store, isRewardUnlocked: (id) => id === 'expert-tracks' || store.isRewardUnlocked(id) };
+const selectAfterExpert = (options = {}) => select({ achievements: { store: expertStore }, ...options });
+assert.equal(selectAfterExpert({ excluded: ['learning:how-to-play'] }).type, 'safety',
+  'PATROL is not offered once EXPERT TRACKS is unlocked');
+assert.equal(selectAfterExpert({ excluded: firstThree, completed: firstThree }).type, 'safety',
+  'EXCURSION is not offered once EXPERT TRACKS is unlocked');
+assert.match(source, /getRewardPreviewChallenge\(active\) && rewardPreviewRetired\(achievements\)\) return null/,
+  'An active PATROL or EXCURSION is withdrawn once EXPERT TRACKS is unlocked');
+
+// A preview is a trial without unlocks: while it runs the store unlocks no achievement
+// and records no track progress. The challenge's own bonus still lands.
+{
+  const previewMemory = new Map();
+  const previewStore = createAchievementStore({
+    getItem: (key) => previewMemory.get(key) ?? null,
+    setItem: (key, value) => previewMemory.set(key, String(value))
+  });
+  const previousRuntime = globalThis.__turnRuntime;
+  globalThis.__turnRuntime = { state: { rewardPreview: { key: PATROL_CHALLENGE.key } } };
+  try {
+    assert.equal(previewStore.unlock('midnight-sprint', { trackId: 'midnight-city' }), null,
+      'A preview lap cannot unlock an achievement');
+    assert.equal(previewStore.addTrack('midnight-city'), false, 'A preview lap is not track progress');
+    assert.ok(previewStore.grantBonus(`support:${PATROL_CHALLENGE.key}`, 25), 'The PATROL bonus still lands');
+    globalThis.__turnRuntime.state.rewardPreview = null;
+    assert.ok(previewStore.unlock('midnight-sprint', { trackId: 'midnight-city' }), 'Normal play unlocks again');
+    assert.equal(previewStore.addTrack('midnight-city'), true);
+  } finally {
+    globalThis.__turnRuntime = previousRuntime;
+  }
+}
+
 // Exercise the real preview lifecycle without any storage adapter: borrowing a
 // locked reward must never require a write to achievement or selection storage.
 for (const challenge of [PATROL_CHALLENGE, EXCURSION_CHALLENGE]) {
