@@ -376,7 +376,7 @@ export const CHANGELOG = Object.freeze([
       ],
       [
         "Unlock introductions",
-        "When DRIFT ATTACK, SHIFT or FLOW unlocks, Home explains it in a sheet that stays until you close it. DRIFT ATTACK offers its tutorial, and the next GARAGE visit points out ACTIVATE SHIFT."
+        "When DRIFT ATTACK, SHIFT or FLOW unlocks, Home explains it in a sheet that stays until you close it. DRIFT ATTACK offers its tutorial; SHIFT is then pointed out in GARAGE and beside the drive pad in your next race."
       ]
     ]
   }

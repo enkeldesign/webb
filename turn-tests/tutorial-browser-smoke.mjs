@@ -372,11 +372,75 @@ try {
     await sheet.locator('[data-unlock-close]').click();
     assert.equal(await page.evaluate(() => document.querySelector('.m8-unlock-sheet').open), false, 'It stays until closed, then goes');
     assert.deepEqual(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.snapshot()),
-      { pending: [], shown: ['shift'], hints: ['garage-shift'] });
+      { pending: [], shown: ['shift'], hints: ['garage-shift', 'race-shift'], views: {} });
     await page.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
     await page.waitForFunction(() => Boolean(document.querySelector('.garage-shift.is-introduced')), null, { timeout: 30000 });
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-shift')), false,
       'ACTIVATE SHIFT is pointed out once');
+  });
+
+  // The drive pad's SHIFT, pointed out in a regular race once the car has a SHIFT setup.
+  await run('SHIFT callout in a regular race', { rewards: ['shift'] }, async (page) => {
+    await page.evaluate(async () => {
+      const queue = globalThis.__turnNextHome.unlockIntroductions.queue;
+      queue.unlocked(['shift']);
+      queue.introduced('shift');
+      queue.consumeHint('garage-shift');
+    });
+    await page.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
+    await page.waitForSelector('.garage-race', { timeout: 60000 });
+    await page.locator('.garage-race').click();
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.running, null, { timeout: 60000 });
+    // A SHIFT setup for the car being raced, as GARAGE saves one.
+    await page.evaluate(async () => {
+      const shift = await import('/turn/vehicle/shift-profile.js?revision=r255-flow-shift-accessibility');
+      const { vehicleId, vehicleStats } = globalThis.__turnRuntime.state;
+      const keys = shift.VEHICLE_SHIFT_STAT_KEYS;
+      for (let a = 0; a < keys.length; a += 1) {
+        for (let b = a + 1; b < keys.length; b += 1) {
+          for (let c = b + 1; c < keys.length; c += 1) {
+            const reducedStats = [keys[a], keys[b], keys[c]];
+            if (shift.saveVehicleShiftProfile({ vehicleId, stats: vehicleStats, reducedStats })) {
+              globalThis.dispatchEvent(new CustomEvent('turn:shift-profile-change', { detail: { vehicleId } }));
+              return;
+            }
+          }
+        }
+      }
+    });
+    await page.waitForFunction(() => document.querySelector('.drive-stack')?.classList.contains('is-shift-available'));
+    // Through the start line, so the lap starts.
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const start = samples[0];
+      state.position.copy(start.point).addScaledVector(start.tangent, -1);
+      state.lapPreviousPosition = { x: state.position.x, z: state.position.z };
+      state.heading = Math.atan2(start.tangent.x, start.tangent.z);
+      state.velocity.copy(start.tangent).multiplyScalar(20);
+      state.speed = 20;
+    });
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.lapActive);
+    await page.waitForFunction(() => document.querySelector('.turn-shift-callout')?.hidden === false);
+    const shown = await page.evaluate(() => {
+      const callout = document.querySelector('.turn-shift-callout');
+      const pad = document.querySelector('.drive-pad').getBoundingClientRect();
+      const box = callout.getBoundingClientRect();
+      return {
+        text: callout.textContent,
+        role: callout.getAttribute('role'),
+        beside: box.right <= pad.left && box.top < pad.bottom && box.bottom > pad.top,
+        views: globalThis.__turnNextHome.unlockIntroductions.queue.snapshot().views
+      };
+    });
+    assert.match(shown.text, /^SHIFTHold GAS, then slide outward into SHIFT/);
+    assert.equal(shown.role, 'status', 'Said as well as shown');
+    assert.equal(shown.beside, true, 'Beside the drive pad, on the side SHIFT slides out');
+    assert.deepEqual(shown.views, { 'race-shift': 1 }, 'Counted as one race');
+    // The move, made: the callout has done its job.
+    await page.evaluate(() => document.querySelector('.drive-shift-bubble').click());
+    await page.waitForFunction(() => document.querySelector('.turn-shift-callout').hidden);
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('race-shift')), false,
+      'Once the player has used SHIFT, it is not pointed out again');
   });
 
   await run('admin UNLOCK replays an introduction', { driftAttack: true, admin: true }, async (page) => {

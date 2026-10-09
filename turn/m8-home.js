@@ -12,6 +12,7 @@ import { createTutorialSession } from './tutorial/tutorial-session.js';
 import { installDriftAttackEntry, installTutorialEntry } from './tutorial/tutorial-entry.js';
 import { isFeatureUnlocked } from './progression/trophy-road.js';
 import { installUnlockIntroductions } from './progression/unlock-introductions.js';
+import { installShiftRaceCallout } from './ui/shift-race-callout.js';
 import { startTurnTutorialCoach } from './tutorial/tutorial-prompt.js';
 import { startDriftAttackCoach } from './tutorial/drift-attack-coach.js';
 import { loadSteeringHelp, saveSteeringHelp } from './tutorial/steering-help.js';
@@ -746,6 +747,8 @@ export async function installM8HomeNavigation() {
   });
   // DRIFT ATTACK, SHIFT and FLOW are introduced on Home when they unlock (#1149).
   const unlockIntroductions = installUnlockIntroductions({ startTutorial });
+  // After the SHIFT introduction: the drive pad's SHIFT, pointed out in the next races.
+  installShiftRaceCallout({ queue: unlockIntroductions.queue, isTutorialActive: tutorialActive });
 
   howButton.addEventListener('click', () => {
     driftAttackEntry.sync();

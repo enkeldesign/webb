@@ -1,5 +1,5 @@
 {
-  "release": "20261009-r427",
+  "release": "20261009-r428",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -481,6 +481,7 @@
     "/turn/ui/rival-onboarding.js",
     "/turn/ui/screen-blanking.js",
     "/turn/ui/shift-feedback.js",
+    "/turn/ui/shift-race-callout.js",
     "/turn/ui/spectate.js",
     "/turn/ui/startup-screen-reader-handoff-r529.js",
     "/turn/ui/steering-limit-warning.js",
