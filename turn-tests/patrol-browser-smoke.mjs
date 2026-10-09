@@ -75,11 +75,12 @@ async function runPreview(challenge) {
     await page.evaluate(async (valid) => {
       const map = JSON.parse(document.querySelector('[type="importmap"]').textContent).imports;
       const { raceNow } = await import(map['/turn/race/race-clock.js']);
+      const { LAP_CHECKPOINTS, MOUNTAIN_LONG_CHECKPOINTS } = await import('/turn/race/lap-system.js?build=20260720-r19');
       const { state, samples } = globalThis.__turnRuntime;
       const start = samples[0];
       state.lapActive = true;
       state.lapStartedAt = raceNow() - 90_000;
-      state.lapCheckpointIndex = 12;
+      state.lapCheckpointIndex = (state.trackId === 'mountain' ? MOUNTAIN_LONG_CHECKPOINTS : LAP_CHECKPOINTS).length;
       state.lapInvalid = false;
       state.position.copy(start.point).addScaledVector(start.tangent, -1);
       state.lapPreviousPosition = { x: state.position.x, z: state.position.z };
