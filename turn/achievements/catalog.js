@@ -110,9 +110,11 @@ const MAYDAY = Object.freeze({
   icon: 'siren'
 });
 
+// CATCH THE CHARGE and HEAD START need OVERCHARGE, which unlocks with DRIFT ATTACK
+// (#1150), so they are Scoring achievements: Getting started stays completable without it.
 const PRODUCTION_CATCH_THE_CHARGE_ACHIEVEMENT = Object.freeze({
   id: 'catch-the-charge',
-  category: base.CATEGORY.ONBOARDING,
+  category: base.CATEGORY.SCORING,
   trophies: 25,
   title: 'CATCH THE CHARGE',
   description: 'With BOOST full, keep using DRIFT to build purple OVERCHARGE. Slide to GAS to catch it before it leaks away.',
@@ -121,7 +123,7 @@ const PRODUCTION_CATCH_THE_CHARGE_ACHIEVEMENT = Object.freeze({
 
 export const HEAD_START_ACHIEVEMENT = Object.freeze({
   id: 'head-start',
-  category: base.CATEGORY.ONBOARDING,
+  category: base.CATEGORY.SCORING,
   trophies: 50,
   title: 'HEAD START',
   description: 'Finish a valid lap with OVERCHARGE, then use that carried OVERCHARGE with BOOST to beat it on the next lap.',
@@ -170,11 +172,7 @@ export const DRIVE_BY_EAR_ACHIEVEMENT = Object.freeze({
   progressMax: DRIVE_BY_EAR_PART_IDS.length
 });
 
-export const ONBOARDING_ACHIEVEMENT_IDS = Object.freeze([
-  ...base.ONBOARDING_ACHIEVEMENT_IDS,
-  PRODUCTION_CATCH_THE_CHARGE_ACHIEVEMENT.id,
-  HEAD_START_ACHIEVEMENT.id
-]);
+export const ONBOARDING_ACHIEVEMENT_IDS = base.ONBOARDING_ACHIEVEMENT_IDS;
 
 export const SAFETY_TARGET_LABELS = Object.freeze({
   countryside: '15 seconds',
@@ -252,8 +250,6 @@ const onboardingInsertionIndex = firstNonOnboardingIndex >= 0
   : rebalancedBaseAchievements.length;
 const withGotStarted = [
   ...rebalancedBaseAchievements.slice(0, onboardingInsertionIndex),
-  PRODUCTION_CATCH_THE_CHARGE_ACHIEVEMENT,
-  HEAD_START_ACHIEVEMENT,
   GOT_STARTED_ACHIEVEMENT,
   TURN_TUTORIAL_ACHIEVEMENT,
   LEARN_TO_PLAY_ACHIEVEMENT,
@@ -282,6 +278,8 @@ const PRODUCTION_ACHIEVEMENTS = Object.freeze([
   ...expandedBaseAchievements.slice(0, insertionIndex),
   MAYDAY,
   CHROMATIC_CAMOUFLAGE,
+  PRODUCTION_CATCH_THE_CHARGE_ACHIEVEMENT,
+  HEAD_START_ACHIEVEMENT,
   ...TRACK_SCORING_ACHIEVEMENTS,
   SCORING_MASTER_ACHIEVEMENT,
   ...expandedBaseAchievements.slice(insertionIndex)

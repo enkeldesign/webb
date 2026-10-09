@@ -27,6 +27,7 @@ import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked
 } from '../progression/trophy-road.js';
+import { isOverchargeAvailable, settleOverchargeProfile } from '../progression/overcharge-unlock.js';
 import {
   VEHICLE_SHIFT_STAT_FIELDS,
   VEHICLE_SHIFT_FEATURE_ID,
@@ -251,6 +252,8 @@ function installGameplayUi() {
   let boostCharge = 1;
   let boostOvercharge = 0;
   let boostOverchargePhase = BOOST_OVERCHARGE_PHASE.READY;
+  // OVERCHARGE comes with DRIFT ATTACK (progression/overcharge-unlock.js).
+  let overchargeOn = true;
   let previousBoostCharge = boostCharge;
   let boostFlashTimer = 0;
   let overchargePeakTimer = 0;
@@ -342,9 +345,9 @@ function installGameplayUi() {
     );
     gasButton.setAttribute(
       'aria-label',
-      shiftAvailable
-        ? 'GAS. Catches and holds OVERCHARGE. While holding GAS, slide outward into SHIFT to toggle alternate attributes.'
-        : 'GAS. Catches and holds OVERCHARGE.'
+      `GAS.${overchargeOn ? ' Catches and holds OVERCHARGE.' : ''}${shiftAvailable
+        ? ' While holding GAS, slide outward into SHIFT to toggle alternate attributes.'
+        : ''}`
     );
     syncFlowShiftPresentation(globalThis.__turnRuntime?.state);
   }
@@ -497,6 +500,30 @@ function installGameplayUi() {
     if (runtime?.state) runtime.state.shiftActive = shiftActive;
     syncShiftVisual();
     publishShiftState({ announce });
+  }
+
+  // Labels name OVERCHARGE only once the player has it.
+  function syncOverchargeAvailability() {
+    try {
+      overchargeOn = isOverchargeAvailable();
+    } catch (_) {
+      overchargeOn = true;
+    }
+    if (!overchargeOn && boostOvercharge > 0) {
+      boostOvercharge = 0;
+      boostOverchargePhase = BOOST_OVERCHARGE_PHASE.READY;
+      globalThis.__turnBoostOvercharge = 0;
+    }
+    drivePad.setAttribute('aria-label', overchargeOn
+      ? 'Drive control. Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE. BRAKE stops the car without reversing. While holding BRAKE, slide outward into REVERSE. DRIFT charges BOOST and builds OVERCHARGE after the bar is full. GAS catches and holds OVERCHARGE. BOOST spends OVERCHARGE before normal BOOST. While holding DRIFT, slide outward into LOCK for rear-wheel lock. When SHIFT is available, slide from GAS into SHIFT each time you want to switch setup.'
+      : 'Drive control. Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE. BRAKE stops the car without reversing. While holding BRAKE, slide outward into REVERSE. DRIFT charges BOOST. While holding DRIFT, slide outward into LOCK for rear-wheel lock. When SHIFT is available, slide from GAS into SHIFT each time you want to switch setup.');
+    driftZone.setAttribute('aria-label', overchargeOn
+      ? 'GAS and DRIFT. DRIFT charges BOOST; after the bar is full, it builds OVERCHARGE. Slide outward into LOCK for rear-wheel lock.'
+      : 'GAS and DRIFT. DRIFT charges BOOST. Slide outward into LOCK for rear-wheel lock.');
+    boostZone.setAttribute('aria-label', overchargeOn
+      ? 'GAS and BOOST. BOOST spends OVERCHARGE before normal BOOST.'
+      : 'GAS and BOOST.');
+    syncShiftVisual();
   }
 
   function syncShiftAvailability({ reset = false, announce = false } = {}) {
@@ -939,11 +966,13 @@ function installGameplayUi() {
     }
     if (isVehicleShiftResetReason(reason)) {
       resetShiftAnnouncementCycle();
+      syncOverchargeAvailability();
       syncShiftAvailability({ reset: true });
     }
   });
   window.addEventListener('turn:runtime-ready', () => {
     resetShiftAnnouncementCycle();
+    syncOverchargeAvailability();
     syncShiftAvailability({ reset: true });
   });
   window.addEventListener('turn:shift-profile-change', (event) => {
@@ -954,6 +983,7 @@ function installGameplayUi() {
     if (wasActive && shiftAvailable) applyShiftMode(true, { announce: false });
   });
   window.addEventListener('turn:trophy-road-updated', () => {
+    syncOverchargeAvailability();
     const wasActive = shiftActive;
     syncShiftAvailability({ reset: !shiftActive });
     if (wasActive && shiftAvailable) applyShiftMode(true, { announce: false });
@@ -1063,7 +1093,7 @@ function installGameplayUi() {
         boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS + perkRefill);
       }
 
-      if (boostCharge >= 0.999999 || boostOvercharge > 0) {
+      if (overchargeOn && (boostCharge >= 0.999999 || boostOvercharge > 0)) {
         const runtimeState = globalThis.__turnRuntime?.state;
         const slipAngle = resolveBoostSlipAngle({
           heading: runtimeState?.heading,
@@ -1249,6 +1279,9 @@ function installGameplayUi() {
   }
 
   setDriveZone(null, false, { announce: false });
+  // Decided at a profile's first launch, before anything can be earned.
+  settleOverchargeProfile();
+  syncOverchargeAvailability();
   syncShiftAvailability({ reset: true });
   globalThis.__turnUpdateGameplayControls = updateBoost;
 }

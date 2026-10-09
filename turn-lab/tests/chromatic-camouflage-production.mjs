@@ -46,7 +46,7 @@ assert.equal(gotStarted?.category, 'onboarding');
 assert.equal(gotStarted?.trophies, 75);
 assert.equal(gotStarted?.description, 'Finish all Getting Started achievements.');
 assert.equal(catchTheCharge?.title, 'CATCH THE CHARGE');
-assert.equal(catchTheCharge?.category, 'onboarding');
+assert.equal(catchTheCharge?.category, 'scoring');
 assert.equal(catchTheCharge?.trophies, 25);
 assert.equal(Object.hasOwn(catchTheCharge || {}, 'progressMax'), false,
   'CATCH THE CHARGE should unlock on the catch itself, without a timed hold');
@@ -54,10 +54,11 @@ assert.equal(
   catchTheCharge?.description,
   'With BOOST full, keep using DRIFT to build purple OVERCHARGE. Slide to GAS to catch it before it leaks away.'
 );
-assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 12,
-  'GOT STARTED must require every Getting Started lesson, including HEAD START, without requiring itself');
-assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('catch-the-charge'), true);
-assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('head-start'), true);
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10,
+  'GOT STARTED must require every Getting Started lesson without requiring itself');
+// OVERCHARGE comes with DRIFT ATTACK (#1150): Getting started never needs it.
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('catch-the-charge'), false);
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('head-start'), false);
 assert.equal(headStart?.title, 'HEAD START');
 assert.equal(headStart?.trophies, 50);
 assert.match(headStart?.description || '', /carried OVERCHARGE/);

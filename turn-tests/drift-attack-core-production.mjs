@@ -264,4 +264,73 @@ assert.doesNotMatch(source, /syncFeedback\(\s*\{/,
 assert.doesNotMatch(source, /driftHeld|boostActive|shiftActive|overcharge/i,
   'Inputs and helper systems must not score directly');
 
+// OVERCHARGE unlocks with DRIFT ATTACK (#1150).
+{
+  const { OVERCHARGE_PROFILE_KEY, isOverchargeAvailable, settleOverchargeProfile } =
+    await import('../turn/progression/overcharge-unlock.js');
+  const { TROPHY_ROAD_STORAGE_KEY, TROPHY_ROAD_STORAGE_VERSION } = await import('../turn/progression/trophy-road.js');
+  const profile = (unlocked = {}, rewards = []) => {
+    const store = new MemoryStorage();
+    if (Object.keys(unlocked).length || rewards.length) {
+      store.setItem(TROPHY_ROAD_STORAGE_KEY, JSON.stringify({
+        version: TROPHY_ROAD_STORAGE_VERSION, unlocked, rewards: { unlocked: rewards }
+      }));
+    }
+    return store;
+  };
+
+  const fresh = profile();
+  assert.equal(settleOverchargeProfile(fresh), 'locked', 'A new profile starts without OVERCHARGE');
+  assert.equal(isOverchargeAvailable({ storage: fresh }), false);
+  fresh.setItem(TROPHY_ROAD_STORAGE_KEY, JSON.stringify({
+    version: TROPHY_ROAD_STORAGE_VERSION, unlocked: { 'first-turn': { unlockedAt: 1 } }, rewards: { unlocked: [] }
+  }));
+  assert.equal(settleOverchargeProfile(fresh), 'locked', 'Decided once: later laps do not make it an old profile');
+  assert.equal(isOverchargeAvailable({ storage: profile({}, ['drift-attack']) }), true);
+  const unlocking = profile({ 'first-turn': { unlockedAt: 1 } });
+  unlocking.setItem(OVERCHARGE_PROFILE_KEY, 'locked');
+  assert.equal(isOverchargeAvailable({ storage: unlocking }), false);
+  unlocking.setItem(TROPHY_ROAD_STORAGE_KEY, JSON.stringify({
+    version: TROPHY_ROAD_STORAGE_VERSION, unlocked: { 'first-turn': { unlockedAt: 1 } }, rewards: { unlocked: ['drift-attack'] }
+  }));
+  assert.equal(isOverchargeAvailable({ storage: unlocking }), true, 'DRIFT ATTACK unlocks OVERCHARGE');
+
+  const existing = profile({ 'first-turn': { unlockedAt: 1 } });
+  assert.equal(settleOverchargeProfile(existing), 'kept', 'A profile that played before keeps OVERCHARGE');
+  assert.equal(isOverchargeAvailable({ storage: existing }), true);
+  const yourTurn = { documentElement: { dataset: { turnDeployment: 'yourturn' } } };
+  assert.equal(isOverchargeAvailable({ storage: profile(), documentRef: yourTurn }), true, 'YOUR TURN is unchanged');
+  assert.equal(isOverchargeAvailable({ storage: null }), true, 'Without storage nothing is held back');
+  const memoryVisit = profile();
+  const blockedData = { documentElement: { dataset: { turnStorage: 'memory' } } };
+  assert.equal(isOverchargeAvailable({ storage: memoryVisit, documentRef: blockedData }), true,
+    'Nor with the memory stand-in TURN uses when website data is blocked');
+  assert.equal(memoryVisit.getItem(OVERCHARGE_PROFILE_KEY), null);
+  const legacy = profile();
+  legacy.setItem('turn-vehicle-selection-v1', JSON.stringify({ carId: 'sports' }));
+  assert.equal(settleOverchargeProfile(legacy), 'kept',
+    'A legacy profile the Trophy Road recognises (rivals, an older car choice) keeps it');
+
+  const catalog = await import('../turn/achievements/catalog.js');
+  for (const id of ['catch-the-charge', 'head-start']) {
+    assert.equal(catalog.ONBOARDING_ACHIEVEMENT_IDS.includes(id), false, `${id} is not needed to finish Getting started`);
+    assert.equal(catalog.ACHIEVEMENTS.find((achievement) => achievement.id === id)?.category, 'scoring');
+  }
+
+  const read = (path) => fs.readFile(new URL(path, import.meta.url), 'utf8');
+  const controls = await read('../turn/ui/gameplay-controls.js');
+  assert.match(controls, /if \(overchargeOn && \(boostCharge >= 0\.999999 \|\| boostOvercharge > 0\)\)/,
+    'Without it, a full BOOST meter builds no OVERCHARGE');
+  assert.match(controls, /'turn:trophy-road-updated', \(\) => \{\s*syncOverchargeAvailability\(\);/,
+    'It arrives the moment DRIFT ATTACK unlocks');
+  assert.match(controls, /GAS and DRIFT\. DRIFT charges BOOST\. Slide outward/, 'Controls do not name what the player lacks');
+  const unlock = await read('../turn/progression/overcharge-unlock.js');
+  assert.doesNotMatch(unlock, /drift-attack-setting|Show DRIFT scoring/i, 'Hiding the DRIFT HUD (ui/drift-attack-setting.js) never removes OVERCHARGE');
+  const guide = await read('../turn/ui/how-to-play-guide.js');
+  assert.match(guide, /data-overcharge-unlock hidden><strong>OVERCHARGE unlocks with DRIFT ATTACK<\/strong>/,
+    'HOW TO PLAY says where it comes from');
+  const road = await read('../turn/progression/trophy-road.js');
+  assert.match(road, /OVERCHARGE comes with it/, 'So does the DRIFT ATTACK reward');
+}
+
 console.log('TURN DRIFT ATTACK core and per-track record regressions passed.');

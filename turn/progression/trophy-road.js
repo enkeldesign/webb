@@ -204,7 +204,7 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     type: 'scoring-system',
     featureId: 'drift-attack',
     icon: 'drift',
-    description: 'Unlock DRIFT scoring on every normal lap. Build and bank slides, set a best score for each track, and keep racing against the clock.'
+    description: 'Unlock DRIFT scoring on every normal lap. Build and bank slides, set a best score for each track, and keep racing against the clock. OVERCHARGE comes with it: with BOOST full, keep drifting to build a stronger burst.'
   }),
   Object.freeze({
     id: 'flow',
