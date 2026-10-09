@@ -1,5 +1,7 @@
+import { getRewardPreviewChallenge } from '../race/reward-preview.js';
+
 const SUPPORT_FEEDBACK_STORAGE_KEY = 'turn-support-feedback-v1';
-const RACE_SUPPORT_BONUS_PATTERN = /^support:(?:patrol|winner|safety|drift):/;
+const RACE_SUPPORT_BONUS_PATTERN = /^support:(?:patrol|excursion|winner|safety|drift):/;
 const SUPPORT_PILL_VISIBLE_MS = 3200;
 const TOAST_CONCEAL_MS = 220;
 const LOT_SELECTION_TIMEOUT_MS = 12000;
@@ -411,7 +413,7 @@ export function installSupportChallengeFeedback({ storage = globalThis.localStor
     const start = event.target?.closest?.('[data-support-start]');
     if (!start) return;
     const active = globalThis.__turnSupportChallenges?.state?.active;
-    if (!active || ['learning', 'patrol'].includes(active.type) || !active.trackId || !active.vehicleId) return;
+    if (!active || active.type === 'learning' || getRewardPreviewChallenge(active) || !active.trackId || !active.vehicleId) return;
     // The existing support handler remains authoritative for track selection and
     // navigation. Arm the recommended Lot choice before that handler opens it.
     selectRecommendedLotCar(active.vehicleId);
