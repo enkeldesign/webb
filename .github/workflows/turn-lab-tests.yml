@@ -104,6 +104,9 @@ jobs:
       - name: Run production race and replay regression tests
         run: node turn-tests/race-production.mjs
 
+      - name: Run TURN TUTORIAL foundation regression (#1131)
+        run: node turn-tests/tutorial-foundation-production.mjs
+
       - name: Run Spectate UI-state snapshot regression
         run: node turn-tests/spectate-ui-state-production.mjs
 

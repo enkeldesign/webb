@@ -11,6 +11,7 @@ import {
 import { completeTrackOrder, getTrackStorageRevision } from '../tracks/definitions.js';
 import { storedReplayFrameCount } from '../race/replay-codec.js';
 import { PATROL_CHALLENGE, EXCURSION_CHALLENGE, getRewardPreviewChallenge } from '../race/reward-preview.js';
+import { sessionPolicy } from '../race/session-policy.js';
 
 export const SUPPORT_CHALLENGE_STORAGE_KEY = 'turn-support-challenges-v1';
 export const SUPPORT_CHALLENGE_CONFIG_CACHE_KEY = 'turn-support-challenge-config-cache-v1';
@@ -205,7 +206,9 @@ function saveSupportState(state, storage = globalThis.localStorage) {
 
 // A race lap or a stored one (its frames may be stored compactly, race/replay-codec.js).
 function validStoredRival(lap) {
-  return Number.isFinite(Number(lap?.time))
+  // A session-only ghost (a tutorial teaching lap) is never a stored rival.
+  return lap?.sessionOnly !== true
+    && Number.isFinite(Number(lap?.time))
     && storedReplayFrameCount(lap?.frames) > 20;
 }
 
@@ -980,6 +983,8 @@ export async function installSupportChallenges({
   window.addEventListener('turn:lap-result', (event) => {
     const time = Number(event.detail?.time);
     if (!Number.isFinite(time) || time <= 5 || event.detail?.valid === false) return;
+    // A tutorial teaching lap is not ordinary race completion.
+    if (!sessionPolicy(runtime?.state).challenges) return;
 
     if (completeActiveRaceChallenge(event.detail)) return;
     if (!achievementUnlockedThisTask) {
