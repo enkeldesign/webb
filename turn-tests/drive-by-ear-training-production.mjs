@@ -134,7 +134,7 @@ assert.equal(LEARNING_FEEDBACK_READY_EVENT, 'turn:learning-feedback-ready');
 assert.match(training, /async function leaveTraining\(\)[\s\S]*new CustomEvent\(LEARNING_FEEDBACK_READY_EVENT/,
   'Achievement feedback must wait until the training dialog has left the top layer');
 
-assert.match(view, /homeButton\.textContent = 'DRIVE BY EAR 101'/);
+assert.match(view, /homeButton\.textContent = 'DRIVE BY EAR TUTORIAL'/);
 assert.doesNotMatch(view, /homeButton\.textContent = 'DRIVE BY EAR TRAINING'/);
 assert.match(view, /data-training-stage="\$\{index\}"/);
 assert.match(view, /Choose a training part/);

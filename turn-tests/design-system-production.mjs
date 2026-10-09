@@ -231,7 +231,7 @@ assert.match(dialogs, /Standardize the shell, not the content\./);
 assert.match(dialogs, /Production dialog inventory/);
 assert.match(dialogs, /About TURN/);
 assert.match(dialogs, /Development history &amp; changelog/);
-assert.match(dialogs, /Drive By Ear 101 introduction/);
+assert.match(dialogs, /DRIVE BY EAR TUTORIAL introduction/);
 assert.match(dialogs, /Motion access denied/);
 assert.match(dialogs, /In-race audio settings/);
 assert.match(dialogs, /Compact[\s\S]*Standard[\s\S]*Wide[\s\S]*Reader/);

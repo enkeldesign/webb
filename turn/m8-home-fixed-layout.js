@@ -117,7 +117,7 @@ function waitForPostHomeIdle() {
 }
 
 function installDriveByEarSpokenLabels(training) {
-  const spokenName = 'Drive By Ear one oh one';
+  const spokenName = 'Drive By Ear tutorial';
   training.entryPoints?.homeButton?.setAttribute('aria-label', spokenName);
   training.entryPoints?.howCallout
     ?.querySelector('[data-turn-dbe-training-entry]')

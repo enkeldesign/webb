@@ -505,7 +505,7 @@
     navigation.setAttribute('aria-label', 'Accessibility shortcuts');
     navigation.innerHTML = `
       <a href="#turnNonVisualOnboarding">Non-visual onboarding</a>
-      <a href="#${trainingButton.id}">Drive By Ear 101</a>
+      <a href="#${trainingButton.id}">Drive By Ear tutorial</a>
     `;
 
     const onboardingTarget = document.createElement('div');

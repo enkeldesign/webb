@@ -80,7 +80,7 @@ assert.match(fixedLayout, /achievements\/trophy-road-feedback\.js\?build=\$\{bui
 assert.match(fixedLayout, /installAchievementUnreadMarkers\(achievements\)/);
 assert.match(fixedLayout, /achievementUnreadMarkers,/);
 assert.match(fixedLayout, /function installDriveByEarSpokenLabels\(training\)/);
-assert.match(fixedLayout, /const spokenName = 'Drive By Ear one oh one'/);
+assert.match(fixedLayout, /const spokenName = 'Drive By Ear tutorial'/);
 assert.match(fixedLayout, /homeButton\?\.setAttribute\('aria-label', spokenName\)/);
 assert.match(fixedLayout, /installDriveByEarSpokenLabels\(driveByEarTraining\)/);
 assert.match(unreadMarkers, /new Set\(achievements\.store\.unseenIds\(\)\)/);

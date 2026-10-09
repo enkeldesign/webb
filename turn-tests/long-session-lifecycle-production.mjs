@@ -140,8 +140,8 @@ assert.match(
   /return `\$\{dbe\}% Drive By Ear, \$\{other\}% other sounds\$\{balance\}`/,
   'Sound balance must expose percentages at every slider position rather than repeating Balanced across a range'
 );
-assert.match(screenReaderCoordinator, /navigation\.innerHTML = `[\s\S]*Non-visual onboarding[\s\S]*Drive By Ear 101/,
-  'Home accessibility shortcuts must put Non-visual onboarding before Drive By Ear 101');
+assert.match(screenReaderCoordinator, /navigation\.innerHTML = `[\s\S]*Non-visual onboarding[\s\S]*Drive By Ear tutorial/,
+  'Home accessibility shortcuts must put Non-visual onboarding before the Drive By Ear tutorial');
 assert.match(screenReaderCoordinator, /function scheduleNonVisualOnboarding\(\)[\s\S]*speak\(`TURN is ready\. \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`, \{ priority: 'assertive' \}\)/,
   'The existing one-time non-visual onboarding remains assertive in either orientation');
 assert.doesNotMatch(screenReaderCoordinator, /viewportIsPortrait|Rotate your device to landscape/,
