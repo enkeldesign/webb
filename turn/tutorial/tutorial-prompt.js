@@ -1,11 +1,16 @@
 import { LEARNING_FEEDBACK_READY_EVENT } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
 import { applyCourseRescue } from './course-rescue.js';
+import { STEERING_HELP_CHANGED_EVENT, loadSteeringHelp, steeringHelpTarget } from './steering-help.js';
 import { createTurnTutorialCoach } from './turn-tutorial-coach.js';
+import { STEERING_HELP_HINT, TURN_TUTORIAL_LESSONS, TUTORIAL_GRADUATION_WITH_HELP_MESSAGE } from './turn-tutorial-lessons.js';
 
 // The TURN TUTORIAL prompt (#1132): one polite live region, so every lesson is both
 // shown and spoken, and recoverable by reading it again. It never takes focus.
 const STYLE_ID = 'turn-tutorial-prompt-styles';
 const GRADUATION_SECONDS = 4;
+// Rescues before the prompt points to Tutorial steering help, and how long it shows.
+const RESCUES_BEFORE_HINT = 2;
+const HINT_SECONDS = 5;
 
 function installStyles() {
   if (document.getElementById(STYLE_ID)) return;
@@ -92,6 +97,9 @@ export function createTutorialPrompt(parent = document.body) {
     } else if (view.kind === 'done') {
       title.textContent = `${view.title} ✓`;
       text.textContent = view.text || 'Nice. Keep driving.';
+    } else if (view.kind === 'hint') {
+      title.textContent = view.title;
+      text.textContent = view.text;
     } else if (view.kind === 'graduated') {
       title.textContent = 'TUTORIAL COMPLETE';
       text.textContent = view.message.replace(/^Tutorial complete\.\s*/, '');
@@ -112,7 +120,30 @@ export function createTutorialPrompt(parent = document.body) {
 export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   const { state } = runtime;
   const prompt = createTutorialPrompt();
-  const coach = createTurnTutorialCoach({ state, maxSpeed: runtime.maxSpeed, present: prompt.present });
+  // Tutorial steering help (steering-help.js), switched in SETTINGS, also mid-lap.
+  let steeringHelp = loadSteeringHelp();
+  let helped = false;
+  let rescuing = false;
+  let rescues = 0;
+  let hintLeft = 0;
+  let lastView = { kind: 'idle' };
+
+  // Lessons say what steering help changes, and the line says that it ends there.
+  function withHelp(view) {
+    if (view.kind === 'lesson' && steeringHelp) {
+      const assisted = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === view.id)?.assistedPrompt;
+      return assisted ? { ...view, prompt: assisted } : view;
+    }
+    if (view.kind === 'graduated' && helped) return { ...view, message: TUTORIAL_GRADUATION_WITH_HELP_MESSAGE };
+    return view;
+  }
+  function present(view) {
+    lastView = view;
+    hintLeft = 0;
+    prompt.present(withHelp(view));
+  }
+
+  const coach = createTurnTutorialCoach({ state, maxSpeed: runtime.maxSpeed, present });
   let frame = 0;
   let last = 0;
   let stopped = false;
@@ -120,15 +151,34 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   // Seconds of race time the completion message stays up; it waits out a pause.
   let graduationLeft = 0;
 
+  function onSteeringHelpChanged(event) {
+    steeringHelp = event.detail?.enabled === true;
+    if (lastView.kind === 'lesson') prompt.present(withHelp(lastView));
+  }
+
   const tick = (now) => {
     if (stopped) return;
     const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
     last = now;
     if (state.running && globalThis.__turnRacePause?.paused !== true) {
       coach.update(dt);
-      // The teaching lap only: ordinary racing after the line has no rescue.
+      // The teaching lap only: ordinary racing after the line has no rescue or help.
       if (!graduated && dt > 0) {
-        applyCourseRescue({ state, samples: runtime.samples, trackWidth: runtime.trackWidth || 27, dt });
+        if (steeringHelp) helped = true;
+        state.sessionSteeringTarget = steeringHelp ? steeringHelpTarget({ state, samples: runtime.samples }) : null;
+        const rescue = applyCourseRescue({ state, samples: runtime.samples, trackWidth: runtime.trackWidth || 27, dt });
+        if (rescue !== 'none' && !rescuing) rescues += 1;
+        rescuing = rescue !== 'none';
+        // Steering keeps going wrong: say once where the stronger help is.
+        if (rescues === RESCUES_BEFORE_HINT && !rescuing && !steeringHelp) {
+          rescues += 1;
+          prompt.present({ kind: 'hint', id: 'steering-help', ...STEERING_HELP_HINT });
+          hintLeft = HINT_SECONDS;
+        }
+      }
+      if (hintLeft > 0) {
+        hintLeft -= dt;
+        if (hintLeft <= 0) prompt.present(withHelp(lastView));
       }
       if (graduationLeft > 0) {
         graduationLeft -= dt;
@@ -145,7 +195,9 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
     if (stopped) return;
     stopped = true;
     cancelAnimationFrame(frame);
+    state.sessionSteeringTarget = null;
     events.removeEventListener?.('turn:session-graduated', onGraduated);
+    events.removeEventListener?.(STEERING_HELP_CHANGED_EVENT, onSteeringHelpChanged);
     coach.stop();
     prompt.remove();
     // The TURN TUTORIAL achievement waits for the completion message (as DRIVE BY EAR
@@ -160,10 +212,12 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   // The line: say so, then step out of the way of ordinary racing.
   function onGraduated() {
     graduated = true;
+    state.sessionSteeringTarget = null;
     coach.graduate();
     graduationLeft = GRADUATION_SECONDS;
   }
   events.addEventListener?.('turn:session-graduated', onGraduated);
+  events.addEventListener?.(STEERING_HELP_CHANGED_EVENT, onSteeringHelpChanged);
   frame = requestAnimationFrame(tick);
 
   return Object.freeze({ coach, stop });
