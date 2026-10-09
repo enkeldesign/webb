@@ -164,6 +164,11 @@ try {
     assert.equal(await page.locator('.turn-tutorial-prompt').count(), 1, 'TUTORIAL COMPLETE is still there after a pause');
     await page.evaluate(() => globalThis.__turnRacePause.resume());
     await page.waitForFunction(() => !document.querySelector('.turn-tutorial-prompt'), null, { timeout: 10000 });
+    // The award is shown at this finish, once TUTORIAL COMPLETE has had its moment.
+    await page.waitForFunction(() => {
+      const toast = globalThis.__turnAchievements.toast;
+      return toast && !toast.hidden && /TURN TUTORIAL/.test(toast.textContent);
+    }, null, { timeout: 10000 });
     current = await inspect(page);
     assert.equal(current.policy, 'normal', 'The run continues as ordinary TURN');
     assert.equal(current.tutorial.status, 'completed');

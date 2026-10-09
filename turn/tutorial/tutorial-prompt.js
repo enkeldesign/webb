@@ -1,3 +1,4 @@
+import { LEARNING_FEEDBACK_READY_EVENT } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
 import { createTurnTutorialCoach } from './turn-tutorial-coach.js';
 
 // The TURN TUTORIAL prompt (#1132): one polite live region, so every lesson is both
@@ -114,6 +115,7 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   let frame = 0;
   let last = 0;
   let stopped = false;
+  let graduated = false;
   // Seconds of race time the completion message stays up; it waits out a pause.
   let graduationLeft = 0;
 
@@ -141,10 +143,18 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
     events.removeEventListener?.('turn:session-graduated', onGraduated);
     coach.stop();
     prompt.remove();
+    // The TURN TUTORIAL achievement waits for the completion message (as DRIVE BY EAR
+    // training's does for its dialogs); this lets it show now, at this finish.
+    if (graduated) {
+      events.dispatchEvent?.(new CustomEvent(LEARNING_FEEDBACK_READY_EVENT, {
+        detail: Object.freeze({ source: 'turn-tutorial' })
+      }));
+    }
   }
 
   // The line: say so, then step out of the way of ordinary racing.
   function onGraduated() {
+    graduated = true;
     coach.graduate();
     graduationLeft = GRADUATION_SECONDS;
   }
