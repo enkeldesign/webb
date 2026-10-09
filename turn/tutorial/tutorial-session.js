@@ -95,7 +95,7 @@ export function createTutorialSession({
   return Object.freeze({
     enter,
     exit,
-    // STOP TUTORIAL: leave, and do not start automatically again.
+    // SKIP TUTORIAL: leave, and do not start automatically again.
     async stop() {
       if (!graduated) progress.stop(module.id);
       return exit();

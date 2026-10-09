@@ -96,7 +96,7 @@ async function run(name, options, scenario) {
 try {
   const showLaunchCard = (page) => page.evaluate(() => globalThis.__turnNextHome.tutorial.entry.showLaunchCard());
 
-  await run('first launch card and STOP TUTORIAL', { launch: true }, async (page) => {
+  await run('first launch card and SKIP TUTORIAL', { launch: true }, async (page) => {
     await page.waitForFunction(() => Boolean(document.querySelector('.m8-tutorial-dialog[open]')));
     let current = await inspect(page);
     assert.equal(current.card, true, 'A new player\'s first launch of TURN opens TURN TUTORIAL');
@@ -109,16 +109,16 @@ try {
     // TURN dialogs focus their heading first, so a screen reader starts at the title.
     assert.equal(await page.evaluate(() => Boolean(document.activeElement?.closest('.m8-tutorial-dialog'))), true,
       'Focus moves into the TURN TUTORIAL card');
-    await page.locator('[data-tutorial-stop]').click();
+    await page.locator('[data-tutorial-skip]').click();
     current = await inspect(page);
     assert.equal(current.card, false);
-    assert.equal(current.tutorial.remindersOff, true, 'STOP TUTORIAL turns automatic starts off');
-    assert.equal(current.tutorial.status, 'not-started', 'Stopping is not completion');
+    assert.equal(current.tutorial.remindersOff, true, 'SKIP TUTORIAL turns automatic starts off');
+    assert.equal(current.tutorial.status, 'not-started', 'Skipping is not completion');
     await page.reload();
     await page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready')
       && globalThis.__turnNextHome?.tutorial);
     await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-    assert.equal((await inspect(page)).card, false, 'A stopped tutorial does not start on the next launch');
+    assert.equal((await inspect(page)).card, false, 'A skipped tutorial does not start on the next launch');
     assert.equal(await showLaunchCard(page), false);
   });
 

@@ -84,7 +84,7 @@ function createLaunchCard() {
       </div>
       <div class="m8-tutorial-actions">
         <button type="button" data-tutorial-start>START TUTORIAL</button>
-        <button type="button" data-tutorial-stop>STOP TUTORIAL</button>
+        <button type="button" data-tutorial-skip>SKIP TUTORIAL</button>
       </div>
       <p class="m8-tutorial-note">You can play TURN TUTORIAL any time from HOW TO PLAY.</p>
     </article>`;
@@ -124,10 +124,10 @@ export function installTutorialEntry({
     close();
     void startTutorial();
   });
-  card.querySelector('[data-tutorial-stop]').addEventListener('click', () => {
+  card.querySelector('[data-tutorial-skip]').addEventListener('click', () => {
     progress.stop(module.id);
     close();
-    announce('TURN TUTORIAL stopped. You can play it any time from HOW TO PLAY.');
+    announce('TURN TUTORIAL skipped. You can play it any time from HOW TO PLAY.');
   });
 
   // The first-launch card, shown while the tutorial still starts on launch.

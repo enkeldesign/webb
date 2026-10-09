@@ -187,8 +187,8 @@ test('tutorial lifecycle: start, interrupt, stop, complete and replay', () => {
 
   progress.stop(id);
   progress = makeProgress();
-  assert.equal(progress.startsOnLaunch(id), false, 'STOP TUTORIAL turns the reminders off');
-  assert.equal(progress.status(id), TUTORIAL_STATUS.IN_PROGRESS, 'Stopping is not completion');
+  assert.equal(progress.startsOnLaunch(id), false, 'SKIP TUTORIAL turns the reminders off');
+  assert.equal(progress.status(id), TUTORIAL_STATUS.IN_PROGRESS, 'Skipping is not completion');
 
   progress.begin(id);
   assert.equal(progress.complete(id, TURN_TUTORIAL.revision), true, 'The first completion is the rewarded one');
@@ -311,7 +311,7 @@ test('a failed restore keeps the player\'s selection for a retry', async () => {
   assert.equal(harness.state.vehicleId, 'convertible');
 });
 
-test('replay and STOP TUTORIAL', async () => {
+test('replay and SKIP TUTORIAL', async () => {
   memory.clear();
   const progress = makeProgress();
   progress.complete(TURN_TUTORIAL.id);
@@ -333,7 +333,7 @@ test('replay and STOP TUTORIAL', async () => {
   const session = createTutorialSession({ ...harness, progress: fresh });
   await session.enter();
   await session.stop();
-  assert.equal(fresh.startsOnLaunch(TURN_TUTORIAL.id), false, 'STOP TUTORIAL ends automatic starts');
+  assert.equal(fresh.startsOnLaunch(TURN_TUTORIAL.id), false, 'SKIP TUTORIAL ends automatic starts');
   assert.equal(fresh.status(TURN_TUTORIAL.id), TUTORIAL_STATUS.IN_PROGRESS);
   assert.equal(harness.state.trackId, 'airport');
 });

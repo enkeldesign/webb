@@ -65,6 +65,8 @@ assert.match(historyCss, /\.turn-changelog-archive > summary[\s\S]*min-height: v
 assert.match(bootstrap, /const INSTALL_NOTE[\s\S]*Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
 assert.match(bootstrap, /const INSTALL_PITCH = 'TURN is an accessible motion-controlled arcade drift racer\.'/,
   'The browser install page must use the concise product pitch from the approved mockup');
+assert.match(bootstrap, /const INSTALL_GOAL = 'It’s all about the feel of the drive and getting faster\. Your best laps become rivals to beat, and trophies unlock new tracks, cars and ways to play\.'/,
+  'Under the pitch, the install page says what TURN is for');
 assert.match(bootstrap, /ACCESSIBILITY_SYMBOL_URL = new URL\('\.\.\/assets\/icons\/accessibility\.svg', import\.meta\.url\)/,
   'The original Wikimedia accessibility SVG must be available without a third-party request');
 await fs.access(new URL('../turn/assets/icons/accessibility.svg', import.meta.url));
