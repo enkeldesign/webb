@@ -4,7 +4,8 @@
 //
 // from/to: lap progress where the lesson is taught. speedCap: share of the car's top
 // speed while the lesson waits for its action (null: no cap, e.g. BOOST must be felt).
-// doneText: said when it is done. needs: 'routeCues' for a lesson that needs DRIVE BY
+// doneText: said when it is done. keyboardPrompt: the prompt for players driving by
+// keyboard, where it differs. needs: 'routeCues' for a lesson that needs DRIVE BY
 // EAR's pace notes; with them off it is skipped. Placement is a first pass for device
 // tuning.
 export const TURN_TUTORIAL_LESSONS = Object.freeze([
@@ -35,6 +36,8 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     // LOCK is on the drive pad from the first lap, so it is named here, where DRIFT is.
     // It is offered, not required: the slide is the lesson.
     prompt: 'Hold DRIFT through the bend. Slide outward into LOCK for a stronger slide.',
+    // LOCK has no key (input/qe-drive-controls.js): keyboard players are told only DRIFT.
+    keyboardPrompt: 'Hold DRIFT through the bend.',
     doneText: 'Drifting refills BOOST.',
     from: 0.47,
     to: 0.58,

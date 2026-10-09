@@ -1,4 +1,6 @@
 import { LEARNING_FEEDBACK_READY_EVENT } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
+import { KEYBOARD_DRIVE_BINDINGS } from '../input/keyboard-driving-controls.js';
+import { QE_DRIVE_BINDINGS } from '../input/qe-drive-controls.js';
 import { applyCourseRescue } from './course-rescue.js';
 import { STEERING_HELP_CHANGED_EVENT, loadSteeringHelp, steeringHelpTarget } from './steering-help.js';
 import { createTurnTutorialCoach } from './turn-tutorial-coach.js';
@@ -8,6 +10,7 @@ import { STEERING_HELP_HINT, TURN_TUTORIAL_LESSONS, TUTORIAL_GRADUATION_WITH_HEL
 // shown and spoken, and recoverable by reading it again. It never takes focus.
 const STYLE_ID = 'turn-tutorial-prompt-styles';
 const GRADUATION_SECONDS = 4;
+const DRIVING_KEYS = new Set([...Object.keys(KEYBOARD_DRIVE_BINDINGS), ...Object.keys(QE_DRIVE_BINDINGS)]);
 // Rescues before the prompt points to Tutorial steering help, and how long it shows.
 const RESCUES_BEFORE_HINT = 2;
 const HINT_SECONDS = 5;
@@ -127,12 +130,16 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   let rescues = 0;
   let hintLeft = 0;
   let lastView = { kind: 'idle' };
+  // Driving by keyboard since the last touch of the race controls: told what keys can do.
+  let keyboard = false;
 
   // Lessons say what steering help changes, and the line says that it ends there.
-  function withHelp(view) {
-    if (view.kind === 'lesson' && steeringHelp) {
-      const assisted = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === view.id)?.assistedPrompt;
-      return assisted ? { ...view, prompt: assisted } : view;
+  function forPlayer(view) {
+    if (view.kind === 'lesson') {
+      const lesson = TURN_TUTORIAL_LESSONS.find((candidate) => candidate.id === view.id);
+      if (steeringHelp && lesson?.assistedPrompt) return { ...view, prompt: lesson.assistedPrompt };
+      if (keyboard && lesson?.keyboardPrompt) return { ...view, prompt: lesson.keyboardPrompt };
+      return view;
     }
     if (view.kind === 'graduated' && helped) return { ...view, message: TUTORIAL_GRADUATION_WITH_HELP_MESSAGE };
     return view;
@@ -140,8 +147,20 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   function present(view) {
     lastView = view;
     hintLeft = 0;
-    prompt.present(withHelp(view));
+    prompt.present(forPlayer(view));
   }
+  function useKeyboard(next) {
+    if (keyboard === next) return;
+    keyboard = next;
+    const lesson = TURN_TUTORIAL_LESSONS.find((candidate) => candidate.id === lastView.id);
+    if (lastView.kind === 'lesson' && lesson?.keyboardPrompt && hintLeft <= 0) prompt.present(forPlayer(lastView));
+  }
+  const onKeyDown = (event) => {
+    if (DRIVING_KEYS.has(event.code)) useKeyboard(true);
+  };
+  const onPointerDown = (event) => {
+    if (event.target?.closest?.('#controls')) useKeyboard(false);
+  };
 
   const coach = createTurnTutorialCoach({ state, maxSpeed: runtime.maxSpeed, present });
   let frame = 0;
@@ -153,7 +172,7 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
 
   function onSteeringHelpChanged(event) {
     steeringHelp = event.detail?.enabled === true;
-    if (lastView.kind === 'lesson') prompt.present(withHelp(lastView));
+    if (lastView.kind === 'lesson') prompt.present(forPlayer(lastView));
   }
 
   const tick = (now) => {
@@ -178,7 +197,7 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
       }
       if (hintLeft > 0) {
         hintLeft -= dt;
-        if (hintLeft <= 0) prompt.present(withHelp(lastView));
+        if (hintLeft <= 0) prompt.present(forPlayer(lastView));
       }
       if (graduationLeft > 0) {
         graduationLeft -= dt;
@@ -198,6 +217,8 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
     state.sessionSteeringTarget = null;
     events.removeEventListener?.('turn:session-graduated', onGraduated);
     events.removeEventListener?.(STEERING_HELP_CHANGED_EVENT, onSteeringHelpChanged);
+    events.removeEventListener?.('keydown', onKeyDown, true);
+    events.removeEventListener?.('pointerdown', onPointerDown, true);
     coach.stop();
     prompt.remove();
     // The TURN TUTORIAL achievement waits for the completion message (as DRIVE BY EAR
@@ -218,6 +239,8 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   }
   events.addEventListener?.('turn:session-graduated', onGraduated);
   events.addEventListener?.(STEERING_HELP_CHANGED_EVENT, onSteeringHelpChanged);
+  events.addEventListener?.('keydown', onKeyDown, true);
+  events.addEventListener?.('pointerdown', onPointerDown, true);
   frame = requestAnimationFrame(tick);
 
   return Object.freeze({ coach, stop });

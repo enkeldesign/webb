@@ -201,6 +201,20 @@ try {
     await page.evaluate(() => globalThis.__turnRacePause?.resume?.());
     await page.setViewportSize({ width: 844, height: 390 });
 
+    // The DRIFT stretch names LOCK, on the drive pad; keyboard players, who have no LOCK
+    // key, are told only DRIFT once they drive by keys.
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * 0.5)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(10);
+    });
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'drift');
+    assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /Slide outward into LOCK/);
+    await page.keyboard.press('KeyQ');
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt').textContent === 'DRIFTHold DRIFT through the bend.');
+
     // Course rescue (#1133): a big mistake on the teaching lap is held at a remote limit,
     // 14 m beyond the off-road line (0.58 x 27 m), instead of ending the lesson.
     const rescueLimit = 27 * 0.58 + 14;
