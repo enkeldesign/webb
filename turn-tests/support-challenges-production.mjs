@@ -126,7 +126,11 @@ assert.equal(isTrackUnlocked('midnight-city', storage), false);
 assert.equal(isVehicleUnlocked('police', storage), false);
 assert.equal(select({ excluded: ['learning:how-to-play', PATROL_CHALLENGE.key] }).type, 'safety',
   'Procedural challenges resume after both fixed challenges are resolved');
-assert.equal(select({ includeFixed: false }).type, 'safety', 'Procedural rerolls cannot offer PATROL or HOW TO PLAY');
+assert.equal(select({ includeFixed: false }), null, 'Procedural rerolls cannot skip the reading challenge');
+assert.equal(select({ includeFixed: false, excluded: ['learning:how-to-play'] }), null,
+  'An existing procedural challenge cannot reroll past a pending PATROL');
+assert.equal(select({ includeFixed: false, excluded: ['learning:how-to-play', PATROL_CHALLENGE.key] }).type, 'safety',
+  'Procedural rerolls resume after the fixed sequence is resolved');
 assert.equal(isRaceSupportBonusId(`support:${PATROL_CHALLENGE.key}`), true);
 assert.equal(normalizeSupportChallengeConfig({ enabled: true }).patrol.enabled, true,
   'Existing offline rules receive PATROL without a config-cache reset');

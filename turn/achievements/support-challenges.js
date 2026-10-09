@@ -288,12 +288,12 @@ export function selectSupportChallenge({
 }) {
   if (!config?.enabled || !achievements?.store) return null;
   const blocked = new Set(stringArray(excluded));
-  if (includeFixed) {
-    const learning = learningCandidate(config, achievements);
-    if (learning && !blocked.has(learning.key)) return learning;
-    if (config.patrol.enabled && !blocked.has(PATROL_CHALLENGE.key)) {
-      return { ...PATROL_CHALLENGE, reward: config.patrol.reward };
-    }
+  const learning = learningCandidate(config, achievements);
+  // An existing procedural challenge survives an upgrade, but its reroll must
+  // not select another procedural challenge ahead of the pending fixed sequence.
+  if (learning && !blocked.has(learning.key)) return includeFixed ? learning : null;
+  if (config.patrol.enabled && !blocked.has(PATROL_CHALLENGE.key)) {
+    return includeFixed ? { ...PATROL_CHALLENGE, reward: config.patrol.reward } : null;
   }
   if (achievements.store.trophyTotal() >= config.stopAtTrophies) return null;
   const tracks = completeTrackOrder(config.trackOrder, TRACK_IDS);

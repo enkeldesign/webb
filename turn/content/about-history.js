@@ -104,7 +104,7 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     "milestones": []
   },
   {
-    "period": "8 October",
+    "period": "9 October",
     "title": "A taste of the next reward",
     "paragraphs": [
       "PATROL follows the HOW TO PLAY challenge with a temporary drive through MIDNIGHT CITY in the POLICE CAR. One valid lap completes it, with an optional second lap before returning Home. Unfinished attempts can be retried while normal Trophy Road unlocks stay in charge."
@@ -355,7 +355,7 @@ export const CHANGELOG = Object.freeze([
     ]
   },
   {
-    "date": "8 October 2026",
+    "date": "9 October 2026",
     "entries": [
       [
         "PATROL reward preview",
