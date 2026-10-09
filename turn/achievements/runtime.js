@@ -1,7 +1,8 @@
 import {
   ACHIEVEMENTS,
   TRACK_IDS,
-  TRAINING_CAR_ID
+  TRAINING_CAR_ID,
+  TURN_TUTORIAL_ACHIEVEMENT
 } from './catalog.js';
 import {
   createAchievementStore,
@@ -40,6 +41,7 @@ import {
 } from './learning-progress.js?revision=r1-learning-achievements';
 import { replayFrameAt } from '../race/replay-system.js?revision=r146-achievement-expansion';
 import { getStoredBestLap } from '../race/rival-storage.js';
+import { TURN_TUTORIAL, TUTORIAL_COMPLETED_EVENT } from '../tutorial/tutorial-progress.js';
 
 const SPECTATE_REQUIRED_MS = 5000;
 const LISTEN_CLOSELY_REQUIRED_MS = 10000;
@@ -559,6 +561,13 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
 
   window.addEventListener(HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT, (event) => {
     recordHowToPlayDisclosure(event.detail?.disclosureId);
+  });
+
+  // TURN TUTORIAL is rewarded once, at the line of its first completion. Replays earn
+  // nothing, and the lap itself never counted (session-policy.js).
+  window.addEventListener(TUTORIAL_COMPLETED_EVENT, (event) => {
+    if (event.detail?.id !== TURN_TUTORIAL.id || event.detail.firstCompletion !== true) return;
+    unlock([TURN_TUTORIAL_ACHIEVEMENT.id], unlockContext(runtime), { delay: -1 });
   });
 
   window.addEventListener(LEARNING_FEEDBACK_READY_EVENT, () => {

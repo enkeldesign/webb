@@ -38,7 +38,7 @@ const catchTheCharge = getAchievement('catch-the-charge');
 const headStart = getAchievement('head-start');
 const gotStarted = getAchievement('got-started');
 
-assert.equal(ACHIEVEMENTS.length, 71,
+assert.equal(ACHIEVEMENTS.length, 72,
   'Production TURN should expose the complete achievement and scoring catalog');
 assert.equal(GOT_STARTED_ACHIEVEMENT, gotStarted);
 assert.equal(gotStarted?.title, 'GOT STARTED');
@@ -168,7 +168,7 @@ challengeApi.disconnect();
 
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
-  5325,
+  5350,
   'The learning and balance pass must expose the complete trophy supply'
 );
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300);

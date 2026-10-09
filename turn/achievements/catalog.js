@@ -138,6 +138,18 @@ export const GOT_STARTED_ACHIEVEMENT = Object.freeze({
   icon: 'trophy'
 });
 
+// Earned at the line on a player's first completion of TURN TUTORIAL (#1130). Players
+// who already knew TURN when the tutorial arrived are not put through it, so it is a
+// Ways to play achievement, not part of Getting started.
+export const TURN_TUTORIAL_ACHIEVEMENT = Object.freeze({
+  id: 'turn-tutorial',
+  category: base.CATEGORY.WAYS_TO_PLAY,
+  trophies: 25,
+  title: 'TURN TUTORIAL',
+  description: 'Finish TURN TUTORIAL: one lap of COUNTRYSIDE in the LEARNER CAR.',
+  icon: 'route'
+});
+
 export const LEARN_TO_PLAY_ACHIEVEMENT = Object.freeze({
   id: LEARN_TO_PLAY_ACHIEVEMENT_ID,
   category: base.CATEGORY.WAYS_TO_PLAY,
@@ -243,6 +255,7 @@ const withGotStarted = [
   PRODUCTION_CATCH_THE_CHARGE_ACHIEVEMENT,
   HEAD_START_ACHIEVEMENT,
   GOT_STARTED_ACHIEVEMENT,
+  TURN_TUTORIAL_ACHIEVEMENT,
   LEARN_TO_PLAY_ACHIEVEMENT,
   DRIVE_BY_EAR_ACHIEVEMENT,
   ...rebalancedBaseAchievements.slice(onboardingInsertionIndex)

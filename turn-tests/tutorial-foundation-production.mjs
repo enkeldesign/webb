@@ -24,6 +24,7 @@ const { saveRivalsState } = await import('../turn/race/rival-storage.js');
 const { createAchievementStore } = await import('../turn/achievements/store.js');
 const {
   TURN_TUTORIAL,
+  TUTORIAL_COMPLETED_EVENT,
   TUTORIAL_STATUS,
   TUTORIAL_STORAGE_KEY,
   createTutorialProgress,
@@ -259,9 +260,15 @@ test('a tutorial session borrows COUNTRYSIDE and the LEARNER CAR, then restores 
   assert.equal(sessionPolicy(harness.state).graduatesTo, 'normal');
   assert.equal(progress.status(TURN_TUTORIAL.id), TUTORIAL_STATUS.IN_PROGRESS);
 
+  const completions = [];
+  const onCompleted = (event) => completions.push(event.detail);
+  globalThis.addEventListener(TUTORIAL_COMPLETED_EVENT, onCompleted);
   globalThis.dispatchEvent(new CustomEvent('turn:session-graduated', { detail: { policy: 'normal' } }));
+  globalThis.removeEventListener(TUTORIAL_COMPLETED_EVENT, onCompleted);
   assert.equal(session.graduated, true);
   assert.equal(session.firstCompletion, true);
+  assert.deepEqual(completions, [{ id: TURN_TUTORIAL.id, revision: TURN_TUTORIAL.revision, firstCompletion: true }],
+    'The line announces the first completion, which is what the reward listens for');
   assert.equal(progress.status(TURN_TUTORIAL.id), TUTORIAL_STATUS.COMPLETED);
 
   harness.state.sessionPolicy = SESSION_POLICY.sandbox;
@@ -312,6 +319,12 @@ test('replay and STOP TUTORIAL', async () => {
   const replaySession = createTutorialSession({ ...replay, progress });
   await replaySession.enter();
   assert.equal(sessionPolicy(replay.state).graduatesTo, 'sandbox');
+  const replayCompletions = [];
+  const onReplayCompleted = (event) => replayCompletions.push(event.detail.firstCompletion);
+  globalThis.addEventListener(TUTORIAL_COMPLETED_EVENT, onReplayCompleted);
+  globalThis.dispatchEvent(new CustomEvent('turn:session-graduated', { detail: { policy: 'sandbox' } }));
+  globalThis.removeEventListener(TUTORIAL_COMPLETED_EVENT, onReplayCompleted);
+  assert.deepEqual(replayCompletions, [false], 'A replay is a completion, but not the first: no second reward');
   await replaySession.exit();
 
   memory.clear();
@@ -323,6 +336,19 @@ test('replay and STOP TUTORIAL', async () => {
   assert.equal(fresh.startsOnLaunch(TURN_TUTORIAL.id), false, 'STOP TUTORIAL ends automatic starts');
   assert.equal(fresh.status(TURN_TUTORIAL.id), TUTORIAL_STATUS.IN_PROGRESS);
   assert.equal(harness.state.trackId, 'airport');
+});
+
+test('TURN TUTORIAL earns 25 trophies in Ways to play, outside Getting started', async () => {
+  const catalog = await import('../turn/achievements/catalog.js');
+  const achievement = catalog.ACHIEVEMENTS.find((entry) => entry.id === catalog.TURN_TUTORIAL_ACHIEVEMENT.id);
+  assert.ok(achievement, 'In the achievements catalog');
+  assert.equal(achievement.trophies, 25);
+  assert.equal(achievement.category, 'ways-to-play');
+  assert.equal(catalog.ONBOARDING_ACHIEVEMENT_IDS.includes(achievement.id), false,
+    'Existing players never play it, so it cannot hold up Getting started');
+  const runtime = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/achievements/runtime.js', import.meta.url), 'utf8'));
+  assert.match(runtime, /addEventListener\(TUTORIAL_COMPLETED_EVENT[\s\S]{0,200}firstCompletion !== true\) return;\s*unlock\(\[TURN_TUTORIAL_ACHIEVEMENT\.id\]/,
+    'Only the first completion unlocks it');
 });
 
 test('the coach teaches DRIVE, BOOST and DRIFT by doing, with no failure state', () => {

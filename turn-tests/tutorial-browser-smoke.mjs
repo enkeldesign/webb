@@ -52,7 +52,8 @@ const inspect = (page) => page.evaluate(() => {
     track: state.trackId,
     car: state.vehicleId,
     ghosts: state.competitorLaps.map((lap) => Boolean(lap.sessionOnly)),
-    firstTurn: globalThis.__turnAchievements.store.isUnlocked('first-turn')
+    firstTurn: globalThis.__turnAchievements.store.isUnlocked('first-turn'),
+    tutorialAchievement: globalThis.__turnAchievements.store.isUnlocked('turn-tutorial')
   };
 });
 
@@ -163,11 +164,17 @@ try {
     assert.equal(await page.locator('.turn-tutorial-prompt').count(), 1, 'TUTORIAL COMPLETE is still there after a pause');
     await page.evaluate(() => globalThis.__turnRacePause.resume());
     await page.waitForFunction(() => !document.querySelector('.turn-tutorial-prompt'), null, { timeout: 10000 });
+    // The award is shown at this finish, once TUTORIAL COMPLETE has had its moment.
+    await page.waitForFunction(() => {
+      const toast = globalThis.__turnAchievements.toast;
+      return toast && !toast.hidden && /TURN TUTORIAL/.test(toast.textContent);
+    }, null, { timeout: 10000 });
     current = await inspect(page);
     assert.equal(current.policy, 'normal', 'The run continues as ordinary TURN');
     assert.equal(current.tutorial.status, 'completed');
     assert.deepEqual(current.ghosts, [true], 'The teaching lap is the ghost to catch, for this run only');
     assert.equal(current.firstTurn, false, 'FIRST TURN never comes from the teaching lap');
+    assert.equal(current.tutorialAchievement, true, 'Finishing TURN TUTORIAL earns its own achievement at the line');
     assert.equal(current.running, true, 'No menu between the teaching lap and ordinary racing');
 
     await crossFinish(page);
@@ -187,6 +194,7 @@ try {
     const current = await inspect(page);
     assert.equal(current.tutorial.status, 'completed');
     assert.equal(current.tutorial.migrated, true);
+    assert.equal(current.tutorialAchievement, false, 'Players who already knew TURN are not rewarded for a tutorial they skipped');
     assert.equal(current.entry, true, 'They can still play it from HOW TO PLAY');
   });
 
