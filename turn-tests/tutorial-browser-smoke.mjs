@@ -109,6 +109,21 @@ try {
     // TURN dialogs focus their heading first, so a screen reader starts at the title.
     assert.equal(await page.evaluate(() => Boolean(document.activeElement?.closest('.m8-tutorial-dialog'))), true,
       'Focus moves into the TURN TUTORIAL card');
+    // DRIVE BY EAR TUTORIAL is an optional first route, not a gate (#1133).
+    await page.waitForFunction(() => Boolean(globalThis.__turnDbeTrainingMusicSilence));
+    await page.locator('[data-tutorial-dbe]').click();
+    await page.waitForFunction(() => document.querySelector('#turnDbeTrainingTitle')?.closest('dialog')?.open);
+    assert.equal(await page.locator('#turnDbeTrainingTitle').textContent(), 'DRIVE BY EAR TUTORIAL', 'No "101" in the name');
+    assert.equal((await inspect(page)).card, false, 'One tutorial at a time');
+    assert.equal(await page.evaluate(() => globalThis.__turnDbeTrainingMusicSilence.active), true,
+      'The menu music goes quiet for DRIVE BY EAR TUTORIAL, as on every other way in');
+    await page.locator('#turnDbeTrainingTitle').locator('xpath=ancestor::dialog').locator('[data-training-cancel]').first().click();
+    await page.waitForFunction(() => Boolean(document.querySelector('.m8-tutorial-dialog[open]')));
+    assert.equal(await page.evaluate(() => globalThis.__turnDbeTrainingMusicSilence.active), false,
+      'And comes back when the player returns to TURN TUTORIAL');
+    current = await inspect(page);
+    assert.equal(current.tutorial.status, 'not-started', 'Coming back from DRIVE BY EAR TUTORIAL, TURN TUTORIAL is offered again');
+    assert.equal(current.tutorial.remindersOff, false);
     await page.locator('[data-tutorial-skip]').click();
     current = await inspect(page);
     assert.equal(current.card, false);

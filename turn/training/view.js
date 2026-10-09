@@ -148,8 +148,8 @@ function createDialogs() {
     content: `
       <article class="m8-dialog-card turn-dbe-training-card">
         <header class="m8-dialog-head">
-          <div><span>FIVE GUIDED PARTS</span><h2 id="turnDbeTrainingTitle">DRIVE BY EAR 101</h2></div>
-          <button type="button" data-training-cancel aria-label="Close Drive By Ear 101">×</button>
+          <div><span>FIVE GUIDED PARTS</span><h2 id="turnDbeTrainingTitle">DRIVE BY EAR TUTORIAL</h2></div>
+          <button type="button" data-training-cancel aria-label="Close Drive By Ear tutorial">×</button>
         </header>
         <div class="turn-dbe-training-copy">
           <p data-training-intro-copy>Learn TURN's spatial guidance one layer at a time. Training temporarily uses the slow-moving vehicle and puts Drive By Ear at 100% of the sound mix. Your car and audio choices return when you leave.</p>
@@ -192,7 +192,7 @@ function createDialogs() {
       <article class="m8-dialog-card turn-dbe-training-card">
         <header class="m8-dialog-head">
           <div><span class="turn-dbe-training-part-kicker"></span><h2 id="turnDbePartTitle"></h2></div>
-          <button type="button" data-training-leave aria-label="Leave Drive By Ear 101">×</button>
+          <button type="button" data-training-leave aria-label="Leave Drive By Ear tutorial">×</button>
         </header>
         <div class="turn-dbe-training-copy">
           <p class="turn-dbe-training-part-lead"></p>
@@ -264,7 +264,7 @@ function installEntryPoints(openTraining) {
   const homeButton = document.createElement('button');
   homeButton.type = 'button';
   homeButton.className = 'm8-feedback-button turn-dbe-training-home';
-  homeButton.textContent = 'DRIVE BY EAR 101';
+  homeButton.textContent = 'DRIVE BY EAR TUTORIAL';
   homeButton.setAttribute('aria-haspopup', 'dialog');
   howButton.after(homeButton);
 
@@ -272,14 +272,14 @@ function installEntryPoints(openTraining) {
   howCallout.className = 'turn-dbe-training-how';
   howCallout.innerHTML = `
     <p><strong>Learn by listening.</strong> Try five short guided parts covering the ribbon, pace notes, status sounds and off-road recovery.</p>
-    <button type="button" data-turn-dbe-training-entry>START DRIVE BY EAR 101</button>`;
+    <button type="button" data-turn-dbe-training-entry>START DRIVE BY EAR TUTORIAL</button>`;
   howDisclosure.before(howCallout);
 
   const settingsCallout = document.createElement('div');
   settingsCallout.className = 'turn-dbe-training-settings';
   settingsCallout.innerHTML = `
     <p>New to these sounds?</p>
-    <button type="button" data-turn-dbe-training-entry>TRY DRIVE BY EAR 101</button>`;
+    <button type="button" data-turn-dbe-training-entry>TRY DRIVE BY EAR TUTORIAL</button>`;
   settingsAudio.appendChild(settingsCallout);
 
   homeButton.addEventListener('click', () => openTraining(homeButton));
@@ -299,7 +299,7 @@ function installBalanceSuggestion() {
     const current = Number(slider.value) || 0;
     if (!mentioned && previous < BALANCE_SUGGESTION_THRESHOLD && current >= BALANCE_SUGGESTION_THRESHOLD) {
       mentioned = true;
-      status.textContent = 'Drive By Ear is prominent in the sound mix. Drive By Ear 101 can help you recognise its guidance.';
+      status.textContent = 'Drive By Ear is prominent in the sound mix. DRIVE BY EAR TUTORIAL can help you recognise its guidance.';
     }
     previous = current;
   });
@@ -319,7 +319,7 @@ function installBlankScreenSuggestion({ openTraining, isTrainingActive }) {
           <button type="button" data-blank-continue aria-label="Close training suggestion">×</button>
         </header>
         <div class="turn-dbe-training-copy">
-          <p>Blank screen mode lets you drive using sound. Drive By Ear 101 introduces the ribbon, pace notes, status sounds and off-road recovery before you rely on them in a race.</p>
+          <p>Blank screen mode lets you drive using sound. DRIVE BY EAR TUTORIAL introduces the ribbon, pace notes, status sounds and off-road recovery before you rely on them in a race.</p>
           <div class="turn-dbe-training-actions">
             <button type="button" data-blank-continue>CONTINUE</button>
             <button type="button" data-training-primary data-blank-training>TRY TRAINING</button>

@@ -70,6 +70,9 @@ assert.match(screenReaderCoordinator, /const VIEWPORT_SETTLE_MS = 1200/,
 assert.match(screenReaderCoordinator, /function installViewportWatch\(\)[\s\S]*window\.addEventListener\('resize', handleViewportChange[\s\S]*window\.addEventListener\('orientationchange', handleViewportChange[\s\S]*visualViewport\?\.addEventListener\('resize', handleViewportChange/,
   'The onboarding coordinator follows viewport and OS orientation transitions');
 assert.match(screenReaderCoordinator, /function scheduleNonVisualOnboarding\(\)[\s\S]*speak\(`TURN is ready\. \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`/);
+assert.match(screenReaderCoordinator, /const NON_VISUAL_ONBOARDING_MESSAGE = '[^']*choose Drive By Ear tutorial\.[^']*jump directly to Drive By Ear tutorial\.'/,
+  'Screen readers hear the same name as the button: Drive By Ear tutorial');
+assert.doesNotMatch(screenReaderCoordinator, /one oh one/, 'The old 101 name is gone from the spoken onboarding');
 assert.doesNotMatch(screenReaderCoordinator, /viewportIsPortrait|Rotate your device to landscape/,
   'Home must neither request rotation nor withhold existing onboarding in portrait');
 assert.doesNotMatch(screenReaderCoordinator, /speak\(`\$\{readyMessage\} \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`/,
@@ -80,7 +83,7 @@ assert.match(fixedLayout, /achievements\/trophy-road-feedback\.js\?build=\$\{bui
 assert.match(fixedLayout, /installAchievementUnreadMarkers\(achievements\)/);
 assert.match(fixedLayout, /achievementUnreadMarkers,/);
 assert.match(fixedLayout, /function installDriveByEarSpokenLabels\(training\)/);
-assert.match(fixedLayout, /const spokenName = 'Drive By Ear one oh one'/);
+assert.match(fixedLayout, /const spokenName = 'Drive By Ear tutorial'/);
 assert.match(fixedLayout, /homeButton\?\.setAttribute\('aria-label', spokenName\)/);
 assert.match(fixedLayout, /installDriveByEarSpokenLabels\(driveByEarTraining\)/);
 assert.match(unreadMarkers, /new Set\(achievements\.store\.unseenIds\(\)\)/);

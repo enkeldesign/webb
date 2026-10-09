@@ -233,7 +233,7 @@ assert.match(designReference, /Standardize the shell, not the content/);
 assert.match(designReference, /Production dialog inventory/);
 assert.match(designReference, /About TURN/);
 assert.match(designReference, /Development history &amp; changelog/);
-assert.match(designReference, /Drive By Ear 101 introduction/);
+assert.match(designReference, /DRIVE BY EAR TUTORIAL introduction/);
 assert.match(designReference, /Motion access denied/);
 assert.match(designReference, /In-race audio settings/);
 assert.match(designReference, /Compact[\s\S]*Standard[\s\S]*Wide[\s\S]*Reader/);

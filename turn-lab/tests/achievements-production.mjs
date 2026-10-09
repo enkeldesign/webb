@@ -120,7 +120,7 @@ assert.equal(byId('drive-by-ear')?.title, 'DRIVE BY EAR');
 assert.equal(byId('drive-by-ear')?.trophies, 50);
 assert.equal(byId('drive-by-ear')?.category, 'ways-to-play');
 assert.equal(byId('drive-by-ear')?.progressMax, DRIVE_BY_EAR_PART_IDS.length);
-assert.equal(byId('drive-by-ear')?.description, 'Finish all five parts of Drive By Ear 101.');
+assert.equal(byId('drive-by-ear')?.description, 'Finish all five parts of DRIVE BY EAR TUTORIAL.');
 assert.equal(byId('listen-closely')?.trophies, 100);
 assert.equal(byId('catch-the-charge')?.title, 'CATCH THE CHARGE');
 assert.equal(byId('catch-the-charge')?.trophies, 25);

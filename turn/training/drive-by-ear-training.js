@@ -64,6 +64,8 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     frame: 0,
     lastFrameAt: 0,
     returnFocus: null,
+    // Called once when this visit to the tutorial ends (intro closed or tutorial left).
+    onClose: null,
     snapshot: null,
     preparedAccess: null
   };
@@ -148,11 +150,20 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
   function cancelIntro() {
     hideTrainingDialog(view.introDialog);
     session.returnFocus?.focus?.();
+    closed();
   }
 
-  async function openTraining(trigger) {
+  // TURN TUTORIAL offers this tutorial first and comes back once it ends (#1133).
+  function closed() {
+    const onClose = session.onClose;
+    session.onClose = null;
+    onClose?.();
+  }
+
+  async function openTraining(trigger, { onClose } = {}) {
     if (session.active) return;
     session.returnFocus = trigger;
+    session.onClose = typeof onClose === 'function' ? onClose : null;
     closeSourceDialog(trigger);
     if (runtime.state.running || runtime.state.rewardPreview) {
       await home.leaveRaceForHome();
@@ -235,7 +246,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       mapWrap.classList.add('turn-dbe-training-hidden-map');
       resetButton.textContent = 'Restart Part';
       leaveButton.textContent = 'Leave Training';
-      leaveButton.setAttribute('aria-label', 'Leave Drive By Ear 101 and return Home');
+      leaveButton.setAttribute('aria-label', 'Leave Drive By Ear tutorial and return Home');
       runtime.openGarage = leaveTraining;
 
       const fullscreenPromise = first ? session.preparedAccess?.fullscreenPromise : Promise.resolve(false);
@@ -452,6 +463,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     globalThis.dispatchEvent(new CustomEvent(LEARNING_FEEDBACK_READY_EVENT, {
       detail: Object.freeze({ source: 'drive-by-ear-training' })
     }));
+    closed();
     return true;
   }
 

@@ -3,7 +3,7 @@
   const SKIP_STYLE_ID = 'turn-screen-reader-skip-link-styles';
   const TRAINING_SPEECH_CHANNEL = 'dbe-training';
   const VIEWPORT_SETTLE_MS = 1200;
-  const NON_VISUAL_ONBOARDING_MESSAGE = 'Non-visual onboarding. To race, choose a track on Home, then choose a car. For a guided introduction to Drive By Ear and non-visual gameplay, choose Drive By Ear one oh one. The first two links on Home let you replay this introduction or jump directly to Drive By Ear one oh one.';
+  const NON_VISUAL_ONBOARDING_MESSAGE = 'Non-visual onboarding. To race, choose a track on Home, then choose a car. For a guided introduction to Drive By Ear and non-visual gameplay, choose Drive By Ear tutorial. The first two links on Home let you replay this introduction or jump directly to Drive By Ear tutorial.';
   const MENU_GLYPHS = new Set(['…', '⋮', '☰']);
   const TRAINING_START_MESSAGES = Object.freeze({
     'dbe-training-1': 'Part one, Find the ribbon. Steer toward the warm guiding hum and keep it centred.',
@@ -505,7 +505,7 @@
     navigation.setAttribute('aria-label', 'Accessibility shortcuts');
     navigation.innerHTML = `
       <a href="#turnNonVisualOnboarding">Non-visual onboarding</a>
-      <a href="#${trainingButton.id}">Drive By Ear 101</a>
+      <a href="#${trainingButton.id}">Drive By Ear tutorial</a>
     `;
 
     const onboardingTarget = document.createElement('div');

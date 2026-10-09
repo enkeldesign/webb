@@ -84,6 +84,7 @@ function createLaunchCard() {
       </div>
       <div class="m8-tutorial-actions">
         <button type="button" data-tutorial-start>START TUTORIAL</button>
+        <button type="button" data-tutorial-dbe>LEARN DRIVE BY EAR FIRST</button>
         <button type="button" data-tutorial-skip>SKIP TUTORIAL</button>
       </div>
       <p class="m8-tutorial-note">You can play TURN TUTORIAL any time from HOW TO PLAY.</p>
@@ -98,6 +99,11 @@ export function installTutorialEntry({
   startTutorial,
   announce = () => {},
   opensOnLaunch = () => opensTutorialOnLaunch(),
+  // DRIVE BY EAR TUTORIAL (training/drive-by-ear-training.js): onClose runs once it ends.
+  driveByEar = () => globalThis.__turnDriveByEarTraining || null,
+  // Like every other way into DRIVE BY EAR TUTORIAL, the menu music goes quiet
+  // (m8-home-fixed-layout.js restores it when the tutorial's introduction closes).
+  silenceMenuMusic = () => globalThis.__turnDbeTrainingMusicSilence?.silence?.(),
   module = TURN_TUTORIAL
 }) {
   installStyles();
@@ -124,6 +130,16 @@ export function installTutorialEntry({
     close();
     void startTutorial();
   });
+  // Learning TURN's sounds first is a choice, never a gate (#1133): TURN TUTORIAL comes
+  // back as soon as DRIVE BY EAR TUTORIAL ends.
+  const driveByEarButton = card.querySelector('[data-tutorial-dbe]');
+  driveByEarButton.addEventListener('click', () => {
+    const training = driveByEar();
+    if (!training?.open) return;
+    close();
+    silenceMenuMusic();
+    void training.open(driveByEarButton, { onClose: () => showLaunchCard() });
+  });
   card.querySelector('[data-tutorial-skip]').addEventListener('click', () => {
     progress.stop(module.id);
     close();
@@ -133,6 +149,7 @@ export function installTutorialEntry({
   // The first-launch card, shown while the tutorial still starts on launch.
   const showLaunchCard = () => {
     if (!progress.startsOnLaunch(module.id) || card.open) return false;
+    driveByEarButton.hidden = !driveByEar()?.open;
     // TURN dialogs move focus to their heading; START TUTORIAL is the first control.
     if (typeof card.showModal === 'function') card.showModal();
     else card.setAttribute('open', '');

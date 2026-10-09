@@ -165,7 +165,7 @@ export const DRIVE_BY_EAR_ACHIEVEMENT = Object.freeze({
   category: base.CATEGORY.WAYS_TO_PLAY,
   trophies: 50,
   title: 'DRIVE BY EAR',
-  description: 'Finish all five parts of Drive By Ear 101.',
+  description: 'Finish all five parts of DRIVE BY EAR TUTORIAL.',
   icon: DRIVE_BY_EAR_FAMILY_ICON,
   progressMax: DRIVE_BY_EAR_PART_IDS.length
 });
