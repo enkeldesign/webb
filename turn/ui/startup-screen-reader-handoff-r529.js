@@ -22,6 +22,7 @@
   let homeReadyHandled = false;
   let onboardingTimer = 0;
   let onboardingAnnounced = false;
+  let onboardingDeferred = false;
   let viewportWatchInstalled = false;
   let externalPriorityTimer = 0;
   let externalPriorityUntil = 0;
@@ -47,6 +48,18 @@
     onboardingTimer = window.setTimeout(() => {
       onboardingTimer = 0;
       if (!homeReadyHandled || onboardingAnnounced) return;
+      // A dialog open at launch (the TURN TUTORIAL card) speaks first. The general
+      // onboarding follows when it closes, unless the player has left Home for a race.
+      const launchDialog = document.querySelector('dialog[open]');
+      if (launchDialog) {
+        onboardingDeferred = true;
+        launchDialog.addEventListener('close', scheduleNonVisualOnboarding, { once: true });
+        return;
+      }
+      if (onboardingDeferred && !document.body.classList.contains('turn-home-open')) {
+        onboardingAnnounced = true;
+        return;
+      }
       onboardingAnnounced = true;
       removeViewportWatch();
       speak(`TURN is ready. ${NON_VISUAL_ONBOARDING_MESSAGE}`, { priority: 'assertive' });

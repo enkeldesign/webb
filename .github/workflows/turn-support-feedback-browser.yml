@@ -12,6 +12,8 @@ on:
       - 'turn/scripts/release.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
       - 'turn-tests/patrol-browser-smoke.mjs'
+      - 'turn-tests/tutorial-browser-smoke.mjs'
+      - 'turn/tutorial/**'
       - 'turn/race/reward-preview.js'
       - 'turn-tests/responsive-browser-smoke.mjs'
       - 'turn-tests/race-menu-browser-smoke.mjs'
@@ -66,6 +68,8 @@ on:
       - 'turn/scripts/release.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
       - 'turn-tests/patrol-browser-smoke.mjs'
+      - 'turn-tests/tutorial-browser-smoke.mjs'
+      - 'turn/tutorial/**'
       - 'turn/race/reward-preview.js'
       - 'turn-tests/responsive-browser-smoke.mjs'
       - 'turn-tests/race-menu-browser-smoke.mjs'
@@ -133,6 +137,7 @@ jobs:
               turn-tests/race-menu-browser-smoke.mjs
               turn-tests/support-feedback-browser-smoke.mjs
               turn-tests/patrol-browser-smoke.mjs
+              turn-tests/tutorial-browser-smoke.mjs
           - shard: garage
             tests: >-
               turn-tests/garage-browser-smoke.mjs

@@ -1,0 +1,165 @@
+import assert from 'node:assert/strict';
+import { chromium } from 'playwright';
+import { TROPHY_ROAD_STORAGE_VERSION } from '../turn/progression/trophy-road.js';
+
+// TURN TUTORIAL entry (#1132) on the production page: the first-launch card, STOP
+// TUTORIAL, and a full teaching lap through graduation. Same server as the
+// support-feedback browser smokes.
+const target = process.env.TURN_SUPPORT_FEEDBACK_URL || 'http://127.0.0.1:8000/';
+const browser = await chromium.launch({ headless: true });
+
+async function openTurn({ admin = true, played = false } = {}) {
+  const context = await browser.newContext({ viewport: { width: 844, height: 390 }, reducedMotion: 'reduce' });
+  const page = await context.newPage();
+  page.setDefaultTimeout(30000);
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.addInitScript(({ admin, played, storageVersion }) => {
+    if (globalThis.sessionStorage.getItem('turn-tutorial-smoke-seeded')) return;
+    globalThis.sessionStorage.setItem('turn-tutorial-smoke-seeded', '1');
+    localStorage.setItem('turn-low-graphics-v1', '1');
+    localStorage.setItem('turn-steering-mode-v1', 'manual');
+    localStorage.setItem('turn-audio-enabled-v1', 'off');
+    localStorage.setItem('turn-racing-music-volume-v1', '0');
+    if (admin) localStorage.setItem('turn-admin-unlock-v1', JSON.stringify({ at: Date.now() }));
+    if (played) {
+      localStorage.setItem('turn-achievements-v1', JSON.stringify({
+        version: storageVersion,
+        unlocked: { 'first-turn': { unlockedAt: Date.now() } }
+      }));
+    }
+  }, { admin, played, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
+  await page.addInitScript(() => {
+    Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
+  });
+  await page.goto(new URL('turn/', target).href);
+  await page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready')
+    && globalThis.__turnNextHome?.tutorial, null, { timeout: 60000 });
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  return { context, page, errors };
+}
+
+const inspect = (page) => page.evaluate(() => {
+  const { progress, session } = globalThis.__turnNextHome.tutorial;
+  const { state } = globalThis.__turnRuntime;
+  return {
+    card: Boolean(document.querySelector('.m8-tutorial-dialog[open]')),
+    entry: Boolean(document.querySelector('.m8-how-dialog [data-tutorial-replay]')),
+    tutorial: progress.get('turn-tutorial'),
+    active: session.active,
+    policy: state.sessionPolicy?.id || 'normal',
+    running: state.running,
+    track: state.trackId,
+    car: state.vehicleId,
+    ghosts: state.competitorLaps.map((lap) => Boolean(lap.sessionOnly)),
+    firstTurn: globalThis.__turnAchievements.store.isUnlocked('first-turn')
+  };
+});
+
+async function crossFinish(page) {
+  const lap = await page.evaluate(() => globalThis.__turnRuntime.state.lap);
+  await page.evaluate(async () => {
+    const map = JSON.parse(document.querySelector('[type="importmap"]').textContent).imports;
+    const { raceNow } = await import(map['/turn/race/race-clock.js']);
+    const { LAP_CHECKPOINTS } = await import('/turn/race/lap-system.js?build=20260720-r19');
+    const { state, samples } = globalThis.__turnRuntime;
+    const start = samples[0];
+    state.lapActive = true;
+    state.lapStartedAt = raceNow() - 90_000;
+    state.lapCheckpointIndex = LAP_CHECKPOINTS.length;
+    state.lapInvalid = false;
+    state.position.copy(start.point).addScaledVector(start.tangent, -1);
+    state.lapPreviousPosition = { x: state.position.x, z: state.position.z };
+    state.heading = Math.atan2(start.tangent.x, start.tangent.z);
+    state.velocity.copy(start.tangent).multiplyScalar(35);
+    state.speed = 35;
+    state.recording = Array.from({ length: 25 }, (_, i) => ({
+      t: i, x: start.point.x, z: start.point.z, h: state.heading, p: i / 25
+    }));
+  });
+  await page.waitForFunction((previous) => globalThis.__turnRuntime.state.lap > previous, lap);
+}
+
+async function run(name, options, scenario) {
+  const { context, page, errors } = await openTurn(options);
+  try {
+    await scenario(page);
+    assert.deepEqual(errors, [], `${name}: no page errors`);
+    console.log(`Chromium: ${name} passed.`);
+  } finally {
+    await context.close();
+  }
+}
+
+try {
+  const showLaunchCard = (page) => page.evaluate(() => globalThis.__turnNextHome.tutorial.entry.showLaunchCard());
+
+  await run('first launch card and STOP TUTORIAL', {}, async (page) => {
+    let current = await inspect(page);
+    assert.equal(current.card, false, 'While admin-only, the card does not open by itself at launch');
+    assert.equal(await showLaunchCard(page), true, 'A new player gets the TURN TUTORIAL card');
+    current = await inspect(page);
+    assert.equal(current.card, true);
+    assert.equal(current.entry, true, 'HOW TO PLAY offers TURN TUTORIAL');
+    // TURN dialogs focus their heading first, so a screen reader starts at the title.
+    assert.equal(await page.evaluate(() => Boolean(document.activeElement?.closest('.m8-tutorial-dialog'))), true,
+      'Focus moves into the TURN TUTORIAL card');
+    await page.locator('[data-tutorial-stop]').click();
+    current = await inspect(page);
+    assert.equal(current.card, false);
+    assert.equal(current.tutorial.remindersOff, true, 'STOP TUTORIAL turns automatic starts off');
+    assert.equal(current.tutorial.status, 'not-started', 'Stopping is not completion');
+    await page.reload();
+    await page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready')
+      && globalThis.__turnNextHome?.tutorial);
+    assert.equal(await showLaunchCard(page), false, 'A stopped tutorial does not start on the next launch');
+    assert.equal((await inspect(page)).card, false);
+  });
+
+  await run('teaching lap, graduation and the self-ghost', {}, async (page) => {
+    await showLaunchCard(page);
+    await page.locator('[data-tutorial-start]').click();
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.running);
+    await page.waitForFunction(() => !document.querySelector('dialog[open]'));
+    let current = await inspect(page);
+    assert.equal(current.track, 'countryside');
+    assert.equal(current.car, 'classic', 'The LEARNER CAR');
+    assert.equal(current.policy, 'tutorial-lap');
+    assert.deepEqual(current.ghosts, [], 'No rival drives ahead of the teaching lap');
+    assert.equal(current.tutorial.status, 'in-progress');
+
+    await crossFinish(page);
+    current = await inspect(page);
+    assert.equal(current.policy, 'normal', 'The run continues as ordinary TURN');
+    assert.equal(current.tutorial.status, 'completed');
+    assert.deepEqual(current.ghosts, [true], 'The teaching lap is the ghost to catch, for this run only');
+    assert.equal(current.firstTurn, false, 'FIRST TURN never comes from the teaching lap');
+    assert.equal(current.running, true, 'No menu between the teaching lap and ordinary racing');
+
+    await crossFinish(page);
+    current = await inspect(page);
+    assert.equal(current.firstTurn, true, 'The first ordinary lap earns FIRST TURN');
+
+    await page.evaluate(() => globalThis.__turnRuntime.openHome());
+    current = await inspect(page);
+    assert.equal(current.active, false);
+    assert.equal(current.policy, 'normal');
+    assert.equal(current.card, false, 'A completed tutorial does not start again');
+  });
+
+  await run('existing player', { played: true }, async (page) => {
+    assert.equal(await showLaunchCard(page), false, 'An existing player is not put through the tutorial');
+    const current = await inspect(page);
+    assert.equal(current.tutorial.status, 'completed');
+    assert.equal(current.tutorial.migrated, true);
+    assert.equal(current.entry, true, 'They can still play it from HOW TO PLAY');
+  });
+
+  await run('players without the admin unlock', { admin: false }, async (page) => {
+    const current = await inspect(page);
+    assert.equal(current.card, false, 'The tutorial stays admin-only until the teaching lap ships');
+    assert.equal(current.entry, false);
+  });
+} finally {
+  await browser.close();
+}
