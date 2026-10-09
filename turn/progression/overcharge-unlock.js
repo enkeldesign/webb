@@ -1,4 +1,4 @@
-import { TROPHY_ROAD_STORAGE_KEY, isFeatureUnlocked } from './trophy-road.js';
+import { TROPHY_ROAD_STORAGE_KEY, isFeatureUnlocked, readTrophyRoadSnapshot } from './trophy-road.js';
 
 // OVERCHARGE unlocks with DRIFT ATTACK (#1150): the first laps teach BOOST and DRIFT
 // alone, and OVERCHARGE arrives once the player has raced with them. Players who knew
@@ -17,20 +17,30 @@ function storageOf(storage) {
   }
 }
 
+// The Trophy Road's own reading of a profile, legacy ones included: saved rivals or a
+// historical car choice from before achievements count as having played.
 function playedBefore(storage) {
   try {
+    const snapshot = readTrophyRoadSnapshot(storage);
+    if (snapshot.isLegacyProfile || snapshot.unlockedRewardIds.length || snapshot.legacyTrackIds.length) return true;
     const state = JSON.parse(storage?.getItem?.(TROPHY_ROAD_STORAGE_KEY) || 'null');
-    return Object.keys(state?.unlocked || {}).length > 0
-      || (Array.isArray(state?.rewards?.unlocked) && state.rewards.unlocked.length > 0);
+    return Object.keys(state?.unlocked || {}).length > 0;
   } catch (_) {
     return false;
   }
 }
 
+// Website data blocked: TURN plays from a memory stand-in that forgets every visit
+// (index.html marks it), so no progress could ever reach DRIFT ATTACK.
+function memoryOnly(documentRef) {
+  return documentRef?.documentElement?.dataset?.turnStorage === 'memory';
+}
+
 // 'kept' for a profile that played before OVERCHARGE was gated, 'locked' for a new
 // one, decided at its first launch of this release and then remembered. null without
-// storage: nothing could be earned or remembered, so nothing is held back.
-export function settleOverchargeProfile(storage) {
+// lasting storage: nothing could be earned or remembered, so nothing is held back.
+export function settleOverchargeProfile(storage, documentRef = globalThis.document) {
+  if (memoryOnly(documentRef)) return null;
   const target = storageOf(storage);
   try {
     const stored = target?.getItem?.(OVERCHARGE_PROFILE_KEY);
@@ -46,7 +56,7 @@ export function settleOverchargeProfile(storage) {
 
 export function isOverchargeAvailable({ storage, documentRef = globalThis.document } = {}) {
   if (documentRef?.documentElement?.dataset?.turnDeployment === 'yourturn') return true;
-  const profile = settleOverchargeProfile(storage);
+  const profile = settleOverchargeProfile(storage, documentRef);
   if (profile !== 'locked') return true;
   try {
     return isFeatureUnlocked(OVERCHARGE_FEATURE_ID, storageOf(storage));

@@ -301,6 +301,15 @@ assert.doesNotMatch(source, /driftHeld|boostActive|shiftActive|overcharge/i,
   const yourTurn = { documentElement: { dataset: { turnDeployment: 'yourturn' } } };
   assert.equal(isOverchargeAvailable({ storage: profile(), documentRef: yourTurn }), true, 'YOUR TURN is unchanged');
   assert.equal(isOverchargeAvailable({ storage: null }), true, 'Without storage nothing is held back');
+  const memoryVisit = profile();
+  const blockedData = { documentElement: { dataset: { turnStorage: 'memory' } } };
+  assert.equal(isOverchargeAvailable({ storage: memoryVisit, documentRef: blockedData }), true,
+    'Nor with the memory stand-in TURN uses when website data is blocked');
+  assert.equal(memoryVisit.getItem(OVERCHARGE_PROFILE_KEY), null);
+  const legacy = profile();
+  legacy.setItem('turn-vehicle-selection-v1', JSON.stringify({ carId: 'sports' }));
+  assert.equal(settleOverchargeProfile(legacy), 'kept',
+    'A legacy profile the Trophy Road recognises (rivals, an older car choice) keeps it');
 
   const catalog = await import('../turn/achievements/catalog.js');
   for (const id of ['catch-the-charge', 'head-start']) {
