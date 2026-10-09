@@ -1,4 +1,5 @@
 import { LEARNING_FEEDBACK_READY_EVENT } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
+import { applyCourseRescue } from './course-rescue.js';
 import { createTurnTutorialCoach } from './turn-tutorial-coach.js';
 
 // The TURN TUTORIAL prompt (#1132): one polite live region, so every lesson is both
@@ -125,6 +126,10 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
     last = now;
     if (state.running && globalThis.__turnRacePause?.paused !== true) {
       coach.update(dt);
+      // The teaching lap only: ordinary racing after the line has no rescue.
+      if (!graduated && dt > 0) {
+        applyCourseRescue({ state, samples: runtime.samples, trackWidth: runtime.trackWidth || 27, dt });
+      }
       if (graduationLeft > 0) {
         graduationLeft -= dt;
         if (graduationLeft <= 0) {

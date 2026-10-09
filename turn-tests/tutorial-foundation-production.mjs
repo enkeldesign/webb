@@ -365,6 +365,38 @@ test('ABOUT TURN, the first-launch card and HOW TO PLAY say what TURN is for', a
   assert.match(entry, /SKIP TUTORIAL/);
 });
 
+test('course rescue leaves ordinary off-road driving alone and stops a big mistake', async () => {
+  const { applyCourseRescue, COURSE_RESCUE } = await import('../turn/tutorial/course-rescue.js');
+  // A straight stretch heading +z; the off-road line is 0.58 x 27 = 15.66 m from the centre.
+  const samples = [{ point: { x: 0, z: 0 }, tangent: { x: 0, z: 1 }, normal: { x: 1, z: 0 } }];
+  const line = 27 * 0.58;
+  const car = (x, vx) => ({ nearestTrackIndex: 0, position: { x, z: 0 }, velocity: { x: vx, z: 20 }, speed: 0 });
+  const rescue = (state) => applyCourseRescue({ state, samples, trackWidth: 27, dt: 0.1 });
+
+  const onRoad = car(10, 3);
+  assert.equal(rescue(onRoad), 'none');
+  assert.deepEqual(onRoad.velocity, { x: 3, z: 20 }, 'On the road nothing is touched');
+  const justOff = car(line + 1, 3);
+  assert.equal(rescue(justOff), 'none', 'Briefly off the road is ordinary driving, with its usual penalty');
+
+  for (const side of [1, -1]) {
+    const drifting = car(side * (line + COURSE_RESCUE.softFrom + 3), side * 6);
+    assert.equal(rescue(drifting), 'push');
+    assert.ok(drifting.velocity.x * side < 6, 'Heading away from the road is slowed');
+    assert.equal(drifting.velocity.z, 20, 'Forward motion is kept');
+    assert.ok(drifting.speed > 0);
+
+    const lost = car(side * (line + COURSE_RESCUE.limit + 10), side * 6);
+    assert.equal(rescue(lost), 'limit');
+    assert.ok(Math.abs(Math.abs(lost.position.x) - (line + COURSE_RESCUE.limit)) < 1e-9, 'Held at the remote limit');
+    assert.ok(lost.velocity.x * side < 0, 'Turned back towards the road');
+    assert.ok(Math.abs(lost.velocity.z - 20 * 0.82) < 1e-9, 'Still moving forward, not snapped back');
+  }
+  assert.equal(applyCourseRescue({ state: car(40, 0), samples: [], trackWidth: 27, dt: 0.1 }), 'none', 'No sample, no rescue');
+  const prompt = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/tutorial/tutorial-prompt.js', import.meta.url), 'utf8'));
+  assert.match(prompt, /if \(!graduated && dt > 0\) \{\s*applyCourseRescue/, 'Only on the teaching lap');
+});
+
 test('TURN TUTORIAL earns 25 trophies in Ways to play, outside Getting started', async () => {
   const catalog = await import('../turn/achievements/catalog.js');
   const achievement = catalog.ACHIEVEMENTS.find((entry) => entry.id === catalog.TURN_TUTORIAL_ACHIEVEMENT.id);
