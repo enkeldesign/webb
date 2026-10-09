@@ -88,9 +88,9 @@ export function createTutorialProgress({
   return Object.freeze({
     get: (id) => ({ ...record(id) }),
     status: (id) => record(id).status,
-    // A new player's first race starts the tutorial, and so does every later race
-    // until they finish it or stop it.
-    startsOnRace(id) {
+    // A new player's first launch of TURN starts the tutorial, and so does every later
+    // launch until they finish it or stop it.
+    startsOnLaunch(id) {
       const current = record(id);
       return current.status !== TUTORIAL_STATUS.COMPLETED && !current.remindersOff;
     },

@@ -174,24 +174,24 @@ test('tutorial lifecycle: start, interrupt, stop, complete and replay', () => {
   let progress = makeProgress();
   const id = TURN_TUTORIAL.id;
   assert.equal(progress.status(id), TUTORIAL_STATUS.NOT_STARTED);
-  assert.equal(progress.startsOnRace(id), true, 'A new player\'s first race starts the tutorial');
+  assert.equal(progress.startsOnLaunch(id), true, 'A new player\'s first launch starts the tutorial');
   assert.equal(memory.has(TUTORIAL_STORAGE_KEY), false, 'Reading a new profile writes nothing');
 
   progress.begin(id);
   progress = makeProgress();
   assert.equal(progress.status(id), TUTORIAL_STATUS.IN_PROGRESS, 'Leaving mid-tutorial keeps it in progress');
-  assert.equal(progress.startsOnRace(id), true, 'The next race starts it again');
+  assert.equal(progress.startsOnLaunch(id), true, 'The next launch starts it again');
 
   progress.stop(id);
   progress = makeProgress();
-  assert.equal(progress.startsOnRace(id), false, 'STOP TUTORIAL turns the reminders off');
+  assert.equal(progress.startsOnLaunch(id), false, 'STOP TUTORIAL turns the reminders off');
   assert.equal(progress.status(id), TUTORIAL_STATUS.IN_PROGRESS, 'Stopping is not completion');
 
   progress.begin(id);
   assert.equal(progress.complete(id, TURN_TUTORIAL.revision), true, 'The first completion is the rewarded one');
   progress = makeProgress();
   assert.equal(progress.status(id), TUTORIAL_STATUS.COMPLETED);
-  assert.equal(progress.startsOnRace(id), false, 'A completed tutorial never starts by itself');
+  assert.equal(progress.startsOnLaunch(id), false, 'A completed tutorial never starts by itself');
 
   progress.begin(id);
   assert.equal(progress.status(id), TUTORIAL_STATUS.COMPLETED, 'A replay keeps the tutorial completed');
@@ -205,14 +205,14 @@ test('existing players count as completed, without a reward, when first consider
   let asked = 0;
   const progress = makeProgress(() => { asked += 1; return true; });
   assert.equal(asked, 0, 'Nothing is decided when the module loads');
-  assert.equal(progress.startsOnRace(TURN_TUTORIAL.id), false);
+  assert.equal(progress.startsOnLaunch(TURN_TUTORIAL.id), false);
   assert.equal(progress.get(TURN_TUTORIAL.id).migrated, true);
   assert.equal(makeProgress(() => false).status(TURN_TUTORIAL.id), TUTORIAL_STATUS.COMPLETED, 'Stored once');
   // A player who stopped the tutorial and then played normally keeps their choice.
   memory.clear();
   makeProgress().stop(TURN_TUTORIAL.id);
   assert.equal(makeProgress(() => true).status(TURN_TUTORIAL.id), TUTORIAL_STATUS.NOT_STARTED);
-  assert.equal(makeProgress(() => true).startsOnRace(TURN_TUTORIAL.id), false);
+  assert.equal(makeProgress(() => true).startsOnLaunch(TURN_TUTORIAL.id), false);
 
   memory.clear();
   const store = createAchievementStore(globalThis.localStorage);
@@ -292,7 +292,7 @@ test('replay and STOP TUTORIAL', async () => {
   const session = createTutorialSession({ ...harness, progress: fresh });
   await session.enter();
   await session.stop();
-  assert.equal(fresh.startsOnRace(TURN_TUTORIAL.id), false, 'STOP TUTORIAL ends automatic starts');
+  assert.equal(fresh.startsOnLaunch(TURN_TUTORIAL.id), false, 'STOP TUTORIAL ends automatic starts');
   assert.equal(fresh.status(TURN_TUTORIAL.id), TUTORIAL_STATUS.IN_PROGRESS);
   assert.equal(harness.state.trackId, 'airport');
 });
