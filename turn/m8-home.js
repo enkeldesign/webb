@@ -11,6 +11,7 @@ import { DRIFT_ATTACK_TUTORIAL, TURN_TUTORIAL, createTutorialProgress } from './
 import { createTutorialSession } from './tutorial/tutorial-session.js';
 import { installDriftAttackEntry, installTutorialEntry } from './tutorial/tutorial-entry.js';
 import { isFeatureUnlocked } from './progression/trophy-road.js';
+import { installUnlockIntroductions } from './progression/unlock-introductions.js';
 import { startTurnTutorialCoach } from './tutorial/tutorial-prompt.js';
 import { startDriftAttackCoach } from './tutorial/drift-attack-coach.js';
 import { loadSteeringHelp, saveSteeringHelp } from './tutorial/steering-help.js';
@@ -743,6 +744,8 @@ export async function installM8HomeNavigation() {
     startTutorial: () => startTutorial(DRIFT_ATTACK_TUTORIAL.id),
     isUnlocked: () => isFeatureUnlocked('drift-attack')
   });
+  // DRIFT ATTACK, SHIFT and FLOW are introduced on Home when they unlock (#1149).
+  const unlockIntroductions = installUnlockIntroductions({ startTutorial });
 
   howButton.addEventListener('click', () => {
     driftAttackEntry.sync();
@@ -781,6 +784,7 @@ export async function installM8HomeNavigation() {
       entry: tutorialEntry,
       driftAttackEntry
     }),
+    unlockIntroductions,
     leaveRaceForHome,
     getSelectedTrackId: () => selectedTrackId,
     getSteeringMode: loadSteeringMode

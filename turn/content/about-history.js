@@ -373,6 +373,10 @@ export const CHANGELOG = Object.freeze([
       [
         "DRIFT ATTACK TUTORIAL",
         "One lap of COUNTRYSIDE that teaches DRIFT scoring and OVERCHARGE, which now unlocks with DRIFT ATTACK: build it, catch it on GAS, hold it, then spend it with BOOST. Play it from HOW TO PLAY."
+      ],
+      [
+        "Unlock introductions",
+        "When DRIFT ATTACK, SHIFT or FLOW unlocks, Home explains it in a sheet that stays until you close it. DRIFT ATTACK offers its tutorial, and the next GARAGE visit points out ACTIVATE SHIFT."
       ]
     ]
   }

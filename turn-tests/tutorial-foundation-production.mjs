@@ -698,6 +698,29 @@ test('DRIFT ATTACK TUTORIAL is its own module, offered in HOW TO PLAY once DRIFT
   assert.match(entry, /\.m8-drift-attack-entry\[hidden\] \{ display: none; \}/, 'Hidden until DRIFT ATTACK unlocks');
 });
 
+test('unlock introductions queue new DRIFT ATTACK, SHIFT and FLOW unlocks once', async () => {
+  const intro = await import('../turn/progression/unlock-introductions.js');
+  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(queue.unlocked(['compact', 'medium-tracks']), false, 'Only DRIFT ATTACK, SHIFT and FLOW are introduced');
+  assert.equal(queue.unlocked(['shift', 'flow']), true);
+  assert.equal(queue.next(), 'shift', 'One at a time, in unlock order');
+  queue.introduced('shift');
+  assert.equal(queue.hasHint('garage-shift'), true, 'SHIFT points GARAGE at ACTIVATE SHIFT next time');
+  assert.equal(queue.unlocked(['shift']), false, 'Never introduced twice');
+  const reloaded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(reloaded.next(), 'flow', 'Waiting introductions survive closing TURN');
+  reloaded.consumeHint('garage-shift');
+  assert.equal(reloaded.hasHint('garage-shift'), false);
+  assert.equal(reloaded.unlocked(['shift'], { replay: true }), true, 'Admin UNLOCK replays one');
+  assert.equal(intro.UNLOCK_INTRODUCTIONS['drift-attack'].action.label, 'START DRIFT ATTACK TUTORIAL');
+  assert.match(intro.UNLOCK_INTRODUCTIONS['drift-attack'].copy.join(' '), /OVERCHARGE/);
+  assert.equal(intro.introducesOnUnlock({ location: { hostname: 'enkel.design' }, navigator: {} }), true,
+    'Players see them as soon as they are back on Home');
+  assert.equal(intro.introducesOnUnlock({ location: { hostname: 'localhost' }, navigator: {} }, { getItem: () => null }), false,
+    'Test suites earning rewards are not interrupted');
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {

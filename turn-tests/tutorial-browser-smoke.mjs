@@ -9,13 +9,15 @@ import { TROPHY_ROAD_STORAGE_VERSION } from '../turn/progression/trophy-road.js'
 const target = process.env.TURN_SUPPORT_FEEDBACK_URL || 'http://127.0.0.1:8000/';
 const browser = await chromium.launch({ headless: true });
 
-async function openTurn({ played = false, launch = false, steeringHelp = false, driftAttack = false } = {}) {
+async function openTurn({
+  played = false, launch = false, steeringHelp = false, driftAttack = false, rewards = [], admin = false, introductions = false
+} = {}) {
   const context = await browser.newContext({ viewport: { width: 844, height: 390 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.addInitScript(({ played, launch, steeringHelp, driftAttack, storageVersion }) => {
+  await page.addInitScript(({ played, launch, steeringHelp, driftAttack, rewards, admin, introductions, storageVersion }) => {
     if (globalThis.sessionStorage.getItem('turn-tutorial-smoke-seeded')) return;
     globalThis.sessionStorage.setItem('turn-tutorial-smoke-seeded', '1');
     localStorage.setItem('turn-low-graphics-v1', '1');
@@ -24,14 +26,17 @@ async function openTurn({ played = false, launch = false, steeringHelp = false, 
     localStorage.setItem('turn-racing-music-volume-v1', '0');
     if (launch) localStorage.setItem('turn-tutorial-launch-under-test', '1');
     if (steeringHelp) localStorage.setItem('turn-tutorial-steering-help-v1', 'on');
-    if (played || driftAttack) {
+    if (admin) localStorage.setItem('turn-admin-unlock-v1', JSON.stringify({ version: 2, activatedAt: Date.now() }));
+    if (introductions) localStorage.setItem('turn-unlock-introductions-under-test', '1');
+    const unlockedRewards = [...(driftAttack ? ['drift-attack'] : []), ...rewards];
+    if (played || unlockedRewards.length) {
       localStorage.setItem('turn-achievements-v1', JSON.stringify({
         version: storageVersion,
         unlocked: { 'first-turn': { unlockedAt: Date.now() } },
-        ...(driftAttack ? { rewards: { unlocked: ['drift-attack'] } } : {})
+        ...(unlockedRewards.length ? { rewards: { unlocked: unlockedRewards } } : {})
       }));
     }
-  }, { played, launch, steeringHelp, driftAttack, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
+  }, { played, launch, steeringHelp, driftAttack, rewards, admin, introductions, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
   await page.addInitScript(() => {
     Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
   });
@@ -340,6 +345,38 @@ try {
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.driftAttackSession.active), false,
       'Going Home restores the player\'s own track and car');
     assert.equal(await page.locator('.turn-tutorial-prompt').count(), 0);
+  });
+
+  // Unlock introductions (#1149): explained on Home when DRIFT ATTACK, SHIFT or FLOW unlocks.
+  await run('SHIFT introduction and the GARAGE hint', { rewards: ['shift'], introductions: true }, async (page) => {
+    const sheet = page.locator('.m8-unlock-sheet');
+    await page.evaluate(() => globalThis.dispatchEvent(new CustomEvent('turn:trophy-road-updated', { detail: { unlocked: ['shift'] } })));
+    await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open);
+    assert.equal(await sheet.locator('h2').textContent(), 'SHIFT');
+    assert.match(await sheet.locator('.m8-unlock-note').textContent(), /GARAGE/);
+    assert.equal(await page.evaluate(() => document.activeElement?.id), 'turnUnlockTitle', 'Focus starts on the title');
+    await sheet.locator('[data-unlock-close]').click();
+    assert.equal(await page.evaluate(() => document.querySelector('.m8-unlock-sheet').open), false, 'It stays until closed, then goes');
+    assert.deepEqual(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.snapshot()),
+      { pending: [], shown: ['shift'], hints: ['garage-shift'] });
+    await page.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
+    await page.waitForFunction(() => Boolean(document.querySelector('.garage-shift.is-introduced')), null, { timeout: 30000 });
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-shift')), false,
+      'ACTIVATE SHIFT is pointed out once');
+  });
+
+  await run('admin UNLOCK replays an introduction', { driftAttack: true, admin: true }, async (page) => {
+    const admin = page.locator('.roadbook-admin');
+    assert.deepEqual(await admin.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW']);
+    await admin.locator('[data-admin-unlock="drift-attack"]').click();
+    await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open);
+    const sheet = page.locator('.m8-unlock-sheet');
+    assert.match(await sheet.textContent(), /OVERCHARGE comes with it/);
+    assert.equal(await sheet.locator('[data-unlock-action]').textContent(), 'START DRIFT ATTACK TUTORIAL');
+    await sheet.locator('[data-unlock-action]').click();
+    await page.waitForFunction(() => globalThis.__turnNextHome.tutorial.driftAttackSession.active
+      && globalThis.__turnRuntime.state.running);
+    assert.equal((await inspect(page)).policy, 'tutorial-lap', 'The introduction starts DRIFT ATTACK TUTORIAL');
   });
 
   await run('existing player', { played: true, launch: true }, async (page) => {

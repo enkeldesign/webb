@@ -1,5 +1,5 @@
 {
-  "release": "20261009-r425",
+  "release": "20261009-r426",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -305,6 +305,7 @@
     "/turn/progression/trophy-road-r157.css",
     "/turn/progression/trophy-road.css",
     "/turn/progression/trophy-road.js",
+    "/turn/progression/unlock-introductions.js",
     "/turn/pwa-short-viewport-repair-r184.js",
     "/turn/pwa-usable-viewport-r181.js",
     "/turn/r104-polish.css",
