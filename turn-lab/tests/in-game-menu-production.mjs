@@ -43,7 +43,7 @@ assert.match(
 );
 assert.match(
   index,
-  new RegExp(`"/turn/ui/in-game-menu\\.js\\?build=20260809-r163": "/turn/ui/in-game-menu\\.js\\?build=${release.cacheKey}&revision=r163-restart-source-label"`),
+  new RegExp(`"/turn/ui/in-game-menu\\.js\\?build=${release.cacheKey}": "/turn/ui/in-game-menu\\.js\\?build=${release.cacheKey}&revision=r163-restart-source-label"`),
   'The source-owned restart label patch must bypass any cached r163 menu module'
 );
 assert.match(app, /installStylesheet\('\.\/r104-polish\.css', 'data-turn-r104-polish'\)/);
