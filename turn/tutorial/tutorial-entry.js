@@ -101,6 +101,9 @@ export function installTutorialEntry({
   opensOnLaunch = () => opensTutorialOnLaunch(),
   // DRIVE BY EAR TUTORIAL (training/drive-by-ear-training.js): onClose runs once it ends.
   driveByEar = () => globalThis.__turnDriveByEarTraining || null,
+  // Like every other way into DRIVE BY EAR TUTORIAL, the menu music goes quiet
+  // (m8-home-fixed-layout.js restores it when the tutorial's introduction closes).
+  silenceMenuMusic = () => globalThis.__turnDbeTrainingMusicSilence?.silence?.(),
   module = TURN_TUTORIAL
 }) {
   installStyles();
@@ -134,6 +137,7 @@ export function installTutorialEntry({
     const training = driveByEar();
     if (!training?.open) return;
     close();
+    silenceMenuMusic();
     void training.open(driveByEarButton, { onClose: () => showLaunchCard() });
   });
   card.querySelector('[data-tutorial-skip]').addEventListener('click', () => {
