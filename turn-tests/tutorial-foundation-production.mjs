@@ -338,6 +338,21 @@ test('replay and STOP TUTORIAL', async () => {
   assert.equal(harness.state.trackId, 'airport');
 });
 
+test('the first-launch card opens for players, and in test runs only when asked', async () => {
+  const { opensTutorialOnLaunch, LAUNCH_UNDER_TEST_KEY } = await import('../turn/tutorial/tutorial-entry.js');
+  const at = (hostname, { webdriver = false, optIn = false } = {}) => opensTutorialOnLaunch({
+    location: { hostname },
+    navigator: { webdriver },
+    localStorage: { getItem: (key) => (optIn && key === LAUNCH_UNDER_TEST_KEY ? '1' : null) }
+  });
+  assert.equal(at('enkel.design'), true, 'A player\'s launch');
+  assert.equal(at('claude-turn-game-review-gz74.turntest.pages.dev'), true, 'Preview builds behave like the game');
+  assert.equal(at('enkel.design', { webdriver: true }), false, 'Browser automation');
+  assert.equal(at('127.0.0.1'), false, 'The local test server');
+  assert.equal(at('127.0.0.1', { webdriver: true, optIn: true }), true, 'A test of the first launch opts in');
+  assert.equal(opensTutorialOnLaunch({ location: { hostname: '127.0.0.1' }, navigator: {}, get localStorage() { throw new Error('blocked'); } }), false);
+});
+
 test('TURN TUTORIAL earns 25 trophies in Ways to play, outside Getting started', async () => {
   const catalog = await import('../turn/achievements/catalog.js');
   const achievement = catalog.ACHIEVEMENTS.find((entry) => entry.id === catalog.TURN_TUTORIAL_ACHIEVEMENT.id);

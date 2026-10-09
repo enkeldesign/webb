@@ -3,16 +3,22 @@ import { TURN_TUTORIAL } from './tutorial-progress.js';
 // TURN TUTORIAL entry points (#1132): the card a new player sees on their first launch
 // of TURN, and the TURN TUTORIAL entry in HOW TO PLAY. iOS grants motion steering and
 // sound only from a tap, so the first launch opens this card instead of driving off.
-//
-// Until the teaching lap is complete, only admin-unlocked profiles see the HOW TO PLAY
-// entry, and the card does not open by itself at launch: admin profiles are also the
-// test profiles, and the release turns the first-launch start on for everyone at once.
-const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 const STYLE_ID = 'turn-tutorial-entry-styles';
 
-export function tutorialEntryEnabled(storage = globalThis.localStorage) {
+// What TURN is for, said where a new player starts and at the top of HOW TO PLAY, where
+// players who never saw the first-launch card find it too.
+export const TURN_GOAL_TEXT = 'TURN is about the feel of the drive and getting faster. Your best laps become rivals to beat, and trophies unlock new tracks, cars and ways to play.';
+
+// The card opens by itself for players, not in automated or local runs: the test suites
+// open TURN with fresh profiles all the time. As in offline.js, a test that covers the
+// first launch opts in with LAUNCH_UNDER_TEST_KEY.
+export const LAUNCH_UNDER_TEST_KEY = 'turn-tutorial-launch-under-test';
+
+export function opensTutorialOnLaunch(windowRef = globalThis) {
+  const local = /^(?:localhost|127\.0\.0\.1|\[::1\])$/.test(windowRef.location?.hostname || '');
+  if (!windowRef.navigator?.webdriver && !local) return true;
   try {
-    return Boolean(storage?.getItem?.(ADMIN_UNLOCK_MARKER));
+    return windowRef.localStorage?.getItem(LAUNCH_UNDER_TEST_KEY) === '1';
   } catch {
     return false;
   }
@@ -50,6 +56,9 @@ function installStyles() {
       font-size: var(--turn-type-small);
       line-height: var(--turn-leading-body);
     }
+    .m8-tutorial-copy p { margin: 0; }
+    .m8-tutorial-copy p + p { margin-top: var(--turn-space-2); }
+    .m8-tutorial-entry .m8-tutorial-goal { font-size: var(--turn-type-body); }
     .m8-tutorial-entry {
       display: grid;
       gap: var(--turn-space-2);
@@ -69,7 +78,10 @@ function createLaunchCard() {
       <header class="m8-dialog-head">
         <div><span>WELCOME TO TURN</span><h2 id="turnTutorialTitle">TURN TUTORIAL</h2></div>
       </header>
-      <p class="m8-tutorial-copy" id="turnTutorialCopy">Learn TURN by playing one lap of COUNTRYSIDE in the LEARNER CAR. When you cross the line, your own lap becomes the rival to catch.</p>
+      <div class="m8-tutorial-copy" id="turnTutorialCopy">
+        <p>${TURN_GOAL_TEXT}</p>
+        <p>Start with one lap of COUNTRYSIDE in the LEARNER CAR.</p>
+      </div>
       <div class="m8-tutorial-actions">
         <button type="button" data-tutorial-start>START TUTORIAL</button>
         <button type="button" data-tutorial-stop>STOP TUTORIAL</button>
@@ -85,17 +97,16 @@ export function installTutorialEntry({
   progress,
   startTutorial,
   announce = () => {},
-  enabled = () => tutorialEntryEnabled(),
-  opensOnLaunch = () => false,
+  opensOnLaunch = () => opensTutorialOnLaunch(),
   module = TURN_TUTORIAL
 }) {
-  if (!enabled()) return null;
   installStyles();
 
   // HOW TO PLAY: always available, first run or replay.
   const entry = document.createElement('section');
   entry.className = 'm8-tutorial-entry';
   entry.innerHTML = `
+    <p class="m8-tutorial-goal">${TURN_GOAL_TEXT}</p>
     <button type="button" data-tutorial-replay>TURN TUTORIAL</button>
     <p>Learn TURN by playing one lap of COUNTRYSIDE.</p>`;
   howDialog?.querySelector('.m8-guide-grid')?.before(entry);
