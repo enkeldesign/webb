@@ -1,5 +1,5 @@
 {
-  "release": "20261009-r423",
+  "release": "20261009-r424",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -301,6 +301,7 @@
     "/turn/platform/web-platform.js",
     "/turn/position-hud-r83.css",
     "/turn/pre-race.css",
+    "/turn/progression/overcharge-unlock.js",
     "/turn/progression/trophy-road-r157.css",
     "/turn/progression/trophy-road.css",
     "/turn/progression/trophy-road.js",

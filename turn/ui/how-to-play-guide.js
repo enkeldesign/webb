@@ -3,6 +3,7 @@ import {
   HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT,
   LEARNING_FEEDBACK_READY_EVENT
 } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
+import { isOverchargeAvailable } from '../progression/overcharge-unlock.js';
 
 const GUIDE_VERSION = 'r263-how-to-play-copy';
 const PACE_NOTE_EXPLANATION = "Pace notes are swipes. Before every bend, a swipe travels out to the ear on the bend's side and ends before the bend begins. Higher pitch means a tighter bend, a quick swipe a short bend and a slower swipe a long one. A bend of more than 120° is told as linked swipes, and bends that follow each other link into one phrase in the order you will meet them. Pace notes need stereo: use headphones or hold the device so both speakers face you.";
@@ -24,6 +25,7 @@ export function installHowToPlayGuide(root = document) {
   updateTrackAndCarCopy(dialog);
   updateDriveControlCopy(dialog);
   updateDriftAndBoostCopy(dialog);
+  installOverchargeUnlockNote(dialog);
   installShiftAndScoringSections(dialog);
   installDriveByEarDisclosure(dialog);
   installGuideCardDisclosures(dialog);
@@ -61,6 +63,7 @@ function updateDriftAndBoostCopy(dialog) {
   content.innerHTML = `
     <h3>Build and use OVERCHARGE</h3>
     <p><strong>DRIFT</strong> charges <strong>BOOST</strong> as you slide. With BOOST full, keep using DRIFT to build purple <strong>OVERCHARGE</strong>.</p>
+    <p class="m8-overcharge-unlock" data-overcharge-unlock hidden><strong>OVERCHARGE unlocks with DRIFT ATTACK</strong> on the Trophy Road. Until then, DRIFT charges BOOST.</p>
     <details class="m8-guide-disclosure m8-overcharge-guide" data-how-to-play-disclosure="catch-and-use-overcharge">
       <summary><span class="m8-disclosure-symbol" aria-hidden="true"></span><span>How to catch and use OVERCHARGE</span></summary>
       <div class="m8-guide-disclosure-panel">
@@ -73,6 +76,23 @@ function updateDriftAndBoostCopy(dialog) {
         <p class="m8-overcharge-leak"><strong>WATCH THE PEAK</strong> Uncaught OVERCHARGE leaks. At its peak, it starts leaking even while you keep using DRIFT.</p>
       </div>
     </details>`;
+}
+
+// Players who have not unlocked OVERCHARGE yet (progression/overcharge-unlock.js) are
+// told where it comes from; the note goes once it is theirs.
+function installOverchargeUnlockNote(dialog) {
+  const note = dialog.querySelector('[data-overcharge-unlock]');
+  if (!note) return;
+  const sync = () => {
+    let available = true;
+    try {
+      available = isOverchargeAvailable();
+    } catch (_) {}
+    note.hidden = available;
+  };
+  sync();
+  dialog.addEventListener('toggle', sync);
+  globalThis.addEventListener?.('turn:trophy-road-updated', sync);
 }
 
 function makeGuideSection(dialog, { id, number, title, copy }) {

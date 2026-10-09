@@ -94,8 +94,8 @@ assert.equal(ACHIEVEMENTS.length, 72,
   'Production TURN must expose 55 core achievements plus 17 scoring achievements');
 assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 72,
   'Production achievement ids must remain unique');
-assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 12,
-  'GOT STARTED must remain the master of the twelve prerequisite Getting Started achievements, not recursively require itself');
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10,
+  'GOT STARTED must remain the master of the ten prerequisite Getting Started achievements, not recursively require itself; CATCH THE CHARGE and HEAD START need OVERCHARGE, which comes with DRIFT ATTACK (#1150)');
 assert.equal(totalAvailableTrophies(), 5350,
   'Eight tracks expose the complete 5,350-trophy supply');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300,
@@ -124,7 +124,7 @@ assert.equal(byId('drive-by-ear')?.description, 'Finish all five parts of DRIVE 
 assert.equal(byId('listen-closely')?.trophies, 100);
 assert.equal(byId('catch-the-charge')?.title, 'CATCH THE CHARGE');
 assert.equal(byId('catch-the-charge')?.trophies, 25);
-assert.equal(byId('catch-the-charge')?.category, 'onboarding');
+assert.equal(byId('catch-the-charge')?.category, 'scoring');
 assert.equal(Object.hasOwn(byId('catch-the-charge') || {}, 'progressMax'), false,
   'CATCH THE CHARGE must not imply a timed GAS hold');
 assert.equal(
@@ -133,7 +133,7 @@ assert.equal(
 );
 assert.equal(byId('head-start')?.title, 'HEAD START');
 assert.equal(byId('head-start')?.trophies, 50);
-assert.equal(byId('head-start')?.category, 'onboarding');
+assert.equal(byId('head-start')?.category, 'scoring');
 assert.equal(byId('head-start')?.description,
   'Finish a valid lap with OVERCHARGE, then use that carried OVERCHARGE with BOOST to beat it on the next lap.');
 assert.equal(byId('head-start')?.recommendation,
@@ -145,7 +145,7 @@ assert.match(ICONS.headStart || '', /Checkered finish/,
   'HEAD START must keep its authored two-row finish-line motif');
 assert.match(ICONS.headStart || '', /Launch streaks/,
   'HEAD START must keep the two launch streaks under the car');
-assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('head-start'), true);
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('head-start'), false, 'HEAD START needs OVERCHARGE, which comes with DRIFT ATTACK (#1150)');
 assert.equal(byId('golden-hour')?.title, 'MAYDAY!');
 assert.equal(byId('golden-hour')?.trophies, 100);
 assert.equal(byId('golden-hour')?.hidden, true);
