@@ -7,7 +7,7 @@ function installSharedAboutStyles() {
   if (document.querySelector('link[data-turn-about-privacy]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = '/turn/about-privacy.css?build=20261009-r413';
+  link.href = '/turn/about-privacy.css?build=20261009-r414';
   link.setAttribute('data-turn-about-privacy', '');
   document.head.appendChild(link);
 }
@@ -17,7 +17,15 @@ export function aboutTurnHtml() {
     <div class="turn-about-shared-copy yourturn-about-copy">
       <p class="m8-about-lead">TURN is a racing game about tilt steering, personal rivals and learning to drive by ear.</p>
       <p class="m8-about-summary">Built through inclusive and universal design so players can use sight, sound, touch, motion, a keyboard or assistive technology.</p>
-      <p class="m8-about-credits">© 2026 <a href="https://enkel.design/" target="_blank" rel="noreferrer">enkel.design</a>. Created by Erik Jansson, aided by OpenAI Codex and Claude Opus. Game assets include <a href="https://kenney.nl" target="_blank" rel="noreferrer">Kenney Game Assets</a>. Drive By Ear™ is inspired by <a href="https://ceal.cs.columbia.edu/rad/" target="_blank" rel="noreferrer">RAD – Racing Auditory Display</a>. The install-page accessibility symbol is <a href="https://commons.wikimedia.org/wiki/File:Accessibility.svg" target="_blank" rel="noreferrer">Accessibility.svg</a> by Dave Braunschweig, licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA 4.0</a>.</p>
+      <p class="m8-about-credits">© 2026 <a href="https://enkel.design/" target="_blank" rel="noreferrer">enkel.design</a>. Created by Erik Jansson, aided by OpenAI Codex and Claude Opus.</p>
+      <details class="turn-about-privacy turn-about-acknowledgements">
+        <summary>ACKNOWLEDGEMENTS</summary>
+        <div class="turn-about-privacy-copy">
+          <p>Game assets include <a href="https://kenney.nl" target="_blank" rel="noreferrer">Kenney Game Assets</a>.</p>
+          <p>Drive By Ear™ is inspired by <a href="https://ceal.cs.columbia.edu/rad/" target="_blank" rel="noreferrer">RAD – Racing Auditory Display</a>.</p>
+          <p>The install-page accessibility symbol is <a href="https://commons.wikimedia.org/wiki/File:Accessibility.svg" target="_blank" rel="noreferrer">Accessibility.svg</a> by Dave Braunschweig, licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA 4.0</a>. It is based on <a href="https://fontawesome.com/" target="_blank" rel="noreferrer">Font Awesome Free</a> 5.2.0 by Fonticons, Inc., licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>.</p>
+        </div>
+      </details>
       <details class="turn-about-privacy">
         <summary>PRIVACY &amp; USAGE STATISTICS</summary>
         <div class="turn-about-privacy-copy">
