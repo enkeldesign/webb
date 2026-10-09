@@ -1,5 +1,5 @@
 {
-  "release": "20261009-r415",
+  "release": "20261009-r416",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -432,6 +432,9 @@
     "/turn/training/drive-by-ear-training.js",
     "/turn/training/stages.js",
     "/turn/training/view.js",
+    "/turn/tutorial/tutorial-entry.js",
+    "/turn/tutorial/tutorial-progress.js",
+    "/turn/tutorial/tutorial-session.js",
     "/turn/ui/about-history-bootstrap-r165.js",
     "/turn/ui/app-navigation.js",
     "/turn/ui/authored-icons.js",

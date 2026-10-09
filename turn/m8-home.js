@@ -7,6 +7,9 @@ import { activateTrack } from '/turn/tracks/track-manager.js?source=20260729-r11
 import { showTrackIntro } from '/turn/ui/track-intro.js?source=20260729-r118-m8';
 import { installRoadbook } from '/turn/roadbook/roadbook.js';
 import { createRewardPreviewSession } from './race/reward-preview.js';
+import { TURN_TUTORIAL, createTutorialProgress } from './tutorial/tutorial-progress.js';
+import { createTutorialSession } from './tutorial/tutorial-session.js';
+import { installTutorialEntry } from './tutorial/tutorial-entry.js';
 import { trackIconMarkup } from '/turn/ui/track-icons.js';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';
 import {
@@ -555,7 +558,7 @@ export async function installM8HomeNavigation() {
   }
 
   async function continueToTrack() {
-    if (setupPending || rewardPreview.active) return false;
+    if (setupPending || rewardPreview.active || tutorialSession.active) return false;
     document.querySelector('.turn-setup-failure')?.remove();
     let garageOpened = false;
     let reloading = false;
@@ -641,7 +644,7 @@ export async function installM8HomeNavigation() {
   });
 
   async function startRewardPreview(challenge) {
-    if (setupPending || rewardPreview.active) return false;
+    if (setupPending || rewardPreview.active || tutorialSession.active) return false;
     setupPending = true;
     try {
       return await rewardPreview.start(challenge);
@@ -650,12 +653,56 @@ export async function installM8HomeNavigation() {
     }
   }
 
+  const tutorialProgress = createTutorialProgress();
+  const tutorialSession = createTutorialSession({
+    state: runtime.state,
+    raceSession,
+    activateTrack: (trackId, options) => activateTrack(trackId, runtime, options),
+    progress: tutorialProgress,
+    syncRivals: () => runtime.syncCompetitorVisuals?.()
+  });
+
+  // TURN TUTORIAL (#1132): COUNTRYSIDE in the LEARNER CAR, then ordinary TURN.
+  async function startTutorial() {
+    if (setupPending || rewardPreview.active || tutorialSession.active || runtime.state.running) return false;
+    setupPending = true;
+    try {
+      // Request iOS motion access in the START tap, before loading any content.
+      const access = await (loadSteeringMode() === STEERING_MODE.MOTION
+        ? raceSession.prepareMotionAccess()
+        : raceSession.prepareManualAccess());
+      hideHome();
+      await tutorialSession.enter();
+      await showTrackIntro(TURN_TUTORIAL.trackId);
+      await raceSession.startGame(access.fullscreenPromise);
+      return true;
+    } catch (error) {
+      console.warn('TURN: TURN TUTORIAL could not start.', error);
+      await tutorialSession.exit().catch(() => {});
+      showHome({ focus: true });
+      homeStatus.textContent = 'TURN TUTORIAL could not start. Try again from HOW TO PLAY.';
+      return false;
+    } finally {
+      setupPending = false;
+    }
+  }
+
   async function leaveRaceForHome() {
     raceSession.leaveRace();
     if (rewardPreview.active) await rewardPreview.restore();
+    if (tutorialSession.active) await tutorialSession.exit();
     showHome({ focus: true });
     return true;
   }
+
+  installTutorialEntry({
+    howDialog,
+    progress: tutorialProgress,
+    startTutorial,
+    announce(message) {
+      homeStatus.textContent = message;
+    }
+  });
 
   howButton.addEventListener('click', () => openDialog(howDialog, howButton));
   homeSettingsButton.addEventListener('click', () => {
@@ -683,6 +730,8 @@ export async function installM8HomeNavigation() {
     hideHome,
     continueToTrack,
     startRewardPreview,
+    startTutorial,
+    tutorial: Object.freeze({ progress: tutorialProgress, session: tutorialSession }),
     leaveRaceForHome,
     getSelectedTrackId: () => selectedTrackId,
     getSteeringMode: loadSteeringMode

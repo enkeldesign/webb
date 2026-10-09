@@ -49,6 +49,9 @@
       if (!homeReadyHandled || onboardingAnnounced) return;
       onboardingAnnounced = true;
       removeViewportWatch();
+      // A dialog open at launch (the TURN TUTORIAL card) is the onboarding: do not
+      // speak over it.
+      if (document.querySelector('dialog[open]')) return;
       speak(`TURN is ready. ${NON_VISUAL_ONBOARDING_MESSAGE}`, { priority: 'assertive' });
     }, VIEWPORT_SETTLE_MS);
   }
