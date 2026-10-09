@@ -353,6 +353,16 @@ test('the first-launch card opens for players, and in test runs only when asked'
   assert.equal(opensTutorialOnLaunch({ location: { hostname: '127.0.0.1' }, navigator: {}, get localStorage() { throw new Error('blocked'); } }), false);
 });
 
+test('ABOUT TURN, the first-launch card and HOW TO PLAY say what TURN is for', async () => {
+  const fs = await import('node:fs');
+  const about = fs.readFileSync(new URL('../turn/content/about-turn.js', import.meta.url), 'utf8');
+  const entry = fs.readFileSync(new URL('../turn/tutorial/tutorial-entry.js', import.meta.url), 'utf8');
+  const goal = /the feel of the drive and getting faster\. Your best laps become rivals to beat, and trophies unlock new tracks, cars and ways to play\./;
+  assert.match(about, goal, 'ABOUT TURN, linked from the install page and in the game');
+  assert.match(entry, goal, 'The first-launch card and HOW TO PLAY');
+  assert.match(entry, /SKIP TUTORIAL/);
+});
+
 test('TURN TUTORIAL earns 25 trophies in Ways to play, outside Getting started', async () => {
   const catalog = await import('../turn/achievements/catalog.js');
   const achievement = catalog.ACHIEVEMENTS.find((entry) => entry.id === catalog.TURN_TUTORIAL_ACHIEVEMENT.id);

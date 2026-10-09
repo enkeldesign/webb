@@ -9,8 +9,6 @@ const REVISION = 'r165-browser-about';
 const INSTALL_NOTE =
   'Install TURN as a home screen web app for the best fullscreen experience. You can also play here, but it is not recommended.';
 const INSTALL_PITCH = 'TURN is an accessible motion-controlled arcade drift racer.';
-// What TURN is for, as the first-launch card and HOW TO PLAY say it.
-const INSTALL_GOAL = 'It’s all about the feel of the drive and getting faster. Your best laps become rivals to beat, and trophies unlock new tracks, cars and ways to play.';
 // Unmodified Wikimedia Accessibility.svg, shipped locally with its existing About credit.
 const ACCESSIBILITY_SYMBOL_URL = new URL('../assets/icons/accessibility.svg', import.meta.url).href;
 const ACCESSIBILITY_FEATURES = Object.freeze([
@@ -292,15 +290,6 @@ function createWebsiteAboutDialog() {
   return dialog;
 }
 
-function ensureGoal(copy) {
-  let goal = copy.parentElement.querySelector('.install-goal');
-  if (goal) return goal;
-  goal = document.createElement('p');
-  goal.className = 'install-goal';
-  copy.after(goal);
-  return goal;
-}
-
 function ensureAccessibilitySummary(gate, actions) {
   let summary = gate.querySelector('.install-accessibility');
   if (summary) return summary;
@@ -347,7 +336,6 @@ function syncInstallGatePresentation() {
   if (!gate || !kicker || !actions || !installButton || !browserButton || !note || !copy) return null;
 
   copy.textContent = INSTALL_PITCH;
-  ensureGoal(copy).textContent = INSTALL_GOAL;
   ensureAccessibilitySummary(gate, actions);
 
   note.textContent = INSTALL_NOTE;

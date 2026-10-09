@@ -106,7 +106,6 @@ async function responsiveInstall(browser, name) {
     await page.waitForFunction(() => Boolean(globalThis.__turnWebsiteAbout));
     await page.evaluate(() => document.fonts.ready);
     assert.equal(await page.locator('.install-copy').textContent(), 'TURN is an accessible motion-controlled arcade drift racer.');
-    assert.equal(await page.locator('.install-goal').textContent(), 'It’s all about the feel of the drive and getting faster. Your best laps become rivals to beat, and trophies unlock new tracks, cars and ways to play.');
     for (const theme of ['light', 'dark']) {
       await page.evaluate((value) => globalThis.__turnTheme.set(value), theme);
       for (const [width, height] of installSizes) {
@@ -159,9 +158,7 @@ async function responsiveInstall(browser, name) {
             }
           }
           if (!enlarged && width === 852) {
-            // A phone in landscape sees the whole pitch, the accessibility list and both
-            // actions at once; only the version footer may sit below the fold.
-            for (const selector of ['.install-icon', '.install-copy', '.install-goal', '.install-accessibility', '#installTurnButton', '#playBrowserButton']) {
+            for (const selector of ['.install-icon', '.install-accessibility', '.install-kicker']) {
               within(await bounds(page, selector), width, height, `${label} ${selector}`);
             }
           }

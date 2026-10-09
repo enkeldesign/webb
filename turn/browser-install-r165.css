@@ -110,17 +110,6 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   text-align: center;
 }
 
-/* What TURN is for, under the pitch (as on the first-launch card and in HOW TO PLAY). */
-html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-goal {
-  max-width: var(--turn-content-max);
-  margin: var(--turn-space-3) 0 0;
-  color: var(--turn-text);
-  font-size: var(--turn-type-body);
-  font-weight: 700;
-  line-height: var(--turn-leading-body);
-  text-align: center;
-}
-
 .install-accessibility {
   width: min(100%, var(--turn-content-max));
   margin-top: var(--turn-space-8);
@@ -417,7 +406,6 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "copy"
-      "goal"
       "accessibility"
       "actions";
     column-gap: var(--turn-space-8);
@@ -431,12 +419,6 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
     grid-area: copy;
     justify-self: stretch;
     font-size: var(--turn-type-title);
-  }
-
-  html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-goal {
-    grid-area: goal;
-    justify-self: stretch;
-    margin-top: 0;
   }
 
   .install-accessibility {
@@ -490,10 +472,9 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loading) .install-card {
     grid-template-columns: minmax(0, 1fr) minmax(220px, 0.95fr);
     /* The feature list spans two rows; its height must not stretch the actions. */
-    grid-template-rows: max-content max-content max-content;
+    grid-template-rows: max-content max-content;
     grid-template-areas:
       "copy accessibility"
-      "goal accessibility"
       "actions accessibility";
   }
 }
