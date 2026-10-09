@@ -90,19 +90,19 @@ assert.equal(
   1825,
   'The base catalog must stay separate from production progression balancing'
 );
-assert.equal(ACHIEVEMENTS.length, 71,
-  'Production TURN must expose 54 core achievements plus 17 scoring achievements');
-assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 71,
+assert.equal(ACHIEVEMENTS.length, 72,
+  'Production TURN must expose 55 core achievements plus 17 scoring achievements');
+assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 72,
   'Production achievement ids must remain unique');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 12,
   'GOT STARTED must remain the master of the twelve prerequisite Getting Started achievements, not recursively require itself');
-assert.equal(totalAvailableTrophies(), 5325,
-  'Eight tracks expose the complete 5,325-trophy supply');
+assert.equal(totalAvailableTrophies(), 5350,
+  'Eight tracks expose the complete 5,350-trophy supply');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300,
   'Trophy Road uses the first 2300 trophies while the full catalog retains headroom');
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  5325
+  5350
 );
 assert.ok(ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.trophies)));
 assert.ok(ACHIEVEMENTS.every((achievement) => !Object.hasOwn(achievement, 'points')));

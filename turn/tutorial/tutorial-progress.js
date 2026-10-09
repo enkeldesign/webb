@@ -12,6 +12,9 @@ export const TUTORIAL_STATUS = Object.freeze({
   COMPLETED: 'completed'
 });
 
+// Dispatched at the line when a tutorial is completed: { id, revision, firstCompletion }.
+export const TUTORIAL_COMPLETED_EVENT = 'turn:tutorial-completed';
+
 export const TURN_TUTORIAL = Object.freeze({
   id: 'turn-tutorial',
   // Raise only for a revised tutorial. A player who completed any revision is never

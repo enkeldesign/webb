@@ -1,5 +1,5 @@
 import { tutorialLapPolicy } from '../race/session-policy.js';
-import { TURN_TUTORIAL, TUTORIAL_STATUS } from './tutorial-progress.js';
+import { TURN_TUTORIAL, TUTORIAL_COMPLETED_EVENT, TUTORIAL_STATUS } from './tutorial-progress.js';
 
 // One tutorial run (#1131). It borrows the tutorial's track and car without saving
 // them, races the teaching lap with no rival ahead, and switches to ordinary play at
@@ -23,6 +23,11 @@ export function createTutorialSession({
     if (!snapshot || graduated) return;
     graduated = true;
     firstCompletion = progress.complete(module.id, module.revision);
+    // The completion reward listens for this (achievements/runtime.js); only the first
+    // completion earns it.
+    events.dispatchEvent?.(new CustomEvent(TUTORIAL_COMPLETED_EVENT, {
+      detail: { id: module.id, revision: module.revision, firstCompletion }
+    }));
   };
 
   function clearRivals() {
