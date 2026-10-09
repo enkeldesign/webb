@@ -10,6 +10,7 @@ import {
 } from '../progression/trophy-road.js';
 import { completeTrackOrder, getTrackStorageRevision } from '../tracks/definitions.js';
 import { storedReplayFrameCount } from '../race/replay-codec.js';
+import { PATROL_CHALLENGE } from '../race/reward-preview.js';
 
 export const SUPPORT_CHALLENGE_STORAGE_KEY = 'turn-support-challenges-v1';
 export const SUPPORT_CHALLENGE_CONFIG_CACHE_KEY = 'turn-support-challenge-config-cache-v1';
@@ -66,7 +67,7 @@ export function normalizeSupportChallengeConfig(value) {
     stopAtTrophies: positiveInteger(raw.stopAtTrophies, 2300),
     priority: stringArray(raw.priority).length
       ? stringArray(raw.priority)
-      : ['winner', 'learning', 'safety', 'drift'],
+      : ['winner', 'safety', 'drift'],
     trackOrder: stringArray(raw.trackOrder),
     winner: Object.freeze({
       enabled: raw.winner?.enabled === true,
@@ -82,6 +83,11 @@ export function normalizeSupportChallengeConfig(value) {
       description: typeof raw.learning?.description === 'string' && raw.learning.description.trim()
         ? raw.learning.description.trim()
         : 'Open every part of HOW TO PLAY.'
+    }),
+    patrol: Object.freeze({
+      // Older cached rules still receive the new fixed challenge offline.
+      enabled: raw.patrol?.enabled !== false,
+      reward: positiveInteger(raw.patrol?.reward, 25)
     }),
     safety: Object.freeze({
       enabled: raw.safety?.enabled === true,
@@ -277,19 +283,22 @@ export function selectSupportChallenge({
   achievements,
   runtime = globalThis.__turnRuntime,
   storage = globalThis.localStorage,
-  excluded = []
+  excluded = [],
+  includeFixed = true
 }) {
   if (!config?.enabled || !achievements?.store) return null;
-  if (achievements.store.trophyTotal() >= config.stopAtTrophies) return null;
   const blocked = new Set(stringArray(excluded));
+  const learning = learningCandidate(config, achievements);
+  // An existing procedural challenge survives an upgrade, but its reroll must
+  // not select another procedural challenge ahead of the pending fixed sequence.
+  if (learning && !blocked.has(learning.key)) return includeFixed ? learning : null;
+  if (config.patrol.enabled && !blocked.has(PATROL_CHALLENGE.key)) {
+    return includeFixed ? { ...PATROL_CHALLENGE, reward: config.patrol.reward } : null;
+  }
+  if (achievements.store.trophyTotal() >= config.stopAtTrophies) return null;
   const tracks = completeTrackOrder(config.trackOrder, TRACK_IDS);
 
   for (const type of config.priority) {
-    if (type === 'learning') {
-      const candidate = learningCandidate(config, achievements);
-      if (candidate && !blocked.has(candidate.key)) return candidate;
-      continue;
-    }
     if (!['winner', 'safety', 'drift'].includes(type)) continue;
     for (const trackId of tracks) {
       const candidate = trackCandidate(type, trackId, config, achievements, storage, runtime);
@@ -319,6 +328,7 @@ function formatTime(seconds) {
 function activeChallengeIsConfigured(active, config) {
   if (!active) return false;
   if (active.type === 'learning') return config.learning.enabled;
+  if (active.type === 'patrol') return config.patrol.enabled && active.key === PATROL_CHALLENGE.key;
   const section = config[active.type];
   if (!section?.enabled) return false;
   if (active.type === 'safety' || active.type === 'drift') {
@@ -329,6 +339,16 @@ function activeChallengeIsConfigured(active, config) {
 
 function challengePresentation(active, config, achievements) {
   if (!active) return null;
+  if (active.type === 'patrol') {
+    return {
+      title: 'PATROL',
+      eyebrow: 'REWARD PREVIEW',
+      reward: `+${config.patrol.reward} TROPHIES`,
+      objective: 'Complete one valid lap of MIDNIGHT CITY using the POLICE CAR.',
+      explanation: 'Try MIDNIGHT CITY and the POLICE CAR before you unlock them for normal play. This temporary preview ends after two completed laps. Leave whenever you like; if you haven’t completed a valid lap, you can try again.',
+      startLabel: 'START PATROL'
+    };
+  }
   if (active.type === 'learning') {
     const opened = achievements.store.state.progress?.howToPlayDisclosures || [];
     const count = HOW_TO_PLAY_DISCLOSURE_IDS.filter((id) => opened.includes(id)).length;
@@ -639,7 +659,8 @@ export async function installSupportChallenges({
     const active = state.active;
     if (!active || !activeChallengeIsConfigured(active, config)) return null;
     if (active.sourceAchievementId && achievements.store.isUnlocked(active.sourceAchievementId)) return null;
-    if (achievements.store.trophyTotal() >= config.stopAtTrophies) return null;
+    if (!['learning', 'patrol'].includes(active.type)
+      && achievements.store.trophyTotal() >= config.stopAtTrophies) return null;
     return active;
   }
 
@@ -650,13 +671,15 @@ export async function installSupportChallenges({
       achievements,
       runtime,
       storage,
-      excluded: excludedKeys([state.active.key])
+      excluded: excludedKeys([state.active.key]),
+      includeFixed: false
     });
   }
 
   function rerollAvailable() {
     return Boolean(
       state.active
+      && !['learning', 'patrol'].includes(state.active.type)
       && state.lapsSinceChallengeProgress >= config.rerollAfterAdditionalValidLaps
       && alternateChallenge()
     );
@@ -753,9 +776,8 @@ export async function installSupportChallenges({
   }
 
   function chooseChallenge({ force = false } = {}) {
-    if (!config.enabled || achievements.store.trophyTotal() >= config.stopAtTrophies) return false;
+    if (!config.enabled) return false;
     if (state.active) return false;
-    if (!force && state.dryValidLaps < config.offerAfterValidLapsWithoutTrophy) return false;
     const candidate = selectSupportChallenge({
       config,
       achievements,
@@ -763,6 +785,8 @@ export async function installSupportChallenges({
       storage,
       excluded: excludedKeys()
     });
+    if (!force && candidate?.type !== 'patrol'
+      && state.dryValidLaps < config.offerAfterValidLapsWithoutTrophy) return false;
     return activate(candidate);
   }
 
@@ -782,13 +806,15 @@ export async function installSupportChallenges({
 
   function completeActiveRaceChallenge(detail) {
     const active = state.active;
-    if (!active || !['winner', 'safety', 'drift'].includes(active.type)) return false;
+    if (!active || !['patrol', 'winner', 'safety', 'drift'].includes(active.type)) return false;
     const trackId = runtime.state?.trackId || globalThis.__turnGetTrackId?.() || '';
     const vehicleId = runtime.state?.vehicleId || '';
     if (trackId !== active.trackId || vehicleId !== active.vehicleId) return false;
 
     let complete = false;
-    if (active.type === 'winner') {
+    if (active.type === 'patrol') {
+      complete = detail?.valid === true && runtime.state?.rewardPreview?.key === active.key;
+    } else if (active.type === 'winner') {
       complete = Number(detail?.position) === 1 && Number(detail?.total) >= 5;
     } else if (active.type === 'safety') {
       const target = positiveNumber(config.safety.targets?.[active.trackId]);
@@ -825,6 +851,7 @@ export async function installSupportChallenges({
     state.lapsSinceChallengeProgress = 0;
     save();
     render();
+    scheduleChallengeSelection();
     return true;
   }
 
@@ -848,9 +875,29 @@ export async function installSupportChallenges({
     }
   }
 
-  function startChallenge() {
+  async function startChallenge() {
     const active = state.active;
     if (!active) return;
+    if (active.type === 'patrol') {
+      if (startButton.disabled) return;
+      startButton.disabled = true;
+      startButton.setAttribute('aria-busy', 'true');
+      try {
+        // Keep the dialog available on permission or loading failure, for retry.
+        const starting = globalThis.__turnHome.startPatrolPreview();
+        closeChallenge({ restoreFocus: false });
+        if (!await starting) openChallenge();
+      } catch (error) {
+        openChallenge();
+        dialog.querySelector('[data-support-explanation]').textContent =
+          `${error instanceof Error ? error.message : 'PATROL could not start.'} Try again, or choose on-screen steering in Settings.`;
+      } finally {
+        startButton.disabled = false;
+        startButton.removeAttribute('aria-busy');
+        if (dialog.open) startButton.focus();
+      }
+      return;
+    }
     closeChallenge({ restoreFocus: false });
     if (active.type === 'learning') {
       howButton.click();
@@ -902,6 +949,7 @@ export async function installSupportChallenges({
         save();
       }
       render();
+      if (!state.active) scheduleChallengeSelection();
     });
   });
 
@@ -947,6 +995,7 @@ export async function installSupportChallenges({
     }
     save();
     render();
+    if (!state.active) scheduleChallengeSelection();
   });
 
   // Reward unlocks can be nested inside the normal achievement lap handler.
@@ -960,9 +1009,7 @@ export async function installSupportChallenges({
     save();
   }
   render();
-  if (!state.active && state.dryValidLaps >= config.offerAfterValidLapsWithoutTrophy) {
-    scheduleChallengeSelection();
-  }
+  if (!state.active) scheduleChallengeSelection();
 
   const api = Object.freeze({
     config,

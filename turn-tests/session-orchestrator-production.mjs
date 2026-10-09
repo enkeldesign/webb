@@ -12,6 +12,7 @@ function createHarness({ selection = { carId: 'sedan', color: '#fff', secondaryC
   const order = [];
   const published = [];
   const applied = [];
+  const appliedOptions = [];
   const timers = [];
   let motionListener = null;
   let fullscreenRequests = 0;
@@ -115,8 +116,9 @@ function createHarness({ selection = { carId: 'sedan', color: '#fff', secondaryC
       });
       return selection;
     },
-    async applyVehicleSelection(value) {
+    async applyVehicleSelection(value, options) {
       applied.push(value);
+      appliedOptions.push(options);
       order.push('apply-selection');
     },
     prepareRaceStartState(receivedState) {
@@ -141,6 +143,7 @@ function createHarness({ selection = { carId: 'sedan', color: '#fff', secondaryC
 
   return {
     applied,
+    appliedOptions,
     get boostRefills() { return boostRefills; },
     elements,
     environment,
@@ -274,6 +277,12 @@ assert.equal(cancelled.elements.intro.hidden, false);
 assert.deepEqual(cancelled.applied, []);
 
 const deferred = createHarness({ selection: null });
+assert.equal(await deferred.orchestrator.selectVehicle({ carId: 'police' }, { persist: false }), true);
+assert.deepEqual(deferred.appliedOptions, [{ persist: false }],
+  'The real session handoff must preserve the preview’s non-persistent selection option');
+assert.equal(await deferred.orchestrator.selectVehicle({ carId: 'sedan' }), true);
+assert.equal(deferred.appliedOptions[1], undefined,
+  'Normal vehicle selections keep the existing persistent default');
 const motionAccess = await deferred.orchestrator.prepareMotionAccess();
 assert.equal(motionAccess.mode, 'motion');
 assert.equal(deferred.order.includes('show-setup'), false);

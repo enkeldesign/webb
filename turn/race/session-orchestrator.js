@@ -197,9 +197,9 @@ export function createRaceSessionOrchestrator({
     return true;
   }
 
-  async function selectVehicle(selection) {
+  async function selectVehicle(selection, options) {
     if (!selection) return false;
-    await applySelection(selection);
+    await applySelection(selection, options);
     return true;
   }
 
@@ -272,6 +272,8 @@ export function createRaceSessionOrchestrator({
   }
 
   function leaveRace() {
+    cancelTiltCentring();
+    cancelTiltCentring = () => {};
     stopSpectating();
     phase = 'home';
     state.running = false;

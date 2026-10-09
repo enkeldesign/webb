@@ -25,7 +25,7 @@ else {
   }, { once: true });
 }
 
-export async function activateTrack(trackId, currentRuntime = runtime) {
+export async function activateTrack(trackId, currentRuntime = runtime, { persist = true } = {}) {
   currentRuntime ||= await runtimeReady;
   const nextTrackId = normalizeTrackId(trackId);
   const nextTrack = getTrackRuntimeEntry(nextTrackId);
@@ -47,7 +47,7 @@ export async function activateTrack(trackId, currentRuntime = runtime) {
   currentRuntime.activeTrack = nextTrack;
   currentRuntime.activeWorld = nextState.world;
   currentRuntime.state.trackId = nextTrackId;
-  saveTrackSelection(nextTrackId);
+  if (persist) saveTrackSelection(nextTrackId);
   applyTrackAtmosphere(currentRuntime, nextTrack);
 
   for (const car of currentRuntime.competitorCars || []) car.visible = false;

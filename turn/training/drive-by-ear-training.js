@@ -150,13 +150,12 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     session.returnFocus?.focus?.();
   }
 
-  function openTraining(trigger) {
+  async function openTraining(trigger) {
     if (session.active) return;
     session.returnFocus = trigger;
     closeSourceDialog(trigger);
-    if (runtime.state.running) {
-      raceSession.leaveRace();
-      home.showHome();
+    if (runtime.state.running || runtime.state.rewardPreview) {
+      await home.leaveRaceForHome();
       session.returnFocus = entryPoints?.homeButton || trigger;
     }
     view.introDialog.querySelector('[data-training-intro-copy]').textContent =

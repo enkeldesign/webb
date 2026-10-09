@@ -70,7 +70,7 @@ assert.match(main, /competitorCars,\s*ensureCompetitorCars,\s*syncCompetitorVisu
 assert.match(main, /if \(root\.userData\.turnVisualKey === key\) \{/, 'Installed identities must retain their fast path while cancelling stale pending selections');
 assert.match(main, /if \(root\.userData\.turnVisualPendingKey === key\) return;/, 'Duplicate pending identities must retain their fast path');
 
-const selectionSection = section(main, 'async function applyVehicleSelection(selection)', '\nvoid installCarVisual(playerCar');
+const selectionSection = section(main, 'async function applyVehicleSelection(', '\nvoid installCarVisual(playerCar');
 assert.match(selectionSection, /if \(!state\.competitorLaps\.length\)/,
   'Only an empty rival roster should prepare the first saved rival from the player identity');
 assert.match(selectionSection, /await installCarVisual\(ghostCar,[\s\S]*ghost: true/,

@@ -6,6 +6,7 @@ import {
 import { activateTrack } from '/turn/tracks/track-manager.js?source=20260729-r118-m8';
 import { showTrackIntro } from '/turn/ui/track-intro.js?source=20260729-r118-m8';
 import { installRoadbook } from '/turn/roadbook/roadbook.js';
+import { createRewardPreviewSession } from './race/reward-preview.js';
 import { trackIconMarkup } from '/turn/ui/track-icons.js';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';
 import {
@@ -554,7 +555,7 @@ export async function installM8HomeNavigation() {
   }
 
   async function continueToTrack() {
-    if (setupPending) return false;
+    if (setupPending || rewardPreview.active) return false;
     document.querySelector('.turn-setup-failure')?.remove();
     let garageOpened = false;
     let reloading = false;
@@ -627,8 +628,31 @@ export async function installM8HomeNavigation() {
     }
   }
 
+  const rewardPreview = createRewardPreviewSession({
+    state: runtime.state,
+    raceSession,
+    activateTrack: (trackId, options) => activateTrack(trackId, runtime, options),
+    prepareAccess: () => loadSteeringMode() === STEERING_MODE.MOTION
+      ? raceSession.prepareMotionAccess()
+      : raceSession.prepareManualAccess(),
+    showTrackIntro,
+    hideHome,
+    showHome
+  });
+
+  async function startPatrolPreview() {
+    if (setupPending || rewardPreview.active) return false;
+    setupPending = true;
+    try {
+      return await rewardPreview.start();
+    } finally {
+      setupPending = false;
+    }
+  }
+
   async function leaveRaceForHome() {
     raceSession.leaveRace();
+    if (rewardPreview.active) await rewardPreview.restore();
     showHome({ focus: true });
     return true;
   }
@@ -658,6 +682,7 @@ export async function installM8HomeNavigation() {
     showHome,
     hideHome,
     continueToTrack,
+    startPatrolPreview,
     leaveRaceForHome,
     getSelectedTrackId: () => selectedTrackId,
     getSteeringMode: loadSteeringMode

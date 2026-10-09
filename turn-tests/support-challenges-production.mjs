@@ -5,13 +5,16 @@ import {
   SUPPORT_CHALLENGE_CONFIG_URL,
   loadSupportChallengeConfig,
   normalizeSupportChallengeConfig,
-  normalizeSupportChallengeState
+  normalizeSupportChallengeState,
+  selectSupportChallenge
 } from '../turn/achievements/support-challenges.js';
 import {
   isRaceSupportBonusId,
   showCompactRacePill
 } from '../turn/achievements/support-challenge-feedback.js';
 import { createAchievementStore, normalizeAchievementState } from '../turn/achievements/store.js';
+import { createRewardPreviewSession, PATROL_CHALLENGE } from '../turn/race/reward-preview.js';
+import { isTrackUnlocked, isVehicleUnlocked } from '../turn/progression/trophy-road.js';
 
 const rawConfig = JSON.parse(await fs.readFile(new URL('../turn/support-challenges.json', import.meta.url), 'utf8'));
 const source = await fs.readFile(new URL('../turn/achievements/support-challenges.js', import.meta.url), 'utf8');
@@ -27,7 +30,7 @@ assert.equal(config.enabled, true);
 assert.equal(config.offerAfterValidLapsWithoutTrophy, 6);
 assert.equal(config.rerollAfterAdditionalValidLaps, 10);
 assert.equal(config.stopAtTrophies, 2300);
-assert.deepEqual(config.priority, ['winner', 'learning', 'safety', 'drift']);
+assert.deepEqual(config.priority, ['winner', 'safety', 'drift']);
 assert.equal(config.learning.title, 'DID YOU READ ALL OF IT?');
 assert.equal(config.learning.rewardPerPart, 5);
 assert.doesNotMatch(JSON.stringify(rawConfig), /disclosure/i, 'Player-facing support rules must not call HOW TO PLAY parts disclosures');
@@ -116,6 +119,70 @@ const storage = {
   setItem: (key, value) => memory.set(key, String(value))
 };
 const store = createAchievementStore(storage);
+const select = (options = {}) => selectSupportChallenge({ config, achievements: { store }, storage, ...options });
+assert.equal(select().type, 'learning', 'The reading challenge precedes all procedural candidates');
+assert.equal(select({ excluded: ['learning:how-to-play'] }).type, 'patrol');
+assert.equal(isTrackUnlocked('midnight-city', storage), false);
+assert.equal(isVehicleUnlocked('police', storage), false);
+assert.equal(select({ excluded: ['learning:how-to-play', PATROL_CHALLENGE.key] }).type, 'safety',
+  'Procedural challenges resume after both fixed challenges are resolved');
+assert.equal(select({ includeFixed: false }), null, 'Procedural rerolls cannot skip the reading challenge');
+assert.equal(select({ includeFixed: false, excluded: ['learning:how-to-play'] }), null,
+  'An existing procedural challenge cannot reroll past a pending PATROL');
+assert.equal(select({ includeFixed: false, excluded: ['learning:how-to-play', PATROL_CHALLENGE.key] }).type, 'safety',
+  'Procedural rerolls resume after the fixed sequence is resolved');
+assert.equal(isRaceSupportBonusId(`support:${PATROL_CHALLENGE.key}`), true);
+assert.equal(normalizeSupportChallengeConfig({ enabled: true }).patrol.enabled, true,
+  'Existing offline rules receive PATROL without a config-cache reset');
+
+// Exercise the real preview lifecycle without any storage adapter: borrowing a
+// locked reward must never require a write to achievement or selection storage.
+const normal = { trackId: 'countryside', vehicleId: 'sedan', vehicleColor: '#123456', vehicleSecondaryColor: '#abcdef' };
+const raceState = { ...normal, running: false };
+const storageBefore = [...memory];
+let launches = 0;
+let failTrack = false;
+const preview = createRewardPreviewSession({
+  state: raceState,
+  raceSession: {
+    leaveRace() { raceState.running = false; },
+    async selectVehicle(selection, options) {
+      assert.equal(options.persist, false);
+      Object.assign(raceState, { vehicleId: selection.carId, vehicleColor: selection.color, vehicleSecondaryColor: selection.secondaryColor });
+    },
+    async startGame() { launches += 1; raceState.running = true; }
+  },
+  async activateTrack(trackId, options) {
+    assert.equal(options.persist, false);
+    if (failTrack && trackId === 'midnight-city') throw new Error('Track unavailable');
+    raceState.trackId = trackId;
+  },
+  prepareAccess: () => ({ fullscreenPromise: Promise.resolve(false) }),
+  showTrackIntro: async () => {}, hideHome() {}, showHome() {}
+});
+assert.equal(await preview.start(), true);
+assert.equal(await preview.start(), false, 'Double taps cannot create concurrent preview sessions');
+assert.equal(raceState.trackId, 'midnight-city');
+assert.equal(raceState.vehicleId, 'police');
+assert.equal(raceState.rewardPreview.completedLaps, 0);
+await preview.restore();
+assert.equal(preview.active, false);
+for (const [key, value] of Object.entries(normal)) assert.equal(raceState[key], value);
+assert.equal(raceState.rewardPreview, null);
+assert.equal(await preview.start(), true, 'An early leave can be retried');
+await preview.restore();
+failTrack = true;
+await assert.rejects(preview.start(), /Track unavailable/);
+assert.equal(preview.active, false, 'A failed launch restores the normal session');
+assert.equal(raceState.trackId, normal.trackId);
+failTrack = false;
+assert.equal(await preview.start(), true, 'A failed launch does not consume the preview');
+await preview.restore();
+assert.equal(launches, 3);
+assert.deepEqual([...memory], storageBefore);
+assert.equal(isTrackUnlocked('midnight-city', storage), false);
+assert.equal(isVehicleUnlocked('police', storage), false);
+
 assert.equal(store.trophyTotal(), 0);
 assert.equal(store.grantBonus('support:test', 5, { reason: 'support-test' })?.trophies, 5);
 assert.equal(store.trophyTotal(), 5);

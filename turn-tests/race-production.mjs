@@ -358,6 +358,32 @@ test('completed laps keep the fastest four rivals and preserve exact vehicle pai
     'Lap completion must transfer the replay buffer instead of cloning every long-track frame');
 });
 
+test('reward previews allow two completed laps and cannot begin a third, including after a reset', () => {
+  const samples = makeSamples();
+  const preview = { key: 'patrol:midnight-city', completedLaps: 0, maxCompletedLaps: 2 };
+  const state = makeState({ running: true, lap: 1, lapStartedAt: 0, recording: makeFrames(), rewardPreview: preview });
+  const first = completeLapState({ state, samples, now: 60_000, competitorLimit: 4 });
+  assert.equal(first.validLap, true);
+  assert.equal(first.previewEnded, false);
+  assert.equal(preview.completedLaps, 1);
+  assert.equal(state.running, true);
+  assert.equal(state.lapActive, true);
+
+  // Restarting the optional lap must not reset the session's allowance.
+  resetRaceToStage({ state, samples, showFeedback: false });
+  assert.equal(preview.completedLaps, 1);
+  beginTimedLapState({ state, samples, now: 70_000 });
+  state.recording = []; // A completed circuit with too few recorded frames is invalid.
+  const second = completeLapState({ state, samples, now: 130_000, competitorLimit: 4 });
+  assert.equal(second.validLap, false);
+  assert.equal(second.previewEnded, true);
+  assert.equal(preview.completedLaps, 2);
+  assert.equal(state.lapActive, false);
+  assert.equal(state.running, false);
+  beginTimedLapState({ state, samples, now: 140_000 });
+  assert.equal(state.lapActive, false, 'No third lap can be armed before preview cleanup');
+});
+
 test('completed lap results expose the physics-latched SAFETY verdict', () => {
   const samples = makeSamples();
   const state = makeState({

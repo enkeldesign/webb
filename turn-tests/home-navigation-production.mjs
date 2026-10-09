@@ -255,7 +255,7 @@ assert.doesNotMatch(orientationGuardCss, /100lvh/);
 
 assert.match(orchestrator, /async function prepareMotionAccess\(\)/);
 assert.match(orchestrator, /function prepareManualAccess\(\)/);
-assert.match(orchestrator, /async function selectVehicle\(selection\)/);
+assert.match(orchestrator, /async function selectVehicle\(selection[,)]/);
 assert.match(orchestrator, /function leaveRace\(\)/);
 assert.match(orchestrator, /publish\('home-open'\)/);
 assert.match(orchestrator, /phase = 'home'/);
