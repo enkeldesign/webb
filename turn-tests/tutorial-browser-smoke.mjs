@@ -92,9 +92,14 @@ async function run(name, options, scenario) {
 }
 
 try {
+  const showLaunchCard = (page) => page.evaluate(() => globalThis.__turnNextHome.tutorial.entry.showLaunchCard());
+
   await run('first launch card and STOP TUTORIAL', {}, async (page) => {
     let current = await inspect(page);
-    assert.equal(current.card, true, 'A new player\'s first launch opens the TURN TUTORIAL card');
+    assert.equal(current.card, false, 'While admin-only, the card does not open by itself at launch');
+    assert.equal(await showLaunchCard(page), true, 'A new player gets the TURN TUTORIAL card');
+    current = await inspect(page);
+    assert.equal(current.card, true);
     assert.equal(current.entry, true, 'HOW TO PLAY offers TURN TUTORIAL');
     // TURN dialogs focus their heading first, so a screen reader starts at the title.
     assert.equal(await page.evaluate(() => Boolean(document.activeElement?.closest('.m8-tutorial-dialog'))), true,
@@ -107,11 +112,12 @@ try {
     await page.reload();
     await page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready')
       && globalThis.__turnNextHome?.tutorial);
-    await page.evaluate(() => new Promise((resolve) => globalThis.setTimeout(resolve, 300)));
-    assert.equal((await inspect(page)).card, false, 'A stopped tutorial does not start on the next launch');
+    assert.equal(await showLaunchCard(page), false, 'A stopped tutorial does not start on the next launch');
+    assert.equal((await inspect(page)).card, false);
   });
 
   await run('teaching lap, graduation and the self-ghost', {}, async (page) => {
+    await showLaunchCard(page);
     await page.locator('[data-tutorial-start]').click();
     await page.waitForFunction(() => globalThis.__turnRuntime.state.running);
     await page.waitForFunction(() => !document.querySelector('dialog[open]'));
@@ -142,8 +148,8 @@ try {
   });
 
   await run('existing player', { played: true }, async (page) => {
+    assert.equal(await showLaunchCard(page), false, 'An existing player is not put through the tutorial');
     const current = await inspect(page);
-    assert.equal(current.card, false, 'An existing player is not put through the tutorial');
     assert.equal(current.tutorial.status, 'completed');
     assert.equal(current.tutorial.migrated, true);
     assert.equal(current.entry, true, 'They can still play it from HOW TO PLAY');

@@ -695,7 +695,7 @@ export async function installM8HomeNavigation() {
     return true;
   }
 
-  installTutorialEntry({
+  const tutorialEntry = installTutorialEntry({
     howDialog,
     progress: tutorialProgress,
     startTutorial,
@@ -731,7 +731,7 @@ export async function installM8HomeNavigation() {
     continueToTrack,
     startRewardPreview,
     startTutorial,
-    tutorial: Object.freeze({ progress: tutorialProgress, session: tutorialSession }),
+    tutorial: Object.freeze({ progress: tutorialProgress, session: tutorialSession, entry: tutorialEntry }),
     leaveRaceForHome,
     getSelectedTrackId: () => selectedTrackId,
     getSteeringMode: loadSteeringMode

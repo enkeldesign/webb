@@ -4,7 +4,9 @@ import { TURN_TUTORIAL } from './tutorial-progress.js';
 // of TURN, and the TURN TUTORIAL entry in HOW TO PLAY. iOS grants motion steering and
 // sound only from a tap, so the first launch opens this card instead of driving off.
 //
-// Until the teaching lap is complete, only admin-unlocked profiles see either entry.
+// Until the teaching lap is complete, only admin-unlocked profiles see the HOW TO PLAY
+// entry, and the card does not open by itself at launch: admin profiles are also the
+// test profiles, and the release turns the first-launch start on for everyone at once.
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 const STYLE_ID = 'turn-tutorial-entry-styles';
 
@@ -84,6 +86,7 @@ export function installTutorialEntry({
   startTutorial,
   announce = () => {},
   enabled = () => tutorialEntryEnabled(),
+  opensOnLaunch = () => false,
   module = TURN_TUTORIAL
 }) {
   if (!enabled()) return null;
@@ -116,14 +119,19 @@ export function installTutorialEntry({
     announce('TURN TUTORIAL stopped. You can play it any time from HOW TO PLAY.');
   });
 
-  const openOnLaunch = () => {
-    if (!progress.startsOnLaunch(module.id) || card.open) return;
+  // The first-launch card, shown while the tutorial still starts on launch.
+  const showLaunchCard = () => {
+    if (!progress.startsOnLaunch(module.id) || card.open) return false;
     // TURN dialogs move focus to their heading; START TUTORIAL is the first control.
     if (typeof card.showModal === 'function') card.showModal();
     else card.setAttribute('open', '');
+    return true;
+  };
+  const openOnLaunch = () => {
+    if (opensOnLaunch()) showLaunchCard();
   };
   if (document.documentElement.classList.contains('turn-home-ready')) openOnLaunch();
   else document.addEventListener('turn:home-ready', openOnLaunch, { once: true });
 
-  return Object.freeze({ card, entry, openOnLaunch });
+  return Object.freeze({ card, entry, showLaunchCard });
 }
