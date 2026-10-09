@@ -50,6 +50,10 @@ async function runPreview(challenge) {
       savedCar: localStorage.getItem('turn-vehicle-selection-v1'),
       savedTrack: localStorage.getItem('turn-selected-track-v1'),
       rewards: JSON.stringify(globalThis.__turnAchievements.store.state.rewards),
+      // A preview is a trial: nothing driven on the borrowed track unlocks or counts.
+      trackAchievements: Object.entries(globalThis.__turnAchievements.store.state.unlocked)
+        .filter(([, entry]) => entry.trackId === trackId).map(([id]) => id),
+      trackProgress: globalThis.__turnAchievements.store.state.progress.tracks.includes(trackId),
       home: document.body.classList.contains('turn-home-open')
     };
   }, challenge);
@@ -109,7 +113,7 @@ async function runPreview(challenge) {
     assert.equal(await page.locator('#turnSupportChallengeTitle').textContent(), challenge.title);
     assert.equal(await page.locator('[data-support-start]').textContent(), `START ${challenge.title}`);
     assert.equal(await page.locator('[data-support-objective]').textContent(), challenge.objective);
-    assert.match(await page.locator('[data-support-explanation]').textContent(), /temporary preview.*two completed laps/);
+    assert.match(await page.locator('[data-support-explanation]').textContent(), /temporary preview.*two completed laps.*no records or achievements/);
     await page.evaluate(() => {
       globalThis.__turnSupportChallenges.state.lapsSinceChallengeProgress = 100;
       globalThis.__turnSupportChallenges.render();
@@ -160,6 +164,8 @@ async function runPreview(challenge) {
     assert.equal(current.track, before.track);
     assert.equal(current.car, before.car);
     assert.equal(current.bonus?.trophies, 25, 'The second lap does not double the support bonus');
+    assert.deepEqual(current.trackAchievements, [], `${challenge.title} laps unlock no achievements`);
+    assert.equal(current.trackProgress, before.trackProgress, `${challenge.title} laps are not track progress`);
     for (const key of ['savedCar', 'savedTrack', 'trackUnlocked', 'carUnlocked']) assert.equal(current[key], before[key], `${key} stays authoritative after ${challenge.title}`);
 
     await closeVisitSummary();

@@ -14,6 +14,7 @@ import {
   crossedForwardGate,
   updateLapProgressState
 } from '../turn/race/lap-system.js';
+import { completeLapState as completeRoutedLapState } from '../turn/race/lap-system-r86.js';
 import {
   normalizeReplayFrames,
   recordReplayFrame,
@@ -382,6 +383,29 @@ test('reward previews allow two completed laps and cannot begin a third, includi
   assert.equal(state.running, false);
   beginTimedLapState({ state, samples, now: 140_000 });
   assert.equal(state.lapActive, false, 'No third lap can be armed before preview cleanup');
+});
+
+test('reward preview laps are unranked: no ghost, best time or DRIFT/FLOW record', () => {
+  // main.js reaches lap-system.js through the r86 wrapper (import map).
+  for (const rewardPreview of [null, { key: 'patrol:midnight-city', completedLaps: 0, maxCompletedLaps: 2 }]) {
+    const state = makeState({ running: true, lap: 1, lapStartedAt: 0, recording: makeFrames(), rewardPreview });
+    let ghostSaves = 0;
+    let scoredAsRanked;
+    const result = completeRoutedLapState({
+      state,
+      samples: makeSamples(),
+      now: 60_000,
+      competitorLimit: 4,
+      saveGhost: () => { ghostSaves += 1; },
+      finalizeScores: ({ rankedLap }) => { scoredAsRanked = rankedLap; return null; }
+    });
+    const preview = Boolean(rewardPreview);
+    assert.equal(result.validLap, true);
+    assert.equal(result.ranked, !preview);
+    assert.equal(scoredAsRanked, !preview);
+    assert.equal(state.competitorLaps.length, preview ? 0 : 1);
+    assert.equal(ghostSaves, preview ? 0 : 1);
+  }
 });
 
 test('completed lap results expose the physics-latched SAFETY verdict', () => {

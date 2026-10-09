@@ -56,10 +56,12 @@ export function updateLapProgressState(options = {}) {
 
 export function completeLapState(options) {
   const state = options?.state;
+  // A reward preview (PATROL, EXCURSION) is a trial on borrowed content: its laps
+  // set no best time, ghost or DRIFT/FLOW record.
   const ranked = !isSportsSedanEasterEgg({
     carId: state?.vehicleId,
     secondaryColor: state?.vehicleSecondaryColor
-  });
+  }) && !state?.rewardPreview;
 
   return baseLapSystem.completeLapState({
     ...options,

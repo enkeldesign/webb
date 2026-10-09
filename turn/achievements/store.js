@@ -268,6 +268,12 @@ export function loadAchievementState(storage = globalThis.localStorage) {
   }
 }
 
+// A reward preview (PATROL, EXCURSION) is a trial: driving in it unlocks no
+// achievement and adds no track progress. The challenge's own bonus still lands.
+function rewardPreviewRunning() {
+  return Boolean(globalThis.__turnRuntime?.state?.rewardPreview);
+}
+
 export function createAchievementStore(storage = globalThis.localStorage) {
   const loaded = loadAchievementState(storage);
   const state = loaded.state;
@@ -329,6 +335,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   }
 
   function unlock(id, context = {}) {
+    if (rewardPreviewRunning()) return null;
     const achievement = getAchievement(id);
     if (!achievement || achievement.calibrationPending === true || isUnlocked(id)) return null;
     state.unlocked[id] = {
@@ -372,6 +379,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   }
 
   function addProgressTrack(key, trackId) {
+    if (rewardPreviewRunning()) return false;
     const collection = state.progress[key];
     if (!Array.isArray(collection) || !TRACK_IDS.includes(trackId) || collection.includes(trackId)) {
       return false;
