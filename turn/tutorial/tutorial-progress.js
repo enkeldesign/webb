@@ -25,6 +25,16 @@ export const TURN_TUTORIAL = Object.freeze({
   vehicleId: 'classic'
 });
 
+// DRIFT ATTACK TUTORIAL (#1150): DRIFT scoring and OVERCHARGE, offered once DRIFT ATTACK
+// unlocks. The track and car are a first choice, to be confirmed on devices: COUNTRYSIDE's
+// long bends leave room to fill BOOST, build OVERCHARGE, then catch and spend it.
+export const DRIFT_ATTACK_TUTORIAL = Object.freeze({
+  id: 'drift-attack',
+  revision: 1,
+  trackId: 'countryside',
+  vehicleId: 'classic'
+});
+
 const STATUSES = new Set(Object.values(TUTORIAL_STATUS));
 
 function normalizeRecord(raw) {

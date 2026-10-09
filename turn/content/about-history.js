@@ -369,6 +369,10 @@ export const CHANGELOG = Object.freeze([
       [
         "Tutorial steering help",
         "A setting for players who cannot steer on their own: TURN steers the TURN TUTORIAL lap through the bends while you keep GAS, BOOST and DRIFT. Switch it in SETTINGS, also from PAUSED mid-lap."
+      ],
+      [
+        "DRIFT ATTACK TUTORIAL",
+        "One lap of COUNTRYSIDE that teaches DRIFT scoring and OVERCHARGE, which now unlocks with DRIFT ATTACK: build it, catch it on GAS, hold it, then spend it with BOOST. Play it from HOW TO PLAY."
       ]
     ]
   }

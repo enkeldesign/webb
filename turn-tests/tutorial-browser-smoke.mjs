@@ -9,13 +9,13 @@ import { TROPHY_ROAD_STORAGE_VERSION } from '../turn/progression/trophy-road.js'
 const target = process.env.TURN_SUPPORT_FEEDBACK_URL || 'http://127.0.0.1:8000/';
 const browser = await chromium.launch({ headless: true });
 
-async function openTurn({ played = false, launch = false, steeringHelp = false } = {}) {
+async function openTurn({ played = false, launch = false, steeringHelp = false, driftAttack = false } = {}) {
   const context = await browser.newContext({ viewport: { width: 844, height: 390 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.addInitScript(({ played, launch, steeringHelp, storageVersion }) => {
+  await page.addInitScript(({ played, launch, steeringHelp, driftAttack, storageVersion }) => {
     if (globalThis.sessionStorage.getItem('turn-tutorial-smoke-seeded')) return;
     globalThis.sessionStorage.setItem('turn-tutorial-smoke-seeded', '1');
     localStorage.setItem('turn-low-graphics-v1', '1');
@@ -24,13 +24,14 @@ async function openTurn({ played = false, launch = false, steeringHelp = false }
     localStorage.setItem('turn-racing-music-volume-v1', '0');
     if (launch) localStorage.setItem('turn-tutorial-launch-under-test', '1');
     if (steeringHelp) localStorage.setItem('turn-tutorial-steering-help-v1', 'on');
-    if (played) {
+    if (played || driftAttack) {
       localStorage.setItem('turn-achievements-v1', JSON.stringify({
         version: storageVersion,
-        unlocked: { 'first-turn': { unlockedAt: Date.now() } }
+        unlocked: { 'first-turn': { unlockedAt: Date.now() } },
+        ...(driftAttack ? { rewards: { unlocked: ['drift-attack'] } } : {})
       }));
     }
-  }, { played, launch, steeringHelp, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
+  }, { played, launch, steeringHelp, driftAttack, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
   await page.addInitScript(() => {
     Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
   });
@@ -126,6 +127,8 @@ try {
     assert.match(await page.locator('.m8-how-dialog .m8-tutorial-entry').innerText(), goal,
       'So does HOW TO PLAY, for players who never see the first-launch card');
     assert.equal(current.entry, true, 'HOW TO PLAY offers TURN TUTORIAL');
+    assert.equal(await page.locator('[data-tutorial-drift-attack]').isVisible(), false,
+      'DRIFT ATTACK TUTORIAL waits for DRIFT ATTACK');
     // TURN dialogs focus their heading first, so a screen reader starts at the title.
     assert.equal(await page.evaluate(() => Boolean(document.activeElement?.closest('.m8-tutorial-dialog'))), true,
       'Focus moves into the TURN TUTORIAL card');
@@ -297,6 +300,46 @@ try {
       'The line says help was used, and that it ends there');
     assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.sessionSteeringTarget), null);
     assert.equal((await inspect(page)).tutorialAchievement, true, 'Finishing with help still completes TURN TUTORIAL');
+  });
+
+  // DRIFT ATTACK TUTORIAL (#1150): in HOW TO PLAY once DRIFT ATTACK is unlocked.
+  await run('DRIFT ATTACK TUTORIAL', { driftAttack: true }, async (page) => {
+    const entry = page.locator('[data-tutorial-drift-attack]');
+    await page.evaluate(() => document.querySelector('.m8-how-button').click());
+    await page.waitForFunction(() => document.querySelector('.m8-how-dialog')?.open);
+    assert.equal(await entry.isVisible(), true, 'HOW TO PLAY offers DRIFT ATTACK TUTORIAL once DRIFT ATTACK is unlocked');
+    await entry.click();
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.running && !document.querySelector('dialog[open]'));
+    let current = await inspect(page);
+    assert.equal(current.track, 'countryside');
+    assert.equal(current.car, 'classic');
+    assert.equal(current.policy, 'tutorial-lap', 'The teaching lap earns nothing');
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.driftAttackSession.active), true);
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * 0.04)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(10);
+    });
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'score');
+    assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /DRIFT SCORING.*BANK/);
+    assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('role'), 'status', 'Spoken as well as shown');
+    // A banked slide, as DRIFT ATTACK announces it (scoring/drift-attack-runtime.js).
+    await page.evaluate(() => globalThis.dispatchEvent(new CustomEvent('turn:drift-score-event', { detail: { type: 'bank' } })));
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.state === 'done');
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'build', null, { timeout: 15000 });
+    assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /OVERCHARGE/, 'BUILD names OVERCHARGE');
+
+    await crossFinish(page);
+    assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-state'), 'graduated');
+    current = await inspect(page);
+    assert.equal(current.policy, 'normal', 'Ordinary racing follows, where CATCH THE CHARGE and HEAD START can be earned');
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.progress.status('drift-attack')), 'completed');
+    await page.evaluate(() => globalThis.__turnRuntime.openHome());
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.driftAttackSession.active), false,
+      'Going Home restores the player\'s own track and car');
+    assert.equal(await page.locator('.turn-tutorial-prompt').count(), 0);
   });
 
   await run('existing player', { played: true, launch: true }, async (page) => {

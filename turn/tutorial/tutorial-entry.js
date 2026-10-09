@@ -33,7 +33,8 @@ function installStyles() {
     .m8-tutorial-copy { margin: 0; font-size: var(--turn-type-body); line-height: var(--turn-leading-body); }
     .m8-tutorial-actions { display: grid; gap: var(--turn-space-3); }
     .m8-tutorial-actions button,
-    .m8-tutorial-entry button {
+    .m8-tutorial-entry button,
+    .m8-drift-attack-entry button {
       min-height: var(--turn-target-min);
       padding: var(--turn-space-3) var(--turn-space-4);
       border: var(--turn-border-control) solid var(--turn-outline);
@@ -46,12 +47,14 @@ function installStyles() {
       cursor: pointer;
     }
     .m8-tutorial-actions [data-tutorial-start],
-    .m8-tutorial-entry button {
+    .m8-tutorial-entry button,
+    .m8-drift-attack-entry button {
       background: var(--turn-action-primary);
       color: var(--turn-ink);
     }
     .m8-tutorial-note,
-    .m8-tutorial-entry p {
+    .m8-tutorial-entry p,
+    .m8-drift-attack-entry p {
       margin: 0;
       font-size: var(--turn-type-small);
       line-height: var(--turn-leading-body);
@@ -59,11 +62,13 @@ function installStyles() {
     .m8-tutorial-copy p { margin: 0; }
     .m8-tutorial-copy p + p { margin-top: var(--turn-space-2); }
     .m8-tutorial-entry .m8-tutorial-goal { font-size: var(--turn-type-body); }
-    .m8-tutorial-entry {
+    .m8-tutorial-entry,
+    .m8-drift-attack-entry {
       display: grid;
       gap: var(--turn-space-2);
       margin-bottom: var(--turn-space-4);
     }
+    .m8-drift-attack-entry[hidden] { display: none; }
   `;
   document.head.appendChild(style);
 }
@@ -162,4 +167,36 @@ export function installTutorialEntry({
   else document.addEventListener('turn:home-ready', openOnLaunch, { once: true });
 
   return Object.freeze({ card, entry, showLaunchCard });
+}
+
+// DRIFT ATTACK TUTORIAL in HOW TO PLAY (#1150), below TURN TUTORIAL once DRIFT ATTACK
+// (and OVERCHARGE with it) is unlocked.
+export function installDriftAttackEntry({ howDialog, startTutorial, isUnlocked }) {
+  installStyles();
+  const entry = document.createElement('section');
+  entry.className = 'm8-drift-attack-entry';
+  entry.innerHTML = `
+    <button type="button" data-tutorial-drift-attack>DRIFT ATTACK TUTORIAL</button>
+    <p>Learn DRIFT scoring and OVERCHARGE in one lap of COUNTRYSIDE.</p>`;
+  const turnEntry = howDialog?.querySelector('.m8-tutorial-entry');
+  if (turnEntry) turnEntry.after(entry);
+  else howDialog?.querySelector('.m8-guide-grid')?.before(entry);
+  const sync = () => {
+    let unlocked = false;
+    try {
+      unlocked = isUnlocked() === true;
+    } catch {
+      unlocked = false;
+    }
+    entry.hidden = !unlocked;
+    return unlocked;
+  };
+  sync();
+  howDialog?.addEventListener('toggle', sync);
+  globalThis.addEventListener?.('turn:trophy-road-updated', sync);
+  entry.querySelector('button').addEventListener('click', () => {
+    if (typeof howDialog.close === 'function' && howDialog.open) howDialog.close();
+    void startTutorial();
+  });
+  return Object.freeze({ entry, sync });
 }
