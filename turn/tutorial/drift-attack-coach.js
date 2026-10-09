@@ -117,7 +117,9 @@ export function createDriftAttackCoach({
       return;
     }
     if (current.speedCap) {
-      const target = current.speedCap * maxSpeed;
+      // The car's own top speed (vehicle/physics.js), not the untuned base limit.
+      const top = Number(state.vehicleEffectiveMaxSpeed) > 0 ? Number(state.vehicleEffectiveMaxSpeed) : maxSpeed;
+      const target = current.speedCap * top;
       const from = Number.isFinite(state.sessionSpeedCap) ? state.sessionSpeedCap : Math.max(target, input.speed);
       state.sessionSpeedCap = Math.max(target, from - CAP_EASE_PER_SECOND * dt);
     } else {

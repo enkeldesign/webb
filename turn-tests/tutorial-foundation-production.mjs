@@ -641,6 +641,12 @@ test('DRIFT ATTACK TUTORIAL teaches scoring, then BUILD, CATCH, HOLD and SPEND i
   assert.equal(views.at(-1).kind, 'done');
   assert.match(views.at(-1).text, /OVERCHARGE/);
   assert.deepEqual(Object.values(coach.outcome()), ['done', 'done', 'done', 'done', 'done']);
+  // The cap is a share of the car's own top speed: the LEARNER CAR tops out below 88.
+  const learner = { sessionSpeedCap: null, vehicleEffectiveMaxSpeed: 73.92 };
+  const capped = createDriftAttackCoach({ state: learner, maxSpeed: 88, signals: () => ({ ...input, speed: 20, banks: 0 }) });
+  capped.update(0.1);
+  capped.update(0.1);
+  assert.ok(Math.abs(learner.sessionSpeedCap - 0.45 * 73.92) < 1e-9, '45 % of this car, not of the base limit');
   coach.graduate();
   assert.equal(views.at(-1).message, lessons.DRIFT_ATTACK_GRADUATION_MESSAGE);
 
