@@ -58,6 +58,25 @@ const inspect = (page) => page.evaluate(() => {
   };
 });
 
+// Puts the car `metres` from the centre line early in the lap, heading straight off the road.
+async function leaveRoad(page, metres) {
+  await page.evaluate((distance) => {
+    const { state, samples } = globalThis.__turnRuntime;
+    const sample = samples[Math.round(samples.length * 0.04)];
+    state.position.copy(sample.point).addScaledVector(sample.normal, distance);
+    state.heading = Math.atan2(sample.normal.x, sample.normal.z);
+    state.velocity.copy(sample.normal).multiplyScalar(12);
+    state.speed = 12;
+  }, metres);
+  await page.waitForTimeout(800);
+  return page.evaluate(() => {
+    const { state, samples } = globalThis.__turnRuntime;
+    const sample = samples[state.nearestTrackIndex];
+    return Math.abs((state.position.x - sample.point.x) * sample.normal.x
+      + (state.position.z - sample.point.z) * sample.normal.z);
+  });
+}
+
 async function crossFinish(page) {
   const lap = await page.evaluate(() => globalThis.__turnRuntime.state.lap);
   await page.evaluate(async () => {
@@ -173,9 +192,25 @@ try {
     await page.evaluate(() => globalThis.__turnRacePause?.resume?.());
     await page.setViewportSize({ width: 844, height: 390 });
 
+    // Course rescue (#1133): a big mistake on the teaching lap is held at a remote limit,
+    // 14 m beyond the off-road line (0.58 x 27 m), instead of ending the lesson.
+    const rescueLimit = 27 * 0.58 + 14;
+    assert.ok(await leaveRoad(page, 40) <= rescueLimit + 1.5, 'The teaching lap keeps a lost car near the road');
+
     await crossFinish(page);
     assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-state'), 'graduated',
       'Crossing the line says the tutorial is complete');
+    assert.ok(await leaveRoad(page, 40) > rescueLimit + 1.5, 'After the line, ordinary TURN has no rescue');
+    // Back onto the road: far off it, slow CI renderers draw too few frames for the
+    // race-time checks below.
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * 0.04)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(10);
+      state.speed = 10;
+    });
     assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.sessionSpeedCap ?? null), null,
       'No lesson cap survives the line');
     // The completion message counts race time: a pause (or backgrounding) waits it out.
