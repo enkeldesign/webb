@@ -201,6 +201,16 @@ try {
     assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-state'), 'graduated',
       'Crossing the line says the tutorial is complete');
     assert.ok(await leaveRoad(page, 40) > rescueLimit + 1.5, 'After the line, ordinary TURN has no rescue');
+    // Back onto the road: far off it, slow CI renderers draw too few frames for the
+    // race-time checks below.
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * 0.04)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(10);
+      state.speed = 10;
+    });
     assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.sessionSpeedCap ?? null), null,
       'No lesson cap survives the line');
     // The completion message counts race time: a pause (or backgrounding) waits it out.
