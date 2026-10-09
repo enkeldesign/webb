@@ -1,4 +1,5 @@
 import { normalizeStoredVehiclePaint } from '../vehicle/catalog.js';
+import { graduateSessionPolicy, sessionPolicy } from './session-policy.js';
 
 export const LAP_CHECKPOINTS = Object.freeze([
   0.08,
@@ -151,12 +152,15 @@ export function completeLapState({
   onError,
   finalizeScores,
   onScoreError,
-  ranked = true
+  ranked = true,
+  ghost
 }) {
   const finishedTime = (now - state.lapStartedAt) / 1000;
   const completedLap = finishedTime > 5;
   const validLap = completedLap && state.recording.length > 20;
   const rankedLap = ranked !== false;
+  // 'saved' joins the stored rivals, 'session' races for this run only, 'none' neither.
+  const ghostMode = ghost ?? (rankedLap ? 'saved' : 'none');
   const preview = state.rewardPreview;
   if (completedLap && preview) preview.completedLaps += 1;
   const previewEnded = Boolean(preview && preview.completedLaps >= preview.maxCompletedLaps);
@@ -174,7 +178,7 @@ export function completeLapState({
     finishingTotal = raceRivals.length + 1;
   }
 
-  if (validLap && rankedLap) {
+  if (validLap && ghostMode !== 'none') {
     try {
       // Transfer the completed recording to its immutable rival snapshot. Copying
       // every frame here caused a visible finish-line spike on the two long tracks.
@@ -203,7 +207,8 @@ export function completeLapState({
         carColor: paint.color,
         carSecondaryColor: paint.secondaryColor,
         factoryPaint: paint.factoryPaint,
-        frames: candidateFrames
+        frames: candidateFrames,
+        ...(ghostMode === 'session' ? { sessionOnly: true } : {})
       };
 
       state.competitorLaps = [...state.competitorLaps, candidate]
@@ -213,8 +218,8 @@ export function completeLapState({
       state.bestTime = state.competitorLaps[0]?.time ?? Infinity;
       state.ghostFrames = state.competitorLaps[0]?.frames ?? [];
       state.ghostVisible = state.competitorLaps.length > 0;
-      savedLap = true;
-      saveGhost?.();
+      savedLap = ghostMode === 'saved';
+      if (savedLap) saveGhost?.();
     } catch (error) {
       onError?.(error);
     }
@@ -246,6 +251,10 @@ export function completeLapState({
       ...(scoreResults || {})
     });
   }
+  // A tutorial teaching lap ends at the line. Every lap-result listener above has seen
+  // it under its own policy, so the next lap starts fully eligible.
+  const graduated = completedLap ? graduateSessionPolicy(state) !== null : false;
+  if (graduated) publishEvent('turn:session-graduated', { policy: sessionPolicy(state).id });
 
   state.lapCheckpointIndex = 0;
   state.lapInvalid = false;
@@ -262,6 +271,7 @@ export function completeLapState({
     finishedTime,
     completedLap,
     previewEnded,
+    graduated,
     validLap,
     savedLap,
     ranked: rankedLap,

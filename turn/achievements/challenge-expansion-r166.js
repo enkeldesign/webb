@@ -3,6 +3,7 @@ import {
   TRACK_IDS
 } from './catalog.js';
 import { assertTrackConfigCoverage } from '../tracks/definitions.js';
+import { sessionPolicy } from '../race/session-policy.js';
 
 export const CHALLENGE_PROGRESS_STORAGE_KEY = 'turn-achievement-challenges-v1';
 export const CLEAN_LAP_TARGETS = Object.freeze({
@@ -254,9 +255,9 @@ export function installAchievementChallengeExpansion({
   function completeLap(detail) {
     const attempt = currentLap;
     resetLap();
-    // A reward preview (PATROL, EXCURSION) is a trial: its laps add no progress here,
-    // which unlockStoredTrackAchievements() would otherwise replay on the next launch.
-    if (runtime?.state?.rewardPreview) {
+    // A trial lap (reward preview, tutorial teaching lap) adds no progress here, which
+    // unlockStoredTrackAchievements() would otherwise replay on the next launch.
+    if (!sessionPolicy(runtime?.state).progress) {
       headStartSetup = null;
       return;
     }

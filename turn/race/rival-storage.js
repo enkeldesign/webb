@@ -639,7 +639,10 @@ export function syncPrimaryRivalState(state) {
 }
 
 function isValidLap(lap) {
-  return Number.isFinite(lap?.time)
+  // A session-only ghost (a tutorial teaching lap) races for one run and is never
+  // stored, so it can never stand as a record.
+  return lap?.sessionOnly !== true
+    && Number.isFinite(lap?.time)
     && Array.isArray(lap?.frames)
     && lap.frames.length > 20
     && !isSportsSedanEasterEgg({

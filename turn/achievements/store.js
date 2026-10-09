@@ -17,6 +17,7 @@ import {
   migrateStoredRewardIdsForVersion,
   rewardIdsForTrophies
 } from '../progression/trophy-road.js';
+import { activeSessionPolicy } from '../race/session-policy.js';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;
@@ -268,12 +269,6 @@ export function loadAchievementState(storage = globalThis.localStorage) {
   }
 }
 
-// A reward preview (PATROL, EXCURSION) is a trial: driving in it unlocks no
-// achievement and adds no track progress. The challenge's own bonus still lands.
-function rewardPreviewRunning() {
-  return Boolean(globalThis.__turnRuntime?.state?.rewardPreview);
-}
-
 export function createAchievementStore(storage = globalThis.localStorage) {
   const loaded = loadAchievementState(storage);
   const state = loaded.state;
@@ -335,7 +330,9 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   }
 
   function unlock(id, context = {}) {
-    if (rewardPreviewRunning()) return null;
+    // A trial session (reward preview, tutorial teaching lap) unlocks nothing. Bonuses
+    // such as a challenge's own reward are granted separately and still land.
+    if (!activeSessionPolicy().achievements) return null;
     const achievement = getAchievement(id);
     if (!achievement || achievement.calibrationPending === true || isUnlocked(id)) return null;
     state.unlocked[id] = {
@@ -379,7 +376,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   }
 
   function addProgressTrack(key, trackId) {
-    if (rewardPreviewRunning()) return false;
+    if (!activeSessionPolicy().progress) return false;
     const collection = state.progress[key];
     if (!Array.isArray(collection) || !TRACK_IDS.includes(trackId) || collection.includes(trackId)) {
       return false;

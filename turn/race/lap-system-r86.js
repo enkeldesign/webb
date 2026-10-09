@@ -1,5 +1,6 @@
 import * as baseLapSystem from './lap-system.js?revision=r262-forgiving-lap-void';
 import { isSportsSedanEasterEgg } from '../vehicle/catalog.js?build=20260720-r20';
+import { sessionPolicy } from './session-policy.js';
 
 export const LAP_CHECKPOINTS = baseLapSystem.LAP_CHECKPOINTS;
 export const MOUNTAIN_LONG_CHECKPOINTS = Object.freeze(
@@ -56,16 +57,20 @@ export function updateLapProgressState(options = {}) {
 
 export function completeLapState(options) {
   const state = options?.state;
-  // A reward preview (PATROL, EXCURSION) is a trial on borrowed content: its laps
-  // set no best time, ghost or DRIFT/FLOW record.
+  // A trial lap (reward preview, tutorial teaching lap) sets no best time or
+  // DRIFT/FLOW record; the session policy says whether it becomes a ghost.
+  const policy = sessionPolicy(state);
   const ranked = !isSportsSedanEasterEgg({
     carId: state?.vehicleId,
     secondaryColor: state?.vehicleSecondaryColor
-  }) && !state?.rewardPreview;
+  }) && policy.records;
 
   return baseLapSystem.completeLapState({
     ...options,
     ranked,
+    // The hidden Sports Sedan setup never becomes a rival. A teaching lap does, for
+    // this run only.
+    ghost: ranked || policy.ghost === 'session' ? policy.ghost : 'none',
     saveGhost: ranked ? options?.saveGhost : undefined
   });
 }
