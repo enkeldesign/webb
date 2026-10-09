@@ -32,7 +32,10 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
   Object.freeze({
     id: 'drift',
     title: 'DRIFT',
-    prompt: 'Hold DRIFT through the bend. Drifting refills BOOST.',
+    // LOCK is on the drive pad from the first lap, so it is named here, where DRIFT is.
+    // It is offered, not required: the slide is the lesson.
+    prompt: 'Hold DRIFT through the bend. Slide outward into LOCK for a stronger slide.',
+    doneText: 'Drifting refills BOOST.',
     from: 0.47,
     to: 0.58,
     speedCap: 0.4,

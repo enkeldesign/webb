@@ -721,6 +721,16 @@ test('unlock introductions queue new DRIFT ATTACK, SHIFT and FLOW unlocks once',
     'Test suites earning rewards are not interrupted');
 });
 
+test('the DRIFT lesson names LOCK, which is on the drive pad from the first lap', async () => {
+  const { TURN_TUTORIAL_LESSONS } = await import('../turn/tutorial/turn-tutorial-lessons.js');
+  const drift = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'drift');
+  assert.match(drift.prompt, /LOCK/, 'Taught where DRIFT is');
+  assert.match(drift.doneText, /refills BOOST/, 'The BOOST loop is still said, once the slide is done');
+  // LOCK is part of the DRIFT zone, so a slide into LOCK still counts as drifting.
+  const controls = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'));
+  assert.match(controls, /globalThis\.__turnDriftHeld = nextZone === 'drift';/);
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {
