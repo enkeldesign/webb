@@ -187,8 +187,8 @@ test('tutorial lifecycle: start, interrupt, stop, complete and replay', () => {
 
   progress.stop(id);
   progress = makeProgress();
-  assert.equal(progress.startsOnLaunch(id), false, 'STOP TUTORIAL turns the reminders off');
-  assert.equal(progress.status(id), TUTORIAL_STATUS.IN_PROGRESS, 'Stopping is not completion');
+  assert.equal(progress.startsOnLaunch(id), false, 'SKIP TUTORIAL turns the reminders off');
+  assert.equal(progress.status(id), TUTORIAL_STATUS.IN_PROGRESS, 'Skipping is not completion');
 
   progress.begin(id);
   assert.equal(progress.complete(id, TURN_TUTORIAL.revision), true, 'The first completion is the rewarded one');
@@ -311,7 +311,7 @@ test('a failed restore keeps the player\'s selection for a retry', async () => {
   assert.equal(harness.state.vehicleId, 'convertible');
 });
 
-test('replay and STOP TUTORIAL', async () => {
+test('replay and SKIP TUTORIAL', async () => {
   memory.clear();
   const progress = makeProgress();
   progress.complete(TURN_TUTORIAL.id);
@@ -333,9 +333,36 @@ test('replay and STOP TUTORIAL', async () => {
   const session = createTutorialSession({ ...harness, progress: fresh });
   await session.enter();
   await session.stop();
-  assert.equal(fresh.startsOnLaunch(TURN_TUTORIAL.id), false, 'STOP TUTORIAL ends automatic starts');
+  assert.equal(fresh.startsOnLaunch(TURN_TUTORIAL.id), false, 'SKIP TUTORIAL ends automatic starts');
   assert.equal(fresh.status(TURN_TUTORIAL.id), TUTORIAL_STATUS.IN_PROGRESS);
   assert.equal(harness.state.trackId, 'airport');
+});
+
+test('the first-launch card opens for players, and in test runs only when asked', async () => {
+  const { opensTutorialOnLaunch, LAUNCH_UNDER_TEST_KEY } = await import('../turn/tutorial/tutorial-entry.js');
+  const at = (hostname, { webdriver = false, optIn = false } = {}) => opensTutorialOnLaunch({
+    location: { hostname },
+    navigator: { webdriver },
+    localStorage: { getItem: (key) => (optIn && key === LAUNCH_UNDER_TEST_KEY ? '1' : null) }
+  });
+  assert.equal(at('enkel.design'), true, 'A player\'s launch');
+  assert.equal(at('claude-turn-game-review-gz74.turntest.pages.dev'), true, 'Preview builds behave like the game');
+  assert.equal(at('enkel.design', { webdriver: true }), false, 'Browser automation');
+  assert.equal(at('127.0.0.1'), false, 'The local test server');
+  assert.equal(at('127.0.0.1', { webdriver: true, optIn: true }), true, 'A test of the first launch opts in');
+  assert.equal(opensTutorialOnLaunch({ location: { hostname: '127.0.0.1' }, navigator: {}, get localStorage() { throw new Error('blocked'); } }), false);
+});
+
+test('ABOUT TURN, the first-launch card and HOW TO PLAY say what TURN is for', async () => {
+  const fs = await import('node:fs');
+  const about = fs.readFileSync(new URL('../turn/content/about-turn.js', import.meta.url), 'utf8');
+  const entry = fs.readFileSync(new URL('../turn/tutorial/tutorial-entry.js', import.meta.url), 'utf8');
+  const goal = /the feel of the drive and getting faster\. Your best laps become rivals to beat, and trophies unlock new tracks, cars and ways to play\./;
+  assert.match(about, /<p class="m8-about-lead">TURN is about the feel of the drive and getting faster\./,
+    'ABOUT TURN, linked from the install page and in the game, leads with it');
+  assert.match(about, goal);
+  assert.match(entry, goal, 'The first-launch card and HOW TO PLAY');
+  assert.match(entry, /SKIP TUTORIAL/);
 });
 
 test('TURN TUTORIAL earns 25 trophies in Ways to play, outside Getting started', async () => {

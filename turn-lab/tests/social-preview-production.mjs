@@ -7,7 +7,11 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const turnRoot = path.resolve(here, '../../turn');
 const index = fs.readFileSync(path.join(turnRoot, 'index.html'), 'utf8');
 
-assert.match(index, /<meta name="description" content="TURN is a motion-controlled arcade drift racer\./);
+assert.match(index, /<meta name="description" content="TURN is an accessible motion-controlled arcade drift racer, all about the feel of the drive and getting faster\. Your best laps become rivals to beat, and trophies unlock new tracks, cars and ways to play\.">/);
+// Sharing says what TURN is for, as the install page and HOW TO PLAY do.
+for (const property of ['property="og:description"', 'name="twitter:description"']) {
+  assert.match(index, new RegExp(`<meta ${property} content="An accessible motion-controlled arcade drift racer, all about the feel of the drive and getting faster\\. Your best laps become rivals to beat, and trophies unlock new tracks, cars and ways to play\\.">`));
+}
 assert.match(index, /<link rel="canonical" href="https:\/\/enkel\.design\/turn\/">/);
 assert.match(index, /<meta property="og:type" content="website">/);
 assert.match(index, /<meta property="og:title" content="TURN — Tilt\. Drift\. Boost\.">/);

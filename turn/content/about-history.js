@@ -107,7 +107,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     "period": "9 October",
     "title": "A taste of the next reward",
     "paragraphs": [
-      "PATROL follows the HOW TO PLAY challenge with a temporary drive through MIDNIGHT CITY in the POLICE CAR. After the first procedural challenge, EXCURSION takes the MONSTER TRUCK to MOUNTAIN. One valid lap completes each preview, with an optional second lap before returning Home. Unfinished attempts can be retried while normal Trophy Road unlocks stay in charge."
+      "PATROL follows the HOW TO PLAY challenge with a temporary drive through MIDNIGHT CITY in the POLICE CAR. After the first procedural challenge, EXCURSION takes the MONSTER TRUCK to MOUNTAIN. One valid lap completes each preview, with an optional second lap before returning Home. Unfinished attempts can be retried while normal Trophy Road unlocks stay in charge.",
+      "TURN TUTORIAL made the first lap the lesson. A new player drives COUNTRYSIDE in the LEARNER CAR while DRIVE, BOOST, DRIFT and a first pace note are taught on the road, and crossing the line hands straight over to ordinary racing, with that lap as the rival to catch."
     ],
     "milestones": []
   }
@@ -360,6 +361,10 @@ export const CHANGELOG = Object.freeze([
       [
         "PATROL and EXCURSION reward previews",
         "Try MIDNIGHT CITY in the POLICE CAR and MOUNTAIN in the MONSTER TRUCK before unlocking them. Complete one valid lap to clear each challenge, with up to two completed laps per preview and retries for unfinished attempts."
+      ],
+      [
+        "TURN TUTORIAL",
+        "New players start with one lap of COUNTRYSIDE in the LEARNER CAR that teaches DRIVE, BOOST, DRIFT and reading the road by ear. At the line, that lap becomes the first rival. Replay it from HOW TO PLAY."
       ]
     ]
   }

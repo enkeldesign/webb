@@ -1,7 +1,7 @@
 // Hands-on tutorials (#1130, #1131): one persistent lifecycle for TURN TUTORIAL and
 // the later DRIFT ATTACK, SHIFT and FLOW modules.
 //
-// A module is not started, in progress or completed. Stopping a tutorial turns its
+// A module is not started, in progress or completed. Skipping a tutorial turns its
 // reminders off; it is not completion, and the tutorial stays in HOW TO PLAY.
 export const TUTORIAL_STORAGE_KEY = 'turn-tutorials-v1';
 const STORAGE_VERSION = 1;
@@ -113,7 +113,7 @@ export function createTutorialProgress({
       });
       return first;
     },
-    // STOP TUTORIAL: no more automatic starts. The tutorial stays in HOW TO PLAY.
+    // SKIP TUTORIAL: no more automatic starts. The tutorial stays in HOW TO PLAY.
     stop(id) {
       return update(id, { remindersOff: true });
     }

@@ -83,7 +83,7 @@ assert.match(feedback, /meta\.appendChild\(trigger\)/, 'ABOUT TURN must appear d
 assert.match(feedback, /dialog\.className = 'm8-dialog m8-about-dialog'/);
 assert.match(feedback, /aria-labelledby', 'm8AboutTitle'/);
 assert.match(feedback, /<h2 id="m8AboutTitle">ABOUT TURN<\/h2>/);
-assert.match(feedback, /TURN is a racing game about tilt steering, personal rivals and learning to drive by ear/);
+assert.match(feedback, /TURN is about the feel of the drive and getting faster\. Your best laps become rivals to beat, and trophies unlock new tracks, cars and ways to play\./);
 assert.match(feedback, /inclusive and universal design so everyone can play/);
 assert.match(feedback, /regardless of ability or how they interact with the game/);
 assert.doesNotMatch(feedback, /accessibility built into the game from the start/);

@@ -4,31 +4,32 @@ import { TROPHY_ROAD_STORAGE_VERSION } from '../turn/progression/trophy-road.js'
 
 // TURN TUTORIAL entry (#1132) on the production page: the first-launch card, STOP
 // TUTORIAL, and a full teaching lap through graduation. Same server as the
-// support-feedback browser smokes.
+// support-feedback browser smokes. The card opens by itself only for players; a test of
+// the first launch opts in with turn-tutorial-launch-under-test (tutorial-entry.js).
 const target = process.env.TURN_SUPPORT_FEEDBACK_URL || 'http://127.0.0.1:8000/';
 const browser = await chromium.launch({ headless: true });
 
-async function openTurn({ admin = true, played = false } = {}) {
+async function openTurn({ played = false, launch = false } = {}) {
   const context = await browser.newContext({ viewport: { width: 844, height: 390 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.addInitScript(({ admin, played, storageVersion }) => {
+  await page.addInitScript(({ played, launch, storageVersion }) => {
     if (globalThis.sessionStorage.getItem('turn-tutorial-smoke-seeded')) return;
     globalThis.sessionStorage.setItem('turn-tutorial-smoke-seeded', '1');
     localStorage.setItem('turn-low-graphics-v1', '1');
     localStorage.setItem('turn-steering-mode-v1', 'manual');
     localStorage.setItem('turn-audio-enabled-v1', 'off');
     localStorage.setItem('turn-racing-music-volume-v1', '0');
-    if (admin) localStorage.setItem('turn-admin-unlock-v1', JSON.stringify({ at: Date.now() }));
+    if (launch) localStorage.setItem('turn-tutorial-launch-under-test', '1');
     if (played) {
       localStorage.setItem('turn-achievements-v1', JSON.stringify({
         version: storageVersion,
         unlocked: { 'first-turn': { unlockedAt: Date.now() } }
       }));
     }
-  }, { admin, played, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
+  }, { played, launch, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
   await page.addInitScript(() => {
     Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
   });
@@ -95,26 +96,30 @@ async function run(name, options, scenario) {
 try {
   const showLaunchCard = (page) => page.evaluate(() => globalThis.__turnNextHome.tutorial.entry.showLaunchCard());
 
-  await run('first launch card and STOP TUTORIAL', {}, async (page) => {
+  await run('first launch card and SKIP TUTORIAL', { launch: true }, async (page) => {
+    await page.waitForFunction(() => Boolean(document.querySelector('.m8-tutorial-dialog[open]')));
     let current = await inspect(page);
-    assert.equal(current.card, false, 'While admin-only, the card does not open by itself at launch');
-    assert.equal(await showLaunchCard(page), true, 'A new player gets the TURN TUTORIAL card');
-    current = await inspect(page);
-    assert.equal(current.card, true);
+    assert.equal(current.card, true, 'A new player\'s first launch of TURN opens TURN TUTORIAL');
+    const goal = /your best laps become rivals to beat/i;
+    assert.match(await page.locator('.m8-tutorial-dialog .m8-tutorial-copy').innerText(), goal,
+      'The first launch says what TURN is for');
+    assert.match(await page.locator('.m8-how-dialog .m8-tutorial-entry').innerText(), goal,
+      'So does HOW TO PLAY, for players who never see the first-launch card');
     assert.equal(current.entry, true, 'HOW TO PLAY offers TURN TUTORIAL');
     // TURN dialogs focus their heading first, so a screen reader starts at the title.
     assert.equal(await page.evaluate(() => Boolean(document.activeElement?.closest('.m8-tutorial-dialog'))), true,
       'Focus moves into the TURN TUTORIAL card');
-    await page.locator('[data-tutorial-stop]').click();
+    await page.locator('[data-tutorial-skip]').click();
     current = await inspect(page);
     assert.equal(current.card, false);
-    assert.equal(current.tutorial.remindersOff, true, 'STOP TUTORIAL turns automatic starts off');
-    assert.equal(current.tutorial.status, 'not-started', 'Stopping is not completion');
+    assert.equal(current.tutorial.remindersOff, true, 'SKIP TUTORIAL turns automatic starts off');
+    assert.equal(current.tutorial.status, 'not-started', 'Skipping is not completion');
     await page.reload();
     await page.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready')
       && globalThis.__turnNextHome?.tutorial);
-    assert.equal(await showLaunchCard(page), false, 'A stopped tutorial does not start on the next launch');
-    assert.equal((await inspect(page)).card, false);
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    assert.equal((await inspect(page)).card, false, 'A skipped tutorial does not start on the next launch');
+    assert.equal(await showLaunchCard(page), false);
   });
 
   await run('teaching lap, graduation and the self-ghost', {}, async (page) => {
@@ -189,7 +194,8 @@ try {
     assert.equal(current.card, false, 'A completed tutorial does not start again');
   });
 
-  await run('existing player', { played: true }, async (page) => {
+  await run('existing player', { played: true, launch: true }, async (page) => {
+    assert.equal((await inspect(page)).card, false, 'An existing player\'s launch does not open the tutorial');
     assert.equal(await showLaunchCard(page), false, 'An existing player is not put through the tutorial');
     const current = await inspect(page);
     assert.equal(current.tutorial.status, 'completed');
@@ -198,10 +204,11 @@ try {
     assert.equal(current.entry, true, 'They can still play it from HOW TO PLAY');
   });
 
-  await run('players without the admin unlock', { admin: false }, async (page) => {
+  await run('automated runs', {}, async (page) => {
     const current = await inspect(page);
-    assert.equal(current.card, false, 'The tutorial stays admin-only until the teaching lap ships');
-    assert.equal(current.entry, false);
+    assert.equal(current.card, false, 'Test runs get the card only when they ask for it');
+    assert.equal(current.entry, true, 'Every player has TURN TUTORIAL in HOW TO PLAY');
+    assert.equal(current.tutorial.status, 'not-started');
   });
 } finally {
   await browser.close();
