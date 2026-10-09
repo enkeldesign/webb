@@ -57,6 +57,22 @@ export function createTutorialPrompt(parent = document.body) {
   element.append(title, text);
   parent.appendChild(element);
 
+  // Below the HUD stat row, measured again whenever the layout can change: the stat
+  // chips reflow between portrait and landscape.
+  function place() {
+    if (element.hidden) return;
+    const stats = document.querySelector('#hud .topbar .stats') || document.querySelector('#hud .topbar');
+    const below = stats?.getBoundingClientRect?.().bottom;
+    if (Number.isFinite(below) && below > 0) element.style.setProperty('--turn-tutorial-prompt-top', `${Math.round(below) + 8}px`);
+  }
+  let placing = 0;
+  const onResize = () => {
+    cancelAnimationFrame(placing);
+    placing = requestAnimationFrame(place);
+  };
+  globalThis.addEventListener?.('resize', onResize);
+  globalThis.addEventListener?.('orientationchange', onResize);
+
   function present(view) {
     element.dataset.lesson = view.id || '';
     element.dataset.state = view.kind;
@@ -66,10 +82,8 @@ export function createTutorialPrompt(parent = document.body) {
       text.textContent = '';
       return;
     }
-    const stats = document.querySelector('#hud .topbar .stats') || document.querySelector('#hud .topbar');
-    const below = stats?.getBoundingClientRect?.().bottom;
-    if (Number.isFinite(below) && below > 0) element.style.setProperty('--turn-tutorial-prompt-top', `${Math.round(below) + 8}px`);
     element.hidden = false;
+    place();
     if (view.kind === 'lesson') {
       title.textContent = view.title;
       text.textContent = view.prompt;
@@ -82,7 +96,14 @@ export function createTutorialPrompt(parent = document.body) {
     }
   }
 
-  return Object.freeze({ element, present, remove: () => element.remove() });
+  function remove() {
+    cancelAnimationFrame(placing);
+    globalThis.removeEventListener?.('resize', onResize);
+    globalThis.removeEventListener?.('orientationchange', onResize);
+    element.remove();
+  }
+
+  return Object.freeze({ element, present, remove });
 }
 
 // Runs the coach once per frame for one tutorial run. Paused races do not advance it.
@@ -93,13 +114,23 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   let frame = 0;
   let last = 0;
   let stopped = false;
-  let graduationTimer = 0;
+  // Seconds of race time the completion message stays up; it waits out a pause.
+  let graduationLeft = 0;
 
   const tick = (now) => {
     if (stopped) return;
     const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
     last = now;
-    if (state.running && globalThis.__turnRacePause?.paused !== true) coach.update(dt);
+    if (state.running && globalThis.__turnRacePause?.paused !== true) {
+      coach.update(dt);
+      if (graduationLeft > 0) {
+        graduationLeft -= dt;
+        if (graduationLeft <= 0) {
+          stop();
+          return;
+        }
+      }
+    }
     frame = requestAnimationFrame(tick);
   };
 
@@ -107,7 +138,6 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
     if (stopped) return;
     stopped = true;
     cancelAnimationFrame(frame);
-    clearTimeout(graduationTimer);
     events.removeEventListener?.('turn:session-graduated', onGraduated);
     coach.stop();
     prompt.remove();
@@ -116,7 +146,7 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   // The line: say so, then step out of the way of ordinary racing.
   function onGraduated() {
     coach.graduate();
-    graduationTimer = setTimeout(stop, GRADUATION_SECONDS * 1000);
+    graduationLeft = GRADUATION_SECONDS;
   }
   events.addEventListener?.('turn:session-graduated', onGraduated);
   frame = requestAnimationFrame(tick);
