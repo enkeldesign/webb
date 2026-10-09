@@ -30,6 +30,8 @@ const {
   hasPlayedBefore
 } = await import('../turn/tutorial/tutorial-progress.js');
 const { createTutorialSession } = await import('../turn/tutorial/tutorial-session.js');
+const { createTurnTutorialCoach } = await import('../turn/tutorial/turn-tutorial-coach.js');
+const { TURN_TUTORIAL_LESSONS } = await import('../turn/tutorial/turn-tutorial-lessons.js');
 
 const tests = [];
 const test = (name, fn) => tests.push([name, fn]);
@@ -321,6 +323,57 @@ test('replay and STOP TUTORIAL', async () => {
   assert.equal(fresh.startsOnLaunch(TURN_TUTORIAL.id), false, 'STOP TUTORIAL ends automatic starts');
   assert.equal(fresh.status(TURN_TUTORIAL.id), TUTORIAL_STATUS.IN_PROGRESS);
   assert.equal(harness.state.trackId, 'airport');
+});
+
+test('the coach teaches DRIVE, BOOST and DRIFT by doing, with no failure state', () => {
+  const state = { sessionSpeedCap: null };
+  const views = [];
+  let input = { progress: 0.02, speed: 70, gas: false, drift: false, boostActive: false, boostCharge: 1 };
+  const coach = createTurnTutorialCoach({ state, maxSpeed: 88, signals: () => input, present: (view) => views.push(view) });
+  const run = (seconds, change = {}) => {
+    input = { ...input, ...change };
+    for (let t = 0; t < seconds; t += 0.1) coach.update(0.1);
+  };
+  assert.deepEqual(TURN_TUTORIAL_LESSONS.map((lesson) => lesson.id), ['drive', 'boost', 'drift'],
+    'BOOST is taught before DRIFT');
+
+  run(1);
+  assert.equal(views.at(-1).id, 'drive');
+  assert.ok(state.sessionSpeedCap < 70 && state.sessionSpeedCap >= TURN_TUTORIAL_LESSONS[0].speedCap * 88, 'The car eases down while DRIVE waits');
+  run(2, { gas: true });
+  assert.equal(coach.outcome().drive, 'done', 'Holding GAS completes DRIVE');
+  assert.equal(state.sessionSpeedCap, null, 'A finished lesson releases the speed cap');
+
+  run(1, { progress: 0.2, gas: true, boostActive: true, boostCharge: 0.6 });
+  assert.equal(coach.outcome().boost, 'pending', 'BOOST waits until the meter is spent');
+  assert.equal(state.sessionSpeedCap, null, 'BOOST is never capped: it must be felt');
+  run(0.5, { boostCharge: 0.1 });
+  assert.equal(coach.outcome().boost, 'done', 'Emptying the meter completes BOOST');
+
+  run(1, { progress: 0.4, boostActive: false });
+  assert.equal(views.at(-1).kind, 'idle', 'No prompt between lessons');
+
+  run(0.5, { progress: 0.5 });
+  assert.equal(views.at(-1).id, 'drift');
+  assert.ok(state.sessionSpeedCap > 0, 'The car eases down for the DRIFT bend');
+  run(1, { progress: 0.62 });
+  assert.equal(coach.outcome().drift, 'pending', 'A late DRIFT still counts: the prompt stays');
+  assert.equal(state.sessionSpeedCap, null, 'No cap outside the lesson stretch');
+  coach.graduate();
+  assert.equal(coach.outcome().drift, 'missed', 'Crossing the line ends the teaching lap regardless');
+  assert.equal(views.at(-1).kind, 'graduated');
+  run(1, { progress: 0.05 });
+  assert.equal(views.at(-1).kind, 'graduated', 'After the line the coach stays out of ordinary racing');
+});
+
+test('a drifted bend completes DRIFT and the physics honour the lesson cap', async () => {
+  const state = { sessionSpeedCap: null };
+  let input = { progress: 0.5, speed: 40, gas: true, drift: true, boostActive: false, boostCharge: 0.4 };
+  const coach = createTurnTutorialCoach({ state, maxSpeed: 88, signals: () => input });
+  for (let t = 0; t < 2; t += 0.1) coach.update(0.1);
+  assert.equal(coach.outcome().drift, 'done');
+  const physics = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8'));
+  assert.match(physics, /Math\.min\(speedLimit, sessionSpeedCap\)/, 'The lesson cap limits the vehicle speed');
 });
 
 let failed = 0;

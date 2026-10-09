@@ -492,8 +492,11 @@ function updateVehiclePhysicsStateCore({
     driftSlipAngle,
     driftLockAmount
   }) * overdriveSpeedMultiplier;
+  // A TURN TUTORIAL lesson eases the car down for thinking time (#1132).
+  const sessionSpeedCap = Number(state.sessionSpeedCap);
+  const cappedSpeedLimit = sessionSpeedCap > 0 ? Math.min(speedLimit, sessionSpeedCap) : speedLimit;
 
-  if (speed > speedLimit) state.velocity.multiplyScalar(speedLimit / speed);
+  if (speed > cappedSpeedLimit) state.velocity.multiplyScalar(cappedSpeedLimit / speed);
 
   state.position.addScaledVector(state.velocity, dt);
   state.speed = state.velocity.length();

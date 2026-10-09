@@ -10,6 +10,7 @@ import { createRewardPreviewSession } from './race/reward-preview.js';
 import { TURN_TUTORIAL, createTutorialProgress } from './tutorial/tutorial-progress.js';
 import { createTutorialSession } from './tutorial/tutorial-session.js';
 import { installTutorialEntry } from './tutorial/tutorial-entry.js';
+import { startTurnTutorialCoach } from './tutorial/tutorial-prompt.js';
 import { trackIconMarkup } from '/turn/ui/track-icons.js';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';
 import {
@@ -663,6 +664,12 @@ export async function installM8HomeNavigation() {
   });
 
   // TURN TUTORIAL (#1132): COUNTRYSIDE in the LEARNER CAR, then ordinary TURN.
+  let tutorialCoach = null;
+  function stopTutorialCoach() {
+    tutorialCoach?.stop();
+    tutorialCoach = null;
+  }
+
   async function startTutorial() {
     if (setupPending || rewardPreview.active || tutorialSession.active || runtime.state.running) return false;
     setupPending = true;
@@ -675,9 +682,11 @@ export async function installM8HomeNavigation() {
       await tutorialSession.enter();
       await showTrackIntro(TURN_TUTORIAL.trackId);
       await raceSession.startGame(access.fullscreenPromise);
+      tutorialCoach = startTurnTutorialCoach({ runtime });
       return true;
     } catch (error) {
       console.warn('TURN: TURN TUTORIAL could not start.', error);
+      stopTutorialCoach();
       await tutorialSession.exit().catch(() => {});
       showHome({ focus: true });
       homeStatus.textContent = 'TURN TUTORIAL could not start. Try again from HOW TO PLAY.';
@@ -690,6 +699,7 @@ export async function installM8HomeNavigation() {
   async function leaveRaceForHome() {
     raceSession.leaveRace();
     if (rewardPreview.active) await rewardPreview.restore();
+    stopTutorialCoach();
     if (tutorialSession.active) await tutorialSession.exit();
     showHome({ focus: true });
     return true;

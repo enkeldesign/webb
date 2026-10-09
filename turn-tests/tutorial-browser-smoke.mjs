@@ -127,8 +127,42 @@ try {
     assert.equal(current.policy, 'tutorial-lap');
     assert.deepEqual(current.ghosts, [], 'No rival drives ahead of the teaching lap');
     assert.equal(current.tutorial.status, 'in-progress');
+    assert.equal(await page.locator('.turn-tutorial-prompt').count(), 1, 'The lesson prompt runs with the teaching lap');
+    assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('role'), 'status',
+      'Lessons are spoken as well as shown');
+    // Into the DRIVE stretch, just past the line.
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * 0.04)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(10);
+    });
+    await page.waitForFunction(() => {
+      const prompt = document.querySelector('.turn-tutorial-prompt');
+      return prompt?.dataset.lesson === 'drive' && !prompt.hidden;
+    });
+    // Rotating reflows the HUD stat chips into a taller grid; the prompt follows them.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForFunction(() => {
+      const stats = document.querySelector('#hud .topbar .stats');
+      const prompt = document.querySelector('.turn-tutorial-prompt');
+      return !prompt.hidden && prompt.getBoundingClientRect().top >= stats.getBoundingClientRect().bottom;
+    }, null, { timeout: 5000 });
+    await page.evaluate(() => globalThis.__turnRacePause?.resume?.());
+    await page.setViewportSize({ width: 844, height: 390 });
 
     await crossFinish(page);
+    assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-state'), 'graduated',
+      'Crossing the line says the tutorial is complete');
+    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.sessionSpeedCap ?? null), null,
+      'No lesson cap survives the line');
+    // The completion message counts race time: a pause (or backgrounding) waits it out.
+    await page.evaluate(() => globalThis.__turnRacePause.pause('player'));
+    await page.waitForTimeout(4500);
+    assert.equal(await page.locator('.turn-tutorial-prompt').count(), 1, 'TUTORIAL COMPLETE is still there after a pause');
+    await page.evaluate(() => globalThis.__turnRacePause.resume());
+    await page.waitForFunction(() => !document.querySelector('.turn-tutorial-prompt'), null, { timeout: 10000 });
     current = await inspect(page);
     assert.equal(current.policy, 'normal', 'The run continues as ordinary TURN');
     assert.equal(current.tutorial.status, 'completed');
@@ -142,6 +176,7 @@ try {
 
     await page.evaluate(() => globalThis.__turnRuntime.openHome());
     current = await inspect(page);
+    assert.equal(await page.locator('.turn-tutorial-prompt').count(), 0, 'Going Home removes the prompt');
     assert.equal(current.active, false);
     assert.equal(current.policy, 'normal');
     assert.equal(current.card, false, 'A completed tutorial does not start again');
