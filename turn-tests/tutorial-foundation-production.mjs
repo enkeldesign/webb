@@ -30,7 +30,7 @@ const {
   hasPlayedBefore
 } = await import('../turn/tutorial/tutorial-progress.js');
 const { createTutorialSession } = await import('../turn/tutorial/tutorial-session.js');
-const { createTurnTutorialCoach } = await import('../turn/tutorial/turn-tutorial-coach.js');
+const { createTurnTutorialCoach, readTutorialSignals } = await import('../turn/tutorial/turn-tutorial-coach.js');
 const { TURN_TUTORIAL_LESSONS } = await import('../turn/tutorial/turn-tutorial-lessons.js');
 
 const tests = [];
@@ -328,14 +328,14 @@ test('replay and STOP TUTORIAL', async () => {
 test('the coach teaches DRIVE, BOOST and DRIFT by doing, with no failure state', () => {
   const state = { sessionSpeedCap: null };
   const views = [];
-  let input = { progress: 0.02, speed: 70, gas: false, drift: false, boostActive: false, boostCharge: 1 };
+  let input = { progress: 0.02, speed: 70, gas: false, drift: false, boostActive: false, boostCharge: 1, routeCues: true, paceNotes: 0 };
   const coach = createTurnTutorialCoach({ state, maxSpeed: 88, signals: () => input, present: (view) => views.push(view) });
   const run = (seconds, change = {}) => {
     input = { ...input, ...change };
     for (let t = 0; t < seconds; t += 0.1) coach.update(0.1);
   };
-  assert.deepEqual(TURN_TUTORIAL_LESSONS.map((lesson) => lesson.id), ['drive', 'boost', 'drift'],
-    'BOOST is taught before DRIFT');
+  assert.deepEqual(TURN_TUTORIAL_LESSONS.map((lesson) => lesson.id), ['drive', 'boost', 'drift', 'read'],
+    'BOOST is taught before DRIFT, and READ THE ROAD comes last');
 
   run(1);
   assert.equal(views.at(-1).id, 'drive');
@@ -356,7 +356,7 @@ test('the coach teaches DRIVE, BOOST and DRIFT by doing, with no failure state',
   run(0.5, { progress: 0.5 });
   assert.equal(views.at(-1).id, 'drift');
   assert.ok(state.sessionSpeedCap > 0, 'The car eases down for the DRIFT bend');
-  run(1, { progress: 0.62 });
+  run(1, { progress: 0.59 });
   assert.equal(coach.outcome().drift, 'pending', 'A late DRIFT still counts: the prompt stays');
   assert.equal(state.sessionSpeedCap, null, 'No cap outside the lesson stretch');
   coach.graduate();
@@ -364,6 +364,78 @@ test('the coach teaches DRIVE, BOOST and DRIFT by doing, with no failure state',
   assert.equal(views.at(-1).kind, 'graduated');
   run(1, { progress: 0.05 });
   assert.equal(views.at(-1).kind, 'graduated', 'After the line the coach stays out of ordinary racing');
+});
+
+test('READ THE ROAD is done when the pace note for the next bend plays', () => {
+  const state = { sessionSpeedCap: null };
+  const views = [];
+  let input = { progress: 0.62, speed: 50, gas: true, drift: false, boostActive: false, boostCharge: 0.5, routeCues: true, paceNotes: 6 };
+  const coach = createTurnTutorialCoach({ state, maxSpeed: 88, signals: () => input, present: (view) => views.push(view) });
+  const run = (seconds, change = {}) => {
+    input = { ...input, ...change };
+    for (let t = 0; t < seconds; t += 0.1) coach.update(0.1);
+  };
+  run(1);
+  assert.equal(views.at(-1).id, 'read');
+  assert.match(views.at(-1).prompt, /chime/i, 'The prompt says what to listen for, before the cue plays');
+  assert.equal(coach.outcome().read, 'pending', 'Cues heard before the lesson do not count');
+  assert.ok(state.sessionSpeedCap > 0, 'The car eases down so the cue is clear');
+  run(0.2, { progress: 0.7, paceNotes: 7 });
+  assert.equal(coach.outcome().read, 'done', 'The cue playing completes the lesson: no recognition test');
+  assert.equal(views.at(-1).kind, 'done');
+  assert.match(views.at(-1).text, /bend ahead/, 'The text says what the cue meant, as it plays');
+  assert.equal(state.sessionSpeedCap, null);
+  run(2, { progress: 0.75 });
+  assert.equal(views.at(-1).kind, 'done', 'The meaning stays up long enough to read or hear');
+  run(3, { progress: 0.85 });
+  assert.equal(views.at(-1).kind, 'idle');
+
+  const quiet = [];
+  const quietState = { sessionSpeedCap: null };
+  input = { ...input, progress: 0.55, drift: false, routeCues: false };
+  const withoutCues = createTurnTutorialCoach({ state: quietState, maxSpeed: 88, signals: () => input, present: (view) => quiet.push(view) });
+  withoutCues.update(0.1);
+  assert.equal(quiet.at(-1).id, 'drift');
+  input = { ...input, progress: 0.65 };
+  withoutCues.update(0.1);
+  assert.equal(withoutCues.outcome().read, 'skipped', 'With DRIVE BY EAR off there is nothing to hear: no prompt to listen');
+  assert.equal(quiet.at(-1).kind, 'idle', 'The missed DRIFT prompt does not linger');
+  assert.equal(quietState.sessionSpeedCap, null);
+
+  // Sound or DRIVE BY EAR turned off in SETTINGS while READ THE ROAD waits.
+  const switched = [];
+  const switchedState = { sessionSpeedCap: null };
+  input = { ...input, progress: 0.65, routeCues: true, paceNotes: 9 };
+  const midLesson = createTurnTutorialCoach({ state: switchedState, maxSpeed: 88, signals: () => input, present: (view) => switched.push(view) });
+  midLesson.update(0.1);
+  assert.equal(switched.at(-1).id, 'read');
+  assert.ok(switchedState.sessionSpeedCap > 0);
+  input = { ...input, routeCues: false };
+  midLesson.update(0.1);
+  assert.equal(midLesson.outcome().read, 'skipped', 'Cues turned off mid-lesson end the lesson');
+  assert.equal(switched.at(-1).kind, 'idle', 'The listening prompt goes away');
+  assert.equal(switchedState.sessionSpeedCap, null, 'and so does its speed cap');
+});
+
+test('pace notes count as available only when they can actually play', () => {
+  const saved = Object.fromEntries(['__turnSwooshPaceNotes', '__turnRouteAudio', '__turnDriveByEarEnabled', '__turnAudioPreferences']
+    .map((key) => [key, globalThis[key]]));
+  try {
+    globalThis.__turnSwooshPaceNotes = { counts: { fired: 4 } };
+    globalThis.__turnDriveByEarEnabled = true;
+    globalThis.__turnAudioPreferences = { getSettings: () => ({ audioEnabled: true, dbeEnabled: true }) };
+    globalThis.__turnRouteAudio = { ready: true, destination: {} };
+    assert.deepEqual([readTutorialSignals({}).routeCues, readTutorialSignals({}).paceNotes], [true, 4]);
+    globalThis.__turnRouteAudio = { ready: false, destination: null };
+    assert.equal(readTutorialSignals({}).routeCues, false, 'No ready route channel (no Web Audio, or a suspended context): no cue can play');
+    globalThis.__turnRouteAudio = { ready: true, destination: {} };
+    globalThis.__turnAudioPreferences = { getSettings: () => ({ audioEnabled: true, dbeEnabled: false }) };
+    assert.equal(readTutorialSignals({}).routeCues, false, 'DRIVE BY EAR off');
+    globalThis.__turnAudioPreferences = { getSettings: () => ({ audioEnabled: false, dbeEnabled: true }) };
+    assert.equal(readTutorialSignals({}).routeCues, false, 'Sound off');
+  } finally {
+    Object.assign(globalThis, saved);
+  }
 });
 
 test('a drifted bend completes DRIFT and the physics honour the lesson cap', async () => {

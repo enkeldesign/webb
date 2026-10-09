@@ -89,7 +89,7 @@ export function createTutorialPrompt(parent = document.body) {
       text.textContent = view.prompt;
     } else if (view.kind === 'done') {
       title.textContent = `${view.title} ✓`;
-      text.textContent = 'Nice. Keep driving.';
+      text.textContent = view.text || 'Nice. Keep driving.';
     } else if (view.kind === 'graduated') {
       title.textContent = 'TUTORIAL COMPLETE';
       text.textContent = view.message.replace(/^Tutorial complete\.\s*/, '');
