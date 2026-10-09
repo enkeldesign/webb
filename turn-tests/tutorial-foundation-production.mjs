@@ -276,6 +276,32 @@ test('a tutorial session borrows COUNTRYSIDE and the LEARNER CAR, then restores 
   assert.equal(progress.complete(TURN_TUTORIAL.id), false, 'An ended session no longer listens');
 });
 
+test('a failed restore keeps the player\'s selection for a retry', async () => {
+  memory.clear();
+  const harness = makeSessionHarness();
+  const session = createTutorialSession({ ...harness, progress: makeProgress() });
+  await session.enter();
+  const activate = harness.activateTrack;
+  let failOnce = true;
+  const flaky = createTutorialSession({
+    ...harness,
+    progress: makeProgress(),
+    activateTrack: async (id, options) => {
+      if (failOnce && id === 'airport') { failOnce = false; throw new Error('Track unavailable'); }
+      return activate(id, options);
+    }
+  });
+  await session.exit();
+  await flaky.enter();
+  await assert.rejects(flaky.exit(), /Track unavailable/);
+  assert.equal(flaky.active, true, 'The saved selection survives the failed restore');
+  assert.equal(harness.state.sessionPolicy, null, 'Progression is never left suspended');
+  assert.equal(await flaky.exit(), true);
+  assert.equal(flaky.active, false);
+  assert.equal(harness.state.trackId, 'airport');
+  assert.equal(harness.state.vehicleId, 'convertible');
+});
+
 test('replay and STOP TUTORIAL', async () => {
   memory.clear();
   const progress = makeProgress();

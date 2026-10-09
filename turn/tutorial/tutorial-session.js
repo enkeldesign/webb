@@ -76,12 +76,13 @@ export function createTutorialSession({
       // Re-activating the track reloads its stored rivals over the session's ghosts.
       await activateTrack(saved.trackId, { persist: false });
       await raceSession.selectVehicle(saved.vehicle, { persist: false });
+      // Kept until both succeed, so a failed restore can be retried.
+      snapshot = null;
       return true;
     })();
     try {
       return await restoring;
     } finally {
-      snapshot = null;
       restoring = null;
     }
   }
