@@ -352,6 +352,23 @@ function verifyIdentityGuard() {
     fixtureMap, currentRelease, (file) => fixtureFiles.get(file) ?? null);
   assert.equal(routed.imports['/turn/state.js?revision=legacy'], `/turn/state.js?build=${build}`,
     'Release routing traverses the dependencies of deferred world modules');
+
+  // The code asks for an alias under this release's key; the previous release's
+  // spelling of it is dead. A pinned historical key the code still asks for stays.
+  const previousBuild = '20260101-r1';
+  const aliasFiles = new Map([
+    ['turn/render/world.js', `import '../state.js?build=${build}-legacy'; import '../pinned.js?build=${previousBuild}';`],
+    ['turn/state.js', 'export const state = {};'],
+    ['turn/pinned.js', 'export const pinned = true;']
+  ]);
+  const aliasRouted = routeModuleGraph(`<script type="module" src="/turn/render/world.js?build=${build}"></script>`,
+    { imports: { [`/turn/state.js?build=${previousBuild}-legacy`]: `/turn/state.js?build=${previousBuild}` } },
+    currentRelease, (file) => aliasFiles.get(file) ?? null);
+  assert.equal(aliasRouted.imports[`/turn/state.js?build=${previousBuild}-legacy`], undefined,
+    'A release drops the previous release spelling of an alias');
+  assert.equal(aliasRouted.imports[`/turn/state.js?build=${build}-legacy`], `/turn/state.js?build=${build}`);
+  assert.equal(aliasRouted.imports[`/turn/pinned.js?build=${previousBuild}`], `/turn/pinned.js?build=${build}`,
+    'A pinned key the code still asks for keeps its route');
 }
 
 const turnWorkflowPaths = (await fs.readdir(path.join(repositoryRoot, '.github', 'workflows')))
@@ -389,6 +406,17 @@ assertRouteTargets(headGraph.importMap, criticalReleaseTargets, 'Production TURN
 assertRouteTargets(headGraph.importMap, crossDeploymentCompatibilityRoutes, 'Production TURN');
 assertRouteTargets(yourTurnImportMap, criticalReleaseTargets, 'YOUR TURN');
 assertRouteTargets(yourTurnImportMap, crossDeploymentCompatibilityRoutes, 'YOUR TURN');
+for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['YOUR TURN', yourTurnImportMap]]) {
+  // The import map does not grow per release: an alias spelled with this release's key
+  // has no earlier-release twin (1,122 of them had accumulated by r411).
+  const keys = new Set(Object.keys(importMap.imports || {}));
+  const twins = [...keys].filter((specifier) => {
+    const build = specifier.match(/[?&]build=(\d{8}-r\d+)/)?.[1];
+    return build && build !== currentRelease.cacheKey
+      && keys.has(specifier.replace(`build=${build}`, `build=${currentRelease.cacheKey}`));
+  });
+  assert.deepEqual(twins, [], `${label} keeps earlier-release spellings of current aliases`);
+}
 for (const [label, importMap] of [['Production TURN', headGraph.importMap], ['YOUR TURN', yourTurnImportMap]]) {
   // One canonical module each: no revision aliases, and nothing routes to a retired layer.
   for (const [specifier, target] of Object.entries(importMap.imports || {})) {

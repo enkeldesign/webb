@@ -158,6 +158,19 @@ export function routeModuleGraph(document, importMap, release, read, documentPat
       if (url !== target) imports[url] = target;
     }
   }
+  // Every release rewrites the keys in the code, so a URL the code asked for under an
+  // earlier release's key is now asked for under this one. Drop the earlier spelling;
+  // kept, it would add one dead route per module per release.
+  const askedNow = new Set([...asked.values()].flatMap((urls) => [...urls]));
+  for (const specifier of Object.keys(imports)) {
+    if (!LOCAL.test(specifier)) continue;
+    const url = new URL(specifier, DOCUMENT_URL);
+    const build = url.searchParams.get('build') || '';
+    if (url.origin !== ORIGIN || !/^\d{8}-r\d+/.test(build) || withRelease(build, release) === build) continue;
+    const spelling = `${url.pathname}${url.search}`;
+    const current = spelling.replace(`build=${build}`, `build=${withRelease(build, release)}`);
+    if (!askedNow.has(spelling) && askedNow.has(current)) delete imports[specifier];
+  }
   // Earlier aliases of a module go where its new URLs go.
   for (const [specifier, target] of Object.entries(imports)) {
     if (!LOCAL.test(target)) continue;

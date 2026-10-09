@@ -39,7 +39,7 @@ assert.equal(
   'Production must map the start-announcement-aware race session through the current release identity'
 );
 assert.equal(
-  productionImports['/turn/training/drive-by-ear-training.js?build=20260817-r172-r151-dbe-training-device-fixes'],
+  productionImports[`/turn/training/drive-by-ear-training.js?build=${release.cacheKey}-r151-dbe-training-device-fixes`],
   `/turn/training/drive-by-ear-training.js?build=${release.cacheKey}`,
   'Legacy DBE 101 entrypoints must route to the current release build instead of a stale training module'
 );
