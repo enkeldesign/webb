@@ -9,6 +9,21 @@ export const PATROL_CHALLENGE = Object.freeze({
   maxCompletedLaps: 2
 });
 
+export const EXCURSION_CHALLENGE = Object.freeze({
+  key: 'excursion:mountain',
+  type: 'excursion',
+  trackId: 'mountain',
+  vehicleId: 'monster-truck',
+  sourceAchievementId: '',
+  maxCompletedLaps: 2
+});
+
+export function getRewardPreviewChallenge(active) {
+  return [PATROL_CHALLENGE, EXCURSION_CHALLENGE].find(
+    (challenge) => challenge.key === active?.key && challenge.type === active?.type
+  );
+}
+
 export function createRewardPreviewSession({
   state, raceSession, activateTrack, prepareAccess, showTrackIntro, hideHome, showHome
 }) {
@@ -33,8 +48,9 @@ export function createRewardPreviewSession({
     }
   }
 
-  async function start() {
-    if (starting || snapshot || state.running) return false;
+  async function start(challenge = PATROL_CHALLENGE) {
+    const preview = getRewardPreviewChallenge(challenge);
+    if (!preview || starting || snapshot || state.running) return false;
     starting = true;
     try {
       // Request iOS motion access in the START tap, before loading any content.
@@ -47,11 +63,11 @@ export function createRewardPreviewSession({
           secondaryColor: state.vehicleSecondaryColor
         }
       };
-      state.rewardPreview = { ...PATROL_CHALLENGE, completedLaps: 0 };
+      state.rewardPreview = { ...preview, completedLaps: 0 };
       hideHome();
-      await activateTrack(PATROL_CHALLENGE.trackId, { persist: false });
-      await raceSession.selectVehicle({ carId: PATROL_CHALLENGE.vehicleId }, { persist: false });
-      await showTrackIntro(PATROL_CHALLENGE.trackId);
+      await activateTrack(preview.trackId, { persist: false });
+      await raceSession.selectVehicle({ carId: preview.vehicleId }, { persist: false });
+      await showTrackIntro(preview.trackId);
       await raceSession.startGame(access.fullscreenPromise);
       return true;
     } catch (error) {

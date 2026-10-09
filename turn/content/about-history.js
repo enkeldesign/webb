@@ -107,7 +107,7 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     "period": "9 October",
     "title": "A taste of the next reward",
     "paragraphs": [
-      "PATROL follows the HOW TO PLAY challenge with a temporary drive through MIDNIGHT CITY in the POLICE CAR. One valid lap completes it, with an optional second lap before returning Home. Unfinished attempts can be retried while normal Trophy Road unlocks stay in charge."
+      "PATROL follows the HOW TO PLAY challenge with a temporary drive through MIDNIGHT CITY in the POLICE CAR. After the first procedural challenge, EXCURSION takes the MONSTER TRUCK to MOUNTAIN. One valid lap completes each preview, with an optional second lap before returning Home. Unfinished attempts can be retried while normal Trophy Road unlocks stay in charge."
     ],
     "milestones": []
   }
@@ -358,8 +358,8 @@ export const CHANGELOG = Object.freeze([
     "date": "9 October 2026",
     "entries": [
       [
-        "PATROL reward preview",
-        "Try MIDNIGHT CITY and the POLICE CAR before unlocking them. Complete one valid lap to clear PATROL, with up to two completed laps per preview and retries for unfinished attempts."
+        "PATROL and EXCURSION reward previews",
+        "Try MIDNIGHT CITY in the POLICE CAR and MOUNTAIN in the MONSTER TRUCK before unlocking them. Complete one valid lap to clear each challenge, with up to two completed laps per preview and retries for unfinished attempts."
       ]
     ]
   }

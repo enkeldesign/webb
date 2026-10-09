@@ -10,7 +10,7 @@ import {
 } from '../progression/trophy-road.js';
 import { completeTrackOrder, getTrackStorageRevision } from '../tracks/definitions.js';
 import { storedReplayFrameCount } from '../race/replay-codec.js';
-import { PATROL_CHALLENGE } from '../race/reward-preview.js';
+import { PATROL_CHALLENGE, EXCURSION_CHALLENGE, getRewardPreviewChallenge } from '../race/reward-preview.js';
 
 export const SUPPORT_CHALLENGE_STORAGE_KEY = 'turn-support-challenges-v1';
 export const SUPPORT_CHALLENGE_CONFIG_CACHE_KEY = 'turn-support-challenge-config-cache-v1';
@@ -88,6 +88,10 @@ export function normalizeSupportChallengeConfig(value) {
       // Older cached rules still receive the new fixed challenge offline.
       enabled: raw.patrol?.enabled !== false,
       reward: positiveInteger(raw.patrol?.reward, 25)
+    }),
+    excursion: Object.freeze({
+      enabled: raw.excursion?.enabled !== false,
+      reward: positiveInteger(raw.excursion?.reward, 25)
     }),
     safety: Object.freeze({
       enabled: raw.safety?.enabled === true,
@@ -284,6 +288,7 @@ export function selectSupportChallenge({
   runtime = globalThis.__turnRuntime,
   storage = globalThis.localStorage,
   excluded = [],
+  completed = [],
   includeFixed = true
 }) {
   if (!config?.enabled || !achievements?.store) return null;
@@ -294,6 +299,12 @@ export function selectSupportChallenge({
   if (learning && !blocked.has(learning.key)) return includeFixed ? learning : null;
   if (config.patrol.enabled && !blocked.has(PATROL_CHALLENGE.key)) {
     return includeFixed ? { ...PATROL_CHALLENGE, reward: config.patrol.reward } : null;
+  }
+  // The first procedural challenge occupies slot three. Rerolls replace that
+  // challenge; they do not complete the slot or put EXCURSION in the reroll pool.
+  const proceduralCompleted = stringArray(completed).some((key) => /^(winner|safety|drift):/.test(key));
+  if (config.excursion.enabled && proceduralCompleted && !blocked.has(EXCURSION_CHALLENGE.key)) {
+    return includeFixed ? { ...EXCURSION_CHALLENGE, reward: config.excursion.reward } : null;
   }
   if (achievements.store.trophyTotal() >= config.stopAtTrophies) return null;
   const tracks = completeTrackOrder(config.trackOrder, TRACK_IDS);
@@ -328,7 +339,7 @@ function formatTime(seconds) {
 function activeChallengeIsConfigured(active, config) {
   if (!active) return false;
   if (active.type === 'learning') return config.learning.enabled;
-  if (active.type === 'patrol') return config.patrol.enabled && active.key === PATROL_CHALLENGE.key;
+  if (getRewardPreviewChallenge(active)) return config[active.type].enabled;
   const section = config[active.type];
   if (!section?.enabled) return false;
   if (active.type === 'safety' || active.type === 'drift') {
@@ -339,14 +350,17 @@ function activeChallengeIsConfigured(active, config) {
 
 function challengePresentation(active, config, achievements) {
   if (!active) return null;
-  if (active.type === 'patrol') {
+  if (getRewardPreviewChallenge(active)) {
+    const title = active.type.toUpperCase();
+    const track = trackName(active.trackId).toUpperCase();
+    const car = vehicleName(active.vehicleId).toUpperCase();
     return {
-      title: 'PATROL',
+      title,
       eyebrow: 'REWARD PREVIEW',
-      reward: `+${config.patrol.reward} TROPHIES`,
-      objective: 'Complete one valid lap of MIDNIGHT CITY using the POLICE CAR.',
-      explanation: 'Try MIDNIGHT CITY and the POLICE CAR before you unlock them for normal play. This temporary preview ends after two completed laps. Leave whenever you like; if you haven’t completed a valid lap, you can try again.',
-      startLabel: 'START PATROL'
+      reward: `+${config[active.type].reward} TROPHIES`,
+      objective: `Complete one valid lap of ${track} using the ${car}.`,
+      explanation: `Try ${track} and the ${car} before you unlock them for normal play. This temporary preview ends after two completed laps. Leave whenever you like; if you haven’t completed a valid lap, you can try again.`,
+      startLabel: `START ${title}`
     };
   }
   if (active.type === 'learning') {
@@ -659,7 +673,7 @@ export async function installSupportChallenges({
     const active = state.active;
     if (!active || !activeChallengeIsConfigured(active, config)) return null;
     if (active.sourceAchievementId && achievements.store.isUnlocked(active.sourceAchievementId)) return null;
-    if (!['learning', 'patrol'].includes(active.type)
+    if (active.type !== 'learning' && !getRewardPreviewChallenge(active)
       && achievements.store.trophyTotal() >= config.stopAtTrophies) return null;
     return active;
   }
@@ -672,6 +686,7 @@ export async function installSupportChallenges({
       runtime,
       storage,
       excluded: excludedKeys([state.active.key]),
+      completed: state.completed,
       includeFixed: false
     });
   }
@@ -679,7 +694,7 @@ export async function installSupportChallenges({
   function rerollAvailable() {
     return Boolean(
       state.active
-      && !['learning', 'patrol'].includes(state.active.type)
+      && state.active.type !== 'learning' && !getRewardPreviewChallenge(state.active)
       && state.lapsSinceChallengeProgress >= config.rerollAfterAdditionalValidLaps
       && alternateChallenge()
     );
@@ -688,6 +703,10 @@ export async function installSupportChallenges({
   function render() {
     const active = currentChallenge();
     if (!active && state.active) {
+      if (state.active.sourceAchievementId && achievements.store.isUnlocked(state.active.sourceAchievementId)
+        && !state.completed.includes(state.active.key)) {
+        state.completed.push(state.active.key);
+      }
       state.active = null;
       state.seenActiveKey = '';
       state.lapsSinceChallengeProgress = 0;
@@ -783,9 +802,10 @@ export async function installSupportChallenges({
       achievements,
       runtime,
       storage,
-      excluded: excludedKeys()
+      excluded: excludedKeys(),
+      completed: state.completed
     });
-    if (!force && candidate?.type !== 'patrol'
+    if (!force && !getRewardPreviewChallenge(candidate)
       && state.dryValidLaps < config.offerAfterValidLapsWithoutTrophy) return false;
     return activate(candidate);
   }
@@ -806,13 +826,13 @@ export async function installSupportChallenges({
 
   function completeActiveRaceChallenge(detail) {
     const active = state.active;
-    if (!active || !['patrol', 'winner', 'safety', 'drift'].includes(active.type)) return false;
+    if (!active || (!getRewardPreviewChallenge(active) && !['winner', 'safety', 'drift'].includes(active.type))) return false;
     const trackId = runtime.state?.trackId || globalThis.__turnGetTrackId?.() || '';
     const vehicleId = runtime.state?.vehicleId || '';
     if (trackId !== active.trackId || vehicleId !== active.vehicleId) return false;
 
     let complete = false;
-    if (active.type === 'patrol') {
+    if (getRewardPreviewChallenge(active)) {
       complete = detail?.valid === true && runtime.state?.rewardPreview?.key === active.key;
     } else if (active.type === 'winner') {
       complete = Number(detail?.position) === 1 && Number(detail?.total) >= 5;
@@ -878,19 +898,19 @@ export async function installSupportChallenges({
   async function startChallenge() {
     const active = state.active;
     if (!active) return;
-    if (active.type === 'patrol') {
+    if (getRewardPreviewChallenge(active)) {
       if (startButton.disabled) return;
       startButton.disabled = true;
       startButton.setAttribute('aria-busy', 'true');
       try {
         // Keep the dialog available on permission or loading failure, for retry.
-        const starting = globalThis.__turnHome.startPatrolPreview();
+        const starting = globalThis.__turnHome.startRewardPreview(active);
         closeChallenge({ restoreFocus: false });
         if (!await starting) openChallenge();
       } catch (error) {
         openChallenge();
         dialog.querySelector('[data-support-explanation]').textContent =
-          `${error instanceof Error ? error.message : 'PATROL could not start.'} Try again, or choose on-screen steering in Settings.`;
+          `${error instanceof Error ? error.message : `${active.type.toUpperCase()} could not start.`} Try again, or choose on-screen steering in Settings.`;
       } finally {
         startButton.disabled = false;
         startButton.removeAttribute('aria-busy');
@@ -943,11 +963,6 @@ export async function installSupportChallenges({
     save();
     queueMicrotask(() => {
       achievementUnlockedThisTask = false;
-      if (state.active?.sourceAchievementId && achievements.store.isUnlocked(state.active.sourceAchievementId)) {
-        state.active = null;
-        state.seenActiveKey = '';
-        save();
-      }
       render();
       if (!state.active) scheduleChallengeSelection();
     });
@@ -1003,11 +1018,6 @@ export async function installSupportChallenges({
   window.addEventListener('turn:trophy-road-updated', () => queueMicrotask(render));
   window.addEventListener('turn:home-shown', hideBonusToast);
 
-  if (state.active?.sourceAchievementId && achievements.store.isUnlocked(state.active.sourceAchievementId)) {
-    state.active = null;
-    state.seenActiveKey = '';
-    save();
-  }
   render();
   if (!state.active) scheduleChallengeSelection();
 

@@ -640,11 +640,11 @@ export async function installM8HomeNavigation() {
     showHome
   });
 
-  async function startPatrolPreview() {
+  async function startRewardPreview(challenge) {
     if (setupPending || rewardPreview.active) return false;
     setupPending = true;
     try {
-      return await rewardPreview.start();
+      return await rewardPreview.start(challenge);
     } finally {
       setupPending = false;
     }
@@ -682,7 +682,7 @@ export async function installM8HomeNavigation() {
     showHome,
     hideHome,
     continueToTrack,
-    startPatrolPreview,
+    startRewardPreview,
     leaveRaceForHome,
     getSelectedTrackId: () => selectedTrackId,
     getSteeringMode: loadSteeringMode

@@ -30,6 +30,10 @@
     "enabled": true,
     "reward": 25
   },
+  "excursion": {
+    "enabled": true,
+    "reward": 25
+  },
   "safety": {
     "enabled": true,
     "reward": 25,

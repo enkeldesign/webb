@@ -13,7 +13,7 @@ import {
   showCompactRacePill
 } from '../turn/achievements/support-challenge-feedback.js';
 import { createAchievementStore, normalizeAchievementState } from '../turn/achievements/store.js';
-import { createRewardPreviewSession, PATROL_CHALLENGE } from '../turn/race/reward-preview.js';
+import { createRewardPreviewSession, PATROL_CHALLENGE, EXCURSION_CHALLENGE } from '../turn/race/reward-preview.js';
 import { isTrackUnlocked, isVehicleUnlocked } from '../turn/progression/trophy-road.js';
 
 const rawConfig = JSON.parse(await fs.readFile(new URL('../turn/support-challenges.json', import.meta.url), 'utf8'));
@@ -134,54 +134,76 @@ assert.equal(select({ includeFixed: false, excluded: ['learning:how-to-play', PA
 assert.equal(isRaceSupportBonusId(`support:${PATROL_CHALLENGE.key}`), true);
 assert.equal(normalizeSupportChallengeConfig({ enabled: true }).patrol.enabled, true,
   'Existing offline rules receive PATROL without a config-cache reset');
+assert.equal(normalizeSupportChallengeConfig({ enabled: true }).excursion.enabled, true,
+  'Existing offline rules receive EXCURSION without a config-cache reset');
+const firstFixed = ['learning:how-to-play', PATROL_CHALLENGE.key];
+const third = select({ excluded: firstFixed });
+assert.equal(third.type, 'safety', 'Slot three remains a normal procedural challenge');
+assert.notEqual(select({ excluded: [...firstFixed, third.key], includeFixed: false })?.type, 'excursion',
+  'Rerolling slot three must not consume it or select EXCURSION');
+const firstThree = [...firstFixed, third.key];
+assert.equal(select({ excluded: firstThree, completed: firstThree }).key, EXCURSION_CHALLENGE.key,
+  'EXCURSION is fourth, after one completed procedural challenge');
+assert.equal(select({ excluded: firstThree, completed: firstThree, includeFixed: false }), null,
+  'Procedural selection cannot reroll past a pending EXCURSION');
+const firstFour = [...firstThree, EXCURSION_CHALLENGE.key];
+assert.equal(select({ excluded: firstFour, completed: firstFour }).type, 'safety',
+  'Procedural selection resumes after EXCURSION');
+assert.equal(select({ config: normalizeSupportChallengeConfig({ ...rawConfig, excursion: { enabled: false } }),
+  excluded: firstThree, completed: firstThree }).type, 'safety', 'Live rules can disable EXCURSION');
+assert.equal(isRaceSupportBonusId(`support:${EXCURSION_CHALLENGE.key}`), true);
 
 // Exercise the real preview lifecycle without any storage adapter: borrowing a
 // locked reward must never require a write to achievement or selection storage.
-const normal = { trackId: 'countryside', vehicleId: 'sedan', vehicleColor: '#123456', vehicleSecondaryColor: '#abcdef' };
-const raceState = { ...normal, running: false };
-const storageBefore = [...memory];
-let launches = 0;
-let failTrack = false;
-const preview = createRewardPreviewSession({
-  state: raceState,
-  raceSession: {
-    leaveRace() { raceState.running = false; },
-    async selectVehicle(selection, options) {
-      assert.equal(options.persist, false);
-      Object.assign(raceState, { vehicleId: selection.carId, vehicleColor: selection.color, vehicleSecondaryColor: selection.secondaryColor });
+for (const challenge of [PATROL_CHALLENGE, EXCURSION_CHALLENGE]) {
+  const normal = { trackId: 'countryside', vehicleId: 'sedan', vehicleColor: '#123456', vehicleSecondaryColor: '#abcdef' };
+  const raceState = { ...normal, running: false };
+  const storageBefore = [...memory];
+  let launches = 0;
+  let failTrack = false;
+  const preview = createRewardPreviewSession({
+    state: raceState,
+    raceSession: {
+      leaveRace() { raceState.running = false; },
+      async selectVehicle(selection, options) {
+        assert.equal(options.persist, false);
+        Object.assign(raceState, { vehicleId: selection.carId, vehicleColor: selection.color, vehicleSecondaryColor: selection.secondaryColor });
+      },
+      async startGame() { launches += 1; raceState.running = true; }
     },
-    async startGame() { launches += 1; raceState.running = true; }
-  },
-  async activateTrack(trackId, options) {
-    assert.equal(options.persist, false);
-    if (failTrack && trackId === 'midnight-city') throw new Error('Track unavailable');
-    raceState.trackId = trackId;
-  },
-  prepareAccess: () => ({ fullscreenPromise: Promise.resolve(false) }),
-  showTrackIntro: async () => {}, hideHome() {}, showHome() {}
-});
-assert.equal(await preview.start(), true);
-assert.equal(await preview.start(), false, 'Double taps cannot create concurrent preview sessions');
-assert.equal(raceState.trackId, 'midnight-city');
-assert.equal(raceState.vehicleId, 'police');
-assert.equal(raceState.rewardPreview.completedLaps, 0);
-await preview.restore();
-assert.equal(preview.active, false);
-for (const [key, value] of Object.entries(normal)) assert.equal(raceState[key], value);
-assert.equal(raceState.rewardPreview, null);
-assert.equal(await preview.start(), true, 'An early leave can be retried');
-await preview.restore();
-failTrack = true;
-await assert.rejects(preview.start(), /Track unavailable/);
-assert.equal(preview.active, false, 'A failed launch restores the normal session');
-assert.equal(raceState.trackId, normal.trackId);
-failTrack = false;
-assert.equal(await preview.start(), true, 'A failed launch does not consume the preview');
-await preview.restore();
-assert.equal(launches, 3);
-assert.deepEqual([...memory], storageBefore);
-assert.equal(isTrackUnlocked('midnight-city', storage), false);
-assert.equal(isVehicleUnlocked('police', storage), false);
+    async activateTrack(trackId, options) {
+      assert.equal(options.persist, false);
+      if (failTrack && trackId === challenge.trackId) throw new Error('Track unavailable');
+      raceState.trackId = trackId;
+    },
+    prepareAccess: () => ({ fullscreenPromise: Promise.resolve(false) }),
+    showTrackIntro: async () => {}, hideHome() {}, showHome() {}
+  });
+  assert.equal(await preview.start(challenge), true);
+  assert.equal(await preview.start(challenge), false, 'Double taps cannot create concurrent preview sessions');
+  assert.equal(raceState.trackId, challenge.trackId);
+  assert.equal(raceState.vehicleId, challenge.vehicleId);
+  assert.equal(raceState.rewardPreview.key, challenge.key);
+  assert.equal(raceState.rewardPreview.maxCompletedLaps, 2);
+  assert.equal(raceState.rewardPreview.completedLaps, 0);
+  await preview.restore();
+  assert.equal(preview.active, false);
+  for (const [key, value] of Object.entries(normal)) assert.equal(raceState[key], value);
+  assert.equal(raceState.rewardPreview, null);
+  assert.equal(await preview.start(challenge), true, 'An early leave can be retried');
+  await preview.restore();
+  failTrack = true;
+  await assert.rejects(preview.start(challenge), /Track unavailable/);
+  assert.equal(preview.active, false, 'A failed launch restores the normal session');
+  assert.equal(raceState.trackId, normal.trackId);
+  failTrack = false;
+  assert.equal(await preview.start(challenge), true, 'A failed launch does not consume the preview');
+  await preview.restore();
+  assert.equal(launches, 3);
+  assert.deepEqual([...memory], storageBefore);
+  assert.equal(isTrackUnlocked(challenge.trackId, storage), false);
+  assert.equal(isVehicleUnlocked(challenge.vehicleId, storage), false);
+}
 
 assert.equal(store.trophyTotal(), 0);
 assert.equal(store.grantBonus('support:test', 5, { reason: 'support-test' })?.trophies, 5);
