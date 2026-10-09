@@ -328,14 +328,14 @@ test('replay and STOP TUTORIAL', async () => {
 test('the coach teaches DRIVE, BOOST and DRIFT by doing, with no failure state', () => {
   const state = { sessionSpeedCap: null };
   const views = [];
-  let input = { progress: 0.02, speed: 70, gas: false, drift: false, boostActive: false, boostCharge: 1 };
+  let input = { progress: 0.02, speed: 70, gas: false, drift: false, boostActive: false, boostCharge: 1, routeCues: true, paceNotes: 0 };
   const coach = createTurnTutorialCoach({ state, maxSpeed: 88, signals: () => input, present: (view) => views.push(view) });
   const run = (seconds, change = {}) => {
     input = { ...input, ...change };
     for (let t = 0; t < seconds; t += 0.1) coach.update(0.1);
   };
-  assert.deepEqual(TURN_TUTORIAL_LESSONS.map((lesson) => lesson.id), ['drive', 'boost', 'drift'],
-    'BOOST is taught before DRIFT');
+  assert.deepEqual(TURN_TUTORIAL_LESSONS.map((lesson) => lesson.id), ['drive', 'boost', 'drift', 'read'],
+    'BOOST is taught before DRIFT, and READ THE ROAD comes last');
 
   run(1);
   assert.equal(views.at(-1).id, 'drive');
@@ -356,7 +356,7 @@ test('the coach teaches DRIVE, BOOST and DRIFT by doing, with no failure state',
   run(0.5, { progress: 0.5 });
   assert.equal(views.at(-1).id, 'drift');
   assert.ok(state.sessionSpeedCap > 0, 'The car eases down for the DRIFT bend');
-  run(1, { progress: 0.62 });
+  run(1, { progress: 0.59 });
   assert.equal(coach.outcome().drift, 'pending', 'A late DRIFT still counts: the prompt stays');
   assert.equal(state.sessionSpeedCap, null, 'No cap outside the lesson stretch');
   coach.graduate();
@@ -364,6 +364,43 @@ test('the coach teaches DRIVE, BOOST and DRIFT by doing, with no failure state',
   assert.equal(views.at(-1).kind, 'graduated');
   run(1, { progress: 0.05 });
   assert.equal(views.at(-1).kind, 'graduated', 'After the line the coach stays out of ordinary racing');
+});
+
+test('READ THE ROAD is done when the pace note for the next bend plays', () => {
+  const state = { sessionSpeedCap: null };
+  const views = [];
+  let input = { progress: 0.62, speed: 50, gas: true, drift: false, boostActive: false, boostCharge: 0.5, routeCues: true, paceNotes: 6 };
+  const coach = createTurnTutorialCoach({ state, maxSpeed: 88, signals: () => input, present: (view) => views.push(view) });
+  const run = (seconds, change = {}) => {
+    input = { ...input, ...change };
+    for (let t = 0; t < seconds; t += 0.1) coach.update(0.1);
+  };
+  run(1);
+  assert.equal(views.at(-1).id, 'read');
+  assert.match(views.at(-1).prompt, /chime/i, 'The prompt says what to listen for, before the cue plays');
+  assert.equal(coach.outcome().read, 'pending', 'Cues heard before the lesson do not count');
+  assert.ok(state.sessionSpeedCap > 0, 'The car eases down so the cue is clear');
+  run(0.2, { progress: 0.7, paceNotes: 7 });
+  assert.equal(coach.outcome().read, 'done', 'The cue playing completes the lesson: no recognition test');
+  assert.equal(views.at(-1).kind, 'done');
+  assert.match(views.at(-1).text, /bend ahead/, 'The text says what the cue meant, as it plays');
+  assert.equal(state.sessionSpeedCap, null);
+  run(2, { progress: 0.75 });
+  assert.equal(views.at(-1).kind, 'done', 'The meaning stays up long enough to read or hear');
+  run(3, { progress: 0.85 });
+  assert.equal(views.at(-1).kind, 'idle');
+
+  const quiet = [];
+  const quietState = { sessionSpeedCap: null };
+  input = { ...input, progress: 0.55, drift: false, routeCues: false };
+  const withoutCues = createTurnTutorialCoach({ state: quietState, maxSpeed: 88, signals: () => input, present: (view) => quiet.push(view) });
+  withoutCues.update(0.1);
+  assert.equal(quiet.at(-1).id, 'drift');
+  input = { ...input, progress: 0.65 };
+  withoutCues.update(0.1);
+  assert.equal(withoutCues.outcome().read, 'skipped', 'With DRIVE BY EAR off there is nothing to hear: no prompt to listen');
+  assert.equal(quiet.at(-1).kind, 'idle', 'The missed DRIFT prompt does not linger');
+  assert.equal(quietState.sessionSpeedCap, null);
 });
 
 test('a drifted bend completes DRIFT and the physics honour the lesson cap', async () => {
