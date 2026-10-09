@@ -7,10 +7,12 @@ import { activateTrack } from '/turn/tracks/track-manager.js?source=20260729-r11
 import { showTrackIntro } from '/turn/ui/track-intro.js?source=20260729-r118-m8';
 import { installRoadbook } from '/turn/roadbook/roadbook.js';
 import { createRewardPreviewSession } from './race/reward-preview.js';
-import { TURN_TUTORIAL, createTutorialProgress } from './tutorial/tutorial-progress.js';
+import { DRIFT_ATTACK_TUTORIAL, TURN_TUTORIAL, createTutorialProgress } from './tutorial/tutorial-progress.js';
 import { createTutorialSession } from './tutorial/tutorial-session.js';
-import { installTutorialEntry } from './tutorial/tutorial-entry.js';
+import { installDriftAttackEntry, installTutorialEntry } from './tutorial/tutorial-entry.js';
+import { isFeatureUnlocked } from './progression/trophy-road.js';
 import { startTurnTutorialCoach } from './tutorial/tutorial-prompt.js';
+import { startDriftAttackCoach } from './tutorial/drift-attack-coach.js';
 import { loadSteeringHelp, saveSteeringHelp } from './tutorial/steering-help.js';
 import { trackIconMarkup } from '/turn/ui/track-icons.js';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';
@@ -569,7 +571,7 @@ export async function installM8HomeNavigation() {
   }
 
   async function continueToTrack() {
-    if (setupPending || rewardPreview.active || tutorialSession.active) return false;
+    if (setupPending || rewardPreview.active || tutorialActive()) return false;
     document.querySelector('.turn-setup-failure')?.remove();
     let garageOpened = false;
     let reloading = false;
@@ -655,7 +657,7 @@ export async function installM8HomeNavigation() {
   });
 
   async function startRewardPreview(challenge) {
-    if (setupPending || rewardPreview.active || tutorialSession.active) return false;
+    if (setupPending || rewardPreview.active || tutorialActive()) return false;
     setupPending = true;
     try {
       return await rewardPreview.start(challenge);
@@ -665,23 +667,35 @@ export async function installM8HomeNavigation() {
   }
 
   const tutorialProgress = createTutorialProgress();
-  const tutorialSession = createTutorialSession({
+  const createSession = (module) => createTutorialSession({
     state: runtime.state,
     raceSession,
     activateTrack: (trackId, options) => activateTrack(trackId, runtime, options),
     progress: tutorialProgress,
-    syncRivals: () => runtime.syncCompetitorVisuals?.()
+    syncRivals: () => runtime.syncCompetitorVisuals?.(),
+    module
   });
+  const tutorialSession = createSession(TURN_TUTORIAL);
+  const driftAttackSession = createSession(DRIFT_ATTACK_TUTORIAL);
+  // TURN TUTORIAL (#1132) and DRIFT ATTACK TUTORIAL (#1150): a teaching lap, then
+  // ordinary TURN. One at a time.
+  const TUTORIALS = new Map([
+    [TURN_TUTORIAL.id, { name: 'TURN TUTORIAL', module: TURN_TUTORIAL, session: tutorialSession, coach: startTurnTutorialCoach }],
+    [DRIFT_ATTACK_TUTORIAL.id, { name: 'DRIFT ATTACK TUTORIAL', module: DRIFT_ATTACK_TUTORIAL, session: driftAttackSession, coach: startDriftAttackCoach }]
+  ]);
+  function tutorialActive() {
+    return tutorialSession.active || driftAttackSession.active;
+  }
 
-  // TURN TUTORIAL (#1132): COUNTRYSIDE in the LEARNER CAR, then ordinary TURN.
   let tutorialCoach = null;
   function stopTutorialCoach() {
     tutorialCoach?.stop();
     tutorialCoach = null;
   }
 
-  async function startTutorial() {
-    if (setupPending || rewardPreview.active || tutorialSession.active || runtime.state.running) return false;
+  async function startTutorial(moduleId = TURN_TUTORIAL.id) {
+    const tutorial = TUTORIALS.get(moduleId);
+    if (!tutorial || setupPending || rewardPreview.active || tutorialActive() || runtime.state.running) return false;
     setupPending = true;
     try {
       // Request iOS motion access in the START tap, before loading any content.
@@ -689,17 +703,17 @@ export async function installM8HomeNavigation() {
         ? raceSession.prepareMotionAccess()
         : raceSession.prepareManualAccess());
       hideHome();
-      await tutorialSession.enter();
-      await showTrackIntro(TURN_TUTORIAL.trackId);
+      await tutorial.session.enter();
+      await showTrackIntro(tutorial.module.trackId);
       await raceSession.startGame(access.fullscreenPromise);
-      tutorialCoach = startTurnTutorialCoach({ runtime });
+      tutorialCoach = tutorial.coach({ runtime });
       return true;
     } catch (error) {
-      console.warn('TURN: TURN TUTORIAL could not start.', error);
+      console.warn(`TURN: ${tutorial.name} could not start.`, error);
       stopTutorialCoach();
-      await tutorialSession.exit().catch(() => {});
+      await tutorial.session.exit().catch(() => {});
       showHome({ focus: true });
-      homeStatus.textContent = 'TURN TUTORIAL could not start. Try again from HOW TO PLAY.';
+      homeStatus.textContent = `${tutorial.name} could not start. Try again from HOW TO PLAY.`;
       return false;
     } finally {
       setupPending = false;
@@ -711,6 +725,7 @@ export async function installM8HomeNavigation() {
     if (rewardPreview.active) await rewardPreview.restore();
     stopTutorialCoach();
     if (tutorialSession.active) await tutorialSession.exit();
+    if (driftAttackSession.active) await driftAttackSession.exit();
     showHome({ focus: true });
     return true;
   }
@@ -723,8 +738,16 @@ export async function installM8HomeNavigation() {
       homeStatus.textContent = message;
     }
   });
+  const driftAttackEntry = installDriftAttackEntry({
+    howDialog,
+    startTutorial: () => startTutorial(DRIFT_ATTACK_TUTORIAL.id),
+    isUnlocked: () => isFeatureUnlocked('drift-attack')
+  });
 
-  howButton.addEventListener('click', () => openDialog(howDialog, howButton));
+  howButton.addEventListener('click', () => {
+    driftAttackEntry.sync();
+    openDialog(howDialog, howButton);
+  });
   homeSettingsButton.addEventListener('click', () => {
     settings.sync();
     openDialog(settings.dialog, homeSettingsButton);
@@ -751,7 +774,13 @@ export async function installM8HomeNavigation() {
     continueToTrack,
     startRewardPreview,
     startTutorial,
-    tutorial: Object.freeze({ progress: tutorialProgress, session: tutorialSession, entry: tutorialEntry }),
+    tutorial: Object.freeze({
+      progress: tutorialProgress,
+      session: tutorialSession,
+      driftAttackSession,
+      entry: tutorialEntry,
+      driftAttackEntry
+    }),
     leaveRaceForHome,
     getSelectedTrackId: () => selectedTrackId,
     getSteeringMode: loadSteeringMode

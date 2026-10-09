@@ -599,6 +599,105 @@ test('Tutorial steering help is a saved SETTINGS choice that works mid-lap', asy
   assert.match(lessons.STEERING_HELP_HINT.text, /PAUSED|Pause/, 'Repeated rescues point to it, reachable mid-lap');
 });
 
+test('DRIFT ATTACK TUTORIAL teaches scoring, then BUILD, CATCH, HOLD and SPEND in order', async () => {
+  const { createDriftAttackCoach } = await import('../turn/tutorial/drift-attack-coach.js');
+  const lessons = await import('../turn/tutorial/drift-attack-lessons.js');
+  const state = { sessionSpeedCap: null };
+  let input = { speed: 60, overcharge: 0, caught: false, boosting: false, banks: 0 };
+  const views = [];
+  const coach = createDriftAttackCoach({ state, maxSpeed: 88, signals: () => input, present: (view) => views.push(view) });
+  const run = (seconds) => { for (let t = 0; t < seconds; t += 0.1) coach.update(0.1); };
+
+  run(0.1);
+  assert.equal(coach.lesson, 'score');
+  assert.equal(views.at(-1).title, 'DRIFT SCORING');
+  run(1);
+  assert.ok(state.sessionSpeedCap < 60 && state.sessionSpeedCap >= 0.45 * 88, 'Eased toward the lesson cap, not braked');
+  input = { ...input, banks: 1 };
+  run(0.1);
+  assert.equal(views.at(-1).kind, 'done', 'A banked slide is the lesson');
+  assert.equal(state.sessionSpeedCap, null);
+  run(3.2);
+  assert.equal(coach.lesson, 'build');
+  input = { ...input, overcharge: 0.35 };
+  run(0.1);
+  assert.equal(coach.lesson, 'catch', 'CATCH comes straight after BUILD: OVERCHARGE leaks');
+  assert.equal(state.sessionSpeedCap, null, 'No cap while it leaks');
+
+  // It leaked away before the catch: back to BUILD, never a failure.
+  input = { ...input, overcharge: 0 };
+  run(0.1);
+  assert.equal(coach.lesson, 'build');
+  assert.equal(views.at(-1).prompt, lessons.DRIFT_ATTACK_RETRY_PROMPT);
+  input = { ...input, overcharge: 0.4 };
+  run(0.1);
+  input = { ...input, caught: true };
+  run(0.1);
+  assert.equal(coach.lesson, 'hold');
+  run(1.6);
+  assert.equal(coach.lesson, 'spend');
+  input = { ...input, caught: false, boosting: true, overcharge: 0.25 };
+  run(0.1);
+  assert.equal(views.at(-1).kind, 'done');
+  assert.match(views.at(-1).text, /OVERCHARGE/);
+  assert.deepEqual(Object.values(coach.outcome()), ['done', 'done', 'done', 'done', 'done']);
+  // The cap is a share of the car's own top speed: the LEARNER CAR tops out below 88.
+  const learner = { sessionSpeedCap: null, vehicleEffectiveMaxSpeed: 73.92 };
+  const capped = createDriftAttackCoach({ state: learner, maxSpeed: 88, signals: () => ({ ...input, speed: 20, banks: 0 }) });
+  capped.update(0.1);
+  capped.update(0.1);
+  assert.ok(Math.abs(learner.sessionSpeedCap - 0.45 * 73.92) < 1e-9, '45 % of this car, not of the base limit');
+  coach.graduate();
+  assert.equal(views.at(-1).message, lessons.DRIFT_ATTACK_GRADUATION_MESSAGE);
+
+  for (const lesson of lessons.DRIFT_ATTACK_LESSONS.slice(1)) {
+    assert.match(lesson.prompt, /OVERCHARGE/, `${lesson.title} names OVERCHARGE: on the meter it is only purple`);
+  }
+});
+
+test('DRIFT ATTACK TUTORIAL has no failure state: an early BOOST or the line ends it kindly', async () => {
+  const { createDriftAttackCoach } = await import('../turn/tutorial/drift-attack-coach.js');
+  const lessons = await import('../turn/tutorial/drift-attack-lessons.js');
+  const state = { sessionSpeedCap: null };
+  let input = { speed: 30, overcharge: 0, caught: false, boosting: false, banks: 0 };
+  const views = [];
+  const coach = createDriftAttackCoach({ state, maxSpeed: 88, signals: () => input, present: (view) => views.push(view) });
+  coach.update(0.1);
+  input = { ...input, banks: 1 };
+  coach.update(0.1);
+  for (let t = 0; t < 3.2; t += 0.1) coach.update(0.1);
+  input = { ...input, overcharge: 0.5 };
+  coach.update(0.1);
+  assert.equal(coach.lesson, 'catch');
+  // Straight to BOOST, skipping CATCH and HOLD: that is OVERCHARGE spent.
+  input = { ...input, boosting: true, overcharge: 0.3 };
+  coach.update(0.1);
+  assert.equal(coach.outcome().spend, 'done');
+
+  const missed = createDriftAttackCoach({ state, maxSpeed: 88, signals: () => ({ ...input, banks: 0 }), present: (view) => views.push(view) });
+  missed.update(0.1);
+  missed.graduate();
+  assert.equal(views.at(-1).message, lessons.DRIFT_ATTACK_PRACTICE_MESSAGE, 'The line ends the lesson either way');
+  assert.equal(missed.outcome().score, 'missed');
+  assert.equal(state.sessionSpeedCap, null);
+});
+
+test('DRIFT ATTACK TUTORIAL is its own module, offered in HOW TO PLAY once DRIFT ATTACK unlocks', async () => {
+  const { DRIFT_ATTACK_TUTORIAL } = await import('../turn/tutorial/tutorial-progress.js');
+  assert.equal(DRIFT_ATTACK_TUTORIAL.id, 'drift-attack');
+  memory.delete(TUTORIAL_STORAGE_KEY);
+  const progress = createTutorialProgress({ hasPlayed: () => true });
+  assert.equal(progress.status(DRIFT_ATTACK_TUTORIAL.id), TUTORIAL_STATUS.NOT_STARTED,
+    'Only TURN TUTORIAL is skipped for players who played before');
+  const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
+  const home = await read('../turn/m8-home.js');
+  assert.match(home, /\[DRIFT_ATTACK_TUTORIAL\.id, \{ name: 'DRIFT ATTACK TUTORIAL'[^\n]*coach: startDriftAttackCoach \}\]/);
+  assert.match(home, /if \(driftAttackSession\.active\) await driftAttackSession\.exit\(\);/, 'Leaving restores the player\'s own track and car');
+  assert.match(home, /isUnlocked: \(\) => isFeatureUnlocked\('drift-attack'\)/);
+  const entry = await read('../turn/tutorial/tutorial-entry.js');
+  assert.match(entry, /\.m8-drift-attack-entry\[hidden\] \{ display: none; \}/, 'Hidden until DRIFT ATTACK unlocks');
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {
