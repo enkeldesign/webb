@@ -254,6 +254,12 @@ export function installAchievementChallengeExpansion({
   function completeLap(detail) {
     const attempt = currentLap;
     resetLap();
+    // A reward preview (PATROL, EXCURSION) is a trial: its laps add no progress here,
+    // which unlockStoredTrackAchievements() would otherwise replay on the next launch.
+    if (runtime?.state?.rewardPreview) {
+      headStartSetup = null;
+      return;
+    }
     if (!attempt || !TRACK_IDS.includes(attempt.trackId)) return;
 
     const context = achievementContext(attempt.trackId, attempt.vehicleId, detail?.time);

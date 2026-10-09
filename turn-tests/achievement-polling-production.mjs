@@ -155,6 +155,16 @@ async function verifyChallengeAchievementLifecycle() {
   assert.equal(unlocked['countryside-safety'], undefined,
     'The physics-owned lap result must veto a clean lap');
 
+  // A reward preview lap adds nothing to the stored track progress that
+  // unlockStoredTrackAchievements() replays on the next launch.
+  runtime.state.rewardPreview = { key: 'patrol:midnight-city' };
+  api.beginLap();
+  api.completeLap({ time: 14, onCourseThroughout: true });
+  runtime.state.rewardPreview = null;
+  assert.equal(unlocked['countryside-safety'], undefined, 'A preview lap earns no clean-lap achievement');
+  assert.deepEqual(JSON.parse(memory.get(CHALLENGE_PROGRESS_STORAGE_KEY)).cleanTracks || [], [],
+    'A preview lap is not stored as clean-lap progress');
+
   api.beginLap();
   runtime.state.offRoad = true;
   api.completeLap({ time: 14, onCourseThroughout: true });
