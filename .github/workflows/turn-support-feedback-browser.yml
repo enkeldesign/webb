@@ -11,6 +11,8 @@ on:
       - 'turn/m8-home.js'
       - 'turn/scripts/release.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
+      - 'turn-tests/patrol-browser-smoke.mjs'
+      - 'turn/race/reward-preview.js'
       - 'turn-tests/responsive-browser-smoke.mjs'
       - 'turn-tests/race-menu-browser-smoke.mjs'
       - 'turn/ui/race-menu.js'
@@ -63,6 +65,8 @@ on:
       - 'turn/m8-home.js'
       - 'turn/scripts/release.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
+      - 'turn-tests/patrol-browser-smoke.mjs'
+      - 'turn/race/reward-preview.js'
       - 'turn-tests/responsive-browser-smoke.mjs'
       - 'turn-tests/race-menu-browser-smoke.mjs'
       - 'turn/ui/race-menu.js'
@@ -128,6 +132,7 @@ jobs:
               turn-tests/roadbook-browser-smoke.mjs
               turn-tests/race-menu-browser-smoke.mjs
               turn-tests/support-feedback-browser-smoke.mjs
+              turn-tests/patrol-browser-smoke.mjs
           - shard: garage
             tests: >-
               turn-tests/garage-browser-smoke.mjs

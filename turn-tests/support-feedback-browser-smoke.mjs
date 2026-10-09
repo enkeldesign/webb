@@ -243,6 +243,3 @@ for (const [name, browserType] of [['Chromium', chromium], ['WebKit', webkit]]) 
     await browser.close();
   }
 }
-
-// The authored preview also needs the real Home → race → Home handoff.
-await import('./patrol-browser-smoke.mjs');
