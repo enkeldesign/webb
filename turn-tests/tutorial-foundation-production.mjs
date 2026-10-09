@@ -358,7 +358,9 @@ test('ABOUT TURN, the first-launch card and HOW TO PLAY say what TURN is for', a
   const about = fs.readFileSync(new URL('../turn/content/about-turn.js', import.meta.url), 'utf8');
   const entry = fs.readFileSync(new URL('../turn/tutorial/tutorial-entry.js', import.meta.url), 'utf8');
   const goal = /the feel of the drive and getting faster\. Your best laps become rivals to beat, and trophies unlock new tracks, cars and ways to play\./;
-  assert.match(about, goal, 'ABOUT TURN, linked from the install page and in the game');
+  assert.match(about, /<p class="m8-about-lead">TURN is about the feel of the drive and getting faster\./,
+    'ABOUT TURN, linked from the install page and in the game, leads with it');
+  assert.match(about, goal);
   assert.match(entry, goal, 'The first-launch card and HOW TO PLAY');
   assert.match(entry, /SKIP TUTORIAL/);
 });

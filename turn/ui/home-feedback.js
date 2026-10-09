@@ -109,7 +109,7 @@ function createAboutDialog() {
       </header>
 
       <div class="m8-about-content">
-        <p class="m8-about-lead">TURN is a racing game about tilt steering, personal rivals and learning to drive by ear.</p>
+        <p class="m8-about-lead">TURN is about the feel of the drive and getting faster. Your best laps become rivals to beat, and trophies unlock new tracks, cars and ways to play.</p>
         ${attributionMarkup()}
       </div>
     </article>`;
