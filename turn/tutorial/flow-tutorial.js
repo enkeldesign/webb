@@ -155,7 +155,7 @@ export function startFlowCoach({ runtime, events = globalThis }) {
       if (graduationLeft > 0) {
         graduationLeft -= dt;
         if (graduationLeft <= 0) {
-          stop();
+          void prompt.finish().then(stop);
           return;
         }
       }

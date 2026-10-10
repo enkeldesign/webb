@@ -1,5 +1,6 @@
 import { showRaceOrientationRecommendation, clearRaceOrientationRecommendation } from './race-orientation.js';
 import { getTrackDefinition } from '../tracks/catalog.js?build=20260722-r50';
+import { estimatedSpeechMs, holdSpeechFloor } from './speech-floor.js';
 
 export const TRACK_INTRO_HOLD_MS = 2100;
 export const TRACK_INTRO_FADE_MS = 240;
@@ -17,6 +18,8 @@ export async function showTrackIntro(trackId) {
   intro.querySelector('.track-intro-description').textContent = `Driving: ${track.description}`;
   intro.hidden = false;
   intro.setAttribute('aria-hidden', 'false');
+  // Said as it appears: guidance that can wait waits until it has been.
+  holdSpeechFloor(estimatedSpeechMs(intro.textContent), 'track-intro');
   intro.classList.remove('is-visible');
   document.body.classList.add('turn-track-intro');
   showRaceOrientationRecommendation(intro);
