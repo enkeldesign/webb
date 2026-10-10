@@ -817,7 +817,11 @@ test('PAINTJOB is pointed out in GARAGE without a sheet: its reward toast says i
   assert.equal(intro.createUnlockIntroductionQueue(globalThis.localStorage).hasHint('garage-paint'), true,
     'Armed until GARAGE next shows PAINT');
   const source = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/progression/unlock-introductions.js', import.meta.url), 'utf8'));
-  assert.match(source, /'garage-paint': '\.garage-paint-toggle'/);
+  assert.match(source, /'garage-paint': Object\.freeze\(\{ selector: '\.garage-paint-toggle', say: 'New in GARAGE: PAINT, below the car’s name\.' \}\)/,
+    'Said as well as shown');
+  // Watched on Home and in GARAGE only (turn/AGENTS.md): never during a race.
+  assert.match(source, /if \(hintObserver \|\| windowRef\.__turnRuntime\?\.state\?\.running === true\) return;/);
+  assert.match(source, /if \(event\.detail\?\.running === true\) stopWatchingHints\(\);/);
   assert.match(source, /if \(introducesOnUnlock\(windowRef, storage\)\) armUnlockHints\(event\.detail\?\.unlocked\);/,
     'Not armed in automated runs, as the sheets are not shown');
   assert.match(source, /viewCarWhenGarageOpens\('sedan'\);/, 'TRY SHIFT IN THE SEDAN opens the SEDAN as a challenge opens its car');

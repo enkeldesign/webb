@@ -525,6 +525,9 @@ try {
     await page.waitForFunction(() => Boolean(document.querySelector('.garage-paint-toggle.is-introduced')), null, { timeout: 30000 });
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-paint')), false,
       'PAINT is pointed out once');
+    // And said, for players who cannot see the pulse, in GARAGE after its own opening speech.
+    await page.waitForFunction(() => document.querySelector('#turnGarage .m8-unlock-hint-status')?.textContent
+      === 'New in GARAGE: PAINT, below the car’s name.', null, { timeout: 5000 });
   });
 
   // The same buttons in SETTINGS, on the Admin card with the other admin tools.

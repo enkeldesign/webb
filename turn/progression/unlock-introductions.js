@@ -17,16 +17,18 @@ export const INTRODUCTIONS_UNDER_TEST_KEY = 'turn-unlock-introductions-under-tes
 const STYLE_ID = 'turn-unlock-introduction-styles';
 const SHOW_DELAY_MS = 900;
 const HINT_SECONDS = 4.5;
+// After GARAGE's own opening speech (its title, then the car).
+const HINT_SAY_DELAY_MS = 1200;
 
 // Unlocks explained by their reward toast alone, then pointed out the next time GARAGE
 // shows them.
 export const UNLOCK_HINTS = Object.freeze({
   paintjob: Object.freeze({ title: 'PAINTJOB', hint: 'garage-paint' })
 });
-// What each GARAGE hint scrolls to and pulses.
+// What each GARAGE hint scrolls to and pulses, and what it says.
 const GARAGE_HINT_TARGETS = Object.freeze({
-  'garage-shift': '.garage-shift',
-  'garage-paint': '.garage-paint-toggle'
+  'garage-shift': Object.freeze({ selector: '.garage-shift', say: 'New in GARAGE: ACTIVATE SHIFT, below the car’s name.' }),
+  'garage-paint': Object.freeze({ selector: '.garage-paint-toggle', say: 'New in GARAGE: PAINT, below the car’s name.' })
 });
 
 export const UNLOCK_INTRODUCTIONS = Object.freeze({
@@ -318,23 +320,42 @@ export function installUnlockIntroductions({
   });
   dialog.addEventListener('close', finish);
 
-  // ACTIVATE SHIFT or PAINT, the next time GARAGE shows it: brought into view and pulsed.
+  // ACTIVATE SHIFT or PAINT, the next time GARAGE shows it: brought into view, pulsed
+  // and said. Watched on Home and in GARAGE only: an armed hint waits out a race unwatched.
   const armedGarageHints = () => Object.keys(GARAGE_HINT_TARGETS).filter((hint) => queue.hasHint(hint));
+  function stopWatchingHints() {
+    hintObserver?.disconnect();
+    hintObserver = null;
+  }
   function watchHints() {
-    if (hintObserver || !armedGarageHints().length || typeof MutationObserver !== 'function') return;
+    if (hintObserver || windowRef.__turnRuntime?.state?.running === true) return;
+    if (!armedGarageHints().length || typeof MutationObserver !== 'function') return;
     const reveal = () => {
+      const said = [];
+      let section = null;
       for (const hint of armedGarageHints()) {
-        const target = documentRef.querySelector(GARAGE_HINT_TARGETS[hint]);
+        const { selector, say } = GARAGE_HINT_TARGETS[hint];
+        const target = documentRef.querySelector(selector);
         if (!target || target.hidden || !target.offsetParent) continue;
         queue.consumeHint(hint);
         const reduced = windowRef.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
         target.scrollIntoView?.({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
         target.classList.add('is-introduced');
         windowRef.setTimeout?.(() => target.classList.remove('is-introduced'), HINT_SECONDS * 1000);
+        said.push(say);
+        section ||= target.closest('section') || target.parentElement;
       }
-      if (armedGarageHints().length) return;
-      hintObserver?.disconnect();
-      hintObserver = null;
+      // One message for what was pointed out, in a status added empty and filled once
+      // GARAGE has spoken, so it is heard rather than talked over.
+      if (said.length && section) {
+        const status = documentRef.createElement('p');
+        status.className = 'turn-sr-only m8-unlock-hint-status';
+        status.setAttribute('role', 'status');
+        section.append(status);
+        windowRef.setTimeout?.(() => { status.textContent = said.join(' '); }, HINT_SAY_DELAY_MS);
+        windowRef.setTimeout?.(() => status.remove(), HINT_SAY_DELAY_MS + HINT_SECONDS * 1000);
+      }
+      if (!armedGarageHints().length) stopWatchingHints();
     };
     hintObserver = new MutationObserver(reveal);
     hintObserver.observe(documentRef.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
@@ -356,7 +377,13 @@ export function installUnlockIntroductions({
     // Like the sheets, not in automated runs, where test suites earn rewards all the time.
     if (introducesOnUnlock(windowRef, storage)) armUnlockHints(event.detail?.unlocked);
   });
-  windowRef.addEventListener?.('turn:home-shown', () => schedule());
+  windowRef.addEventListener?.('turn:home-shown', () => {
+    schedule();
+    watchHints();
+  });
+  windowRef.addEventListener?.('turn:ui-state-change', (event) => {
+    if (event.detail?.running === true) stopWatchingHints();
+  });
   windowRef.addEventListener?.('turn:trophy-road-toast-shown', () => schedule());
   documentRef.addEventListener?.('turn:home-ready', () => schedule());
   watchHints();
