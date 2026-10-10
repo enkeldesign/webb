@@ -721,6 +721,33 @@ test('unlock introductions queue new DRIFT ATTACK, SHIFT and FLOW unlocks once',
     'Test suites earning rewards are not interrupted');
 });
 
+test('after the SHIFT introduction, the drive pad\'s SHIFT is pointed out in the next races', async () => {
+  const intro = await import('../turn/progression/unlock-introductions.js');
+  const callout = await import('../turn/ui/shift-race-callout.js');
+  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  queue.unlocked(['shift']);
+  queue.introduced('shift');
+  assert.equal(queue.hasHint(callout.RACE_SHIFT_HINT), true, 'Armed with the GARAGE hint when the sheet closes');
+  assert.match(callout.SHIFT_CALLOUT_TEXT, /Hold GAS, then slide outward into SHIFT/, 'In the drive pad\'s own words');
+  for (let race = 1; race < callout.RACE_SHIFT_HINT_RACES; race += 1) queue.viewHint(callout.RACE_SHIFT_HINT, callout.RACE_SHIFT_HINT_RACES);
+  const reloaded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(reloaded.hasHint(callout.RACE_SHIFT_HINT), true, 'Showings are counted across visits');
+  reloaded.viewHint(callout.RACE_SHIFT_HINT, callout.RACE_SHIFT_HINT_RACES);
+  assert.equal(reloaded.hasHint(callout.RACE_SHIFT_HINT), false, 'A player who never shifts is not reminded forever');
+  assert.equal(reloaded.unlocked(['shift'], { replay: true }), true);
+  reloaded.introduced('shift');
+  assert.equal(reloaded.hasHint(callout.RACE_SHIFT_HINT), true, 'Admin UNLOCK SHIFT arms it again');
+  assert.deepEqual(reloaded.snapshot().views, {}, 'With its count started over');
+  // Introduced in r426/r427, before the race hint: armed once, then never again.
+  memory.set(intro.UNLOCK_INTRODUCTIONS_KEY, JSON.stringify({ pending: [], shown: ['shift'], hints: [] }));
+  const upgraded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(upgraded.hasHint(callout.RACE_SHIFT_HINT), true, 'Players introduced to SHIFT before r428 get the race hint');
+  upgraded.consumeHint(callout.RACE_SHIFT_HINT);
+  assert.equal(intro.createUnlockIntroductionQueue(globalThis.localStorage).hasHint(callout.RACE_SHIFT_HINT), false,
+    'Once used, the backfill does not bring it back');
+});
+
 test('the DRIFT lesson names LOCK, which is on the drive pad from the first lap', async () => {
   const { TURN_TUTORIAL_LESSONS } = await import('../turn/tutorial/turn-tutorial-lessons.js');
   const drift = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'drift');

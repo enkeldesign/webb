@@ -3,7 +3,8 @@ import { getTrophyRoadReward } from './trophy-road.js';
 // Unlock introductions (#1149, #1150): when DRIFT ATTACK, SHIFT or FLOW unlocks, Home
 // explains it in a bottom sheet that stays until the player closes it, instead of
 // leaving them to find HOW TO PLAY. DRIFT ATTACK offers its tutorial; SHIFT points
-// GARAGE at ACTIVATE SHIFT the next time it opens. Only unlocks that happen from now on
+// GARAGE at ACTIVATE SHIFT the next time it opens, then the drive pad's SHIFT in the
+// next races (ui/shift-race-callout.js). Only unlocks that happen from now on
 // are introduced: players who already have these keep their HOW TO PLAY guide.
 export const UNLOCK_INTRODUCTIONS_KEY = 'turn-unlock-introductions-v1';
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
@@ -32,7 +33,7 @@ export const UNLOCK_INTRODUCTIONS = Object.freeze({
       'While racing, slide from GAS into SHIFT to switch between STANDARD and SHIFT.'
     ]),
     note: 'Next time you open GARAGE, ACTIVATE SHIFT is highlighted for you.',
-    hint: 'garage-shift'
+    hints: Object.freeze(['garage-shift', 'race-shift'])
   }),
   flow: Object.freeze({
     title: 'FLOW',
@@ -48,9 +49,16 @@ function readState(storage) {
   try {
     const raw = JSON.parse(storage?.getItem?.(UNLOCK_INTRODUCTIONS_KEY) || 'null');
     const ids = (value) => (Array.isArray(value) ? value.filter((id) => UNLOCK_INTRODUCTIONS[id]) : []);
-    return { pending: ids(raw?.pending), shown: ids(raw?.shown), hints: Array.isArray(raw?.hints) ? raw.hints : [] };
+    const views = raw?.views && typeof raw.views === 'object' ? raw.views : {};
+    const state = { pending: ids(raw?.pending), shown: ids(raw?.shown), hints: Array.isArray(raw?.hints) ? raw.hints : [], views };
+    // Saved before r428, which added views and the race hint: a SHIFT introduced then
+    // arms the race hint once. Every later save carries views, so it is never re-armed.
+    if (raw && !raw.views && state.shown.includes('shift') && !state.hints.includes('race-shift')) {
+      state.hints.push('race-shift');
+    }
+    return state;
   } catch (_) {
-    return { pending: [], shown: [], hints: [] };
+    return { pending: [], shown: [], hints: [], views: {} };
   }
 }
 
@@ -77,18 +85,33 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage)
       return changed;
     },
     next: () => state.pending[0] || null,
-    // Closed by the player: introduced, and its follow-up hint armed.
+    // Closed by the player: introduced, and its follow-up hints armed.
     introduced(id) {
       state.pending = state.pending.filter((pending) => pending !== id);
       if (!state.shown.includes(id)) state.shown.push(id);
-      const hint = UNLOCK_INTRODUCTIONS[id]?.hint;
-      if (hint && !state.hints.includes(hint)) state.hints.push(hint);
+      for (const hint of UNLOCK_INTRODUCTIONS[id]?.hints || []) {
+        if (!state.hints.includes(hint)) state.hints.push(hint);
+        delete state.views[hint];
+      }
       save();
     },
     hasHint: (hint) => state.hints.includes(hint),
     consumeHint(hint) {
       state.hints = state.hints.filter((pending) => pending !== hint);
+      delete state.views[hint];
       save();
+    },
+    // A hint shown once more; after `limit` showings it has had its chance.
+    viewHint(hint, limit = 1) {
+      const views = (Number(state.views[hint]) || 0) + 1;
+      if (views >= limit) {
+        state.hints = state.hints.filter((pending) => pending !== hint);
+        delete state.views[hint];
+      } else {
+        state.views[hint] = views;
+      }
+      save();
+      return views;
     },
     snapshot: () => JSON.parse(JSON.stringify(state))
   });
