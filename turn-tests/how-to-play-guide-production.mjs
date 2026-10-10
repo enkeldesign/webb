@@ -73,6 +73,14 @@ assert.match(guide, /Mix techniques with useful timing to build <strong>COMBO<\/
 assert.doesNotMatch(guide, /Button presses alone score nothing/,
   'FLOW help should describe rewarding play rather than expose anti-spam implementation language');
 assert.match(guide, /gauge shows your current FLOW momentum/);
+// FLOW techniques and combos (#1149): every technique scoring/flow-runtime.js rewards.
+assert.match(guide, /<details class="m8-guide-disclosure m8-overcharge-guide" data-how-to-play-disclosure="flow-combos">/);
+for (const technique of ['DRIFT', 'LOCK', 'EXIT', 'BOOST', 'CATCH', 'SHIFT']) {
+  assert.match(guide, new RegExp(`<li><strong>${technique}</strong><span>`), `FLOW lists ${technique}`);
+}
+assert.match(guide, /Each different technique within 5 seconds of the last raises COMBO, up to ×8/);
+assert.match(guide, /<strong>DRIFT, EXIT, BOOST<\/strong>/);
+assert.ok(!HOW_TO_PLAY_DISCLOSURE_IDS.includes('flow-combos'), 'Not part of the HOW TO PLAY achievement');
 
 assert.match(guide, /installGuideCardDisclosures\(dialog\)/);
 assert.match(guide, /section\.classList\.contains\('m8-guide-wide'\)/,

@@ -224,6 +224,24 @@
   letter-spacing: 0.06em;
 }
 
+.m8-flow-combos {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.m8-flow-combos li {
+  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
+  line-height: 1.35;
+}
+
+.m8-flow-combos strong {
+  display: block;
+  letter-spacing: 0.06em;
+}
+
 .m8-overcharge-leak {
   margin: 8.25px 0 0;
   padding-top: 7.5px;
