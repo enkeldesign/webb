@@ -108,6 +108,29 @@ function makeGuideSection(dialog, { id, number, title, copy }) {
   return section;
 }
 
+// What earns FLOW (scoring/flow-runtime.js) and chains that link them (#1149). Not one of
+// HOW_TO_PLAY_DISCLOSURE_IDS: opening it is not part of the HOW TO PLAY achievement.
+const FLOW_COMBOS_DISCLOSURE = `
+  <details class="m8-guide-disclosure m8-overcharge-guide" data-how-to-play-disclosure="flow-combos">
+    <summary><span class="m8-disclosure-symbol" aria-hidden="true"></span><span>FLOW techniques and combos</span></summary>
+    <div class="m8-guide-disclosure-panel">
+      <ul class="m8-overcharge-steps">
+        <li><strong>DRIFT</strong><span>Bank a slide. Longer, stronger slides earn more.</span></li>
+        <li><strong>LOCK</strong><span>Use LOCK in a slide you bank.</span></li>
+        <li><strong>EXIT</strong><span>Straighten out, or link into the next slide, after at least 0.7 seconds of drifting.</span></li>
+        <li><strong>BOOST</strong><span>BOOST that gains speed. OVERCHARGE makes it worth more.</span></li>
+        <li><strong>CATCH</strong><span>Catch OVERCHARGE on GAS.</span></li>
+        <li><strong>SHIFT</strong><span>SHIFT just before it helps: DRIFT or CONTROL into a slide, speed or BOOST before a BOOST, acceleration out of a bend.</span></li>
+      </ul>
+      <p class="m8-overcharge-leak"><strong>COMBOS</strong> Each different technique within 5 seconds of the last raises COMBO, up to ×8. Repeating one adds little, and a lost slide breaks the chain. For example:</p>
+      <ul class="m8-flow-combos">
+        <li><strong>DRIFT, EXIT, BOOST</strong>Slide through a bend, straighten out cleanly, then BOOST away.</li>
+        <li><strong>LOCK, DRIFT, EXIT, CATCH, BOOST</strong>With BOOST full, LOCK a long slide to build OVERCHARGE, straighten out onto GAS to catch it, then spend it.</li>
+        <li><strong>SHIFT, DRIFT, EXIT, SHIFT, BOOST</strong>SHIFT into a drifting setup before the bend, slide out of it, then SHIFT back and BOOST away.</li>
+      </ul>
+    </div>
+  </details>`;
+
 function installShiftAndScoringSections(dialog) {
   const grid = dialog.querySelector('.m8-guide-grid');
   const before = grid?.querySelector('.m8-guide-wide');
@@ -133,6 +156,8 @@ function installShiftAndScoringSections(dialog) {
     title: 'FLOW',
     copy: '<strong>FLOW</strong> rewards chaining different driving techniques at the right moment: SHIFT, BOOST, DRIFT, LOCK, catching OVERCHARGE and clean exits. Mix techniques with useful timing to build <strong>COMBO</strong>; repeating the same idea adds less and mistakes can break the chain. The gauge shows your current FLOW momentum. <strong>LAP</strong> is this lap, <strong>LAST</strong> is your previous completed lap and <strong>BEST</strong> is the saved record for this track.'
   });
+
+  flow.querySelector(':scope > div')?.insertAdjacentHTML('beforeend', FLOW_COMBOS_DISCLOSURE);
 
   grid.insertBefore(shift, before);
   grid.insertBefore(drift, before);
