@@ -507,6 +507,35 @@ try {
     assert.equal((await inspect(page)).policy, 'tutorial-lap', 'The introduction starts DRIFT ATTACK TUTORIAL');
   });
 
+  // The same buttons in SETTINGS, on the Admin card with the other admin tools.
+  await run('admin UNLOCK SHIFT from SETTINGS', { admin: true }, async (page) => {
+    // SETTINGS, from the ☰ menu sheet as a player reaches it.
+    await page.locator('.turn-home-menu-button').click();
+    await page.locator('.m8-home-settings').click();
+    await page.waitForFunction(() => document.querySelector('.m8-settings-dialog')?.open);
+    const unlocks = page.locator('[data-turn-route-test-hud-setting] .m8-admin-unlocks');
+    assert.deepEqual(await unlocks.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW']);
+    await unlocks.locator('[data-admin-unlock="shift"]').click();
+    assert.equal(await page.evaluate(() => document.querySelector('.m8-settings-dialog').open), false,
+      'SETTINGS closes so the unlock plays on Home');
+    await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open);
+    assert.equal(await page.locator('.m8-unlock-sheet h2').textContent(), 'SHIFT');
+    await page.locator('.m8-unlock-sheet [data-unlock-close]').click();
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-shift')), true,
+      'Closing it arms the GARAGE hint, as a real unlock does');
+    // SETTINGS away from Home (a race's start screen): the introduction could not show there.
+    const hiddenAwayFromHome = await page.evaluate(async () => {
+      globalThis.__turnNextHome.hideHome();
+      const settings = document.querySelector('.m8-settings-dialog');
+      settings.showModal();
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      const hidden = document.querySelector('.m8-admin-unlocks').hidden;
+      settings.close();
+      return hidden;
+    });
+    assert.equal(hiddenAwayFromHome, true, 'Home only');
+  });
+
   await run('existing player', { played: true, launch: true }, async (page) => {
     assert.equal((await inspect(page)).card, false, 'An existing player\'s launch does not open the tutorial');
     assert.equal(await showLaunchCard(page), false, 'An existing player is not put through the tutorial');
