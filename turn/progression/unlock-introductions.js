@@ -134,7 +134,8 @@ function installStyles(documentRef) {
     .m8-unlock-note { margin: 0; font-size: var(--turn-type-small); line-height: var(--turn-leading-body); }
     .m8-unlock-actions { display: grid; gap: var(--turn-space-3); }
     .m8-unlock-actions button,
-    .roadbook-admin button {
+    .roadbook-admin button,
+    .m8-admin-unlocks button {
       min-height: var(--turn-target-min);
       padding: var(--turn-space-3) var(--turn-space-4);
       border: var(--turn-border-control) solid var(--turn-outline);
@@ -149,7 +150,8 @@ function installStyles(documentRef) {
     .m8-unlock-actions [data-unlock-action] { background: var(--turn-action-primary); color: var(--turn-ink); }
     .roadbook-admin { display: grid; gap: var(--turn-space-2); margin-top: var(--turn-space-4); }
     .roadbook-admin h2 { margin: 0; font-size: var(--turn-type-small); letter-spacing: 0.16em; }
-    .roadbook-admin div { display: flex; flex-wrap: wrap; gap: var(--turn-space-2); }
+    .roadbook-admin div,
+    .m8-admin-unlocks { display: flex; flex-wrap: wrap; gap: var(--turn-space-2); }
     .garage-shift.is-introduced { animation: turn-unlock-pulse 1.5s ease-in-out 3; }
     @keyframes turn-unlock-pulse {
       50% { box-shadow: 0 0 0 var(--turn-space-2) var(--turn-action-primary); }
@@ -332,6 +334,37 @@ export function installUnlockIntroductions({
     return row;
   }
 
+  // The same buttons in SETTINGS, on the Admin card with the other admin tools
+  // (testing/route-test-hud.js builds it). SETTINGS closes so the unlock plays on Home.
+  function installAdminSettings() {
+    if (!isAdminProfile(storage)) return;
+    const add = () => {
+      const card = documentRef.querySelector('[data-turn-route-test-hud-setting]');
+      if (!card) return false;
+      if (card.querySelector('.m8-admin-unlocks')) return true;
+      const group = documentRef.createElement('div');
+      group.className = 'm8-admin-unlocks';
+      group.setAttribute('role', 'group');
+      group.setAttribute('aria-label', 'Replay an unlock');
+      group.innerHTML = Object.keys(UNLOCK_INTRODUCTIONS)
+        .map((id) => `<button type="button" data-admin-unlock="${id}">UNLOCK ${UNLOCK_INTRODUCTIONS[id].title}</button>`)
+        .join('');
+      group.addEventListener('click', (event) => {
+        const id = event.target.closest?.('[data-admin-unlock]')?.dataset.adminUnlock;
+        if (!id) return;
+        group.closest('dialog')?.close?.();
+        replay(id);
+      });
+      card.append(group);
+      return true;
+    };
+    if (add() || typeof MutationObserver !== 'function') return;
+    const observer = new MutationObserver(() => {
+      if (add()) observer.disconnect();
+    });
+    observer.observe(documentRef.body, { childList: true, subtree: true });
+  }
+
   function replay(id) {
     const reward = getTrophyRoadReward(id);
     if (reward) globalThis.__turnAchievements?.showRewardToastBatch?.([reward]);
@@ -341,5 +374,6 @@ export function installUnlockIntroductions({
   }
 
   const adminRow = installAdminRow();
+  installAdminSettings();
   return Object.freeze({ dialog, queue, adminRow, replay, schedule });
 }
