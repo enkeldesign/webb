@@ -523,6 +523,17 @@ try {
     await page.locator('.m8-unlock-sheet [data-unlock-close]').click();
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-shift')), true,
       'Closing it arms the GARAGE hint, as a real unlock does');
+    // SETTINGS away from Home (a race's start screen): the introduction could not show there.
+    const hiddenAwayFromHome = await page.evaluate(async () => {
+      globalThis.__turnNextHome.hideHome();
+      const settings = document.querySelector('.m8-settings-dialog');
+      settings.showModal();
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      const hidden = document.querySelector('.m8-admin-unlocks').hidden;
+      settings.close();
+      return hidden;
+    });
+    assert.equal(hiddenAwayFromHome, true, 'Home only');
   });
 
   await run('existing player', { played: true, launch: true }, async (page) => {

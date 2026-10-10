@@ -152,6 +152,7 @@ function installStyles(documentRef) {
     .roadbook-admin h2 { margin: 0; font-size: var(--turn-type-small); letter-spacing: 0.16em; }
     .roadbook-admin div,
     .m8-admin-unlocks { display: flex; flex-wrap: wrap; gap: var(--turn-space-2); }
+    .m8-admin-unlocks[hidden] { display: none; }
     .garage-shift.is-introduced { animation: turn-unlock-pulse 1.5s ease-in-out 3; }
     @keyframes turn-unlock-pulse {
       50% { box-shadow: 0 0 0 var(--turn-space-2) var(--turn-action-primary); }
@@ -335,7 +336,8 @@ export function installUnlockIntroductions({
   }
 
   // The same buttons in SETTINGS, on the Admin card with the other admin tools
-  // (testing/route-test-hud.js builds it). SETTINGS closes so the unlock plays on Home.
+  // (testing/route-test-hud.js builds it). SETTINGS closes so the unlock plays on Home;
+  // SETTINGS opened from a race's start screen does not show them.
   function installAdminSettings() {
     if (!isAdminProfile(storage)) return;
     const add = () => {
@@ -356,6 +358,15 @@ export function installUnlockIntroductions({
         replay(id);
       });
       card.append(group);
+      const settings = card.closest('dialog');
+      const sync = () => {
+        group.hidden = !(documentRef.body.classList.contains('turn-home-open')
+          && documentRef.querySelector('.m8-home:not([hidden])'));
+      };
+      sync();
+      if (settings && typeof MutationObserver === 'function') {
+        new MutationObserver(sync).observe(settings, { attributes: true, attributeFilter: ['open'] });
+      }
       return true;
     };
     if (add() || typeof MutationObserver !== 'function') return;
