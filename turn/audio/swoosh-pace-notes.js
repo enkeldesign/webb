@@ -22,6 +22,7 @@
 // By Ear's balance and on/off apply, and the car sounds and music duck underneath.
 import { routeForSamples, routeSegmentAt, upcomingRouteSegments } from './route-geometry.js';
 import { SWOOSH_LENGTHS, SWOOSH_VOICES, VOICE_VARIANTS, prepareSwooshVoices, startSwoosh, swooshLengths } from './swoosh-sound.js';
+import { holdSpeechFloor } from '../ui/speech-floor.js';
 
 export const SWOOSH_PACE_TUNING = Object.freeze({
   // The race sound: CHIME RING, Erik's choice from the admin sound picker (1.35.4), in
@@ -321,6 +322,8 @@ function playPlanned(item, routeAudio) {
 
   routeAudio.holdMixUntil?.(handle.endsAt + 0.05);
   globalThis.__turnRacingMusic?.duck?.(at - now, handle.endsAt - at);
+  // Nothing that can wait is said over a pace note (ui/speech-floor.js).
+  holdSpeechFloor((handle.endsAt - now) * 1000);
 
   // Seconds between the swoosh ending and the car reaching the bend. A start note plays
   // inside its bend by design, so it is never late.

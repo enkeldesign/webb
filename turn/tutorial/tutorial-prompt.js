@@ -1,14 +1,21 @@
 import { LEARNING_FEEDBACK_READY_EVENT } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
 import { KEYBOARD_DRIVE_BINDINGS } from '../input/keyboard-driving-controls.js';
 import { QE_DRIVE_BINDINGS } from '../input/qe-drive-controls.js';
+import { setLiveAnnouncement } from '../ui/race-announcements.js';
+import { estimatedSpeechMs, holdSpeechFloor, speechFloorWait } from '../ui/speech-floor.js';
 import { applyCourseRescue } from './course-rescue.js';
 import { STEERING_HELP_CHANGED_EVENT, loadSteeringHelp, steeringHelpTarget } from './steering-help.js';
 import { createTurnTutorialCoach } from './turn-tutorial-coach.js';
 import { STEERING_HELP_HINT, TURN_TUTORIAL_LESSONS, TUTORIAL_GRADUATION_WITH_HELP_MESSAGE } from './turn-tutorial-lessons.js';
 
-// The TURN TUTORIAL prompt (#1132): one polite live region, so every lesson is both
-// shown and spoken, and recoverable by reading it again. It never takes focus.
+// The TURN TUTORIAL prompt (#1132): every lesson is shown, and said by a polite live
+// region, and stays recoverable by reading the box again. It never takes focus. It is
+// said when the race has nothing else to say (#1133, ui/speech-floor.js): after the
+// track intro, a lap result or a position, never over a pace note, and never over
+// itself. Tutorial guidance is the speech that waits.
 const STYLE_ID = 'turn-tutorial-prompt-styles';
+// Past the floor's end, so race speech due at that moment goes first.
+const FLOOR_MARGIN_MS = 50;
 const GRADUATION_SECONDS = 4;
 const DRIVING_KEYS = new Set([...Object.keys(KEYBOARD_DRIVE_BINDINGS), ...Object.keys(QE_DRIVE_BINDINGS)]);
 // Rescues before the prompt points to Tutorial steering help, and how long it shows.
@@ -56,16 +63,55 @@ function installStyles() {
 
 export function createTutorialPrompt(parent = document.body) {
   installStyles();
+  // The box is what is seen, and found by exploring; the voice is what is said.
   const element = document.createElement('div');
   element.className = 'turn-tutorial-prompt';
-  element.setAttribute('role', 'status');
-  element.setAttribute('aria-live', 'polite');
-  element.setAttribute('aria-atomic', 'true');
   element.hidden = true;
   const title = document.createElement('strong');
   const text = document.createElement('span');
   element.append(title, text);
-  parent.appendChild(element);
+  const voice = document.createElement('div');
+  voice.className = 'turn-sr-only turn-tutorial-voice';
+  voice.setAttribute('aria-live', 'polite');
+  voice.setAttribute('aria-atomic', 'true');
+  parent.append(element, voice);
+
+  // The newest line not yet said; guidance overtaken before it could be said is not
+  // said late. It waits with one timer at a time, and not at all while the race is
+  // paused: RESUME picks it up again.
+  let unsaid = '';
+  let saidUntil = 0;
+  let sayTimer = 0;
+  let finishTimer = 0;
+  let finishing = null;
+  const paused = () => globalThis.__turnRacePause?.paused === true;
+  function sayWhenFree() {
+    clearTimeout(sayTimer);
+    sayTimer = 0;
+    if (!unsaid || paused()) return;
+    const wait = speechFloorWait();
+    if (wait > 0) {
+      sayTimer = setTimeout(sayWhenFree, wait + FLOOR_MARGIN_MS);
+      return;
+    }
+    const message = unsaid;
+    unsaid = '';
+    const ms = estimatedSpeechMs(message);
+    holdSpeechFloor(ms);
+    saidUntil = performance.now() + ms;
+    setLiveAnnouncement(voice, message);
+    finishing?.check();
+  }
+  // A task later, so RESUME says its own words first (ui/race-pause-menu.js).
+  const onUiState = (event) => {
+    if (event.detail?.reason !== 'race-resumed') return;
+    clearTimeout(sayTimer);
+    sayTimer = setTimeout(() => {
+      sayWhenFree();
+      finishing?.check();
+    }, FLOOR_MARGIN_MS);
+  };
+  globalThis.addEventListener?.('turn:ui-state-change', onUiState);
 
   // Below the HUD stat row, measured again whenever the layout can change: the stat
   // chips reflow between portrait and landscape.
@@ -110,6 +156,8 @@ export function createTutorialPrompt(parent = document.body) {
       element.hidden = true;
       title.textContent = '';
       text.textContent = '';
+      unsaid = '';
+      clearTimeout(sayTimer);
       return;
     }
     element.hidden = false;
@@ -127,18 +175,48 @@ export function createTutorialPrompt(parent = document.body) {
       title.textContent = 'TUTORIAL COMPLETE';
       text.textContent = view.message.replace(/^Tutorial complete\.\s*/, '');
     }
+    unsaid = `${title.textContent.replace(/ ✓$/, ' done')}. ${text.textContent}`;
+    sayWhenFree();
+  }
+
+  // The line: the box goes now, and the run ends once its last words have been said,
+  // so what follows (an achievement) is not said over them.
+  function finish() {
+    element.hidden = true;
+    return new Promise((resolve) => {
+      const check = () => {
+        clearTimeout(finishTimer);
+        // Still to be said, or paused: saying it, or RESUME, checks again.
+        if (unsaid || paused()) return;
+        const left = saidUntil - performance.now();
+        if (left > 0) {
+          finishTimer = setTimeout(check, left);
+          return;
+        }
+        finishing = null;
+        resolve();
+      };
+      finishing = { check, resolve };
+      check();
+    });
   }
 
   function remove() {
+    clearTimeout(sayTimer);
+    clearTimeout(finishTimer);
+    finishing?.resolve();
+    finishing = null;
+    globalThis.removeEventListener?.('turn:ui-state-change', onUiState);
     cancelAnimationFrame(placing);
     globalThis.removeEventListener?.('resize', onResize);
     globalThis.removeEventListener?.('orientationchange', onResize);
     globalThis.removeEventListener?.('keydown', onKeyDown, true);
     globalThis.removeEventListener?.('pointerdown', onPointerDown, true);
     element.remove();
+    voice.remove();
   }
 
-  return Object.freeze({ element, present, remove });
+  return Object.freeze({ element, voice, present, finish, remove });
 }
 
 // Runs the coach once per frame for one tutorial run. Paused races do not advance it.
@@ -209,7 +287,7 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
       if (graduationLeft > 0) {
         graduationLeft -= dt;
         if (graduationLeft <= 0) {
-          stop();
+          void prompt.finish().then(stop);
           return;
         }
       }

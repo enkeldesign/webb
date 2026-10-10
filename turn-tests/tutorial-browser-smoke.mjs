@@ -178,7 +178,10 @@ try {
     assert.deepEqual(current.ghosts, [], 'No rival drives ahead of the teaching lap');
     assert.equal(current.tutorial.status, 'in-progress');
     assert.equal(await page.locator('.turn-tutorial-prompt').count(), 1, 'The lesson prompt runs with the teaching lap');
-    assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('role'), 'status',
+    // Shown in the box, said by the voice (#1133): the box itself is not a live region,
+    // so a lesson is said once, when the race has nothing else to say.
+    assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('aria-live'), null);
+    assert.equal(await page.locator('.turn-tutorial-voice').getAttribute('aria-live'), 'polite',
       'Lessons are spoken as well as shown');
     // Into the DRIVE stretch, just past the line.
     await page.evaluate(() => {
@@ -192,6 +195,9 @@ try {
       const prompt = document.querySelector('.turn-tutorial-prompt');
       return prompt?.dataset.lesson === 'drive' && !prompt.hidden;
     });
+    // Said once the track intro has been.
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-voice')?.textContent
+      === 'DRIVE. Steer into the bend and hold GAS.', null, { timeout: 15000 });
     // Rotating reflows the HUD stat chips into a taller grid; the prompt follows them.
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForFunction(() => {
@@ -224,6 +230,8 @@ try {
     await crossFinish(page);
     assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-state'), 'graduated',
       'Crossing the line says the tutorial is complete');
+    assert.doesNotMatch(await page.locator('.turn-tutorial-voice').textContent(), /TUTORIAL COMPLETE/,
+      'The lap result is said first: the line waits for it');
     assert.ok(await leaveRoad(page, 40) > rescueLimit + 1.5, 'After the line, ordinary TURN has no rescue');
     // Back onto the road: far off it, slow CI renderers draw too few frames for the
     // race-time checks below.
@@ -242,7 +250,10 @@ try {
     await page.waitForTimeout(4500);
     assert.equal(await page.locator('.turn-tutorial-prompt').count(), 1, 'TUTORIAL COMPLETE is still there after a pause');
     await page.evaluate(() => globalThis.__turnRacePause.resume());
-    await page.waitForFunction(() => !document.querySelector('.turn-tutorial-prompt'), null, { timeout: 10000 });
+    await page.waitForFunction(() => /^TUTORIAL COMPLETE\. /.test(document.querySelector('.turn-tutorial-voice')?.textContent || ''),
+      null, { timeout: 10000 });
+    // The run ends once its last words have been said: the award is not said over them.
+    await page.waitForFunction(() => !document.querySelector('.turn-tutorial-prompt'), null, { timeout: 15000 });
     // The award is shown at this finish, once TUTORIAL COMPLETE has had its moment.
     await page.waitForFunction(() => {
       const toast = globalThis.__turnAchievements.toast;
@@ -344,7 +355,7 @@ try {
     });
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'score');
     assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /DRIFT SCORING.*LOCK.*BANK/, 'LOCK first: it may start the slide');
-    assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('role'), 'status', 'Spoken as well as shown');
+    assert.equal(await page.locator('.turn-tutorial-voice').getAttribute('aria-live'), 'polite', 'Spoken as well as shown');
     // A banked slide, as DRIFT ATTACK announces it (scoring/drift-attack-runtime.js).
     await page.evaluate(() => globalThis.dispatchEvent(new CustomEvent('turn:drift-score-event', { detail: { type: 'bank' } })));
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.state === 'done');

@@ -13,6 +13,7 @@
 
 import { installRacePause } from '../race/race-pause.js';
 import { installVisitSummary } from '../race/visit-summary.js';
+import { estimatedSpeechMs, holdSpeechFloor } from './speech-floor.js';
 
 const INSTALL_KEY = '__turnRacePauseMenu';
 
@@ -69,6 +70,7 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
   status.setAttribute('aria-live', 'polite');
   documentRef.body.appendChild(status);
   function announce(message) {
+    holdSpeechFloor(estimatedSpeechMs(message) + 50);
     status.textContent = '';
     windowRef.setTimeout(() => {
       status.textContent = message;
