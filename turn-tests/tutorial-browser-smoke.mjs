@@ -394,7 +394,7 @@ try {
     await flow({ type: 'technique', technique: 'clean-exit', multiplier: 1.5 });
     await flow({ type: 'technique', technique: 'boost', multiplier: 2 });
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.state === 'done');
-    assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /COMBO ×2/);
+    assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /That is a COMBO/);
 
     await crossFinish(page);
     assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-state'), 'graduated');

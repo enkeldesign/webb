@@ -18,8 +18,10 @@ export const FLOW_LESSONS = Object.freeze([
     id: 'combo',
     title: 'COMBO',
     prompt: 'Chain three different techniques, each within 5 seconds: DRIFT, a clean EXIT, then BOOST.',
-    doneText: 'COMBO ×2. Each different technique in a row raises it.',
-    done: (progress) => progress.multiplier >= 2
+    doneText: 'That is a COMBO. Each different technique in a row raises it.',
+    // BOOST, the move it asks for, at COMBO ×2 or more: one slide with LOCK scores LOCK,
+    // DRIFT and EXIT, already ×2, and is not yet the chain the lesson is about.
+    done: (progress) => progress.last === 'boost' && progress.multiplier >= 2
   })
 ]);
 
@@ -35,7 +37,7 @@ const GRADUATION_SECONDS = 4;
 // it reached, and the chain running out. It writes nothing but state.sessionSpeedCap.
 export function createFlowCoach({ state, maxSpeed, lessons = FLOW_LESSONS, present = () => {} }) {
   const outcome = new Map(lessons.map((lesson) => [lesson.id, 'pending']));
-  const progress = { techniques: new Set(), multiplier: 1 };
+  const progress = { techniques: new Set(), last: '', multiplier: 1 };
   let current = null;
   let nextIndex = 0;
   let doneLeft = 0;
@@ -68,6 +70,7 @@ export function createFlowCoach({ state, maxSpeed, lessons = FLOW_LESSONS, prese
   function technique(detail) {
     if (finished) return;
     if (detail?.technique) progress.techniques.add(detail.technique);
+    progress.last = detail?.technique || '';
     progress.multiplier = Math.max(1, Number(detail?.multiplier) || 1);
     if (current?.done(progress)) complete();
   }
@@ -75,6 +78,7 @@ export function createFlowCoach({ state, maxSpeed, lessons = FLOW_LESSONS, prese
   function chainEnded() {
     if (finished) return;
     progress.techniques.clear();
+    progress.last = '';
     progress.multiplier = 1;
     if (current?.id === 'combo') present({ kind: 'lesson', id: current.id, title: current.title, prompt: FLOW_CHAIN_ENDED_PROMPT });
   }

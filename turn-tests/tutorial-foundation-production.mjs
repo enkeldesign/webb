@@ -767,7 +767,16 @@ test('FLOW TUTORIAL: DRIFT and EXIT, then a COMBO of three, judged on FLOW\'s ow
   coach.technique({ technique: 'boost', multiplier: 1.5 });
   assert.equal(coach.lesson, 'combo', 'Two techniques are not yet COMBO ×2');
   coach.technique({ technique: 'clean-exit', multiplier: 2 });
+  assert.equal(coach.lesson, 'combo', 'COMBO ×2, but not ending on the BOOST the lesson asks for');
+  coach.technique({ technique: 'boost', multiplier: 2.25 });
   assert.equal(views.at(-1).kind, 'done');
+  // One slide with LOCK scores LOCK, DRIFT and EXIT, ×2 already: the lesson still waits for BOOST.
+  const locked = flow.createFlowCoach({ state, maxSpeed: 88 });
+  locked.update(0.1, 0);
+  for (const [technique, multiplier] of [['lock', 1], ['drift', 1.5], ['clean-exit', 2]]) locked.technique({ technique, multiplier });
+  assert.equal(locked.lesson, 'combo');
+  locked.technique({ technique: 'boost', multiplier: 2.5 });
+  assert.equal(locked.outcome().combo, 'done');
   coach.graduate();
   assert.equal(views.at(-1).message, flow.FLOW_GRADUATION_MESSAGE);
 
