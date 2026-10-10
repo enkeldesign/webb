@@ -1,5 +1,5 @@
 {
-  "release": "20261009-r428",
+  "release": "20261010-r429",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -437,6 +437,7 @@
     "/turn/tutorial/course-rescue.js",
     "/turn/tutorial/drift-attack-coach.js",
     "/turn/tutorial/drift-attack-lessons.js",
+    "/turn/tutorial/flow-tutorial.js",
     "/turn/tutorial/steering-help.js",
     "/turn/tutorial/turn-tutorial-coach.js",
     "/turn/tutorial/turn-tutorial-lessons.js",

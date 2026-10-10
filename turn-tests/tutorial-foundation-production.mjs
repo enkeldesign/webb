@@ -748,6 +748,42 @@ test('after the SHIFT introduction, the drive pad\'s SHIFT is pointed out in the
     'Once used, the backfill does not bring it back');
 });
 
+test('FLOW TUTORIAL: DRIFT and EXIT, then a COMBO of three, judged on FLOW\'s own events', async () => {
+  const flow = await import('../turn/tutorial/flow-tutorial.js');
+  const { FLOW_TUTORIAL } = await import('../turn/tutorial/tutorial-progress.js');
+  assert.deepEqual([FLOW_TUTORIAL.id, FLOW_TUTORIAL.trackId], ['flow', 'countryside']);
+  const state = { sessionSpeedCap: null, vehicleEffectiveMaxSpeed: 80 };
+  const views = [];
+  const coach = flow.createFlowCoach({ state, maxSpeed: 88, present: (view) => views.push(view) });
+  coach.update(0.1, 30);
+  assert.equal(coach.lesson, 'slide');
+  assert.ok(state.sessionSpeedCap >= 0.45 * 80, 'A slower first bend, from the car\'s own top speed');
+  coach.technique({ technique: 'drift', multiplier: 1 });
+  assert.equal(coach.lesson, 'combo', 'Straight on: the chain is already running');
+  assert.equal(state.sessionSpeedCap, null);
+  coach.chainEnded();
+  assert.equal(views.at(-1).prompt, flow.FLOW_CHAIN_ENDED_PROMPT, 'A chain that runs out is said, not failed');
+  coach.technique({ technique: 'drift', multiplier: 1 });
+  coach.technique({ technique: 'boost', multiplier: 1.5 });
+  assert.equal(coach.lesson, 'combo', 'Two techniques are not yet COMBO ×2');
+  coach.technique({ technique: 'clean-exit', multiplier: 2 });
+  assert.equal(views.at(-1).kind, 'done');
+  coach.graduate();
+  assert.equal(views.at(-1).message, flow.FLOW_GRADUATION_MESSAGE);
+
+  const missed = flow.createFlowCoach({ state, maxSpeed: 88 });
+  missed.update(0.1, 0);
+  missed.graduate();
+  assert.equal(missed.outcome().combo, 'missed');
+  assert.equal(state.sessionSpeedCap, null);
+  const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
+  const home = await read('../turn/m8-home.js');
+  assert.match(home, /\[FLOW_TUTORIAL\.id, \{ name: 'FLOW TUTORIAL'[^\n]*coach: startFlowCoach \}\]/);
+  assert.match(home, /isUnlocked: \(\) => isFeatureUnlocked\('flow'\)/);
+  const intro = await import('../turn/progression/unlock-introductions.js');
+  assert.equal(intro.UNLOCK_INTRODUCTIONS.flow.action.label, 'START FLOW TUTORIAL');
+});
+
 test('the DRIFT lesson names LOCK, which is on the drive pad from the first lap', async () => {
   const { TURN_TUTORIAL_LESSONS } = await import('../turn/tutorial/turn-tutorial-lessons.js');
   const drift = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'drift');

@@ -34,7 +34,8 @@ function installStyles() {
     .m8-tutorial-actions { display: grid; gap: var(--turn-space-3); }
     .m8-tutorial-actions button,
     .m8-tutorial-entry button,
-    .m8-drift-attack-entry button {
+    .m8-drift-attack-entry button,
+    .m8-flow-tutorial-entry button {
       min-height: var(--turn-target-min);
       padding: var(--turn-space-3) var(--turn-space-4);
       border: var(--turn-border-control) solid var(--turn-outline);
@@ -48,13 +49,15 @@ function installStyles() {
     }
     .m8-tutorial-actions [data-tutorial-start],
     .m8-tutorial-entry button,
-    .m8-drift-attack-entry button {
+    .m8-drift-attack-entry button,
+    .m8-flow-tutorial-entry button {
       background: var(--turn-action-primary);
       color: var(--turn-ink);
     }
     .m8-tutorial-note,
     .m8-tutorial-entry p,
-    .m8-drift-attack-entry p {
+    .m8-drift-attack-entry p,
+    .m8-flow-tutorial-entry p {
       margin: 0;
       font-size: var(--turn-type-small);
       line-height: var(--turn-leading-body);
@@ -63,12 +66,14 @@ function installStyles() {
     .m8-tutorial-copy p + p { margin-top: var(--turn-space-2); }
     .m8-tutorial-entry .m8-tutorial-goal { font-size: var(--turn-type-body); }
     .m8-tutorial-entry,
-    .m8-drift-attack-entry {
+    .m8-drift-attack-entry,
+    .m8-flow-tutorial-entry {
       display: grid;
       gap: var(--turn-space-2);
       margin-bottom: var(--turn-space-4);
     }
     .m8-drift-attack-entry[hidden] { display: none; }
+    .m8-flow-tutorial-entry[hidden] { display: none; }
   `;
   document.head.appendChild(style);
 }
@@ -169,17 +174,16 @@ export function installTutorialEntry({
   return Object.freeze({ card, entry, showLaunchCard });
 }
 
-// DRIFT ATTACK TUTORIAL in HOW TO PLAY (#1150), below TURN TUTORIAL once DRIFT ATTACK
-// (and OVERCHARGE with it) is unlocked.
-export function installDriftAttackEntry({ howDialog, startTutorial, isUnlocked }) {
+// A tutorial offered in HOW TO PLAY once its feature unlocks, after the tutorials above it.
+function installFeatureTutorialEntry({ howDialog, startTutorial, isUnlocked, className, attribute, label, copy }) {
   installStyles();
   const entry = document.createElement('section');
-  entry.className = 'm8-drift-attack-entry';
+  entry.className = className;
   entry.innerHTML = `
-    <button type="button" data-tutorial-drift-attack>DRIFT ATTACK TUTORIAL</button>
-    <p>Learn DRIFT scoring and OVERCHARGE in one lap of COUNTRYSIDE.</p>`;
-  const turnEntry = howDialog?.querySelector('.m8-tutorial-entry');
-  if (turnEntry) turnEntry.after(entry);
+    <button type="button" ${attribute}>${label}</button>
+    <p>${copy}</p>`;
+  const above = [...(howDialog?.querySelectorAll('.m8-tutorial-entry, .m8-drift-attack-entry, .m8-flow-tutorial-entry') || [])].at(-1);
+  if (above) above.after(entry);
   else howDialog?.querySelector('.m8-guide-grid')?.before(entry);
   const sync = () => {
     let unlocked = false;
@@ -199,4 +203,31 @@ export function installDriftAttackEntry({ howDialog, startTutorial, isUnlocked }
     void startTutorial();
   });
   return Object.freeze({ entry, sync });
+}
+
+// DRIFT ATTACK TUTORIAL in HOW TO PLAY (#1150), below TURN TUTORIAL once DRIFT ATTACK
+// (and OVERCHARGE with it) is unlocked.
+export function installDriftAttackEntry({ howDialog, startTutorial, isUnlocked }) {
+  return installFeatureTutorialEntry({
+    howDialog,
+    startTutorial,
+    isUnlocked,
+    className: 'm8-drift-attack-entry',
+    attribute: 'data-tutorial-drift-attack',
+    label: 'DRIFT ATTACK TUTORIAL',
+    copy: 'Learn DRIFT scoring and OVERCHARGE in one lap of COUNTRYSIDE.'
+  });
+}
+
+// FLOW TUTORIAL (#1149), once FLOW unlocks.
+export function installFlowTutorialEntry({ howDialog, startTutorial, isUnlocked }) {
+  return installFeatureTutorialEntry({
+    howDialog,
+    startTutorial,
+    isUnlocked,
+    className: 'm8-flow-tutorial-entry',
+    attribute: 'data-tutorial-flow',
+    label: 'FLOW TUTORIAL',
+    copy: 'Learn what earns FLOW and how COMBO grows in one lap of COUNTRYSIDE.'
+  });
 }

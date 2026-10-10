@@ -7,14 +7,15 @@ import { activateTrack } from '/turn/tracks/track-manager.js?source=20260729-r11
 import { showTrackIntro } from '/turn/ui/track-intro.js?source=20260729-r118-m8';
 import { installRoadbook } from '/turn/roadbook/roadbook.js';
 import { createRewardPreviewSession } from './race/reward-preview.js';
-import { DRIFT_ATTACK_TUTORIAL, TURN_TUTORIAL, createTutorialProgress } from './tutorial/tutorial-progress.js';
+import { DRIFT_ATTACK_TUTORIAL, FLOW_TUTORIAL, TURN_TUTORIAL, createTutorialProgress } from './tutorial/tutorial-progress.js';
 import { createTutorialSession } from './tutorial/tutorial-session.js';
-import { installDriftAttackEntry, installTutorialEntry } from './tutorial/tutorial-entry.js';
+import { installDriftAttackEntry, installFlowTutorialEntry, installTutorialEntry } from './tutorial/tutorial-entry.js';
 import { isFeatureUnlocked } from './progression/trophy-road.js';
 import { installUnlockIntroductions } from './progression/unlock-introductions.js';
 import { installShiftRaceCallout } from './ui/shift-race-callout.js';
 import { startTurnTutorialCoach } from './tutorial/tutorial-prompt.js';
 import { startDriftAttackCoach } from './tutorial/drift-attack-coach.js';
+import { startFlowCoach } from './tutorial/flow-tutorial.js';
 import { loadSteeringHelp, saveSteeringHelp } from './tutorial/steering-help.js';
 import { trackIconMarkup } from '/turn/ui/track-icons.js';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';
@@ -679,14 +680,16 @@ export async function installM8HomeNavigation() {
   });
   const tutorialSession = createSession(TURN_TUTORIAL);
   const driftAttackSession = createSession(DRIFT_ATTACK_TUTORIAL);
-  // TURN TUTORIAL (#1132) and DRIFT ATTACK TUTORIAL (#1150): a teaching lap, then
-  // ordinary TURN. One at a time.
+  const flowSession = createSession(FLOW_TUTORIAL);
+  // TURN TUTORIAL (#1132), DRIFT ATTACK TUTORIAL (#1150) and FLOW TUTORIAL (#1149): a
+  // teaching lap, then ordinary TURN. One at a time.
   const TUTORIALS = new Map([
     [TURN_TUTORIAL.id, { name: 'TURN TUTORIAL', module: TURN_TUTORIAL, session: tutorialSession, coach: startTurnTutorialCoach }],
-    [DRIFT_ATTACK_TUTORIAL.id, { name: 'DRIFT ATTACK TUTORIAL', module: DRIFT_ATTACK_TUTORIAL, session: driftAttackSession, coach: startDriftAttackCoach }]
+    [DRIFT_ATTACK_TUTORIAL.id, { name: 'DRIFT ATTACK TUTORIAL', module: DRIFT_ATTACK_TUTORIAL, session: driftAttackSession, coach: startDriftAttackCoach }],
+    [FLOW_TUTORIAL.id, { name: 'FLOW TUTORIAL', module: FLOW_TUTORIAL, session: flowSession, coach: startFlowCoach }]
   ]);
   function tutorialActive() {
-    return tutorialSession.active || driftAttackSession.active;
+    return [...TUTORIALS.values()].some(({ session }) => session.active);
   }
 
   let tutorialCoach = null;
@@ -728,6 +731,7 @@ export async function installM8HomeNavigation() {
     stopTutorialCoach();
     if (tutorialSession.active) await tutorialSession.exit();
     if (driftAttackSession.active) await driftAttackSession.exit();
+    if (flowSession.active) await flowSession.exit();
     showHome({ focus: true });
     return true;
   }
@@ -745,6 +749,11 @@ export async function installM8HomeNavigation() {
     startTutorial: () => startTutorial(DRIFT_ATTACK_TUTORIAL.id),
     isUnlocked: () => isFeatureUnlocked('drift-attack')
   });
+  const flowEntry = installFlowTutorialEntry({
+    howDialog,
+    startTutorial: () => startTutorial(FLOW_TUTORIAL.id),
+    isUnlocked: () => isFeatureUnlocked('flow')
+  });
   // DRIFT ATTACK, SHIFT and FLOW are introduced on Home when they unlock (#1149).
   const unlockIntroductions = installUnlockIntroductions({ startTutorial });
   // After the SHIFT introduction: the drive pad's SHIFT, pointed out in the next races.
@@ -752,6 +761,7 @@ export async function installM8HomeNavigation() {
 
   howButton.addEventListener('click', () => {
     driftAttackEntry.sync();
+    flowEntry.sync();
     openDialog(howDialog, howButton);
   });
   homeSettingsButton.addEventListener('click', () => {
@@ -784,8 +794,10 @@ export async function installM8HomeNavigation() {
       progress: tutorialProgress,
       session: tutorialSession,
       driftAttackSession,
+      flowSession,
       entry: tutorialEntry,
-      driftAttackEntry
+      driftAttackEntry,
+      flowEntry
     }),
     unlockIntroductions,
     leaveRaceForHome,

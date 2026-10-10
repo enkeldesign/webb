@@ -2,7 +2,7 @@ import { getTrophyRoadReward } from './trophy-road.js';
 
 // Unlock introductions (#1149, #1150): when DRIFT ATTACK, SHIFT or FLOW unlocks, Home
 // explains it in a bottom sheet that stays until the player closes it, instead of
-// leaving them to find HOW TO PLAY. DRIFT ATTACK offers its tutorial; SHIFT points
+// leaving them to find HOW TO PLAY. DRIFT ATTACK and FLOW offer their tutorials; SHIFT points
 // GARAGE at ACTIVATE SHIFT the next time it opens, then the drive pad's SHIFT in the
 // next races (ui/shift-race-callout.js). Only unlocks that happen from now on
 // are introduced: players who already have these keep their HOW TO PLAY guide.
@@ -41,7 +41,8 @@ export const UNLOCK_INTRODUCTIONS = Object.freeze({
       'FLOW scores how you mix techniques: SHIFT, BOOST, DRIFT, LOCK, catching OVERCHARGE and clean exits.',
       'Vary them at the right moment to build COMBO. Repeating the same idea adds less.'
     ]),
-    note: 'More about FLOW in HOW TO PLAY.'
+    action: Object.freeze({ id: 'flow-tutorial', label: 'START FLOW TUTORIAL' }),
+    note: 'You can play FLOW TUTORIAL any time from HOW TO PLAY.'
   })
 });
 
@@ -279,6 +280,7 @@ export function installUnlockIntroductions({
     const action = UNLOCK_INTRODUCTIONS[showing]?.action?.id;
     dialog.close?.();
     if (action === 'drift-attack-tutorial') void startTutorial?.('drift-attack');
+    if (action === 'flow-tutorial') void startTutorial?.('flow');
   });
   dialog.addEventListener('close', finish);
 

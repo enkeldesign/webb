@@ -134,6 +134,7 @@ try {
     assert.equal(current.entry, true, 'HOW TO PLAY offers TURN TUTORIAL');
     assert.equal(await page.locator('[data-tutorial-drift-attack]').isVisible(), false,
       'DRIFT ATTACK TUTORIAL waits for DRIFT ATTACK');
+    assert.equal(await page.locator('[data-tutorial-flow]').isVisible(), false, 'FLOW TUTORIAL waits for FLOW');
     // TURN dialogs focus their heading first, so a screen reader starts at the title.
     assert.equal(await page.evaluate(() => Boolean(document.activeElement?.closest('.m8-tutorial-dialog'))), true,
       'Focus moves into the TURN TUTORIAL card');
@@ -359,6 +360,53 @@ try {
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.driftAttackSession.active), false,
       'Going Home restores the player\'s own track and car');
     assert.equal(await page.locator('.turn-tutorial-prompt').count(), 0);
+  });
+
+  // FLOW TUTORIAL (#1149): started from the FLOW introduction, judged on FLOW's own events.
+  await run('FLOW TUTORIAL', { rewards: ['flow'], introductions: true }, async (page) => {
+    await page.evaluate(() => globalThis.dispatchEvent(new CustomEvent('turn:trophy-road-updated', { detail: { unlocked: ['flow'] } })));
+    await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open);
+    const sheet = page.locator('.m8-unlock-sheet');
+    assert.equal(await sheet.locator('h2').textContent(), 'FLOW');
+    assert.equal(await sheet.locator('[data-unlock-action]').textContent(), 'START FLOW TUTORIAL');
+    await sheet.locator('[data-unlock-action]').click();
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.running && !document.querySelector('dialog[open]'));
+    let current = await inspect(page);
+    assert.equal(current.track, 'countryside');
+    assert.equal(current.policy, 'tutorial-lap', 'The teaching lap earns nothing');
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.flowSession.active), true);
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * 0.04)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(10);
+    });
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'slide');
+    assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /DRIFT AND EXIT/);
+    // Techniques as FLOW announces them (scoring/flow-runtime.js).
+    const flow = (detail) => page.evaluate((value) => globalThis.dispatchEvent(new CustomEvent('turn:flow-score-event', { detail: value })), detail);
+    await flow({ type: 'technique', technique: 'drift', multiplier: 1 });
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'combo');
+    await flow({ type: 'chain-expired' });
+    await page.waitForFunction(() => /chain ran out/.test(document.querySelector('.turn-tutorial-prompt').textContent));
+    await flow({ type: 'technique', technique: 'drift', multiplier: 1 });
+    await flow({ type: 'technique', technique: 'clean-exit', multiplier: 1.5 });
+    await flow({ type: 'technique', technique: 'boost', multiplier: 2 });
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.state === 'done');
+    assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /COMBO ×2/);
+
+    await crossFinish(page);
+    assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-state'), 'graduated');
+    assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /LOCK, CATCH and SHIFT count too/);
+    current = await inspect(page);
+    assert.equal(current.policy, 'normal');
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.progress.status('flow')), 'completed');
+    await page.evaluate(() => globalThis.__turnRuntime.openHome());
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.flowSession.active), false);
+    await page.evaluate(() => document.querySelector('.m8-how-button').click());
+    await page.waitForFunction(() => document.querySelector('.m8-how-dialog')?.open);
+    assert.equal(await page.locator('[data-tutorial-flow]').isVisible(), true, 'HOW TO PLAY offers it again');
   });
 
   // Unlock introductions (#1149): explained on Home when DRIFT ATTACK, SHIFT or FLOW unlocks.

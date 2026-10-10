@@ -35,6 +35,15 @@ export const DRIFT_ATTACK_TUTORIAL = Object.freeze({
   vehicleId: 'classic'
 });
 
+// FLOW TUTORIAL (#1149): what earns FLOW and how COMBO grows, offered once FLOW unlocks.
+// The same lap as DRIFT ATTACK TUTORIAL: its bends leave room to drift, exit and BOOST.
+export const FLOW_TUTORIAL = Object.freeze({
+  id: 'flow',
+  revision: 1,
+  trackId: 'countryside',
+  vehicleId: 'classic'
+});
+
 const STATUSES = new Set(Object.values(TUTORIAL_STATUS));
 
 function normalizeRecord(raw) {

@@ -379,5 +379,14 @@ export const CHANGELOG = Object.freeze([
         "When DRIFT ATTACK, SHIFT or FLOW unlocks, Home explains it in a sheet that stays until you close it. DRIFT ATTACK offers its tutorial; SHIFT is then pointed out in GARAGE and beside the drive pad in your next race."
       ]
     ]
+  },
+  {
+    "date": "10 October 2026",
+    "entries": [
+      [
+        "FLOW TUTORIAL",
+        "One lap of COUNTRYSIDE that points out what earns FLOW and has you chain DRIFT, a clean EXIT and BOOST into COMBO. FLOW's unlock sheet offers it; HOW TO PLAY lists every FLOW technique and example combos."
+      ]
+    ]
   }
 ]);
