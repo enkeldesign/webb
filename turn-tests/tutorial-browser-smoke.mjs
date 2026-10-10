@@ -437,6 +437,8 @@ try {
     });
     await page.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
     await page.waitForSelector('.garage-race', { timeout: 60000 });
+    // GARAGE ignores activations during its 600 ms VoiceOver entry-tap guard.
+    await page.waitForTimeout(700);
     await page.locator('.garage-race').click();
     await page.waitForFunction(() => globalThis.__turnRuntime.state.running, null, { timeout: 60000 });
     // A SHIFT setup for the car being raced, as GARAGE saves one.
