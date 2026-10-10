@@ -215,7 +215,7 @@ export function installDriftAttackEntry({ howDialog, startTutorial, isUnlocked }
     className: 'm8-drift-attack-entry',
     attribute: 'data-tutorial-drift-attack',
     label: 'DRIFT ATTACK TUTORIAL',
-    copy: 'Learn DRIFT scoring and OVERCHARGE in one lap of COUNTRYSIDE.'
+    copy: 'Learn DRIFT scoring, linked drifts and OVERCHARGE in one lap of CLIFFSIDE.'
   });
 }
 
@@ -228,6 +228,6 @@ export function installFlowTutorialEntry({ howDialog, startTutorial, isUnlocked 
     className: 'm8-flow-tutorial-entry',
     attribute: 'data-tutorial-flow',
     label: 'FLOW TUTORIAL',
-    copy: 'Learn what earns FLOW and how COMBO grows in one lap of COUNTRYSIDE.'
+    copy: 'Learn what earns FLOW and how COMBO grows in one lap of CLIFFSIDE.'
   });
 }

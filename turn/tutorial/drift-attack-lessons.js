@@ -1,5 +1,6 @@
-// DRIFT ATTACK TUTORIAL (#1150): one teaching lap that turns DRIFT into points and
-// BOOST into OVERCHARGE. Lessons follow each other, each starting when the last is done:
+// DRIFT ATTACK TUTORIAL (#1150): one teaching lap that turns DRIFT into points, links
+// drifts into COMBO, and BOOST into OVERCHARGE. Lessons follow each other, each starting
+// when the last is done:
 // OVERCHARGE leaks, so CATCH, HOLD and SPEND come straight after BUILD. There is no
 // failure state: OVERCHARGE that leaks away sends the player back to BUILD, and the line
 // ends the lesson either way. Every prompt names OVERCHARGE: on the meter it is only
@@ -7,16 +8,30 @@
 //
 // speedCap: share of the car's top speed while the lesson waits, eased in (null: none).
 // pauseAfter: seconds the doneText stays before the next lesson. needsOvercharge: the
-// lesson cannot go on once OVERCHARGE is gone.
+// lesson cannot go on once OVERCHARGE is gone. keyboardPrompt: for players driving by
+// keyboard, where it differs (LOCK has no key).
 export const DRIFT_ATTACK_LESSONS = Object.freeze([
   Object.freeze({
     id: 'score',
     title: 'DRIFT SCORING',
-    prompt: 'Hold DRIFT through the bend, then straighten out to BANK the points.',
+    // LOCK first: it may be what starts the slide at all.
+    prompt: 'Hold DRIFT into the bend. If the car will not slide, slide outward into LOCK. Straighten out to BANK the points.',
+    keyboardPrompt: 'Hold DRIFT into the bend, then straighten out to BANK the points.',
     doneText: 'Banked. Longer, faster slides score more.',
     pauseAfter: 3,
     speedCap: 0.45,
     done: (progress) => progress.banks > 0
+  }),
+  Object.freeze({
+    // DRIFT ATTACK links a drift started the other way within 1.4 s of a bank
+    // (scoring/drift-attack.js), and announces the higher COMBO.
+    id: 'link',
+    title: 'LINK',
+    prompt: 'Bank a slide, then drift the other way straight away. Linked drifts raise COMBO.',
+    doneText: 'Linked. Keep switching sides to keep COMBO climbing.',
+    pauseAfter: 3,
+    speedCap: 0.45,
+    done: (progress) => progress.links > 0
   }),
   Object.freeze({
     id: 'build',

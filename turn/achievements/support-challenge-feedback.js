@@ -1,10 +1,10 @@
 import { getRewardPreviewChallenge } from '../race/reward-preview.js';
+import { viewCarWhenGarageOpens } from '../garage/garage-focus.js';
 
 const SUPPORT_FEEDBACK_STORAGE_KEY = 'turn-support-feedback-v1';
 const RACE_SUPPORT_BONUS_PATTERN = /^support:(?:patrol|excursion|winner|safety|drift):/;
 const SUPPORT_PILL_VISIBLE_MS = 3200;
 const TOAST_CONCEAL_MS = 220;
-const LOT_SELECTION_TIMEOUT_MS = 12000;
 const STYLE_ID = 'turn-support-challenge-feedback-styles';
 const HOME_SHOWN_EVENT = 'turn:home-shown';
 const SUPPORT_HOME_STARTED_EVENT = 'turn:support-home-feedback-started';
@@ -258,28 +258,6 @@ export function showCompactRacePill(label, { tone = 'blue', duration = 1800 } = 
   return true;
 }
 
-// A challenge's recommended car takes precedence over the car GARAGE would otherwise
-// open on, once GARAGE is showing.
-function selectRecommendedLotCar(vehicleId) {
-  if (!vehicleId) return false;
-  const select = () => {
-    const garage = globalThis.__turnGarage;
-    if (!garage?.root?.isConnected) return false;
-    garage.viewCar(vehicleId);
-    return true;
-  };
-  if (select()) return true;
-
-  const observer = new MutationObserver(() => {
-    if (!select()) return;
-    observer.disconnect();
-    globalThis.clearTimeout(timeout);
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-  const timeout = globalThis.setTimeout(() => observer.disconnect(), LOT_SELECTION_TIMEOUT_MS);
-  return true;
-}
-
 function homeIsOpen() {
   return Boolean(
     document.body.classList.contains('turn-home-open')
@@ -416,7 +394,7 @@ export function installSupportChallengeFeedback({ storage = globalThis.localStor
     if (!active || active.type === 'learning' || getRewardPreviewChallenge(active) || !active.trackId || !active.vehicleId) return;
     // The existing support handler remains authoritative for track selection and
     // navigation. Arm the recommended Lot choice before that handler opens it.
-    selectRecommendedLotCar(active.vehicleId);
+    viewCarWhenGarageOpens(active.vehicleId);
   };
   document.addEventListener('click', handleStart, true);
 
@@ -449,7 +427,7 @@ export function installSupportChallengeFeedback({ storage = globalThis.localStor
 
   installed = Object.freeze({
     storageKey: SUPPORT_FEEDBACK_STORAGE_KEY,
-    selectRecommendedLotCar,
+    selectRecommendedLotCar: viewCarWhenGarageOpens,
     showPendingHomeCompletion: maybeShowPendingHomeCompletion,
     disconnect() {
       disconnected = true;

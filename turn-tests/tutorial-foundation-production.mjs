@@ -599,11 +599,11 @@ test('Tutorial steering help is a saved SETTINGS choice that works mid-lap', asy
   assert.match(lessons.STEERING_HELP_HINT.text, /PAUSED|Pause/, 'Repeated rescues point to it, reachable mid-lap');
 });
 
-test('DRIFT ATTACK TUTORIAL teaches scoring, then BUILD, CATCH, HOLD and SPEND in order', async () => {
+test('DRIFT ATTACK TUTORIAL teaches scoring, then LINK, BUILD, CATCH, HOLD and SPEND in order', async () => {
   const { createDriftAttackCoach } = await import('../turn/tutorial/drift-attack-coach.js');
   const lessons = await import('../turn/tutorial/drift-attack-lessons.js');
   const state = { sessionSpeedCap: null };
-  let input = { speed: 60, overcharge: 0, caught: false, boosting: false, banks: 0 };
+  let input = { speed: 60, overcharge: 0, caught: false, boosting: false, banks: 0, links: 0 };
   const views = [];
   const coach = createDriftAttackCoach({ state, maxSpeed: 88, signals: () => input, present: (view) => views.push(view) });
   const run = (seconds) => { for (let t = 0; t < seconds; t += 0.1) coach.update(0.1); };
@@ -611,12 +611,22 @@ test('DRIFT ATTACK TUTORIAL teaches scoring, then BUILD, CATCH, HOLD and SPEND i
   run(0.1);
   assert.equal(coach.lesson, 'score');
   assert.equal(views.at(-1).title, 'DRIFT SCORING');
+  assert.match(views.at(-1).prompt, /LOCK/, 'LOCK first: it may be what starts the slide');
+  assert.doesNotMatch(views.at(-1).keyboardPrompt, /LOCK/, 'LOCK has no key');
   run(1);
   assert.ok(state.sessionSpeedCap < 60 && state.sessionSpeedCap >= 0.45 * 88, 'Eased toward the lesson cap, not braked');
   input = { ...input, banks: 1 };
   run(0.1);
   assert.equal(views.at(-1).kind, 'done', 'A banked slide is the lesson');
   assert.equal(state.sessionSpeedCap, null);
+  run(3.2);
+  assert.equal(coach.lesson, 'link', 'Linking drifts comes before OVERCHARGE');
+  input = { ...input, banks: 2 };
+  run(0.1);
+  assert.equal(coach.lesson, 'link', 'Another bank alone is not a link');
+  input = { ...input, links: 1 };
+  run(0.1);
+  assert.equal(views.at(-1).kind, 'done');
   run(3.2);
   assert.equal(coach.lesson, 'build');
   input = { ...input, overcharge: 0.35 };
@@ -640,17 +650,17 @@ test('DRIFT ATTACK TUTORIAL teaches scoring, then BUILD, CATCH, HOLD and SPEND i
   run(0.1);
   assert.equal(views.at(-1).kind, 'done');
   assert.match(views.at(-1).text, /OVERCHARGE/);
-  assert.deepEqual(Object.values(coach.outcome()), ['done', 'done', 'done', 'done', 'done']);
+  assert.deepEqual(Object.values(coach.outcome()), ['done', 'done', 'done', 'done', 'done', 'done']);
   // The cap is a share of the car's own top speed: the LEARNER CAR tops out below 88.
   const learner = { sessionSpeedCap: null, vehicleEffectiveMaxSpeed: 73.92 };
-  const capped = createDriftAttackCoach({ state: learner, maxSpeed: 88, signals: () => ({ ...input, speed: 20, banks: 0 }) });
+  const capped = createDriftAttackCoach({ state: learner, maxSpeed: 88, signals: () => ({ ...input, speed: 20, banks: 0, links: 0 }) });
   capped.update(0.1);
   capped.update(0.1);
   assert.ok(Math.abs(learner.sessionSpeedCap - 0.45 * 73.92) < 1e-9, '45 % of this car, not of the base limit');
   coach.graduate();
   assert.equal(views.at(-1).message, lessons.DRIFT_ATTACK_GRADUATION_MESSAGE);
 
-  for (const lesson of lessons.DRIFT_ATTACK_LESSONS.slice(1)) {
+  for (const lesson of lessons.DRIFT_ATTACK_LESSONS.filter(({ id }) => !['score', 'link'].includes(id))) {
     assert.match(lesson.prompt, /OVERCHARGE/, `${lesson.title} names OVERCHARGE: on the meter it is only purple`);
   }
 });
@@ -659,11 +669,14 @@ test('DRIFT ATTACK TUTORIAL has no failure state: an early BOOST or the line end
   const { createDriftAttackCoach } = await import('../turn/tutorial/drift-attack-coach.js');
   const lessons = await import('../turn/tutorial/drift-attack-lessons.js');
   const state = { sessionSpeedCap: null };
-  let input = { speed: 30, overcharge: 0, caught: false, boosting: false, banks: 0 };
+  let input = { speed: 30, overcharge: 0, caught: false, boosting: false, banks: 0, links: 0 };
   const views = [];
   const coach = createDriftAttackCoach({ state, maxSpeed: 88, signals: () => input, present: (view) => views.push(view) });
   coach.update(0.1);
   input = { ...input, banks: 1 };
+  coach.update(0.1);
+  for (let t = 0; t < 3.2; t += 0.1) coach.update(0.1);
+  input = { ...input, links: 1 };
   coach.update(0.1);
   for (let t = 0; t < 3.2; t += 0.1) coach.update(0.1);
   input = { ...input, overcharge: 0.5 };
@@ -674,7 +687,7 @@ test('DRIFT ATTACK TUTORIAL has no failure state: an early BOOST or the line end
   coach.update(0.1);
   assert.equal(coach.outcome().spend, 'done');
 
-  const missed = createDriftAttackCoach({ state, maxSpeed: 88, signals: () => ({ ...input, banks: 0 }), present: (view) => views.push(view) });
+  const missed = createDriftAttackCoach({ state, maxSpeed: 88, signals: () => ({ ...input, banks: 0, links: 0 }), present: (view) => views.push(view) });
   missed.update(0.1);
   missed.graduate();
   assert.equal(views.at(-1).message, lessons.DRIFT_ATTACK_PRACTICE_MESSAGE, 'The line ends the lesson either way');
@@ -751,7 +764,7 @@ test('after the SHIFT introduction, the drive pad\'s SHIFT is pointed out in the
 test('FLOW TUTORIAL: DRIFT and EXIT, then a COMBO of three, judged on FLOW\'s own events', async () => {
   const flow = await import('../turn/tutorial/flow-tutorial.js');
   const { FLOW_TUTORIAL } = await import('../turn/tutorial/tutorial-progress.js');
-  assert.deepEqual([FLOW_TUTORIAL.id, FLOW_TUTORIAL.trackId], ['flow', 'countryside']);
+  assert.deepEqual([FLOW_TUTORIAL.id, FLOW_TUTORIAL.trackId], ['flow', 'cliffside']);
   const state = { sessionSpeedCap: null, vehicleEffectiveMaxSpeed: 80 };
   const views = [];
   const coach = flow.createFlowCoach({ state, maxSpeed: 88, present: (view) => views.push(view) });
@@ -793,6 +806,27 @@ test('FLOW TUTORIAL: DRIFT and EXIT, then a COMBO of three, judged on FLOW\'s ow
   assert.equal(intro.UNLOCK_INTRODUCTIONS.flow.action.label, 'START FLOW TUTORIAL');
 });
 
+test('PAINTJOB is pointed out in GARAGE without a sheet: its reward toast says it', async () => {
+  const intro = await import('../turn/progression/unlock-introductions.js');
+  assert.equal(intro.UNLOCK_INTRODUCTIONS.paintjob, undefined, 'No introduction sheet');
+  assert.equal(intro.UNLOCK_HINTS.paintjob.hint, 'garage-paint');
+  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(queue.unlocked(['paintjob']), false, 'Nothing waits on Home for it');
+  queue.armHint('garage-paint');
+  assert.equal(intro.createUnlockIntroductionQueue(globalThis.localStorage).hasHint('garage-paint'), true,
+    'Armed until GARAGE next shows PAINT');
+  const source = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/progression/unlock-introductions.js', import.meta.url), 'utf8'));
+  assert.match(source, /'garage-paint': Object\.freeze\(\{ selector: '\.garage-paint-toggle', say: 'New in GARAGE: PAINT, below the car’s name\.' \}\)/,
+    'Said as well as shown');
+  // Watched on Home and in GARAGE only (turn/AGENTS.md): never during a race.
+  assert.match(source, /if \(hintObserver \|\| windowRef\.__turnRuntime\?\.state\?\.running === true\) return;/);
+  assert.match(source, /if \(event\.detail\?\.running === true\) stopWatchingHints\(\);/);
+  assert.match(source, /if \(introducesOnUnlock\(windowRef, storage\)\) armUnlockHints\(event\.detail\?\.unlocked\);/,
+    'Not armed in automated runs, as the sheets are not shown');
+  assert.match(source, /viewCarWhenGarageOpens\('sedan'\);/, 'TRY SHIFT IN THE SEDAN opens the SEDAN as a challenge opens its car');
+});
+
 test('the DRIFT lesson names LOCK, which is on the drive pad from the first lap', async () => {
   const { TURN_TUTORIAL_LESSONS } = await import('../turn/tutorial/turn-tutorial-lessons.js');
   const drift = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'drift');
@@ -800,7 +834,9 @@ test('the DRIFT lesson names LOCK, which is on the drive pad from the first lap'
   assert.match(drift.doneText, /refills BOOST/, 'The BOOST loop is still said, once the slide is done');
   assert.doesNotMatch(drift.keyboardPrompt, /LOCK/, 'Keyboard players are not told about a move with no key');
   const prompt = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/tutorial/tutorial-prompt.js', import.meta.url), 'utf8'));
-  assert.match(prompt, /if \(keyboard && lesson\?\.keyboardPrompt\) return \{ \.\.\.view, prompt: lesson\.keyboardPrompt \};/);
+  // The shared prompt shows a lesson's keyboardPrompt to players driving by keyboard.
+  assert.match(prompt, /text\.textContent = keyboard && view\.keyboardPrompt \? view\.keyboardPrompt : view\.prompt;/);
+  assert.match(prompt, /return lesson\?\.keyboardPrompt \? \{ \.\.\.view, keyboardPrompt: lesson\.keyboardPrompt \} : view;/);
   // LOCK is part of the DRIFT zone, so a slide into LOCK still counts as drifting.
   const controls = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'));
   assert.match(controls, /globalThis\.__turnDriftHeld = nextZone === 'drift';/);
