@@ -739,6 +739,13 @@ test('after the SHIFT introduction, the drive pad\'s SHIFT is pointed out in the
   reloaded.introduced('shift');
   assert.equal(reloaded.hasHint(callout.RACE_SHIFT_HINT), true, 'Admin UNLOCK SHIFT arms it again');
   assert.deepEqual(reloaded.snapshot().views, {}, 'With its count started over');
+  // Introduced in r426/r427, before the race hint: armed once, then never again.
+  memory.set(intro.UNLOCK_INTRODUCTIONS_KEY, JSON.stringify({ pending: [], shown: ['shift'], hints: [] }));
+  const upgraded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(upgraded.hasHint(callout.RACE_SHIFT_HINT), true, 'Players introduced to SHIFT before r428 get the race hint');
+  upgraded.consumeHint(callout.RACE_SHIFT_HINT);
+  assert.equal(intro.createUnlockIntroductionQueue(globalThis.localStorage).hasHint(callout.RACE_SHIFT_HINT), false,
+    'Once used, the backfill does not bring it back');
 });
 
 test('the DRIFT lesson names LOCK, which is on the drive pad from the first lap', async () => {

@@ -50,7 +50,13 @@ function readState(storage) {
     const raw = JSON.parse(storage?.getItem?.(UNLOCK_INTRODUCTIONS_KEY) || 'null');
     const ids = (value) => (Array.isArray(value) ? value.filter((id) => UNLOCK_INTRODUCTIONS[id]) : []);
     const views = raw?.views && typeof raw.views === 'object' ? raw.views : {};
-    return { pending: ids(raw?.pending), shown: ids(raw?.shown), hints: Array.isArray(raw?.hints) ? raw.hints : [], views };
+    const state = { pending: ids(raw?.pending), shown: ids(raw?.shown), hints: Array.isArray(raw?.hints) ? raw.hints : [], views };
+    // Saved before r428, which added views and the race hint: a SHIFT introduced then
+    // arms the race hint once. Every later save carries views, so it is never re-armed.
+    if (raw && !raw.views && state.shown.includes('shift') && !state.hints.includes('race-shift')) {
+      state.hints.push('race-shift');
+    }
+    return state;
   } catch (_) {
     return { pending: [], shown: [], hints: [], views: {} };
   }
