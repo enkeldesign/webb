@@ -5,7 +5,8 @@
 const SPEECH_START_BUFFER_MS = 900;
 const SPEECH_MS_PER_WORD = 440;
 
-let heldUntil = 0;
+// Each speaker's hold, so one cut short (a pause, a restart, leaving) can let go of it.
+const holds = new Map();
 
 const now = () => globalThis.performance?.now?.() ?? Date.now();
 
@@ -15,11 +16,22 @@ export function estimatedSpeechMs(message) {
   return words ? SPEECH_START_BUFFER_MS + words * SPEECH_MS_PER_WORD : 0;
 }
 
-export function holdSpeechFloor(ms) {
-  if (Number.isFinite(ms) && ms > 0) heldUntil = Math.max(heldUntil, now() + ms);
+export function holdSpeechFloor(ms, owner) {
+  if (!(Number.isFinite(ms) && ms > 0)) return;
+  holds.set(owner, Math.max(holds.get(owner) || 0, now() + ms));
+}
+
+export function releaseSpeechFloor(owner) {
+  holds.delete(owner);
 }
 
 // Milliseconds until nothing is being said or played; 0 when the floor is free.
 export function speechFloorWait() {
-  return Math.max(0, heldUntil - now());
+  const at = now();
+  let until = at;
+  for (const [owner, end] of holds) {
+    if (end <= at) holds.delete(owner);
+    else until = Math.max(until, end);
+  }
+  return until - at;
 }

@@ -70,7 +70,7 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
   status.setAttribute('aria-live', 'polite');
   documentRef.body.appendChild(status);
   function announce(message) {
-    holdSpeechFloor(estimatedSpeechMs(message) + 50);
+    holdSpeechFloor(estimatedSpeechMs(message) + 50, 'race-pause');
     status.textContent = '';
     windowRef.setTimeout(() => {
       status.textContent = message;

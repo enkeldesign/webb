@@ -323,7 +323,7 @@ function playPlanned(item, routeAudio) {
   routeAudio.holdMixUntil?.(handle.endsAt + 0.05);
   globalThis.__turnRacingMusic?.duck?.(at - now, handle.endsAt - at);
   // Nothing that can wait is said over a pace note (ui/speech-floor.js).
-  holdSpeechFloor((handle.endsAt - now) * 1000);
+  holdSpeechFloor((handle.endsAt - now) * 1000, 'pace-notes');
 
   // Seconds between the swoosh ending and the car reaching the bend. A start note plays
   // inside its bend by design, so it is never late.

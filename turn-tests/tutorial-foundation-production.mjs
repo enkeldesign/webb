@@ -847,30 +847,38 @@ test('tutorial guidance waits for the race to finish speaking: one voice at a ti
   assert.equal(floor.estimatedSpeechMs(''), 0, 'Nothing to say holds nothing');
   assert.equal(floor.estimatedSpeechMs('Race resumed.'), 900 + 2 * 440, 'The estimate race-speech.js has used for the lap result');
   assert.equal(floor.speechFloorWait(), 0, 'Free until something is said or played');
-  floor.holdSpeechFloor(400);
-  floor.holdSpeechFloor(100);
+  floor.holdSpeechFloor(400, 'race-speech');
+  floor.holdSpeechFloor(100, 'race-speech');
+  floor.holdSpeechFloor(200, 'pace-notes');
   const wait = floor.speechFloorWait();
   assert.ok(wait > 300 && wait <= 400, 'A shorter hold never cuts a longer one short');
+  // Speech cut short (a pause, a restart, leaving) lets go of its own hold, not others'.
+  floor.releaseSpeechFloor('race-speech');
+  assert.ok(floor.speechFloorWait() > 100 && floor.speechFloorWait() <= 200, 'The pace note still holds');
+  floor.releaseSpeechFloor('pace-notes');
+  assert.equal(floor.speechFloorWait(), 0);
   const { lapAnnouncementPriorityMs } = await import('../turn/ui/race-speech.js');
   assert.equal(lapAnnouncementPriorityMs('Lap.'), 3200, 'Lap priority keeps its floor');
   assert.equal(lapAnnouncementPriorityMs('Lap. Position: first. Time: forty one point two seconds.'), 900 + 9 * 440);
   const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
   // Race speech is said at once and holds the floor; so do the track intro, the PAUSED
   // dialog's status and every pace note while it sounds.
-  assert.match(await read('../turn/ui/race-speech.js'), /holdSpeechFloor\(priorityMs\);/);
-  assert.match(await read('../turn/ui/race-speech.js'), /holdSpeechFloor\(estimatedSpeechMs\(ordinalWord\(normalizedPosition\)\)\);\n      setLiveAnnouncement\(positionAnnouncer, ordinalWord\(normalizedPosition\)\);/);
+  assert.match(await read('../turn/ui/race-speech.js'), /holdSpeechFloor\(priorityMs, FLOOR_OWNER\);/);
+  assert.match(await read('../turn/ui/race-speech.js'), /holdSpeechFloor\(estimatedSpeechMs\(ordinalWord\(normalizedPosition\)\), FLOOR_OWNER\);\n      setLiveAnnouncement\(positionAnnouncer, ordinalWord\(normalizedPosition\)\);/);
   // A position held back by the lap result keeps the floor until it has been said.
-  assert.match(await read('../turn/ui/race-speech.js'), /holdSpeechFloor\(lapPriorityUntil - performance\.now\(\) \+ estimatedSpeechMs\(ordinalWord\(normalizedPosition\)\)\);/);
-  assert.match(await read('../turn/ui/track-intro.js'), /holdSpeechFloor\(estimatedSpeechMs\(intro\.textContent\)\);/);
-  assert.match(await read('../turn/ui/race-pause-menu.js'), /holdSpeechFloor\(estimatedSpeechMs\(message\) \+ 50\);/);
-  assert.match(await read('../turn/audio/swoosh-pace-notes.js'), /holdSpeechFloor\(\(handle\.endsAt - now\) \* 1000\);/);
+  assert.match(await read('../turn/ui/race-speech.js'), /holdSpeechFloor\(lapPriorityUntil - performance\.now\(\) \+ estimatedSpeechMs\(ordinalWord\(normalizedPosition\)\), FLOOR_OWNER\);/);
+  assert.match(await read('../turn/ui/race-speech.js'), /setLiveAnnouncement\(contextAnnouncer, ''\);\n[^\n]*\n      releaseSpeechFloor\(FLOOR_OWNER\);/,
+    'A pause, restart or leave lets go of what race speech held');
+  assert.match(await read('../turn/ui/track-intro.js'), /holdSpeechFloor\(estimatedSpeechMs\(intro\.textContent\), 'track-intro'\);/);
+  assert.match(await read('../turn/ui/race-pause-menu.js'), /holdSpeechFloor\(estimatedSpeechMs\(message\) \+ 50, 'race-pause'\);/);
+  assert.match(await read('../turn/audio/swoosh-pace-notes.js'), /holdSpeechFloor\(\(handle\.endsAt - now\) \* 1000, 'pace-notes'\);/);
   // The tutorial's voice is the speech that waits, holds the floor while it speaks, and a
   // run ends once its last words have been said.
   const prompt = await read('../turn/tutorial/tutorial-prompt.js');
   assert.match(prompt, /if \(!unsaid \|\| paused\(\)\) return;\n    const wait = speechFloorWait\(\);/,
     'Nothing waits on a timer while the race is paused: RESUME picks it up');
   assert.match(prompt, /if \(event\.detail\?\.reason !== 'race-resumed'\) return;/);
-  assert.match(prompt, /holdSpeechFloor\(ms\);\n    saidUntil = performance\.now\(\) \+ ms;\n    setLiveAnnouncement\(voice, message\);/);
+  assert.match(prompt, /holdSpeechFloor\(ms, 'tutorial'\);\n    saidUntil = performance\.now\(\) \+ ms;\n    setLiveAnnouncement\(voice, message\);/);
   for (const path of ['../turn/tutorial/tutorial-prompt.js', '../turn/tutorial/drift-attack-coach.js', '../turn/tutorial/flow-tutorial.js']) {
     assert.match(await read(path), /void prompt\.finish\(\)\.then\(stop\);/, path);
   }

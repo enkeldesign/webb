@@ -19,7 +19,7 @@ export async function showTrackIntro(trackId) {
   intro.hidden = false;
   intro.setAttribute('aria-hidden', 'false');
   // Said as it appears: guidance that can wait waits until it has been.
-  holdSpeechFloor(estimatedSpeechMs(intro.textContent));
+  holdSpeechFloor(estimatedSpeechMs(intro.textContent), 'track-intro');
   intro.classList.remove('is-visible');
   document.body.classList.add('turn-track-intro');
   showRaceOrientationRecommendation(intro);

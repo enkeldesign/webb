@@ -2,7 +2,7 @@ import { LEARNING_FEEDBACK_READY_EVENT } from '../achievements/learning-progress
 import { KEYBOARD_DRIVE_BINDINGS } from '../input/keyboard-driving-controls.js';
 import { QE_DRIVE_BINDINGS } from '../input/qe-drive-controls.js';
 import { setLiveAnnouncement } from '../ui/race-announcements.js';
-import { estimatedSpeechMs, holdSpeechFloor, speechFloorWait } from '../ui/speech-floor.js';
+import { estimatedSpeechMs, holdSpeechFloor, releaseSpeechFloor, speechFloorWait } from '../ui/speech-floor.js';
 import { applyCourseRescue } from './course-rescue.js';
 import { STEERING_HELP_CHANGED_EVENT, loadSteeringHelp, steeringHelpTarget } from './steering-help.js';
 import { createTurnTutorialCoach } from './turn-tutorial-coach.js';
@@ -97,7 +97,7 @@ export function createTutorialPrompt(parent = document.body) {
     const message = unsaid;
     unsaid = '';
     const ms = estimatedSpeechMs(message);
-    holdSpeechFloor(ms);
+    holdSpeechFloor(ms, 'tutorial');
     saidUntil = performance.now() + ms;
     setLiveAnnouncement(voice, message);
     finishing?.check();
@@ -207,6 +207,7 @@ export function createTutorialPrompt(parent = document.body) {
     finishing?.resolve();
     finishing = null;
     globalThis.removeEventListener?.('turn:ui-state-change', onUiState);
+    releaseSpeechFloor('tutorial');
     cancelAnimationFrame(placing);
     globalThis.removeEventListener?.('resize', onResize);
     globalThis.removeEventListener?.('orientationchange', onResize);

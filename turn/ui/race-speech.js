@@ -6,7 +6,9 @@ import {
   spokenPosition,
   spokenRivalCount
 } from './race-announcements.js';
-import { estimatedSpeechMs, holdSpeechFloor } from './speech-floor.js';
+import { estimatedSpeechMs, holdSpeechFloor, releaseSpeechFloor } from './speech-floor.js';
+
+const FLOOR_OWNER = 'race-speech';
 
 const START_CONTEXT_DELAY_MS = 320;
 const LAP_PRIORITY_MIN_MS = 3200;
@@ -74,7 +76,7 @@ export function installRaceSpeech() {
     const priorityMs = lapAnnouncementPriorityMs(message);
     lapPriorityUntil = performance.now() + priorityMs;
     lapPriorityTimer = window.setTimeout(flushPendingPosition, priorityMs);
-    holdSpeechFloor(priorityMs);
+    holdSpeechFloor(priorityMs, FLOOR_OWNER);
   }
 
   globalThis.__turnSetRacePosition = (position, total) => {
@@ -99,12 +101,12 @@ export function installRaceSpeech() {
       if (changed || lastPosition === null) {
         pendingPositionAnnouncement = normalizedPosition;
         // Kept through the position that follows the lap, so nothing waiting slips in between.
-        holdSpeechFloor(lapPriorityUntil - performance.now() + estimatedSpeechMs(ordinalWord(normalizedPosition)));
+        holdSpeechFloor(lapPriorityUntil - performance.now() + estimatedSpeechMs(ordinalWord(normalizedPosition)), FLOOR_OWNER);
       }
     } else if (changed) {
       resetLapPriority();
       // Race speech is said at once, and holds the floor (speech-floor.js) while it is.
-      holdSpeechFloor(estimatedSpeechMs(ordinalWord(normalizedPosition)));
+      holdSpeechFloor(estimatedSpeechMs(ordinalWord(normalizedPosition)), FLOOR_OWNER);
       setLiveAnnouncement(positionAnnouncer, ordinalWord(normalizedPosition));
     }
 
@@ -128,7 +130,7 @@ export function installRaceSpeech() {
       if (!lapPriorityActive()) {
         const rivalCount = globalThis.__turnRuntime?.state?.competitorLaps?.length || 0;
         if (rivalCount > 0) {
-          holdSpeechFloor(START_CONTEXT_DELAY_MS + estimatedSpeechMs(spokenRivalCount(rivalCount)));
+          holdSpeechFloor(START_CONTEXT_DELAY_MS + estimatedSpeechMs(spokenRivalCount(rivalCount)), FLOOR_OWNER);
           contextTimer = window.setTimeout(() => {
             contextTimer = 0;
             setLiveAnnouncement(contextAnnouncer, spokenRivalCount(rivalCount));
@@ -144,6 +146,8 @@ export function installRaceSpeech() {
       resetLapPriority();
       setLiveAnnouncement(positionAnnouncer, '');
       setLiveAnnouncement(contextAnnouncer, '');
+      // And lets go of the floor it held, so nothing waits on words no longer coming.
+      releaseSpeechFloor(FLOOR_OWNER);
     }
   });
 
