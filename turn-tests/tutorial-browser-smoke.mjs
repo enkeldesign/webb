@@ -331,7 +331,7 @@ try {
     await entry.click();
     await page.waitForFunction(() => globalThis.__turnRuntime.state.running && !document.querySelector('dialog[open]'));
     let current = await inspect(page);
-    assert.equal(current.track, 'countryside');
+    assert.equal(current.track, 'cliffside', 'A track to drift on');
     assert.equal(current.car, 'classic');
     assert.equal(current.policy, 'tutorial-lap', 'The teaching lap earns nothing');
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.driftAttackSession.active), true);
@@ -343,10 +343,14 @@ try {
       state.velocity.copy(sample.tangent).multiplyScalar(10);
     });
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'score');
-    assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /DRIFT SCORING.*BANK/);
+    assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /DRIFT SCORING.*LOCK.*BANK/, 'LOCK first: it may start the slide');
     assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('role'), 'status', 'Spoken as well as shown');
     // A banked slide, as DRIFT ATTACK announces it (scoring/drift-attack-runtime.js).
     await page.evaluate(() => globalThis.dispatchEvent(new CustomEvent('turn:drift-score-event', { detail: { type: 'bank' } })));
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.state === 'done');
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'link', null, { timeout: 15000 });
+    // A drift linked to the last bank, as DRIFT ATTACK announces its higher COMBO.
+    await page.evaluate(() => globalThis.dispatchEvent(new CustomEvent('turn:drift-score-event', { detail: { type: 'milestone', multiplier: 2 } })));
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.state === 'done');
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'build', null, { timeout: 15000 });
     assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /OVERCHARGE/, 'BUILD names OVERCHARGE');
@@ -372,7 +376,7 @@ try {
     await sheet.locator('[data-unlock-action]').click();
     await page.waitForFunction(() => globalThis.__turnRuntime.state.running && !document.querySelector('dialog[open]'));
     let current = await inspect(page);
-    assert.equal(current.track, 'countryside');
+    assert.equal(current.track, 'cliffside');
     assert.equal(current.policy, 'tutorial-lap', 'The teaching lap earns nothing');
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.flowSession.active), true);
     await page.evaluate(() => {
@@ -417,12 +421,15 @@ try {
     assert.equal(await sheet.locator('h2').textContent(), 'SHIFT');
     assert.match(await sheet.locator('.m8-unlock-note').textContent(), /GARAGE/);
     assert.equal(await page.evaluate(() => document.activeElement?.id), 'turnUnlockTitle', 'Focus starts on the title');
-    await sheet.locator('[data-unlock-close]').click();
+    assert.match(await sheet.textContent(), /SEDAN has 3 in every attribute/);
+    // No preset: the SEDAN (any trade is legal) is where the player builds a setup.
+    assert.equal(await sheet.locator('[data-unlock-action]').textContent(), 'TRY SHIFT IN THE SEDAN');
+    await sheet.locator('[data-unlock-action]').click();
     assert.equal(await page.evaluate(() => document.querySelector('.m8-unlock-sheet').open), false, 'It stays until closed, then goes');
-    assert.deepEqual(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.snapshot()),
-      { pending: [], shown: ['shift'], hints: ['garage-shift', 'race-shift'], views: {} });
-    await page.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
     await page.waitForFunction(() => Boolean(document.querySelector('.garage-shift.is-introduced')), null, { timeout: 30000 });
+    assert.equal(await page.evaluate(() => globalThis.__turnGarage.getViewedCarId()), 'sedan', 'GARAGE opens on the SEDAN');
+    assert.deepEqual(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.snapshot()),
+      { pending: [], shown: ['shift'], hints: ['race-shift'], views: {} });
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-shift')), false,
       'ACTIVATE SHIFT is pointed out once');
   });
@@ -495,7 +502,7 @@ try {
 
   await run('admin UNLOCK replays an introduction', { driftAttack: true, admin: true }, async (page) => {
     const admin = page.locator('.roadbook-admin');
-    assert.deepEqual(await admin.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW']);
+    assert.deepEqual(await admin.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PAINTJOB']);
     await admin.locator('[data-admin-unlock="drift-attack"]').click();
     await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open);
     const sheet = page.locator('.m8-unlock-sheet');
@@ -507,6 +514,19 @@ try {
     assert.equal((await inspect(page)).policy, 'tutorial-lap', 'The introduction starts DRIFT ATTACK TUTORIAL');
   });
 
+  // PAINTJOB: the reward toast, no sheet, then GARAGE scrolls to PAINT and pulses it.
+  await run('admin UNLOCK PAINTJOB points GARAGE at PAINT', { rewards: ['paintjob'], admin: true }, async (page) => {
+    await page.locator('.roadbook-admin [data-admin-unlock="paintjob"]').click();
+    await page.waitForFunction(() => Boolean(document.querySelector('.turn-achievement-toast')), null, { timeout: 15000 });
+    await page.waitForTimeout(1200);
+    assert.equal(await page.evaluate(() => Boolean(document.querySelector('.m8-unlock-sheet')?.open)), false, 'The toast is enough');
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-paint')), true);
+    await page.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
+    await page.waitForFunction(() => Boolean(document.querySelector('.garage-paint-toggle.is-introduced')), null, { timeout: 30000 });
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-paint')), false,
+      'PAINT is pointed out once');
+  });
+
   // The same buttons in SETTINGS, on the Admin card with the other admin tools.
   await run('admin UNLOCK SHIFT from SETTINGS', { admin: true }, async (page) => {
     // SETTINGS, from the ☰ menu sheet as a player reaches it.
@@ -514,7 +534,7 @@ try {
     await page.locator('.m8-home-settings').click();
     await page.waitForFunction(() => document.querySelector('.m8-settings-dialog')?.open);
     const unlocks = page.locator('[data-turn-route-test-hud-setting] .m8-admin-unlocks');
-    assert.deepEqual(await unlocks.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW']);
+    assert.deepEqual(await unlocks.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PAINTJOB']);
     await unlocks.locator('[data-admin-unlock="shift"]').click();
     assert.equal(await page.evaluate(() => document.querySelector('.m8-settings-dialog').open), false,
       'SETTINGS closes so the unlock plays on Home');

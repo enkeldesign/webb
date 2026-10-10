@@ -1,5 +1,5 @@
 {
-  "release": "20261010-r430",
+  "release": "20261010-r431",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -250,6 +250,7 @@
     "/turn/garage/car-view.js",
     "/turn/garage/garage-cars.js",
     "/turn/garage/garage-catalog.js",
+    "/turn/garage/garage-focus.js",
     "/turn/garage/garage-selection.js",
     "/turn/garage/garage.css",
     "/turn/garage/garage.js",

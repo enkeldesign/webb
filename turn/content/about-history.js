@@ -372,7 +372,7 @@ export const CHANGELOG = Object.freeze([
       ],
       [
         "DRIFT ATTACK TUTORIAL",
-        "One lap of COUNTRYSIDE that teaches DRIFT scoring and OVERCHARGE, which now unlocks with DRIFT ATTACK: build it, catch it on GAS, hold it, then spend it with BOOST. Play it from HOW TO PLAY."
+        "One lap of CLIFFSIDE that teaches DRIFT scoring, linked drifts and OVERCHARGE, which now unlocks with DRIFT ATTACK: build it, catch it on GAS, hold it, then spend it with BOOST. Play it from HOW TO PLAY."
       ],
       [
         "Unlock introductions",
@@ -385,7 +385,7 @@ export const CHANGELOG = Object.freeze([
     "entries": [
       [
         "FLOW TUTORIAL",
-        "One lap of COUNTRYSIDE that points out what earns FLOW and has you chain DRIFT, a clean EXIT and BOOST into COMBO. FLOW's unlock sheet offers it; HOW TO PLAY lists every FLOW technique and example combos."
+        "One lap of CLIFFSIDE that points out what earns FLOW and has you chain DRIFT, a clean EXIT and BOOST into COMBO. FLOW's unlock sheet offers it; HOW TO PLAY lists every FLOW technique and example combos."
       ]
     ]
   }

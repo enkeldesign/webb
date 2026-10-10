@@ -83,7 +83,27 @@ export function createTutorialPrompt(parent = document.body) {
   globalThis.addEventListener?.('resize', onResize);
   globalThis.addEventListener?.('orientationchange', onResize);
 
+  // LOCK has no key (input/qe-drive-controls.js): a lesson's keyboardPrompt is shown to
+  // players driving by keyboard, from their first driving key until they next touch the
+  // race controls.
+  let keyboard = false;
+  let lastView = { kind: 'idle' };
+  function useKeyboard(next) {
+    if (keyboard === next) return;
+    keyboard = next;
+    if (lastView.kind === 'lesson' && lastView.keyboardPrompt) present(lastView);
+  }
+  const onKeyDown = (event) => {
+    if (DRIVING_KEYS.has(event.code)) useKeyboard(true);
+  };
+  const onPointerDown = (event) => {
+    if (event.target?.closest?.('#controls')) useKeyboard(false);
+  };
+  globalThis.addEventListener?.('keydown', onKeyDown, true);
+  globalThis.addEventListener?.('pointerdown', onPointerDown, true);
+
   function present(view) {
+    lastView = view;
     element.dataset.lesson = view.id || '';
     element.dataset.state = view.kind;
     if (view.kind === 'idle') {
@@ -96,7 +116,7 @@ export function createTutorialPrompt(parent = document.body) {
     place();
     if (view.kind === 'lesson') {
       title.textContent = view.title;
-      text.textContent = view.prompt;
+      text.textContent = keyboard && view.keyboardPrompt ? view.keyboardPrompt : view.prompt;
     } else if (view.kind === 'done') {
       title.textContent = `${view.title} ✓`;
       text.textContent = view.text || 'Nice. Keep driving.';
@@ -113,6 +133,8 @@ export function createTutorialPrompt(parent = document.body) {
     cancelAnimationFrame(placing);
     globalThis.removeEventListener?.('resize', onResize);
     globalThis.removeEventListener?.('orientationchange', onResize);
+    globalThis.removeEventListener?.('keydown', onKeyDown, true);
+    globalThis.removeEventListener?.('pointerdown', onPointerDown, true);
     element.remove();
   }
 
@@ -130,16 +152,13 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   let rescues = 0;
   let hintLeft = 0;
   let lastView = { kind: 'idle' };
-  // Driving by keyboard since the last touch of the race controls: told what keys can do.
-  let keyboard = false;
 
   // Lessons say what steering help changes, and the line says that it ends there.
   function forPlayer(view) {
     if (view.kind === 'lesson') {
       const lesson = TURN_TUTORIAL_LESSONS.find((candidate) => candidate.id === view.id);
       if (steeringHelp && lesson?.assistedPrompt) return { ...view, prompt: lesson.assistedPrompt };
-      if (keyboard && lesson?.keyboardPrompt) return { ...view, prompt: lesson.keyboardPrompt };
-      return view;
+      return lesson?.keyboardPrompt ? { ...view, keyboardPrompt: lesson.keyboardPrompt } : view;
     }
     if (view.kind === 'graduated' && helped) return { ...view, message: TUTORIAL_GRADUATION_WITH_HELP_MESSAGE };
     return view;
@@ -149,18 +168,6 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
     hintLeft = 0;
     prompt.present(forPlayer(view));
   }
-  function useKeyboard(next) {
-    if (keyboard === next) return;
-    keyboard = next;
-    const lesson = TURN_TUTORIAL_LESSONS.find((candidate) => candidate.id === lastView.id);
-    if (lastView.kind === 'lesson' && lesson?.keyboardPrompt && hintLeft <= 0) prompt.present(forPlayer(lastView));
-  }
-  const onKeyDown = (event) => {
-    if (DRIVING_KEYS.has(event.code)) useKeyboard(true);
-  };
-  const onPointerDown = (event) => {
-    if (event.target?.closest?.('#controls')) useKeyboard(false);
-  };
 
   const coach = createTurnTutorialCoach({ state, maxSpeed: runtime.maxSpeed, present });
   let frame = 0;
@@ -217,8 +224,6 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
     state.sessionSteeringTarget = null;
     events.removeEventListener?.('turn:session-graduated', onGraduated);
     events.removeEventListener?.(STEERING_HELP_CHANGED_EVENT, onSteeringHelpChanged);
-    events.removeEventListener?.('keydown', onKeyDown, true);
-    events.removeEventListener?.('pointerdown', onPointerDown, true);
     coach.stop();
     prompt.remove();
     // The TURN TUTORIAL achievement waits for the completion message (as DRIVE BY EAR
@@ -239,8 +244,6 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   }
   events.addEventListener?.('turn:session-graduated', onGraduated);
   events.addEventListener?.(STEERING_HELP_CHANGED_EVENT, onSteeringHelpChanged);
-  events.addEventListener?.('keydown', onKeyDown, true);
-  events.addEventListener?.('pointerdown', onPointerDown, true);
   frame = requestAnimationFrame(tick);
 
   return Object.freeze({ coach, stop });

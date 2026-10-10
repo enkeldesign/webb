@@ -25,22 +25,22 @@ export const TURN_TUTORIAL = Object.freeze({
   vehicleId: 'classic'
 });
 
-// DRIFT ATTACK TUTORIAL (#1150): DRIFT scoring and OVERCHARGE, offered once DRIFT ATTACK
-// unlocks. The track and car are a first choice, to be confirmed on devices: COUNTRYSIDE's
-// long bends leave room to fill BOOST, build OVERCHARGE, then catch and spend it.
+// DRIFT ATTACK TUTORIAL (#1150): DRIFT scoring, linked drifts and OVERCHARGE, offered
+// once DRIFT ATTACK unlocks. On CLIFFSIDE (EASY, open to everyone): COUNTRYSIDE, tried on
+// a device, does not drift well.
 export const DRIFT_ATTACK_TUTORIAL = Object.freeze({
   id: 'drift-attack',
   revision: 1,
-  trackId: 'countryside',
+  trackId: 'cliffside',
   vehicleId: 'classic'
 });
 
 // FLOW TUTORIAL (#1149): what earns FLOW and how COMBO grows, offered once FLOW unlocks.
-// The same lap as DRIFT ATTACK TUTORIAL: its bends leave room to drift, exit and BOOST.
+// The same lap as DRIFT ATTACK TUTORIAL: CLIFFSIDE, a track to drift, exit and BOOST on.
 export const FLOW_TUTORIAL = Object.freeze({
   id: 'flow',
   revision: 1,
-  trackId: 'countryside',
+  trackId: 'cliffside',
   vehicleId: 'classic'
 });
 

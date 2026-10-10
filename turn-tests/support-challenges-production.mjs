@@ -58,8 +58,11 @@ assert.doesNotMatch(
 );
 assert.match(feedbackSource, /\[data-support-start\]/,
   'START CHALLENGE must arm the recommended vehicle before the existing track navigation runs');
-assert.match(feedbackSource, /garage\.viewCar\(vehicleId\)/,
+assert.match(feedbackSource, /viewCarWhenGarageOpens\(active\.vehicleId\)/,
   'The recommended car must be featured in GARAGE');
+// Shared with the SHIFT introduction's SEDAN (progression/unlock-introductions.js).
+const garageFocusSource = await fs.readFile(new URL('../turn/garage/garage-focus.js', import.meta.url), 'utf8');
+assert.match(garageFocusSource, /garage\.viewCar\(vehicleId\)/, 'Featured through GARAGE\'s own viewCar');
 assert.match(feedbackSource, /turn-support-home-toast/,
   'Challenge completion must replay as a compact success toast on Home');
 assert.match(feedbackSource, /turn-support-completion-indicator/,

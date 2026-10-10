@@ -16,14 +16,15 @@ const GRADUATION_SECONDS = 4;
 const SPENT_AMOUNT = 0.1;
 
 // What the lessons are judged on: OVERCHARGE as the BOOST controls publish it
-// (ui/gameplay-controls.js) and the banks DRIFT ATTACK has announced.
+// (ui/gameplay-controls.js), and the banks and links DRIFT ATTACK has announced.
 export function readDriftAttackSignals(counters, state = globalThis.__turnRuntime?.state) {
   return {
     speed: Math.max(0, Number(state?.speed) || 0),
     overcharge: Math.max(0, Number(globalThis.__turnBoostOvercharge) || 0),
     caught: globalThis.__turnBoostOverchargeCaught === true,
     boosting: globalThis.__turnBoostActive === true,
-    banks: Number(counters?.banks) || 0
+    banks: Number(counters?.banks) || 0,
+    links: Number(counters?.links) || 0
   };
 }
 
@@ -42,6 +43,7 @@ export function createDriftAttackCoach({
   let pauseLeft = 0;
   let finished = false;
   let banksAtStart = 0;
+  let linksAtStart = 0;
   let lastOvercharge = 0;
   const progress = {};
 
@@ -53,11 +55,18 @@ export function createDriftAttackCoach({
     current = lessons[index];
     nextIndex = index + 1;
     banksAtStart = input.banks;
+    linksAtStart = input.links;
     lastOvercharge = input.overcharge;
     Object.assign(progress, {
-      banks: 0, overcharge: input.overcharge, caught: false, caughtSeconds: 0, spentAmount: 0, spent: false
+      banks: 0, links: 0, overcharge: input.overcharge, caught: false, caughtSeconds: 0, spentAmount: 0, spent: false
     });
-    present({ kind: 'lesson', id: current.id, title: current.title, prompt: prompt || current.prompt });
+    present({
+      kind: 'lesson',
+      id: current.id,
+      title: current.title,
+      prompt: prompt || current.prompt,
+      keyboardPrompt: prompt ? null : current.keyboardPrompt
+    });
   }
 
   // A lesson is done: say so, then move on (straight away while OVERCHARGE leaks).
@@ -91,6 +100,7 @@ export function createDriftAttackCoach({
     }
 
     progress.banks = input.banks - banksAtStart;
+    progress.links = input.links - linksAtStart;
     progress.overcharge = input.overcharge;
     if (input.caught) {
       progress.caught = true;
@@ -156,9 +166,11 @@ export function createDriftAttackCoach({
 export function startDriftAttackCoach({ runtime, events = globalThis }) {
   const { state } = runtime;
   const prompt = createTutorialPrompt();
-  const counters = { banks: 0 };
+  const counters = { banks: 0, links: 0 };
   const onScore = (event) => {
     if (event.detail?.type === 'bank') counters.banks += 1;
+    // A drift linked to the last bank raises COMBO, announced as a milestone.
+    if (event.detail?.type === 'milestone' && Number(event.detail.multiplier) >= 2) counters.links += 1;
   };
   const coach = createDriftAttackCoach({
     state,

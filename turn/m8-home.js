@@ -755,7 +755,10 @@ export async function installM8HomeNavigation() {
     isUnlocked: () => isFeatureUnlocked('flow')
   });
   // DRIFT ATTACK, SHIFT and FLOW are introduced on Home when they unlock (#1149).
-  const unlockIntroductions = installUnlockIntroductions({ startTutorial });
+  const unlockIntroductions = installUnlockIntroductions({
+    startTutorial,
+    openGarage: () => continueToTrack()
+  });
   // After the SHIFT introduction: the drive pad's SHIFT, pointed out in the next races.
   installShiftRaceCallout({ queue: unlockIntroductions.queue, isTutorialActive: tutorialActive });
 

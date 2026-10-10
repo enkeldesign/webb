@@ -1,11 +1,13 @@
 import { getTrophyRoadReward } from './trophy-road.js';
+import { viewCarWhenGarageOpens } from '../garage/garage-focus.js';
 
 // Unlock introductions (#1149, #1150): when DRIFT ATTACK, SHIFT or FLOW unlocks, Home
 // explains it in a bottom sheet that stays until the player closes it, instead of
 // leaving them to find HOW TO PLAY. DRIFT ATTACK and FLOW offer their tutorials; SHIFT points
 // GARAGE at ACTIVATE SHIFT the next time it opens, then the drive pad's SHIFT in the
-// next races (ui/shift-race-callout.js). Only unlocks that happen from now on
-// are introduced: players who already have these keep their HOW TO PLAY guide.
+// next races (ui/shift-race-callout.js). PAINTJOB needs no sheet: its reward toast says
+// it, and GARAGE points out PAINT. Only unlocks that happen from now on are introduced:
+// players who already have these keep their HOW TO PLAY guide.
 export const UNLOCK_INTRODUCTIONS_KEY = 'turn-unlock-introductions-v1';
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 // As with TURN TUTORIAL's launch card (tutorial-entry.js), introductions open by
@@ -15,6 +17,17 @@ export const INTRODUCTIONS_UNDER_TEST_KEY = 'turn-unlock-introductions-under-tes
 const STYLE_ID = 'turn-unlock-introduction-styles';
 const SHOW_DELAY_MS = 900;
 const HINT_SECONDS = 4.5;
+
+// Unlocks explained by their reward toast alone, then pointed out the next time GARAGE
+// shows them.
+export const UNLOCK_HINTS = Object.freeze({
+  paintjob: Object.freeze({ title: 'PAINTJOB', hint: 'garage-paint' })
+});
+// What each GARAGE hint scrolls to and pulses.
+const GARAGE_HINT_TARGETS = Object.freeze({
+  'garage-shift': '.garage-shift',
+  'garage-paint': '.garage-paint-toggle'
+});
 
 export const UNLOCK_INTRODUCTIONS = Object.freeze({
   'drift-attack': Object.freeze({
@@ -26,13 +39,17 @@ export const UNLOCK_INTRODUCTIONS = Object.freeze({
     action: Object.freeze({ id: 'drift-attack-tutorial', label: 'START DRIFT ATTACK TUTORIAL' }),
     note: 'You can play DRIFT ATTACK TUTORIAL any time from HOW TO PLAY.'
   }),
+  // SHIFT is learnt by doing, in GARAGE's SHIFT box: no preset. The SEDAN (3 in every
+  // attribute) can make any trade; the LEARNER CAR has only one legal SHIFT setup.
   shift: Object.freeze({
     title: 'SHIFT',
     copy: Object.freeze([
       'Every car can now SHIFT: move attribute points into an alternate setup in GARAGE.',
-      'While racing, slide from GAS into SHIFT to switch between STANDARD and SHIFT.'
+      'While racing, slide from GAS into SHIFT to switch between STANDARD and SHIFT.',
+      'The SEDAN has 3 in every attribute, so it can make any trade: a good car to try it in.'
     ]),
-    note: 'Next time you open GARAGE, ACTIVATE SHIFT is highlighted for you.',
+    action: Object.freeze({ id: 'shift-sedan', label: 'TRY SHIFT IN THE SEDAN' }),
+    note: 'GARAGE highlights ACTIVATE SHIFT for you.',
     hints: Object.freeze(['garage-shift', 'race-shift'])
   }),
   flow: Object.freeze({
@@ -97,6 +114,12 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage)
       save();
     },
     hasHint: (hint) => state.hints.includes(hint),
+    // A hint armed by an unlock with no sheet of its own (UNLOCK_HINTS).
+    armHint(hint) {
+      if (!state.hints.includes(hint)) state.hints.push(hint);
+      delete state.views[hint];
+      save();
+    },
     consumeHint(hint) {
       state.hints = state.hints.filter((pending) => pending !== hint);
       delete state.views[hint];
@@ -153,12 +176,14 @@ function installStyles(documentRef) {
     .roadbook-admin div,
     .m8-admin-unlocks { display: flex; flex-wrap: wrap; gap: var(--turn-space-2); }
     .m8-admin-unlocks[hidden] { display: none; }
-    .garage-shift.is-introduced { animation: turn-unlock-pulse 1.5s ease-in-out 3; }
+    .garage-shift.is-introduced,
+    .garage-paint-toggle.is-introduced { animation: turn-unlock-pulse 1.5s ease-in-out 3; }
     @keyframes turn-unlock-pulse {
       50% { box-shadow: 0 0 0 var(--turn-space-2) var(--turn-action-primary); }
     }
     @media (prefers-reduced-motion: reduce) {
-      .garage-shift.is-introduced {
+      .garage-shift.is-introduced,
+      .garage-paint-toggle.is-introduced {
         animation: none;
         outline: var(--turn-border-control) solid var(--turn-action-primary);
         outline-offset: var(--turn-space-1);
@@ -217,6 +242,7 @@ function isAdminProfile(storage) {
 
 export function installUnlockIntroductions({
   startTutorial,
+  openGarage,
   storage = globalThis.localStorage,
   documentRef = globalThis.document,
   windowRef = globalThis
@@ -284,36 +310,62 @@ export function installUnlockIntroductions({
     dialog.close?.();
     if (action === 'drift-attack-tutorial') void startTutorial?.('drift-attack');
     if (action === 'flow-tutorial') void startTutorial?.('flow');
+    if (action === 'shift-sedan') {
+      // The same way a support challenge opens its recommended car.
+      viewCarWhenGarageOpens('sedan');
+      void openGarage?.();
+    }
   });
   dialog.addEventListener('close', finish);
 
-  // ACTIVATE SHIFT, the next time GARAGE shows it: brought into view and pulsed.
+  // ACTIVATE SHIFT or PAINT, the next time GARAGE shows it: brought into view and pulsed.
+  const armedGarageHints = () => Object.keys(GARAGE_HINT_TARGETS).filter((hint) => queue.hasHint(hint));
   function watchHints() {
-    if (hintObserver || !queue.hasHint('garage-shift') || typeof MutationObserver !== 'function') return;
+    if (hintObserver || !armedGarageHints().length || typeof MutationObserver !== 'function') return;
     const reveal = () => {
-      const target = documentRef.querySelector('.garage-shift');
-      if (!target || target.hidden || !target.offsetParent) return;
+      for (const hint of armedGarageHints()) {
+        const target = documentRef.querySelector(GARAGE_HINT_TARGETS[hint]);
+        if (!target || target.hidden || !target.offsetParent) continue;
+        queue.consumeHint(hint);
+        const reduced = windowRef.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+        target.scrollIntoView?.({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
+        target.classList.add('is-introduced');
+        windowRef.setTimeout?.(() => target.classList.remove('is-introduced'), HINT_SECONDS * 1000);
+      }
+      if (armedGarageHints().length) return;
       hintObserver?.disconnect();
       hintObserver = null;
-      queue.consumeHint('garage-shift');
-      const reduced = windowRef.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-      target.scrollIntoView?.({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
-      target.classList.add('is-introduced');
-      windowRef.setTimeout?.(() => target.classList.remove('is-introduced'), HINT_SECONDS * 1000);
     };
     hintObserver = new MutationObserver(reveal);
     hintObserver.observe(documentRef.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
     reveal();
   }
 
+  function armUnlockHints(ids) {
+    let armed = false;
+    for (const id of ids || []) {
+      if (!UNLOCK_HINTS[id]) continue;
+      queue.armHint(UNLOCK_HINTS[id].hint);
+      armed = true;
+    }
+    if (armed) watchHints();
+  }
+
   windowRef.addEventListener?.('turn:trophy-road-updated', (event) => {
     if (queue.unlocked(event.detail?.unlocked)) schedule();
+    // Like the sheets, not in automated runs, where test suites earn rewards all the time.
+    if (introducesOnUnlock(windowRef, storage)) armUnlockHints(event.detail?.unlocked);
   });
   windowRef.addEventListener?.('turn:home-shown', () => schedule());
   windowRef.addEventListener?.('turn:trophy-road-toast-shown', () => schedule());
   documentRef.addEventListener?.('turn:home-ready', () => schedule());
   watchHints();
   schedule();
+
+  // UNLOCK DRIFT ATTACK, SHIFT and FLOW (their sheets), then PAINTJOB (a GARAGE hint).
+  const adminButtons = () => [...Object.keys(UNLOCK_INTRODUCTIONS), ...Object.keys(UNLOCK_HINTS)]
+    .map((id) => `<button type="button" data-admin-unlock="${id}">UNLOCK ${(UNLOCK_INTRODUCTIONS[id] || UNLOCK_HINTS[id]).title}</button>`)
+    .join('');
 
   // Admin profiles have every reward already: these replay an unlock to test it.
   function installAdminRow() {
@@ -323,9 +375,7 @@ export function installUnlockIntroductions({
     const row = documentRef.createElement('section');
     row.className = 'roadbook-admin';
     row.setAttribute('aria-labelledby', 'roadbookAdminTitle');
-    row.innerHTML = `<h2 id="roadbookAdminTitle">ADMIN</h2><div>${Object.keys(UNLOCK_INTRODUCTIONS)
-      .map((id) => `<button type="button" data-admin-unlock="${id}">UNLOCK ${UNLOCK_INTRODUCTIONS[id].title}</button>`)
-      .join('')}</div>`;
+    row.innerHTML = `<h2 id="roadbookAdminTitle">ADMIN</h2><div>${adminButtons()}</div>`;
     list.after(row);
     row.addEventListener('click', (event) => {
       const id = event.target.closest?.('[data-admin-unlock]')?.dataset.adminUnlock;
@@ -348,9 +398,7 @@ export function installUnlockIntroductions({
       group.className = 'm8-admin-unlocks';
       group.setAttribute('role', 'group');
       group.setAttribute('aria-label', 'Replay an unlock');
-      group.innerHTML = Object.keys(UNLOCK_INTRODUCTIONS)
-        .map((id) => `<button type="button" data-admin-unlock="${id}">UNLOCK ${UNLOCK_INTRODUCTIONS[id].title}</button>`)
-        .join('');
+      group.innerHTML = adminButtons();
       group.addEventListener('click', (event) => {
         const id = event.target.closest?.('[data-admin-unlock]')?.dataset.adminUnlock;
         if (!id) return;
@@ -379,6 +427,10 @@ export function installUnlockIntroductions({
   function replay(id) {
     const reward = getTrophyRoadReward(id);
     if (reward) globalThis.__turnAchievements?.showRewardToastBatch?.([reward]);
+    if (UNLOCK_HINTS[id]) {
+      armUnlockHints([id]);
+      return;
+    }
     queue.unlocked([id], { replay: true });
     replayed = true;
     schedule(250);
