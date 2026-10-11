@@ -275,10 +275,11 @@ assert.equal(restlessSamples, 22, 'The start gives up waiting after about two an
 assert.equal(restless.order.filter((entry) => entry === CENTRED).length, 1, 'Said once');
 assert.equal(startCentringLog(restless.environment)[0].outcome, 'gave up');
 
-// #1174: a pause during the start does not lose the centring. Nothing runs while the
-// race is paused, and RESUME starts the sequence again on the pose the player holds
-// then, unless the resume centred the steering itself (a rotation's 3-2-1 ends in
-// RECALIBRATE).
+// #1174: a pause during the start does not lose the centring. A race pauses only once
+// the car is moving (race-pause.js), so nothing runs while paused and RESUME finishes the
+// start as driving off does: on the pose the player races on in, without asking for the
+// grip again. A resume that centred the steering itself (a rotation's 3-2-1 ends in
+// RECALIBRATE) leaves nothing to finish.
 function pausableHarness() {
   const harness = createHarness();
   const raceListeners = new Set();
@@ -295,6 +296,10 @@ function pausableHarness() {
     harness.environment.__turnRacePause.paused = reason === 'race-paused';
     for (const listener of [...raceListeners]) listener({ detail: { reason } });
   };
+  harness.driveOff = () => {
+    harness.state.mode = 'racing';
+    harness.state.speed = 8;
+  };
   harness.raceListeners = raceListeners;
   harness.runLatest = (limit = 40) => {
     let ran = 0;
@@ -309,11 +314,11 @@ function pausableHarness() {
   return harness;
 }
 {
+  // Driven off and paused before the 0.22 s pose.
   const early = pausableHarness();
   await early.orchestrator.requestMotion();
-  early.state.mode = 'staged';
-  early.state.speed = 0;
   early.state.targetRoll = 0.1;
+  early.driveOff();
   early.raceChange('race-paused');
   const scheduled = early.timers.length;
   early.timers[0].callback();
@@ -321,15 +326,16 @@ function pausableHarness() {
   assert.equal(early.order.includes(CENTRED), false);
   early.state.targetRoll = 0.25;
   early.raceChange('race-resumed');
-  assert.equal(early.timers.at(-1).delay, 220, 'RESUME starts the centring again');
+  assert.equal(early.timers.at(-1).delay, 220, 'RESUME takes up the centring again');
   early.timers.at(-1).callback();
-  assert.equal(early.order.filter((entry) => entry === HOLD).length, 2, 'And asks for the driving grip again');
-  early.runLatest();
-  assert.equal(early.order.filter((entry) => entry === CENTRED).length, 1, 'Then centres once, out loud');
-  assert.equal(early.state.neutralRoll, 0.25, 'On the pose held after RESUME');
-  assert.equal(startCentringLog(early.environment)[0].outcome, 'steady');
+  assert.equal(early.runLatest(), 1, 'The car is moving, so it finishes at once');
+  assert.equal(early.order.filter((entry) => entry === HOLD).length, 1, 'Without asking for the grip again');
+  assert.equal(early.order.filter((entry) => entry === CENTRED).length, 1, 'STEERING CENTRED, once');
+  assert.equal(early.state.neutralRoll, 0.25, 'On the pose the player races on in');
+  assert.equal(startCentringLog(early.environment)[0].outcome, 'car moved');
   assert.equal(early.raceListeners.size, 0, 'Done, it stops listening');
 
+  // Driven off and paused between two samples, before the start saw the car move.
   const midway = pausableHarness();
   await midway.orchestrator.requestMotion();
   midway.state.mode = 'staged';
@@ -337,11 +343,12 @@ function pausableHarness() {
   midway.state.targetRoll = 0.1;
   midway.timers[0].callback();
   midway.timers[3].callback();
-  midway.timers[4].callback();
+  midway.driveOff();
   midway.raceChange('race-paused');
   const during = midway.timers.length;
   midway.timers.at(-1).callback();
   assert.equal(midway.timers.length, during, 'Paused mid-way: the sampling stops');
+  assert.equal(midway.order.includes(CENTRED), false);
   midway.state.targetRoll = -0.2;
   midway.raceChange('race-resumed');
   midway.timers.at(-1).callback();
@@ -351,9 +358,8 @@ function pausableHarness() {
 
   const rotated = pausableHarness();
   await rotated.orchestrator.requestMotion();
-  rotated.state.mode = 'staged';
-  rotated.state.speed = 0;
   rotated.timers[0].callback();
+  rotated.driveOff();
   rotated.raceChange('race-paused');
   rotated.raceChange('race-resumed');
   // The rotation resume's RECALIBRATE (main.js calibrate) centres the steering itself.
@@ -361,11 +367,12 @@ function pausableHarness() {
   const afterRecalibrate = rotated.timers.length;
   rotated.timers.at(-1).callback();
   assert.equal(rotated.timers.length, afterRecalibrate, 'Already centred by the resume: the start ends quietly');
-  assert.equal(rotated.order.filter((entry) => entry === HOLD).length, 1, 'Without asking for the grip again');
+  assert.equal(rotated.order.includes(CENTRED), false, 'RECALIBRATE said it, not the start');
   assert.equal(rotated.raceListeners.size, 0);
 
   const left = pausableHarness();
   await left.orchestrator.requestMotion();
+  left.driveOff();
   left.raceChange('race-paused');
   left.raceChange('race-pause-ended');
   assert.equal(left.raceListeners.size, 0, 'RESTART LAP or LEAVE RACE from the pause ends the start centring');

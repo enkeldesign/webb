@@ -100,9 +100,10 @@ export function describeStartCentring(entry) {
 // Runs the race-start sequence and returns a cancel function. Never holds the race:
 // the car can drive from the first frame. Ends when the phone keeps still, when the car
 // moves, or after 2.4 s, each time centred on the middle of the last 300 ms.
-// Nothing runs while the race is paused (#1174). RESUME starts the sequence again, on the
-// pose the player holds then, unless the resume centred the steering itself (after a
-// rotation, its 3-2-1 ends in RECALIBRATE).
+// Nothing runs while the race is paused (#1174). A race pauses only once the car is
+// moving, so RESUME finishes the start as driving off does: on the pose the player races
+// on in, without asking for the grip again. A resume that centred the steering itself
+// (after a rotation, its 3-2-1 ends in RECALIBRATE) leaves nothing to finish.
 export function startTiltCentring({ state, showMessage, setTimer, clearTimer = () => {}, environment = globalThis }) {
   let cancelled = false;
   let timer = 0;
@@ -170,7 +171,7 @@ export function startTiltCentring({ state, showMessage, setTimer, clearTimer = (
       if (paused()) return;
       if (resumed) {
         if (centringsOf(state) !== centredBefore) return stop();
-        ask();
+        if (still()) ask();
       }
       provisional = poseOf(state);
       recent.push(provisional);
