@@ -32,6 +32,28 @@
   transform: translate(2.25px, 2.25px) rotate(-3deg);
 }
 
+/* The BOOST bar's look, in one place. The race's bar below reads these, and so
+   does HOW TO PLAY's picture of it (ui/how-to-play-demos.js), so a change here
+   changes both. */
+:root {
+  --turn-boost-bar-height: 11.25px;
+  --turn-boost-bar-outline: 3px;
+  --turn-boost-bar-radius: 749.25px;
+  --turn-boost-bar-shadow-offset: 2.25px;
+  /* The empty bar lets a little of the track through. */
+  --turn-boost-bar-track-opacity: 82%;
+  /* OVERCHARGE widens the bar at both ends, in purple. */
+  --turn-boost-overcharge: linear-gradient(
+    90deg,
+    var(--turn-control-overcharge-deep) 0%,
+    var(--turn-control-overcharge) 4%,
+    var(--turn-control-overcharge-light) 9%,
+    var(--turn-control-overcharge-light) 91%,
+    var(--turn-control-overcharge) 96%,
+    var(--turn-control-overcharge-deep) 100%
+  );
+}
+
 .boost-hud {
   --boost-charge: 100%;
   --boost-overcharge-width: 0%;
@@ -70,12 +92,12 @@
   position: relative;
   left: 50%;
   width: calc(100% + var(--boost-overcharge-width));
-  height: 11.25px;
+  height: var(--turn-boost-bar-height);
   overflow: hidden;
-  border: 3px solid var(--turn-outline);
-  border-radius: 749.25px;
-  background: color-mix(in srgb, var(--turn-surface-page) 82%, transparent);
-  box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
+  border: var(--turn-boost-bar-outline) solid var(--turn-outline);
+  border-radius: var(--turn-boost-bar-radius);
+  background: color-mix(in srgb, var(--turn-surface-page) var(--turn-boost-bar-track-opacity), transparent);
+  box-shadow: var(--turn-boost-bar-shadow-offset) var(--turn-boost-bar-shadow-offset) 0 var(--turn-shadow-color);
   transform: translateX(-50%);
   transform-origin: center;
   transition:
@@ -155,15 +177,7 @@
 }
 
 .boost-hud.has-overcharge > div {
-  background: linear-gradient(
-    90deg,
-    #5f3dc4 0%,
-    #8b5cf6 4%,
-    #d0bfff 9%,
-    #d0bfff 91%,
-    #8b5cf6 96%,
-    #5f3dc4 100%
-  );
+  background: var(--turn-boost-overcharge);
 }
 
 .boost-hud.has-overcharge i {
@@ -179,7 +193,7 @@
 
 .boost-hud.is-boosting > div {
   box-shadow:
-    2.25px 2.25px 0 var(--turn-shadow-color),
+    var(--turn-boost-bar-shadow-offset) var(--turn-boost-bar-shadow-offset) 0 var(--turn-shadow-color),
     0 0 0 3.75px rgb(255 90 95 / 0.28);
 }
 

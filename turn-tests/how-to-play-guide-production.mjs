@@ -126,10 +126,11 @@ assert.match(css, /\.m8-guide-grid \.m8-guide-locked > \.m8-guide-card-number \{
 // #748: every card acts out a real control. Pictures, hidden from assistive technology;
 // their own classes, since other modules look for the real controls; the race's colour
 // roles and motion; moving only while their card is open, one still frame under Reduced Motion.
-const [demos, tokens, drivePad, messageCss, inGameMenuCss] = await Promise.all([
+const [demos, tokens, drivePad, gameplayCss, messageCss, inGameMenuCss] = await Promise.all([
   fs.readFile(new URL('../turn/ui/how-to-play-demos.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-tokens.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/drive-pad.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/gameplay-v2.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/styles.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/in-game-menu.css', import.meta.url), 'utf8')
 ]);
@@ -151,9 +152,6 @@ for (const [, name, body] of factories) assert.match(body, /demoElement\(/, `${n
 assert.doesNotMatch(demoCode, /(?<![\w-])(drive-(stack|pad\b|zone|gas|brake|drift|boost|lock|shift|reverse)|boost-hud|manual-steer\b|score-feedback|race-position-hud)/,
   'The demos never use the race controls\' classes');
 assert.doesNotMatch(demoCode, /#[0-9a-f]{3,8}\b/i, 'Colours come from tokens');
-for (const token of ['--turn-control-lock', '--turn-control-shift-on', '--turn-control-overcharge']) {
-  assert.match(tokens, new RegExp(`${token}: #`), `${token} is defined`);
-}
 assert.match(tokens, /:root\[data-theme="dark"\] \.turn-demo-pad,\n:root\[data-theme="dark"\] \.drive-pad \{/, 'The demo pad is dark like the real one');
 const animated = [...demoCode.matchAll(/([^{}]+)\{[^{}]*animation:\s*turn-demo/g)].map(([, selector]) => selector.trim());
 assert.ok(animated.length >= 30);
@@ -161,13 +159,84 @@ for (const selector of animated) assert.match(selector, /^details\[open\] /, `${
 assert.match(demos, /@media \(prefers-reduced-motion: reduce\) \{\s*\.turn-demo,\s*\.turn-demo \*,\s*\.turn-demo \*::after \{ animation: none !important; \}/);
 assert.match(demos, /@media \(forced-colors: active\)/);
 
-// The slide-outs are the race's own (drive-pad.css): from the bubble's edge, 140 ms on the
-// pad's curve with an 80 ms fade, never a substitute that reads as a turn in depth.
-const lockBubble = drivePad.match(/\.drive-lock-bubble \{[\s\S]*?\n\}/)[0];
-assert.match(lockBubble, /opacity 80ms ease-out,\s*transform 140ms cubic-bezier\(\.2,\.88,\.25,1\)/);
-assert.match(lockBubble, /transform: translateX\(62%\) scaleX\(0\.38\);\s*transform-origin: right center;/);
-assert.match(demoCode, /--turn-demo-tucked: translateX\(62%\) scaleX\(0\.38\);/);
+// The drive pad and the BOOST bar read the race's own look and motion: the custom
+// properties drive-pad.css and gameplay-v2.css declare, which the race's controls read
+// too, so a change there changes both. Nothing the race declares is copied.
+const rootOf = (css, comment) => css.match(new RegExp(`${comment}[\\s\\S]*?\\*/\\n:root \\{([^}]*)\\}`))[1];
+const valuesOf = (block) => Object.fromEntries([...block.matchAll(/^\s*(--[\w-]+):\s*([^;]+);/gm)]
+  .map(([, name, value]) => [name, value.replace(/\s+/g, ' ').trim()]));
+const driveValues = valuesOf(rootOf(drivePad, "The drive pad's look and motion, in one place"));
+const barValues = valuesOf(rootOf(gameplayCss, "The BOOST bar's look, in one place"));
+assert.deepEqual(Object.keys(driveValues), [
+  '--turn-drive-outline', '--turn-drive-divider', '--turn-drive-pad-radius', '--turn-drive-pad-shadow-x',
+  '--turn-drive-pad-shadow-y', '--turn-drive-pad-rows', '--turn-drive-zone-pressed', '--turn-drive-bubble-pressed',
+  '--turn-drive-bubble-radius', '--turn-drive-bubble-tuck', '--turn-drive-bubble-tuck-scale',
+  '--turn-drive-bubble-slide', '--turn-drive-bubble-slide-easing', '--turn-drive-bubble-fade',
+  '--turn-drive-bubble-colour-change'
+]);
+assert.deepEqual(Object.keys(barValues), [
+  '--turn-boost-bar-height', '--turn-boost-bar-outline', '--turn-boost-bar-radius',
+  '--turn-boost-bar-shadow-offset', '--turn-boost-bar-track-opacity', '--turn-boost-overcharge'
+]);
+// Their colours are design-tokens.css's roles, never literals of their own.
+for (const [name, value] of Object.entries({ ...driveValues, ...barValues })) {
+  assert.doesNotMatch(value, /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i, `${name} takes its colours from design-tokens.css`);
+}
+for (const role of ['--turn-control-pressed', '--turn-control-pressed-bubble', '--turn-control-overcharge-deep', '--turn-control-overcharge-light']) {
+  assert.match(tokens, new RegExp(`^\\s*${role}: `, 'm'), `design-tokens.css declares ${role}`);
+}
+const driveRules = drivePad.replace(/:root \{[^}]*\}/, '');
+const barRules = gameplayCss.replace(/:root \{[^}]*\}/, '');
+for (const name of Object.keys(driveValues)) {
+  assert.ok(driveRules.includes(`var(${name})`), `The race's drive pad reads ${name}`);
+}
+for (const name of Object.keys(barValues)) {
+  assert.ok(barRules.includes(`var(${name})`), `The race's BOOST bar reads ${name}`);
+  assert.ok(demoCode.includes(`var(${name})`), `The demo's BOOST bar reads ${name}`);
+}
+const driveShape = Object.keys(driveValues).filter((name) => !/-(slide|slide-easing|fade|colour-change)$/.test(name));
+for (const name of driveShape) assert.ok(demoCode.includes(`var(${name})`), `The demo's drive pad reads ${name}`);
+const lockBubble = driveRules.match(/\.drive-lock-bubble \{[\s\S]*?\n\}/)[0];
+assert.match(lockBubble, /transform: translateX\(var\(--turn-drive-bubble-tuck\)\) scaleX\(var\(--turn-drive-bubble-tuck-scale\)\);\s*transform-origin: right center;/);
+assert.match(lockBubble, /opacity var\(--turn-drive-bubble-fade\) ease-out,\s*transform var\(--turn-drive-bubble-slide\) var\(--turn-drive-bubble-slide-easing\),\s*background-color var\(--turn-drive-bubble-colour-change\) ease;/);
+assert.match(demoCode, /--turn-demo-tucked: translateX\(var\(--turn-drive-bubble-tuck\)\) scaleX\(var\(--turn-drive-bubble-tuck-scale\)\);/);
 assert.match(demoCode, /\.turn-demo-bubble \{[^}]*transform: var\(--turn-demo-tucked\);\s*transform-origin: right center;/);
+assert.match(demoCode, /\.turn-demo-bar > b \{[^}]*background: var\(--turn-boost-overcharge\);/);
+assert.doesNotMatch(demoCode, /translateX\(62%\)|scaleX\(0\.38\)|inset 0 0 0 (?:4\.5|3\.75)px|5\.25px 6px|-left-radius: 22\.5px|17\.25px|32% 44% 24%|cubic-bezier\((?:0)?\.2, ?0?\.88/,
+  'The demos read the race\'s values instead of copying them');
+// LOCK, SHIFT and OVERCHARGE: the race's bubbles and the demos read the same colour roles.
+for (const [race, token, colour] of [
+  [/\.drive-lock-bubble \{[^}]*background: var\(--turn-control-lock\);/, '--turn-control-lock', '#748ffc'],
+  [/\.drive-stack\.is-drift-locking \.drive-lock-bubble \{\s*background: var\(--turn-control-overcharge\);/, '--turn-control-overcharge', '#8b5cf6'],
+  [/\.controls \.drive-shift-bubble \{[^}]*background: var\(--turn-control-gas\);/, '--turn-control-gas', null],
+  [/\.drive-stack\.is-shift-active \.drive-shift-bubble \{\s*background: var\(--turn-control-shift-on\);/, '--turn-control-shift-on', '#51cf66']
+]) {
+  assert.match(driveRules, race, `The race's bubble reads ${token}`);
+  assert.ok(demoCode.includes(`var(${token})`), `The demo's bubble reads ${token}`);
+  if (colour) assert.match(tokens, new RegExp(`${token}: ${colour};`), `${token} keeps its colour`);
+}
+// What the race keeps for itself (its bubbles' places and its smallest size, which
+// short landscape and the race layout change) the demos match exactly.
+for (const [race, demo] of [
+  [/\.drive-lock-bubble \{[^}]*height: (calc\([^)]*\));/, /\.turn-demo-bubble\.is-lock \{[^}]*height: (calc\([^)]*\));/],
+  [/\.controls \.drive-shift-bubble \{[^}]*top: (calc\([^)]*\));/, /\.turn-demo-bubble\.is-shift \{[^}]*top: (calc\([^)]*\));/],
+  [/\.controls \.drive-shift-bubble \{[^}]*height: (calc\([^)]*\));/, /\.turn-demo-bubble\.is-shift \{[^}]*height: (calc\([^)]*\));/],
+  [/\.controls \.drive-reverse-bubble \{[^}]*height: (calc\([^)]*\));/, /\.turn-demo-bubble\.is-reverse \{[^}]*height: (calc\([^)]*\));/],
+  [/\.drive-lock-bubble \{[^}]*right: (calc\([^)]*\));/, /\.turn-demo-bubble \{[^}]*right: (calc\([^)]*\));/],
+  [/--drift-lock-bubble-width: clamp\(([\d.]+px),/, /\.turn-demo-bubble\.is-lock \{[^}]*width: ([\d.]+px);/],
+  [/--shift-bubble-width: clamp\(([\d.]+px),/, /\.turn-demo-bubble\.is-shift \{[^}]*width: ([\d.]+px);/],
+  [/--reverse-bubble-width: clamp\(([\d.]+px),/, /\.turn-demo-bubble\.is-reverse \{[^}]*width: ([\d.]+px);/],
+  [/--drive-pad-height: clamp\(([\d.]+px),/, /\.turn-demo-stack \{[^}]*height: ([\d.]+px);/]
+]) assert.equal(demoCode.match(demo)[1], drivePad.match(race)[1], `${demo.source} matches the race`);
+
+// A keyframe's place in the loop cannot be a custom property, so each step is laid out to
+// last as long as the race's: a slide-out over --turn-drive-bubble-slide on the pad's
+// curve with a --turn-drive-bubble-fade fade, never a substitute that reads as a turn in
+// depth, and each colour change over --turn-drive-bubble-colour-change.
+const msOf = (value) => Number(value.match(/^(\d+)ms$/)[1]);
+const slideMs = msOf(driveValues['--turn-drive-bubble-slide']);
+const fadeMs = msOf(driveValues['--turn-drive-bubble-fade']);
+const colourMs = msOf(driveValues['--turn-drive-bubble-colour-change']);
 const stopsOf = (name) => [...demoCode.match(new RegExp(`@keyframes ${name} \\{([\\s\\S]*?)\\n  \\}`))[1]
   .matchAll(/^\s*([\d.%, ]+)\{([^}]*)\}/gm)].map(([, at, body]) => ({ at: at.split(',').map((stop) => parseFloat(stop)), body }));
 const loopMs = (name) => Number(demoCode.match(new RegExp(`${name} (\\d+)s`))[1]) * 1000;
@@ -178,12 +247,20 @@ for (const name of slides) {
   const slide = stopsOf(name);
   const fadeName = name.replace(/-slide$/, '-fade');
   const fade = stopsOf(fadeName);
-  assert.equal(segmentMs(name, slide[0], slide[1]), 140, `${name}: out in 140 ms`);
-  assert.equal(segmentMs(name, slide[1], slide[2]), 140, `${name}: back in 140 ms`);
-  assert.match(slide[0].body, /animation-timing-function: cubic-bezier\(0\.2, 0\.88, 0\.25, 1\)/);
-  assert.match(slide[1].body, /animation-timing-function: cubic-bezier\(0\.2, 0\.88, 0\.25, 1\)/);
-  assert.equal(segmentMs(fadeName, fade[0], fade[1]), 80, `${fadeName}: in over 80 ms`);
-  assert.equal(segmentMs(fadeName, fade[1], fade[2]), 80, `${fadeName}: out over 80 ms`);
+  assert.equal(segmentMs(name, slide[0], slide[1]), slideMs, `${name}: out in ${slideMs} ms`);
+  assert.equal(segmentMs(name, slide[1], slide[2]), slideMs, `${name}: back in ${slideMs} ms`);
+  for (const stop of slide.slice(0, 2)) {
+    assert.match(stop.body, /animation-timing-function: var\(--turn-drive-bubble-slide-easing\);/, `${name} slides on the pad's curve`);
+  }
+  assert.equal(segmentMs(fadeName, fade[0], fade[1]), fadeMs, `${fadeName}: in over ${fadeMs} ms`);
+  assert.equal(segmentMs(fadeName, fade[1], fade[2]), fadeMs, `${fadeName}: out over ${fadeMs} ms`);
+}
+const colourChanges = ['turn-demo-drive-lock-colour', 'turn-demo-drive-reverse-colour', 'turn-demo-shift-on', 'turn-demo-shift-dot'];
+for (const name of colourChanges) {
+  const stops = stopsOf(name);
+  for (let i = 1; i < stops.length; i += 1) {
+    assert.equal(segmentMs(name, stops[i - 1], stops[i]), colourMs, `${name}: changes over ${colourMs} ms`);
+  }
 }
 // STEERING CENTRED fades in as the race's message does, and RECALIBRATE blinks twice in 960 ms.
 assert.match(messageCss, /\.message \{[\s\S]*?transition: opacity 140ms ease;/);

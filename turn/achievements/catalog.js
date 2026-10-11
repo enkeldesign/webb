@@ -157,7 +157,7 @@ export const LEARN_TO_PLAY_ACHIEVEMENT = Object.freeze({
   category: base.CATEGORY.WAYS_TO_PLAY,
   trophies: 50,
   title: 'LEARN TO PLAY',
-  description: 'Read all parts of How to Play.',
+  description: 'Read all five parts of QUICK REFERENCE in HOW TO PLAY.',
   icon: 'map',
   progressMax: HOW_TO_PLAY_DISCLOSURE_IDS.length
 });
