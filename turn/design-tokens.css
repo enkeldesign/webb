@@ -91,6 +91,12 @@
   --turn-control-brake: var(--turn-orange-500);
   /* FLOW's colour, on the control that just earned it (ui/flow-pulses.js). */
   --turn-control-flow: var(--turn-pink-500);
+  /* LOCK beside the pad, SHIFT while it is on, and OVERCHARGE's purple, which LOCK
+     turns while it builds it: the values drive-pad.css and gameplay-v2.css use, for
+     HOW TO PLAY's demos (ui/how-to-play-demos.js). */
+  --turn-control-lock: #748ffc;
+  --turn-control-shift-on: #51cf66;
+  --turn-control-overcharge: #8b5cf6;
 
   /* Social challenge identity. Join order stays stable even when race order changes. */
   --turn-social-racer-1: var(--turn-pink-100);
@@ -328,7 +334,9 @@
    cream dividers and a cream border, instead of the light pad's bright fills and Ink.
    Scoped to the pad, so GARAGE and the pre-race records keep the light control
    colours, and the REVERSE, SHIFT and LOCK bubbles beside the pad keep theirs.
-   BOOST and GAS sit a shade under the design's values so cream reads at 4.5:1. */
+   BOOST and GAS sit a shade under the design's values so cream reads at 4.5:1.
+   HOW TO PLAY's picture of the pad (ui/how-to-play-demos.js) is dark the same way. */
+:root[data-theme="dark"] .turn-demo-pad,
 :root[data-theme="dark"] .drive-pad {
   --turn-control-drift: #327484;
   --turn-control-boost: #7f7322;
