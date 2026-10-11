@@ -891,6 +891,37 @@ test('PAINTJOB is pointed out in GARAGE without a sheet: its reward toast says i
   assert.match(source, /viewCarWhenGarageOpens\('sedan'\);/, 'TRY SHIFT IN THE SEDAN opens the SEDAN as a challenge opens its car');
 });
 
+test('GARAGE points at ALL CARS once, and RACE at ACTIVATE SHIFT once per car', async () => {
+  const intro = await import('../turn/progression/unlock-introductions.js');
+  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(queue.armOnce(intro.ALL_CARS_HINT), true, 'Armed for every player, including existing ones');
+  queue.consumeHint(intro.ALL_CARS_HINT);
+  const later = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(later.armOnce(intro.ALL_CARS_HINT), false, 'Never armed again');
+  assert.equal(later.hasHint(intro.ALL_CARS_HINT), false);
+  const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
+  const source = await read('../turn/progression/unlock-introductions.js');
+  assert.match(source, /if \(introducesOnUnlock\(windowRef, storage\)\) queue\.armOnce\(ALL_CARS_HINT\);/, 'Not in automated runs');
+  assert.match(source, /if \(ownVisit && \(points\.length \|\| pointedGarage === garage \|\| garageOpenedForCar\(garage\)\)\) continue;/,
+    'Only on a visit the player opened themselves, with nothing else to point out');
+
+  const reminder = await import('../turn/garage/shift-race-reminder.js');
+  const trigger = (classes = [], extra = {}) => ({
+    isConnected: true, disabled: false, hidden: false, offsetParent: {},
+    classList: { contains: (name) => classes.includes(name) }, ...extra
+  });
+  assert.equal(reminder.shiftNeedsSetup(trigger()), true, 'Unlocked, possible and not set up');
+  assert.equal(reminder.shiftNeedsSetup(trigger(['is-active'])), false, 'A car with a SHIFT setup is never reminded');
+  assert.equal(reminder.shiftNeedsSetup(trigger(['is-locked'])), false, 'Not before SHIFT unlocks');
+  assert.equal(reminder.shiftNeedsSetup(trigger(['is-unavailable'])), false, 'Not for a car that cannot SHIFT');
+  assert.equal(reminder.remindShiftBeforeRace('sedan', trigger(), { storage: globalThis.localStorage, windowRef: { location: { hostname: 'localhost' } } }),
+    false, 'Not in automated or local runs');
+  assert.match(await read('../turn/garage/garage.js'),
+    /if \(remindShiftBeforeRace\(state\.choice\.carId, shift\.trigger, \{ documentRef, windowRef \}\)\) return;\n      finish\(\{ \.\.\.state\.choice \}\);/,
+    'RACE asks first, after the locked-car check and before racing');
+});
+
 test('the DRIFT lesson names LOCK, which is on the drive pad from the first lap', async () => {
   const { TURN_TUTORIAL_LESSONS } = await import('../turn/tutorial/turn-tutorial-lessons.js');
   const drift = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'drift');

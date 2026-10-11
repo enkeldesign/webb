@@ -48,6 +48,7 @@ import { signalSecretAchievement } from '../achievements/secret-events.js?revisi
 import { getSavedCarPaint, carPaintMatches, resetCarPaint, resolveCarPaint, saveCarPaint } from './saved-car-paint.js';
 import { hasTriedTrainingCar, installTrainingCarGuide, TRAINING_CAR_ID } from './training-car-guide.js';
 import { createShiftSetup } from './shift-setup.js';
+import { remindShiftBeforeRace } from './shift-race-reminder.js';
 import { createShowroomViewer } from './showroom-viewer.js';
 import { createGarageCatalog } from './garage-catalog.js';
 import { GARAGE_STARTER_CAR_ID, garageCarDescription, garageCarOrder } from './garage-cars.js';
@@ -841,6 +842,8 @@ export function showGarage({
         showTrophyUnlockNotice({ reward: carLock(car.id), itemName: car.name });
         return;
       }
+      // After SHIFT unlocks: once per car, RACE first points at ACTIVATE SHIFT (#1167).
+      if (remindShiftBeforeRace(state.choice.carId, shift.trigger, { documentRef, windowRef })) return;
       finish({ ...state.choice });
     }
 
