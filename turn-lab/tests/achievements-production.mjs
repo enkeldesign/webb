@@ -263,7 +263,7 @@ assert.deepEqual(
     ['countryside', 11],
     ['cliffside', 14],
     ['airport', 15],
-    ['beachfront', 24],
+    ['beachfront', 22],
     ['harbor', 22],
     ['dead-canyon', 33],
     ['midnight-city', 50],
@@ -536,7 +536,7 @@ assert.match(timeTrialSource, /targetSeconds: 14/);
 assert.match(timeTrialSource, /targetSeconds: 22/);
 assert.match(timeTrialSource, /targetSeconds: 50/);
 assert.match(timeTrialSource, /targetSeconds: 47/);
-assert.match(timeTrialSource, /targetSeconds: 24/);
+assert.match(timeTrialSource, /trackId: 'beachfront',\n    targetSeconds: 22,/);
 assert.match(timeTrialSource, /targetSeconds: 33/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 for (const entry of [productionEntry]) {

@@ -27,9 +27,13 @@ assert.match(view, /\{ actionTitle: 'Open Achievements', showGuide: true \}/);
 assert.match(view, /rewardToast\.addEventListener\('click', openRewardToast\)/);
 assert.match(
   view,
-  /function openRewardToast\(\) \{[\s\S]*?hideRewardToast\(\);[\s\S]*?open\(raceTrigger\.hidden === false \? raceTrigger : homeTrigger\);[\s\S]*?\}/,
-  'Activating the reward toast must conceal it and open Achievements from either game state'
+  /function openRewardToast\(\) \{[\s\S]*?const rewardId = activeRewardBatch\[0\]\?\.id \|\| '';[\s\S]*?hideRewardToast\(\);[\s\S]*?open\(raceTrigger\.hidden === false \? raceTrigger : homeTrigger, \{ rewardId \}\);[\s\S]*?\}/,
+  'Activating the reward toast must conceal it and open Achievements on that reward from either game state'
 );
+assert.match(view, /selectedRewardId = reward \? reward\.id : initialRewardSelection\(store\);/,
+  'The reward asked for is selected on Trophy Road');
+assert.match(view, /selectedRewardMarker\(\)\?\.scrollIntoView\(\{ block: 'center' \}\);\n        openTrophyRoadDetail\(\);/,
+  'Its details open beside its marker, which is scrolled into view');
 assert.match(view, /data-trophy-reward-guide hidden><mark>HOW TO PLAY<\/mark><span>FOR INSTRUCTIONS<\/span>/,
   'The instructions destination must be visible text rather than an aria-only hint');
 assert.match(view, /rewardBatchNeedsHowToPlay\(batch\)/);
