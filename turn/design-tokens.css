@@ -89,6 +89,8 @@
   --turn-control-boost: var(--turn-yellow-400);
   --turn-control-boost-empty: var(--turn-yellow-200);
   --turn-control-brake: var(--turn-orange-500);
+  /* FLOW's colour, on the control that just earned it (ui/flow-pulses.js). */
+  --turn-control-flow: var(--turn-pink-500);
 
   /* Social challenge identity. Join order stays stable even when race order changes. */
   --turn-social-racer-1: var(--turn-pink-100);
