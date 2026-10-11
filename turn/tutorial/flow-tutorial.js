@@ -152,6 +152,7 @@ export function startFlowCoach({ runtime, events = globalThis }) {
     last = now;
     if (state.running && globalThis.__turnRacePause?.paused !== true) {
       coach.update(dt, Math.max(0, Number(state.speed) || 0));
+      prompt.pace({ state, dt, maxSpeed: runtime.maxSpeed });
       if (graduationLeft > 0) {
         graduationLeft -= dt;
         if (graduationLeft <= 0) {
