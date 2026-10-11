@@ -57,8 +57,8 @@ body .m8-feedback-content * {
   /* DRIFT and BOOST, then GAS, then BRAKE. */
   --turn-drive-pad-rows: 32% 44% 24%;
   /* The ring on a pressed zone, and on a pressed LOCK or REVERSE. */
-  --turn-drive-zone-pressed: inset 0 0 0 4.5px rgb(255 248 232 / 0.78);
-  --turn-drive-bubble-pressed: inset 0 0 0 3.75px rgb(255 248 232 / 0.62);
+  --turn-drive-zone-pressed: inset 0 0 0 4.5px var(--turn-control-pressed);
+  --turn-drive-bubble-pressed: inset 0 0 0 3.75px var(--turn-control-pressed-bubble);
   /* LOCK, SHIFT and REVERSE wait tucked against the pad's edge, then slide out
      on the pad's curve and fade in; they change colour as they are pressed. */
   --turn-drive-bubble-radius: 749.25px;

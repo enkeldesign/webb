@@ -230,8 +230,8 @@ const STYLES = `
     69.5% { border-top-left-radius: var(--turn-drive-pad-radius); border-bottom-left-radius: 0; }
   }
   @keyframes turn-demo-drive-lock-slide {
-    0%, 12% { transform: var(--turn-demo-tucked); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
-    13.4%, 47% { transform: var(--turn-demo-out); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    0%, 12% { transform: var(--turn-demo-tucked); animation-timing-function: var(--turn-drive-bubble-slide-easing); }
+    13.4%, 47% { transform: var(--turn-demo-out); animation-timing-function: var(--turn-drive-bubble-slide-easing); }
     48.4%, 100% { transform: var(--turn-demo-tucked); }
   }
   @keyframes turn-demo-drive-lock-fade {
@@ -249,8 +249,8 @@ const STYLES = `
     30% { box-shadow: var(--turn-drive-bubble-pressed); }
   }
   @keyframes turn-demo-drive-reverse-slide {
-    0%, 69.5% { transform: var(--turn-demo-tucked); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
-    70.9%, 94.5% { transform: var(--turn-demo-out); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    0%, 69.5% { transform: var(--turn-demo-tucked); animation-timing-function: var(--turn-drive-bubble-slide-easing); }
+    70.9%, 94.5% { transform: var(--turn-demo-out); animation-timing-function: var(--turn-drive-bubble-slide-easing); }
     95.9%, 100% { transform: var(--turn-demo-tucked); }
   }
   @keyframes turn-demo-drive-reverse-fade {
@@ -384,8 +384,8 @@ const STYLES = `
     7.5% { border-top-left-radius: 0; }
   }
   @keyframes turn-demo-boost-lock-slide {
-    0%, 7.5% { transform: var(--turn-demo-tucked); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
-    9.25%, 42.5% { transform: var(--turn-demo-out); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    0%, 7.5% { transform: var(--turn-demo-tucked); animation-timing-function: var(--turn-drive-bubble-slide-easing); }
+    9.25%, 42.5% { transform: var(--turn-demo-out); animation-timing-function: var(--turn-drive-bubble-slide-easing); }
     44.25%, 100% { transform: var(--turn-demo-tucked); }
   }
   @keyframes turn-demo-boost-lock-fade {
@@ -457,8 +457,8 @@ const STYLES = `
     6% { border-top-left-radius: 0; }
   }
   @keyframes turn-demo-overcharge-lock-slide {
-    0%, 6% { transform: var(--turn-demo-tucked); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
-    7.4%, 48% { transform: var(--turn-demo-out); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    0%, 6% { transform: var(--turn-demo-tucked); animation-timing-function: var(--turn-drive-bubble-slide-easing); }
+    7.4%, 48% { transform: var(--turn-demo-out); animation-timing-function: var(--turn-drive-bubble-slide-easing); }
     49.4%, 100% { transform: var(--turn-demo-tucked); }
   }
   @keyframes turn-demo-overcharge-lock-fade {

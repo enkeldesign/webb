@@ -97,6 +97,12 @@
   --turn-control-lock: #748ffc;
   --turn-control-shift-on: #51cf66;
   --turn-control-overcharge: #8b5cf6;
+  /* OVERCHARGE's deep and light ends, where it widens the BOOST bar past full. */
+  --turn-control-overcharge-deep: #5f3dc4;
+  --turn-control-overcharge-light: #d0bfff;
+  /* The cream ring on a pressed drive-pad zone, and on a pressed LOCK or REVERSE. */
+  --turn-control-pressed: color-mix(in srgb, var(--turn-paper) 78%, transparent);
+  --turn-control-pressed-bubble: color-mix(in srgb, var(--turn-paper) 62%, transparent);
 
   /* Social challenge identity. Join order stays stable even when race order changes. */
   --turn-social-racer-1: var(--turn-pink-100);

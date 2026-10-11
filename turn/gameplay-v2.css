@@ -45,12 +45,12 @@
   /* OVERCHARGE widens the bar at both ends, in purple. */
   --turn-boost-overcharge: linear-gradient(
     90deg,
-    #5f3dc4 0%,
+    var(--turn-control-overcharge-deep) 0%,
     var(--turn-control-overcharge) 4%,
-    #d0bfff 9%,
-    #d0bfff 91%,
+    var(--turn-control-overcharge-light) 9%,
+    var(--turn-control-overcharge-light) 91%,
     var(--turn-control-overcharge) 96%,
-    #5f3dc4 100%
+    var(--turn-control-overcharge-deep) 100%
   );
 }
 
