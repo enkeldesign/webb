@@ -42,6 +42,32 @@ body .m8-feedback-content * {
   display: block;
 }
 
+/*
+ * The drive pad's look and motion, in one place. The race's pad below reads
+ * these, and so does HOW TO PLAY's picture of it (ui/how-to-play-demos.js), so
+ * a change here changes both. Short landscape (below) and the race layout
+ * (responsive.css) still resize the race's pad for themselves.
+ */
+:root {
+  --turn-drive-outline: 4px;
+  --turn-drive-divider: 2px;
+  --turn-drive-pad-radius: 22.5px;
+  --turn-drive-pad-shadow-x: 5.25px;
+  --turn-drive-pad-shadow-y: 6px;
+  /* The ring on a pressed zone, and on a pressed LOCK or REVERSE. */
+  --turn-drive-zone-pressed: inset 0 0 0 4.5px rgb(255 248 232 / 0.78);
+  --turn-drive-bubble-pressed: inset 0 0 0 3.75px rgb(255 248 232 / 0.62);
+  /* LOCK, SHIFT and REVERSE wait tucked against the pad's edge, then slide out
+     on the pad's curve and fade in; they change colour as they are pressed. */
+  --turn-drive-bubble-radius: 749.25px;
+  --turn-drive-bubble-tuck: 62%;
+  --turn-drive-bubble-tuck-scale: 0.38;
+  --turn-drive-bubble-slide: 140ms;
+  --turn-drive-bubble-slide-easing: cubic-bezier(.2,.88,.25,1);
+  --turn-drive-bubble-fade: 80ms;
+  --turn-drive-bubble-colour-change: 100ms;
+}
+
 .drive-stack {
   --drive-pad-height: clamp(142.5px, 26vw, 201px);
   --drift-lock-bubble-width: clamp(39px, 7.2vw, 55.5px);
@@ -64,10 +90,10 @@ body .m8-feedback-content * {
   overflow: hidden;
   display: grid;
   grid-template-rows: 32% 44% 24%;
-  border: 4px solid var(--turn-outline);
-  border-radius: 22.5px;
+  border: var(--turn-drive-outline) solid var(--turn-outline);
+  border-radius: var(--turn-drive-pad-radius);
   background: var(--lime);
-  box-shadow: 5.25px 6px 0 var(--turn-shadow-color);
+  box-shadow: var(--turn-drive-pad-shadow-x) var(--turn-drive-pad-shadow-y) 0 var(--turn-shadow-color);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -85,17 +111,17 @@ body .m8-feedback-content * {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 4px solid var(--turn-outline);
-  border-radius: 749.25px 0 0 749.25px;
+  border: var(--turn-drive-outline) solid var(--turn-outline);
+  border-radius: var(--turn-drive-bubble-radius) 0 0 var(--turn-drive-bubble-radius);
   background: #748ffc;
   color: var(--turn-ink);
   opacity: 0;
-  transform: translateX(62%) scaleX(0.38);
+  transform: translateX(var(--turn-drive-bubble-tuck)) scaleX(var(--turn-drive-bubble-tuck-scale));
   transform-origin: right center;
   transition:
-    opacity 80ms ease-out,
-    transform 140ms cubic-bezier(.2,.88,.25,1),
-    background-color 100ms ease;
+    opacity var(--turn-drive-bubble-fade) ease-out,
+    transform var(--turn-drive-bubble-slide) var(--turn-drive-bubble-slide-easing),
+    background-color var(--turn-drive-bubble-colour-change) ease;
   pointer-events: none;
 }
 
@@ -123,18 +149,18 @@ body .m8-feedback-content * {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 4px solid var(--turn-outline);
-  border-radius: 749.25px 0 0 749.25px;
+  border: var(--turn-drive-outline) solid var(--turn-outline);
+  border-radius: var(--turn-drive-bubble-radius) 0 0 var(--turn-drive-bubble-radius);
   background: #8ce99a;
   color: var(--turn-ink);
   box-shadow: none;
   opacity: 0;
-  transform: translateX(62%) scaleX(0.38);
+  transform: translateX(var(--turn-drive-bubble-tuck)) scaleX(var(--turn-drive-bubble-tuck-scale));
   transform-origin: right center;
   transition:
-    opacity 80ms ease-out,
-    transform 140ms cubic-bezier(.2,.88,.25,1),
-    background-color 100ms ease;
+    opacity var(--turn-drive-bubble-fade) ease-out,
+    transform var(--turn-drive-bubble-slide) var(--turn-drive-bubble-slide-easing),
+    background-color var(--turn-drive-bubble-colour-change) ease;
   pointer-events: none;
 }
 
@@ -160,7 +186,9 @@ body .m8-feedback-content * {
   font-size: .9em;
   font-style: normal;
   line-height: 1;
-  transition: width 100ms ease, opacity 100ms ease;
+  transition:
+    width var(--turn-drive-bubble-colour-change) ease,
+    opacity var(--turn-drive-bubble-colour-change) ease;
 }
 
 .controls .drive-reverse-bubble {
@@ -177,18 +205,18 @@ body .m8-feedback-content * {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 4px solid var(--turn-outline);
-  border-radius: 749.25px 0 0 749.25px;
+  border: var(--turn-drive-outline) solid var(--turn-outline);
+  border-radius: var(--turn-drive-bubble-radius) 0 0 var(--turn-drive-bubble-radius);
   background: var(--drive-brake-color);
   color: var(--turn-ink);
   box-shadow: none;
   opacity: 0;
-  transform: translateX(62%) scaleX(0.38);
+  transform: translateX(var(--turn-drive-bubble-tuck)) scaleX(var(--turn-drive-bubble-tuck-scale));
   transform-origin: right center;
   transition:
-    opacity 80ms ease-out,
-    transform 140ms cubic-bezier(.2,.88,.25,1),
-    background-color 100ms ease;
+    opacity var(--turn-drive-bubble-fade) ease-out,
+    transform var(--turn-drive-bubble-slide) var(--turn-drive-bubble-slide-easing),
+    background-color var(--turn-drive-bubble-colour-change) ease;
   pointer-events: none;
   touch-action: none;
   font-size: max(var(--turn-text-floor, 11px), clamp(0.585rem, 2vw, 0.84rem));
@@ -212,7 +240,7 @@ body .m8-feedback-content * {
 .drive-stack.is-reversing .drive-reverse-bubble,
 .drive-reverse-bubble.is-active {
   background: var(--turn-orange-200, #ffb89f);
-  box-shadow: inset 0 0 0 3.75px rgb(255 248 232 / 0.62);
+  box-shadow: var(--turn-drive-bubble-pressed);
 }
 
 .drive-reverse-bubble:focus-visible {
@@ -253,7 +281,7 @@ body .m8-feedback-content * {
 
 .drive-stack.is-drift-locking .drive-lock-bubble {
   background: #8b5cf6;
-  box-shadow: inset 0 0 0 3.75px rgb(255 248 232 / 0.62);
+  box-shadow: var(--turn-drive-bubble-pressed);
 }
 
 .drive-pad-top {
@@ -290,14 +318,14 @@ body .m8-feedback-content * {
 }
 
 .drive-drift-zone {
-  border-right: 2px solid var(--turn-outline);
+  border-right: var(--turn-drive-divider) solid var(--turn-outline);
   background: #54c2ef;
 }
 
 .drive-boost-zone {
   position: relative;
   overflow: hidden;
-  border-left: 2px solid var(--turn-outline);
+  border-left: var(--turn-drive-divider) solid var(--turn-outline);
   background:
     linear-gradient(
       to top,
@@ -321,7 +349,7 @@ body .m8-feedback-content * {
   display: grid;
   place-items: center;
   text-align: center;
-  border-top: 4px solid var(--turn-outline);
+  border-top: var(--turn-drive-outline) solid var(--turn-outline);
   background: #c8db08;
 }
 
@@ -333,7 +361,7 @@ body .m8-feedback-content * {
   display: grid;
   place-items: center;
   padding: 4.5px 9px;
-  border-top: 4px solid var(--turn-outline);
+  border-top: var(--turn-drive-outline) solid var(--turn-outline);
   background: var(--drive-brake-color);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.45rem, 1.45vw, 0.615rem));
   letter-spacing: 0.035em;
@@ -344,7 +372,7 @@ body .m8-feedback-content * {
 .drive-drift-zone.is-active,
 .drive-boost-zone.is-active,
 .drive-brake-zone.is-active {
-  box-shadow: inset 0 0 0 4.5px rgb(255 248 232 / 0.78);
+  box-shadow: var(--turn-drive-zone-pressed);
 }
 
 .drive-pad[data-drive-zone="gas"] .drive-gas-zone {
@@ -370,7 +398,7 @@ body .m8-feedback-content * {
 
 .drive-pad.is-boosting {
   box-shadow:
-    5.25px 6px 0 var(--turn-shadow-color),
+    var(--turn-drive-pad-shadow-x) var(--turn-drive-pad-shadow-y) 0 var(--turn-shadow-color),
     0 0 0 3.75px rgb(255 90 95 / 0.28);
 }
 
@@ -396,24 +424,24 @@ body .m8-feedback-content * {
 :root.turn-left-handed-controls .drive-lock-bubble {
   right: auto;
   left: calc(100% - 3px);
-  border-radius: 0 749.25px 749.25px 0;
-  transform: translateX(-62%) scaleX(0.38);
+  border-radius: 0 var(--turn-drive-bubble-radius) var(--turn-drive-bubble-radius) 0;
+  transform: translateX(calc(-1 * var(--turn-drive-bubble-tuck))) scaleX(var(--turn-drive-bubble-tuck-scale));
   transform-origin: left center;
 }
 
 :root.turn-left-handed-controls .drive-shift-bubble {
   right: auto;
   left: calc(100% - 3px);
-  border-radius: 0 749.25px 749.25px 0;
-  transform: translateX(-62%) scaleX(0.38);
+  border-radius: 0 var(--turn-drive-bubble-radius) var(--turn-drive-bubble-radius) 0;
+  transform: translateX(calc(-1 * var(--turn-drive-bubble-tuck))) scaleX(var(--turn-drive-bubble-tuck-scale));
   transform-origin: left center;
 }
 
 :root.turn-left-handed-controls .drive-reverse-bubble {
   right: auto;
   left: calc(100% - 3px);
-  border-radius: 0 749.25px 749.25px 0;
-  transform: translateX(-62%) scaleX(0.38);
+  border-radius: 0 var(--turn-drive-bubble-radius) var(--turn-drive-bubble-radius) 0;
+  transform: translateX(calc(-1 * var(--turn-drive-bubble-tuck))) scaleX(var(--turn-drive-bubble-tuck-scale));
   transform-origin: left center;
 }
 
@@ -434,23 +462,23 @@ body .m8-feedback-content * {
 }
 
 :root.turn-left-handed-controls .drive-stack.is-drift-ready .drive-pad {
-  border-top-left-radius: 22.5px;
+  border-top-left-radius: var(--turn-drive-pad-radius);
   border-top-right-radius: 0;
 }
 
 :root.turn-left-handed-controls .drive-stack.is-brake-ready .drive-pad {
-  border-bottom-left-radius: 22.5px;
+  border-bottom-left-radius: var(--turn-drive-pad-radius);
   border-bottom-right-radius: 0;
 }
 
 :root.turn-left-handed-controls .drive-boost-zone {
-  border-right: 2px solid var(--turn-outline);
+  border-right: var(--turn-drive-divider) solid var(--turn-outline);
   border-left: 0;
 }
 
 :root.turn-left-handed-controls .drive-drift-zone {
   border-right: 0;
-  border-left: 2px solid var(--turn-outline);
+  border-left: var(--turn-drive-divider) solid var(--turn-outline);
 }
 
 .drive-boost-zone.is-locked::after {
