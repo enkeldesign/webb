@@ -388,5 +388,14 @@ export const CHANGELOG = Object.freeze([
         "One lap of CLIFFSIDE that points out what earns FLOW and has you chain DRIFT, a clean EXIT and BOOST into COMBO. FLOW's unlock sheet offers it; HOW TO PLAY lists every FLOW technique and example combos."
       ]
     ]
+  },
+  {
+    "date": "11 October 2026",
+    "entries": [
+      [
+        "HOW TO PLAY",
+        "A quick reference to steering, the drive pad, BOOST and rivals, each card acting out the real control. DRIFT ATTACK, SHIFT and FLOW join as you unlock them. LEARN TO PLAY now asks for its five parts."
+      ]
+    ]
   }
 ]);

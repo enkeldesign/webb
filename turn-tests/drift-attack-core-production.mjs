@@ -327,8 +327,8 @@ assert.doesNotMatch(source, /driftHeld|boostActive|shiftActive|overcharge/i,
   const unlock = await read('../turn/progression/overcharge-unlock.js');
   assert.doesNotMatch(unlock, /drift-attack-setting|Show DRIFT scoring/i, 'Hiding the DRIFT HUD (ui/drift-attack-setting.js) never removes OVERCHARGE');
   const guide = await read('../turn/ui/how-to-play-guide.js');
-  assert.match(guide, /data-overcharge-unlock hidden><strong>OVERCHARGE unlocks with DRIFT ATTACK<\/strong>/,
-    'HOW TO PLAY says where it comes from');
+  assert.match(guide, /<p class="m8-guide-note"><strong>OVERCHARGE unlocks with DRIFT ATTACK<\/strong> on the Trophy Road\.<\/p>/,
+    'HOW TO PLAY says where it comes from, in the BOOST card it shows until then (#748)');
   const road = await read('../turn/progression/trophy-road.js');
   assert.match(road, /OVERCHARGE comes with it/, 'So does the DRIFT ATTACK reward');
 }

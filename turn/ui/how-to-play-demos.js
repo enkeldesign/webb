@@ -1,14 +1,23 @@
-// HOW TO PLAY demos (#748): small copies of the drive pad and the BOOST bar that act out
-// what a card explains: a thumb sliding between the zones, LOCK, SHIFT and REVERSE
-// sliding out, DRIFT filling BOOST and OVERCHARGE growing past it. They mirror the race
-// controls (drive-pad.css, gameplay-v2.css) at the same sizes and in the same colour
-// roles, light and dark, and follow the left-handed layout. They are pictures: hidden
-// from assistive technology, since the card's text says the same, and built from their
-// own classes, so nothing that looks for the real drive pad or BOOST bar finds them.
-// They move only while their card is open; with Reduced Motion each is one still frame.
+// HOW TO PLAY demos (#748): small copies of the race's own controls that act out what
+// a card explains: a thumb sliding between the drive pad's zones, LOCK, SHIFT and REVERSE
+// sliding out, DRIFT filling the BOOST bar and OVERCHARGE growing past it, RECALIBRATE
+// centring the steering, and the chips that show your place among your rivals. They
+// mirror the race (drive-pad.css, gameplay-v2.css, styles.css, in-game-menu.css) at the
+// same sizes, in the same colour roles and with the same motion, light and dark, and
+// follow the left-handed layout. They are pictures: hidden from assistive technology,
+// since the card's text says the same, and built from their own classes, so nothing
+// that looks for the real controls finds them. They move only while their card is open;
+// with Reduced Motion each is one still frame.
 const STYLE_ID = 'turn-how-to-play-demo-styles';
 
 const STYLES = `
+  /* BOOST's charge, 0 to 1, shared by the bar and the pad's BOOST zone. */
+  @property --turn-demo-charge { syntax: '<number>'; inherits: true; initial-value: 1; }
+  /* The live DRIFT or FLOW score, counted up as the race's scorekeeper does. */
+  @property --turn-demo-score { syntax: '<integer>'; inherits: true; initial-value: 0; }
+
+  /* Pictures at the race's own sizes, in px: they do not grow with the text size, so a
+     label never outgrows its control. The card's text, which says the same, does. */
   .turn-demo {
     display: flex;
     justify-content: center;
@@ -39,7 +48,7 @@ const STYLES = `
     border-radius: 22.5px;
     background: var(--turn-control-gas);
     box-shadow: 5.25px 6px 0 var(--turn-shadow-color);
-    font-size: max(var(--turn-text-floor, 11px), 0.585rem);
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.025em;
     line-height: 1;
@@ -54,8 +63,13 @@ const STYLES = `
     background-color: var(--turn-control-drift);
   }
   .turn-demo-pad > .is-boost {
+    --turn-demo-boost-fill: var(--turn-control-boost);
     border-left: 2px solid var(--turn-outline);
-    background-color: var(--turn-control-boost);
+    background: linear-gradient(
+      to top,
+      var(--turn-demo-boost-fill) 0 calc(var(--turn-demo-charge) * 100%),
+      var(--turn-control-boost-empty) calc(var(--turn-demo-charge) * 100%) 100%
+    );
   }
   .turn-demo-pad > :is(.is-gas, .is-brake) {
     grid-column: 1 / -1;
@@ -75,7 +89,7 @@ const STYLES = `
     border: 4px solid var(--turn-outline);
     border-radius: 749.25px 0 0 749.25px;
     color: var(--turn-ink);
-    font-size: max(var(--turn-text-floor, 11px), 0.435rem);
+    font-size: 11px;
     font-weight: 950;
     letter-spacing: 0.035em;
     line-height: 1;
@@ -196,8 +210,8 @@ const STYLES = `
     12% { box-shadow: var(--turn-demo-pressed); }
   }
   @keyframes turn-demo-drive-boost {
-    0%, 61.5% { box-shadow: var(--turn-demo-released); background-color: var(--turn-control-boost); }
-    47% { box-shadow: var(--turn-demo-pressed); background-color: var(--turn-yellow-600); }
+    0%, 61.5% { box-shadow: var(--turn-demo-released); --turn-demo-boost-fill: var(--turn-control-boost); }
+    47% { box-shadow: var(--turn-demo-pressed); --turn-demo-boost-fill: var(--turn-yellow-600); }
   }
   @keyframes turn-demo-drive-brake {
     0%, 94.5% { box-shadow: var(--turn-demo-released); }
@@ -275,34 +289,26 @@ const STYLES = `
     60.2%, 100% { width: 0; opacity: 0; }
   }
 
-  /* The BOOST bar, with the zone the thumb is on beneath it. */
-  .turn-demo-boost {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--turn-space-2);
-  }
-  .turn-demo-boost > span {
-    padding: 1.5px 6px 2.25px;
-    border: 2px solid var(--turn-outline);
-    border-radius: 749.25px;
-    background: var(--turn-surface-page);
-    box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
-    font-size: var(--turn-text-floor, 11px);
-    font-weight: 800;
-    letter-spacing: 0.08em;
-  }
+  /* BOOST on the pad. While racing, the BOOST bar sits above the pad at its width with
+     no label (responsive.css, r104-polish.css), and OVERCHARGE widens it at both ends in
+     purple (gameplay-v2.css). The pad's BOOST zone fills with the same charge. */
+  .turn-demo-stack.has-bar { margin-block-start: 30px; }
   .turn-demo-bar {
-    position: relative;
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    bottom: calc(100% + 10px);
     box-sizing: border-box;
-    width: 150px;
-    height: 20px;
+    width: 100%;
+    height: 17.25px;
     overflow: hidden;
     border: 3px solid var(--turn-outline);
     border-radius: 749.25px;
-    background: var(--turn-surface-page);
+    background: color-mix(in srgb, var(--turn-surface-page) 82%, transparent);
     box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
+    transform: translateX(-50%);
   }
-  /* OVERCHARGE: the bar grows past full at both ends, in purple. */
+  :root.turn-left-handed-controls .turn-demo-bar { transform: translateX(-50%) scaleX(-1); }
   .turn-demo-bar > b {
     position: absolute;
     inset: 0;
@@ -314,7 +320,7 @@ const STYLES = `
   .turn-demo-bar > i {
     position: absolute;
     inset: 0 auto 0 0;
-    width: 144px;
+    width: calc(var(--turn-demo-charge) * 136.5px);
     background: linear-gradient(90deg, var(--turn-yellow-600), var(--turn-control-boost));
   }
   /* While DRIFT charges it, the fill is DRIFT's colour into GAS's. */
@@ -325,65 +331,438 @@ const STYLES = `
     opacity: 0;
     background: linear-gradient(90deg, var(--turn-control-drift), var(--turn-control-gas));
   }
-  .turn-demo-zones {
-    display: flex;
-    gap: var(--turn-space-2);
-  }
-  .turn-demo-zones > span {
-    padding: 3px 9px 4px;
-    border: 2px solid var(--turn-outline);
-    border-radius: 749.25px;
-    color: var(--turn-ink);
-    font-size: var(--turn-text-floor, 11px);
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    opacity: 0.38;
-  }
-  .turn-demo-zones > .is-drift { background-color: var(--turn-control-drift); }
-  .turn-demo-zones > .is-gas { background-color: var(--turn-control-gas); }
-  .turn-demo-zones > .is-boost { background-color: var(--turn-control-boost); }
 
-  /* OVERCHARGE, 8 s: DRIFT fills BOOST, then builds OVERCHARGE past it; GAS catches it;
-     BOOST spends OVERCHARGE first, then BOOST. Like the race's bar, the fill takes
-     DRIFT's colours at once, and the bar turns purple at once. */
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar { animation: turn-demo-overcharge-bar 8s ease-in-out infinite; }
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar > b { animation: turn-demo-overcharge-purple 8s steps(1, end) infinite; }
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar > i { animation: turn-demo-overcharge-fill 8s ease-in-out infinite; }
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar > i::after { animation: turn-demo-overcharge-drift 8s steps(1, end) infinite; }
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-zones > .is-drift { animation: turn-demo-overcharge-on-drift 8s steps(1, end) infinite; }
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-zones > .is-gas { animation: turn-demo-overcharge-on-gas 8s steps(1, end) infinite; }
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-zones > .is-boost { animation: turn-demo-overcharge-on-boost 8s steps(1, end) infinite; }
+  /* BOOST, 8 s: from GAS into DRIFT, which fills BOOST (LOCK waits beside it); back to
+     GAS; into BOOST, which spends it; back to GAS. */
+  details[open] .turn-demo-stack[data-demo="boost"] { animation: turn-demo-boost-charge 8s linear infinite; }
+  details[open] .turn-demo-stack[data-demo="boost"] .turn-demo-thumb { animation: turn-demo-boost-thumb 8s ease-in-out infinite; }
+  details[open] .turn-demo-stack[data-demo="boost"] .turn-demo-pad { animation: turn-demo-boost-corners 8s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="boost"] .is-gas { animation: turn-demo-boost-gas 8s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="boost"] .is-drift { animation: turn-demo-boost-drift 8s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="boost"] .is-boost { animation: turn-demo-boost-boost 8s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="boost"] .turn-demo-bar > i::after { animation: turn-demo-boost-drifting 8s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="boost"] .is-lock {
+    animation:
+      turn-demo-boost-lock-slide 8s linear infinite,
+      turn-demo-boost-lock-fade 8s linear infinite;
+  }
+  @keyframes turn-demo-boost-charge {
+    0%, 10% { --turn-demo-charge: 0.2; }
+    38%, 60% { --turn-demo-charge: 1; }
+    82%, 100% { --turn-demo-charge: 0.2; }
+  }
+  @keyframes turn-demo-boost-thumb {
+    0%, 5% { left: 50%; top: 54%; }
+    10%, 40% { left: 25%; top: 16%; }
+    45%, 55% { left: 50%; top: 54%; }
+    60%, 85% { left: 75%; top: 16%; }
+    90%, 100% { left: 50%; top: 54%; }
+  }
+  @keyframes turn-demo-boost-gas {
+    0%, 42.5%, 87.5% { box-shadow: var(--turn-demo-pressed); }
+    7.5%, 57.5% { box-shadow: var(--turn-demo-released); }
+  }
+  @keyframes turn-demo-boost-drift {
+    0%, 42.5% { box-shadow: var(--turn-demo-released); }
+    7.5% { box-shadow: var(--turn-demo-pressed); }
+  }
+  @keyframes turn-demo-boost-boost {
+    0%, 87.5% { box-shadow: var(--turn-demo-released); --turn-demo-boost-fill: var(--turn-control-boost); }
+    57.5% { box-shadow: var(--turn-demo-pressed); --turn-demo-boost-fill: var(--turn-yellow-600); }
+  }
+  @keyframes turn-demo-boost-drifting {
+    0%, 42.5% { opacity: 0; }
+    7.5% { opacity: 1; }
+  }
+  @keyframes turn-demo-boost-corners {
+    0%, 42.5% { border-top-left-radius: 22.5px; }
+    7.5% { border-top-left-radius: 0; }
+  }
+  @keyframes turn-demo-boost-lock-slide {
+    0%, 7.5% { transform: translateX(62%) scaleX(0.38); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    9.25%, 42.5% { transform: translateX(0) scaleX(1); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    44.25%, 100% { transform: translateX(62%) scaleX(0.38); }
+  }
+  @keyframes turn-demo-boost-lock-fade {
+    0%, 7.5% { opacity: 0; animation-timing-function: ease-out; }
+    8.5%, 42.5% { opacity: 1; animation-timing-function: ease-out; }
+    43.5%, 100% { opacity: 0; }
+  }
+
+  /* OVERCHARGE, 10 s: DRIFT fills BOOST, then builds OVERCHARGE past it; GAS catches and
+     holds it; BOOST spends OVERCHARGE first, then BOOST. Like the race's bar, the fill
+     takes DRIFT's colours at once, and the bar turns purple at once. */
+  details[open] .turn-demo-stack[data-demo="overcharge"] { animation: turn-demo-overcharge-charge 10s linear infinite; }
+  details[open] .turn-demo-stack[data-demo="overcharge"] .turn-demo-thumb { animation: turn-demo-overcharge-thumb 10s ease-in-out infinite; }
+  details[open] .turn-demo-stack[data-demo="overcharge"] .turn-demo-pad { animation: turn-demo-overcharge-corners 10s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="overcharge"] .is-gas { animation: turn-demo-overcharge-gas 10s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="overcharge"] .is-drift { animation: turn-demo-overcharge-drift 10s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="overcharge"] .is-boost { animation: turn-demo-overcharge-boost 10s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="overcharge"] .turn-demo-bar { animation: turn-demo-overcharge-bar 10s linear infinite; }
+  details[open] .turn-demo-stack[data-demo="overcharge"] .turn-demo-bar > b { animation: turn-demo-overcharge-purple 10s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="overcharge"] .turn-demo-bar > i { animation: turn-demo-overcharge-fill 10s linear infinite; }
+  details[open] .turn-demo-stack[data-demo="overcharge"] .turn-demo-bar > i::after { animation: turn-demo-overcharge-drifting 10s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="overcharge"] .is-lock {
+    animation:
+      turn-demo-overcharge-lock-slide 10s linear infinite,
+      turn-demo-overcharge-lock-fade 10s linear infinite;
+  }
+  @keyframes turn-demo-overcharge-charge {
+    0%, 8% { --turn-demo-charge: 0.2; }
+    28%, 74% { --turn-demo-charge: 1; }
+    88%, 100% { --turn-demo-charge: 0.2; }
+  }
+  @keyframes turn-demo-overcharge-thumb {
+    0%, 4% { left: 50%; top: 54%; }
+    8%, 46% { left: 25%; top: 16%; }
+    50%, 60% { left: 50%; top: 54%; }
+    64%, 88% { left: 75%; top: 16%; }
+    92%, 100% { left: 50%; top: 54%; }
+  }
+  @keyframes turn-demo-overcharge-gas {
+    0%, 48%, 90% { box-shadow: var(--turn-demo-pressed); }
+    6%, 62% { box-shadow: var(--turn-demo-released); }
+  }
+  @keyframes turn-demo-overcharge-drift {
+    0%, 48% { box-shadow: var(--turn-demo-released); }
+    6% { box-shadow: var(--turn-demo-pressed); }
+  }
+  @keyframes turn-demo-overcharge-boost {
+    0%, 90% { box-shadow: var(--turn-demo-released); --turn-demo-boost-fill: var(--turn-control-boost); }
+    62% { box-shadow: var(--turn-demo-pressed); --turn-demo-boost-fill: var(--turn-yellow-600); }
+  }
   @keyframes turn-demo-overcharge-bar {
-    0%, 30%, 74%, 100% { width: 150px; }
-    48%, 62% { width: 195px; }
+    0%, 30%, 74%, 100% { width: 100%; }
+    44%, 64% { width: 130%; }
+  }
+  @keyframes turn-demo-overcharge-fill {
+    0%, 30%, 74%, 100% { left: 0; }
+    44%, 64% { left: 21.375px; }
   }
   @keyframes turn-demo-overcharge-purple {
     0%, 74% { opacity: 0; }
     30% { opacity: 1; }
   }
-  @keyframes turn-demo-overcharge-fill {
-    0% { left: 0; width: 22px; }
-    30% { left: 0; width: 144px; }
-    48%, 62% { left: 22.5px; width: 144px; }
-    74% { left: 0; width: 144px; }
-    90%, 100% { left: 0; width: 22px; }
+  @keyframes turn-demo-overcharge-drifting {
+    0%, 48% { opacity: 0; }
+    6% { opacity: 1; }
   }
-  @keyframes turn-demo-overcharge-drift {
-    0%, 96% { opacity: 1; }
-    48% { opacity: 0; }
+  @keyframes turn-demo-overcharge-corners {
+    0%, 48% { border-top-left-radius: 22.5px; }
+    6% { border-top-left-radius: 0; }
   }
-  @keyframes turn-demo-overcharge-on-drift {
-    0%, 96% { opacity: 1; box-shadow: var(--turn-demo-pressed-pill); }
-    48% { opacity: 0.38; box-shadow: none; }
+  @keyframes turn-demo-overcharge-lock-slide {
+    0%, 6% { transform: translateX(62%) scaleX(0.38); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    7.4%, 48% { transform: translateX(0) scaleX(1); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    49.4%, 100% { transform: translateX(62%) scaleX(0.38); }
   }
-  @keyframes turn-demo-overcharge-on-gas {
-    0%, 62% { opacity: 0.38; box-shadow: none; }
-    48% { opacity: 1; box-shadow: var(--turn-demo-pressed-pill); }
+  @keyframes turn-demo-overcharge-lock-fade {
+    0%, 6% { opacity: 0; animation-timing-function: ease-out; }
+    6.8%, 48% { opacity: 1; animation-timing-function: ease-out; }
+    48.8%, 100% { opacity: 0; }
   }
-  @keyframes turn-demo-overcharge-on-boost {
-    0%, 90% { opacity: 0.38; box-shadow: none; }
-    62% { opacity: 1; box-shadow: var(--turn-demo-pressed-pill); }
+
+  /* STEER, 8 s: the device turns like a wheel, settles where the player likes to hold
+     it, and RECALIBRATE makes that straight ahead: it blinks twice as STEERING CENTRED
+     shows, as in the race (in-game-menu.css, styles.css), in the race's message yellow. */
+  .turn-demo-steer {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--turn-space-3);
   }
+  .turn-demo-message {
+    padding: 5.25px 9.75px;
+    border: 3px solid var(--turn-outline);
+    border-radius: 749.25px;
+    background: var(--yellow);
+    color: var(--turn-ink);
+    box-shadow: 3px 3px 0 var(--turn-shadow-color);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    opacity: 0;
+    transform: rotate(-2deg);
+  }
+  /* A phone held in landscape: a dark body around its screen, the camera at one end. */
+  .turn-demo-device {
+    position: relative;
+    width: 112px;
+    height: 58px;
+    margin: 6px 0;
+    padding: 5px 8px 5px 14px;
+    box-sizing: border-box;
+    border: 3px solid var(--turn-outline);
+    border-radius: 15px;
+    background: var(--turn-ink);
+    box-shadow: 3px 3px 0 var(--turn-shadow-color);
+  }
+  .turn-demo-device::before {
+    content: "";
+    position: absolute;
+    left: 4.5px;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    margin-top: -2px;
+    border-radius: 50%;
+    background: var(--turn-road);
+  }
+  .turn-demo-device > i {
+    display: block;
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(var(--turn-blue-200) 0 52%, var(--turn-control-gas) 52% 100%);
+  }
+  .turn-demo-recalibrate {
+    display: grid;
+    place-items: center;
+    min-height: var(--turn-target-min, 44px);
+    padding: 6px 13.2px;
+    box-sizing: border-box;
+    border: var(--turn-border-control, 3px) solid var(--turn-outline);
+    border-radius: var(--turn-radius-control, 12px);
+    background-color: var(--turn-action-utility);
+    color: var(--turn-text);
+    box-shadow: var(--turn-shadow-control, 3px 3px 0 var(--turn-shadow-color));
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: normal;
+  }
+  details[open] .turn-demo-steer .turn-demo-device { animation: turn-demo-steer-device 8s ease-in-out infinite; }
+  details[open] .turn-demo-steer .turn-demo-message { animation: turn-demo-steer-message 8s linear infinite; }
+  details[open] .turn-demo-steer .turn-demo-recalibrate {
+    animation:
+      turn-demo-steer-press 8s steps(1, end) infinite,
+      turn-demo-steer-blink 8s steps(1, end) infinite;
+  }
+  @keyframes turn-demo-steer-device {
+    0%, 6% { transform: rotate(0deg); }
+    18% { transform: rotate(-16deg); }
+    32% { transform: rotate(16deg); }
+    44%, 90% { transform: rotate(7deg); }
+    100% { transform: rotate(0deg); }
+  }
+  @keyframes turn-demo-steer-press {
+    0%, 57.5% { transform: none; box-shadow: var(--turn-shadow-control, 3px 3px 0 var(--turn-shadow-color)); }
+    56% { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--turn-shadow-color); }
+  }
+  @keyframes turn-demo-steer-blink {
+    0%, 59%, 65% { background-color: var(--turn-action-utility); color: var(--turn-text); }
+    56%, 62% { background-color: var(--yellow); color: var(--turn-ink); }
+  }
+  @keyframes turn-demo-steer-message {
+    0%, 56% { opacity: 0; animation-timing-function: ease; }
+    57.75%, 82% { opacity: 1; animation-timing-function: ease; }
+    83.75%, 100% { opacity: 0; }
+  }
+
+  /* On-screen steering, 6 s (manual-steering.css): the thumb drags the knob left, then
+     right; let go, it springs back to the middle on the race's 110 ms curve. */
+  .turn-demo-manual-steer {
+    position: relative;
+    width: 150px;
+    height: 96px;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 5px solid var(--turn-outline);
+    border-radius: 22.5px;
+    background: var(--yellow);
+    /* A coloured control: Ink on it in both themes, as design-tokens.css gives the race's. */
+    color: var(--turn-ink);
+    box-shadow: 5.25px 5.25px 0 var(--turn-shadow-color);
+  }
+  .turn-demo-manual-steer > span {
+    position: absolute;
+    top: 50%;
+    font-size: 26.4px;
+    font-weight: 1000;
+    line-height: 1;
+    transform: translateY(-54%);
+  }
+  .turn-demo-manual-steer > span:first-child { left: 7%; }
+  .turn-demo-manual-steer > span:nth-child(2) { right: 7%; }
+  .turn-demo-manual-steer > i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 58px;
+    aspect-ratio: 1;
+    box-sizing: border-box;
+    border: 5px solid var(--turn-ink);
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 3.75px 5.25px 0 color-mix(in srgb, var(--turn-shadow-color) 35%, transparent);
+    transform: translate(-50%, -50%);
+  }
+  details[open] .turn-demo-manual-steer > i { animation: turn-demo-manual-knob 6s linear infinite; }
+  @keyframes turn-demo-manual-knob {
+    0%, 10% { left: 50%; animation-timing-function: ease-in-out; }
+    24%, 38% { left: 24%; animation-timing-function: ease-in-out; }
+    58%, 72% { left: 76%; animation-timing-function: cubic-bezier(0.2, 0.9, 0.25, 1.15); }
+    73.83%, 100% { left: 50%; }
+  }
+
+  /* RIVALS: the race's POSITION and BEST chips (styles.css, position-hud-r83.css). */
+  .turn-demo-rivals { gap: var(--turn-space-3); }
+  .turn-demo-chip {
+    min-width: 61.5px;
+    min-height: 44px;
+    padding: 5.25px 7.5px 6px;
+    box-sizing: border-box;
+    border: 3px solid var(--turn-outline);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--turn-surface-page) 90%, transparent);
+    color: var(--turn-text);
+    box-shadow: 3px 3px 0 var(--turn-shadow-color);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .turn-demo-chip > strong {
+    display: block;
+    margin-top: 2.25px;
+    font-size: 16.8px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+  }
+
+  /* DRIFT ATTACK and FLOW: the race's scorekeeper (scoring/score-feedback.css): the live
+     score and COMBO, LAP, LAST and BEST, and the callout that follows a bank or a new
+     COMBO. */
+  .turn-demo-score {
+    flex-direction: column;
+    align-items: center;
+    gap: 6.75px;
+  }
+  .turn-demo-paper {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    width: 149px;
+    min-height: 78px;
+    padding: 6px 7.5px 6.75px;
+    box-sizing: border-box;
+    border: 3px solid var(--turn-outline);
+    border-radius: 11.25px;
+    background: color-mix(in srgb, var(--turn-surface-page) 94%, transparent);
+    color: var(--turn-text);
+    box-shadow: 2.25px 2.25px 0 var(--turn-shadow-color);
+  }
+  .turn-demo-paper > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .turn-demo-paper .is-heading,
+  .turn-demo-paper .is-record {
+    font-size: 11px;
+    font-weight: 950;
+    letter-spacing: 0.075em;
+    line-height: 1;
+  }
+  .turn-demo-paper .is-values {
+    margin-top: 2.25px;
+    line-height: 1;
+  }
+  .turn-demo-paper .is-values > strong {
+    align-self: center;
+    font-size: 21.36px;
+    font-weight: 900;
+    letter-spacing: -0.055em;
+    counter-reset: turn-demo-score var(--turn-demo-score);
+  }
+  .turn-demo-paper .is-values > strong::before { content: counter(turn-demo-score); }
+  .turn-demo-paper .is-record {
+    justify-content: flex-start;
+    gap: 3px;
+    margin-top: 3px;
+    letter-spacing: 0.055em;
+  }
+  .turn-demo-paper .is-record > b { font: inherit; font-size: 1.08em; }
+  /* Values that change in the demo stack in one cell and take turns. */
+  .turn-demo-swap { display: inline-grid; }
+  .turn-demo-swap > * { grid-area: 1 / 1; font-style: normal; }
+  .turn-demo-swap > :not(:first-child) { opacity: 0; }
+  .turn-demo-paper .is-values > b {
+    align-self: center;
+    padding: 1.5px 3.75px 2.25px;
+    border: 1.5px solid var(--turn-outline);
+    border-radius: 749.25px;
+    background: var(--turn-blue-200);
+    color: var(--turn-ink);
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .turn-demo-score[data-demo="flow"] .is-values > b { background: var(--turn-control-flow); }
+  .turn-demo-callout {
+    padding: 5.25px 7.5px 6px;
+    box-sizing: border-box;
+    border: 3px solid var(--turn-outline);
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--turn-surface-page) 94%, transparent);
+    color: var(--turn-text);
+    box-shadow: 3px 3px 0 var(--turn-shadow-color);
+    opacity: 0;
+  }
+  .turn-demo-callout > strong,
+  .turn-demo-callout > b {
+    display: block;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .turn-demo-callout > strong { font-size: 11px; font-weight: 950; letter-spacing: 0.055em; }
+  .turn-demo-callout > .turn-demo-swap { display: grid; }
+  .turn-demo-callout > b { margin-top: 2.25px; font-size: 15.12px; font-weight: 900; }
+
+  /* DRIFT ATTACK, 6 s: a slide builds its score at ×2, then a clean exit banks it into LAP. */
+  details[open] .turn-demo-score[data-demo="drift"] { animation: turn-demo-drift-score 6s linear infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .is-lap .turn-demo-swap > :first-child { animation: turn-demo-swap-out 6s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .is-lap .turn-demo-swap > :last-child { animation: turn-demo-swap-in 6s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .turn-demo-callout { animation: turn-demo-drift-callout 6s linear infinite; }
+  @keyframes turn-demo-drift-score {
+    0%, 8% { --turn-demo-score: 0; }
+    56%, 57.9% { --turn-demo-score: 860; }
+    58%, 100% { --turn-demo-score: 0; }
+  }
+  @keyframes turn-demo-swap-out {
+    0% { opacity: 1; }
+    58% { opacity: 0; }
+  }
+  @keyframes turn-demo-swap-in {
+    0% { opacity: 0; }
+    58% { opacity: 1; }
+  }
+  @keyframes turn-demo-drift-callout {
+    0%, 58% { opacity: 0; animation-timing-function: linear; }
+    60.3%, 84% { opacity: 1; animation-timing-function: linear; }
+    86.3%, 100% { opacity: 0; }
+  }
+
+  /* FLOW, 6 s: each different technique raises COMBO, and the score grows faster. */
+  details[open] .turn-demo-score[data-demo="flow"] { animation: turn-demo-flow-score 6s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="flow"] .is-values .turn-demo-swap > :nth-child(1) { animation: turn-demo-flow-step-1 6s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="flow"] .is-values .turn-demo-swap > :nth-child(2) { animation: turn-demo-flow-step-2 6s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="flow"] .is-values .turn-demo-swap > :nth-child(3) { animation: turn-demo-flow-step-3 6s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="flow"] .turn-demo-callout { animation: turn-demo-flow-callout 6s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="flow"] .turn-demo-callout .turn-demo-swap > :first-child { animation: turn-demo-flow-label-1 6s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="flow"] .turn-demo-callout .turn-demo-swap > :last-child { animation: turn-demo-flow-label-2 6s steps(1, end) infinite; }
+  @keyframes turn-demo-flow-score {
+    0% { --turn-demo-score: 0; }
+    20% { --turn-demo-score: 140; }
+    45% { --turn-demo-score: 390; }
+    70% { --turn-demo-score: 760; }
+  }
+  @keyframes turn-demo-flow-step-1 { 0% { opacity: 1; } 45% { opacity: 0; } }
+  @keyframes turn-demo-flow-step-2 { 0% { opacity: 0; } 45% { opacity: 1; } 70% { opacity: 0; } }
+  @keyframes turn-demo-flow-step-3 { 0% { opacity: 0; } 70% { opacity: 1; } }
+  @keyframes turn-demo-flow-callout { 0% { opacity: 0; } 45% { opacity: 1; } 62% { opacity: 0; } 70% { opacity: 1; } 90% { opacity: 0; } }
+  @keyframes turn-demo-flow-label-1 { 0% { opacity: 1; } 70% { opacity: 0; } }
+  @keyframes turn-demo-flow-label-2 { 0% { opacity: 0; } 70% { opacity: 1; } }
 
   .turn-demo {
     --turn-demo-pressed: inset 0 0 0 4.5px color-mix(in srgb, var(--turn-paper) 78%, transparent);
@@ -394,33 +773,43 @@ const STYLES = `
     --turn-demo-overcharge-light: color-mix(in oklab, var(--turn-control-overcharge) 40%, var(--turn-paper));
   }
 
-  /* Reduced Motion: one still frame each. DRIFT out into LOCK; SHIFT on; DRIFT building
-     OVERCHARGE past a full bar. */
+  /* Reduced Motion: one still frame each. DRIFT out into LOCK; SHIFT on; DRIFT filling
+     BOOST, or building OVERCHARGE past a full bar; STEERING CENTRED with RECALIBRATE
+     held highlighted, as the race does under Reduced Motion. */
   @media (prefers-reduced-motion: reduce) {
     .turn-demo,
     .turn-demo *,
     .turn-demo *::after { animation: none !important; }
     .turn-demo-stack[data-demo="drive"] .turn-demo-thumb { left: -12%; top: 16%; }
-    .turn-demo-stack[data-demo="drive"] .turn-demo-pad { border-top-left-radius: 0; }
-    .turn-demo-stack[data-demo="drive"] .is-drift { box-shadow: var(--turn-demo-pressed); }
+    .turn-demo-stack:is([data-demo="drive"], [data-demo="boost"], [data-demo="overcharge"]) .turn-demo-pad { border-top-left-radius: 0; }
+    .turn-demo-stack:is([data-demo="drive"], [data-demo="boost"], [data-demo="overcharge"]) .is-drift { box-shadow: var(--turn-demo-pressed); }
+    .turn-demo-stack:is([data-demo="drive"], [data-demo="boost"], [data-demo="overcharge"]) .is-lock { opacity: 1; transform: var(--turn-demo-out); }
     .turn-demo-stack[data-demo="drive"] .is-lock {
-      opacity: 1;
-      transform: var(--turn-demo-out);
       background-color: var(--turn-control-overcharge);
       box-shadow: var(--turn-demo-pressed-bubble);
     }
     .turn-demo-stack[data-demo="shift"] .turn-demo-thumb { left: -13%; top: 54%; }
     .turn-demo-stack[data-demo="shift"] .is-shift { background-color: var(--turn-control-shift-on); }
     .turn-demo-stack[data-demo="shift"] .is-shift i { width: 0.72em; opacity: 1; }
-    .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar { width: 195px; }
-    .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar > b { opacity: 1; }
-    .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar > i { left: 22.5px; }
-    .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar > i::after { opacity: 1; }
-    .turn-demo-boost[data-demo="overcharge"] .turn-demo-zones > .is-drift { opacity: 1; box-shadow: var(--turn-demo-pressed-pill); }
+    .turn-demo-stack:is([data-demo="boost"], [data-demo="overcharge"]) .turn-demo-thumb { left: 25%; top: 16%; }
+    .turn-demo-stack:is([data-demo="boost"], [data-demo="overcharge"]) .turn-demo-bar > i::after { opacity: 1; }
+    .turn-demo-stack[data-demo="boost"] { --turn-demo-charge: 0.6; }
+    .turn-demo-stack[data-demo="overcharge"] .turn-demo-bar { width: 130%; }
+    .turn-demo-stack[data-demo="overcharge"] .turn-demo-bar > b { opacity: 1; }
+    .turn-demo-stack[data-demo="overcharge"] .turn-demo-bar > i { left: 21.375px; }
+    .turn-demo-steer .turn-demo-device { transform: rotate(7deg); }
+    .turn-demo-steer .turn-demo-message { opacity: 1; }
+    .turn-demo-steer .turn-demo-recalibrate { background-color: var(--yellow); color: var(--turn-ink); }
+    .turn-demo-manual-steer > i { left: 24%; }
+    .turn-demo-score[data-demo="drift"] { --turn-demo-score: 860; }
+    .turn-demo-score[data-demo="drift"] .turn-demo-callout { display: none; }
+    .turn-demo-score[data-demo="flow"] { --turn-demo-score: 760; }
+    .turn-demo-score[data-demo="flow"] .turn-demo-swap > * { opacity: 0; }
+    .turn-demo-score[data-demo="flow"] .turn-demo-swap > :last-child,
+    .turn-demo-score[data-demo="flow"] .turn-demo-callout { opacity: 1; }
   }
 
-  /* Forced colours drop fills and shadows: the thumb and the fill take Highlight, and
-     the zone in use keeps its outline. */
+  /* Forced colours drop fills and shadows: the thumb and the fill take Highlight. */
   @media (forced-colors: active) {
     .turn-demo-thumb { forced-color-adjust: none; border-color: CanvasText; background: Highlight; box-shadow: none; }
     .turn-demo-bar > i { forced-color-adjust: none; background: Highlight; }
@@ -437,14 +826,22 @@ function installStyles(documentRef) {
   documentRef.head.appendChild(style);
 }
 
-// kind: 'drive' (GAS, DRIFT into LOCK, BOOST, BRAKE into REVERSE) or 'shift'.
-export function createDrivePadDemo(kind, documentRef = globalThis.document) {
+function demoElement(className, documentRef) {
   installStyles(documentRef);
   const demo = documentRef.createElement('div');
-  demo.className = 'turn-demo';
+  demo.className = `turn-demo ${className}`.trim();
   demo.setAttribute('aria-hidden', 'true');
+  return demo;
+}
+
+// kind: 'drive' (GAS, DRIFT into LOCK, BOOST, BRAKE into REVERSE), 'shift', or 'boost'
+// and 'overcharge', which add the BOOST bar above the pad.
+export function createDrivePadDemo(kind, documentRef = globalThis.document) {
+  const demo = demoElement('', documentRef);
+  const bar = kind === 'boost' || kind === 'overcharge';
   demo.innerHTML = `
-    <div class="turn-demo-stack" data-demo="${kind}">
+    <div class="turn-demo-stack${bar ? ' has-bar' : ''}" data-demo="${kind}">
+      ${bar ? '<div class="turn-demo-bar"><b></b><i></i></div>' : ''}
       <span class="turn-demo-bubble is-lock"><b>LOCK</b></span>
       <span class="turn-demo-bubble is-shift"><b>SHIFT<i>●</i></b></span>
       <span class="turn-demo-bubble is-reverse"><b>R</b></span>
@@ -458,16 +855,53 @@ export function createDrivePadDemo(kind, documentRef = globalThis.document) {
   return demo;
 }
 
-// The BOOST bar: DRIFT fills it and builds OVERCHARGE, GAS catches it, BOOST spends it.
-export function createBoostBarDemo(documentRef = globalThis.document) {
-  installStyles(documentRef);
-  const demo = documentRef.createElement('div');
-  demo.className = 'turn-demo turn-demo-boost';
-  demo.dataset.demo = 'overcharge';
-  demo.setAttribute('aria-hidden', 'true');
+// STEER: the device turns, then RECALIBRATE centres it.
+export function createSteerDemo(documentRef = globalThis.document) {
+  const demo = demoElement('turn-demo-steer', documentRef);
   demo.innerHTML = `
-    <span>BOOST</span>
-    <div class="turn-demo-bar"><b></b><i></i></div>
-    <div class="turn-demo-zones"><span class="is-drift">DRIFT</span><span class="is-gas">GAS</span><span class="is-boost">BOOST</span></div>`;
+    <span class="turn-demo-message">STEERING CENTRED</span>
+    <span class="turn-demo-device"><i></i></span>
+    <span class="turn-demo-recalibrate">RECALIBRATE</span>`;
+  return demo;
+}
+
+// RIVALS: your place among your rivals, and your record.
+export function createRivalsDemo(documentRef = globalThis.document) {
+  const demo = demoElement('turn-demo-rivals', documentRef);
+  demo.innerHTML = `
+    <span class="turn-demo-chip">POSITION<strong>2/5</strong></span>
+    <span class="turn-demo-chip">BEST<strong>0:39.874</strong></span>`;
+  return demo;
+}
+
+// DRIFT ATTACK ('drift') or FLOW ('flow'): the race's scorekeeper, with its callout.
+export function createScoreDemo(kind, documentRef = globalThis.document) {
+  const demo = demoElement('turn-demo-score', documentRef);
+  demo.dataset.demo = kind;
+  const drift = kind === 'drift';
+  demo.innerHTML = drift ? `
+    <div class="turn-demo-paper">
+      <div class="is-heading"><span>DRIFT</span><span>COMBO</span></div>
+      <div class="is-values"><strong></strong><b>×2</b></div>
+      <div class="is-record is-lap"><span>LAP:</span><b class="turn-demo-swap"><i>1,240</i><i>2,100</i></b></div>
+      <div class="is-record"><span>LAST:</span><b>1,905</b></div>
+      <div class="is-record"><span>BEST:</span><b>2,480</b></div>
+    </div>
+    <div class="turn-demo-callout"><strong>✓ BANKED ×2</strong><b>+860</b></div>` : `
+    <div class="turn-demo-paper">
+      <div class="is-heading"><span>FLOW</span><span>COMBO</span></div>
+      <div class="is-values"><strong></strong><b class="turn-demo-swap"><i>×1</i><i>×2</i><i>×3</i></b></div>
+      <div class="is-record"><span>LAP:</span><b>3,410</b></div>
+      <div class="is-record"><span>LAST:</span><b>2,960</b></div>
+      <div class="is-record"><span>BEST:</span><b>4,125</b></div>
+    </div>
+    <div class="turn-demo-callout"><strong class="turn-demo-swap"><i>FLOW ×2</i><i>FLOW ×3</i></strong></div>`;
+  return demo;
+}
+
+// STEER with on-screen steering: the race's steering control, dragged left and right.
+export function createManualSteerDemo(documentRef = globalThis.document) {
+  const demo = demoElement('', documentRef);
+  demo.innerHTML = '<div class="turn-demo-manual-steer"><span>←</span><span>→</span><i></i></div>';
   return demo;
 }

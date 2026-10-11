@@ -10,14 +10,15 @@ const target = process.env.TURN_SUPPORT_FEEDBACK_URL || 'http://127.0.0.1:8000/'
 const browser = await chromium.launch({ headless: true });
 
 async function openTurn({
-  played = false, launch = false, steeringHelp = false, driftAttack = false, rewards = [], admin = false, introductions = false
+  played = false, launch = false, steeringHelp = false, driftAttack = false, rewards = [], admin = false, introductions = false,
+  howToPlayRead = []
 } = {}) {
   const context = await browser.newContext({ viewport: { width: 844, height: 390 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.addInitScript(({ played, launch, steeringHelp, driftAttack, rewards, admin, introductions, storageVersion }) => {
+  await page.addInitScript(({ played, launch, steeringHelp, driftAttack, rewards, admin, introductions, howToPlayRead, storageVersion }) => {
     if (globalThis.sessionStorage.getItem('turn-tutorial-smoke-seeded')) return;
     globalThis.sessionStorage.setItem('turn-tutorial-smoke-seeded', '1');
     localStorage.setItem('turn-low-graphics-v1', '1');
@@ -33,10 +34,11 @@ async function openTurn({
       localStorage.setItem('turn-achievements-v1', JSON.stringify({
         version: storageVersion,
         unlocked: { 'first-turn': { unlockedAt: Date.now() } },
-        ...(unlockedRewards.length ? { rewards: { unlocked: unlockedRewards } } : {})
+        ...(unlockedRewards.length ? { rewards: { unlocked: unlockedRewards } } : {}),
+        ...(howToPlayRead.length ? { progress: { howToPlayDisclosures: howToPlayRead } } : {})
       }));
     }
-  }, { played, launch, steeringHelp, driftAttack, rewards, admin, introductions, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
+  }, { played, launch, steeringHelp, driftAttack, rewards, admin, introductions, howToPlayRead, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
   await page.addInitScript(() => {
     Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
   });
@@ -436,8 +438,12 @@ try {
     assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /That is a COMBO/);
     // LOCK banks after the drift ends, when its bubble is tucked away: it slides out to pulse.
     await flow({ type: 'technique', technique: 'lock', multiplier: 2 });
-    assert.equal(await page.locator('.drive-lock-bubble').evaluate((element) => !element.closest('.is-drift-ready')
-      && element.classList.contains('is-flow-pulse') && globalThis.getComputedStyle(element).opacity === '1'), true, 'LOCK shows for its pulse');
+    // The bubble fades in over the race's 80 ms (drive-pad.css): wait for it, within the pulse.
+    await page.waitForFunction(() => {
+      const lock = document.querySelector('.drive-lock-bubble');
+      return !lock.closest('.is-drift-ready') && lock.classList.contains('is-flow-pulse')
+        && globalThis.getComputedStyle(lock).opacity === '1';
+    }, null, { timeout: 500 }).catch(() => assert.fail('LOCK shows for its pulse'));
     // Forced colours drop box-shadow: the pulse is an outline there.
     await page.emulateMedia({ forcedColors: 'active' });
     await flow({ type: 'technique', technique: 'boost', multiplier: 2 });
@@ -652,40 +658,81 @@ try {
     assert.equal(current.entry, true, 'They can still play it from HOW TO PLAY');
   });
 
-  // HOW TO PLAY demos (#748): the drive pad and BOOST bar acted out in three cards.
-  await run('HOW TO PLAY demos', { played: true }, async (page) => {
+  // HOW TO PLAY (#748): QUICK REFERENCE for every player, each card a real control acted
+  // out; SHIFT, DRIFT ATTACK and FLOW named with where they unlock, taught once unlocked.
+  const openHowToPlay = async (page) => {
     await page.evaluate(() => document.querySelector('.m8-how-button').click());
     await page.waitForFunction(() => document.querySelector('.m8-how-dialog')?.open);
-    const demos = () => page.evaluate(() => [...document.querySelectorAll('.m8-how-dialog .turn-demo')].map((demo) => ({
+  };
+  const shownDemos = (page) => page.evaluate(() => [...document.querySelectorAll('.m8-how-dialog .turn-demo')]
+    .filter((demo) => !demo.closest('[hidden]'))
+    .map((demo) => ({
       card: demo.closest('details').dataset.howToPlayDisclosure,
       hidden: demo.getAttribute('aria-hidden'),
       moving: demo.getAnimations({ subtree: true }).length
     })));
-    const openCard = (id, open) => page.evaluate(({ id, open }) => {
-      document.querySelector(`.m8-how-dialog details[data-how-to-play-disclosure="${id}"]`).open = open;
-    }, { id, open });
-    assert.deepEqual(await demos(), [
+  const openCard = (page, id, open) => page.evaluate(({ id, open }) => {
+    document.querySelector(`.m8-how-dialog details[data-how-to-play-disclosure="${id}"]`).open = open;
+  }, { id, open });
+
+  await run('HOW TO PLAY demos', { played: true }, async (page) => {
+    await openHowToPlay(page);
+    assert.deepEqual(await shownDemos(page), [
+      { card: 'turn-device-to-steer', hidden: 'true', moving: 0 },
       { card: 'drive-with-one-thumb', hidden: 'true', moving: 0 },
       { card: 'build-and-use-overcharge', hidden: 'true', moving: 0 },
-      { card: 'shift', hidden: 'true', moving: 0 }
-    ], 'Pictures for sighted players, still while their cards are closed');
-    const raceControls = '.drive-stack, .drive-pad, .drive-zone, .drive-gas-zone, .drive-brake-zone, .drive-lock-bubble, .drive-shift-bubble, .drive-reverse-bubble, .boost-hud';
+      { card: 'choose-track-and-car', hidden: 'true', moving: 0 }
+    ], 'QUICK REFERENCE: pictures for sighted players, still while their cards are closed');
+    assert.deepEqual(await page.locator('.m8-how-dialog [data-steer-guide]').evaluateAll((parts) => parts.map((part) => [part.dataset.steerGuide, part.hidden])),
+      [['motion', true], ['manual', false]], 'STEER teaches the on-screen steering this player has chosen');
+    assert.deepEqual(await page.locator('.m8-how-dialog [data-guide-locked]:not([hidden]) [role="heading"]').allTextContents(),
+      ['DRIFT ATTACK', 'SHIFT', 'FLOW'], 'Named, with where they unlock, not yet taught');
+    assert.equal(await page.locator('.m8-how-dialog [data-guide-topic="shift"]').evaluate((card) => card.hidden), true);
+    const raceControls = '.drive-stack, .drive-pad, .drive-zone, .drive-gas-zone, .drive-brake-zone, .drive-lock-bubble, .drive-shift-bubble, .drive-reverse-bubble, .boost-hud, .manual-steer, .score-feedback, .race-position-hud';
     assert.equal(await page.locator(`.m8-how-dialog :is(${raceControls})`).count(), 0,
-      'Nothing that looks for the real drive pad or BOOST bar finds a demo');
+      'Nothing that looks for the real controls finds a demo');
 
-    await openCard('drive-with-one-thumb', true);
-    assert.equal((await demos())[0].moving, 0, 'Reduced Motion: a still frame');
+    await openCard(page, 'drive-with-one-thumb', true);
+    assert.equal((await shownDemos(page))[1].moving, 0, 'Reduced Motion: a still frame');
     const lock = page.locator('.m8-how-dialog [data-how-to-play-disclosure="drive-with-one-thumb"] .turn-demo-bubble.is-lock');
     assert.equal(await lock.evaluate((bubble) => globalThis.getComputedStyle(bubble).opacity), '1',
       'The still frame shows DRIFT out into LOCK');
 
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    let moving = await demos();
-    assert.ok(moving[0].moving > 0, 'An open card acts out its controls');
+    let moving = await shownDemos(page);
+    assert.ok(moving[1].moving > 0, 'An open card acts out its controls');
     assert.equal(moving[2].moving, 0, 'A closed card does not');
-    await openCard('drive-with-one-thumb', false);
-    moving = await demos();
-    assert.equal(moving[0].moving, 0, 'Closing the card stops it');
+    await openCard(page, 'drive-with-one-thumb', false);
+    moving = await shownDemos(page);
+    assert.equal(moving[1].moving, 0, 'Closing the card stops it');
+  });
+
+  await run('HOW TO PLAY once the Trophy Road unlocks them', { played: true, rewards: ['drift-attack', 'shift', 'flow'] }, async (page) => {
+    await openHowToPlay(page);
+    assert.deepEqual((await shownDemos(page)).map(({ card }) => card), [
+      'turn-device-to-steer', 'drive-with-one-thumb', 'build-and-use-overcharge', 'choose-track-and-car',
+      'drift-points', 'shift', 'flow-points'
+    ], 'DRIFT ATTACK, SHIFT and FLOW are taught, each with its control');
+    assert.equal(await page.locator('.m8-how-dialog [data-guide-locked]:not([hidden])').count(), 0);
+    assert.equal(await page.locator('.m8-how-dialog [data-guide-topic="build-and-use-overcharge"] [role="heading"]').textContent(),
+      'BOOST AND OVERCHARGE');
+
+    // LEARN TO PLAY: the five QUICK REFERENCE parts.
+    for (const id of ['turn-device-to-steer', 'drive-with-one-thumb', 'build-and-use-overcharge', 'choose-track-and-car', 'drive-by-ear-sounds']) {
+      assert.equal(await page.evaluate(() => globalThis.__turnAchievements.store.isUnlocked('learn-to-play')), false);
+      await openCard(page, id, true);
+      await page.waitForFunction((part) => globalThis.__turnAchievements.store.state.progress.howToPlayDisclosures.includes(part), id);
+    }
+    await page.waitForFunction(() => globalThis.__turnAchievements.store.isUnlocked('learn-to-play'));
+  });
+
+  await run('LEARN TO PLAY for a player who read the old HOW TO PLAY', {
+    played: true,
+    howToPlayRead: ['choose-track-and-car', 'turn-device-to-steer', 'drive-with-one-thumb', 'build-and-use-overcharge',
+      'catch-and-use-overcharge', 'shift', 'drift-points', 'flow-points', 'drive-by-ear-sounds']
+  }, async (page) => {
+    assert.equal(await page.evaluate(() => globalThis.__turnAchievements.store.isUnlocked('learn-to-play')), true,
+      'Parts read before still count, and cover the new five');
   });
 
   await run('automated runs', {}, async (page) => {

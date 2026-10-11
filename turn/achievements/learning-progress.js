@@ -12,15 +12,15 @@ export const DRIVE_BY_EAR_PART_IDS = Object.freeze([
   'dbe-training-5'
 ]);
 
+// LEARN TO PLAY: the five parts of HOW TO PLAY's QUICK REFERENCE (#748), which every
+// player can open: STEER, DRIVE PAD, BOOST, RIVALS and the Drive By Ear sounds. The ids
+// are the cards' old ones, so parts a player opened before still count; SHIFT, DRIFT
+// ATTACK and FLOW unlock later and are no longer part of it.
 export const HOW_TO_PLAY_DISCLOSURE_IDS = Object.freeze([
-  'choose-track-and-car',
   'turn-device-to-steer',
   'drive-with-one-thumb',
   'build-and-use-overcharge',
-  'catch-and-use-overcharge',
-  'shift',
-  'drift-points',
-  'flow-points',
+  'choose-track-and-car',
   'drive-by-ear-sounds'
 ]);
 

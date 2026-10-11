@@ -116,6 +116,7 @@
 
 .m8-guide-card-panel {
   padding: 10.5px 12px 12px;
+  font-size: max(var(--turn-text-floor, 11px), 0.8125rem);
   background: rgb(255 255 255 / 0.5);
   overflow-anchor: none;
 }
@@ -128,6 +129,69 @@
 .m8-guide-card-panel > p {
   margin: 0;
   line-height: 1.42;
+}
+
+.m8-guide-card-panel p + p {
+  margin-top: 6px;
+}
+
+/* #748: HOW TO PLAY's two parts, QUICK REFERENCE and ON THE TROPHY ROAD, each named
+   like the dialog's own QUICK GUIDE label. */
+.m8-guide-grid .m8-guide-section-title {
+  grid-column: 1 / -1;
+  margin: 6px 0 -3px;
+  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
+  font-weight: 950;
+  letter-spacing: 0.14em;
+}
+
+.m8-guide-note {
+  color: var(--turn-text-muted);
+}
+
+.m8-guide-wide h4 {
+  margin: 0 0 4.5px;
+  font-size: max(var(--turn-text-floor, 11px), 0.84rem);
+}
+
+/* Not yet unlocked: named, with where it unlocks, on the page's own surface without a
+   card's raised edge. */
+.m8-guide-grid section.m8-guide-locked {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  padding: 9.75px 12px;
+  border: 3px dashed var(--turn-outline-muted);
+  border-radius: 15px;
+  background: var(--turn-surface-page);
+  box-shadow: none;
+}
+
+.m8-guide-grid .m8-guide-locked > .m8-guide-card-number {
+  --turn-pill: var(--turn-difficulty-locked);
+  background: var(--turn-pill);
+}
+
+.m8-guide-locked > div {
+  min-width: 0;
+  font-size: max(var(--turn-text-floor, 11px), 0.8125rem);
+}
+
+.m8-guide-locked .m8-guide-card-title {
+  display: block;
+  margin: 6px 0 3px;
+}
+
+.m8-guide-locked p {
+  margin: 0;
+  line-height: 1.38;
+}
+
+.m8-guide-grid .m8-guide-locked .m8-guide-locked-at {
+  margin-top: 6px;
+  color: var(--turn-text-muted);
+  font-size: var(--turn-text-floor, 11px);
+  font-weight: 900;
+  letter-spacing: 0.06em;
 }
 
 .m8-dbe-guide,
@@ -230,7 +294,7 @@
   grid-template-columns: 4.05rem minmax(0, 1fr);
   gap: 6px;
   align-items: start;
-  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
+  font-size: inherit;
   line-height: 1.35;
 }
 
@@ -248,7 +312,7 @@
 }
 
 .m8-flow-combos li {
-  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
+  font-size: inherit;
   line-height: 1.35;
 }
 
@@ -261,7 +325,7 @@
   margin: 8.25px 0 0;
   padding-top: 7.5px;
   border-top: 2px solid var(--turn-outline);
-  font-size: max(var(--turn-text-floor, 11px), 0.75rem);
+  font-size: inherit;
   line-height: 1.38;
 }
 
@@ -305,7 +369,7 @@
   scroll-margin-block-end: max(24px, env(safe-area-inset-bottom));
 }
 
-.m8-dbe-guide-content h4 {
+.m8-dbe-guide-content h5 {
   margin: 0 0 4.5px;
   font-size: max(var(--turn-text-floor, 11px), 0.75rem);
   line-height: 1.15;
