@@ -26,6 +26,11 @@ const START_LOG_KEY = '__turnStartCentring';
 const START_LOG_LENGTH = 6;
 const RECALIBRATE_AFTER_START_MS = 30000;
 
+// How many times each race's steering has been centred, so a start that waits out a
+// pause can tell whether its resume already centred it.
+const centrings = new WeakMap();
+const centringsOf = (state) => centrings.get(state) || 0;
+
 // Centres on the phone as held now, or on a given pose (the middle of the last few).
 export function centreTiltSteering(state, { horizon = false, pose = null } = {}) {
   const roll = pose ? pose.roll : state.targetRoll;
@@ -37,6 +42,7 @@ export function centreTiltSteering(state, { horizon = false, pose = null } = {})
   state.pitch = state.targetPitch;
   state.steering = 0;
   state.steeringEngaged = false;
+  centrings.set(state, centringsOf(state) + 1);
 }
 
 const BLINK_CLASS = 'is-centred-blink';
@@ -94,13 +100,17 @@ export function describeStartCentring(entry) {
 // Runs the race-start sequence and returns a cancel function. Never holds the race:
 // the car can drive from the first frame. Ends when the phone keeps still, when the car
 // moves, or after 2.4 s, each time centred on the middle of the last 300 ms.
+// Nothing runs while the race is paused (#1174). RESUME starts the sequence again, on the
+// pose the player holds then, unless the resume centred the steering itself (after a
+// rotation, its 3-2-1 ends in RECALIBRATE).
 export function startTiltCentring({ state, showMessage, setTimer, clearTimer = () => {}, environment = globalThis }) {
   let cancelled = false;
   let timer = 0;
   let elapsed = START_PROVISIONAL_MS;
   let provisional = null;
-  const recent = [];
-  const live = () => !cancelled && state.running && state.sensorMode && !environment.__turnRacePause?.paused;
+  let recent = [];
+  const ended = () => cancelled || !state.running || !state.sensorMode;
+  const paused = () => environment.__turnRacePause?.paused === true;
   const still = () => state.mode !== 'racing' && Math.abs(Number(state.speed) || 0) < STILL_SPEED;
   const middle = () => ({
     roll: recent.reduce((sum, pose) => sum + pose.roll, 0) / recent.length,
@@ -113,19 +123,30 @@ export function startTiltCentring({ state, showMessage, setTimer, clearTimer = (
     state.horizonRollReference = pose.roll;
     state.neutralPitch = pose.pitch;
   };
+  const holdTimer = () => {
+    if (timer) clearTimer(timer);
+    timer = 0;
+  };
+
+  function stop() {
+    cancelled = true;
+    holdTimer();
+    environment.removeEventListener?.('turn:ui-state-change', onRaceChange);
+  }
 
   const finish = (outcome) => {
     const pose = middle();
     if (outcome === 'car moved') follow(pose);
     else centreTiltSteering(state, { horizon: true, pose });
-    cancelled = true;
+    stop();
     logStart(environment, { outcome, ms: elapsed, roll: pose.roll, fromProvisional: pose.roll - provisional.roll, spread: spread() });
     announceSteeringCentred({ showMessage, environment });
   };
 
   const sample = () => {
     timer = 0;
-    if (!live()) return;
+    if (ended()) return stop();
+    if (paused()) return;
     elapsed += START_SAMPLE_MS;
     recent.push(poseOf(state));
     if (recent.length > STEADY_WINDOW) recent.shift();
@@ -136,19 +157,39 @@ export function startTiltCentring({ state, showMessage, setTimer, clearTimer = (
     timer = setTimer(sample, START_SAMPLE_MS);
   };
 
-  showMessage?.(HOLD_PHONE_MESSAGE, START_GIVE_UP_MS + 400);
-  timer = setTimer(() => {
-    timer = 0;
-    if (!live()) return;
-    provisional = poseOf(state);
-    recent.push(provisional);
-    centreTiltSteering(state, { horizon: true });
-    timer = setTimer(sample, START_SAMPLE_MS);
-  }, START_PROVISIONAL_MS);
-
-  return () => {
-    cancelled = true;
-    if (timer) clearTimer(timer);
-    timer = 0;
+  const begin = ({ resumed = false } = {}) => {
+    elapsed = START_PROVISIONAL_MS;
+    provisional = null;
+    recent = [];
+    const centredBefore = centringsOf(state);
+    const ask = () => showMessage?.(HOLD_PHONE_MESSAGE, START_GIVE_UP_MS + 400);
+    if (!resumed) ask();
+    timer = setTimer(() => {
+      timer = 0;
+      if (ended()) return stop();
+      if (paused()) return;
+      if (resumed) {
+        if (centringsOf(state) !== centredBefore) return stop();
+        ask();
+      }
+      provisional = poseOf(state);
+      recent.push(provisional);
+      centreTiltSteering(state, { horizon: true });
+      timer = setTimer(sample, START_SAMPLE_MS);
+    }, START_PROVISIONAL_MS);
   };
+
+  function onRaceChange(event) {
+    const reason = event?.detail?.reason;
+    if (reason === 'race-paused') holdTimer();
+    else if (reason === 'race-pause-ended') stop();
+    else if (reason === 'race-resumed' && !ended()) {
+      holdTimer();
+      begin({ resumed: true });
+    }
+  }
+
+  environment.addEventListener?.('turn:ui-state-change', onRaceChange);
+  begin();
+  return stop;
 }
