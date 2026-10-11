@@ -408,6 +408,12 @@ try {
       'After CLOSE the reward banner shows, with HOW TO PLAY, without taking focus');
     await visitPage.locator('.turn-trophy-reward-toast').click();
     await visitPage.waitForFunction(() => globalThis.__turnAchievements.dialog.open);
+    // On that reward, with its details showing (#1173).
+    await visitPage.waitForFunction(() => !document.querySelector('[data-trophy-road-detail-layer]')?.hidden);
+    assert.equal(await visitPage.evaluate(() => document.querySelector('#turnTrophyRoadDetailTitle')?.textContent), 'DRIFT ATTACK',
+      'The reward banner opens ACHIEVEMENTS on the reward it showed, with its details open');
+    assert.equal(await visitPage.evaluate(() => document.activeElement?.matches('[data-trophy-road-detail-close]')), true,
+      'Focus goes into the details, so a screen reader reads them');
     await opened.context.close();
   }
 

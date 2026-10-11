@@ -703,10 +703,12 @@ export function createAchievementView({ store, session, utilityGroup }) {
 
   // With a trackId, ACHIEVEMENTS opens on that track's achievements alone (the filters
   // read the scope when they reset for the opening), and on the one asked for, if any.
-  function open(trigger, { trackId = '', achievementId = '' } = {}) {
+  // With a rewardId, it opens on that Trophy Road reward with its details showing.
+  function open(trigger, { trackId = '', achievementId = '', rewardId = '' } = {}) {
     returnFocus = trigger;
     closeTrophyRoadDetail({ restoreFocus: false });
-    selectedRewardId = initialRewardSelection(store);
+    const reward = rewardId ? getTrophyRoadReward(rewardId) : null;
+    selectedRewardId = reward ? reward.id : initialRewardSelection(store);
     if (trackId && TRACK_NAMES[trackId]) dialog.dataset.achievementTrackScope = trackId;
     else delete dialog.dataset.achievementTrackScope;
     render({ force: true });
@@ -715,6 +717,15 @@ export function createAchievementView({ store, session, utilityGroup }) {
     closeButton.focus();
     store.markAllSeen();
     syncTriggers();
+    if (reward) {
+      // Laid out first: the details are placed beside the reward's marker.
+      requestAnimationFrame(() => {
+        if (!dialogIsOpen()) return;
+        selectedRewardMarker()?.scrollIntoView({ block: 'center' });
+        openTrophyRoadDetail();
+      });
+      return;
+    }
     const card = achievementId ? list.querySelector(`[data-achievement-id="${CSS.escape(achievementId)}"]`) : null;
     if (card) {
       // After the filters have applied the scope, so the card is laid out.
@@ -878,9 +889,11 @@ export function createAchievementView({ store, session, utilityGroup }) {
     return interrupted;
   }
 
+  // On the reward the toast showed: the first of its batch.
   function openRewardToast() {
+    const rewardId = activeRewardBatch[0]?.id || '';
     hideRewardToast();
-    open(raceTrigger.hidden === false ? raceTrigger : homeTrigger);
+    open(raceTrigger.hidden === false ? raceTrigger : homeTrigger, { rewardId });
   }
 
   render();
