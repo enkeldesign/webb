@@ -79,12 +79,22 @@ export function startFlowPulses({ events = globalThis, documentRef = globalThis.
     timers.set(element, globalThis.setTimeout(() => clear(element), PULSE_MS + 80));
   };
 
+  const clearAll = () => {
+    for (const element of [...timers.keys()]) clear(element);
+  };
   const onFlow = (event) => {
     if (event.detail?.type === 'technique') pulse(event.detail.technique);
   };
+  // Nothing of a race runs on through a pause, a restart or leaving (race/race-pause.js).
+  const onRaceState = (event) => {
+    const reason = event.detail?.reason;
+    if (reason === 'race-paused' || reason === 'race-reset' || event.detail?.running === false) clearAll();
+  };
   events.addEventListener?.('turn:flow-score-event', onFlow);
+  events.addEventListener?.('turn:ui-state-change', onRaceState);
   return () => {
     events.removeEventListener?.('turn:flow-score-event', onFlow);
-    for (const element of [...timers.keys()]) clear(element);
+    events.removeEventListener?.('turn:ui-state-change', onRaceState);
+    clearAll();
   };
 }

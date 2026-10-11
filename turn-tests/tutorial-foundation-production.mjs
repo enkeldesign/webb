@@ -901,6 +901,10 @@ test('FLOW pulses: each technique FLOW scores pulses the control that earned it 
   assert.equal(pulsing('.drive-gas-zone'), true, 'A caught OVERCHARGE pulses GAS');
   send({ type: 'chain-expired' });
   assert.equal(made.size, 2, 'Only scored techniques pulse');
+  // A pause clears what is showing at once (turn/AGENTS.md: nothing runs on through it).
+  bus.dispatchEvent(new globalThis.CustomEvent('turn:ui-state-change', { detail: { reason: 'race-paused', running: true, paused: true } }));
+  assert.equal(pulsing('.drive-lock-bubble') || pulsing('.drive-gas-zone'), false, 'A pause clears the pulses');
+  send({ type: 'technique', technique: 'lock' });
   stop();
   assert.equal(pulsing('.drive-lock-bubble') || pulsing('.drive-gas-zone'), false, 'Stopping clears what is showing');
   send({ type: 'technique', technique: 'boost' });
