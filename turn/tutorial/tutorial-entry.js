@@ -369,10 +369,24 @@ export function installTutorialsMenu({
     if (typeof dialog.close === 'function' && dialog.open) dialog.close();
     else dialog.removeAttribute('open');
   };
+  const show = (dialog) => {
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+  };
+  // One modal at a time (design-dialogs.html): the sheet stands in for HOW TO PLAY, as
+  // HISTORY does for ABOUT, and HOW TO PLAY comes back, on TUTORIALS, when it closes.
+  // HOW TO PLAY's own trigger is kept for when it finally closes.
+  let howReturnFocus = null;
+  let reopenHow = false;
   openButton.addEventListener('click', () => {
     render();
-    if (typeof sheet.showModal === 'function') sheet.showModal();
-    else sheet.setAttribute('open', '');
+    reopenHow = howDialog.open || howDialog.hasAttribute('open');
+    if (reopenHow) {
+      howReturnFocus = howDialog.__turnReturnFocus || null;
+      howDialog.__turnReturnFocus = null;
+      close(howDialog);
+    }
+    show(sheet);
     sheet.querySelector('h2').focus();
   });
   sheet.querySelector('[data-tutorials-close]').addEventListener('click', () => close(sheet));
@@ -380,17 +394,29 @@ export function installTutorialsMenu({
     if (event.target === sheet) close(sheet);
   });
   sheet.addEventListener('close', () => {
-    if (howDialog.open) openButton.focus();
+    if (!reopenHow) return;
+    reopenHow = false;
+    show(howDialog);
+    howDialog.__turnReturnFocus = howReturnFocus;
+    // After TURN's heading-first focus (ui/startup-screen-reader-handoff-r529.js), which
+    // runs in microtasks once HOW TO PLAY opens: close returns focus to the trigger.
+    globalThis.setTimeout(() => {
+      if (howDialog.open) openButton.focus();
+    }, 0);
   });
   list.addEventListener('click', (event) => {
     const button = event.target.closest('[data-tutorial-pick]');
     if (!button) return;
     const id = button.dataset.tutorialPick;
+    // A tutorial starts instead: focus goes where closing HOW TO PLAY would send it.
+    reopenHow = false;
     close(sheet);
-    close(howDialog);
+    const returnTo = howReturnFocus;
+    howReturnFocus = null;
+    returnTo?.focus?.();
     if (id === 'drive-by-ear') {
       silenceMenuMusic();
-      void driveByEar()?.open?.(button);
+      void driveByEar()?.open?.(returnTo || openButton);
     } else if (id === TURN_TUTORIAL.id) {
       void startTutorial();
     } else {

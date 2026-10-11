@@ -352,6 +352,8 @@ try {
     await page.locator('.m8-how-dialog [data-tutorials-open]').click();
     await page.waitForFunction(() => document.querySelector('.m8-tutorials-sheet')?.open);
     assert.equal(await page.evaluate(() => document.activeElement?.id), 'turnTutorialsTitle', 'Focus starts on the title');
+    assert.equal(await page.evaluate(() => document.querySelectorAll('dialog[open]').length), 1,
+      'One modal at a time: the sheet stands in for HOW TO PLAY');
     const listed = await page.locator('.m8-tutorials-sheet [data-tutorial-pick]').evaluateAll((buttons) => buttons.map((b) => b.dataset.tutorialPick));
     assert.deepEqual(listed.filter((id) => id !== 'drive-by-ear'), ['turn-tutorial', 'drift-attack'],
       'In the order a player meets them; FLOW is not listed before it unlocks');
@@ -437,15 +439,23 @@ try {
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.progress.status('flow')), 'completed');
     await page.evaluate(() => globalThis.__turnRuntime.openHome());
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.flowSession.active), false);
+    // The lap was finished, so Home first shows THIS VISIT (race/visit-summary.js).
+    await page.locator('.turn-visit-summary-dialog[open] .turn-visit-summary-close').click();
+    await page.waitForFunction(() => !document.querySelector('dialog[open]'));
     await page.evaluate(() => document.querySelector('.m8-how-button').click());
     await page.waitForFunction(() => document.querySelector('.m8-how-dialog')?.open);
     await page.locator('.m8-how-dialog [data-tutorials-open]').click();
     await page.waitForFunction(() => document.querySelector('.m8-tutorials-sheet')?.open);
     assert.equal(await page.locator('.m8-tutorials-sheet [data-tutorial-pick="flow"]').isVisible(), true, 'TUTORIALS offers it again');
     assert.match(await page.locator('#turnTutorialsCopy-flow').textContent(), /DONE$/, 'Marked done');
-    // Closing the sheet returns to HOW TO PLAY, on TUTORIALS.
+    // Closing the sheet brings HOW TO PLAY back, on TUTORIALS, still returning to its own
+    // trigger when it closes.
     await page.locator('.m8-tutorials-sheet [data-tutorials-close]').click();
-    assert.equal(await page.evaluate(() => document.activeElement?.matches('[data-tutorials-open]')), true);
+    await page.waitForFunction(() => document.querySelector('.m8-how-dialog')?.open
+      && !document.querySelector('.m8-tutorials-sheet')?.open
+      && document.activeElement?.matches('[data-tutorials-open]'));
+    assert.equal(await page.evaluate(() => document.querySelector('.m8-how-dialog').__turnReturnFocus
+      === document.querySelector('.m8-how-button')), true);
   });
 
   // Unlock introductions (#1149): explained on Home when DRIFT ATTACK, SHIFT or FLOW unlocks.
