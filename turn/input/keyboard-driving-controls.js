@@ -1,7 +1,7 @@
 import {
   createKeyboardDriveOwnership,
   installKeyboardDriveOwnershipLossHandlers
-} from './keyboard-drive-ownership.js?build=20261011-r435';
+} from './keyboard-drive-ownership.js?build=20261011-r436';
 
 const STEER_LEFT = 'steer-left';
 const STEER_RIGHT = 'steer-right';

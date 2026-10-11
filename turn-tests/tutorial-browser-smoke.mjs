@@ -135,6 +135,13 @@ try {
     assert.equal(await page.locator('[data-tutorial-drift-attack]').isVisible(), false,
       'DRIFT ATTACK TUTORIAL waits for DRIFT ATTACK');
     assert.equal(await page.locator('[data-tutorial-flow]').isVisible(), false, 'FLOW TUTORIAL waits for FLOW');
+    // #1170: before the buttons, the card says DRIVE BY EAR can come first, when it can.
+    assert.equal(await page.evaluate(() => {
+      const note = document.querySelector('.m8-tutorial-dialog [data-tutorial-dbe-note]');
+      const button = document.querySelector('.m8-tutorial-dialog [data-tutorial-dbe]');
+      return note.hidden === button.hidden && /learn them first/.test(note.textContent)
+        && document.querySelector('#turnTutorialCopy').contains(note);
+    }), true, 'Part of the card copy, heard before START TUTORIAL');
     // TURN dialogs focus their heading first, so a screen reader starts at the title.
     assert.equal(await page.evaluate(() => Boolean(document.activeElement?.closest('.m8-tutorial-dialog'))), true,
       'Focus moves into the TURN TUTORIAL card');
@@ -336,10 +343,20 @@ try {
 
   // DRIFT ATTACK TUTORIAL (#1150): in HOW TO PLAY once DRIFT ATTACK is unlocked.
   await run('DRIFT ATTACK TUTORIAL', { driftAttack: true }, async (page) => {
-    const entry = page.locator('[data-tutorial-drift-attack]');
     await page.evaluate(() => document.querySelector('.m8-how-button').click());
     await page.waitForFunction(() => document.querySelector('.m8-how-dialog')?.open);
-    assert.equal(await entry.isVisible(), true, 'HOW TO PLAY offers DRIFT ATTACK TUTORIAL once DRIFT ATTACK is unlocked');
+    // #1169: two or more tutorials sit behind one TUTORIALS button.
+    assert.equal(await page.locator('.m8-how-dialog [data-tutorials-open]').isVisible(), true, 'One TUTORIALS button');
+    assert.equal(await page.locator('.m8-how-dialog [data-tutorial-replay]').isVisible(), false, 'Not a stack of tutorial buttons');
+    assert.equal(await page.locator('.m8-how-dialog [data-tutorial-drift-attack]').isVisible(), false);
+    await page.locator('.m8-how-dialog [data-tutorials-open]').click();
+    await page.waitForFunction(() => document.querySelector('.m8-tutorials-sheet')?.open);
+    assert.equal(await page.evaluate(() => document.activeElement?.id), 'turnTutorialsTitle', 'Focus starts on the title');
+    const listed = await page.locator('.m8-tutorials-sheet [data-tutorial-pick]').evaluateAll((buttons) => buttons.map((b) => b.dataset.tutorialPick));
+    assert.deepEqual(listed.filter((id) => id !== 'drive-by-ear'), ['turn-tutorial', 'drift-attack'],
+      'In the order a player meets them; FLOW is not listed before it unlocks');
+    const entry = page.locator('.m8-tutorials-sheet [data-tutorial-pick="drift-attack"]');
+    assert.equal(await entry.isVisible(), true, 'TUTORIALS offers DRIFT ATTACK TUTORIAL once DRIFT ATTACK is unlocked');
     await entry.click();
     await page.waitForFunction(() => globalThis.__turnRuntime.state.running && !document.querySelector('dialog[open]'));
     let current = await inspect(page);
@@ -422,7 +439,13 @@ try {
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.tutorial.flowSession.active), false);
     await page.evaluate(() => document.querySelector('.m8-how-button').click());
     await page.waitForFunction(() => document.querySelector('.m8-how-dialog')?.open);
-    assert.equal(await page.locator('[data-tutorial-flow]').isVisible(), true, 'HOW TO PLAY offers it again');
+    await page.locator('.m8-how-dialog [data-tutorials-open]').click();
+    await page.waitForFunction(() => document.querySelector('.m8-tutorials-sheet')?.open);
+    assert.equal(await page.locator('.m8-tutorials-sheet [data-tutorial-pick="flow"]').isVisible(), true, 'TUTORIALS offers it again');
+    assert.match(await page.locator('#turnTutorialsCopy-flow').textContent(), /DONE$/, 'Marked done');
+    // Closing the sheet returns to HOW TO PLAY, on TUTORIALS.
+    await page.locator('.m8-tutorials-sheet [data-tutorials-close]').click();
+    assert.equal(await page.evaluate(() => document.activeElement?.matches('[data-tutorials-open]')), true);
   });
 
   // Unlock introductions (#1149): explained on Home when DRIFT ATTACK, SHIFT or FLOW unlocks.

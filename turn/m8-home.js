@@ -9,7 +9,7 @@ import { installRoadbook } from '/turn/roadbook/roadbook.js';
 import { createRewardPreviewSession } from './race/reward-preview.js';
 import { DRIFT_ATTACK_TUTORIAL, FLOW_TUTORIAL, TURN_TUTORIAL, createTutorialProgress } from './tutorial/tutorial-progress.js';
 import { createTutorialSession } from './tutorial/tutorial-session.js';
-import { installDriftAttackEntry, installFlowTutorialEntry, installTutorialEntry } from './tutorial/tutorial-entry.js';
+import { installDriftAttackEntry, installFlowTutorialEntry, installTutorialEntry, installTutorialsMenu } from './tutorial/tutorial-entry.js';
 import { isFeatureUnlocked } from './progression/trophy-road.js';
 import { installUnlockIntroductions } from './progression/unlock-introductions.js';
 import { installShiftRaceCallout } from './ui/shift-race-callout.js';
@@ -754,6 +754,13 @@ export async function installM8HomeNavigation() {
     startTutorial: () => startTutorial(FLOW_TUTORIAL.id),
     isUnlocked: () => isFeatureUnlocked('flow')
   });
+  // Two or more of them: one TUTORIALS button in HOW TO PLAY (#1169).
+  const tutorialsMenu = installTutorialsMenu({
+    howDialog,
+    progress: tutorialProgress,
+    startTutorial,
+    isUnlocked: isFeatureUnlocked
+  });
   // DRIFT ATTACK, SHIFT and FLOW are introduced on Home when they unlock (#1149).
   const unlockIntroductions = installUnlockIntroductions({
     startTutorial,
@@ -765,6 +772,7 @@ export async function installM8HomeNavigation() {
   howButton.addEventListener('click', () => {
     driftAttackEntry.sync();
     flowEntry.sync();
+    tutorialsMenu.sync();
     openDialog(howDialog, howButton);
   });
   homeSettingsButton.addEventListener('click', () => {
@@ -800,7 +808,8 @@ export async function installM8HomeNavigation() {
       flowSession,
       entry: tutorialEntry,
       driftAttackEntry,
-      flowEntry
+      flowEntry,
+      tutorialsMenu
     }),
     unlockIntroductions,
     leaveRaceForHome,
