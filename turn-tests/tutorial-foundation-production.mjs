@@ -492,12 +492,27 @@ test('each new tutorial line slows the car while it is read, once, and BOOST end
   pace.read('lesson:boost:Press BOOST.', 'Press BOOST.');
   assert.equal(pace.reading, false, 'A line already read does not slow the car again');
 
+  // A line still to be said, or being said, keeps the car slow until it has been heard.
+  let speaking = true;
+  const heard = createReadingPace({ speaking: () => speaking });
+  const heardState = { sessionSpeedCap: null, speed: 20, vehicleEffectiveMaxSpeed: 74 };
+  heard.read('lesson:drive:Hold GAS.', 'Hold GAS.');
+  for (let t = 0; t < 4; t += 0.1) heard.update({ state: heardState, dt: 0.1, maxSpeed: 88 });
+  assert.equal(heard.reading, true, 'Past its reading time, still slow while it is to be heard');
+  speaking = false;
+  heard.update({ state: heardState, dt: 0.1, maxSpeed: 88 });
+  assert.equal(heard.reading, false);
+  assert.equal(heardState.sessionSpeedCap, null);
+
   const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
   for (const path of ['../turn/tutorial/tutorial-prompt.js', '../turn/tutorial/drift-attack-coach.js', '../turn/tutorial/flow-tutorial.js']) {
     assert.match(await read(path), /prompt\.pace\(\{ state, dt, maxSpeed: runtime\.maxSpeed \}\);/, `${path} paces its lines`);
   }
   assert.match(await read('../turn/tutorial/tutorial-prompt.js'), /if \(view\.kind === 'graduated'\) reading\.end\(\);/,
     'After the line, ordinary racing is never slowed');
+  assert.match(await read('../turn/tutorial/tutorial-prompt.js'),
+    /createReadingPace\(\{ speaking: \(\) => unsaid !== '' \|\| performance\.now\(\) < saidUntil \}\)/,
+    'The prompt paces by its voice as well as its text');
 });
 
 test('READ THE ROAD is done when the pace note for the next bend plays', () => {
@@ -880,7 +895,9 @@ test('the DRIFT lesson names LOCK, which is on the drive pad from the first lap'
   const { TURN_TUTORIAL_LESSONS } = await import('../turn/tutorial/turn-tutorial-lessons.js');
   const drift = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'drift');
   assert.match(drift.prompt, /LOCK/, 'Taught where DRIFT is');
-  assert.match(drift.doneText, /refills BOOST/, 'The BOOST loop is still said, once the slide is done');
+  const boost = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'boost');
+  assert.match(boost.doneText, /refills BOOST/, 'The BOOST loop is said once BOOST has been spent, where a slide shows it');
+  assert.equal(drift.doneText, undefined, 'Not after DRIFT: BOOST starts the lap full, so no refill could be seen');
   assert.doesNotMatch(drift.keyboardPrompt, /LOCK/, 'Keyboard players are not told about a move with no key');
   const prompt = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/tutorial/tutorial-prompt.js', import.meta.url), 'utf8'));
   // The shared prompt shows a lesson's keyboardPrompt to players driving by keyboard.

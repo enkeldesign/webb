@@ -30,10 +30,13 @@ export function readingSeconds(text) {
 }
 
 // The first time each line is shown in a run, the car eases down to a reading speed
-// for readingSeconds(), on top of whatever cap the lesson sets; then that cap (or
-// none) is back. BOOST ends it: the player has chosen to go. Race time only.
-export function createReadingPace() {
+// for readingSeconds(), on top of whatever cap the lesson sets, and for as long as the
+// line is still to be said or being said (speaking): a line waiting behind the track
+// intro, or slower to hear than to read, is heard before the car speeds up. Then that
+// cap (or none) is back. BOOST ends it: the player has chosen to go. Race time only.
+export function createReadingPace({ speaking = () => false } = {}) {
   const seen = new Set();
+  let active = false;
   let left = 0;
   let cap = null;
   let applied;
@@ -42,10 +45,12 @@ export function createReadingPace() {
   function read(key, text) {
     if (seen.has(key)) return;
     seen.add(key);
+    active = true;
     left = readingSeconds(text);
   }
 
   function end() {
+    active = false;
     left = 0;
   }
 
@@ -53,14 +58,14 @@ export function createReadingPace() {
   // one this applied, so the coach's own is remembered and given back.
   function update({ state, dt, maxSpeed }) {
     if (state.sessionSpeedCap !== applied) lessonCap = state.sessionSpeedCap ?? null;
-    if (globalThis.__turnBoostActive === true) left = 0;
-    if (left <= 0) {
+    if (globalThis.__turnBoostActive === true || (left <= 0 && !speaking())) end();
+    if (!active) {
       if (applied !== undefined && state.sessionSpeedCap === applied) state.sessionSpeedCap = lessonCap;
       applied = undefined;
       cap = null;
       return;
     }
-    left -= dt;
+    left = Math.max(0, left - dt);
     const top = Number(state.vehicleEffectiveMaxSpeed) > 0 ? Number(state.vehicleEffectiveMaxSpeed) : maxSpeed;
     const target = READING_SPEED_SHARE * top;
     const from = Number.isFinite(cap) ? cap : Math.max(target, Math.max(0, Number(state.speed) || 0));
@@ -69,7 +74,7 @@ export function createReadingPace() {
     state.sessionSpeedCap = applied;
   }
 
-  return Object.freeze({ read, end, update, get reading() { return left > 0; } });
+  return Object.freeze({ read, end, update, get reading() { return active; } });
 }
 const GRADUATION_SECONDS = 4;
 const DRIVING_KEYS = new Set([...Object.keys(KEYBOARD_DRIVE_BINDINGS), ...Object.keys(QE_DRIVE_BINDINGS)]);
@@ -131,7 +136,8 @@ export function createTutorialPrompt(parent = document.body) {
   voice.setAttribute('aria-atomic', 'true');
   parent.append(element, voice);
 
-  const reading = createReadingPace();
+  // Until the newest line has been said, as the voice below estimates it.
+  const reading = createReadingPace({ speaking: () => unsaid !== '' || performance.now() < saidUntil });
 
   // The newest line not yet said; guidance overtaken before it could be said is not
   // said late. It waits with one timer at a time, and not at all while the race is

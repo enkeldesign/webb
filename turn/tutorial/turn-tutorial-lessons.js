@@ -32,7 +32,6 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     prompt: 'Hold DRIFT through the bend. Slide outward into LOCK for a stronger slide.',
     // LOCK has no key (input/qe-drive-controls.js): keyboard players are told only DRIFT.
     keyboardPrompt: 'Hold DRIFT through the bend.',
-    doneText: 'Drifting refills BOOST.',
     from: 0.17,
     to: 0.4,
     speedCap: 0.4,
@@ -44,6 +43,9 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     id: 'boost',
     title: 'BOOST',
     prompt: 'Press BOOST and watch the meter empty.',
+    // BOOST starts the lap full, so the refill is said once it has been spent: still in
+    // the long curve, where the next slide shows it.
+    doneText: 'Drifting refills BOOST.',
     from: 0.42,
     to: 0.6,
     speedCap: 0.6,
