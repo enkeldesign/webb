@@ -1,9 +1,11 @@
 // TURN TUTORIAL teaching lap (#1132): the lessons, as semantic beats placed on
-// production COUNTRYSIDE (1,135 m: a short straight and two long bends). A lesson is
-// the thing to experience; the prompt, speech and speed cap are how it is presented.
+// production COUNTRYSIDE (1,135 m, every bend to the right): the opening bend (4–16% of
+// the lap), a short straight (16–24%), one long curve (24–79%) and the bend through the
+// line. A lesson is the thing to experience; the prompt, speech and speed cap are how
+// it is presented. DRIFT comes where the long curve begins, BOOST after it (#1166).
 //
 // from/to: lap progress where the lesson is taught. speedCap: share of the car's top
-// speed while the lesson waits for its action (null: no cap, e.g. BOOST must be felt).
+// speed while the lesson waits for its action (null: no cap).
 // doneText: said when it is done. keyboardPrompt: the prompt for players driving by
 // keyboard, where it differs. needs: 'routeCues' for a lesson that needs DRIVE BY
 // EAR's pace notes; with them off it is skipped. Placement is a first pass for device
@@ -16,21 +18,13 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     // With Tutorial steering help on (steering-help.js).
     assistedPrompt: 'Steering help is on: TURN steers. Hold GAS.',
     from: 0,
-    to: 0.12,
+    to: 0.14,
     speedCap: 0.3,
     // About a second and a half of GAS is enough to have felt the car respond.
     done: (progress) => progress.gasSeconds >= 1.5
   }),
   Object.freeze({
-    id: 'boost',
-    title: 'BOOST',
-    prompt: 'Press BOOST and watch the meter empty.',
-    from: 0.15,
-    to: 0.3,
-    speedCap: null,
-    done: (progress) => progress.boostSpent
-  }),
-  Object.freeze({
+    // Said on the straight, so the slide starts as the long curve does.
     id: 'drift',
     title: 'DRIFT',
     // LOCK is on the drive pad from the first lap, so it is named here, where DRIFT is.
@@ -39,10 +33,21 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     // LOCK has no key (input/qe-drive-controls.js): keyboard players are told only DRIFT.
     keyboardPrompt: 'Hold DRIFT through the bend.',
     doneText: 'Drifting refills BOOST.',
-    from: 0.47,
-    to: 0.58,
+    from: 0.17,
+    to: 0.4,
     speedCap: 0.4,
     done: (progress) => progress.driftSeconds >= 1.5
+  }),
+  Object.freeze({
+    // In the long curve, so capped: the burst is felt from DRIFT's speed, and a new
+    // player keeps the car on the road.
+    id: 'boost',
+    title: 'BOOST',
+    prompt: 'Press BOOST and watch the meter empty.',
+    from: 0.42,
+    to: 0.6,
+    speedCap: 0.6,
+    done: (progress) => progress.boostSpent
   }),
   Object.freeze({
     // READ THE ROAD: the pace note for the second bend, which starts at 78% of the lap.

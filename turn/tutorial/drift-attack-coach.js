@@ -189,6 +189,7 @@ export function startDriftAttackCoach({ runtime, events = globalThis }) {
     last = now;
     if (state.running && globalThis.__turnRacePause?.paused !== true) {
       coach.update(dt);
+      prompt.pace({ state, dt, maxSpeed: runtime.maxSpeed });
       if (graduationLeft > 0) {
         graduationLeft -= dt;
         if (graduationLeft <= 0) {

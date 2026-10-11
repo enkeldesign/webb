@@ -410,7 +410,7 @@ test('TURN TUTORIAL earns 25 trophies in Ways to play, outside Getting started',
     'Only the first completion unlocks it');
 });
 
-test('the coach teaches DRIVE, BOOST and DRIFT by doing, with no failure state', () => {
+test('the coach teaches DRIVE, DRIFT and BOOST by doing, with no failure state', () => {
   const state = { sessionSpeedCap: null };
   const views = [];
   let input = { progress: 0.02, speed: 70, gas: false, drift: false, boostActive: false, boostCharge: 1, routeCues: true, paceNotes: 0 };
@@ -419,8 +419,13 @@ test('the coach teaches DRIVE, BOOST and DRIFT by doing, with no failure state',
     input = { ...input, ...change };
     for (let t = 0; t < seconds; t += 0.1) coach.update(0.1);
   };
-  assert.deepEqual(TURN_TUTORIAL_LESSONS.map((lesson) => lesson.id), ['drive', 'boost', 'drift', 'read'],
-    'BOOST is taught before DRIFT, and READ THE ROAD comes last');
+  // #1166: DRIFT where COUNTRYSIDE's long curve begins (24% of the lap), BOOST after it.
+  assert.deepEqual(TURN_TUTORIAL_LESSONS.map((lesson) => lesson.id), ['drive', 'drift', 'boost', 'read'],
+    'DRIFT is taught before BOOST, and READ THE ROAD comes last');
+  const zone = (id) => TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === id);
+  assert.ok(zone('drift').from < 0.24 && zone('drift').to > 0.24, 'DRIFT is said on the straight and runs into the long curve');
+  assert.ok(zone('boost').speedCap > zone('drift').speedCap && zone('boost').speedCap < 1,
+    'BOOST is felt from the DRIFT speed but capped in the curve');
 
   run(1);
   assert.equal(views.at(-1).id, 'drive');
@@ -429,26 +434,70 @@ test('the coach teaches DRIVE, BOOST and DRIFT by doing, with no failure state',
   assert.equal(coach.outcome().drive, 'done', 'Holding GAS completes DRIVE');
   assert.equal(state.sessionSpeedCap, null, 'A finished lesson releases the speed cap');
 
-  run(1, { progress: 0.2, gas: true, boostActive: true, boostCharge: 0.6 });
-  assert.equal(coach.outcome().boost, 'pending', 'BOOST waits until the meter is spent');
-  assert.equal(state.sessionSpeedCap, null, 'BOOST is never capped: it must be felt');
-  run(0.5, { boostCharge: 0.1 });
-  assert.equal(coach.outcome().boost, 'done', 'Emptying the meter completes BOOST');
-
-  run(1, { progress: 0.4, boostActive: false });
+  run(1, { progress: 0.15, gas: true });
   assert.equal(views.at(-1).kind, 'idle', 'No prompt between lessons');
 
-  run(0.5, { progress: 0.5 });
+  run(0.5, { progress: 0.2 });
   assert.equal(views.at(-1).id, 'drift');
   assert.ok(state.sessionSpeedCap > 0, 'The car eases down for the DRIFT bend');
-  run(1, { progress: 0.59 });
+  run(1, { progress: 0.39 });
   assert.equal(coach.outcome().drift, 'pending', 'A late DRIFT still counts: the prompt stays');
+  run(0.5, { progress: 0.41 });
   assert.equal(state.sessionSpeedCap, null, 'No cap outside the lesson stretch');
+
+  run(1, { progress: 0.45, gas: true, boostActive: true, boostCharge: 0.6 });
+  assert.equal(views.at(-1).id, 'boost');
+  assert.equal(coach.outcome().drift, 'missed', 'BOOST\'s stretch begins: the waiting DRIFT gives way');
+  assert.equal(coach.outcome().boost, 'pending', 'BOOST waits until the meter is spent');
+  assert.ok(state.sessionSpeedCap >= zone('boost').speedCap * 88 - 1e-9, 'BOOST is capped, but above DRIFT speed');
+  run(0.5, { boostCharge: 0.1 });
+  assert.equal(coach.outcome().boost, 'done', 'Emptying the meter completes BOOST');
   coach.graduate();
-  assert.equal(coach.outcome().drift, 'missed', 'Crossing the line ends the teaching lap regardless');
   assert.equal(views.at(-1).kind, 'graduated');
   run(1, { progress: 0.05 });
   assert.equal(views.at(-1).kind, 'graduated', 'After the line the coach stays out of ordinary racing');
+});
+
+test('each new tutorial line slows the car while it is read, once, and BOOST ends it', async () => {
+  const { createReadingPace, readingSeconds, READING_SPEED_SHARE } = await import('../turn/tutorial/tutorial-prompt.js');
+  assert.equal(readingSeconds('Press BOOST and watch the meter empty.'), 1 + 7 * 0.3);
+  assert.equal(readingSeconds('word '.repeat(40)), 5, 'Never more than 5 s');
+  const state = { sessionSpeedCap: null, speed: 20, vehicleEffectiveMaxSpeed: 74 };
+  const pace = createReadingPace();
+  const frame = (dt = 0.1) => pace.update({ state, dt, maxSpeed: 88 });
+  const line = 'Hold DRIFT through the bend and slide outward into LOCK.';
+  pace.read(`lesson:drift:${line}`, line);
+  frame();
+  assert.ok(pace.reading && state.sessionSpeedCap < 20 && state.sessionSpeedCap >= READING_SPEED_SHARE * 74,
+    'Eased down from the current speed, never below the reading speed');
+  for (let t = 0; t < 1; t += 0.1) frame();
+  assert.ok(Math.abs(state.sessionSpeedCap - READING_SPEED_SHARE * 74) < 1e-9, 'At the reading speed while it is read');
+  for (let t = 0; t < 4; t += 0.1) frame();
+  assert.equal(pace.reading, false);
+  assert.equal(state.sessionSpeedCap, null, 'Then the cap the lesson had (none) is back');
+
+  // Under a lesson cap the coach rewrites each frame: the lower of the two applies,
+  // and the lesson's comes back after.
+  pace.read('lesson:boost:Press BOOST.', 'Press BOOST.');
+  state.sessionSpeedCap = 0.6 * 88;
+  frame();
+  assert.ok(state.sessionSpeedCap < 0.6 * 88);
+  pace.read('lesson:boost:Press BOOST.', 'Press BOOST.');
+  globalThis.__turnBoostActive = true;
+  state.sessionSpeedCap = 0.6 * 88;
+  frame();
+  delete globalThis.__turnBoostActive;
+  assert.equal(pace.reading, false, 'BOOST ends it: the player has chosen to go');
+  assert.equal(state.sessionSpeedCap, 0.6 * 88, 'The lesson cap is untouched');
+  pace.read('lesson:boost:Press BOOST.', 'Press BOOST.');
+  assert.equal(pace.reading, false, 'A line already read does not slow the car again');
+
+  const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
+  for (const path of ['../turn/tutorial/tutorial-prompt.js', '../turn/tutorial/drift-attack-coach.js', '../turn/tutorial/flow-tutorial.js']) {
+    assert.match(await read(path), /prompt\.pace\(\{ state, dt, maxSpeed: runtime\.maxSpeed \}\);/, `${path} paces its lines`);
+  }
+  assert.match(await read('../turn/tutorial/tutorial-prompt.js'), /if \(view\.kind === 'graduated'\) reading\.end\(\);/,
+    'After the line, ordinary racing is never slowed');
 });
 
 test('READ THE ROAD is done when the pace note for the next bend plays', () => {
@@ -480,11 +529,11 @@ test('READ THE ROAD is done when the pace note for the next bend plays', () => {
   input = { ...input, progress: 0.55, drift: false, routeCues: false };
   const withoutCues = createTurnTutorialCoach({ state: quietState, maxSpeed: 88, signals: () => input, present: (view) => quiet.push(view) });
   withoutCues.update(0.1);
-  assert.equal(quiet.at(-1).id, 'drift');
+  assert.equal(quiet.at(-1).id, 'boost');
   input = { ...input, progress: 0.65 };
   withoutCues.update(0.1);
   assert.equal(withoutCues.outcome().read, 'skipped', 'With DRIVE BY EAR off there is nothing to hear: no prompt to listen');
-  assert.equal(quiet.at(-1).kind, 'idle', 'The missed DRIFT prompt does not linger');
+  assert.equal(quiet.at(-1).kind, 'idle', 'The missed BOOST prompt does not linger');
   assert.equal(quietState.sessionSpeedCap, null);
 
   // Sound or DRIVE BY EAR turned off in SETTINGS while READ THE ROAD waits.
@@ -525,7 +574,7 @@ test('pace notes count as available only when they can actually play', () => {
 
 test('a drifted bend completes DRIFT and the physics honour the lesson cap', async () => {
   const state = { sessionSpeedCap: null };
-  let input = { progress: 0.5, speed: 40, gas: true, drift: true, boostActive: false, boostCharge: 0.4 };
+  let input = { progress: 0.3, speed: 40, gas: true, drift: true, boostActive: false, boostCharge: 0.4 };
   const coach = createTurnTutorialCoach({ state, maxSpeed: 88, signals: () => input });
   for (let t = 0; t < 2; t += 0.1) coach.update(0.1);
   assert.equal(coach.outcome().drift, 'done');

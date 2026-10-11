@@ -212,7 +212,8 @@ try {
     // key, are told only DRIFT once they drive by keys.
     await page.evaluate(() => {
       const { state, samples } = globalThis.__turnRuntime;
-      const sample = samples[Math.round(samples.length * 0.5)];
+      // The DRIFT stretch, where the long curve begins (#1166).
+      const sample = samples[Math.round(samples.length * 0.25)];
       state.position.copy(sample.point);
       state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
       state.velocity.copy(sample.tangent).multiplyScalar(10);
