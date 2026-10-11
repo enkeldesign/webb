@@ -434,6 +434,16 @@ try {
     assert.equal(await page.locator('.drive-boost-zone').evaluate((element) => element.classList.contains('is-flow-pulse')), true, 'BOOST pulses BOOST');
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.state === 'done');
     assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /That is a COMBO/);
+    // LOCK banks after the drift ends, when its bubble is tucked away: it slides out to pulse.
+    await flow({ type: 'technique', technique: 'lock', multiplier: 2 });
+    assert.equal(await page.locator('.drive-lock-bubble').evaluate((element) => !element.closest('.is-drift-ready')
+      && element.classList.contains('is-flow-pulse') && globalThis.getComputedStyle(element).opacity === '1'), true, 'LOCK shows for its pulse');
+    // Forced colours drop box-shadow: the pulse is an outline there.
+    await page.emulateMedia({ forcedColors: 'active' });
+    await flow({ type: 'technique', technique: 'boost', multiplier: 2 });
+    assert.equal(await page.locator('.drive-boost-zone').evaluate((element) => element.classList.contains('is-flow-pulse')
+      && globalThis.getComputedStyle(element).outlineStyle), 'solid', 'Seen in forced colours');
+    await page.emulateMedia({ forcedColors: 'none' });
 
     await crossFinish(page);
     assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-state'), 'graduated');

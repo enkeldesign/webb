@@ -28,6 +28,13 @@ function installStyles(documentRef) {
     .drive-stack { --turn-flow-flash: 70%; }
     :root[data-theme="dark"] .drive-stack { --turn-flow-flash: 28%; }
     .drive-stack .${FLOW_PULSE_CLASS} { animation: turn-flow-pulse ${PULSE_MS}ms cubic-bezier(.2,.8,.3,1); }
+    /* LOCK and SHIFT are often tucked away by the time FLOW scores them (a drift banks
+       after it ends): they slide out for their pulse, and back. */
+    .drive-stack .drive-lock-bubble.${FLOW_PULSE_CLASS},
+    .drive-stack .drive-shift-bubble.${FLOW_PULSE_CLASS} {
+      opacity: 1;
+      transform: translateX(0) scaleX(1);
+    }
     @keyframes turn-flow-pulse {
       0% {
         box-shadow: inset 0 0 0 0 var(--turn-control-flow),
@@ -51,6 +58,14 @@ function installStyles(documentRef) {
         animation: none;
         box-shadow: inset 0 0 0 var(--turn-space-2) var(--turn-control-flow),
           inset 0 0 0 999px color-mix(in srgb, var(--turn-paper) calc(var(--turn-flow-flash) * 0.6), transparent);
+      }
+    }
+    /* Forced colours drop box-shadow: an outline in the system highlight instead. */
+    @media (forced-colors: active) {
+      .drive-stack .${FLOW_PULSE_CLASS} {
+        animation: none;
+        outline: var(--turn-border-default) solid Highlight;
+        outline-offset: calc(-1 * var(--turn-border-default));
       }
     }
   `;
