@@ -40,7 +40,7 @@ const STYLES = `
     background: var(--turn-control-gas);
     box-shadow: 5.25px 6px 0 var(--turn-shadow-color);
     font-size: max(var(--turn-text-floor, 11px), 0.585rem);
-    font-weight: 900;
+    font-weight: 800;
     letter-spacing: 0.025em;
     line-height: 1;
   }
@@ -62,7 +62,7 @@ const STYLES = `
     border-top: 4px solid var(--turn-outline);
     background-color: var(--turn-control-gas);
   }
-  .turn-demo-pad > .is-brake { background-color: var(--turn-control-brake); }
+  .turn-demo-pad > .is-brake { background-color: var(--turn-control-brake); letter-spacing: 0.035em; }
 
   .turn-demo-bubble {
     position: absolute;
@@ -80,7 +80,7 @@ const STYLES = `
     letter-spacing: 0.035em;
     line-height: 1;
     opacity: 0;
-    transform: translateX(62%) scaleX(0.38);
+    transform: var(--turn-demo-tucked);
     transform-origin: right center;
   }
   .turn-demo-bubble > b {
@@ -91,6 +91,7 @@ const STYLES = `
     white-space: nowrap;
     transform: rotate(-90deg);
   }
+  .turn-demo-bubble.is-lock > b { font-weight: 900; }
   .turn-demo-bubble.is-lock {
     top: 0;
     width: 39px;
@@ -110,7 +111,7 @@ const STYLES = `
     font-size: 0.9em;
     font-style: normal;
   }
-  .turn-demo-bubble.is-reverse > b { transform: none; }
+  .turn-demo-bubble.is-reverse > b { letter-spacing: normal; transform: none; }
   .turn-demo-bubble.is-reverse {
     bottom: 0;
     width: 39px;
@@ -145,18 +146,35 @@ const STYLES = `
   :root.turn-left-handed-controls .turn-demo-bubble.is-reverse > b { transform: scaleX(-1); }
   :root.turn-left-handed-controls .turn-demo-bubble > b { transform: scaleX(-1) rotate(-90deg); }
 
+  /* Motion copies the race (drive-pad.css). A bubble slides out over 140 ms on the
+     pad's curve from its edge and fades in over 80 ms; LOCK, SHIFT and REVERSE change
+     colour over 100 ms; a pressed zone, its ring and the pad's corner change at once.
+     Each changes as the thumb crosses into or out of its zone. */
+  .turn-demo {
+    --turn-demo-tucked: translateX(62%) scaleX(0.38);
+    --turn-demo-out: translateX(0) scaleX(1);
+  }
+
   /* DRIVE, 10 s: GAS; DRIFT, out into LOCK; BOOST; GAS; BRAKE, out into REVERSE; GAS. */
   details[open] .turn-demo-stack[data-demo="drive"] .turn-demo-thumb { animation: turn-demo-drive-thumb 10s ease-in-out infinite; }
-  details[open] .turn-demo-stack[data-demo="drive"] .turn-demo-pad { animation: turn-demo-drive-corners 10s linear infinite; }
-  details[open] .turn-demo-stack[data-demo="drive"] .is-gas { animation: turn-demo-drive-gas 10s linear infinite; }
-  details[open] .turn-demo-stack[data-demo="drive"] .is-drift { animation: turn-demo-drive-drift 10s linear infinite; }
-  details[open] .turn-demo-stack[data-demo="drive"] .is-boost { animation: turn-demo-drive-boost 10s linear infinite; }
-  details[open] .turn-demo-stack[data-demo="drive"] .is-brake { animation: turn-demo-drive-brake 10s linear infinite; }
+  details[open] .turn-demo-stack[data-demo="drive"] .turn-demo-pad { animation: turn-demo-drive-corners 10s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="drive"] .is-gas { animation: turn-demo-drive-gas 10s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="drive"] .is-drift { animation: turn-demo-drive-drift 10s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="drive"] .is-boost { animation: turn-demo-drive-boost 10s steps(1, end) infinite; }
+  details[open] .turn-demo-stack[data-demo="drive"] .is-brake { animation: turn-demo-drive-brake 10s steps(1, end) infinite; }
   details[open] .turn-demo-stack[data-demo="drive"] .is-lock {
-    animation: turn-demo-drive-lock-out 10s linear infinite, turn-demo-drive-lock-on 10s linear infinite;
+    animation:
+      turn-demo-drive-lock-slide 10s linear infinite,
+      turn-demo-drive-lock-fade 10s linear infinite,
+      turn-demo-drive-lock-colour 10s linear infinite,
+      turn-demo-drive-lock-ring 10s steps(1, end) infinite;
   }
   details[open] .turn-demo-stack[data-demo="drive"] .is-reverse {
-    animation: turn-demo-drive-reverse-out 10s linear infinite, turn-demo-drive-reverse-on 10s linear infinite;
+    animation:
+      turn-demo-drive-reverse-slide 10s linear infinite,
+      turn-demo-drive-reverse-fade 10s linear infinite,
+      turn-demo-drive-reverse-colour 10s linear infinite,
+      turn-demo-drive-reverse-ring 10s steps(1, end) infinite;
   }
   @keyframes turn-demo-drive-thumb {
     0%, 10% { left: 50%; top: 54%; }
@@ -170,47 +188,69 @@ const STYLES = `
     96%, 100% { left: 50%; top: 54%; }
   }
   @keyframes turn-demo-drive-gas {
-    0%, 10%, 63%, 68%, 96%, 100% { box-shadow: var(--turn-demo-pressed); }
-    11%, 62%, 69%, 95% { box-shadow: var(--turn-demo-released); }
+    0%, 61.5%, 94.5% { box-shadow: var(--turn-demo-pressed); }
+    12%, 69.5% { box-shadow: var(--turn-demo-released); }
   }
   @keyframes turn-demo-drive-drift {
-    0%, 13%, 46%, 100% { box-shadow: var(--turn-demo-released); }
-    14%, 45% { box-shadow: var(--turn-demo-pressed); }
+    0%, 47% { box-shadow: var(--turn-demo-released); }
+    12% { box-shadow: var(--turn-demo-pressed); }
   }
   @keyframes turn-demo-drive-boost {
-    0%, 48%, 61%, 100% { box-shadow: var(--turn-demo-released); background-color: var(--turn-control-boost); }
-    49%, 60% { box-shadow: var(--turn-demo-pressed); background-color: var(--turn-yellow-600); }
+    0%, 61.5% { box-shadow: var(--turn-demo-released); background-color: var(--turn-control-boost); }
+    47% { box-shadow: var(--turn-demo-pressed); background-color: var(--turn-yellow-600); }
   }
   @keyframes turn-demo-drive-brake {
-    0%, 70%, 93%, 100% { box-shadow: var(--turn-demo-released); }
-    71%, 92% { box-shadow: var(--turn-demo-pressed); }
-  }
-  @keyframes turn-demo-drive-lock-out {
-    0%, 14%, 47%, 100% { opacity: 0; transform: translateX(62%) scaleX(0.38); }
-    16%, 45% { opacity: 1; transform: none; }
-  }
-  @keyframes turn-demo-drive-lock-on {
-    0%, 30%, 43%, 100% { background-color: var(--turn-control-lock); box-shadow: var(--turn-demo-released); }
-    31%, 42% { background-color: var(--turn-control-overcharge); box-shadow: var(--turn-demo-pressed-bubble); }
-  }
-  @keyframes turn-demo-drive-reverse-out {
-    0%, 71%, 96%, 100% { opacity: 0; transform: translateX(62%) scaleX(0.38); }
-    73%, 94% { opacity: 1; transform: none; }
-  }
-  @keyframes turn-demo-drive-reverse-on {
-    0%, 82%, 93%, 100% { background-color: var(--turn-control-brake); box-shadow: var(--turn-demo-released); }
-    83%, 92% { background-color: var(--turn-orange-200); box-shadow: var(--turn-demo-pressed-bubble); }
+    0%, 94.5% { box-shadow: var(--turn-demo-released); }
+    69.5% { box-shadow: var(--turn-demo-pressed); }
   }
   @keyframes turn-demo-drive-corners {
-    0%, 14%, 47%, 71%, 96%, 100% { border-top-left-radius: 22.5px; border-bottom-left-radius: 22.5px; }
-    16%, 45% { border-top-left-radius: 0; border-bottom-left-radius: 22.5px; }
-    73%, 94% { border-top-left-radius: 22.5px; border-bottom-left-radius: 0; }
+    0%, 47%, 94.5% { border-top-left-radius: 22.5px; border-bottom-left-radius: 22.5px; }
+    12% { border-top-left-radius: 0; border-bottom-left-radius: 22.5px; }
+    69.5% { border-top-left-radius: 22.5px; border-bottom-left-radius: 0; }
+  }
+  @keyframes turn-demo-drive-lock-slide {
+    0%, 12% { transform: translateX(62%) scaleX(0.38); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    13.4%, 47% { transform: translateX(0) scaleX(1); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    48.4%, 100% { transform: translateX(62%) scaleX(0.38); }
+  }
+  @keyframes turn-demo-drive-lock-fade {
+    0%, 12% { opacity: 0; animation-timing-function: ease-out; }
+    12.8%, 47% { opacity: 1; animation-timing-function: ease-out; }
+    47.8%, 100% { opacity: 0; }
+  }
+  @keyframes turn-demo-drive-lock-colour {
+    0%, 30% { background-color: var(--turn-control-lock); animation-timing-function: ease; }
+    31%, 43% { background-color: var(--turn-control-overcharge); animation-timing-function: ease; }
+    44%, 100% { background-color: var(--turn-control-lock); }
+  }
+  @keyframes turn-demo-drive-lock-ring {
+    0%, 43% { box-shadow: var(--turn-demo-released); }
+    30% { box-shadow: var(--turn-demo-pressed-bubble); }
+  }
+  @keyframes turn-demo-drive-reverse-slide {
+    0%, 69.5% { transform: translateX(62%) scaleX(0.38); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    70.9%, 94.5% { transform: translateX(0) scaleX(1); animation-timing-function: cubic-bezier(0.2, 0.88, 0.25, 1); }
+    95.9%, 100% { transform: translateX(62%) scaleX(0.38); }
+  }
+  @keyframes turn-demo-drive-reverse-fade {
+    0%, 69.5% { opacity: 0; animation-timing-function: ease-out; }
+    70.3%, 94.5% { opacity: 1; animation-timing-function: ease-out; }
+    95.3%, 100% { opacity: 0; }
+  }
+  @keyframes turn-demo-drive-reverse-colour {
+    0%, 82% { background-color: var(--turn-control-brake); animation-timing-function: ease; }
+    83%, 93% { background-color: var(--turn-orange-200); animation-timing-function: ease; }
+    94%, 100% { background-color: var(--turn-control-brake); }
+  }
+  @keyframes turn-demo-drive-reverse-ring {
+    0%, 93% { box-shadow: var(--turn-demo-released); }
+    82% { box-shadow: var(--turn-demo-pressed-bubble); }
   }
 
   /* SHIFT, 6 s: from GAS, out into SHIFT and back; SHIFT stays on until the next. */
-  .turn-demo-stack[data-demo="shift"] .is-shift { opacity: 1; transform: none; }
+  .turn-demo-stack[data-demo="shift"] .is-shift { opacity: 1; transform: var(--turn-demo-out); }
   details[open] .turn-demo-stack[data-demo="shift"] .turn-demo-thumb { animation: turn-demo-shift-thumb 6s ease-in-out infinite; }
-  details[open] .turn-demo-stack[data-demo="shift"] .is-gas { animation: turn-demo-shift-gas 6s linear infinite; }
+  details[open] .turn-demo-stack[data-demo="shift"] .is-gas { animation: turn-demo-shift-gas 6s steps(1, end) infinite; }
   details[open] .turn-demo-stack[data-demo="shift"] .is-shift { animation: turn-demo-shift-on 6s linear infinite; }
   details[open] .turn-demo-stack[data-demo="shift"] .is-shift i { animation: turn-demo-shift-dot 6s linear infinite; }
   @keyframes turn-demo-shift-thumb {
@@ -221,16 +261,18 @@ const STYLES = `
     77%, 100% { left: 50%; top: 54%; }
   }
   @keyframes turn-demo-shift-gas {
-    0%, 15%, 37%, 55%, 77%, 100% { box-shadow: var(--turn-demo-pressed); }
-    16%, 36%, 56%, 76% { box-shadow: var(--turn-demo-released); }
+    0%, 33.5%, 73.5% { box-shadow: var(--turn-demo-pressed); }
+    18.5%, 58.5% { box-shadow: var(--turn-demo-released); }
   }
   @keyframes turn-demo-shift-on {
-    0%, 21%, 63%, 100% { background-color: var(--turn-control-gas); }
-    22%, 62% { background-color: var(--turn-control-shift-on); }
+    0%, 18.5% { background-color: var(--turn-control-gas); animation-timing-function: ease; }
+    20.2%, 58.5% { background-color: var(--turn-control-shift-on); animation-timing-function: ease; }
+    60.2%, 100% { background-color: var(--turn-control-gas); }
   }
   @keyframes turn-demo-shift-dot {
-    0%, 21%, 63%, 100% { width: 0; opacity: 0; }
-    22%, 62% { width: 0.72em; opacity: 1; }
+    0%, 18.5% { width: 0; opacity: 0; animation-timing-function: ease; }
+    20.2%, 58.5% { width: 0.72em; opacity: 1; animation-timing-function: ease; }
+    60.2%, 100% { width: 0; opacity: 0; }
   }
 
   /* The BOOST bar, with the zone the thumb is on beneath it. */
@@ -246,7 +288,7 @@ const STYLES = `
     background: var(--turn-surface-page);
     box-shadow: 1.5px 1.5px 0 var(--turn-shadow-color);
     font-size: var(--turn-text-floor, 11px);
-    font-weight: 900;
+    font-weight: 800;
     letter-spacing: 0.08em;
   }
   .turn-demo-bar {
@@ -302,21 +344,22 @@ const STYLES = `
   .turn-demo-zones > .is-boost { background-color: var(--turn-control-boost); }
 
   /* OVERCHARGE, 8 s: DRIFT fills BOOST, then builds OVERCHARGE past it; GAS catches it;
-     BOOST spends OVERCHARGE first, then BOOST. */
+     BOOST spends OVERCHARGE first, then BOOST. Like the race's bar, the fill takes
+     DRIFT's colours at once, and the bar turns purple at once. */
   details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar { animation: turn-demo-overcharge-bar 8s ease-in-out infinite; }
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar > b { animation: turn-demo-overcharge-purple 8s linear infinite; }
+  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar > b { animation: turn-demo-overcharge-purple 8s steps(1, end) infinite; }
   details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar > i { animation: turn-demo-overcharge-fill 8s ease-in-out infinite; }
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar > i::after { animation: turn-demo-overcharge-drift 8s linear infinite; }
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-zones > .is-drift { animation: turn-demo-overcharge-on-drift 8s linear infinite; }
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-zones > .is-gas { animation: turn-demo-overcharge-on-gas 8s linear infinite; }
-  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-zones > .is-boost { animation: turn-demo-overcharge-on-boost 8s linear infinite; }
+  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-bar > i::after { animation: turn-demo-overcharge-drift 8s steps(1, end) infinite; }
+  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-zones > .is-drift { animation: turn-demo-overcharge-on-drift 8s steps(1, end) infinite; }
+  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-zones > .is-gas { animation: turn-demo-overcharge-on-gas 8s steps(1, end) infinite; }
+  details[open] .turn-demo-boost[data-demo="overcharge"] .turn-demo-zones > .is-boost { animation: turn-demo-overcharge-on-boost 8s steps(1, end) infinite; }
   @keyframes turn-demo-overcharge-bar {
     0%, 30%, 74%, 100% { width: 150px; }
     48%, 62% { width: 195px; }
   }
   @keyframes turn-demo-overcharge-purple {
-    0%, 30%, 74%, 100% { opacity: 0; }
-    31%, 73% { opacity: 1; }
+    0%, 74% { opacity: 0; }
+    30% { opacity: 1; }
   }
   @keyframes turn-demo-overcharge-fill {
     0% { left: 0; width: 22px; }
@@ -326,20 +369,20 @@ const STYLES = `
     90%, 100% { left: 0; width: 22px; }
   }
   @keyframes turn-demo-overcharge-drift {
-    0%, 48%, 100% { opacity: 1; }
-    50%, 96% { opacity: 0; }
+    0%, 96% { opacity: 1; }
+    48% { opacity: 0; }
   }
   @keyframes turn-demo-overcharge-on-drift {
-    0%, 48%, 96%, 100% { opacity: 1; box-shadow: var(--turn-demo-pressed-pill); }
-    49%, 95% { opacity: 0.38; box-shadow: none; }
+    0%, 96% { opacity: 1; box-shadow: var(--turn-demo-pressed-pill); }
+    48% { opacity: 0.38; box-shadow: none; }
   }
   @keyframes turn-demo-overcharge-on-gas {
-    0%, 48%, 62%, 100% { opacity: 0.38; box-shadow: none; }
-    49%, 61% { opacity: 1; box-shadow: var(--turn-demo-pressed-pill); }
+    0%, 62% { opacity: 0.38; box-shadow: none; }
+    48% { opacity: 1; box-shadow: var(--turn-demo-pressed-pill); }
   }
   @keyframes turn-demo-overcharge-on-boost {
-    0%, 61%, 91%, 100% { opacity: 0.38; box-shadow: none; }
-    62%, 90% { opacity: 1; box-shadow: var(--turn-demo-pressed-pill); }
+    0%, 90% { opacity: 0.38; box-shadow: none; }
+    62% { opacity: 1; box-shadow: var(--turn-demo-pressed-pill); }
   }
 
   .turn-demo {
@@ -362,7 +405,7 @@ const STYLES = `
     .turn-demo-stack[data-demo="drive"] .is-drift { box-shadow: var(--turn-demo-pressed); }
     .turn-demo-stack[data-demo="drive"] .is-lock {
       opacity: 1;
-      transform: none;
+      transform: var(--turn-demo-out);
       background-color: var(--turn-control-overcharge);
       box-shadow: var(--turn-demo-pressed-bubble);
     }
