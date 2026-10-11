@@ -92,8 +92,8 @@
   /* FLOW's colour, on the control that just earned it (ui/flow-pulses.js). */
   --turn-control-flow: var(--turn-pink-500);
   /* LOCK beside the pad, SHIFT while it is on, and OVERCHARGE's purple, which LOCK
-     turns while it builds it: the values drive-pad.css and gameplay-v2.css use, for
-     HOW TO PLAY's demos (ui/how-to-play-demos.js). */
+     turns while it builds it. The race's drive pad (drive-pad.css) and BOOST bar
+     (gameplay-v2.css) read them, as do HOW TO PLAY's demos (ui/how-to-play-demos.js). */
   --turn-control-lock: #748ffc;
   --turn-control-shift-on: #51cf66;
   --turn-control-overcharge: #8b5cf6;

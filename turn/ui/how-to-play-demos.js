@@ -45,7 +45,7 @@ const STYLES = `
     height: 100%;
     overflow: hidden;
     display: grid;
-    grid-template: 32% 44% 24% / 1fr 1fr;
+    grid-template: var(--turn-drive-pad-rows) / 1fr 1fr;
     border: var(--turn-drive-outline) solid var(--turn-outline);
     border-radius: var(--turn-drive-pad-radius);
     background: var(--turn-control-gas);

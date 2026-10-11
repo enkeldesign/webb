@@ -477,9 +477,9 @@ assert.match(gameplayStyles, /@keyframes turn-shift-feedback-line/,
   'SHIFT attribute gains must use a brief rolling HUD treatment');
 assert.match(gameplayStyles, /prefers-reduced-motion: reduce[\s\S]*\.shift-change-feedback\.is-visible/,
   'SHIFT feedback must remain readable without rolling motion');
-assert.match(driveStyles, /\.controls \.drive-shift-bubble[\s\S]*background: #8ce99a/,
+assert.match(driveStyles, /\.controls \.drive-shift-bubble[\s\S]*background: var\(--turn-control-gas\)/,
   'The ready SHIFT bubble must be green');
-assert.match(driveStyles, /\.drive-stack\.is-shift-active \.drive-shift-bubble[\s\S]*#51cf66/,
+assert.match(driveStyles, /\.drive-stack\.is-shift-active \.drive-shift-bubble[\s\S]*var\(--turn-control-shift-on\)/,
   'The active SHIFT bubble must be darker green');
 assert.match(driveStyles, /\.drive-stack\.is-shift-active \.drive-shift-bubble i[\s\S]*opacity: 1/);
 assert.match(driveStyles, /\.drive-shift-bubble span \{[\s\S]*display: inline-flex;[\s\S]*justify-content: center;/,

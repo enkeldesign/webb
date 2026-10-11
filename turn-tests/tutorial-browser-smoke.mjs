@@ -705,6 +705,19 @@ try {
     await openCard(page, 'drive-with-one-thumb', false);
     moving = await shownDemos(page);
     assert.equal(moving[1].moving, 0, 'Closing the card stops it');
+
+    // Chosen in SETTINGS, the other steering method is what HOW TO PLAY teaches next time.
+    const steerGuides = () => page.locator('.m8-how-dialog [data-steer-guide]')
+      .evaluateAll((parts) => parts.map((part) => [part.dataset.steerGuide, part.hidden]));
+    await page.locator('.m8-how-dialog [data-dialog-close]').click();
+    await page.waitForFunction(() => !document.querySelector('.m8-how-dialog')?.open);
+    await page.evaluate(() => document.querySelector('.m8-home-settings').click());
+    await page.waitForFunction(() => document.querySelector('.m8-settings-dialog')?.open);
+    await page.locator('.m8-settings-dialog input[name="m8Steering"][value="motion"]').check();
+    await page.locator('.m8-settings-dialog [data-dialog-close]').click();
+    await page.waitForFunction(() => !document.querySelector('.m8-settings-dialog')?.open);
+    await openHowToPlay(page);
+    assert.deepEqual(await steerGuides(), [['motion', false], ['manual', true]], 'Device rotation: the rotate symbol and RECALIBRATE');
   });
 
   await run('HOW TO PLAY once the Trophy Road unlocks them', { played: true, rewards: ['drift-attack', 'shift', 'flow'] }, async (page) => {

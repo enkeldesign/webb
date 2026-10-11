@@ -54,6 +54,8 @@ body .m8-feedback-content * {
   --turn-drive-pad-radius: 22.5px;
   --turn-drive-pad-shadow-x: 5.25px;
   --turn-drive-pad-shadow-y: 6px;
+  /* DRIFT and BOOST, then GAS, then BRAKE. */
+  --turn-drive-pad-rows: 32% 44% 24%;
   /* The ring on a pressed zone, and on a pressed LOCK or REVERSE. */
   --turn-drive-zone-pressed: inset 0 0 0 4.5px rgb(255 248 232 / 0.78);
   --turn-drive-bubble-pressed: inset 0 0 0 3.75px rgb(255 248 232 / 0.62);
@@ -89,7 +91,7 @@ body .m8-feedback-content * {
   height: var(--drive-pad-height);
   overflow: hidden;
   display: grid;
-  grid-template-rows: 32% 44% 24%;
+  grid-template-rows: var(--turn-drive-pad-rows);
   border: var(--turn-drive-outline) solid var(--turn-outline);
   border-radius: var(--turn-drive-pad-radius);
   background: var(--lime);
@@ -113,7 +115,7 @@ body .m8-feedback-content * {
   overflow: hidden;
   border: var(--turn-drive-outline) solid var(--turn-outline);
   border-radius: var(--turn-drive-bubble-radius) 0 0 var(--turn-drive-bubble-radius);
-  background: #748ffc;
+  background: var(--turn-control-lock);
   color: var(--turn-ink);
   opacity: 0;
   transform: translateX(var(--turn-drive-bubble-tuck)) scaleX(var(--turn-drive-bubble-tuck-scale));
@@ -151,7 +153,7 @@ body .m8-feedback-content * {
   overflow: hidden;
   border: var(--turn-drive-outline) solid var(--turn-outline);
   border-radius: var(--turn-drive-bubble-radius) 0 0 var(--turn-drive-bubble-radius);
-  background: #8ce99a;
+  background: var(--turn-control-gas);
   color: var(--turn-ink);
   box-shadow: none;
   opacity: 0;
@@ -257,7 +259,7 @@ body .m8-feedback-content * {
 }
 
 .drive-stack.is-shift-active .drive-shift-bubble {
-  background: #51cf66;
+  background: var(--turn-control-shift-on);
 }
 
 .drive-stack.is-shift-active .drive-shift-bubble i {
@@ -280,7 +282,7 @@ body .m8-feedback-content * {
 }
 
 .drive-stack.is-drift-locking .drive-lock-bubble {
-  background: #8b5cf6;
+  background: var(--turn-control-overcharge);
   box-shadow: var(--turn-drive-bubble-pressed);
 }
 

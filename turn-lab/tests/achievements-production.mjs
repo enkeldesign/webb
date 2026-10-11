@@ -115,7 +115,7 @@ assert.equal(byId('learn-to-play')?.title, 'LEARN TO PLAY');
 assert.equal(byId('learn-to-play')?.trophies, 50);
 assert.equal(byId('learn-to-play')?.category, 'ways-to-play');
 assert.equal(byId('learn-to-play')?.progressMax, HOW_TO_PLAY_DISCLOSURE_IDS.length);
-assert.equal(byId('learn-to-play')?.description, 'Read all parts of How to Play.');
+assert.equal(byId('learn-to-play')?.description, 'Read all five parts of QUICK REFERENCE in HOW TO PLAY.');
 assert.equal(byId('drive-by-ear')?.title, 'DRIVE BY EAR');
 assert.equal(byId('drive-by-ear')?.trophies, 50);
 assert.equal(byId('drive-by-ear')?.category, 'ways-to-play');
