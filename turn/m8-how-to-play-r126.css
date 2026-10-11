@@ -99,6 +99,208 @@
   line-height: 1.15;
 }
 
+/* Supplementary examples: production primitives, sized for a reading surface. */
+.m8-guide-card-number {
+  padding: 5px;
+  box-sizing: border-box;
+  color: var(--turn-ink);
+}
+
+.m8-guide-card-number svg,
+.m8-guide-topic-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.m8-guide-card-number svg[viewBox="0 0 64 48"],
+.m8-guide-topic-icon svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.m8-how-dialog .m8-guide-topic-icon {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.m8-how-dialog .m8-guide-topic-icon::before {
+  content: none;
+}
+
+.m8-guide-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  min-width: 0;
+  margin-block: 3px 12px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: var(--turn-surface-raised);
+  color: var(--turn-text);
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.m8-guide-card-panel > .m8-guide-demo-caption,
+.m8-guide-disclosure-panel > .m8-guide-demo-caption {
+  margin-block: 0 12px;
+  font-size: max(var(--turn-text-floor, 11px), .75rem);
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.m8-guide-choice {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: 80px;
+  height: 72px;
+  font-size: .7rem;
+}
+
+.m8-guide-choice > :first-child {
+  width: 64px !important;
+  height: 44px !important;
+}
+
+.m8-guide-device {
+  display: grid;
+  place-items: center;
+  width: 160px;
+  height: 72px;
+  border: 4px solid var(--turn-outline);
+  border-radius: 12px;
+  background: var(--turn-surface-page);
+  box-shadow: 3px 3px 0 var(--turn-shadow-color);
+  transform: rotate(-12deg);
+  font-weight: 950;
+}
+
+.m8-guide-demo .drive-stack {
+  --drive-pad-height: 144px;
+  --drift-lock-bubble-width: 36px;
+  --shift-bubble-width: 36px;
+  width: 144px;
+  height: var(--drive-pad-height);
+  margin-inline: 38px;
+}
+
+.m8-guide-demo .drive-zone {
+  display: grid;
+  place-items: center;
+}
+
+.m8-guide-demo :is(.drive-zone, .drive-gas-zone, .drive-brake-zone) {
+  font-size: max(var(--turn-text-floor, 11px), .75rem);
+  font-weight: 950;
+}
+
+.m8-guide-demo .drive-lock-bubble {
+  opacity: 1;
+  transform: none;
+  background: var(--turn-control-drift);
+  color: var(--turn-text);
+}
+
+.m8-guide-demo .drive-shift-bubble {
+  top: calc(32% + 1.08px);
+  height: calc(44% + .36px);
+  background: var(--turn-control-gas);
+}
+
+.m8-guide-demo .m8-guide-bubble span {
+  font-size: max(var(--turn-text-floor, 11px), .7rem);
+}
+
+.m8-guide-demo .boost-hud {
+  --boost-charge: 65%;
+  --boost-base-width: 100px;
+  position: relative;
+  inset: auto;
+  width: 100px;
+  margin: 9px 12px;
+  transform: none;
+}
+
+.m8-guide-demo .boost-hud > span {
+  font-size: max(var(--turn-text-floor, 11px), .65rem);
+}
+
+.m8-guide-demo .boost-hud > div {
+  height: 18px;
+  box-sizing: content-box;
+  transition: none;
+}
+
+.m8-guide-demo .boost-hud.has-overcharge > div {
+  width: 125%;
+}
+
+.m8-guide-demo .boost-hud i {
+  transition: none;
+}
+
+.m8-guide-demo .score-feedback {
+  --score-feedback-paper-width: 155px;
+  --score-feedback-gauge-width: 38px;
+  position: relative;
+  inset: auto;
+  margin-inline-end: var(--score-feedback-gauge-width);
+}
+
+.m8-guide-demo .score-feedback :is(.score-feedback-heading, .score-feedback-lap, .score-feedback-values b) {
+  font-size: max(var(--turn-text-floor, 11px), .65rem);
+}
+
+.m8-guide-demo .score-feedback-values strong {
+  font-size: 1.5rem;
+}
+
+.m8-guide-demo :is(.score-feedback-meter, .score-feedback-gauge) i {
+  width: 65%;
+}
+
+.m8-guide-flow-pad :is(.drive-drift-zone, .drive-boost-zone) {
+  outline: 3px solid var(--turn-control-flow, var(--turn-pink-500));
+  outline-offset: -5px;
+}
+
+/* One short demonstration per opening; no ongoing motion while reading. */
+.m8-how-dialog[open] .m8-guide-card-disclosure[open] > .m8-guide-card-panel > .m8-guide-demo .m8-guide-bubble,
+.m8-how-dialog[open] .m8-guide-card-disclosure[open] .m8-guide-disclosure[open] > .m8-guide-disclosure-panel > .m8-guide-demo .m8-guide-bubble {
+  animation: m8-guide-bubble-reveal 3s ease-out both;
+}
+
+.m8-how-dialog[open] .m8-guide-card-disclosure[open] > .m8-guide-card-panel > .m8-guide-demo .has-overcharge > div,
+.m8-how-dialog[open] .m8-guide-card-disclosure[open] .m8-guide-disclosure[open] > .m8-guide-disclosure-panel > .m8-guide-demo .has-overcharge > div {
+  animation: m8-guide-overcharge 4s ease-in-out both;
+}
+
+@keyframes m8-guide-bubble-reveal {
+  0%, 15% { opacity: 0; transform: scaleX(.35); }
+  55%, 100% { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes m8-guide-overcharge {
+  0%, 15% { width: 100%; }
+  55%, 65% { width: 125%; }
+  100% { width: 110%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m8-how-dialog .m8-guide-demo :is(.m8-guide-bubble, .has-overcharge > div) {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 .m8-guide-card-panel {
   padding: 10.5px 12px 12px;
   background: rgb(255 255 255 / 0.5);
@@ -342,3 +544,4 @@
     padding: 7.5px 9px;
   }
 }
+

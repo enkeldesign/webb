@@ -33,7 +33,7 @@ assert.ok(
   'The contextual reset enhancer must run only after the shared Settings dialog exists'
 );
 
-assert.match(guide, /GUIDE_VERSION = 'r263-how-to-play-copy'/);
+assert.match(guide, /GUIDE_VERSION = 'visual-how-to-play'/);
 assert.match(guide, /updateTrackAndCarCopy\(dialog\)/);
 assert.match(guide, /Choose a track, then pick your car in <strong>GARAGE<\/strong> before racing/);
 assert.match(guide, /Open the <strong>Track sheet<\/strong> to compare your saved TIME, DRIFT and FLOW records/);
@@ -167,7 +167,19 @@ assert.match(components, /\.m8-dbe-guide\[open\] \.m8-disclosure-symbol::before[
 assert.match(components, /\.m8-guide-disclosure\[open\] \.m8-disclosure-symbol::before[\s\S]*content: '−'/);
 assert.match(components, /\.m8-dbe-guide-panel,[\s\S]*background: var\(--turn-disclosure-panel\)/);
 assert.doesNotMatch(components, /#eaf9ef/);
-assert.doesNotMatch(`${guide}\n${css}\n${components}`, /setInterval|setTimeout|@keyframes|animation:/, 'Help content must add no runtime loop or distracting motion');
+assert.doesNotMatch(guide, /setInterval|setTimeout|requestAnimationFrame/, 'Examples add no gameplay or animation runtime');
+assert.doesNotMatch(css, /\binfinite\b/, 'Demonstrations finish so players can read without ongoing motion');
+assert.match(guide, /TROPHY_ROAD_REWARD_ICONS.*from '\.\.\/progression\/trophy-road\.js'/);
+assert.match(guide, /badge\.setAttribute\('aria-hidden', 'true'\)/, 'Topic icons are decorative');
+assert.match(guide, /visual\.setAttribute\('aria-hidden', 'true'\)/);
+assert.match(guide, /visual\.setAttribute\('inert', ''\)/, 'Examples cannot take focus or input');
+assert.match(guide, /caption\.textContent = demo\[1\]/, 'Example relationships also have accessible text');
+assert.match(guide, /class="drive-pad"/);
+assert.match(guide, /class="boost-hud/);
+assert.match(guide, /class="score-feedback m8-guide-score"/);
+assert.match(css, /\.m8-how-dialog\[open\] \.m8-guide-card-disclosure\[open\]/, 'Motion belongs to an open dialog and disclosure');
+assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none !important/);
+assert.match(css, /var\(--turn-control-flow, var\(--turn-pink-500\)\)/, 'FLOW uses its shared semantic colour when available');
 
 assert.equal(HOW_TO_PLAY_DISCLOSURE_IDS.length, 9,
   'LEARN TO PLAY must cover all seven collapsible guide cards and both nested disclosures');
@@ -224,3 +236,4 @@ assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId:
 assert.match(trackManager, /globalThis\.__turnResetRivals = resetCurrentTrackRivals/);
 
 console.log('TURN collapsible How to Play cards, current player-facing copy, clean scorekeeper and contextual rival reset passed.');
+

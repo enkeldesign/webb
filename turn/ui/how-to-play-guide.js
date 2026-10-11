@@ -4,8 +4,10 @@ import {
   LEARNING_FEEDBACK_READY_EVENT
 } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
 import { isOverchargeAvailable } from '../progression/overcharge-unlock.js';
+import { TROPHY_ROAD_REWARD_ICONS } from '../progression/trophy-road.js';
+import { AUTHORED_SAFETY_ICON } from './authored-icons.js';
 
-const GUIDE_VERSION = 'r263-how-to-play-copy';
+const GUIDE_VERSION = 'visual-how-to-play';
 const PACE_NOTE_EXPLANATION = "Pace notes are swipes. Before every bend, a swipe travels out to the ear on the bend's side and ends before the bend begins. Higher pitch means a tighter bend, a quick swipe a short bend and a slower swipe a long one. A bend of more than 120° is told as linked swipes, and bends that follow each other link into one phrase in the order you will meet them. Pace notes need stereo: use headphones or hold the device so both speakers face you.";
 const GUIDE_CARD_ID_BY_NUMBER = Object.freeze({
   1: 'choose-track-and-car',
@@ -29,6 +31,7 @@ export function installHowToPlayGuide(root = document) {
   installShiftAndScoringSections(dialog);
   installDriveByEarDisclosure(dialog);
   installGuideCardDisclosures(dialog);
+  installGuideVisuals(dialog);
   installDisclosureProgress(dialog);
   installLearningFeedbackRelease(dialog, 'how-to-play');
   updateAudioPanelCopy(root);
@@ -185,7 +188,8 @@ function installGuideCardDisclosures(dialog) {
     const summary = dialog.ownerDocument.createElement('summary');
     const badge = dialog.ownerDocument.createElement('strong');
     badge.className = 'm8-guide-card-number';
-    badge.textContent = number.textContent;
+    badge.setAttribute('aria-hidden', 'true');
+    badge.innerHTML = guideIcon(disclosureId);
 
     const title = dialog.ownerDocument.createElement('span');
     title.className = 'm8-guide-card-title';
@@ -317,3 +321,91 @@ function findGuideSection(dialog, headingText) {
     section.querySelector('h3')?.textContent?.trim() === headingText
   ));
 }
+
+function guideIcon(id) {
+  const icons = TROPHY_ROAD_REWARD_ICONS;
+  return ({
+    'choose-track-and-car': icons.race,
+    'turn-device-to-steer': AUTHORED_SAFETY_ICON,
+    'drive-with-one-thumb': icons.drift,
+    'build-and-use-overcharge': icons.flow,
+    'catch-and-use-overcharge': icons.flow,
+    shift: icons.shift,
+    'drift-points': icons.drift,
+    'flow-points': icons.flow,
+    'flow-combos': icons.flow,
+    'drive-by-ear-sounds': icons.flow
+  })[id] || icons.race;
+}
+
+// Inert examples share production classes, but have no buttons, IDs, gameplay
+// data attributes or runtime. The adjoining prose carries every instruction.
+function guidePad({ bubble = 'lock', flow = false } = {}) {
+  const shift = bubble === 'shift';
+  return `<div class="drive-stack m8-guide-pad ${shift ? 'is-shift-available is-gas-ready' : 'is-drift-ready'} ${flow ? 'm8-guide-flow-pad' : ''}">
+    <div class="drive-lock-bubble ${shift ? 'drive-shift-bubble' : ''} m8-guide-bubble"><span>${shift ? 'SHIFT' : 'LOCK'}</span></div>
+    <div class="drive-pad">
+      <div class="drive-pad-top"><span class="drive-zone drive-drift-zone">DRIFT</span><span class="drive-zone drive-boost-zone">BOOST</span></div>
+      <span class="drive-gas-zone">GAS</span><span class="drive-brake-zone">BRAKE</span>
+    </div>
+  </div>`;
+}
+
+function guideBoost(overcharge = false) {
+  return `<div class="boost-hud ${overcharge ? 'has-overcharge' : ''}"><span>${overcharge ? 'OVERCHARGE' : 'BOOST'}</span><div><i></i></div></div>`;
+}
+
+function guideScore(flow = false) {
+  const channel = flow ? 'flow' : 'drift';
+  return `<div class="score-feedback m8-guide-score">
+    <div class="score-feedback-row">
+      <div class="score-feedback-gauge-shell"><div class="${flow ? 'score-feedback-gauge' : 'score-feedback-meter'}" data-score-channel="${channel}"><i></i></div></div>
+      <div class="score-feedback-state ${flow ? 'score-feedback-flow-state' : ''}">
+        <div class="score-feedback-heading"><span>${flow ? 'FLOW' : 'DRIFT'}</span><span>COMBO</span></div>
+        <div class="score-feedback-values"><strong>${flow ? '1,240' : '680'}</strong><b>×3</b></div>
+        <div class="score-feedback-footer"><div class="score-feedback-lap"><span>LAP</span><b>2,480</b></div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function installGuideVisuals(dialog) {
+  const demos = {
+    'choose-track-and-car': [
+      `<span class="m8-guide-choice">${TROPHY_ROAD_REWARD_ICONS['medium-tracks']}<b>ROADBOOK</b></span><span class="m8-guide-arrow">→</span><span class="m8-guide-choice">${TROPHY_ROAD_REWARD_ICONS.race}<b>GARAGE</b></span>`,
+      'Choose a track, then a car.'
+    ],
+    'turn-device-to-steer': [
+      '<div class="m8-guide-device"><span>← STEER →</span></div>',
+      'Rotate the device like a steering wheel; recalibrate when your resting angle changes.'
+    ],
+    'drive-with-one-thumb': [guidePad(), 'Slide between the pad’s zones. LOCK extends outward from DRIFT; REVERSE extends outward from BRAKE.'],
+    'build-and-use-overcharge': [guideBoost() + guideBoost(true), 'DRIFT fills BOOST, then builds OVERCHARGE. Catch it on GAS before it leaks; spend it with BOOST.'],
+    'catch-and-use-overcharge': [guideBoost(true), 'DRIFT builds → GAS catches and holds → BOOST spends. Uncaught OVERCHARGE leaks away.'],
+    shift: [guidePad({ bubble: 'shift' }), 'Slide outward from GAS to SHIFT: STANDARD ↔ SHIFT. Each slide switches setup.'],
+    'drift-points': [guideScore(), 'Example: 680 points at risk, ×3 COMBO, 2,480 already banked this lap. Exit cleanly to bank the slide.'],
+    'flow-points': [guidePad({ flow: true }) + guideScore(true), 'DRIFT → clean EXIT → BOOST: different useful techniques build COMBO. The gauge shows FLOW momentum.'],
+    'flow-combos': [guidePad({ flow: true }), 'DRIFT → clean EXIT → BOOST: chain different techniques within 5 seconds to raise COMBO.']
+  };
+  for (const details of dialog.querySelectorAll('details[data-how-to-play-disclosure]')) {
+    const id = details.dataset.howToPlayDisclosure;
+    const symbol = details.querySelector(':scope > summary .m8-disclosure-symbol');
+    if (symbol) {
+      symbol.classList.add('m8-guide-topic-icon');
+      symbol.innerHTML = guideIcon(id);
+    }
+    const panel = details.querySelector(':scope > .m8-guide-card-panel, :scope > .m8-guide-disclosure-panel');
+    const demo = demos[id];
+    if (!panel || !demo) continue;
+    const visual = dialog.ownerDocument.createElement('div');
+    visual.className = `m8-guide-demo m8-guide-demo-${id}`;
+    visual.setAttribute('aria-hidden', 'true');
+    visual.setAttribute('inert', '');
+    visual.innerHTML = demo[0];
+    const caption = dialog.ownerDocument.createElement('p');
+    caption.className = 'm8-guide-demo-caption';
+    caption.textContent = demo[1];
+    panel.prepend(visual, caption);
+  }
+}
+
