@@ -33,8 +33,8 @@
 - Colours come from the semantic tokens in `turn/design-tokens.css`, never hard-coded.
 - Anything that runs during a race must stop on pause, leave and background: `race/race-pause.js` and `leaveRace()` in `race/session-orchestrator.js`.
 - Mockups show intent. Names, lengths and counts in them may be worst-case placeholders; ask which parts are literal when unsure.
-- **Mockups are not required for implementation.** When Erik provides no mockup or leaves presentation details open, OPUS should make a common-sense design implementation using established TURN patterns, the design system, existing form and colour language, accessibility best practices and the surrounding UI as precedent. Do not stall merely because a visual specification is absent.
-- When a mockup is provided, treat it as design direction rather than permission to ignore system consistency, responsive behaviour, accessibility or established interaction patterns.
+- **Mockups are not required for implementation.** When Erik provides no mockup or leaves presentation details open, OPUS should make a common-sense implementation using established TURN patterns, the design system, existing form and colour language, the surrounding code and UI as precedent, and recognised best practices across architecture, frontend, backend, performance, security, accessibility and interaction/visual design. Do not stall merely because a visual specification is absent.
+- When a mockup is provided, treat it as design direction rather than permission to ignore system consistency, responsive behaviour, accessibility, sound engineering practice or established interaction patterns.
 
 ## Releases
 
