@@ -93,6 +93,39 @@ export function advanceBoostOvercharge({
   return Object.freeze({ amount: nextAmount, phase: nextPhase, peaked });
 }
 
+// SHIFT (#1172): BOOST is kept in seconds across a SHIFT, so a bigger tank is left part
+// full and a SHIFT never tops BOOST up. A full bar shifting to a smaller tank with more
+// BOOST POWER turns the seconds that no longer fit into OVERCHARGE (0.6 s is a full
+// one), once OVERCHARGE is unlocked; otherwise they are lost. Shifting back and forth
+// mints nothing more: after one conversion the bigger tank is no longer full.
+export function transferBoostAcrossShift({
+  charge = 1,
+  fromSeconds = 1,
+  toSeconds = 1,
+  fromPower = 0,
+  toPower = 0,
+  overcharge = 0,
+  overchargeOn = false
+} = {}) {
+  const from = Math.max(0.001, finiteNumber(fromSeconds));
+  const to = Math.max(0.001, finiteNumber(toSeconds));
+  const level = clamp(finiteNumber(charge), 0, 1);
+  const seconds = level * from;
+  const overflow = Math.max(0, seconds - to);
+  const held = clamp(finiteNumber(overcharge), 0, 1);
+  // Full is the drift build's own test (ui/gameplay-controls.js).
+  const converts = overchargeOn === true
+    && level >= 0.999999
+    && overflow > 0
+    && finiteNumber(toPower) > finiteNumber(fromPower);
+  const nextOvercharge = converts ? Math.min(1, held + overflow / BOOST_OVERCHARGE_MAX_SECONDS) : held;
+  return Object.freeze({
+    charge: Math.min(1, seconds / to),
+    overcharge: nextOvercharge,
+    converted: nextOvercharge - held
+  });
+}
+
 export function boostOverchargeVisualWidth(amount = 0) {
   return clamp(finiteNumber(amount), 0, 1) * BOOST_OVERCHARGE_MAX_WIDTH;
 }

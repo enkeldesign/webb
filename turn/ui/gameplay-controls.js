@@ -11,7 +11,8 @@ import {
   advanceBoostOvercharge,
   boostOverchargeVisualWidth,
   qualifiesForBoostOvercharge,
-  resolveBoostSlipAngle
+  resolveBoostSlipAngle,
+  transferBoostAcrossShift
 } from '../input/boost-overcharge.js?revision=r219-overcharge-state';
 import {
   driftLockSideForHandedness,
@@ -258,6 +259,8 @@ function installGameplayUi() {
   let boostFlashTimer = 0;
   let overchargePeakTimer = 0;
   let shiftFeedbackTimer = 0;
+  // OVERCHARGE the last player SHIFT made from BOOST that no longer fit (#1172).
+  let shiftOverchargeGain = 0;
   let shiftDetailsAnnouncedThisRace = false;
   let previousTime = raceNow();
   const TOP_ZONE_SHARE = 0.32;
@@ -309,7 +312,7 @@ function installGameplayUi() {
     shiftFeedback.classList.remove('is-visible', 'is-shift-on', 'is-shift-off');
   }
 
-  function showShiftFeedback(feedback) {
+  function showShiftFeedback(feedback, { overcharge = false } = {}) {
     clearShiftFeedback();
     if (!feedback) return;
 
@@ -320,6 +323,11 @@ function installGameplayUi() {
       line.textContent = `+${feedback.amount || 1} ${label}`;
       return line;
     });
+    if (overcharge) {
+      const line = document.createElement('span');
+      line.textContent = '+OVERCHARGE';
+      lines.push(line);
+    }
     shiftFeedback.replaceChildren(heading, ...lines);
     void shiftFeedback.offsetWidth;
     hud.classList.add('has-shift-feedback');
@@ -369,11 +377,12 @@ function installGameplayUi() {
       const briefAnnouncement = feedback?.briefAnnouncement || (shiftActive
         ? 'SHIFT on.'
         : 'SHIFT off.');
-      shiftStatus.textContent = shiftDetailsAnnouncedThisRace
+      const overchargeNote = shiftOverchargeGain > 0 ? ' +OVERCHARGE.' : '';
+      shiftStatus.textContent = `${shiftDetailsAnnouncedThisRace
         ? briefAnnouncement
-        : detailedAnnouncement;
+        : detailedAnnouncement}${overchargeNote}`;
       shiftDetailsAnnouncedThisRace = true;
-      showShiftFeedback(feedback);
+      showShiftFeedback(feedback, { overcharge: shiftOverchargeGain > 0 });
     } else {
       clearShiftFeedback();
     }
@@ -469,7 +478,8 @@ function installGameplayUi() {
 
   function applyShiftMode(active, {
     announce = true,
-    easeTopSpeedReduction = true
+    easeTopSpeedReduction = true,
+    transferBoost = false
   } = {}) {
     const { runtime, vehicleId, car, profile } = shiftContext();
     const canActivate = Boolean(
@@ -483,6 +493,10 @@ function installGameplayUi() {
     const target = nextActive
       ? deriveVehicleTuningForCar(vehicleId, profile.shiftedStats)
       : car?.tuning;
+    // A player's SHIFT in a race keeps BOOST in seconds (#1172): read the tank first.
+    const before = transferBoost && runtime?.state?.running && target
+      ? { seconds: getBoostDrainSeconds(), power: Number(runtime.state.vehicleStats?.boostPower) }
+      : null;
 
     if (runtime?.state && target) {
       applyVehicleShiftTuning({
@@ -498,8 +512,36 @@ function installGameplayUi() {
     shiftActive = nextActive;
     globalThis.__turnShiftActive = shiftActive;
     if (runtime?.state) runtime.state.shiftActive = shiftActive;
+    shiftOverchargeGain = before ? transferShiftBoost(before, runtime.state) : 0;
     syncShiftVisual();
     publishShiftState({ announce });
+  }
+
+  // The new tank holds the same BOOST seconds. Seconds that no longer fit become loose
+  // OVERCHARGE when the bar was full and the new setup has more BOOST POWER: like
+  // drift-built OVERCHARGE it decays unless GAS holds it. Being on GAS as the SHIFT
+  // lands is not a new CATCH: FLOW scores the SHIFT itself.
+  function transferShiftBoost(before, state) {
+    const transfer = transferBoostAcrossShift({
+      charge: boostCharge,
+      fromSeconds: before.seconds,
+      toSeconds: getBoostDrainSeconds(),
+      fromPower: before.power,
+      toPower: Number(state.vehicleStats?.boostPower),
+      overcharge: boostOvercharge,
+      overchargeOn
+    });
+    boostCharge = transfer.charge;
+    previousBoostCharge = boostCharge;
+    globalThis.__turnBoostCharge = boostCharge;
+    if (transfer.converted > 0) {
+      boostOvercharge = transfer.overcharge;
+      boostOverchargePhase = BOOST_OVERCHARGE_PHASE.DECAYING;
+      previousOverchargeCaughtForOutcome = true;
+      globalThis.__turnBoostOvercharge = boostOvercharge;
+    }
+    boostVisualDirty = true;
+    return transfer.converted;
   }
 
   // Labels name OVERCHARGE only once the player has it.
@@ -542,7 +584,7 @@ function installGameplayUi() {
 
   function toggleShift({ announce = true } = {}) {
     if (!shiftAvailable) return false;
-    applyShiftMode(!shiftActive, { announce });
+    applyShiftMode(!shiftActive, { announce, transferBoost: true });
     safeVibrate(shiftActive ? [16, 12, 24] : 10);
     return true;
   }

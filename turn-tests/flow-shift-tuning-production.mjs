@@ -226,4 +226,52 @@ try {
   globalThis.__turnVehicleTuning = previousGlobalTuning;
 }
 
+// #1172: BOOST is kept in seconds across a SHIFT; a full bar shifting to a smaller tank
+// with more BOOST POWER turns what no longer fits into loose OVERCHARGE.
+{
+  const { BOOST_OVERCHARGE_MAX_SECONDS, transferBoostAcrossShift } = await import('../turn/input/boost-overcharge.js');
+  const near = (actual, expected, message) => assert.ok(Math.abs(actual - expected) < 1e-9, `${message}: ${actual} vs ${expected}`);
+  const bigger = transferBoostAcrossShift({ charge: 1, fromSeconds: 4, toSeconds: 5, fromPower: 3, toPower: 2, overchargeOn: true });
+  near(bigger.charge, 0.8, 'A bigger tank keeps the seconds, so it is part full: SHIFT never tops BOOST up');
+  assert.equal(bigger.converted, 0);
+  const stronger = transferBoostAcrossShift({ charge: 1, fromSeconds: 5, toSeconds: 4.7, fromPower: 2, toPower: 3, overchargeOn: true });
+  near(stronger.charge, 1, 'The smaller tank is full');
+  near(stronger.converted, 0.3 / BOOST_OVERCHARGE_MAX_SECONDS, 'What no longer fits becomes OVERCHARGE, 0.6 s to a full one');
+  assert.equal(transferBoostAcrossShift({ charge: 1, fromSeconds: 5, toSeconds: 4.7, fromPower: 3, toPower: 3, overchargeOn: true }).converted, 0,
+    'No more BOOST POWER: the overflow is lost, as before');
+  assert.equal(transferBoostAcrossShift({ charge: 1, fromSeconds: 5, toSeconds: 4.7, fromPower: 2, toPower: 3, overchargeOn: false }).converted, 0,
+    'Before OVERCHARGE unlocks (DRIFT ATTACK), nothing converts');
+  assert.equal(transferBoostAcrossShift({ charge: 0.99, fromSeconds: 5, toSeconds: 4.7, fromPower: 2, toPower: 3, overchargeOn: true }).converted, 0,
+    'Only a full bar converts, the drift build\'s own test');
+  near(transferBoostAcrossShift({ charge: 1, fromSeconds: 5, toSeconds: 4.7, fromPower: 2, toPower: 3, overcharge: 0.8, overchargeOn: true }).overcharge, 1,
+    'OVERCHARGE caps at full');
+  // Shifting back and forth on one bar mints nothing more.
+  let charge = 1;
+  let overcharge = 0;
+  let minted = 0;
+  for (let i = 0; i < 6; i += 1) {
+    const toSmall = i % 2 === 0;
+    const step = transferBoostAcrossShift({
+      charge,
+      overcharge,
+      fromSeconds: toSmall ? 5 : 4.7,
+      toSeconds: toSmall ? 4.7 : 5,
+      fromPower: toSmall ? 2 : 3,
+      toPower: toSmall ? 3 : 2,
+      overchargeOn: true
+    });
+    ({ charge, overcharge } = step);
+    minted += step.converted;
+  }
+  near(minted, 0.3 / BOOST_OVERCHARGE_MAX_SECONDS, 'One conversion per full bar, however often the player shifts');
+
+  const controlsSource = await fs.readFile(new URL('../turn/ui/gameplay-controls.js', import.meta.url), 'utf8');
+  assert.match(controlsSource, /applyShiftMode\(!shiftActive, \{ announce, transferBoost: true \}\)/,
+    'Only a player SHIFT moves BOOST between tanks, never a reset or a profile change');
+  assert.match(controlsSource, /const overchargeNote = shiftOverchargeGain > 0 \? ' \+OVERCHARGE\.' : '';/,
+    'The SHIFT announcement names the OVERCHARGE it made');
+  assert.match(controlsSource, /boostOverchargePhase = BOOST_OVERCHARGE_PHASE\.DECAYING;\n      previousOverchargeCaughtForOutcome = true;/,
+    'Loose like drift-built OVERCHARGE, and not a CATCH of its own');
+}
+
 console.log('TURN FLOW SHIFT authoritative tuning transition regression passed.');
