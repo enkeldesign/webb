@@ -1,5 +1,5 @@
 import { getTrophyRoadReward } from './trophy-road.js';
-import { viewCarWhenGarageOpens } from '../garage/garage-focus.js';
+import { garageOpenedForCar, pointOutInGarage, viewCarWhenGarageOpens } from '../garage/garage-focus.js';
 
 // Unlock introductions (#1149, #1150): when DRIFT ATTACK, SHIFT or FLOW unlocks, Home
 // explains it in a bottom sheet that stays until the player closes it, instead of
@@ -16,20 +16,27 @@ const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 export const INTRODUCTIONS_UNDER_TEST_KEY = 'turn-unlock-introductions-under-test';
 const STYLE_ID = 'turn-unlock-introduction-styles';
 const SHOW_DELAY_MS = 900;
-const HINT_SECONDS = 4.5;
-// After GARAGE's own opening speech (its title, then the car).
-const HINT_SAY_DELAY_MS = 1200;
 
 // Unlocks explained by their reward toast alone, then pointed out the next time GARAGE
 // shows them.
 export const UNLOCK_HINTS = Object.freeze({
   paintjob: Object.freeze({ title: 'PAINTJOB', hint: 'garage-paint' })
 });
-// What each GARAGE hint scrolls to and pulses, and what it says.
+// What each GARAGE hint scrolls to and pulses, and what it says. ownVisit: only on a
+// GARAGE visit the player opened themselves, with nothing else to point out (#1168).
 const GARAGE_HINT_TARGETS = Object.freeze({
   'garage-shift': Object.freeze({ selector: '.garage-shift', say: 'New in GARAGE: ACTIVATE SHIFT, below the car’s name.' }),
-  'garage-paint': Object.freeze({ selector: '.garage-paint-toggle', say: 'New in GARAGE: PAINT, below the car’s name.' })
+  'garage-paint': Object.freeze({ selector: '.garage-paint-toggle', say: 'New in GARAGE: PAINT, below the car’s name.' }),
+  // The button on phones; the inline catalog's heading where GARAGE shows ALL CARS
+  // beside or below the car (tablets), and hides the button.
+  'garage-all-cars': Object.freeze({
+    selector: '.garage-all-cars-button, #garageCatalogTitle',
+    say: 'New in GARAGE: ALL CARS, every car and what unlocks it.',
+    ownVisit: true
+  })
 });
+// Armed once for every player, the first time TURN runs with this release.
+export const ALL_CARS_HINT = 'garage-all-cars';
 
 export const UNLOCK_INTRODUCTIONS = Object.freeze({
   'drift-attack': Object.freeze({
@@ -70,7 +77,13 @@ function readState(storage) {
     const raw = JSON.parse(storage?.getItem?.(UNLOCK_INTRODUCTIONS_KEY) || 'null');
     const ids = (value) => (Array.isArray(value) ? value.filter((id) => UNLOCK_INTRODUCTIONS[id]) : []);
     const views = raw?.views && typeof raw.views === 'object' ? raw.views : {};
-    const state = { pending: ids(raw?.pending), shown: ids(raw?.shown), hints: Array.isArray(raw?.hints) ? raw.hints : [], views };
+    const state = {
+      pending: ids(raw?.pending),
+      shown: ids(raw?.shown),
+      hints: Array.isArray(raw?.hints) ? raw.hints : [],
+      views,
+      once: Array.isArray(raw?.once) ? raw.once : []
+    };
     // Saved before r428, which added views and the race hint: a SHIFT introduced then
     // arms the race hint once. Every later save carries views, so it is never re-armed.
     if (raw && !raw.views && state.shown.includes('shift') && !state.hints.includes('race-shift')) {
@@ -78,7 +91,7 @@ function readState(storage) {
     }
     return state;
   } catch (_) {
-    return { pending: [], shown: [], hints: [], views: {} };
+    return { pending: [], shown: [], hints: [], views: {}, once: [] };
   }
 }
 
@@ -121,6 +134,14 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage)
       if (!state.hints.includes(hint)) state.hints.push(hint);
       delete state.views[hint];
       save();
+    },
+    // A hint every player gets once, whenever it was added (ALL_CARS_HINT).
+    armOnce(hint) {
+      if (state.once.includes(hint)) return false;
+      state.once.push(hint);
+      if (!state.hints.includes(hint)) state.hints.push(hint);
+      save();
+      return true;
     },
     consumeHint(hint) {
       state.hints = state.hints.filter((pending) => pending !== hint);
@@ -178,19 +199,6 @@ function installStyles(documentRef) {
     .roadbook-admin div,
     .m8-admin-unlocks { display: flex; flex-wrap: wrap; gap: var(--turn-space-2); }
     .m8-admin-unlocks[hidden] { display: none; }
-    .garage-shift.is-introduced,
-    .garage-paint-toggle.is-introduced { animation: turn-unlock-pulse 1.5s ease-in-out 3; }
-    @keyframes turn-unlock-pulse {
-      50% { box-shadow: 0 0 0 var(--turn-space-2) var(--turn-action-primary); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .garage-shift.is-introduced,
-      .garage-paint-toggle.is-introduced {
-        animation: none;
-        outline: var(--turn-border-control) solid var(--turn-action-primary);
-        outline-offset: var(--turn-space-1);
-      }
-    }
   `;
   documentRef.head.appendChild(style);
 }
@@ -260,6 +268,7 @@ export function installUnlockIntroductions({
   let showing = null;
   let timer = 0;
   let hintObserver = null;
+  let pointedGarage = null;
   let replayed = false;
 
   function show(id) {
@@ -331,30 +340,19 @@ export function installUnlockIntroductions({
     if (hintObserver || windowRef.__turnRuntime?.state?.running === true) return;
     if (!armedGarageHints().length || typeof MutationObserver !== 'function') return;
     const reveal = () => {
-      const said = [];
-      let section = null;
+      const points = [];
       for (const hint of armedGarageHints()) {
-        const { selector, say } = GARAGE_HINT_TARGETS[hint];
-        const target = documentRef.querySelector(selector);
-        if (!target || target.hidden || !target.offsetParent) continue;
+        const { selector, say, ownVisit } = GARAGE_HINT_TARGETS[hint];
+        const target = [...documentRef.querySelectorAll(selector)].find((element) => !element.hidden && element.offsetParent);
+        if (!target) continue;
+        const garage = target.closest('#turnGarage');
+        // Later, on a visit the player opens themselves with nothing else to point out.
+        if (ownVisit && (points.length || pointedGarage === garage || garageOpenedForCar(garage))) continue;
         queue.consumeHint(hint);
-        const reduced = windowRef.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-        target.scrollIntoView?.({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
-        target.classList.add('is-introduced');
-        windowRef.setTimeout?.(() => target.classList.remove('is-introduced'), HINT_SECONDS * 1000);
-        said.push(say);
-        section ||= target.closest('section') || target.parentElement;
+        pointedGarage = garage;
+        points.push({ element: target, say });
       }
-      // One message for what was pointed out, in a status added empty and filled once
-      // GARAGE has spoken, so it is heard rather than talked over.
-      if (said.length && section) {
-        const status = documentRef.createElement('p');
-        status.className = 'turn-sr-only m8-unlock-hint-status';
-        status.setAttribute('role', 'status');
-        section.append(status);
-        windowRef.setTimeout?.(() => { status.textContent = said.join(' '); }, HINT_SAY_DELAY_MS);
-        windowRef.setTimeout?.(() => status.remove(), HINT_SAY_DELAY_MS + HINT_SECONDS * 1000);
-      }
+      pointOutInGarage(points, { documentRef, windowRef });
       if (!armedGarageHints().length) stopWatchingHints();
     };
     hintObserver = new MutationObserver(reveal);
@@ -381,6 +379,8 @@ export function installUnlockIntroductions({
     schedule();
     watchHints();
   });
+  // Like the sheets, not in automated runs.
+  if (introducesOnUnlock(windowRef, storage)) queue.armOnce(ALL_CARS_HINT);
   windowRef.addEventListener?.('turn:ui-state-change', (event) => {
     if (event.detail?.running === true) stopWatchingHints();
   });

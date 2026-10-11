@@ -1,5 +1,5 @@
 {
-  "release": "20261011-r434",
+  "release": "20261011-r435",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -256,6 +256,7 @@
     "/turn/garage/garage.js",
     "/turn/garage/saved-car-paint.js",
     "/turn/garage/shift-gearbox.js",
+    "/turn/garage/shift-race-reminder.js",
     "/turn/garage/shift-setup.css",
     "/turn/garage/shift-setup.js",
     "/turn/garage/showroom-viewer.js",

@@ -441,9 +441,33 @@ try {
     await page.waitForFunction(() => Boolean(document.querySelector('.garage-shift.is-introduced')), null, { timeout: 30000 });
     assert.equal(await page.evaluate(() => globalThis.__turnGarage.getViewedCarId()), 'sedan', 'GARAGE opens on the SEDAN');
     assert.deepEqual(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.snapshot()),
-      { pending: [], shown: ['shift'], hints: ['race-shift'], views: {} });
+      { pending: [], shown: ['shift'], hints: ['garage-all-cars', 'race-shift'], views: {}, once: ['garage-all-cars'] },
+      'ALL CARS waits: this GARAGE was opened for the player, and points at ACTIVATE SHIFT');
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-shift')), false,
       'ACTIVATE SHIFT is pointed out once');
+    assert.equal(await page.evaluate(() => document.querySelector('.garage-all-cars-button').classList.contains('is-introduced')), false);
+  });
+
+  // #1168 and #1167: the first GARAGE the player opens points at ALL CARS; after SHIFT
+  // unlocks, the first RACE on a car with no SHIFT setup points at ACTIVATE SHIFT.
+  await run('GARAGE points at ALL CARS, then RACE at ACTIVATE SHIFT', { rewards: ['shift'], introductions: true }, async (page) => {
+    await page.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
+    await page.waitForFunction(() => document.querySelector('.garage-all-cars-button')?.classList.contains('is-introduced'), null, { timeout: 60000 });
+    await page.waitForFunction(() => document.querySelector('#turnGarage .m8-unlock-hint-status')?.textContent
+      === 'New in GARAGE: ALL CARS, every car and what unlocks it.', null, { timeout: 5000 });
+    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-all-cars')), false,
+      'ALL CARS is pointed out once');
+    // GARAGE ignores activations during its 600 ms VoiceOver entry-tap guard.
+    await page.waitForTimeout(700);
+    await page.locator('.garage-race').click();
+    await page.waitForFunction(() => document.querySelector('.garage-shift')?.classList.contains('is-introduced'));
+    await page.waitForFunction(() => /^No SHIFT setup on the .+ yet\. ACTIVATE SHIFT is below the car’s name\. Press RACE again to race\.$/
+      .test([...document.querySelectorAll('#turnGarage .m8-unlock-hint-status')].at(-1)?.textContent || ''), null, { timeout: 5000 });
+    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.running), false, 'The first RACE points instead of racing');
+    await page.locator('.garage-race').click();
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.running, null, { timeout: 60000 });
+    const reminded = await page.evaluate(() => JSON.parse(localStorage.getItem('turn-shift-race-reminder-v1')));
+    assert.equal(reminded.length, 1, 'That car is never reminded again');
   });
 
   // The drive pad's SHIFT, pointed out in a regular race once the car has a SHIFT setup.
