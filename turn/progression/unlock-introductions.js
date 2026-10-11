@@ -27,8 +27,10 @@ export const UNLOCK_HINTS = Object.freeze({
 const GARAGE_HINT_TARGETS = Object.freeze({
   'garage-shift': Object.freeze({ selector: '.garage-shift', say: 'New in GARAGE: ACTIVATE SHIFT, below the car’s name.' }),
   'garage-paint': Object.freeze({ selector: '.garage-paint-toggle', say: 'New in GARAGE: PAINT, below the car’s name.' }),
+  // The button on phones; the inline catalog's heading where GARAGE shows ALL CARS
+  // beside or below the car (tablets), and hides the button.
   'garage-all-cars': Object.freeze({
-    selector: '.garage-all-cars-button',
+    selector: '.garage-all-cars-button, #garageCatalogTitle',
     say: 'New in GARAGE: ALL CARS, every car and what unlocks it.',
     ownVisit: true
   })
@@ -341,8 +343,8 @@ export function installUnlockIntroductions({
       const points = [];
       for (const hint of armedGarageHints()) {
         const { selector, say, ownVisit } = GARAGE_HINT_TARGETS[hint];
-        const target = documentRef.querySelector(selector);
-        if (!target || target.hidden || !target.offsetParent) continue;
+        const target = [...documentRef.querySelectorAll(selector)].find((element) => !element.hidden && element.offsetParent);
+        if (!target) continue;
         const garage = target.closest('#turnGarage');
         // Later, on a visit the player opens themselves with nothing else to point out.
         if (ownVisit && (points.length || pointedGarage === garage || garageOpenedForCar(garage))) continue;

@@ -905,6 +905,9 @@ test('GARAGE points at ALL CARS once, and RACE at ACTIVATE SHIFT once per car', 
   assert.match(source, /if \(introducesOnUnlock\(windowRef, storage\)\) queue\.armOnce\(ALL_CARS_HINT\);/, 'Not in automated runs');
   assert.match(source, /if \(ownVisit && \(points\.length \|\| pointedGarage === garage \|\| garageOpenedForCar\(garage\)\)\) continue;/,
     'Only on a visit the player opened themselves, with nothing else to point out');
+  assert.match(source, /selector: '\.garage-all-cars-button, #garageCatalogTitle'/,
+    'On tablets, where ALL CARS is shown inline and its button hidden, the inline heading is pointed out');
+  assert.match(source, /const target = \[\.\.\.documentRef\.querySelectorAll\(selector\)\]\.find\(\(element\) => !element\.hidden && element\.offsetParent\);/);
 
   const reminder = await import('../turn/garage/shift-race-reminder.js');
   const trigger = (classes = [], extra = {}) => ({
