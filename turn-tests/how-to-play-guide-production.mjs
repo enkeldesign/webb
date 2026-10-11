@@ -87,6 +87,14 @@ assert.match(guide, /section\.classList\.contains\('m8-guide-wide'\)/,
   'Drive By Ear must remain the one ordinary card with its disclosure inside');
 assert.match(guide, /details\.className = 'm8-guide-card-disclosure'/);
 assert.match(guide, /summary\.append\(badge, title\)/);
+// #748: each card shows an icon in place of its step number, decorative beside its title.
+for (const id of ['choose-track-and-car', 'turn-device-to-steer', 'drive-with-one-thumb', 'build-and-use-overcharge', 'shift', 'drift-points', 'flow-points']) {
+  assert.match(guide, new RegExp(`'?${id}'?: [A-Z_]+`), `${id} has an icon`);
+}
+assert.match(guide, /badge\.classList\.add\('has-icon'\);\n\s*badge\.setAttribute\('aria-hidden', 'true'\);/,
+  'The icon is decorative: the card title names it');
+assert.match(guide, /TROPHY_ROAD_REWARD_ICONS\.(race|shift|drift|flow)/, 'The game\'s own icons where it has them');
+assert.match(css, /\.m8-guide-card-number\.has-icon svg \{[\s\S]*stroke: currentColor;/);
 assert.match(guide, /title\.setAttribute\('role', 'heading'\)/);
 assert.match(guide, /title\.setAttribute\('aria-level', '3'\)/);
 assert.doesNotMatch(guide, /turn:open-how-to-play|installTargetedOpening|__turnOpenHowToPlaySection|TARGET_SECTION_ID/,

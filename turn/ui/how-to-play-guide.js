@@ -4,6 +4,8 @@ import {
   LEARNING_FEEDBACK_READY_EVENT
 } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
 import { isOverchargeAvailable } from '../progression/overcharge-unlock.js';
+import { TROPHY_ROAD_REWARD_ICONS } from '../progression/trophy-road.js';
+import { ROTATE_DEVICE_ICON } from './race-orientation.js';
 
 const GUIDE_VERSION = 'r263-how-to-play-copy';
 const PACE_NOTE_EXPLANATION = "Pace notes are swipes. Before every bend, a swipe travels out to the ear on the bend's side and ends before the bend begins. Higher pitch means a tighter bend, a quick swipe a short bend and a slower swipe a long one. A bend of more than 120° is told as linked swipes, and bends that follow each other link into one phrase in the order you will meet them. Pace notes need stereo: use headphones or hold the device so both speakers face you.";
@@ -15,6 +17,21 @@ const GUIDE_CARD_ID_BY_NUMBER = Object.freeze({
   5: 'shift',
   6: 'drift-points',
   7: 'flow-points'
+});
+
+// Each card's icon (#748), in the place of its step number: the game's own where it
+// has one (Trophy Road, the rotate tip), otherwise a pictogram in the same stroke style
+// as Trophy Road's FLOW icon. Decorative: the card's title is its name.
+const DRIVE_PAD_ICON = '<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="11" y="4" width="26" height="40" rx="7"></rect><path d="M11 17h26M24 4v13M11 33h26"></path></svg>';
+const BOOST_BAR_ICON = '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><rect x="3" y="14" width="58" height="20" rx="10"></rect><path d="M13 24h22M45 24h6" stroke-width="7"></path></svg>';
+const GUIDE_CARD_ICONS = Object.freeze({
+  'choose-track-and-car': TROPHY_ROAD_REWARD_ICONS.race,
+  'turn-device-to-steer': ROTATE_DEVICE_ICON,
+  'drive-with-one-thumb': DRIVE_PAD_ICON,
+  'build-and-use-overcharge': BOOST_BAR_ICON,
+  shift: TROPHY_ROAD_REWARD_ICONS.shift,
+  'drift-points': TROPHY_ROAD_REWARD_ICONS.drift,
+  'flow-points': TROPHY_ROAD_REWARD_ICONS.flow
 });
 
 export function installHowToPlayGuide(root = document) {
@@ -185,7 +202,14 @@ function installGuideCardDisclosures(dialog) {
     const summary = dialog.ownerDocument.createElement('summary');
     const badge = dialog.ownerDocument.createElement('strong');
     badge.className = 'm8-guide-card-number';
-    badge.textContent = number.textContent;
+    const icon = GUIDE_CARD_ICONS[disclosureId];
+    if (icon) {
+      badge.classList.add('has-icon');
+      badge.setAttribute('aria-hidden', 'true');
+      badge.innerHTML = icon;
+    } else {
+      badge.textContent = number.textContent;
+    }
 
     const title = dialog.ownerDocument.createElement('span');
     title.className = 'm8-guide-card-title';

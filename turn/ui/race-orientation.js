@@ -1,8 +1,8 @@
 const SESSION_KEY = 'turn-first-race-orientation-v1';
 
 // The familiar rotate-device symbol: a phone between two turning arrows. The phone
-// turns to landscape once, unless motion is reduced.
-const ROTATE_DEVICE_ICON = `<svg viewBox="0 0 48 48" focusable="false" aria-hidden="true">
+// turns to landscape once, unless motion is reduced. HOW TO PLAY shows it still.
+export const ROTATE_DEVICE_ICON = `<svg viewBox="0 0 48 48" focusable="false" aria-hidden="true">
   <g class="turn-orientation-arrows" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M28.5 4.6a20 20 0 0 1 15 14.9"/><path d="M39.6 17.9l3.9 1.6 1.5-3.9"/>
     <path d="M19.5 43.4a20 20 0 0 1-15-14.9"/><path d="M8.4 30.1l-3.9-1.6-1.5 3.9"/>
