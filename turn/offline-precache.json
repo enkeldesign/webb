@@ -1,5 +1,5 @@
 {
-  "release": "20261011-r440",
+  "release": "20261011-r441",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -460,6 +460,7 @@
     "/turn/ui/home-app-bar.js",
     "/turn/ui/home-feedback.js",
     "/turn/ui/home-rival-reset.js",
+    "/turn/ui/how-to-play-demos.js",
     "/turn/ui/how-to-play-guide.js",
     "/turn/ui/hud.js",
     "/turn/ui/idle-frame-loop.js",

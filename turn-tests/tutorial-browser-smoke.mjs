@@ -652,6 +652,42 @@ try {
     assert.equal(current.entry, true, 'They can still play it from HOW TO PLAY');
   });
 
+  // HOW TO PLAY demos (#748): the drive pad and BOOST bar acted out in three cards.
+  await run('HOW TO PLAY demos', { played: true }, async (page) => {
+    await page.evaluate(() => document.querySelector('.m8-how-button').click());
+    await page.waitForFunction(() => document.querySelector('.m8-how-dialog')?.open);
+    const demos = () => page.evaluate(() => [...document.querySelectorAll('.m8-how-dialog .turn-demo')].map((demo) => ({
+      card: demo.closest('details').dataset.howToPlayDisclosure,
+      hidden: demo.getAttribute('aria-hidden'),
+      moving: demo.getAnimations({ subtree: true }).length
+    })));
+    const openCard = (id, open) => page.evaluate(({ id, open }) => {
+      document.querySelector(`.m8-how-dialog details[data-how-to-play-disclosure="${id}"]`).open = open;
+    }, { id, open });
+    assert.deepEqual(await demos(), [
+      { card: 'drive-with-one-thumb', hidden: 'true', moving: 0 },
+      { card: 'build-and-use-overcharge', hidden: 'true', moving: 0 },
+      { card: 'shift', hidden: 'true', moving: 0 }
+    ], 'Pictures for sighted players, still while their cards are closed');
+    const raceControls = '.drive-stack, .drive-pad, .drive-zone, .drive-gas-zone, .drive-brake-zone, .drive-lock-bubble, .drive-shift-bubble, .drive-reverse-bubble, .boost-hud';
+    assert.equal(await page.locator(`.m8-how-dialog :is(${raceControls})`).count(), 0,
+      'Nothing that looks for the real drive pad or BOOST bar finds a demo');
+
+    await openCard('drive-with-one-thumb', true);
+    assert.equal((await demos())[0].moving, 0, 'Reduced Motion: a still frame');
+    const lock = page.locator('.m8-how-dialog [data-how-to-play-disclosure="drive-with-one-thumb"] .turn-demo-bubble.is-lock');
+    assert.equal(await lock.evaluate((bubble) => globalThis.getComputedStyle(bubble).opacity), '1',
+      'The still frame shows DRIFT out into LOCK');
+
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    let moving = await demos();
+    assert.ok(moving[0].moving > 0, 'An open card acts out its controls');
+    assert.equal(moving[2].moving, 0, 'A closed card does not');
+    await openCard('drive-with-one-thumb', false);
+    moving = await demos();
+    assert.equal(moving[0].moving, 0, 'Closing the card stops it');
+  });
+
   await run('automated runs', {}, async (page) => {
     const current = await inspect(page);
     assert.equal(current.card, false, 'Test runs get the card only when they ask for it');

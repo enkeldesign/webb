@@ -6,6 +6,7 @@ import {
 import { isOverchargeAvailable } from '../progression/overcharge-unlock.js';
 import { TROPHY_ROAD_REWARD_ICONS } from '../progression/trophy-road.js';
 import { ROTATE_DEVICE_ICON } from './race-orientation.js';
+import { createBoostBarDemo, createDrivePadDemo } from './how-to-play-demos.js';
 
 const GUIDE_VERSION = 'r263-how-to-play-copy';
 const PACE_NOTE_EXPLANATION = "Pace notes are swipes. Before every bend, a swipe travels out to the ear on the bend's side and ends before the bend begins. Higher pitch means a tighter bend, a quick swipe a short bend and a slower swipe a long one. A bend of more than 120° is told as linked swipes, and bends that follow each other link into one phrase in the order you will meet them. Pace notes need stereo: use headphones or hold the device so both speakers face you.";
@@ -32,6 +33,12 @@ const GUIDE_CARD_ICONS = Object.freeze({
   shift: TROPHY_ROAD_REWARD_ICONS.shift,
   'drift-points': TROPHY_ROAD_REWARD_ICONS.drift,
   'flow-points': TROPHY_ROAD_REWARD_ICONS.flow
+});
+// Cards that act out their controls (#748), above their text.
+const GUIDE_CARD_DEMOS = Object.freeze({
+  'drive-with-one-thumb': (documentRef) => createDrivePadDemo('drive', documentRef),
+  'build-and-use-overcharge': (documentRef) => createBoostBarDemo(documentRef),
+  shift: (documentRef) => createDrivePadDemo('shift', documentRef)
 });
 
 export function installHowToPlayGuide(root = document) {
@@ -223,6 +230,8 @@ function installGuideCardDisclosures(dialog) {
     for (const child of [...content.children]) {
       if (child !== heading) panel.append(child);
     }
+    const demo = GUIDE_CARD_DEMOS[disclosureId]?.(dialog.ownerDocument);
+    if (demo) panel.prepend(demo);
 
     details.append(summary, panel);
     section.classList.add('m8-guide-card-shell');

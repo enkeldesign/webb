@@ -95,6 +95,56 @@ assert.match(guide, /badge\.classList\.add\('has-icon'\);\n\s*badge\.setAttribut
   'The icon is decorative: the card title names it');
 assert.match(guide, /TROPHY_ROAD_REWARD_ICONS\.(race|shift|drift|flow)/, 'The game\'s own icons where it has them');
 assert.match(css, /\.m8-guide-card-number\.has-icon svg \{[\s\S]*stroke: currentColor;/);
+// #748: the drive, OVERCHARGE and SHIFT cards act out their controls above their text.
+// Pictures, hidden from assistive technology; their own classes, since other modules
+// look for the real drive pad and BOOST bar; the race controls' colour roles; moving
+// only while their card is open, and one still frame under Reduced Motion.
+const [demos, tokens] = await Promise.all([
+  fs.readFile(new URL('../turn/ui/how-to-play-demos.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/design-tokens.css', import.meta.url), 'utf8')
+]);
+const demoCode = demos.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+assert.match(guide, /'drive-with-one-thumb': \(documentRef\) => createDrivePadDemo\('drive', documentRef\)/);
+assert.match(guide, /'build-and-use-overcharge': \(documentRef\) => createBoostBarDemo\(documentRef\)/);
+assert.match(guide, /shift: \(documentRef\) => createDrivePadDemo\('shift', documentRef\)/);
+assert.match(guide, /if \(demo\) panel\.prepend\(demo\);/);
+assert.equal(demos.match(/demo\.setAttribute\('aria-hidden', 'true'\);/g)?.length, 2, 'Both kinds of demo are decorative');
+assert.doesNotMatch(demoCode, /(?<![\w-])(drive-(stack|pad\b|zone|gas|brake|drift|boost|lock|shift|reverse)|boost-hud)/,
+  'The demos never use the race controls\' classes');
+assert.doesNotMatch(demoCode, /#[0-9a-f]{3,8}\b/i, 'Colours come from tokens');
+for (const token of ['--turn-control-lock', '--turn-control-shift-on', '--turn-control-overcharge']) {
+  assert.match(tokens, new RegExp(`${token}: #`), `${token} is defined`);
+}
+assert.match(tokens, /:root\[data-theme="dark"\] \.turn-demo-pad,\n:root\[data-theme="dark"\] \.drive-pad \{/, 'The demo pad is dark like the real one');
+const demoRules = demoCode.matchAll(/([^{}]+)\{[^{}]*animation:\s*turn-demo/g);
+const animated = [...demoRules].map(([, selector]) => selector.trim());
+assert.ok(animated.length >= 10);
+for (const selector of animated) assert.match(selector, /^details\[open\] /, `${selector} moves only in an open card`);
+assert.match(demos, /@media \(prefers-reduced-motion: reduce\) \{\s*\.turn-demo,\s*\.turn-demo \*,\s*\.turn-demo \*::after \{ animation: none !important; \}/);
+assert.match(demos, /@media \(forced-colors: active\)/);
+// The slide-out is the race's own (drive-pad.css): from the bubble's edge, 140 ms on the
+// pad's curve with an 80 ms fade, never a substitute that reads as a turn in depth.
+const drivePad = await fs.readFile(new URL('../turn/drive-pad.css', import.meta.url), 'utf8');
+const lockBubble = drivePad.match(/\.drive-lock-bubble \{[\s\S]*?\n\}/)[0];
+assert.match(lockBubble, /opacity 80ms ease-out,\s*transform 140ms cubic-bezier\(\.2,\.88,\.25,1\)/);
+assert.match(lockBubble, /transform: translateX\(62%\) scaleX\(0\.38\);\s*transform-origin: right center;/);
+assert.match(demoCode, /--turn-demo-tucked: translateX\(62%\) scaleX\(0\.38\);/);
+assert.match(demoCode, /\.turn-demo-bubble \{[^}]*transform: var\(--turn-demo-tucked\);\s*transform-origin: right center;/);
+const stopsOf = (name) => [...demoCode.match(new RegExp(`@keyframes ${name} \\{([\\s\\S]*?)\\n  \\}`))[1]
+  .matchAll(/^\s*([\d.%, ]+)\{([^}]*)\}/gm)].map(([, at, body]) => ({ at: at.split(',').map((stop) => parseFloat(stop)), body }));
+for (const bubble of ['lock', 'reverse']) {
+  const slide = stopsOf(`turn-demo-drive-${bubble}-slide`);
+  const fade = stopsOf(`turn-demo-drive-${bubble}-fade`);
+  const ms = (from, to) => Math.round((to.at[0] - from.at.at(-1)) * 100);
+  assert.equal(ms(slide[0], slide[1]), 140, `${bubble} slides out in 140 ms`);
+  assert.equal(ms(slide[1], slide[2]), 140, `${bubble} slides back in 140 ms`);
+  assert.match(slide[0].body, /animation-timing-function: cubic-bezier\(0\.2, 0\.88, 0\.25, 1\)/);
+  assert.match(slide[1].body, /animation-timing-function: cubic-bezier\(0\.2, 0\.88, 0\.25, 1\)/);
+  assert.equal(ms(fade[0], fade[1]), 80, `${bubble} fades in over 80 ms`);
+  assert.equal(ms(fade[1], fade[2]), 80, `${bubble} fades out over 80 ms`);
+}
+assert.match(demoCode, /details\[open\] \.turn-demo-stack\[data-demo="drive"\] \.is-lock \{\s*animation:\s*turn-demo-drive-lock-slide 10s linear infinite,/,
+  'Each slide stop is 10 s × its percentage');
 assert.match(guide, /title\.setAttribute\('role', 'heading'\)/);
 assert.match(guide, /title\.setAttribute\('aria-level', '3'\)/);
 assert.doesNotMatch(guide, /turn:open-how-to-play|installTargetedOpening|__turnOpenHowToPlaySection|TARGET_SECTION_ID/,
