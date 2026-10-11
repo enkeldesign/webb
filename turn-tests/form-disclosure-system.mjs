@@ -62,9 +62,9 @@ assert.match(components, /\.m8-dbe-guide\[open\] \.m8-disclosure-symbol::before[
 assert.match(components, /\.m8-dbe-guide-panel,[\s\S]*background: var\(--turn-disclosure-panel\)/);
 assert.doesNotMatch(components, /#eaf9ef/);
 
-assert.match(guide, /GUIDE_VERSION = 'r263-how-to-play-copy'/);
-assert.match(guide, /details\.className = 'm8-guide-card-disclosure'/);
-assert.match(guide, /section\.classList\.contains\('m8-guide-wide'\)/,
+assert.match(guide, /GUIDE_VERSION = 'r442-how-to-play-remake'/);
+assert.match(guide, /<details class="m8-guide-card-disclosure" data-how-to-play-disclosure="\$\{id\}">/);
+assert.match(guide, /section\.className = 'm8-guide-wide';/,
   'Drive By Ear must remain the non-collapsible outer card');
 assert.match(
   guide,

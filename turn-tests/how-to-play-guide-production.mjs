@@ -33,46 +33,76 @@ assert.ok(
   'The contextual reset enhancer must run only after the shared Settings dialog exists'
 );
 
-assert.match(guide, /GUIDE_VERSION = 'r263-how-to-play-copy'/);
-assert.match(guide, /updateTrackAndCarCopy\(dialog\)/);
-assert.match(guide, /Choose a track, then pick your car in <strong>GARAGE<\/strong> before racing/);
-assert.match(guide, /Open the <strong>Track sheet<\/strong> to compare your saved TIME, DRIFT and FLOW records/);
-assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE<\/strong>/);
-assert.match(guide, /BRAKE stops at zero without reversing/);
-assert.match(guide, /slide outward into <strong>REVERSE<\/strong>/);
-assert.match(guide, /slide outward past it into <strong>LOCK<\/strong>/);
-assert.match(guide, /<strong>Clean driving<\/strong> simply means staying on the track/);
-assert.match(guide, /some perks and achievements combine it with speed or time targets/);
-assert.match(guide, /<strong>DRIFT<\/strong> charges <strong>BOOST<\/strong> as you slide/);
-assert.match(guide, /With BOOST full, keep using DRIFT to build purple <strong>OVERCHARGE<\/strong>/);
-assert.match(guide, /<details class="m8-guide-disclosure m8-overcharge-guide" data-how-to-play-disclosure="catch-and-use-overcharge">/);
-assert.match(guide, /How to catch and use OVERCHARGE/);
-assert.match(guide, /<strong>BUILD<\/strong><span>With BOOST full, keep using DRIFT\.<\/span>/);
-assert.match(guide, /<strong>CATCH<\/strong><span>Slide to GAS before OVERCHARGE leaks away\.<\/span>/);
-assert.match(guide, /<strong>HOLD<\/strong><span>Stay on GAS to hold the OVERCHARGE you caught\.<\/span>/);
-assert.match(guide, /<strong>SPEND<\/strong><span>Slide to BOOST\. OVERCHARGE burns first as a stronger burst, then normal BOOST continues\.<\/span>/);
-assert.match(guide, /Uncaught OVERCHARGE leaks\. At its peak, it starts leaking even while you keep using DRIFT/);
+// HOW TO PLAY (#748, #1130): after the tutorials, a QUICK REFERENCE of what every player
+// has, then what the Trophy Road unlocks: taught once it is the player's, and before then
+// named with where it unlocks. Only TURN-specific teaching, each card with a real control.
+assert.match(guide, /GUIDE_VERSION = 'r442-how-to-play-remake'/);
+const layout = [
+  "sectionTitle(documentRef, 'm8QuickReferenceTitle', 'QUICK REFERENCE')",
+  "variantCard(documentRef, STEER_CARD, 'data-steer-guide')",
+  'QUICK_REFERENCE.map((card) => guideCard(documentRef, card))',
+  "variantCard(documentRef, BOOST_CARD, 'data-boost-guide')",
+  'guideCard(documentRef, RIVALS_CARD)',
+  'driveByEarCard(documentRef)',
+  "sectionTitle(documentRef, 'm8TrophyRoadTitle', 'ON THE TROPHY ROAD')",
+  'TROPHY_ROAD_CARDS.flatMap((card) => [guideCard(documentRef, card), lockedCard(documentRef, card)])'
+].map((part) => guide.indexOf(part));
+assert.ok(layout.every((at, index) => at > 0 && (index === 0 || at > layout[index - 1])),
+  'QUICK REFERENCE (STEER, DRIVE PAD, BOOST, RIVALS, Drive By Ear), then ON THE TROPHY ROAD');
 
-assert.match(guide, /title: 'SHIFT'/);
-assert.match(guide, /normal attributes and the alternate setup you configured in <strong>GARAGE<\/strong>/);
-assert.match(guide, /redistributes attribute points between the two setups/);
+// STEER teaches the steering chosen in SETTINGS (#748, SOL): device rotation or on-screen.
+assert.match(guide, /title: 'STEER'/);
+assert.match(guide, /demo: Object\.freeze\(\{ motion: createSteerDemo, manual: createManualSteerDemo \}\)/);
+assert.match(guide, /<strong>RECALIBRATE<\/strong> sets it again at any time/);
+assert.match(guide, /Rather not tilt\? Choose <strong>On-screen steering<\/strong> in SETTINGS/);
+assert.match(guide, /Drag the <strong>steering control<\/strong> left and right with one thumb while the other drives/);
+assert.match(guide, /the arrow keys or A and D steer/);
+assert.match(guide, /Rather turn the device\? Choose <strong>Device rotation<\/strong> in SETTINGS/);
+assert.match(guide, /getItem\('turn-steering-mode-v1'\) === 'manual'\) return 'manual'/);
+assert.match(guide, /typeof globalThis\.DeviceMotionEvent === 'undefined' \? 'manual' : 'motion'/,
+  'The same choice m8-home.js makes: on-screen when chosen or without motion sensors');
+assert.match(guide, /showVariant\(dialog\.querySelector\(`\[data-guide-topic="\$\{STEER_CARD\.id\}"\]`\), 'data-steer-guide', steeringMode\(\)\)/);
+
+assert.match(guide, /title: 'DRIVE PAD'/);
+assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE<\/strong>/);
+assert.match(guide, /While using DRIFT, slide outward past it into <strong>LOCK<\/strong> for a stronger slide/);
+assert.match(guide, /BRAKE stops at zero without reversing; to back up, hold BRAKE and slide outward into <strong>REVERSE<\/strong>/);
+assert.match(guide, /Staying on the track is <strong>clean driving<\/strong>, which some perks and achievements reward/);
+
+// BOOST: OVERCHARGE is taught only once it is the player's (#1150, #1130, SOL).
+assert.match(guide, /title: Object\.freeze\(\{ boost: 'BOOST', overcharge: 'BOOST AND OVERCHARGE' \}\)/);
+assert.match(guide, /<strong>DRIFT<\/strong> fills <strong>BOOST<\/strong> as you slide\. Slide to BOOST to spend it as a burst of speed/);
+assert.match(guide, /<p class="m8-guide-note"><strong>OVERCHARGE unlocks with DRIFT ATTACK<\/strong> on the Trophy Road\.<\/p>/);
+for (const step of ['FILL', 'BUILD', 'CATCH', 'SPEND']) {
+  assert.match(guide, new RegExp(`<li><strong>${step}</strong><span>`), `OVERCHARGE: ${step}`);
+}
+assert.match(guide, /At its peak, uncaught OVERCHARGE leaks even while you keep using DRIFT/);
+assert.match(guide, /const boostKind = overchargeUnlocked\(\) \? 'overcharge' : 'boost'/);
+assert.doesNotMatch(guide, /catch-and-use-overcharge/, 'One BOOST card, without a nested OVERCHARGE disclosure');
+
+assert.match(guide, /title: 'RIVALS'/);
+assert.match(guide, /You race recordings of your own fastest laps, not computer drivers/);
+assert.match(guide, /The <strong>Track sheet<\/strong> keeps your records for every track/);
+assert.doesNotMatch(guide, /Choose a track|pick your car/, 'No general racing-game instructions');
+
+// ON THE TROPHY ROAD, in the order it unlocks them.
+for (const [id, rewardId, title] of [['drift-points', 'drift-attack', 'DRIFT ATTACK'], ['shift', 'shift', 'SHIFT'], ['flow-points', 'flow', 'FLOW']]) {
+  assert.match(guide, new RegExp(`id: '${id}',\\s*rewardId: '${rewardId}',\\s*title: '${title}'`), `${title} unlocks with ${rewardId}`);
+}
+assert.match(guide, /LOCKED · \$\{threshold\} TROPHIES/);
+assert.match(guide, /<p class="turn-sr-only">Unlocks at \$\{threshold\} trophies on the Trophy Road\.<\/p>/);
+assert.match(guide, /if \(card\) card\.hidden = !unlocked;\s*if \(locked\) locked\.hidden = unlocked;/,
+  'Taught once unlocked; before then, only named');
+assert.match(guide, /dialog\.addEventListener\('toggle', sync\);\s*globalThis\.addEventListener\?\.\('turn:trophy-road-updated', sync\);/);
+assert.match(guide, /<strong>DRIFT ATTACK<\/strong> scores your slides/);
+assert.match(guide, /Exit cleanly to <strong>BANK<\/strong> it; a failed slide loses it, but never what you have banked/);
+assert.match(guide, /Link slides to raise <strong>COMBO<\/strong>/);
+assert.match(guide, /<strong>LAP<\/strong> is this lap, <strong>LAST<\/strong> your previous lap and <strong>BEST<\/strong> your record on this track/);
+assert.match(guide, /<strong>SHIFT<\/strong> switches your car between two setups/);
+assert.match(guide, /slide from GAS out into SHIFT to switch, and again to switch back/);
 assert.doesNotMatch(guide, /does not add free power/,
   'SHIFT help should explain the mechanic positively rather than defend against an unstated misconception');
-assert.match(guide, /slide from GAS into SHIFT to swap setup, then SHIFT again to return/);
-assert.match(guide, /title: 'DRIFT ATTACK'/);
-assert.match(guide, /DRIFT ATTACK<\/strong> rewards strong, fast, controlled slides/);
-assert.doesNotMatch(guide, /not pressing DRIFT/,
-  'DRIFT ATTACK help must not introduce the confusing input-versus-score aside');
-assert.match(guide, /large live number is the current drift value at risk/);
-assert.match(guide, /Link drifts to raise <strong>COMBO<\/strong>/);
-assert.match(guide, /clean exit <strong>BANKS<\/strong>/);
-assert.match(guide, /<strong>LAP<\/strong> is this lap, <strong>LAST<\/strong> is your previous completed lap and <strong>BEST<\/strong> is the saved record for this track/);
-assert.match(guide, /title: 'FLOW'/);
-assert.match(guide, /FLOW<\/strong> rewards chaining different driving techniques at the right moment/);
-assert.match(guide, /Mix techniques with useful timing to build <strong>COMBO<\/strong>/);
-assert.doesNotMatch(guide, /Button presses alone score nothing/,
-  'FLOW help should describe rewarding play rather than expose anti-spam implementation language');
-assert.match(guide, /gauge shows your current FLOW momentum/);
+assert.match(guide, /<strong>FLOW<\/strong> scores linking different techniques, each at a moment it helps/);
 // FLOW techniques and combos (#1149): every technique scoring/flow-runtime.js rewards.
 assert.match(guide, /<details class="m8-guide-disclosure m8-overcharge-guide" data-how-to-play-disclosure="flow-combos">/);
 for (const technique of ['DRIFT', 'LOCK', 'EXIT', 'BOOST', 'CATCH', 'SHIFT']) {
@@ -82,49 +112,57 @@ assert.match(guide, /Each different technique within 5 seconds of the last raise
 assert.match(guide, /<strong>DRIFT, EXIT, BOOST<\/strong>/);
 assert.ok(!HOW_TO_PLAY_DISCLOSURE_IDS.includes('flow-combos'), 'Not part of the HOW TO PLAY achievement');
 
-assert.match(guide, /installGuideCardDisclosures\(dialog\)/);
-assert.match(guide, /section\.classList\.contains\('m8-guide-wide'\)/,
-  'Drive By Ear must remain the one ordinary card with its disclosure inside');
-assert.match(guide, /details\.className = 'm8-guide-card-disclosure'/);
-assert.match(guide, /summary\.append\(badge, title\)/);
-// #748: each card shows an icon in place of its step number, decorative beside its title.
-for (const id of ['choose-track-and-car', 'turn-device-to-steer', 'drive-with-one-thumb', 'build-and-use-overcharge', 'shift', 'drift-points', 'flow-points']) {
-  assert.match(guide, new RegExp(`'?${id}'?: [A-Z_]+`), `${id} has an icon`);
-}
-assert.match(guide, /badge\.classList\.add\('has-icon'\);\n\s*badge\.setAttribute\('aria-hidden', 'true'\);/,
-  'The icon is decorative: the card title names it');
+// Cards: a decorative icon (#748; the title names the card), the title a level-4 heading
+// under its section's h3, and the panel's demo above its text.
+assert.match(guide, /<summary><strong class="m8-guide-card-number has-icon" aria-hidden="true">\$\{icon\}<\/strong><span class="m8-guide-card-title" role="heading" aria-level="4">\$\{title\}<\/span><\/summary>/);
+assert.match(guide, /<details class="m8-guide-card-disclosure" data-how-to-play-disclosure="\$\{id\}">/);
 assert.match(guide, /TROPHY_ROAD_REWARD_ICONS\.(race|shift|drift|flow)/, 'The game\'s own icons where it has them');
+assert.match(guide, /<h4>Drive By Ear™<\/h4>/);
+assert.match(guide, /<h5 id="m8DbeBasics">Start here<\/h5>/);
 assert.match(css, /\.m8-guide-card-number\.has-icon svg \{[\s\S]*stroke: currentColor;/);
-// #748: the drive, OVERCHARGE and SHIFT cards act out their controls above their text.
-// Pictures, hidden from assistive technology; their own classes, since other modules
-// look for the real drive pad and BOOST bar; the race controls' colour roles; moving
-// only while their card is open, and one still frame under Reduced Motion.
-const [demos, tokens] = await Promise.all([
+assert.match(css, /\.m8-guide-grid \.m8-guide-section-title \{\s*grid-column: 1 \/ -1;/);
+assert.match(css, /\.m8-guide-grid \.m8-guide-locked > \.m8-guide-card-number \{\s*--turn-pill: var\(--turn-difficulty-locked\);/);
+
+// #748: every card acts out a real control. Pictures, hidden from assistive technology;
+// their own classes, since other modules look for the real controls; the race's colour
+// roles and motion; moving only while their card is open, one still frame under Reduced Motion.
+const [demos, tokens, drivePad, messageCss, inGameMenuCss] = await Promise.all([
   fs.readFile(new URL('../turn/ui/how-to-play-demos.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/design-tokens.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/design-tokens.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/drive-pad.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/styles.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/in-game-menu.css', import.meta.url), 'utf8')
 ]);
 const demoCode = demos.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
-assert.match(guide, /'drive-with-one-thumb': \(documentRef\) => createDrivePadDemo\('drive', documentRef\)/);
-assert.match(guide, /'build-and-use-overcharge': \(documentRef\) => createBoostBarDemo\(documentRef\)/);
-assert.match(guide, /shift: \(documentRef\) => createDrivePadDemo\('shift', documentRef\)/);
-assert.match(guide, /if \(demo\) panel\.prepend\(demo\);/);
-assert.equal(demos.match(/demo\.setAttribute\('aria-hidden', 'true'\);/g)?.length, 2, 'Both kinds of demo are decorative');
-assert.doesNotMatch(demoCode, /(?<![\w-])(drive-(stack|pad\b|zone|gas|brake|drift|boost|lock|shift|reverse)|boost-hud)/,
+for (const demo of [
+  /demo: \(documentRef\) => createDrivePadDemo\('drive', documentRef\)/,
+  /boost: \(documentRef\) => createDrivePadDemo\('boost', documentRef\)/,
+  /overcharge: \(documentRef\) => createDrivePadDemo\('overcharge', documentRef\)/,
+  /demo: createRivalsDemo/,
+  /demo: \(documentRef\) => createScoreDemo\('drift', documentRef\)/,
+  /demo: \(documentRef\) => createDrivePadDemo\('shift', documentRef\)/,
+  /demo: \(documentRef\) => createScoreDemo\('flow', documentRef\)/
+]) assert.match(guide, demo);
+assert.match(guide, /if \(demo\) shell\.querySelector\('\.m8-guide-card-panel'\)\.prepend\(demo\(documentRef\)\);/);
+assert.match(demos, /function demoElement\(className, documentRef\) \{[\s\S]*?demo\.setAttribute\('aria-hidden', 'true'\);/);
+const factories = [...demos.matchAll(/export function (create\w+)\([^)]*\) \{([\s\S]*?)\n\}/g)];
+assert.equal(factories.length, 5);
+for (const [, name, body] of factories) assert.match(body, /demoElement\(/, `${name} is a decorative demo`);
+assert.doesNotMatch(demoCode, /(?<![\w-])(drive-(stack|pad\b|zone|gas|brake|drift|boost|lock|shift|reverse)|boost-hud|manual-steer\b|score-feedback|race-position-hud)/,
   'The demos never use the race controls\' classes');
 assert.doesNotMatch(demoCode, /#[0-9a-f]{3,8}\b/i, 'Colours come from tokens');
 for (const token of ['--turn-control-lock', '--turn-control-shift-on', '--turn-control-overcharge']) {
   assert.match(tokens, new RegExp(`${token}: #`), `${token} is defined`);
 }
 assert.match(tokens, /:root\[data-theme="dark"\] \.turn-demo-pad,\n:root\[data-theme="dark"\] \.drive-pad \{/, 'The demo pad is dark like the real one');
-const demoRules = demoCode.matchAll(/([^{}]+)\{[^{}]*animation:\s*turn-demo/g);
-const animated = [...demoRules].map(([, selector]) => selector.trim());
-assert.ok(animated.length >= 10);
+const animated = [...demoCode.matchAll(/([^{}]+)\{[^{}]*animation:\s*turn-demo/g)].map(([, selector]) => selector.trim());
+assert.ok(animated.length >= 30);
 for (const selector of animated) assert.match(selector, /^details\[open\] /, `${selector} moves only in an open card`);
 assert.match(demos, /@media \(prefers-reduced-motion: reduce\) \{\s*\.turn-demo,\s*\.turn-demo \*,\s*\.turn-demo \*::after \{ animation: none !important; \}/);
 assert.match(demos, /@media \(forced-colors: active\)/);
-// The slide-out is the race's own (drive-pad.css): from the bubble's edge, 140 ms on the
+
+// The slide-outs are the race's own (drive-pad.css): from the bubble's edge, 140 ms on the
 // pad's curve with an 80 ms fade, never a substitute that reads as a turn in depth.
-const drivePad = await fs.readFile(new URL('../turn/drive-pad.css', import.meta.url), 'utf8');
 const lockBubble = drivePad.match(/\.drive-lock-bubble \{[\s\S]*?\n\}/)[0];
 assert.match(lockBubble, /opacity 80ms ease-out,\s*transform 140ms cubic-bezier\(\.2,\.88,\.25,1\)/);
 assert.match(lockBubble, /transform: translateX\(62%\) scaleX\(0\.38\);\s*transform-origin: right center;/);
@@ -132,21 +170,28 @@ assert.match(demoCode, /--turn-demo-tucked: translateX\(62%\) scaleX\(0\.38\);/)
 assert.match(demoCode, /\.turn-demo-bubble \{[^}]*transform: var\(--turn-demo-tucked\);\s*transform-origin: right center;/);
 const stopsOf = (name) => [...demoCode.match(new RegExp(`@keyframes ${name} \\{([\\s\\S]*?)\\n  \\}`))[1]
   .matchAll(/^\s*([\d.%, ]+)\{([^}]*)\}/gm)].map(([, at, body]) => ({ at: at.split(',').map((stop) => parseFloat(stop)), body }));
-for (const bubble of ['lock', 'reverse']) {
-  const slide = stopsOf(`turn-demo-drive-${bubble}-slide`);
-  const fade = stopsOf(`turn-demo-drive-${bubble}-fade`);
-  const ms = (from, to) => Math.round((to.at[0] - from.at.at(-1)) * 100);
-  assert.equal(ms(slide[0], slide[1]), 140, `${bubble} slides out in 140 ms`);
-  assert.equal(ms(slide[1], slide[2]), 140, `${bubble} slides back in 140 ms`);
+const loopMs = (name) => Number(demoCode.match(new RegExp(`${name} (\\d+)s`))[1]) * 1000;
+const segmentMs = (name, from, to) => Math.round((to.at[0] - from.at.at(-1)) * loopMs(name) / 100);
+const slides = [...demoCode.matchAll(/@keyframes (turn-demo-[a-z]+-(?:lock|reverse)-slide) \{/g)].map(([, name]) => name);
+assert.deepEqual(slides, ['turn-demo-drive-lock-slide', 'turn-demo-drive-reverse-slide', 'turn-demo-boost-lock-slide', 'turn-demo-overcharge-lock-slide']);
+for (const name of slides) {
+  const slide = stopsOf(name);
+  const fadeName = name.replace(/-slide$/, '-fade');
+  const fade = stopsOf(fadeName);
+  assert.equal(segmentMs(name, slide[0], slide[1]), 140, `${name}: out in 140 ms`);
+  assert.equal(segmentMs(name, slide[1], slide[2]), 140, `${name}: back in 140 ms`);
   assert.match(slide[0].body, /animation-timing-function: cubic-bezier\(0\.2, 0\.88, 0\.25, 1\)/);
   assert.match(slide[1].body, /animation-timing-function: cubic-bezier\(0\.2, 0\.88, 0\.25, 1\)/);
-  assert.equal(ms(fade[0], fade[1]), 80, `${bubble} fades in over 80 ms`);
-  assert.equal(ms(fade[1], fade[2]), 80, `${bubble} fades out over 80 ms`);
+  assert.equal(segmentMs(fadeName, fade[0], fade[1]), 80, `${fadeName}: in over 80 ms`);
+  assert.equal(segmentMs(fadeName, fade[1], fade[2]), 80, `${fadeName}: out over 80 ms`);
 }
-assert.match(demoCode, /details\[open\] \.turn-demo-stack\[data-demo="drive"\] \.is-lock \{\s*animation:\s*turn-demo-drive-lock-slide 10s linear infinite,/,
-  'Each slide stop is 10 s × its percentage');
-assert.match(guide, /title\.setAttribute\('role', 'heading'\)/);
-assert.match(guide, /title\.setAttribute\('aria-level', '3'\)/);
+// STEERING CENTRED fades in as the race's message does, and RECALIBRATE blinks twice in 960 ms.
+assert.match(messageCss, /\.message \{[\s\S]*?transition: opacity 140ms ease;/);
+assert.match(inGameMenuCss, /animation: turn-recalibrate-centred 960ms linear 1;/);
+const message = stopsOf('turn-demo-steer-message');
+assert.equal(segmentMs('turn-demo-steer-message', message[0], message[1]), 140);
+assert.deepEqual(stopsOf('turn-demo-steer-blink').map(({ at }) => at), [[0, 59, 65], [56, 62]],
+  'Yellow for 240 ms, twice, 480 ms apart, as in-game-menu.css blinks it');
 assert.doesNotMatch(guide, /turn:open-how-to-play|installTargetedOpening|__turnOpenHowToPlaySection|TARGET_SECTION_ID/,
   'Removing the scorekeeper info buttons must also remove their deep-link event wiring');
 
@@ -227,8 +272,9 @@ assert.match(components, /\.m8-dbe-guide-panel,[\s\S]*background: var\(--turn-di
 assert.doesNotMatch(components, /#eaf9ef/);
 assert.doesNotMatch(`${guide}\n${css}\n${components}`, /setInterval|setTimeout|@keyframes|animation:/, 'Help content must add no runtime loop or distracting motion');
 
-assert.equal(HOW_TO_PLAY_DISCLOSURE_IDS.length, 9,
-  'LEARN TO PLAY must cover all seven collapsible guide cards and both nested disclosures');
+assert.deepEqual([...HOW_TO_PLAY_DISCLOSURE_IDS], [
+  'turn-device-to-steer', 'drive-with-one-thumb', 'build-and-use-overcharge', 'choose-track-and-car', 'drive-by-ear-sounds'
+], 'LEARN TO PLAY counts the five QUICK REFERENCE parts every player can open, under their old ids');
 for (const disclosureId of HOW_TO_PLAY_DISCLOSURE_IDS) {
   assert.match(guide, new RegExp(`['"]${disclosureId}['"]`),
     `How to Play must expose the stable ${disclosureId} progress id`);
