@@ -5,6 +5,7 @@
 // hidden from assistive technology (no per-frame announcements). It reads the race
 // state and never changes it.
 import { routeForSamples, routeSegmentAt, upcomingRouteSegments } from '../audio/route-geometry.js';
+import { describeStartCentring, startCentringLog } from '../input/tilt-centring.js';
 
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 const HUD_SETTING_KEY = 'turn-route-test-hud-v1';
@@ -72,7 +73,9 @@ function installStyles() {
     .turn-route-test-hud[hidden] { display: none; }
     .turn-route-test-hud .is-right { color: #8ce99a; }
     .turn-route-test-hud .is-left { color: #ffd43b; }
-    .turn-route-test-hud .is-dim { color: #a6a7ab; }`;
+    .turn-route-test-hud .is-dim { color: #a6a7ab; }
+    .m8-admin-centring { display: grid; gap: var(--turn-space-1); margin-top: var(--turn-space-3); }
+    .m8-admin-centring ol { margin: 0; padding-inline-start: var(--turn-space-8); font-size: var(--turn-type-small); }`;
   document.head.append(style);
 }
 
@@ -208,8 +211,25 @@ function installSetting(hud) {
         <strong>ROUTE TEST HUD</strong>
         <small id="m8RouteTestHudDescription">Shows the upcoming SWOOSH bends while racing, also with a blank screen</small>
       </span>
-    </label>`;
+    </label>
+    <div class="m8-admin-centring">
+      <strong id="m8AdminCentringTitle">START CENTRING</strong>
+      <small>How tilt steering was centred at the last race starts, newest first. RECALIBRATE within 30 s of a start adds how far it moved the centre.</small>
+      <ol aria-labelledby="m8AdminCentringTitle"></ol>
+    </div>`;
   list.append(section);
+
+  // Read when SETTINGS opens: the starts since this page loaded.
+  const starts = section.querySelector('.m8-admin-centring ol');
+  const showStarts = () => {
+    const log = startCentringLog();
+    starts.replaceChildren(...(log.length ? log.map(describeStartCentring) : ['No tilt race start yet.']).map((text) => {
+      const item = document.createElement('li');
+      item.textContent = text;
+      return item;
+    }));
+  };
+  showStarts();
 
   const toggle = section.querySelector('#m8RouteTestHud');
   toggle.checked = loadEnabled();
@@ -223,6 +243,7 @@ function installSetting(hud) {
   });
   dialog.addEventListener('toggle', () => {
     toggle.checked = loadEnabled();
+    showStarts();
   });
   return true;
 }
