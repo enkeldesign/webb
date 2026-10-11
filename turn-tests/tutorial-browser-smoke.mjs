@@ -422,12 +422,16 @@ try {
     // Techniques as FLOW announces them (scoring/flow-runtime.js).
     const flow = (detail) => page.evaluate((value) => globalThis.dispatchEvent(new CustomEvent('turn:flow-score-event', { detail: value })), detail);
     await flow({ type: 'technique', technique: 'drift', multiplier: 1 });
+    // #1171: what scored pulses on the drive pad, and only that.
+    assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('.drive-stack .is-flow-pulse')]
+      .map((element) => element.classList.contains('drive-drift-zone'))), [true], 'DRIFT pulses DRIFT');
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'combo');
     await flow({ type: 'chain-expired' });
     await page.waitForFunction(() => /chain ran out/.test(document.querySelector('.turn-tutorial-prompt').textContent));
     await flow({ type: 'technique', technique: 'drift', multiplier: 1 });
     await flow({ type: 'technique', technique: 'clean-exit', multiplier: 1.5 });
     await flow({ type: 'technique', technique: 'boost', multiplier: 2 });
+    assert.equal(await page.locator('.drive-boost-zone').evaluate((element) => element.classList.contains('is-flow-pulse')), true, 'BOOST pulses BOOST');
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.state === 'done');
     assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /That is a COMBO/);
 

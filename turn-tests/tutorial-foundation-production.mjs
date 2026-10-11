@@ -870,6 +870,51 @@ test('FLOW TUTORIAL: DRIFT and EXIT, then a COMBO of three, judged on FLOW\'s ow
   assert.equal(intro.UNLOCK_INTRODUCTIONS.flow.action.label, 'START FLOW TUTORIAL');
 });
 
+test('FLOW pulses: each technique FLOW scores pulses the control that earned it (#1171)', async () => {
+  const { FLOW_PULSE_CLASS, FLOW_PULSE_TARGETS, startFlowPulses } = await import('../turn/ui/flow-pulses.js');
+  const made = new Map();
+  const control = () => {
+    const classes = new Set();
+    return {
+      isConnected: true,
+      offsetWidth: 1,
+      classList: { add: (name) => classes.add(name), remove: (name) => classes.delete(name), contains: (name) => classes.has(name) }
+    };
+  };
+  const documentRef = {
+    head: { appendChild() {} },
+    getElementById: () => null,
+    createElement: () => ({}),
+    querySelector(selector) {
+      const key = selector.replace('.drive-stack ', '');
+      if (!made.has(key)) made.set(key, control());
+      return made.get(key);
+    }
+  };
+  const bus = new globalThis.EventTarget();
+  const send = (detail) => bus.dispatchEvent(new globalThis.CustomEvent('turn:flow-score-event', { detail }));
+  const pulsing = (selector) => made.get(selector)?.classList.contains(FLOW_PULSE_CLASS) === true;
+  const stop = startFlowPulses({ events: bus, documentRef });
+  send({ type: 'technique', technique: 'lock' });
+  assert.equal(pulsing('.drive-lock-bubble'), true, 'LOCK during a drift pulses LOCK');
+  send({ type: 'technique', technique: 'overcharge-catch' });
+  assert.equal(pulsing('.drive-gas-zone'), true, 'A caught OVERCHARGE pulses GAS');
+  send({ type: 'chain-expired' });
+  assert.equal(made.size, 2, 'Only scored techniques pulse');
+  stop();
+  assert.equal(pulsing('.drive-lock-bubble') || pulsing('.drive-gas-zone'), false, 'Stopping clears what is showing');
+  send({ type: 'technique', technique: 'boost' });
+  assert.equal(made.has('.drive-boost-zone'), false, 'Stopped: nothing more pulses');
+  // Every technique FLOW scores, by FLOW's own names, has its control.
+  const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
+  const runtime = await read('../turn/scoring/flow-runtime.js');
+  const scored = [...runtime.matchAll(/accept\('([a-z-]+)'/g)].map(([, technique]) => technique).sort();
+  assert.deepEqual(Object.keys(FLOW_PULSE_TARGETS).sort(), scored);
+  const tutorial = await read('../turn/tutorial/flow-tutorial.js');
+  assert.match(tutorial, /const stopPulses = startFlowPulses\(\{ events \}\);/, 'FLOW TUTORIAL starts them');
+  assert.match(tutorial, /stopPulses\(\);\n    coach\.stop\(\);/, 'and stops them with the coach');
+});
+
 test('PAINTJOB is pointed out in GARAGE without a sheet: its reward toast says it', async () => {
   const intro = await import('../turn/progression/unlock-introductions.js');
   assert.equal(intro.UNLOCK_INTRODUCTIONS.paintjob, undefined, 'No introduction sheet');
