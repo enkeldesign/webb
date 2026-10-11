@@ -369,6 +369,7 @@ try {
     if (announcement !== undefined) assert.equal(shiftStatus.textContent, announcement);
   };
 
+  assert.equal(globalThis.__turnBoostCharge ?? 1, 1, 'The race starts with a full bar');
   shiftBubble.dispatch('click');
   assertOrientation({
     gear: 'up',
@@ -376,6 +377,11 @@ try {
     label: 'FLOW SHIFT. UP gear active. Activate to move the three-point boost to the default gear.',
     announcement: 'FLOW SHIFT. UP gear active. Control, drift, and boost tank gain one point with no reductions.'
   });
+  // #1172: a bigger BOOST TANK keeps the same seconds, so the bar is part full. No more
+  // BOOST POWER, so nothing became OVERCHARGE and none is announced.
+  const partFull = globalThis.__turnBoostCharge;
+  assert.ok(partFull > 0.5 && partFull < 0.95, `SHIFT to a bigger tank leaves it part full (${partFull})`);
+  assert.equal(globalThis.__turnBoostOvercharge ?? 0, 0);
 
   drivePad.dispatch('pointerdown', { pointerId: 1 });
   drivePad.dispatch('pointerup', { pointerId: 1 });
@@ -393,6 +399,8 @@ try {
     label: 'FLOW SHIFT. Default gear active. Activate to move the three-point boost to the UP gear.',
     announcement: 'FLOW SHIFT. Default gear active.'
   });
+  assert.ok(Math.abs(globalThis.__turnBoostCharge - 1) < 1e-9, 'Back to the smaller tank, the same seconds fill it again');
+  assert.equal(globalThis.__turnBoostOvercharge ?? 0, 0, 'Shifting back and forth mints no OVERCHARGE');
 
   drivePad.dispatch('pointerdown', { pointerId: 2 });
   drivePad.dispatch('pointercancel', { pointerId: 2 });
