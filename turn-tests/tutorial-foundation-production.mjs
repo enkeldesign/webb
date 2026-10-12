@@ -268,7 +268,7 @@ test('a tutorial session borrows COUNTRYSIDE and the LEARNER CAR, then restores 
   const completions = [];
   const onCompleted = (event) => completions.push(event.detail);
   globalThis.addEventListener(TUTORIAL_COMPLETED_EVENT, onCompleted);
-  globalThis.dispatchEvent(new CustomEvent('turn:session-graduated', { detail: { policy: 'normal' } }));
+  globalThis.dispatchEvent(new globalThis.CustomEvent('turn:session-graduated', { detail: { policy: 'normal' } }));
   globalThis.removeEventListener(TUTORIAL_COMPLETED_EVENT, onCompleted);
   assert.equal(session.graduated, true);
   assert.equal(session.firstCompletion, true);
@@ -286,7 +286,7 @@ test('a tutorial session borrows COUNTRYSIDE and the LEARNER CAR, then restores 
   assert.deepEqual(harness.state.competitorLaps, stored, 'The stored rivals come back');
   assert.deepEqual(harness.calls.slice(-2), [['track', 'airport', false], ['car', 'convertible', false]]);
 
-  globalThis.dispatchEvent(new CustomEvent('turn:session-graduated', { detail: { policy: 'normal' } }));
+  globalThis.dispatchEvent(new globalThis.CustomEvent('turn:session-graduated', { detail: { policy: 'normal' } }));
   assert.equal(progress.complete(TURN_TUTORIAL.id), false, 'An ended session no longer listens');
 });
 
@@ -327,7 +327,7 @@ test('replay and SKIP TUTORIAL', async () => {
   const replayCompletions = [];
   const onReplayCompleted = (event) => replayCompletions.push(event.detail.firstCompletion);
   globalThis.addEventListener(TUTORIAL_COMPLETED_EVENT, onReplayCompleted);
-  globalThis.dispatchEvent(new CustomEvent('turn:session-graduated', { detail: { policy: 'sandbox' } }));
+  globalThis.dispatchEvent(new globalThis.CustomEvent('turn:session-graduated', { detail: { policy: 'sandbox' } }));
   globalThis.removeEventListener(TUTORIAL_COMPLETED_EVENT, onReplayCompleted);
   assert.deepEqual(replayCompletions, [false], 'A replay is a completion, but not the first: no second reward');
   await replaySession.exit();
@@ -1050,7 +1050,8 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
   for (const consume of [false, true]) {
     for (const armLast of [false, true]) {
       clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
-      const first = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+      const events = new globalThis.EventTarget();
+      const first = intro.createUnlockIntroductionQueue(globalThis.localStorage, { events });
       const overlapping = intro.createUnlockIntroductionQueue({
         getItem: globalThis.localStorage.getItem,
         setItem(key, value) {
@@ -1062,9 +1063,13 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
             if (!armLast) globalThis.localStorage.setItem(key, value);
           } else globalThis.localStorage.setItem(key, value);
         }
-      });
+      }, { events });
       overlapping.unlocked(['flow']);
+      events.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: intro.UNLOCK_INTRODUCTIONS_KEY }));
+      assert.equal(first.hasHint(intro.ALL_CARS_HINT), !consume, 'Storage sync preserves the arming tab’s guidance without a startup call');
+      assert.equal(overlapping.hasHint(intro.ALL_CARS_HINT), !consume, 'The overlapping tab recovers the arm on storage sync too');
       const reloaded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+      assert.equal(reloaded.hasHint(intro.ALL_CARS_HINT), !consume, 'A new queue reconciles before armOnce is called');
       assert.equal(reloaded.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), false, 'The original once operation survives');
       assert.equal(reloaded.hasHint(intro.ALL_CARS_HINT), !consume, 'An omitted arm is restored only when it has not been consumed');
       assert.equal(reloaded.pointedOut(intro.ALL_CARS_HINT), !consume, 'Restoring the arm also preserves its previous presentation');

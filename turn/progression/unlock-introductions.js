@@ -108,6 +108,7 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
   let persistent = typeof storage?.getItem === 'function' && typeof storage?.setItem === 'function';
   const prefix = `${UNLOCK_INTRODUCTIONS_KEY}:`;
   const markers = new Map();
+  const knownHints = new Set([...Object.keys(GARAGE_HINT_TARGETS), 'race-shift', ...state.hints]);
   const markerKey = (...parts) => prefix + JSON.stringify(parts);
   const readMarker = (key) => {
     if (persistent) {
@@ -129,6 +130,14 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
   // the shared snapshot cannot erase it. Only an explicit new arming generation
   // (admin replay or a new armOnce key) can make that hint available again.
   const applyConsumed = () => {
+    for (const hint of knownHints) {
+      const armedGeneration = generation(hint);
+      if (!armedGeneration.startsWith('once:')) continue;
+      const key = armedGeneration.slice(5);
+      if (!readMarker(markerKey('once', key))) continue;
+      if (!state.once.includes(key)) state.once.push(key);
+      if (!readMarker(consumedKey(hint)) && !state.hints.includes(hint)) state.hints.push(hint);
+    }
     state.hints = state.hints.filter((hint) => {
       if (!readMarker(consumedKey(hint))) {
         if (readMarker(pointedKey(hint))) state.views[hint] = Math.max(1, Number(state.views[hint]) || 0);
@@ -206,19 +215,10 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
     // A hint every player gets once, whenever it was added (ALL_CARS_HINT); `key`
     // names that once, so a hint can be armed again under a new one.
     armOnce(hint, key = hint) {
+      knownHints.add(hint);
       refresh();
       const onceKey = markerKey('once', key);
-      const armed = readMarker(onceKey);
-      if (state.once.includes(key) || armed) {
-        // An unrelated overlapping snapshot can omit this newly armed hint. Its
-        // independent generation/once markers retain the arming operation too.
-        // Legacy once entries without a marker may already have been consumed.
-        if (armed && generation(hint) === `once:${key}` && !readMarker(consumedKey(hint)) && !state.hints.includes(hint)) {
-          state.hints.push(hint);
-          save();
-        }
-        return false;
-      }
+      if (state.once.includes(key) || readMarker(onceKey)) return false;
       rearm(hint, `once:${key}`);
       writeMarker(onceKey, '1');
       state.once.push(key);
