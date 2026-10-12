@@ -103,7 +103,7 @@ function readState(storage) {
 }
 
 // The queue, without the page: what is waiting to be introduced, and what has been.
-export function createUnlockIntroductionQueue(storage = globalThis.localStorage, { events = null } = {}) {
+export function createUnlockIntroductionQueue(storage = globalThis.localStorage, { events = null, onSync = () => {} } = {}) {
   const state = readState(storage);
   const save = () => {
     try {
@@ -114,7 +114,9 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
   // window) takes up what it saved, so a later save here does not write back a hint
   // that tab has used (#1192).
   events?.addEventListener?.('storage', (event) => {
-    if (event.key === UNLOCK_INTRODUCTIONS_KEY) Object.assign(state, readState(storage));
+    if (event.key !== UNLOCK_INTRODUCTIONS_KEY) return;
+    Object.assign(state, readState(storage));
+    onSync();
   });
   return Object.freeze({
     // A reward unlocked just now; replay (admin) introduces it again.
@@ -279,7 +281,7 @@ export function installUnlockIntroductions({
   windowRef = globalThis
 } = {}) {
   installStyles(documentRef);
-  const queue = createUnlockIntroductionQueue(storage, { events: windowRef });
+  const queue = createUnlockIntroductionQueue(storage, { events: windowRef, onSync: syncGarageHints });
   const dialog = createSheet(documentRef);
   const title = dialog.querySelector('h2');
   const copy = dialog.querySelector('.m8-unlock-copy');
@@ -357,6 +359,18 @@ export function installUnlockIntroductions({
     hintObserver?.disconnect();
     hintObserver = null;
   }
+  // Another tab can use a hint while this GARAGE is already open. Reconcile both
+  // its visible pulse and its watcher with the queue that was just synchronized.
+  function syncGarageHints() {
+    for (const [hint, { selector, untilUsed }] of Object.entries(GARAGE_HINT_TARGETS)) {
+      if (!untilUsed || queue.hasHint(hint)) continue;
+      for (const element of documentRef.querySelectorAll(selector)) {
+        element.classList.remove('is-suggested', 'is-introduced');
+      }
+    }
+    stopWatchingHints();
+    watchHints();
+  }
   function watchHints() {
     if (hintObserver || windowRef.__turnRuntime?.state?.running === true) return;
     if (!armedGarageHints().length || typeof MutationObserver !== 'function') return;
@@ -416,7 +430,7 @@ export function installUnlockIntroductions({
     for (const [hint, { untilUsed }] of Object.entries(GARAGE_HINT_TARGETS)) {
       if (!untilUsed || !queue.hasHint(hint) || !event.target?.closest?.(untilUsed)) continue;
       queue.consumeHint(hint);
-      for (const element of documentRef.querySelectorAll('.is-suggested')) element.classList.remove('is-suggested');
+      syncGarageHints();
     }
   }, true);
   windowRef.addEventListener?.('turn:ui-state-change', (event) => {

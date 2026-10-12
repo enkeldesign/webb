@@ -517,11 +517,30 @@ try {
         suggested: document.querySelector('.garage-all-cars-button').classList.contains('is-suggested') };
     });
     assert.deepEqual(await queueState(), { armed: true, pointedOut: true, suggested: true }, 'ALL CARS keeps a calm pulse until it is used');
+    // A real second tab shares storage but already has its own rendered GARAGE.
+    // Using ALL CARS here must stop that tab's pulse without reopening GARAGE.
+    const otherTab = await page.context().newPage();
+    const otherErrors = [];
+    otherTab.on('pageerror', (error) => otherErrors.push(error.message));
+    await otherTab.addInitScript(() => {
+      Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
+    });
+    await otherTab.goto(new URL('turn/', target).href);
+    await otherTab.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready')
+      && globalThis.__turnNextHome?.tutorial, null, { timeout: 60000 });
+    await otherTab.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
+    await otherTab.waitForFunction(() => document.querySelector('.garage-all-cars-button')?.classList.contains('is-suggested'));
     // GARAGE ignores activations during its 600 ms VoiceOver entry-tap guard.
     await page.waitForTimeout(700);
     await page.locator('.garage-all-cars-button').click();
     await page.waitForFunction(() => document.querySelector('.garage-all-cars')?.open);
     assert.deepEqual(await queueState(), { armed: false, pointedOut: false, suggested: false }, 'Opened once, it stops for good');
+    await otherTab.waitForFunction(() => !globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-all-cars'));
+    assert.equal(await otherTab.locator('.garage-all-cars-button').evaluate((button) =>
+      button.classList.contains('is-suggested') || button.classList.contains('is-introduced')), false,
+    'The already-open GARAGE in the other tab stops pulsing as soon as the saved hint is consumed');
+    assert.deepEqual(otherErrors, [], 'The other tab has no page errors');
+    await otherTab.close();
     await page.locator('.garage-all-cars .turn-pr-close').click();
     await page.waitForFunction(() => !document.querySelector('.garage-all-cars')?.open);
     await page.locator('.garage-race').click();
