@@ -103,13 +103,19 @@ function readState(storage) {
 }
 
 // The queue, without the page: what is waiting to be introduced, and what has been.
-export function createUnlockIntroductionQueue(storage = globalThis.localStorage) {
+export function createUnlockIntroductionQueue(storage = globalThis.localStorage, { events = null } = {}) {
   const state = readState(storage);
   const save = () => {
     try {
       storage?.setItem?.(UNLOCK_INTRODUCTIONS_KEY, JSON.stringify(state));
     } catch (_) {}
   };
+  // TURN open in another tab saves the whole queue too: the page's queue (events: the
+  // window) takes up what it saved, so a later save here does not write back a hint
+  // that tab has used (#1192).
+  events?.addEventListener?.('storage', (event) => {
+    if (event.key === UNLOCK_INTRODUCTIONS_KEY) Object.assign(state, readState(storage));
+  });
   return Object.freeze({
     // A reward unlocked just now; replay (admin) introduces it again.
     unlocked(ids, { replay = false } = {}) {
@@ -273,7 +279,7 @@ export function installUnlockIntroductions({
   windowRef = globalThis
 } = {}) {
   installStyles(documentRef);
-  const queue = createUnlockIntroductionQueue(storage);
+  const queue = createUnlockIntroductionQueue(storage, { events: windowRef });
   const dialog = createSheet(documentRef);
   const title = dialog.querySelector('h2');
   const copy = dialog.querySelector('.m8-unlock-copy');

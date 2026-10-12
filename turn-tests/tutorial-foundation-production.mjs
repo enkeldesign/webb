@@ -955,6 +955,22 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
   const later = intro.createUnlockIntroductionQueue(globalThis.localStorage);
   assert.equal(later.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), false, 'Once used, never armed again');
   assert.equal(later.hasHint(intro.ALL_CARS_HINT), false);
+  // TURN in two tabs (CODEX on #1192): used in one, the other takes that up from the
+  // storage event, so its next save does not arm ALL CARS again.
+  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  const tabs = new globalThis.EventTarget();
+  const usedHere = intro.createUnlockIntroductionQueue(globalThis.localStorage, { events: new globalThis.EventTarget() });
+  usedHere.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
+  const otherTab = intro.createUnlockIntroductionQueue(globalThis.localStorage, { events: tabs });
+  assert.equal(otherTab.hasHint(intro.ALL_CARS_HINT), true);
+  usedHere.consumeHint(intro.ALL_CARS_HINT);
+  tabs.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: 'some-other-key' }));
+  assert.equal(otherTab.hasHint(intro.ALL_CARS_HINT), true, 'Only its own key is taken up');
+  tabs.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: intro.UNLOCK_INTRODUCTIONS_KEY }));
+  assert.equal(otherTab.hasHint(intro.ALL_CARS_HINT), false, 'The other tab sees it used');
+  otherTab.markPointedOut('garage-paint');
+  assert.equal(intro.createUnlockIntroductionQueue(globalThis.localStorage).hasHint(intro.ALL_CARS_HINT), false,
+    'And its next save keeps it used');
   // A player whose r435 hint ended after one showing is armed once more.
   globalThis.localStorage.setItem(intro.UNLOCK_INTRODUCTIONS_KEY, JSON.stringify({ pending: [], shown: [], hints: [], views: {}, once: ['garage-all-cars'] }));
   const r435 = intro.createUnlockIntroductionQueue(globalThis.localStorage);
