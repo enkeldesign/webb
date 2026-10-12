@@ -57,9 +57,18 @@ function installStyles(documentRef) {
       50% { box-shadow: 0 0 0 var(--turn-space-1) color-mix(in srgb, var(--turn-action-primary) 70%, transparent); }
     }
     @media (prefers-reduced-motion: reduce) {
-      #turnGarage :is(.is-introduced, .is-suggested) {
+      #turnGarage .is-introduced,
+      #turnGarage .is-suggested:not(.is-introduced) {
         animation: none;
         outline: var(--turn-border-control) solid var(--turn-action-primary);
+        outline-offset: var(--turn-space-1);
+      }
+    }
+    @media (forced-colors: active) {
+      #turnGarage .is-introduced,
+      #turnGarage .is-suggested:not(.is-introduced) {
+        animation: none;
+        outline: var(--turn-border-control) solid Highlight;
         outline-offset: var(--turn-space-1);
       }
     }

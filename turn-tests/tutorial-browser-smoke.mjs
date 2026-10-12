@@ -517,6 +517,15 @@ try {
         suggested: document.querySelector('.garage-all-cars-button').classList.contains('is-suggested') };
     });
     assert.deepEqual(await queueState(), { armed: true, pointedOut: true, suggested: true }, 'ALL CARS keeps a calm pulse until it is used');
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars-button').classList.contains('is-introduced'));
+    assert.equal(await page.locator('.garage-all-cars-button').evaluate((button) => globalThis.getComputedStyle(button).animationName),
+      'none', 'Reduce Motion stays static after the first introduction ends');
+    await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'no-preference' });
+    assert.deepEqual(await page.locator('.garage-all-cars-button').evaluate((button) => {
+      const style = globalThis.getComputedStyle(button);
+      return { animation: style.animationName, outline: style.outlineStyle, visible: parseFloat(style.outlineWidth) > 0 };
+    }), { animation: 'none', outline: 'solid', visible: true }, 'Forced colours retain a visible static hint without Reduce Motion');
+    await page.emulateMedia({ forcedColors: 'none', reducedMotion: 'reduce' });
     // A real second tab shares storage but already has its own rendered GARAGE.
     // Using ALL CARS here must stop that tab's pulse without reopening GARAGE.
     const otherTab = await page.context().newPage();

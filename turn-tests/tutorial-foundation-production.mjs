@@ -989,7 +989,7 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
     'Using it ends the pulse for good');
   const focusSource = await read('../turn/garage/garage-focus.js');
   assert.match(focusSource, /#turnGarage \.is-suggested:not\(\.is-introduced\) \{ animation: turn-garage-suggest 2\.4s ease-in-out infinite; \}/);
-  assert.match(focusSource, /prefers-reduced-motion: reduce\) \{\s*#turnGarage :is\(\.is-introduced, \.is-suggested\) \{\s*animation: none;/,
+  assert.match(focusSource, /prefers-reduced-motion: reduce\) \{\s*#turnGarage \.is-introduced,\s*#turnGarage \.is-suggested:not\(\.is-introduced\) \{\s*animation: none;/,
     'Reduced Motion: a steady outline instead');
   assert.match(source, /if \(ownVisit && \(points\.length \|\| pointedGarage === garage \|\| garageOpenedForCar\(garage\)\)\) continue;/,
     'Only on a visit the player opened themselves, with nothing else to point out');
