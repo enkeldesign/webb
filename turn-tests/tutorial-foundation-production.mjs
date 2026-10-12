@@ -940,18 +940,39 @@ test('PAINTJOB is pointed out in GARAGE without a sheet: its reward toast says i
   assert.match(source, /viewCarWhenGarageOpens\('sedan'\);/, 'TRY SHIFT IN THE SEDAN opens the SEDAN as a challenge opens its car');
 });
 
-test('GARAGE points at ALL CARS once, and RACE at ACTIVATE SHIFT once per car', async () => {
+test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT once per car', async () => {
   const intro = await import('../turn/progression/unlock-introductions.js');
   memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
   const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
-  assert.equal(queue.armOnce(intro.ALL_CARS_HINT), true, 'Armed for every player, including existing ones');
-  queue.consumeHint(intro.ALL_CARS_HINT);
+  assert.equal(queue.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), true, 'Armed for every player, including existing ones');
+  // #1189: pointed out once, then a calm pulse on every visit until ALL CARS is used.
+  assert.equal(queue.pointedOut(intro.ALL_CARS_HINT), false);
+  queue.markPointedOut(intro.ALL_CARS_HINT);
+  const revisit = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(revisit.hasHint(intro.ALL_CARS_HINT), true, 'Still armed on later visits');
+  assert.equal(revisit.pointedOut(intro.ALL_CARS_HINT), true, 'But said and scrolled to only once');
+  revisit.consumeHint(intro.ALL_CARS_HINT);
   const later = intro.createUnlockIntroductionQueue(globalThis.localStorage);
-  assert.equal(later.armOnce(intro.ALL_CARS_HINT), false, 'Never armed again');
+  assert.equal(later.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), false, 'Once used, never armed again');
   assert.equal(later.hasHint(intro.ALL_CARS_HINT), false);
+  // A player whose r435 hint ended after one showing is armed once more.
+  globalThis.localStorage.setItem(intro.UNLOCK_INTRODUCTIONS_KEY, JSON.stringify({ pending: [], shown: [], hints: [], views: {}, once: ['garage-all-cars'] }));
+  const r435 = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(r435.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), true);
+  assert.equal(r435.hasHint(intro.ALL_CARS_HINT), true);
   const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
   const source = await read('../turn/progression/unlock-introductions.js');
-  assert.match(source, /if \(introducesOnUnlock\(windowRef, storage\)\) queue\.armOnce\(ALL_CARS_HINT\);/, 'Not in automated runs');
+  assert.match(source, /if \(introducesOnUnlock\(windowRef, storage\)\) queue\.armOnce\(ALL_CARS_HINT, ALL_CARS_UNTIL_USED\);/, 'Not in automated runs');
+  assert.match(source, /untilUsed: '\.garage-all-cars-button, \.garage-car-card'/,
+    'Used: the sheet opened on a phone, or a car chosen from ALL CARS, in the sheet or inline on iPad');
+  assert.match(source, /if \(untilUsed\) suggestInGarage\(target, \{ documentRef \}\);\n\s*if \(untilUsed && queue\.pointedOut\(hint\)\) continue;/,
+    'The calm pulse on every visit; the scroll and the line only once');
+  assert.match(source, /if \(!untilUsed \|\| !queue\.hasHint\(hint\) \|\| !event\.target\?\.closest\?\.\(untilUsed\)\) continue;\n\s*queue\.consumeHint\(hint\);/,
+    'Using it ends the pulse for good');
+  const focusSource = await read('../turn/garage/garage-focus.js');
+  assert.match(focusSource, /#turnGarage \.is-suggested:not\(\.is-introduced\) \{ animation: turn-garage-suggest 2\.4s ease-in-out infinite; \}/);
+  assert.match(focusSource, /prefers-reduced-motion: reduce\) \{\s*#turnGarage :is\(\.is-introduced, \.is-suggested\) \{\s*animation: none;/,
+    'Reduced Motion: a steady outline instead');
   assert.match(source, /if \(ownVisit && \(points\.length \|\| pointedGarage === garage \|\| garageOpenedForCar\(garage\)\)\) continue;/,
     'Only on a visit the player opened themselves, with nothing else to point out');
   assert.match(source, /selector: '\.garage-all-cars-button, #garageCatalogTitle'/,

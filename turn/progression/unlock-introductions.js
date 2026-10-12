@@ -1,5 +1,5 @@
 import { getTrophyRoadReward } from './trophy-road.js';
-import { garageOpenedForCar, pointOutInGarage, viewCarWhenGarageOpens } from '../garage/garage-focus.js';
+import { garageOpenedForCar, pointOutInGarage, suggestInGarage, viewCarWhenGarageOpens } from '../garage/garage-focus.js';
 
 // Unlock introductions (#1149, #1150): when DRIFT ATTACK, SHIFT or FLOW unlocks, Home
 // explains it in a bottom sheet that stays until the player closes it, instead of
@@ -24,6 +24,8 @@ export const UNLOCK_HINTS = Object.freeze({
 });
 // What each GARAGE hint scrolls to and pulses, and what it says. ownVisit: only on a
 // GARAGE visit the player opened themselves, with nothing else to point out (#1168).
+// untilUsed: after that, a calm pulse on every visit until the player uses it, which
+// clicking anything matching untilUsed counts as (#1189).
 const GARAGE_HINT_TARGETS = Object.freeze({
   'garage-shift': Object.freeze({ selector: '.garage-shift', say: 'New in GARAGE: ACTIVATE SHIFT, below the car’s name.' }),
   'garage-paint': Object.freeze({ selector: '.garage-paint-toggle', say: 'New in GARAGE: PAINT, below the car’s name.' }),
@@ -32,11 +34,16 @@ const GARAGE_HINT_TARGETS = Object.freeze({
   'garage-all-cars': Object.freeze({
     selector: '.garage-all-cars-button, #garageCatalogTitle',
     say: 'New in GARAGE: ALL CARS, every car and what unlocks it.',
-    ownVisit: true
+    ownVisit: true,
+    // Opening the sheet on a phone, or choosing a car from it or from the catalog
+    // shown inline on iPad.
+    untilUsed: '.garage-all-cars-button, .garage-car-card'
   })
 });
-// Armed once for every player, the first time TURN runs with this release.
+// Armed once for every player, the first time TURN runs with this release. Players who
+// saw the r435 hint, which ended after one showing, are armed once more (#1189).
 export const ALL_CARS_HINT = 'garage-all-cars';
+export const ALL_CARS_UNTIL_USED = 'garage-all-cars-until-used';
 
 export const UNLOCK_INTRODUCTIONS = Object.freeze({
   'drift-attack': Object.freeze({
@@ -135,13 +142,21 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage)
       delete state.views[hint];
       save();
     },
-    // A hint every player gets once, whenever it was added (ALL_CARS_HINT).
-    armOnce(hint) {
-      if (state.once.includes(hint)) return false;
-      state.once.push(hint);
+    // A hint every player gets once, whenever it was added (ALL_CARS_HINT); `key`
+    // names that once, so a hint can be armed again under a new one.
+    armOnce(hint, key = hint) {
+      if (state.once.includes(key)) return false;
+      state.once.push(key);
       if (!state.hints.includes(hint)) state.hints.push(hint);
+      delete state.views[hint];
       save();
       return true;
+    },
+    // An untilUsed hint, pointed out (scrolled to and said) once; it stays armed.
+    pointedOut: (hint) => Number(state.views[hint]) > 0,
+    markPointedOut(hint) {
+      state.views[hint] = 1;
+      save();
     },
     consumeHint(hint) {
       state.hints = state.hints.filter((pending) => pending !== hint);
@@ -342,13 +357,16 @@ export function installUnlockIntroductions({
     const reveal = () => {
       const points = [];
       for (const hint of armedGarageHints()) {
-        const { selector, say, ownVisit } = GARAGE_HINT_TARGETS[hint];
+        const { selector, say, ownVisit, untilUsed } = GARAGE_HINT_TARGETS[hint];
         const target = [...documentRef.querySelectorAll(selector)].find((element) => !element.hidden && element.offsetParent);
         if (!target) continue;
+        if (untilUsed) suggestInGarage(target, { documentRef });
+        if (untilUsed && queue.pointedOut(hint)) continue;
         const garage = target.closest('#turnGarage');
         // Later, on a visit the player opens themselves with nothing else to point out.
         if (ownVisit && (points.length || pointedGarage === garage || garageOpenedForCar(garage))) continue;
-        queue.consumeHint(hint);
+        if (untilUsed) queue.markPointedOut(hint);
+        else queue.consumeHint(hint);
         pointedGarage = garage;
         points.push({ element: target, say });
       }
@@ -380,7 +398,15 @@ export function installUnlockIntroductions({
     watchHints();
   });
   // Like the sheets, not in automated runs.
-  if (introducesOnUnlock(windowRef, storage)) queue.armOnce(ALL_CARS_HINT);
+  if (introducesOnUnlock(windowRef, storage)) queue.armOnce(ALL_CARS_HINT, ALL_CARS_UNTIL_USED);
+  // Using an untilUsed hint's control ends its pulse for good.
+  documentRef.addEventListener?.('click', (event) => {
+    for (const [hint, { untilUsed }] of Object.entries(GARAGE_HINT_TARGETS)) {
+      if (!untilUsed || !queue.hasHint(hint) || !event.target?.closest?.(untilUsed)) continue;
+      queue.consumeHint(hint);
+      for (const element of documentRef.querySelectorAll('.is-suggested')) element.classList.remove('is-suggested');
+    }
+  }, true);
   windowRef.addEventListener?.('turn:ui-state-change', (event) => {
     if (event.detail?.running === true) stopWatchingHints();
   });

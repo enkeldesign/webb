@@ -494,7 +494,7 @@ try {
     await page.waitForFunction(() => Boolean(document.querySelector('.garage-shift.is-introduced')), null, { timeout: 30000 });
     assert.equal(await page.evaluate(() => globalThis.__turnGarage.getViewedCarId()), 'sedan', 'GARAGE opens on the SEDAN');
     assert.deepEqual(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.snapshot()),
-      { pending: [], shown: ['shift'], hints: ['garage-all-cars', 'race-shift'], views: {}, once: ['garage-all-cars'] },
+      { pending: [], shown: ['shift'], hints: ['garage-all-cars', 'race-shift'], views: {}, once: ['garage-all-cars-until-used'] },
       'ALL CARS waits: this GARAGE was opened for the player, and points at ACTIVATE SHIFT');
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-shift')), false,
       'ACTIVATE SHIFT is pointed out once');
@@ -508,10 +508,20 @@ try {
     await page.waitForFunction(() => document.querySelector('.garage-all-cars-button')?.classList.contains('is-introduced'), null, { timeout: 60000 });
     await page.waitForFunction(() => document.querySelector('#turnGarage .m8-unlock-hint-status')?.textContent
       === 'New in GARAGE: ALL CARS, every car and what unlocks it.', null, { timeout: 5000 });
-    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-all-cars')), false,
-      'ALL CARS is pointed out once');
+    // #1189: said once, then a calm pulse until ALL CARS is used.
+    const queueState = () => page.evaluate(() => {
+      const queue = globalThis.__turnNextHome.unlockIntroductions.queue;
+      return { armed: queue.hasHint('garage-all-cars'), pointedOut: queue.pointedOut('garage-all-cars'),
+        suggested: document.querySelector('.garage-all-cars-button').classList.contains('is-suggested') };
+    });
+    assert.deepEqual(await queueState(), { armed: true, pointedOut: true, suggested: true }, 'ALL CARS keeps a calm pulse until it is used');
     // GARAGE ignores activations during its 600 ms VoiceOver entry-tap guard.
     await page.waitForTimeout(700);
+    await page.locator('.garage-all-cars-button').click();
+    await page.waitForFunction(() => document.querySelector('.garage-all-cars')?.open);
+    assert.deepEqual(await queueState(), { armed: false, pointedOut: false, suggested: false }, 'Opened once, it stops for good');
+    await page.locator('.garage-all-cars .turn-pr-close').click();
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars')?.open);
     await page.locator('.garage-race').click();
     await page.waitForFunction(() => document.querySelector('.garage-shift')?.classList.contains('is-introduced'));
     await page.waitForFunction(() => /^No SHIFT setup on the .+ yet\. ACTIVATE SHIFT is below the car’s name\. Press RACE again to race\.$/
