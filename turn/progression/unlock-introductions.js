@@ -123,13 +123,17 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
   };
   const generation = (hint) => readMarker(markerKey('generation', hint)) || 'initial';
   const consumedKey = (hint) => markerKey('consumed', hint, generation(hint));
+  const pointedKey = (hint) => markerKey('pointed', hint, generation(hint));
   const rearm = (hint, value = globalThis.crypto.randomUUID()) => writeMarker(markerKey('generation', hint), value);
   // A consumption is an independent, immutable tombstone. An interleaved save of
   // the shared snapshot cannot erase it. Only an explicit new arming generation
   // (admin replay or a new armOnce key) can make that hint available again.
   const applyConsumed = () => {
     state.hints = state.hints.filter((hint) => {
-      if (!readMarker(consumedKey(hint))) return true;
+      if (!readMarker(consumedKey(hint))) {
+        if (readMarker(pointedKey(hint))) state.views[hint] = Math.max(1, Number(state.views[hint]) || 0);
+        return true;
+      }
       delete state.views[hint];
       return false;
     });
@@ -218,6 +222,7 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
     markPointedOut(hint) {
       refresh();
       if (!state.hints.includes(hint)) return false;
+      writeMarker(pointedKey(hint), '1');
       state.views[hint] = 1;
       save();
       return true;

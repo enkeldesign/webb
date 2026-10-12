@@ -1047,6 +1047,26 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
       assert.equal(reloaded.hasHint(intro.ALL_CARS_HINT), true);
     }
   }
+  for (const pointLast of [false, true]) {
+    clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
+    const first = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+    first.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
+    const overlapping = intro.createUnlockIntroductionQueue({
+      getItem: globalThis.localStorage.getItem,
+      setItem(key, value) {
+        if (key === intro.UNLOCK_INTRODUCTIONS_KEY) {
+          if (pointLast) globalThis.localStorage.setItem(key, value);
+          first.markPointedOut(intro.ALL_CARS_HINT);
+          if (!pointLast) globalThis.localStorage.setItem(key, value);
+        } else globalThis.localStorage.setItem(key, value);
+      }
+    });
+    overlapping.unlocked(['flow']);
+    assert.equal(overlapping.pointedOut(intro.ALL_CARS_HINT), true, 'An overlapping save keeps the once-only pointing-out marker');
+    const reloaded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+    assert.equal(reloaded.pointedOut(intro.ALL_CARS_HINT), true, 'Pointing-out survives reload regardless of final writer');
+    assert.equal(reloaded.hasHint(intro.ALL_CARS_HINT), true, 'The calm pulse remains until use');
+  }
   const memoryOnly = intro.createUnlockIntroductionQueue({
     getItem: () => null,
     setItem() { throw new Error('Storage unavailable'); }
