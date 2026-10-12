@@ -986,6 +986,37 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
   otherTab.unlocked(['shift'], { replay: true });
   otherTab.introduced('shift');
   assert.equal(otherTab.hasHint('garage-shift'), true, 'An explicit admin replay still arms its guidance');
+  // Mutations can run before either tab receives a storage event. Every operation
+  // must keep the latest deletion and unrelated additions, not resurrect its snapshot.
+  const mutations = [
+    (tab) => tab.unlocked(['flow']),
+    (tab) => tab.introduced('shift'),
+    (tab) => tab.armHint('garage-paint'),
+    (tab) => tab.armOnce('another-hint'),
+    (tab) => tab.markPointedOut('garage-paint'),
+    (tab) => tab.consumeHint('garage-paint'),
+    (tab) => tab.viewHint('garage-paint', 3)
+  ];
+  for (const mutate of mutations) {
+    memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+    const first = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+    first.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
+    const stale = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+    first.consumeHint(intro.ALL_CARS_HINT);
+    first.armHint('unrelated-new-hint');
+    mutate(stale); // No storage event has been delivered.
+    const saved = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+    assert.equal(saved.hasHint(intro.ALL_CARS_HINT), false, 'A stale mutation preserves the consumed hint');
+    assert.equal(saved.hasHint('unrelated-new-hint'), true, 'It also preserves another tab’s new hint');
+  }
+  const memoryOnly = intro.createUnlockIntroductionQueue({
+    getItem: () => null,
+    setItem() { throw new Error('Storage unavailable'); }
+  });
+  memoryOnly.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
+  assert.equal(memoryOnly.markPointedOut(intro.ALL_CARS_HINT), true, 'Blocked storage retains in-page progress');
+  memoryOnly.consumeHint(intro.ALL_CARS_HINT);
+  assert.equal(memoryOnly.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), false, 'The in-page once marker survives too');
   // A player whose r435 hint ended after one showing is armed once more.
   globalThis.localStorage.setItem(intro.UNLOCK_INTRODUCTIONS_KEY, JSON.stringify({ pending: [], shown: [], hints: [], views: {}, once: ['garage-all-cars'] }));
   const r435 = intro.createUnlockIntroductionQueue(globalThis.localStorage);
@@ -998,7 +1029,7 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
     'Used: the sheet opened on a phone, or a car chosen from ALL CARS, in the sheet or inline on iPad');
   assert.match(source, /if \(untilUsed && queue\.pointedOut\(hint\)\) \{\n\s*suggestInGarage\(target, \{ documentRef \}\);\n\s*continue;\n\s*\}/,
     'The calm pulse on every later visit; the scroll and the line only once');
-  assert.match(source, /if \(untilUsed\) \{\n\s*queue\.markPointedOut\(hint\);\n\s*suggestInGarage\(target, \{ documentRef \}\);\n\s*\} else queue\.consumeHint\(hint\);/,
+  assert.match(source, /if \(untilUsed\) \{\n\s*if \(!queue\.markPointedOut\(hint\)\) continue;\n\s*suggestInGarage\(target, \{ documentRef \}\);\n\s*\} else queue\.consumeHint\(hint\);/,
     'And not before that pointing-out: a hint still waiting does not pulse (CODEX on #1192)');
   assert.match(source, /if \(!untilUsed \|\| !queue\.hasHint\(hint\) \|\| !event\.target\?\.closest\?\.\(untilUsed\)\) continue;\n\s*queue\.consumeHint\(hint\);/,
     'Using it ends the pulse for good');

@@ -79,7 +79,7 @@ export const UNLOCK_INTRODUCTIONS = Object.freeze({
   })
 });
 
-function readState(storage) {
+function readState(storage, fallback = null) {
   try {
     const raw = JSON.parse(storage?.getItem?.(UNLOCK_INTRODUCTIONS_KEY) || 'null');
     const ids = (value) => (Array.isArray(value) ? value.filter((id) => UNLOCK_INTRODUCTIONS[id]) : []);
@@ -98,29 +98,37 @@ function readState(storage) {
     }
     return state;
   } catch (_) {
-    return { pending: [], shown: [], hints: [], views: {}, once: [] };
+    return fallback || { pending: [], shown: [], hints: [], views: {}, once: [] };
   }
 }
 
 // The queue, without the page: what is waiting to be introduced, and what has been.
 export function createUnlockIntroductionQueue(storage = globalThis.localStorage, { events = null, onSync = () => {} } = {}) {
   const state = readState(storage);
+  let persistent = typeof storage?.getItem === 'function' && typeof storage?.setItem === 'function';
+  // Storage events arrive later. Apply each mutation to the latest stored queue,
+  // including deletions, rather than saving the tab's earlier snapshot over it.
+  // If saving is unavailable, keep this page's progress in memory as before.
+  const refresh = () => {
+    if (persistent) Object.assign(state, readState(storage, state));
+  };
   const save = () => {
     try {
       storage?.setItem?.(UNLOCK_INTRODUCTIONS_KEY, JSON.stringify(state));
-    } catch (_) {}
+    } catch (_) { persistent = false; }
   };
   // TURN open in another tab saves the whole queue too: the page's queue (events: the
   // window) takes up what it saved, so a later save here does not write back a hint
   // that tab has used (#1192).
   events?.addEventListener?.('storage', (event) => {
     if (event.key !== UNLOCK_INTRODUCTIONS_KEY) return;
-    Object.assign(state, readState(storage));
+    refresh();
     onSync();
   });
   return Object.freeze({
     // A reward unlocked just now; replay (admin) introduces it again.
     unlocked(ids, { replay = false } = {}) {
+      refresh();
       let changed = false;
       for (const id of ids || []) {
         if (!UNLOCK_INTRODUCTIONS[id]) continue;
@@ -135,6 +143,7 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
     next: () => state.pending[0] || null,
     // Closed by the player: introduced, and its follow-up hints armed.
     introduced(id) {
+      refresh();
       // Another tab may have finished the same sheet and already used its hints.
       // Admin replay deliberately removes this marker in unlocked({ replay: true }).
       if (state.shown.includes(id)) return;
@@ -149,6 +158,7 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
     hasHint: (hint) => state.hints.includes(hint),
     // A hint armed by an unlock with no sheet of its own (UNLOCK_HINTS).
     armHint(hint) {
+      refresh();
       if (!state.hints.includes(hint)) state.hints.push(hint);
       delete state.views[hint];
       save();
@@ -156,6 +166,7 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
     // A hint every player gets once, whenever it was added (ALL_CARS_HINT); `key`
     // names that once, so a hint can be armed again under a new one.
     armOnce(hint, key = hint) {
+      refresh();
       if (state.once.includes(key)) return false;
       state.once.push(key);
       if (!state.hints.includes(hint)) state.hints.push(hint);
@@ -166,16 +177,22 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
     // An untilUsed hint, pointed out (scrolled to and said) once; it stays armed.
     pointedOut: (hint) => Number(state.views[hint]) > 0,
     markPointedOut(hint) {
+      refresh();
+      if (!state.hints.includes(hint)) return false;
       state.views[hint] = 1;
       save();
+      return true;
     },
     consumeHint(hint) {
+      refresh();
       state.hints = state.hints.filter((pending) => pending !== hint);
       delete state.views[hint];
       save();
     },
     // A hint shown once more; after `limit` showings it has had its chance.
     viewHint(hint, limit = 1) {
+      refresh();
+      if (!state.hints.includes(hint)) return 0;
       const views = (Number(state.views[hint]) || 0) + 1;
       if (views >= limit) {
         state.hints = state.hints.filter((pending) => pending !== hint);
@@ -393,7 +410,7 @@ export function installUnlockIntroductions({
         // Later, on a visit the player opens themselves with nothing else to point out.
         if (ownVisit && (points.length || pointedGarage === garage || garageOpenedForCar(garage))) continue;
         if (untilUsed) {
-          queue.markPointedOut(hint);
+          if (!queue.markPointedOut(hint)) continue;
           suggestInGarage(target, { documentRef });
         } else queue.consumeHint(hint);
         pointedGarage = garage;
