@@ -208,9 +208,19 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
     armOnce(hint, key = hint) {
       refresh();
       const onceKey = markerKey('once', key);
-      if (state.once.includes(key) || readMarker(onceKey)) return false;
-      writeMarker(onceKey, '1');
+      const armed = readMarker(onceKey);
+      if (state.once.includes(key) || armed) {
+        // An unrelated overlapping snapshot can omit this newly armed hint. Its
+        // independent generation/once markers retain the arming operation too.
+        // Legacy once entries without a marker may already have been consumed.
+        if (armed && generation(hint) === `once:${key}` && !readMarker(consumedKey(hint)) && !state.hints.includes(hint)) {
+          state.hints.push(hint);
+          save();
+        }
+        return false;
+      }
       rearm(hint, `once:${key}`);
+      writeMarker(onceKey, '1');
       state.once.push(key);
       if (!state.hints.includes(hint)) state.hints.push(hint);
       delete state.views[hint];
