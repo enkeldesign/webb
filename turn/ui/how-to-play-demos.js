@@ -12,6 +12,17 @@
 // with Reduced Motion each is one still frame.
 const STYLE_ID = 'turn-how-to-play-demo-styles';
 
+// A score counts up as the race's does, one held value after another, each its own
+// keyframe and never an interpolation: Safari does not redraw a counter while a
+// registered number animates, so an interpolated count showed 0 and then a flash
+// (#1189). count values reach top in equal steps from start% to end%.
+function countUp(start, end, top, count) {
+  return Array.from({ length: count }, (_, step) => {
+    const at = Math.round((start + (end - start) * step / (count - 1)) * 100) / 100;
+    return `    ${at}% { --turn-demo-score: ${Math.round(top * (step + 1) / count)}; }`;
+  }).join('\n');
+}
+
 const STYLES = `
   /* BOOST's charge, 0 to 1, shared by the bar and the pad's BOOST zone. */
   @property --turn-demo-charge { syntax: '<number>'; inherits: true; initial-value: 1; }
@@ -714,38 +725,133 @@ const STYLES = `
     box-shadow: 3px 3px 0 var(--turn-shadow-color);
     opacity: 0;
   }
-  .turn-demo-callout > strong,
-  .turn-demo-callout > b {
+  .turn-demo-callout strong,
+  .turn-demo-callout b {
     display: block;
     white-space: nowrap;
     line-height: 1;
   }
-  .turn-demo-callout > strong { font-size: 11px; font-weight: 950; letter-spacing: 0.055em; }
+  .turn-demo-callout strong { font-size: 11px; font-weight: 950; letter-spacing: 0.055em; }
   .turn-demo-callout > .turn-demo-swap { display: grid; }
-  .turn-demo-callout > b { margin-top: 2.25px; font-size: 15.12px; font-weight: 900; }
+  .turn-demo-callout > .turn-demo-swap > span { align-self: center; }
+  .turn-demo-callout b { margin-top: 2.25px; font-size: 15.12px; font-weight: 900; }
 
-  /* DRIFT ATTACK, 6 s: a slide builds its score at ×2, then a clean exit banks it into LAP. */
-  details[open] .turn-demo-score[data-demo="drift"] { animation: turn-demo-drift-score 6s linear infinite; }
-  details[open] .turn-demo-score[data-demo="drift"] .is-lap .turn-demo-swap > :first-child { animation: turn-demo-swap-out 6s steps(1, end) infinite; }
-  details[open] .turn-demo-score[data-demo="drift"] .is-lap .turn-demo-swap > :last-child { animation: turn-demo-swap-in 6s steps(1, end) infinite; }
-  details[open] .turn-demo-score[data-demo="drift"] .turn-demo-callout { animation: turn-demo-drift-callout 6s linear infinite; }
+  /* The race's side gauge (score-feedback.css): it unfolds beside the score while a
+     slide or FLOW is live, or COMBO is held, fills with how hard it is going, and is
+     bolder at a higher COMBO. */
+  .turn-demo-scorekeeper {
+    position: relative;
+    margin-inline-end: 41.25px;
+  }
+  .turn-demo-scorekeeper > .turn-demo-paper {
+    position: relative;
+    z-index: 1;
+  }
+  .turn-demo-gauge {
+    --turn-demo-gauge-fill: var(--turn-control-drift);
+    position: absolute;
+    z-index: 0;
+    top: 5.25px;
+    bottom: 5.25px;
+    left: calc(100% - 2.25px);
+    width: 43.5px;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 3px solid var(--turn-outline);
+    border-radius: 0 7.5px 7.5px 0;
+    background: var(--turn-ink);
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  .turn-demo-score[data-demo="flow"] .turn-demo-gauge { --turn-demo-gauge-fill: var(--turn-control-flow); }
+  /* A sliver of colour marks zero inside the dark gauge. */
+  .turn-demo-gauge::before {
+    content: "";
+    position: absolute;
+    top: 3.75px;
+    bottom: 3.75px;
+    left: 3.75px;
+    width: 3.75px;
+    border-radius: 749.25px;
+    background: var(--turn-demo-gauge-fill);
+  }
+  .turn-demo-gauge > i {
+    position: absolute;
+    z-index: 1;
+    inset: 3.75px;
+    border-radius: 3px;
+    background: linear-gradient(to right, var(--turn-demo-gauge-fill), color-mix(in srgb, var(--turn-demo-gauge-fill) 55%, var(--turn-paper)));
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  /* Left-handed, the scorekeeper sits on the right and its gauge unfolds to the left. */
+  :root.turn-left-handed-controls .turn-demo-scorekeeper { margin-inline: 41.25px 0; }
+  :root.turn-left-handed-controls .turn-demo-gauge {
+    right: calc(100% - 2.25px);
+    left: auto;
+    border-radius: 7.5px 0 0 7.5px;
+    transform-origin: right center;
+  }
+  :root.turn-left-handed-controls .turn-demo-gauge::before { right: 3.75px; left: auto; }
+  :root.turn-left-handed-controls .turn-demo-gauge > i {
+    background: linear-gradient(to left, var(--turn-demo-gauge-fill), color-mix(in srgb, var(--turn-demo-gauge-fill) 55%, var(--turn-paper)));
+    transform-origin: right center;
+  }
+
+  /* DRIFT ATTACK, 10 s: a slide builds its score, and a clean exit BANKS it into LAP. The
+     next slide, linked the other way in time, raises COMBO to ×2 and builds faster; it
+     banks too, and COMBO drops back once the link runs out. Each value holds long
+     enough to read. */
+  details[open] .turn-demo-score[data-demo="drift"] { animation: turn-demo-drift-score 10s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .is-values .turn-demo-swap > :nth-child(1) { animation: turn-demo-drift-combo-1 10s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .is-values .turn-demo-swap > :nth-child(2) { animation: turn-demo-drift-combo-2 10s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .is-lap .turn-demo-swap > :nth-child(1) { animation: turn-demo-drift-lap-1 10s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .is-lap .turn-demo-swap > :nth-child(2) { animation: turn-demo-drift-lap-2 10s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .is-lap .turn-demo-swap > :nth-child(3) { animation: turn-demo-drift-lap-3 10s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .turn-demo-callout { animation: turn-demo-drift-callout 10s linear infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .turn-demo-callout .turn-demo-swap > :nth-child(1) { animation: turn-demo-drift-event-1 10s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .turn-demo-callout .turn-demo-swap > :nth-child(2) { animation: turn-demo-drift-event-2 10s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .turn-demo-callout .turn-demo-swap > :nth-child(3) { animation: turn-demo-drift-event-3 10s steps(1, end) infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .turn-demo-gauge { animation: turn-demo-drift-gauge 10s linear infinite; }
+  details[open] .turn-demo-score[data-demo="drift"] .turn-demo-gauge > i { animation: turn-demo-drift-gauge-fill 10s linear infinite; }
   @keyframes turn-demo-drift-score {
-    0%, 8% { --turn-demo-score: 0; }
-    56%, 57.9% { --turn-demo-score: 860; }
-    58%, 100% { --turn-demo-score: 0; }
+    0% { --turn-demo-score: 0; }
+${countUp(6, 28, 300, 12)}
+    30% { --turn-demo-score: 0; }
+${countUp(44, 66, 600, 12)}
+    68% { --turn-demo-score: 0; }
   }
-  @keyframes turn-demo-swap-out {
-    0% { opacity: 1; }
-    58% { opacity: 0; }
-  }
-  @keyframes turn-demo-swap-in {
-    0% { opacity: 0; }
-    58% { opacity: 1; }
-  }
+  @keyframes turn-demo-drift-combo-1 { 0% { opacity: 1; } 40% { opacity: 0; } 84% { opacity: 1; } }
+  @keyframes turn-demo-drift-combo-2 { 0% { opacity: 0; } 40% { opacity: 1; } 84% { opacity: 0; } }
+  @keyframes turn-demo-drift-lap-1 { 0% { opacity: 1; } 30% { opacity: 0; } }
+  @keyframes turn-demo-drift-lap-2 { 0% { opacity: 0; } 30% { opacity: 1; } 68% { opacity: 0; } }
+  @keyframes turn-demo-drift-lap-3 { 0% { opacity: 0; } 68% { opacity: 1; } }
   @keyframes turn-demo-drift-callout {
-    0%, 58% { opacity: 0; animation-timing-function: linear; }
-    60.3%, 84% { opacity: 1; animation-timing-function: linear; }
-    86.3%, 100% { opacity: 0; }
+    0%, 30% { opacity: 0; }
+    31.4%, 46.6% { opacity: 1; }
+    48%, 68% { opacity: 0; }
+    69.4%, 80.6% { opacity: 1; }
+    82%, 100% { opacity: 0; }
+  }
+  @keyframes turn-demo-drift-event-1 { 0% { opacity: 1; } 40% { opacity: 0; } }
+  @keyframes turn-demo-drift-event-2 { 0% { opacity: 0; } 40% { opacity: 1; } 68% { opacity: 0; } }
+  @keyframes turn-demo-drift-event-3 { 0% { opacity: 0; } 68% { opacity: 1; } }
+  /* The gauge unfolds over 140 ms as a slide starts, and folds away 180 ms after a bank
+     leaves nothing live and no COMBO held. */
+  @keyframes turn-demo-drift-gauge {
+    0%, 6% { opacity: 0; transform: scaleX(0); }
+    7.4%, 31.8% { opacity: 0.75; transform: scaleX(1); }
+    33.2%, 40% { opacity: 0; transform: scaleX(0); }
+    41.4%, 84% { opacity: 0.79; transform: scaleX(1); }
+    85.4%, 100% { opacity: 0; transform: scaleX(0); }
+  }
+  @keyframes turn-demo-drift-gauge-fill {
+    0%, 6% { transform: scaleX(0); }
+    28%, 30% { transform: scaleX(0.8); }
+    31%, 44% { transform: scaleX(0); }
+    66%, 68% { transform: scaleX(0.95); }
+    69%, 100% { transform: scaleX(0); }
   }
 
   /* FLOW, 6 s: each different technique raises COMBO, and the score grows faster. */
@@ -768,6 +874,22 @@ const STYLES = `
   @keyframes turn-demo-flow-callout { 0% { opacity: 0; } 45% { opacity: 1; } 62% { opacity: 0; } 70% { opacity: 1; } 90% { opacity: 0; } }
   @keyframes turn-demo-flow-label-1 { 0% { opacity: 1; } 70% { opacity: 0; } }
   @keyframes turn-demo-flow-label-2 { 0% { opacity: 0; } 70% { opacity: 1; } }
+  details[open] .turn-demo-score[data-demo="flow"] .turn-demo-gauge { animation: turn-demo-flow-gauge 6s linear infinite; }
+  details[open] .turn-demo-score[data-demo="flow"] .turn-demo-gauge > i { animation: turn-demo-flow-gauge-fill 6s linear infinite; }
+  @keyframes turn-demo-flow-gauge {
+    0%, 20% { opacity: 0; transform: scaleX(0); }
+    22.3%, 45% { opacity: 0.75; transform: scaleX(1); }
+    45.1%, 70% { opacity: 0.79; transform: scaleX(1); }
+    70.1%, 96% { opacity: 0.82; transform: scaleX(1); }
+    98.3%, 100% { opacity: 0; transform: scaleX(0); }
+  }
+  @keyframes turn-demo-flow-gauge-fill {
+    0%, 20% { transform: scaleX(0); }
+    23%, 45% { transform: scaleX(0.35); }
+    48%, 70% { transform: scaleX(0.62); }
+    73%, 96% { transform: scaleX(0.9); }
+    98.3%, 100% { transform: scaleX(0); }
+  }
 
   .turn-demo {
     --turn-demo-released: inset 0 0 0 0 transparent;
@@ -802,12 +924,18 @@ const STYLES = `
     .turn-demo-steer .turn-demo-message { opacity: 1; }
     .turn-demo-steer .turn-demo-recalibrate { background-color: var(--yellow); color: var(--turn-ink); }
     .turn-demo-manual-steer > i { left: 24%; }
-    .turn-demo-score[data-demo="drift"] { --turn-demo-score: 860; }
+    .turn-demo-score[data-demo="drift"] { --turn-demo-score: 420; }
     .turn-demo-score[data-demo="drift"] .turn-demo-callout { display: none; }
+    .turn-demo-score[data-demo="drift"] .turn-demo-swap > * { opacity: 0; }
+    .turn-demo-score[data-demo="drift"] .turn-demo-swap > :nth-child(2) { opacity: 1; }
+    .turn-demo-score[data-demo="drift"] .turn-demo-gauge { opacity: 0.79; transform: none; }
+    .turn-demo-score[data-demo="drift"] .turn-demo-gauge > i { transform: scaleX(0.7); }
     .turn-demo-score[data-demo="flow"] { --turn-demo-score: 760; }
     .turn-demo-score[data-demo="flow"] .turn-demo-swap > * { opacity: 0; }
     .turn-demo-score[data-demo="flow"] .turn-demo-swap > :last-child,
     .turn-demo-score[data-demo="flow"] .turn-demo-callout { opacity: 1; }
+    .turn-demo-score[data-demo="flow"] .turn-demo-gauge { opacity: 0.82; transform: none; }
+    .turn-demo-score[data-demo="flow"] .turn-demo-gauge > i { transform: scaleX(0.9); }
   }
 
   /* Forced colours drop fills and shadows: the thumb and the fill take Highlight. */
@@ -816,6 +944,9 @@ const STYLES = `
     .turn-demo-bar > i { forced-color-adjust: none; background: Highlight; }
     .turn-demo-bar > i::after { display: none; }
     .turn-demo-bar > b { forced-color-adjust: none; background: CanvasText; }
+    .turn-demo-gauge { forced-color-adjust: none; border-color: CanvasText; background: Canvas; }
+    .turn-demo-gauge::before,
+    .turn-demo-gauge > i { forced-color-adjust: none; background: Highlight; }
   }
 `;
 
@@ -881,20 +1012,30 @@ export function createScoreDemo(kind, documentRef = globalThis.document) {
   demo.dataset.demo = kind;
   const drift = kind === 'drift';
   demo.innerHTML = drift ? `
-    <div class="turn-demo-paper">
-      <div class="is-heading"><span>DRIFT</span><span>COMBO</span></div>
-      <div class="is-values"><strong></strong><b>×2</b></div>
-      <div class="is-record is-lap"><span>LAP:</span><b class="turn-demo-swap"><i>1,240</i><i>2,100</i></b></div>
-      <div class="is-record"><span>LAST:</span><b>1,905</b></div>
-      <div class="is-record"><span>BEST:</span><b>2,480</b></div>
+    <div class="turn-demo-scorekeeper">
+      <div class="turn-demo-paper">
+        <div class="is-heading"><span>DRIFT</span><span>COMBO</span></div>
+        <div class="is-values"><strong></strong><b class="turn-demo-swap"><i>×1</i><i>×2</i></b></div>
+        <div class="is-record is-lap"><span>LAP:</span><b class="turn-demo-swap"><i>1,240</i><i>1,540</i><i>2,140</i></b></div>
+        <div class="is-record"><span>LAST:</span><b>1,905</b></div>
+        <div class="is-record"><span>BEST:</span><b>2,480</b></div>
+      </div>
+      <div class="turn-demo-gauge"><i></i></div>
     </div>
-    <div class="turn-demo-callout"><strong>✓ BANKED ×2</strong><b>+860</b></div>` : `
-    <div class="turn-demo-paper">
-      <div class="is-heading"><span>FLOW</span><span>COMBO</span></div>
-      <div class="is-values"><strong></strong><b class="turn-demo-swap"><i>×1</i><i>×2</i><i>×3</i></b></div>
-      <div class="is-record"><span>LAP:</span><b>3,410</b></div>
-      <div class="is-record"><span>LAST:</span><b>2,960</b></div>
-      <div class="is-record"><span>BEST:</span><b>4,125</b></div>
+    <div class="turn-demo-callout"><span class="turn-demo-swap">
+      <span><strong>✓ BANKED</strong><b>+300</b></span>
+      <span><strong>DRIFT ×2</strong></span>
+      <span><strong>✓ BANKED ×2</strong><b>+600</b></span>
+    </span></div>` : `
+    <div class="turn-demo-scorekeeper">
+      <div class="turn-demo-paper">
+        <div class="is-heading"><span>FLOW</span><span>COMBO</span></div>
+        <div class="is-values"><strong></strong><b class="turn-demo-swap"><i>×1</i><i>×2</i><i>×3</i></b></div>
+        <div class="is-record"><span>LAP:</span><b>3,410</b></div>
+        <div class="is-record"><span>LAST:</span><b>2,960</b></div>
+        <div class="is-record"><span>BEST:</span><b>4,125</b></div>
+      </div>
+      <div class="turn-demo-gauge"><i></i></div>
     </div>
     <div class="turn-demo-callout"><strong class="turn-demo-swap"><i>FLOW ×2</i><i>FLOW ×3</i></strong></div>`;
   return demo;

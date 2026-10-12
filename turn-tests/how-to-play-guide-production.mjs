@@ -126,13 +126,14 @@ assert.match(css, /\.m8-guide-grid \.m8-guide-locked > \.m8-guide-card-number \{
 // #748: every card acts out a real control. Pictures, hidden from assistive technology;
 // their own classes, since other modules look for the real controls; the race's colour
 // roles and motion; moving only while their card is open, one still frame under Reduced Motion.
-const [demos, tokens, drivePad, gameplayCss, messageCss, inGameMenuCss] = await Promise.all([
+const [demos, tokens, drivePad, gameplayCss, messageCss, inGameMenuCss, scoreFeedbackCss] = await Promise.all([
   fs.readFile(new URL('../turn/ui/how-to-play-demos.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-tokens.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/drive-pad.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/gameplay-v2.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/styles.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/in-game-menu.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/in-game-menu.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/scoring/score-feedback.css', import.meta.url), 'utf8')
 ]);
 const demoCode = demos.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
 for (const demo of [
@@ -262,6 +263,59 @@ for (const name of colourChanges) {
     assert.equal(segmentMs(name, stops[i - 1], stops[i]), colourMs, `${name}: changes over ${colourMs} ms`);
   }
 }
+// DRIFT ATTACK and FLOW (#1189): every score is a held step, never an interpolated
+// number, because Safari does not redraw a counter while a registered number animates.
+// The DRIFT example builds, BANKS into LAP, links into COMBO ×2, builds faster and banks
+// again, each value held long enough to read.
+// The DRIFT count is generated, so these read the stylesheet the demos install.
+const { createScoreDemo } = await import('../turn/ui/how-to-play-demos.js');
+let installedCss = '';
+const fakeDocument = {
+  head: { appendChild(node) { installedCss = node.textContent; } },
+  getElementById: () => null,
+  createElement: () => ({ dataset: {}, className: '', setAttribute() {}, append() {}, set innerHTML(html) { this.html = html; } })
+};
+const driftDemo = createScoreDemo('drift', fakeDocument).html;
+const flowDemo = createScoreDemo('flow', fakeDocument).html;
+const keyframesOf = (name) => installedCss.match(new RegExp(`@keyframes ${name} \\{([\\s\\S]*?)\\n  \\}`))[1];
+const scoreAnimations = [...installedCss.matchAll(/\{[^{}]*animation:\s*(turn-demo-[a-z-]+) (\d+)s ([^;]*?) infinite/g)]
+  .filter(([, name]) => keyframesOf(name).includes('--turn-demo-score'));
+assert.deepEqual(scoreAnimations.map(([, name]) => name).sort(), ['turn-demo-drift-score', 'turn-demo-flow-score']);
+for (const [, name, seconds, timing] of scoreAnimations) {
+  assert.equal(timing, 'steps(1, end)', `${name} holds each score instead of interpolating it`);
+  const held = [...keyframesOf(name).matchAll(/^\s*([\d.]+)% \{ --turn-demo-score: (\d+); \}/gm)].map(([, at]) => Number(at));
+  for (let i = 1; i < held.length; i += 1) {
+    assert.ok((held[i] - held[i - 1]) * Number(seconds) * 10 >= 200, `${name}: each score holds at least 200 ms`);
+  }
+}
+const scoreValues = [...keyframesOf('turn-demo-drift-score').matchAll(/--turn-demo-score: (\d+);/g)].map(([, value]) => Number(value));
+assert.equal(Math.max(...scoreValues.slice(0, scoreValues.indexOf(0, 1))), 300, 'The first slide banks 300');
+assert.equal(Math.max(...scoreValues), 600, 'The linked slide banks 600');
+for (const step of ['<i>×1</i><i>×2</i>', '<i>1,240</i><i>1,540</i><i>2,140</i>', '<strong>✓ BANKED</strong><b>+300</b>',
+  '<strong>DRIFT ×2</strong>', '<strong>✓ BANKED ×2</strong><b>+600</b>']) {
+  assert.ok(driftDemo.includes(step), `The DRIFT example shows ${step}`);
+}
+// Both show the race's side gauge beside the score, unfolding while scoring.
+for (const html of [driftDemo, flowDemo]) assert.match(html, /<div class="turn-demo-paper">[\s\S]*<\/div>\s*<div class="turn-demo-gauge"><i><\/i><\/div>/);
+for (const kind of ['drift', 'flow']) {
+  assert.match(demoCode, new RegExp(`details\\[open\\] \\.turn-demo-score\\[data-demo="${kind}"\\] \\.turn-demo-gauge \\{ animation:`));
+  assert.match(demoCode, new RegExp(`details\\[open\\] \\.turn-demo-score\\[data-demo="${kind}"\\] \\.turn-demo-gauge > i \\{ animation:`));
+  assert.match(demoCode, new RegExp(`\\.turn-demo-score\\[data-demo="${kind}"\\] \\.turn-demo-gauge \\{ opacity: [\\d.]+; transform: none; \\}`),
+    `Reduced Motion: the ${kind} gauge stays out in the still frame`);
+}
+// At the race's own size and place: it tucks under the score's edge, inset from its top
+// and bottom, with the race's outline, corners and fill inset.
+const raceGauge = (name) => scoreFeedbackCss.match(new RegExp(`${name}: ([\\d.]+px)`))[1];
+const demoGauge = demoCode.match(/\.turn-demo-gauge \{([^}]*)\}/)[1];
+assert.match(demoGauge, new RegExp(`top: ${raceGauge('--score-feedback-gauge-inset-y')};`));
+assert.match(demoGauge, new RegExp(`left: calc\\(100% - ${raceGauge('--score-feedback-gauge-overlap')}\\);`));
+const raceMeter = scoreFeedbackCss.match(/\.score-feedback-meter,\s*\.score-feedback-gauge \{([^}]*)\}/)[1];
+for (const property of ['border', 'border-radius']) {
+  assert.equal(demoGauge.match(new RegExp(`\\n\\s*${property}: ([^;]+);`))[1], raceMeter.match(new RegExp(`\\n\\s*${property}: ([^;]+);`))[1]);
+}
+assert.equal(demoCode.match(/\.turn-demo-gauge > i \{[^}]*inset: ([\d.]+px);/)[1],
+  scoreFeedbackCss.match(/\.score-feedback-meter > i,\s*\.score-feedback-gauge > i \{[^}]*inset: ([\d.]+px);/)[1]);
+
 // STEERING CENTRED fades in as the race's message does, and RECALIBRATE blinks twice in 960 ms.
 assert.match(messageCss, /\.message \{[\s\S]*?transition: opacity 140ms ease;/);
 assert.match(inGameMenuCss, /animation: turn-recalibrate-centred 960ms linear 1;/);
