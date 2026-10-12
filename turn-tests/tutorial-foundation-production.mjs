@@ -971,6 +971,21 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
   otherTab.markPointedOut('garage-paint');
   assert.equal(intro.createUnlockIntroductionQueue(globalThis.localStorage).hasHint(intro.ALL_CARS_HINT), false,
     'And its next save keeps it used');
+  // The same introduction can already be open in both tabs. A stale sheet closing
+  // after the other tab finishes and uses its hint must not arm that hint again.
+  usedHere.unlocked(['shift']);
+  tabs.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: intro.UNLOCK_INTRODUCTIONS_KEY }));
+  usedHere.introduced('shift');
+  tabs.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: intro.UNLOCK_INTRODUCTIONS_KEY }));
+  usedHere.consumeHint('garage-shift');
+  tabs.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: intro.UNLOCK_INTRODUCTIONS_KEY }));
+  otherTab.introduced('shift');
+  assert.equal(otherTab.hasHint('garage-shift'), false, 'Closing a stale SHIFT sheet does not rearm its used hint');
+  assert.equal(intro.createUnlockIntroductionQueue(globalThis.localStorage).hasHint('garage-shift'), false,
+    'The persisted hint stays consumed too');
+  otherTab.unlocked(['shift'], { replay: true });
+  otherTab.introduced('shift');
+  assert.equal(otherTab.hasHint('garage-shift'), true, 'An explicit admin replay still arms its guidance');
   // A player whose r435 hint ended after one showing is armed once more.
   globalThis.localStorage.setItem(intro.UNLOCK_INTRODUCTIONS_KEY, JSON.stringify({ pending: [], shown: [], hints: [], views: {}, once: ['garage-all-cars'] }));
   const r435 = intro.createUnlockIntroductionQueue(globalThis.localStorage);

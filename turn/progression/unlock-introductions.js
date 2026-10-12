@@ -135,6 +135,9 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
     next: () => state.pending[0] || null,
     // Closed by the player: introduced, and its follow-up hints armed.
     introduced(id) {
+      // Another tab may have finished the same sheet and already used its hints.
+      // Admin replay deliberately removes this marker in unlocked({ replay: true }).
+      if (state.shown.includes(id)) return;
       state.pending = state.pending.filter((pending) => pending !== id);
       if (!state.shown.includes(id)) state.shown.push(id);
       for (const hint of UNLOCK_INTRODUCTIONS[id]?.hints || []) {
