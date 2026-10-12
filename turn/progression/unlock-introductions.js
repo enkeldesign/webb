@@ -394,7 +394,7 @@ export function installUnlockIntroductions({
           suggestInGarage(target, { documentRef });
         } else queue.consumeHint(hint);
         pointedGarage = garage;
-        points.push({ element: target, say });
+        points.push({ element: target, say, isCurrent: untilUsed ? () => queue.hasHint(hint) : undefined });
       }
       pointOutInGarage(points, { documentRef, windowRef });
       if (!armedGarageHints().length) stopWatchingHints();

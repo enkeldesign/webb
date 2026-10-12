@@ -997,6 +997,26 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
     'On tablets, where ALL CARS is shown inline and its button hidden, the inline heading is pointed out');
   assert.match(source, /const target = \[\.\.\.documentRef\.querySelectorAll\(selector\)\]\.find\(\(element\) => !element\.hidden && element\.offsetParent\);/);
 
+  // Consumed during the speech delay: no stale hint is announced, while other
+  // current guidance in the same call still gets its turn.
+  const { pointOutInGarage } = await import('../turn/garage/garage-focus.js');
+  const delayed = [];
+  const statuses = [];
+  const section = { append: (status) => statuses.push(status) };
+  const target = { isConnected: true, classList: { add() {}, remove() {} }, closest: () => section };
+  let current = true;
+  pointOutInGarage([
+    { element: target, say: 'ALL CARS', isCurrent: () => current },
+    { element: target, say: 'Still relevant' }
+  ], {
+    documentRef: { getElementById: () => ({}), createElement: () => ({ textContent: '', setAttribute() {}, remove() {} }) },
+    windowRef: { setTimeout: (fn, ms) => delayed.push({ fn, ms }) }
+  });
+  assert.equal(statuses[0].textContent, '', 'The hint waits for GARAGE to speak first');
+  current = false;
+  delayed.find(({ ms }) => ms === 1200).fn();
+  assert.equal(statuses[0].textContent, 'Still relevant', 'Used hints are removed from the pending announcement');
+
   const reminder = await import('../turn/garage/shift-race-reminder.js');
   const trigger = (classes = [], extra = {}) => ({
     isConnected: true, disabled: false, hidden: false, offsetParent: {},

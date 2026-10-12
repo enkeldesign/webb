@@ -96,13 +96,17 @@ export function pointOutInGarage(points, {
     windowRef.setTimeout?.(() => element.classList.remove('is-introduced'), POINT_SECONDS * 1000);
   }
   const section = shown[0].element.closest('section') || shown[0].element.parentElement;
-  const said = shown.map(({ say }) => say).filter(Boolean);
-  if (section && said.length) {
+  // A retained hint may be used in this or another tab during GARAGE's speech
+  // delay. Recheck its owner before announcing it, just as its pulse is cleared.
+  const currentMessages = () => shown
+    .filter(({ element, isCurrent }) => element.isConnected && (!isCurrent || isCurrent()))
+    .map(({ say }) => say).filter(Boolean);
+  if (section && currentMessages().length) {
     const status = documentRef.createElement('p');
     status.className = 'turn-sr-only m8-unlock-hint-status';
     status.setAttribute('role', 'status');
     section.append(status);
-    windowRef.setTimeout?.(() => { status.textContent = said.join(' '); }, sayAfterMs);
+    windowRef.setTimeout?.(() => { status.textContent = currentMessages().join(' '); }, sayAfterMs);
     windowRef.setTimeout?.(() => status.remove(), sayAfterMs + POINT_SECONDS * 1000);
   }
   return true;
