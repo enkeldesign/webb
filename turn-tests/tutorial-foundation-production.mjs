@@ -8,6 +8,11 @@ globalThis.localStorage = {
   setItem: (key, value) => memory.set(key, String(value)),
   removeItem: (key) => memory.delete(key)
 };
+function clearIntroductionState(key) {
+  for (const stored of memory.keys()) {
+    if (stored === key || stored.startsWith(`${key}:`)) memory.delete(stored);
+  }
+}
 const events = new globalThis.EventTarget();
 globalThis.addEventListener = events.addEventListener.bind(events);
 globalThis.removeEventListener = events.removeEventListener.bind(events);
@@ -777,7 +782,7 @@ test('DRIFT ATTACK TUTORIAL is its own module, offered in HOW TO PLAY once DRIFT
 
 test('unlock introductions queue new DRIFT ATTACK, SHIFT and FLOW unlocks once', async () => {
   const intro = await import('../turn/progression/unlock-introductions.js');
-  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
   assert.equal(queue.unlocked(['compact', 'medium-tracks']), false, 'Only DRIFT ATTACK, SHIFT and FLOW are introduced');
   assert.equal(queue.unlocked(['shift', 'flow']), true);
@@ -801,7 +806,7 @@ test('unlock introductions queue new DRIFT ATTACK, SHIFT and FLOW unlocks once',
 test('after the SHIFT introduction, the drive pad\'s SHIFT is pointed out in the next races', async () => {
   const intro = await import('../turn/progression/unlock-introductions.js');
   const callout = await import('../turn/ui/shift-race-callout.js');
-  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
   queue.unlocked(['shift']);
   queue.introduced('shift');
@@ -817,6 +822,7 @@ test('after the SHIFT introduction, the drive pad\'s SHIFT is pointed out in the
   assert.equal(reloaded.hasHint(callout.RACE_SHIFT_HINT), true, 'Admin UNLOCK SHIFT arms it again');
   assert.deepEqual(reloaded.snapshot().views, {}, 'With its count started over');
   // Introduced in r426/r427, before the race hint: armed once, then never again.
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   memory.set(intro.UNLOCK_INTRODUCTIONS_KEY, JSON.stringify({ pending: [], shown: ['shift'], hints: [] }));
   const upgraded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
   assert.equal(upgraded.hasHint(callout.RACE_SHIFT_HINT), true, 'Players introduced to SHIFT before r428 get the race hint');
@@ -923,7 +929,7 @@ test('PAINTJOB is pointed out in GARAGE without a sheet: its reward toast says i
   const intro = await import('../turn/progression/unlock-introductions.js');
   assert.equal(intro.UNLOCK_INTRODUCTIONS.paintjob, undefined, 'No introduction sheet');
   assert.equal(intro.UNLOCK_HINTS.paintjob.hint, 'garage-paint');
-  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
   assert.equal(queue.unlocked(['paintjob']), false, 'Nothing waits on Home for it');
   queue.armHint('garage-paint');
@@ -942,7 +948,7 @@ test('PAINTJOB is pointed out in GARAGE without a sheet: its reward toast says i
 
 test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT once per car', async () => {
   const intro = await import('../turn/progression/unlock-introductions.js');
-  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
   assert.equal(queue.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), true, 'Armed for every player, including existing ones');
   // #1189: pointed out once, then a calm pulse on every visit until ALL CARS is used.
@@ -957,7 +963,7 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
   assert.equal(later.hasHint(intro.ALL_CARS_HINT), false);
   // TURN in two tabs (CODEX on #1192): used in one, the other takes that up from the
   // storage event, so its next save does not arm ALL CARS again.
-  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   const tabs = new globalThis.EventTarget();
   const usedHere = intro.createUnlockIntroductionQueue(globalThis.localStorage, { events: new globalThis.EventTarget() });
   usedHere.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
@@ -998,7 +1004,7 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
     (tab) => tab.viewHint('garage-paint', 3)
   ];
   for (const mutate of mutations) {
-    memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+    clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
     const first = intro.createUnlockIntroductionQueue(globalThis.localStorage);
     first.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
     const stale = intro.createUnlockIntroductionQueue(globalThis.localStorage);
@@ -1009,6 +1015,38 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
     assert.equal(saved.hasHint(intro.ALL_CARS_HINT), false, 'A stale mutation preserves the consumed hint');
     assert.equal(saved.hasHint('unrelated-new-hint'), true, 'It also preserves another tab’s new hint');
   }
+  // Interleave inside the actual write, after the other tab has already read and
+  // serialized its old snapshot. Exercise either tab being the final writer.
+  for (const consumeLast of [false, true]) {
+    for (const mutate of mutations) {
+      clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
+      const first = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+      first.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
+      first.armHint('garage-paint');
+      let interleave = true;
+      const overlapping = intro.createUnlockIntroductionQueue({
+        getItem: globalThis.localStorage.getItem,
+        setItem(key, value) {
+          if (key !== intro.UNLOCK_INTRODUCTIONS_KEY || !interleave) {
+            globalThis.localStorage.setItem(key, value);
+            return;
+          }
+          interleave = false;
+          if (consumeLast) globalThis.localStorage.setItem(key, value);
+          first.consumeHint(intro.ALL_CARS_HINT);
+          if (!consumeLast) globalThis.localStorage.setItem(key, value);
+        }
+      });
+      mutate(overlapping);
+      assert.equal(interleave, false, 'The regression crosses the read/write boundary');
+      assert.equal(overlapping.hasHint(intro.ALL_CARS_HINT), false, 'An overlapping save cannot revive a consumed hint in this tab');
+      const reloaded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+      assert.equal(reloaded.hasHint(intro.ALL_CARS_HINT), false, 'The tombstone survives either final snapshot writer');
+      assert.equal(reloaded.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), false, 'An overlapping save cannot erase the once marker');
+      assert.equal(reloaded.armOnce(intro.ALL_CARS_HINT, 'future-all-cars-guidance'), true, 'A deliberately new generation can still arm the hint');
+      assert.equal(reloaded.hasHint(intro.ALL_CARS_HINT), true);
+    }
+  }
   const memoryOnly = intro.createUnlockIntroductionQueue({
     getItem: () => null,
     setItem() { throw new Error('Storage unavailable'); }
@@ -1018,6 +1056,7 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
   memoryOnly.consumeHint(intro.ALL_CARS_HINT);
   assert.equal(memoryOnly.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), false, 'The in-page once marker survives too');
   // A player whose r435 hint ended after one showing is armed once more.
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   globalThis.localStorage.setItem(intro.UNLOCK_INTRODUCTIONS_KEY, JSON.stringify({ pending: [], shown: [], hints: [], views: {}, once: ['garage-all-cars'] }));
   const r435 = intro.createUnlockIntroductionQueue(globalThis.localStorage);
   assert.equal(r435.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), true);

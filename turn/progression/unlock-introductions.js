@@ -106,22 +106,54 @@ function readState(storage, fallback = null) {
 export function createUnlockIntroductionQueue(storage = globalThis.localStorage, { events = null, onSync = () => {} } = {}) {
   const state = readState(storage);
   let persistent = typeof storage?.getItem === 'function' && typeof storage?.setItem === 'function';
+  const prefix = `${UNLOCK_INTRODUCTIONS_KEY}:`;
+  const markers = new Map();
+  const markerKey = (...parts) => prefix + JSON.stringify(parts);
+  const readMarker = (key) => {
+    if (persistent) {
+      try { return storage.getItem(key); } catch (_) { /* Keep in-page progress. */ }
+    }
+    return markers.get(key) || null;
+  };
+  const writeMarker = (key, value) => {
+    markers.set(key, value);
+    if (persistent) {
+      try { storage.setItem(key, value); } catch (_) { persistent = false; }
+    }
+  };
+  const generation = (hint) => readMarker(markerKey('generation', hint)) || 'initial';
+  const consumedKey = (hint) => markerKey('consumed', hint, generation(hint));
+  const rearm = (hint, value = globalThis.crypto.randomUUID()) => writeMarker(markerKey('generation', hint), value);
+  // A consumption is an independent, immutable tombstone. An interleaved save of
+  // the shared snapshot cannot erase it. Only an explicit new arming generation
+  // (admin replay or a new armOnce key) can make that hint available again.
+  const applyConsumed = () => {
+    state.hints = state.hints.filter((hint) => {
+      if (!readMarker(consumedKey(hint))) return true;
+      delete state.views[hint];
+      return false;
+    });
+  };
   // Storage events arrive later. Apply each mutation to the latest stored queue,
   // including deletions, rather than saving the tab's earlier snapshot over it.
   // If saving is unavailable, keep this page's progress in memory as before.
   const refresh = () => {
     if (persistent) Object.assign(state, readState(storage, state));
+    applyConsumed();
   };
   const save = () => {
+    applyConsumed();
     try {
       storage?.setItem?.(UNLOCK_INTRODUCTIONS_KEY, JSON.stringify(state));
     } catch (_) { persistent = false; }
+    applyConsumed();
   };
+  applyConsumed();
   // TURN open in another tab saves the whole queue too: the page's queue (events: the
   // window) takes up what it saved, so a later save here does not write back a hint
   // that tab has used (#1192).
   events?.addEventListener?.('storage', (event) => {
-    if (event.key !== UNLOCK_INTRODUCTIONS_KEY) return;
+    if (event.key !== UNLOCK_INTRODUCTIONS_KEY && !event.key?.startsWith(prefix)) return;
     refresh();
     onSync();
   });
@@ -132,7 +164,10 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
       let changed = false;
       for (const id of ids || []) {
         if (!UNLOCK_INTRODUCTIONS[id]) continue;
-        if (replay) state.shown = state.shown.filter((shown) => shown !== id);
+        if (replay) {
+          state.shown = state.shown.filter((shown) => shown !== id);
+          for (const hint of UNLOCK_INTRODUCTIONS[id].hints || []) rearm(hint);
+        }
         if (state.shown.includes(id) || state.pending.includes(id)) continue;
         state.pending.push(id);
         changed = true;
@@ -159,6 +194,7 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
     // A hint armed by an unlock with no sheet of its own (UNLOCK_HINTS).
     armHint(hint) {
       refresh();
+      rearm(hint);
       if (!state.hints.includes(hint)) state.hints.push(hint);
       delete state.views[hint];
       save();
@@ -167,7 +203,10 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
     // names that once, so a hint can be armed again under a new one.
     armOnce(hint, key = hint) {
       refresh();
-      if (state.once.includes(key)) return false;
+      const onceKey = markerKey('once', key);
+      if (state.once.includes(key) || readMarker(onceKey)) return false;
+      writeMarker(onceKey, '1');
+      rearm(hint, `once:${key}`);
       state.once.push(key);
       if (!state.hints.includes(hint)) state.hints.push(hint);
       delete state.views[hint];
@@ -185,6 +224,7 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
     },
     consumeHint(hint) {
       refresh();
+      writeMarker(consumedKey(hint), '1');
       state.hints = state.hints.filter((pending) => pending !== hint);
       delete state.views[hint];
       save();
@@ -195,6 +235,7 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage,
       if (!state.hints.includes(hint)) return 0;
       const views = (Number(state.views[hint]) || 0) + 1;
       if (views >= limit) {
+        writeMarker(consumedKey(hint), '1');
         state.hints = state.hints.filter((pending) => pending !== hint);
         delete state.views[hint];
       } else {
