@@ -360,13 +360,19 @@ export function installUnlockIntroductions({
         const { selector, say, ownVisit, untilUsed } = GARAGE_HINT_TARGETS[hint];
         const target = [...documentRef.querySelectorAll(selector)].find((element) => !element.hidden && element.offsetParent);
         if (!target) continue;
-        if (untilUsed) suggestInGarage(target, { documentRef });
-        if (untilUsed && queue.pointedOut(hint)) continue;
+        // Pointed out already: the calm pulse, until used. Never before that pointing-out,
+        // which stays the player's first sight of it.
+        if (untilUsed && queue.pointedOut(hint)) {
+          suggestInGarage(target, { documentRef });
+          continue;
+        }
         const garage = target.closest('#turnGarage');
         // Later, on a visit the player opens themselves with nothing else to point out.
         if (ownVisit && (points.length || pointedGarage === garage || garageOpenedForCar(garage))) continue;
-        if (untilUsed) queue.markPointedOut(hint);
-        else queue.consumeHint(hint);
+        if (untilUsed) {
+          queue.markPointedOut(hint);
+          suggestInGarage(target, { documentRef });
+        } else queue.consumeHint(hint);
         pointedGarage = garage;
         points.push({ element: target, say });
       }

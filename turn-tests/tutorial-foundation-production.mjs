@@ -965,8 +965,10 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
   assert.match(source, /if \(introducesOnUnlock\(windowRef, storage\)\) queue\.armOnce\(ALL_CARS_HINT, ALL_CARS_UNTIL_USED\);/, 'Not in automated runs');
   assert.match(source, /untilUsed: '\.garage-all-cars-button, \.garage-car-card'/,
     'Used: the sheet opened on a phone, or a car chosen from ALL CARS, in the sheet or inline on iPad');
-  assert.match(source, /if \(untilUsed\) suggestInGarage\(target, \{ documentRef \}\);\n\s*if \(untilUsed && queue\.pointedOut\(hint\)\) continue;/,
-    'The calm pulse on every visit; the scroll and the line only once');
+  assert.match(source, /if \(untilUsed && queue\.pointedOut\(hint\)\) \{\n\s*suggestInGarage\(target, \{ documentRef \}\);\n\s*continue;\n\s*\}/,
+    'The calm pulse on every later visit; the scroll and the line only once');
+  assert.match(source, /if \(untilUsed\) \{\n\s*queue\.markPointedOut\(hint\);\n\s*suggestInGarage\(target, \{ documentRef \}\);\n\s*\} else queue\.consumeHint\(hint\);/,
+    'And not before that pointing-out: a hint still waiting does not pulse (CODEX on #1192)');
   assert.match(source, /if \(!untilUsed \|\| !queue\.hasHint\(hint\) \|\| !event\.target\?\.closest\?\.\(untilUsed\)\) continue;\n\s*queue\.consumeHint\(hint\);/,
     'Using it ends the pulse for good');
   const focusSource = await read('../turn/garage/garage-focus.js');

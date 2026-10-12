@@ -498,7 +498,9 @@ try {
       'ALL CARS waits: this GARAGE was opened for the player, and points at ACTIVATE SHIFT');
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-shift')), false,
       'ACTIVATE SHIFT is pointed out once');
-    assert.equal(await page.evaluate(() => document.querySelector('.garage-all-cars-button').classList.contains('is-introduced')), false);
+    assert.deepEqual(await page.evaluate(() => ['is-introduced', 'is-suggested']
+      .map((name) => document.querySelector('.garage-all-cars-button').classList.contains(name))), [false, false],
+    'ALL CARS neither pulses nor waits with a calm pulse before its own introduction');
   });
 
   // #1168 and #1167: the first GARAGE the player opens points at ALL CARS; after SHIFT
