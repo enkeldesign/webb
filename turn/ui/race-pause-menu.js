@@ -95,7 +95,8 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
   function syncDialog() {
     title.textContent = rotatedAway() ? 'SCREEN ROTATED' : 'PAUSED';
     note.hidden = !rotatedAway();
-    resumeButton.textContent = rotatedAway() ? `RACE IN ${screenWord()}` : 'RESUME';
+    note.textContent = racePause.lessonHeld ? 'Turn back to return to the lesson.' : 'Turn back to keep racing.';
+    resumeButton.textContent = rotatedAway() ? `${racePause.lessonHeld ? 'CONTINUE' : 'RACE'} IN ${screenWord()}` : 'RESUME';
     // THIS VISIT (#1061), once a lap is done.
     const visitText = visitSummary.compactText();
     visit.querySelector('b').textContent = visitText;
@@ -107,7 +108,7 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
     syncDialog();
     if (!dialog.open) dialog.showModal();
     resumeButton.focus();
-    announce(rotatedAway() ? 'Screen rotated. Race paused. Turn back to keep racing.' : 'Race paused.');
+    announce(rotatedAway() ? `Screen rotated. Race paused. ${note.textContent}` : 'Race paused.');
   }
 
   function closeDialog() {
@@ -137,8 +138,10 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
         if (!racePause.resume()) return;
         documentRef.querySelector('#calibrateButton')?.click();
         syncButton();
-        button.focus();
-        announce('Race resumed.');
+        if (!racePause.paused) {
+          button.focus();
+          announce('Race resumed.');
+        }
         return;
       }
       countdown.textContent = String(count);
@@ -150,22 +153,28 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
   }
 
   function resume() {
-    if (rotated()) {
+    const rotation = rotated();
+    if (rotation && !racePause.lessonHeld) {
       resumeAfterCountdown();
       return;
     }
     closeDialog();
     if (!racePause.resume()) return;
+    // Returning to TRY IT keeps racing held: no racing countdown or resume speech.
+    // Centring still follows the phone's current orientation.
+    if (rotation) documentRef.querySelector('#calibrateButton')?.click();
     syncButton();
-    button.focus();
-    announce('Race resumed.');
+    if (!racePause.paused) {
+      button.focus();
+      announce('Race resumed.');
+    }
   }
 
   // Escape, back, or any other close while still paused resumes. The actions lift the
   // pause themselves before the dialog's close event arrives. That event comes a task
   // later: if a new pause has opened PAUSED again by then, it is not this close's.
   dialog.addEventListener('close', () => {
-    if (racePause.paused && !dialog.open && !countTimer) resume();
+    if (racePause.paused && racePause.reason !== 'lesson' && !dialog.open && !countTimer) resume();
   });
 
   dialog.addEventListener('click', (event) => {
@@ -201,7 +210,7 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
 
   windowRef.addEventListener('turn:ui-state-change', (event) => {
     const change = event.detail?.reason;
-    if (change === 'race-paused') openDialog();
+    if (change === 'race-paused' && event.detail.pauseReason !== 'lesson') openDialog();
     else if (change === 'race-pause-ended') {
       stopCountdown();
       closeDialog();
@@ -209,8 +218,8 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
       // Turned back: race on, unless SETTINGS (or another dialog) is open over PAUSED;
       // then the pause holds until the player resumes. Turned elsewhere, even
       // mid-count: ask again.
-      const covered = [...documentRef.querySelectorAll('dialog[open]')].some((open) => open !== dialog);
-      if (event.detail?.rotatedBack && !covered) resumeAfterCountdown();
+      const covered = [...documentRef.querySelectorAll('dialog[open]')].some((open) => open !== dialog && !open.classList.contains('turn-tutorial-card'));
+      if (event.detail?.rotatedBack && !covered) resume();
       else if (event.detail?.rotatedBack) syncDialog();
       else {
         stopCountdown();

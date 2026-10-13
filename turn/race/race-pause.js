@@ -34,13 +34,16 @@ const RACING = 'racing';
 export const PAUSE_REASON = Object.freeze({
   PLAYER: 'player',
   BACKGROUND: 'background',
-  ROTATION: 'rotation'
+  ROTATION: 'rotation',
+  LESSON: 'lesson'
 });
 
 export function installRacePause({ windowRef = window, documentRef = document } = {}) {
   if (windowRef[INSTALL_KEY]) return windowRef[INSTALL_KEY];
   const body = documentRef.body;
   let reason = null;
+  let lessonHeld = false;
+  const currentReason = () => reason || (lessonHeld ? PAUSE_REASON.LESSON : null);
   let pausedAt = 0;
   // The screen orientation the race is driven in; it follows every rotation outside a lap.
   const orientationNow = () => windowRef.screen?.orientation?.type || String(windowRef.orientation ?? '');
@@ -59,8 +62,8 @@ export function installRacePause({ windowRef = window, documentRef = document } 
         reason: change,
         mode: state?.mode,
         running: state?.running === true,
-        paused: reason !== null,
-        pauseReason: reason,
+        paused: currentReason() !== null,
+        pauseReason: currentReason(),
         rotatedBack: reason === PAUSE_REASON.ROTATION ? orientationNow() === raceOrientation : undefined
       }
     }));
@@ -72,8 +75,9 @@ export function installRacePause({ windowRef = window, documentRef = document } 
       return true;
     }
     if (!racing()) return false;
+    const alreadyHeld = lessonHeld;
     reason = nextReason;
-    pausedAt = windowRef.performance.now();
+    if (!alreadyHeld) pausedAt = windowRef.performance.now();
     freezeRaceClock();
     body.classList.add('turn-runtime-paused', 'turn-race-paused');
     windowRef.__turnAudio?.silence?.();
@@ -85,7 +89,14 @@ export function installRacePause({ windowRef = window, documentRef = document } 
   // Resume the race, or with { ending: true } only lift the pause because the race is
   // about to end (RESTART LAP, LEAVE RACE); the caller then takes that path.
   function resume({ ending = false } = {}) {
-    if (reason === null) return false;
+    if (currentReason() === null || (!ending && reason === null)) return false;
+    reason = null;
+    raceOrientation = orientationNow();
+    if (!ending && lessonHeld) {
+      publish('race-lesson-returned');
+      return true;
+    }
+    lessonHeld = false;
     // The frame loop measures from its last frame, the paused moment in race time.
     thawRaceClock();
     body.classList.remove('turn-runtime-paused', 'turn-race-paused');
@@ -96,10 +107,37 @@ export function installRacePause({ windowRef = window, documentRef = document } 
     return true;
   }
 
+  // Lessons share the pause owner, but sit underneath player/background/rotation
+  // pauses. RESUME only removes that upper pause; TRY IT alone releases the lesson.
+  function hold() {
+    if (lessonHeld) return true;
+    if (!racing()) return false;
+    lessonHeld = true;
+    if (reason !== null) return true;
+    pausedAt = windowRef.performance.now();
+    freezeRaceClock();
+    body.classList.add('turn-runtime-paused', 'turn-race-paused');
+    windowRef.__turnAudio?.silence?.();
+    windowRef.dispatchEvent(new CustomEvent('turn:pace-note-silence'));
+    publish('race-paused');
+    return true;
+  }
+
+  function letGo() {
+    if (!lessonHeld) return false;
+    lessonHeld = false;
+    if (reason !== null) return true;
+    thawRaceClock();
+    body.classList.remove('turn-runtime-paused', 'turn-race-paused');
+    pausedAt = 0;
+    publish('race-resumed');
+    return true;
+  }
+
   // A race that stops being a race while paused ends the pause with it.
   windowRef.addEventListener('turn:ui-state-change', (event) => {
     const change = event.detail?.reason;
-    if (reason === null || change === 'race-paused' || change === 'race-resumed' || change === 'race-pause-ended' || change === 'race-rotation') return;
+    if (currentReason() === null || change === 'race-paused' || change === 'race-resumed' || change === 'race-pause-ended' || change === 'race-rotation') return;
     if (!racing()) resume({ ending: true });
   });
 
@@ -134,7 +172,7 @@ export function installRacePause({ windowRef = window, documentRef = document } 
   function syncOrientationLock() {
     const orientation = windowRef.screen?.orientation;
     if (typeof orientation?.lock !== 'function') return;
-    const lock = reason === null && racing();
+    const lock = currentReason() === null && racing();
     if (lock === locked) return;
     locked = lock;
     try {
@@ -149,15 +187,20 @@ export function installRacePause({ windowRef = window, documentRef = document } 
   const api = Object.freeze({
     pause,
     resume,
+    hold,
+    letGo,
+    get lessonHeld() {
+      return lessonHeld;
+    },
     get paused() {
-      return reason !== null;
+      return currentReason() !== null;
     },
     get reason() {
-      return reason;
+      return currentReason();
     },
     // How long the current pause has lasted, in milliseconds (0 when not paused).
     get pausedFor() {
-      return reason === null ? 0 : windowRef.performance.now() - pausedAt;
+      return currentReason() === null ? 0 : windowRef.performance.now() - pausedAt;
     },
     get canPause() {
       return reason === null && racing();

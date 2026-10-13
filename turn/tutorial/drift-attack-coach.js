@@ -8,8 +8,7 @@ import { createTutorialPrompt } from './tutorial-prompt.js';
 
 // The DRIFT ATTACK TUTORIAL coach (#1150), on top of an ordinary teaching lap. Like the
 // TURN TUTORIAL coach it only reads the game, writes nothing but state.sessionSpeedCap,
-// and presents through the one polite live region (tutorial-prompt.js).
-const CAP_EASE_PER_SECOND = 12;
+// and presents through the shared lesson card and feedback voice (tutorial-prompt.js).
 const DONE_TEXT_SECONDS = 3;
 const GRADUATION_SECONDS = 4;
 // OVERCHARGE burned by BOOST before SPEND counts as done.
@@ -30,10 +29,10 @@ export function readDriftAttackSignals(counters, state = globalThis.__turnRuntim
 
 export function createDriftAttackCoach({
   state,
-  maxSpeed,
   lessons = DRIFT_ATTACK_LESSONS,
   signals,
-  present = () => {}
+  present = () => {},
+  isHeld = () => false
 }) {
   const outcome = new Map(lessons.map((lesson) => [lesson.id, 'pending']));
   const buildIndex = Math.max(0, lessons.findIndex((lesson) => lesson.id === 'build'));
@@ -65,7 +64,9 @@ export function createDriftAttackCoach({
       id: current.id,
       title: current.title,
       prompt: prompt || current.prompt,
-      keyboardPrompt: prompt ? null : current.keyboardPrompt
+      keyboardPrompt: prompt ? null : current.keyboardPrompt,
+      hold: !prompt && current.id !== 'hold',
+      targets: current.targets
     });
   }
 
@@ -83,7 +84,7 @@ export function createDriftAttackCoach({
   }
 
   function update(dt) {
-    if (finished) return;
+    if (finished || isHeld()) return;
     const input = signals();
     if (pauseLeft > 0) {
       pauseLeft -= dt;
@@ -99,6 +100,7 @@ export function createDriftAttackCoach({
       begin(nextIndex, input);
     }
 
+    if (isHeld()) return;
     progress.banks = input.banks - banksAtStart;
     progress.links = input.links - linksAtStart;
     progress.overcharge = input.overcharge;
@@ -126,15 +128,7 @@ export function createDriftAttackCoach({
       begin(buildIndex, input, DRIFT_ATTACK_RETRY_PROMPT);
       return;
     }
-    if (current.speedCap) {
-      // The car's own top speed (vehicle/physics.js), not the untuned base limit.
-      const top = Number(state.vehicleEffectiveMaxSpeed) > 0 ? Number(state.vehicleEffectiveMaxSpeed) : maxSpeed;
-      const target = current.speedCap * top;
-      const from = Number.isFinite(state.sessionSpeedCap) ? state.sessionSpeedCap : Math.max(target, input.speed);
-      state.sessionSpeedCap = Math.max(target, from - CAP_EASE_PER_SECOND * dt);
-    } else {
-      release();
-    }
+    release();
   }
 
   function graduate() {
@@ -174,10 +168,11 @@ export function startDriftAttackCoach({ runtime, events = globalThis }) {
   };
   const coach = createDriftAttackCoach({
     state,
-    maxSpeed: runtime.maxSpeed,
     signals: () => readDriftAttackSignals(counters, state),
-    present: prompt.present
+    present: prompt.present,
+    isHeld: () => prompt.holding
   });
+  coach.update(0);
   let frame = 0;
   let last = 0;
   let stopped = false;
@@ -187,9 +182,8 @@ export function startDriftAttackCoach({ runtime, events = globalThis }) {
     if (stopped) return;
     const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
     last = now;
-    if (state.running && globalThis.__turnRacePause?.paused !== true) {
+    if (state.running && !prompt.holding && globalThis.__turnRacePause?.paused !== true) {
       coach.update(dt);
-      prompt.pace({ state, dt, maxSpeed: runtime.maxSpeed });
       if (graduationLeft > 0) {
         graduationLeft -= dt;
         if (graduationLeft <= 0) {

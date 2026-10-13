@@ -277,9 +277,11 @@
   function focusDialogHeading(dialog) {
     if (!dialog || dialog.hidden) return;
     if (globalThis.HTMLDialogElement && dialog instanceof globalThis.HTMLDialogElement && !dialog.open) return;
-    const heading = headingForDialog(dialog);
+    // A teaching card has one explicit action; other dialogs keep heading-first focus.
+    const initialControl = dialog.querySelector('[data-turn-dialog-initial-focus]');
+    const heading = initialControl || headingForDialog(dialog);
     if (!heading) return;
-    if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+    if (!initialControl && !heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
     try {
       heading.focus({ preventScroll: true });
     } catch (_) {

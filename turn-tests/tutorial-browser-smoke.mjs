@@ -110,6 +110,33 @@ async function crossFinish(page) {
   await page.waitForFunction((previous) => globalThis.__turnRuntime.state.lap > previous, lap);
 }
 
+async function acceptLesson(page, id = null) {
+  const card = page.locator('.turn-tutorial-card[open]');
+  await card.waitFor();
+  if (id) assert.equal(await card.getAttribute('data-lesson'), id);
+  assert.equal(await card.getAttribute('aria-labelledby'), 'turnTutorialCardTitle');
+  assert.equal(await card.getAttribute('aria-describedby'), 'turnTutorialCardText');
+  await page.waitForFunction(() => document.activeElement === document.querySelector('.turn-tutorial-card[open] button'));
+  assert.equal(await page.locator('.turn-tutorial-voice').textContent(), '', 'The card has no duplicate live-region speech');
+  await card.locator('button').click();
+  await page.waitForFunction(() => !document.querySelector('.turn-tutorial-card[open]'));
+}
+
+async function restartTutorial(page, first, paused = true) {
+  if (paused) {
+    await page.evaluate(() => globalThis.__turnRacePause.pause('player'));
+    await page.locator('[data-pause-action="restart"]').click();
+  } else await page.locator('#resetButton').click();
+  await page.locator('.turn-tutorial-card[open]').waitFor();
+  assert.deepEqual(await page.evaluate(() => ({
+    mode: globalThis.__turnRuntime.state.mode,
+    paused: globalThis.__turnRacePause.paused,
+    prompts: document.querySelectorAll('.turn-tutorial-prompt').length,
+    cards: document.querySelectorAll('.turn-tutorial-card').length
+  })), { mode: 'staged', paused: false, prompts: 1, cards: 1 }, 'Restart returns to the line with one fresh tutorial and no old pause');
+  await acceptLesson(page, first);
+}
+
 async function run(name, options, scenario) {
   const { context, page, errors } = await openTurn(options);
   try {
@@ -179,7 +206,12 @@ try {
     await showLaunchCard(page);
     await page.locator('[data-tutorial-start]').click();
     await page.waitForFunction(() => globalThis.__turnRuntime.state.running);
-    await page.waitForFunction(() => !document.querySelector('dialog[open]'));
+    await page.locator('.turn-tutorial-card[open]').waitFor();
+    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.mode), 'staged', 'DRIVE teaches before the first action');
+    await page.keyboard.press('ArrowUp');
+    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.mode), 'staged', 'A driving key cannot bypass the card');
+    await acceptLesson(page, 'drive');
+    await page.dispatchEvent('#controls', 'pointerdown');
     let current = await inspect(page);
     assert.equal(current.track, 'countryside');
     assert.equal(current.car, 'classic', 'The LEARNER CAR');
@@ -204,9 +236,7 @@ try {
       const prompt = document.querySelector('.turn-tutorial-prompt');
       return prompt?.dataset.lesson === 'drive' && !prompt.hidden;
     });
-    // Said once the track intro has been.
-    await page.waitForFunction(() => document.querySelector('.turn-tutorial-voice')?.textContent
-      === 'DRIVE. Steer into the bend and hold GAS.', null, { timeout: 15000 });
+    assert.equal(await page.locator('.turn-tutorial-voice').textContent(), '', 'Acknowledged DRIVE remains a silent reminder');
     // Rotating reflows the HUD stat chips into a taller grid; the prompt follows them.
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForFunction(() => {
@@ -230,7 +260,18 @@ try {
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'drift');
     assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /Slide outward into LOCK/);
     await page.keyboard.press('KeyQ');
-    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt').textContent === 'DRIFTHold DRIFT through the bend.');
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt').textContent === 'DRIFTKeep GAS on into the bend, then hold DRIFT through it.');
+
+    // RESTART LAP from PAUSED over a lesson discards its old progress and card.
+    await restartTutorial(page, 'drive');
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * 0.25)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(10);
+    });
+    await acceptLesson(page, 'drift');
 
     // Course rescue (#1133): a big mistake on the teaching lap is held at a remote limit,
     // 14 m beyond the off-road line (0.58 x 27 m), instead of ending the lesson.
@@ -293,7 +334,8 @@ try {
   await run('Tutorial steering help', { steeringHelp: true }, async (page) => {
     await showLaunchCard(page);
     await page.locator('[data-tutorial-start]').click();
-    await page.waitForFunction(() => globalThis.__turnRuntime.state.running && !document.querySelector('dialog[open]'));
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.running);
+    await acceptLesson(page);
     await page.evaluate(() => {
       const { state, samples } = globalThis.__turnRuntime;
       const sample = samples[Math.round(samples.length * 0.04)];
@@ -305,7 +347,7 @@ try {
     // Hands off the steering with GAS held, into COUNTRYSIDE's first long bend.
     const drive = await page.evaluate(async () => {
       const { state, samples } = globalThis.__turnRuntime;
-      const sample = samples[Math.round(samples.length * 0.12)];
+      const sample = samples[Math.round(samples.length * 0.04)];
       state.position.copy(sample.point);
       state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
       state.velocity.copy(sample.tangent).multiplyScalar(15);
@@ -331,9 +373,10 @@ try {
     assert.equal(await page.locator('#m8SteeringHelp').isChecked(), false);
     assert.equal(await page.locator('.m8-settings-status').textContent(), 'Tutorial steering help off.');
     await page.evaluate(() => {
-      for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
+      for (const dialog of document.querySelectorAll('dialog[open]:not(.turn-tutorial-card)')) dialog.close();
       globalThis.__turnRacePause.resume();
     });
+    if (await page.evaluate(() => globalThis.__turnRacePause.reason === 'lesson')) await acceptLesson(page);
     await page.waitForFunction(() => globalThis.__turnRuntime.state.sessionSteeringTarget === null);
 
     await crossFinish(page);
@@ -362,7 +405,8 @@ try {
     const entry = page.locator('.m8-tutorials-sheet [data-tutorial-pick="drift-attack"]');
     assert.equal(await entry.isVisible(), true, 'TUTORIALS offers DRIFT ATTACK TUTORIAL once DRIFT ATTACK is unlocked');
     await entry.click();
-    await page.waitForFunction(() => globalThis.__turnRuntime.state.running && !document.querySelector('dialog[open]'));
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.running);
+    await acceptLesson(page);
     let current = await inspect(page);
     assert.equal(current.track, 'cliffside', 'A track to drift on');
     assert.equal(current.car, 'classic');
@@ -382,11 +426,15 @@ try {
     await page.evaluate(() => globalThis.dispatchEvent(new CustomEvent('turn:drift-score-event', { detail: { type: 'bank' } })));
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.state === 'done');
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'link', null, { timeout: 15000 });
+    await acceptLesson(page, 'link');
     // A drift linked to the last bank, as DRIFT ATTACK announces its higher COMBO.
     await page.evaluate(() => globalThis.dispatchEvent(new CustomEvent('turn:drift-score-event', { detail: { type: 'milestone', multiplier: 2 } })));
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.state === 'done');
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'build', null, { timeout: 15000 });
     assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /OVERCHARGE/, 'BUILD names OVERCHARGE');
+    await acceptLesson(page, 'build');
+    await restartTutorial(page, 'score', false);
+    assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-state'), 'lesson', 'Old banks and links do not complete the restarted lesson');
 
     await crossFinish(page);
     assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-state'), 'graduated');
@@ -407,7 +455,8 @@ try {
     assert.equal(await sheet.locator('h2').textContent(), 'FLOW');
     assert.equal(await sheet.locator('[data-unlock-action]').textContent(), 'START FLOW TUTORIAL');
     await sheet.locator('[data-unlock-action]').click();
-    await page.waitForFunction(() => globalThis.__turnRuntime.state.running && !document.querySelector('dialog[open]'));
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.running);
+    await acceptLesson(page);
     let current = await inspect(page);
     assert.equal(current.track, 'cliffside');
     assert.equal(current.policy, 'tutorial-lap', 'The teaching lap earns nothing');
@@ -424,10 +473,23 @@ try {
     // Techniques as FLOW announces them (scoring/flow-runtime.js).
     const flow = (detail) => page.evaluate((value) => globalThis.dispatchEvent(new CustomEvent('turn:flow-score-event', { detail: value })), detail);
     await flow({ type: 'technique', technique: 'drift', multiplier: 1 });
-    // #1171: what scored pulses on the drive pad, and only that.
-    assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('.drive-stack .is-flow-pulse')]
-      .map((element) => element.classList.contains('drive-drift-zone'))), [true], 'DRIFT pulses DRIFT');
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'combo');
+    assert.equal(await page.evaluate(() => globalThis.__turnRacePause.reason), 'lesson');
+    assert.equal(await page.locator('.drive-stack .is-flow-pulse').count(), 0, 'The new lesson clears race pulses while paused');
+    await restartTutorial(page, 'slide');
+    await flow({ type: 'technique', technique: 'boost', multiplier: 2 });
+    assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-lesson'), 'slide', 'The old DRIFT no longer counts after restart');
+    // Stage the new lap before scoring its next technique.
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * 0.04)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(10);
+    });
+    await page.waitForFunction(() => globalThis.__turnRuntime.state.mode === 'racing');
+    await flow({ type: 'technique', technique: 'drift', multiplier: 1 });
+    await acceptLesson(page, 'combo');
     await flow({ type: 'chain-expired' });
     await page.waitForFunction(() => /chain ran out/.test(document.querySelector('.turn-tutorial-prompt').textContent));
     await flow({ type: 'technique', technique: 'drift', multiplier: 1 });
