@@ -494,11 +494,13 @@ try {
     await page.waitForFunction(() => Boolean(document.querySelector('.garage-shift.is-introduced')), null, { timeout: 30000 });
     assert.equal(await page.evaluate(() => globalThis.__turnGarage.getViewedCarId()), 'sedan', 'GARAGE opens on the SEDAN');
     assert.deepEqual(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.snapshot()),
-      { pending: [], shown: ['shift'], hints: ['garage-all-cars', 'race-shift'], views: {}, once: ['garage-all-cars'] },
+      { pending: [], shown: ['shift'], hints: ['garage-all-cars', 'race-shift'], views: {}, once: ['garage-all-cars-until-used'] },
       'ALL CARS waits: this GARAGE was opened for the player, and points at ACTIVATE SHIFT');
     assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-shift')), false,
       'ACTIVATE SHIFT is pointed out once');
-    assert.equal(await page.evaluate(() => document.querySelector('.garage-all-cars-button').classList.contains('is-introduced')), false);
+    assert.deepEqual(await page.evaluate(() => ['is-introduced', 'is-suggested']
+      .map((name) => document.querySelector('.garage-all-cars-button').classList.contains(name))), [false, false],
+    'ALL CARS neither pulses nor waits with a calm pulse before its own introduction');
   });
 
   // #1168 and #1167: the first GARAGE the player opens points at ALL CARS; after SHIFT
@@ -508,10 +510,48 @@ try {
     await page.waitForFunction(() => document.querySelector('.garage-all-cars-button')?.classList.contains('is-introduced'), null, { timeout: 60000 });
     await page.waitForFunction(() => document.querySelector('#turnGarage .m8-unlock-hint-status')?.textContent
       === 'New in GARAGE: ALL CARS, every car and what unlocks it.', null, { timeout: 5000 });
-    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-all-cars')), false,
-      'ALL CARS is pointed out once');
+    // #1189: said once, then a calm pulse until ALL CARS is used.
+    const queueState = () => page.evaluate(() => {
+      const queue = globalThis.__turnNextHome.unlockIntroductions.queue;
+      return { armed: queue.hasHint('garage-all-cars'), pointedOut: queue.pointedOut('garage-all-cars'),
+        suggested: document.querySelector('.garage-all-cars-button').classList.contains('is-suggested') };
+    });
+    assert.deepEqual(await queueState(), { armed: true, pointedOut: true, suggested: true }, 'ALL CARS keeps a calm pulse until it is used');
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars-button').classList.contains('is-introduced'));
+    assert.equal(await page.locator('.garage-all-cars-button').evaluate((button) => globalThis.getComputedStyle(button).animationName),
+      'none', 'Reduce Motion stays static after the first introduction ends');
+    await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'no-preference' });
+    assert.deepEqual(await page.locator('.garage-all-cars-button').evaluate((button) => {
+      const style = globalThis.getComputedStyle(button);
+      return { animation: style.animationName, outline: style.outlineStyle, visible: parseFloat(style.outlineWidth) > 0 };
+    }), { animation: 'none', outline: 'solid', visible: true }, 'Forced colours retain a visible static hint without Reduce Motion');
+    await page.emulateMedia({ forcedColors: 'none', reducedMotion: 'reduce' });
+    // A real second tab shares storage but already has its own rendered GARAGE.
+    // Using ALL CARS here must stop that tab's pulse without reopening GARAGE.
+    const otherTab = await page.context().newPage();
+    const otherErrors = [];
+    otherTab.on('pageerror', (error) => otherErrors.push(error.message));
+    await otherTab.addInitScript(() => {
+      Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
+    });
+    await otherTab.goto(new URL('turn/', target).href);
+    await otherTab.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready')
+      && globalThis.__turnNextHome?.tutorial, null, { timeout: 60000 });
+    await otherTab.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
+    await otherTab.waitForFunction(() => document.querySelector('.garage-all-cars-button')?.classList.contains('is-suggested'));
     // GARAGE ignores activations during its 600 ms VoiceOver entry-tap guard.
     await page.waitForTimeout(700);
+    await page.locator('.garage-all-cars-button').click();
+    await page.waitForFunction(() => document.querySelector('.garage-all-cars')?.open);
+    assert.deepEqual(await queueState(), { armed: false, pointedOut: false, suggested: false }, 'Opened once, it stops for good');
+    await otherTab.waitForFunction(() => !globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-all-cars'));
+    assert.equal(await otherTab.locator('.garage-all-cars-button').evaluate((button) =>
+      button.classList.contains('is-suggested') || button.classList.contains('is-introduced')), false,
+    'The already-open GARAGE in the other tab stops pulsing as soon as the saved hint is consumed');
+    assert.deepEqual(otherErrors, [], 'The other tab has no page errors');
+    await otherTab.close();
+    await page.locator('.garage-all-cars .turn-pr-close').click();
+    await page.waitForFunction(() => !document.querySelector('.garage-all-cars')?.open);
     await page.locator('.garage-race').click();
     await page.waitForFunction(() => document.querySelector('.garage-shift')?.classList.contains('is-introduced'));
     await page.waitForFunction(() => /^No SHIFT setup on the .+ yet\. ACTIVATE SHIFT is below the car’s name\. Press RACE again to race\.$/

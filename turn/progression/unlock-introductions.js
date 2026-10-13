@@ -1,5 +1,5 @@
 import { getTrophyRoadReward } from './trophy-road.js';
-import { garageOpenedForCar, pointOutInGarage, viewCarWhenGarageOpens } from '../garage/garage-focus.js';
+import { garageOpenedForCar, pointOutInGarage, suggestInGarage, viewCarWhenGarageOpens } from '../garage/garage-focus.js';
 
 // Unlock introductions (#1149, #1150): when DRIFT ATTACK, SHIFT or FLOW unlocks, Home
 // explains it in a bottom sheet that stays until the player closes it, instead of
@@ -24,6 +24,8 @@ export const UNLOCK_HINTS = Object.freeze({
 });
 // What each GARAGE hint scrolls to and pulses, and what it says. ownVisit: only on a
 // GARAGE visit the player opened themselves, with nothing else to point out (#1168).
+// untilUsed: after that, a calm pulse on every visit until the player uses it, which
+// clicking anything matching untilUsed counts as (#1189).
 const GARAGE_HINT_TARGETS = Object.freeze({
   'garage-shift': Object.freeze({ selector: '.garage-shift', say: 'New in GARAGE: ACTIVATE SHIFT, below the car’s name.' }),
   'garage-paint': Object.freeze({ selector: '.garage-paint-toggle', say: 'New in GARAGE: PAINT, below the car’s name.' }),
@@ -32,11 +34,16 @@ const GARAGE_HINT_TARGETS = Object.freeze({
   'garage-all-cars': Object.freeze({
     selector: '.garage-all-cars-button, #garageCatalogTitle',
     say: 'New in GARAGE: ALL CARS, every car and what unlocks it.',
-    ownVisit: true
+    ownVisit: true,
+    // Opening the sheet on a phone, or choosing a car from it or from the catalog
+    // shown inline on iPad.
+    untilUsed: '.garage-all-cars-button, .garage-car-card'
   })
 });
-// Armed once for every player, the first time TURN runs with this release.
+// Armed once for every player, the first time TURN runs with this release. Players who
+// saw the r435 hint, which ended after one showing, are armed once more (#1189).
 export const ALL_CARS_HINT = 'garage-all-cars';
+export const ALL_CARS_UNTIL_USED = 'garage-all-cars-until-used';
 
 export const UNLOCK_INTRODUCTIONS = Object.freeze({
   'drift-attack': Object.freeze({
@@ -72,7 +79,7 @@ export const UNLOCK_INTRODUCTIONS = Object.freeze({
   })
 });
 
-function readState(storage) {
+function readState(storage, fallback = null) {
   try {
     const raw = JSON.parse(storage?.getItem?.(UNLOCK_INTRODUCTIONS_KEY) || 'null');
     const ids = (value) => (Array.isArray(value) ? value.filter((id) => UNLOCK_INTRODUCTIONS[id]) : []);
@@ -91,25 +98,89 @@ function readState(storage) {
     }
     return state;
   } catch (_) {
-    return { pending: [], shown: [], hints: [], views: {}, once: [] };
+    return fallback || { pending: [], shown: [], hints: [], views: {}, once: [] };
   }
 }
 
 // The queue, without the page: what is waiting to be introduced, and what has been.
-export function createUnlockIntroductionQueue(storage = globalThis.localStorage) {
+export function createUnlockIntroductionQueue(storage = globalThis.localStorage, { events = null, onSync = () => {} } = {}) {
   const state = readState(storage);
+  let persistent = typeof storage?.getItem === 'function' && typeof storage?.setItem === 'function';
+  const prefix = `${UNLOCK_INTRODUCTIONS_KEY}:`;
+  const markers = new Map();
+  const knownHints = new Set([...Object.keys(GARAGE_HINT_TARGETS), 'race-shift', ...state.hints]);
+  const markerKey = (...parts) => prefix + JSON.stringify(parts);
+  const readMarker = (key) => {
+    if (persistent) {
+      try { return storage.getItem(key); } catch (_) { /* Keep in-page progress. */ }
+    }
+    return markers.get(key) || null;
+  };
+  const writeMarker = (key, value) => {
+    markers.set(key, value);
+    if (persistent) {
+      try { storage.setItem(key, value); } catch (_) { persistent = false; }
+    }
+  };
+  const generation = (hint) => readMarker(markerKey('generation', hint)) || 'initial';
+  const consumedKey = (hint) => markerKey('consumed', hint, generation(hint));
+  const pointedKey = (hint) => markerKey('pointed', hint, generation(hint));
+  const rearm = (hint, value = globalThis.crypto.randomUUID()) => writeMarker(markerKey('generation', hint), value);
+  // A consumption is an independent, immutable tombstone. An interleaved save of
+  // the shared snapshot cannot erase it. Only an explicit new arming generation
+  // (admin replay or a new armOnce key) can make that hint available again.
+  const applyConsumed = () => {
+    for (const hint of knownHints) {
+      const armedGeneration = generation(hint);
+      if (!armedGeneration.startsWith('once:')) continue;
+      const key = armedGeneration.slice(5);
+      if (!readMarker(markerKey('once', key))) continue;
+      if (!state.once.includes(key)) state.once.push(key);
+      if (!readMarker(consumedKey(hint)) && !state.hints.includes(hint)) state.hints.push(hint);
+    }
+    state.hints = state.hints.filter((hint) => {
+      if (!readMarker(consumedKey(hint))) {
+        if (readMarker(pointedKey(hint))) state.views[hint] = Math.max(1, Number(state.views[hint]) || 0);
+        return true;
+      }
+      delete state.views[hint];
+      return false;
+    });
+  };
+  // Storage events arrive later. Apply each mutation to the latest stored queue,
+  // including deletions, rather than saving the tab's earlier snapshot over it.
+  // If saving is unavailable, keep this page's progress in memory as before.
+  const refresh = () => {
+    if (persistent) Object.assign(state, readState(storage, state));
+    applyConsumed();
+  };
   const save = () => {
+    applyConsumed();
     try {
       storage?.setItem?.(UNLOCK_INTRODUCTIONS_KEY, JSON.stringify(state));
-    } catch (_) {}
+    } catch (_) { persistent = false; }
+    applyConsumed();
   };
+  applyConsumed();
+  // TURN open in another tab saves the whole queue too: the page's queue (events: the
+  // window) takes up what it saved, so a later save here does not write back a hint
+  // that tab has used (#1192).
+  events?.addEventListener?.('storage', (event) => {
+    if (event.key !== UNLOCK_INTRODUCTIONS_KEY && !event.key?.startsWith(prefix)) return;
+    refresh();
+    onSync();
+  });
   return Object.freeze({
     // A reward unlocked just now; replay (admin) introduces it again.
     unlocked(ids, { replay = false } = {}) {
+      refresh();
       let changed = false;
       for (const id of ids || []) {
         if (!UNLOCK_INTRODUCTIONS[id]) continue;
-        if (replay) state.shown = state.shown.filter((shown) => shown !== id);
+        if (replay) {
+          state.shown = state.shown.filter((shown) => shown !== id);
+          for (const hint of UNLOCK_INTRODUCTIONS[id].hints || []) rearm(hint);
+        }
         if (state.shown.includes(id) || state.pending.includes(id)) continue;
         state.pending.push(id);
         changed = true;
@@ -120,6 +191,10 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage)
     next: () => state.pending[0] || null,
     // Closed by the player: introduced, and its follow-up hints armed.
     introduced(id) {
+      refresh();
+      // Another tab may have finished the same sheet and already used its hints.
+      // Admin replay deliberately removes this marker in unlocked({ replay: true }).
+      if (state.shown.includes(id)) return;
       state.pending = state.pending.filter((pending) => pending !== id);
       if (!state.shown.includes(id)) state.shown.push(id);
       for (const hint of UNLOCK_INTRODUCTIONS[id]?.hints || []) {
@@ -131,27 +206,51 @@ export function createUnlockIntroductionQueue(storage = globalThis.localStorage)
     hasHint: (hint) => state.hints.includes(hint),
     // A hint armed by an unlock with no sheet of its own (UNLOCK_HINTS).
     armHint(hint) {
+      refresh();
+      rearm(hint);
       if (!state.hints.includes(hint)) state.hints.push(hint);
       delete state.views[hint];
       save();
     },
-    // A hint every player gets once, whenever it was added (ALL_CARS_HINT).
-    armOnce(hint) {
-      if (state.once.includes(hint)) return false;
-      state.once.push(hint);
+    // A hint every player gets once, whenever it was added (ALL_CARS_HINT); `key`
+    // names that once, so a hint can be armed again under a new one.
+    armOnce(hint, key = hint) {
+      knownHints.add(hint);
+      refresh();
+      const onceKey = markerKey('once', key);
+      if (state.once.includes(key) || readMarker(onceKey)) return false;
+      rearm(hint, `once:${key}`);
+      writeMarker(onceKey, '1');
+      state.once.push(key);
       if (!state.hints.includes(hint)) state.hints.push(hint);
+      delete state.views[hint];
+      save();
+      return true;
+    },
+    // An untilUsed hint, pointed out (scrolled to and said) once; it stays armed.
+    pointedOut: (hint) => Number(state.views[hint]) > 0,
+    markPointedOut(hint) {
+      refresh();
+      if (!state.hints.includes(hint)) return false;
+      writeMarker(pointedKey(hint), '1');
+      state.views[hint] = 1;
       save();
       return true;
     },
     consumeHint(hint) {
+      refresh();
+      writeMarker(consumedKey(hint), '1');
       state.hints = state.hints.filter((pending) => pending !== hint);
       delete state.views[hint];
       save();
     },
     // A hint shown once more; after `limit` showings it has had its chance.
     viewHint(hint, limit = 1) {
+      refresh();
+      if (!state.hints.includes(hint)) return 0;
       const views = (Number(state.views[hint]) || 0) + 1;
       if (views >= limit) {
+        writeMarker(consumedKey(hint), '1');
         state.hints = state.hints.filter((pending) => pending !== hint);
         delete state.views[hint];
       } else {
@@ -258,7 +357,7 @@ export function installUnlockIntroductions({
   windowRef = globalThis
 } = {}) {
   installStyles(documentRef);
-  const queue = createUnlockIntroductionQueue(storage);
+  const queue = createUnlockIntroductionQueue(storage, { events: windowRef, onSync: syncGarageHints });
   const dialog = createSheet(documentRef);
   const title = dialog.querySelector('h2');
   const copy = dialog.querySelector('.m8-unlock-copy');
@@ -336,21 +435,42 @@ export function installUnlockIntroductions({
     hintObserver?.disconnect();
     hintObserver = null;
   }
+  // Another tab can use a hint while this GARAGE is already open. Reconcile both
+  // its visible pulse and its watcher with the queue that was just synchronized.
+  function syncGarageHints() {
+    for (const [hint, { selector, untilUsed }] of Object.entries(GARAGE_HINT_TARGETS)) {
+      if (!untilUsed || queue.hasHint(hint)) continue;
+      for (const element of documentRef.querySelectorAll(selector)) {
+        element.classList.remove('is-suggested', 'is-introduced');
+      }
+    }
+    stopWatchingHints();
+    watchHints();
+  }
   function watchHints() {
     if (hintObserver || windowRef.__turnRuntime?.state?.running === true) return;
     if (!armedGarageHints().length || typeof MutationObserver !== 'function') return;
     const reveal = () => {
       const points = [];
       for (const hint of armedGarageHints()) {
-        const { selector, say, ownVisit } = GARAGE_HINT_TARGETS[hint];
+        const { selector, say, ownVisit, untilUsed } = GARAGE_HINT_TARGETS[hint];
         const target = [...documentRef.querySelectorAll(selector)].find((element) => !element.hidden && element.offsetParent);
         if (!target) continue;
+        // Pointed out already: the calm pulse, until used. Never before that pointing-out,
+        // which stays the player's first sight of it.
+        if (untilUsed && queue.pointedOut(hint)) {
+          suggestInGarage(target, { documentRef });
+          continue;
+        }
         const garage = target.closest('#turnGarage');
         // Later, on a visit the player opens themselves with nothing else to point out.
         if (ownVisit && (points.length || pointedGarage === garage || garageOpenedForCar(garage))) continue;
-        queue.consumeHint(hint);
+        if (untilUsed) {
+          if (!queue.markPointedOut(hint)) continue;
+          suggestInGarage(target, { documentRef });
+        } else queue.consumeHint(hint);
         pointedGarage = garage;
-        points.push({ element: target, say });
+        points.push({ element: target, say, isCurrent: untilUsed ? () => queue.hasHint(hint) : undefined });
       }
       pointOutInGarage(points, { documentRef, windowRef });
       if (!armedGarageHints().length) stopWatchingHints();
@@ -380,7 +500,15 @@ export function installUnlockIntroductions({
     watchHints();
   });
   // Like the sheets, not in automated runs.
-  if (introducesOnUnlock(windowRef, storage)) queue.armOnce(ALL_CARS_HINT);
+  if (introducesOnUnlock(windowRef, storage)) queue.armOnce(ALL_CARS_HINT, ALL_CARS_UNTIL_USED);
+  // Using an untilUsed hint's control ends its pulse for good.
+  documentRef.addEventListener?.('click', (event) => {
+    for (const [hint, { untilUsed }] of Object.entries(GARAGE_HINT_TARGETS)) {
+      if (!untilUsed || !queue.hasHint(hint) || !event.target?.closest?.(untilUsed)) continue;
+      queue.consumeHint(hint);
+      syncGarageHints();
+    }
+  }, true);
   windowRef.addEventListener?.('turn:ui-state-change', (event) => {
     if (event.detail?.running === true) stopWatchingHints();
   });

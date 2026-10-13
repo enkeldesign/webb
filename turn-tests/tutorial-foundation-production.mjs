@@ -8,6 +8,11 @@ globalThis.localStorage = {
   setItem: (key, value) => memory.set(key, String(value)),
   removeItem: (key) => memory.delete(key)
 };
+function clearIntroductionState(key) {
+  for (const stored of memory.keys()) {
+    if (stored === key || stored.startsWith(`${key}:`)) memory.delete(stored);
+  }
+}
 const events = new globalThis.EventTarget();
 globalThis.addEventListener = events.addEventListener.bind(events);
 globalThis.removeEventListener = events.removeEventListener.bind(events);
@@ -263,7 +268,7 @@ test('a tutorial session borrows COUNTRYSIDE and the LEARNER CAR, then restores 
   const completions = [];
   const onCompleted = (event) => completions.push(event.detail);
   globalThis.addEventListener(TUTORIAL_COMPLETED_EVENT, onCompleted);
-  globalThis.dispatchEvent(new CustomEvent('turn:session-graduated', { detail: { policy: 'normal' } }));
+  globalThis.dispatchEvent(new globalThis.CustomEvent('turn:session-graduated', { detail: { policy: 'normal' } }));
   globalThis.removeEventListener(TUTORIAL_COMPLETED_EVENT, onCompleted);
   assert.equal(session.graduated, true);
   assert.equal(session.firstCompletion, true);
@@ -281,7 +286,7 @@ test('a tutorial session borrows COUNTRYSIDE and the LEARNER CAR, then restores 
   assert.deepEqual(harness.state.competitorLaps, stored, 'The stored rivals come back');
   assert.deepEqual(harness.calls.slice(-2), [['track', 'airport', false], ['car', 'convertible', false]]);
 
-  globalThis.dispatchEvent(new CustomEvent('turn:session-graduated', { detail: { policy: 'normal' } }));
+  globalThis.dispatchEvent(new globalThis.CustomEvent('turn:session-graduated', { detail: { policy: 'normal' } }));
   assert.equal(progress.complete(TURN_TUTORIAL.id), false, 'An ended session no longer listens');
 });
 
@@ -322,7 +327,7 @@ test('replay and SKIP TUTORIAL', async () => {
   const replayCompletions = [];
   const onReplayCompleted = (event) => replayCompletions.push(event.detail.firstCompletion);
   globalThis.addEventListener(TUTORIAL_COMPLETED_EVENT, onReplayCompleted);
-  globalThis.dispatchEvent(new CustomEvent('turn:session-graduated', { detail: { policy: 'sandbox' } }));
+  globalThis.dispatchEvent(new globalThis.CustomEvent('turn:session-graduated', { detail: { policy: 'sandbox' } }));
   globalThis.removeEventListener(TUTORIAL_COMPLETED_EVENT, onReplayCompleted);
   assert.deepEqual(replayCompletions, [false], 'A replay is a completion, but not the first: no second reward');
   await replaySession.exit();
@@ -777,7 +782,7 @@ test('DRIFT ATTACK TUTORIAL is its own module, offered in HOW TO PLAY once DRIFT
 
 test('unlock introductions queue new DRIFT ATTACK, SHIFT and FLOW unlocks once', async () => {
   const intro = await import('../turn/progression/unlock-introductions.js');
-  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
   assert.equal(queue.unlocked(['compact', 'medium-tracks']), false, 'Only DRIFT ATTACK, SHIFT and FLOW are introduced');
   assert.equal(queue.unlocked(['shift', 'flow']), true);
@@ -801,7 +806,7 @@ test('unlock introductions queue new DRIFT ATTACK, SHIFT and FLOW unlocks once',
 test('after the SHIFT introduction, the drive pad\'s SHIFT is pointed out in the next races', async () => {
   const intro = await import('../turn/progression/unlock-introductions.js');
   const callout = await import('../turn/ui/shift-race-callout.js');
-  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
   queue.unlocked(['shift']);
   queue.introduced('shift');
@@ -817,6 +822,7 @@ test('after the SHIFT introduction, the drive pad\'s SHIFT is pointed out in the
   assert.equal(reloaded.hasHint(callout.RACE_SHIFT_HINT), true, 'Admin UNLOCK SHIFT arms it again');
   assert.deepEqual(reloaded.snapshot().views, {}, 'With its count started over');
   // Introduced in r426/r427, before the race hint: armed once, then never again.
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   memory.set(intro.UNLOCK_INTRODUCTIONS_KEY, JSON.stringify({ pending: [], shown: ['shift'], hints: [] }));
   const upgraded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
   assert.equal(upgraded.hasHint(callout.RACE_SHIFT_HINT), true, 'Players introduced to SHIFT before r428 get the race hint');
@@ -923,7 +929,7 @@ test('PAINTJOB is pointed out in GARAGE without a sheet: its reward toast says i
   const intro = await import('../turn/progression/unlock-introductions.js');
   assert.equal(intro.UNLOCK_INTRODUCTIONS.paintjob, undefined, 'No introduction sheet');
   assert.equal(intro.UNLOCK_HINTS.paintjob.hint, 'garage-paint');
-  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
   assert.equal(queue.unlocked(['paintjob']), false, 'Nothing waits on Home for it');
   queue.armHint('garage-paint');
@@ -940,23 +946,209 @@ test('PAINTJOB is pointed out in GARAGE without a sheet: its reward toast says i
   assert.match(source, /viewCarWhenGarageOpens\('sedan'\);/, 'TRY SHIFT IN THE SEDAN opens the SEDAN as a challenge opens its car');
 });
 
-test('GARAGE points at ALL CARS once, and RACE at ACTIVATE SHIFT once per car', async () => {
+test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT once per car', async () => {
   const intro = await import('../turn/progression/unlock-introductions.js');
-  memory.delete(intro.UNLOCK_INTRODUCTIONS_KEY);
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
   const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
-  assert.equal(queue.armOnce(intro.ALL_CARS_HINT), true, 'Armed for every player, including existing ones');
-  queue.consumeHint(intro.ALL_CARS_HINT);
+  assert.equal(queue.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), true, 'Armed for every player, including existing ones');
+  // #1189: pointed out once, then a calm pulse on every visit until ALL CARS is used.
+  assert.equal(queue.pointedOut(intro.ALL_CARS_HINT), false);
+  queue.markPointedOut(intro.ALL_CARS_HINT);
+  const revisit = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(revisit.hasHint(intro.ALL_CARS_HINT), true, 'Still armed on later visits');
+  assert.equal(revisit.pointedOut(intro.ALL_CARS_HINT), true, 'But said and scrolled to only once');
+  revisit.consumeHint(intro.ALL_CARS_HINT);
   const later = intro.createUnlockIntroductionQueue(globalThis.localStorage);
-  assert.equal(later.armOnce(intro.ALL_CARS_HINT), false, 'Never armed again');
+  assert.equal(later.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), false, 'Once used, never armed again');
   assert.equal(later.hasHint(intro.ALL_CARS_HINT), false);
+  // TURN in two tabs (CODEX on #1192): used in one, the other takes that up from the
+  // storage event, so its next save does not arm ALL CARS again.
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
+  const tabs = new globalThis.EventTarget();
+  const usedHere = intro.createUnlockIntroductionQueue(globalThis.localStorage, { events: new globalThis.EventTarget() });
+  usedHere.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
+  const otherTab = intro.createUnlockIntroductionQueue(globalThis.localStorage, { events: tabs });
+  assert.equal(otherTab.hasHint(intro.ALL_CARS_HINT), true);
+  usedHere.consumeHint(intro.ALL_CARS_HINT);
+  tabs.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: 'some-other-key' }));
+  assert.equal(otherTab.hasHint(intro.ALL_CARS_HINT), true, 'Only its own key is taken up');
+  tabs.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: intro.UNLOCK_INTRODUCTIONS_KEY }));
+  assert.equal(otherTab.hasHint(intro.ALL_CARS_HINT), false, 'The other tab sees it used');
+  otherTab.markPointedOut('garage-paint');
+  assert.equal(intro.createUnlockIntroductionQueue(globalThis.localStorage).hasHint(intro.ALL_CARS_HINT), false,
+    'And its next save keeps it used');
+  // The same introduction can already be open in both tabs. A stale sheet closing
+  // after the other tab finishes and uses its hint must not arm that hint again.
+  usedHere.unlocked(['shift']);
+  tabs.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: intro.UNLOCK_INTRODUCTIONS_KEY }));
+  usedHere.introduced('shift');
+  tabs.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: intro.UNLOCK_INTRODUCTIONS_KEY }));
+  usedHere.consumeHint('garage-shift');
+  tabs.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: intro.UNLOCK_INTRODUCTIONS_KEY }));
+  otherTab.introduced('shift');
+  assert.equal(otherTab.hasHint('garage-shift'), false, 'Closing a stale SHIFT sheet does not rearm its used hint');
+  assert.equal(intro.createUnlockIntroductionQueue(globalThis.localStorage).hasHint('garage-shift'), false,
+    'The persisted hint stays consumed too');
+  otherTab.unlocked(['shift'], { replay: true });
+  otherTab.introduced('shift');
+  assert.equal(otherTab.hasHint('garage-shift'), true, 'An explicit admin replay still arms its guidance');
+  // Mutations can run before either tab receives a storage event. Every operation
+  // must keep the latest deletion and unrelated additions, not resurrect its snapshot.
+  const mutations = [
+    (tab) => tab.unlocked(['flow']),
+    (tab) => tab.introduced('shift'),
+    (tab) => tab.armHint('garage-paint'),
+    (tab) => tab.armOnce('another-hint'),
+    (tab) => tab.markPointedOut('garage-paint'),
+    (tab) => tab.consumeHint('garage-paint'),
+    (tab) => tab.viewHint('garage-paint', 3)
+  ];
+  for (const mutate of mutations) {
+    clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
+    const first = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+    first.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
+    const stale = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+    first.consumeHint(intro.ALL_CARS_HINT);
+    first.armHint('unrelated-new-hint');
+    mutate(stale); // No storage event has been delivered.
+    const saved = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+    assert.equal(saved.hasHint(intro.ALL_CARS_HINT), false, 'A stale mutation preserves the consumed hint');
+    assert.equal(saved.hasHint('unrelated-new-hint'), true, 'It also preserves another tab’s new hint');
+  }
+  // Interleave inside the actual write, after the other tab has already read and
+  // serialized its old snapshot. Exercise either tab being the final writer.
+  for (const consumeLast of [false, true]) {
+    for (const mutate of mutations) {
+      clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
+      const first = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+      first.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
+      first.armHint('garage-paint');
+      let interleave = true;
+      const overlapping = intro.createUnlockIntroductionQueue({
+        getItem: globalThis.localStorage.getItem,
+        setItem(key, value) {
+          if (key !== intro.UNLOCK_INTRODUCTIONS_KEY || !interleave) {
+            globalThis.localStorage.setItem(key, value);
+            return;
+          }
+          interleave = false;
+          if (consumeLast) globalThis.localStorage.setItem(key, value);
+          first.consumeHint(intro.ALL_CARS_HINT);
+          if (!consumeLast) globalThis.localStorage.setItem(key, value);
+        }
+      });
+      mutate(overlapping);
+      assert.equal(interleave, false, 'The regression crosses the read/write boundary');
+      assert.equal(overlapping.hasHint(intro.ALL_CARS_HINT), false, 'An overlapping save cannot revive a consumed hint in this tab');
+      const reloaded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+      assert.equal(reloaded.hasHint(intro.ALL_CARS_HINT), false, 'The tombstone survives either final snapshot writer');
+      assert.equal(reloaded.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), false, 'An overlapping save cannot erase the once marker');
+      assert.equal(reloaded.armOnce(intro.ALL_CARS_HINT, 'future-all-cars-guidance'), true, 'A deliberately new generation can still arm the hint');
+      assert.equal(reloaded.hasHint(intro.ALL_CARS_HINT), true);
+    }
+  }
+  for (const consume of [false, true]) {
+    for (const armLast of [false, true]) {
+      clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
+      const events = new globalThis.EventTarget();
+      const first = intro.createUnlockIntroductionQueue(globalThis.localStorage, { events });
+      const overlapping = intro.createUnlockIntroductionQueue({
+        getItem: globalThis.localStorage.getItem,
+        setItem(key, value) {
+          if (key === intro.UNLOCK_INTRODUCTIONS_KEY) {
+            if (armLast) globalThis.localStorage.setItem(key, value);
+            first.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
+            first.markPointedOut(intro.ALL_CARS_HINT);
+            if (consume) first.consumeHint(intro.ALL_CARS_HINT);
+            if (!armLast) globalThis.localStorage.setItem(key, value);
+          } else globalThis.localStorage.setItem(key, value);
+        }
+      }, { events });
+      overlapping.unlocked(['flow']);
+      events.dispatchEvent(Object.assign(new globalThis.Event('storage'), { key: intro.UNLOCK_INTRODUCTIONS_KEY }));
+      assert.equal(first.hasHint(intro.ALL_CARS_HINT), !consume, 'Storage sync preserves the arming tab’s guidance without a startup call');
+      assert.equal(overlapping.hasHint(intro.ALL_CARS_HINT), !consume, 'The overlapping tab recovers the arm on storage sync too');
+      const reloaded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+      assert.equal(reloaded.hasHint(intro.ALL_CARS_HINT), !consume, 'A new queue reconciles before armOnce is called');
+      assert.equal(reloaded.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), false, 'The original once operation survives');
+      assert.equal(reloaded.hasHint(intro.ALL_CARS_HINT), !consume, 'An omitted arm is restored only when it has not been consumed');
+      assert.equal(reloaded.pointedOut(intro.ALL_CARS_HINT), !consume, 'Restoring the arm also preserves its previous presentation');
+    }
+  }
+  for (const pointLast of [false, true]) {
+    clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
+    const first = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+    first.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
+    const overlapping = intro.createUnlockIntroductionQueue({
+      getItem: globalThis.localStorage.getItem,
+      setItem(key, value) {
+        if (key === intro.UNLOCK_INTRODUCTIONS_KEY) {
+          if (pointLast) globalThis.localStorage.setItem(key, value);
+          first.markPointedOut(intro.ALL_CARS_HINT);
+          if (!pointLast) globalThis.localStorage.setItem(key, value);
+        } else globalThis.localStorage.setItem(key, value);
+      }
+    });
+    overlapping.unlocked(['flow']);
+    assert.equal(overlapping.pointedOut(intro.ALL_CARS_HINT), true, 'An overlapping save keeps the once-only pointing-out marker');
+    const reloaded = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+    assert.equal(reloaded.pointedOut(intro.ALL_CARS_HINT), true, 'Pointing-out survives reload regardless of final writer');
+    assert.equal(reloaded.hasHint(intro.ALL_CARS_HINT), true, 'The calm pulse remains until use');
+  }
+  const memoryOnly = intro.createUnlockIntroductionQueue({
+    getItem: () => null,
+    setItem() { throw new Error('Storage unavailable'); }
+  });
+  memoryOnly.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED);
+  assert.equal(memoryOnly.markPointedOut(intro.ALL_CARS_HINT), true, 'Blocked storage retains in-page progress');
+  memoryOnly.consumeHint(intro.ALL_CARS_HINT);
+  assert.equal(memoryOnly.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), false, 'The in-page once marker survives too');
+  // A player whose r435 hint ended after one showing is armed once more.
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
+  globalThis.localStorage.setItem(intro.UNLOCK_INTRODUCTIONS_KEY, JSON.stringify({ pending: [], shown: [], hints: [], views: {}, once: ['garage-all-cars'] }));
+  const r435 = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(r435.armOnce(intro.ALL_CARS_HINT, intro.ALL_CARS_UNTIL_USED), true);
+  assert.equal(r435.hasHint(intro.ALL_CARS_HINT), true);
   const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
   const source = await read('../turn/progression/unlock-introductions.js');
-  assert.match(source, /if \(introducesOnUnlock\(windowRef, storage\)\) queue\.armOnce\(ALL_CARS_HINT\);/, 'Not in automated runs');
+  assert.match(source, /if \(introducesOnUnlock\(windowRef, storage\)\) queue\.armOnce\(ALL_CARS_HINT, ALL_CARS_UNTIL_USED\);/, 'Not in automated runs');
+  assert.match(source, /untilUsed: '\.garage-all-cars-button, \.garage-car-card'/,
+    'Used: the sheet opened on a phone, or a car chosen from ALL CARS, in the sheet or inline on iPad');
+  assert.match(source, /if \(untilUsed && queue\.pointedOut\(hint\)\) \{\n\s*suggestInGarage\(target, \{ documentRef \}\);\n\s*continue;\n\s*\}/,
+    'The calm pulse on every later visit; the scroll and the line only once');
+  assert.match(source, /if \(untilUsed\) \{\n\s*if \(!queue\.markPointedOut\(hint\)\) continue;\n\s*suggestInGarage\(target, \{ documentRef \}\);\n\s*\} else queue\.consumeHint\(hint\);/,
+    'And not before that pointing-out: a hint still waiting does not pulse (CODEX on #1192)');
+  assert.match(source, /if \(!untilUsed \|\| !queue\.hasHint\(hint\) \|\| !event\.target\?\.closest\?\.\(untilUsed\)\) continue;\n\s*queue\.consumeHint\(hint\);/,
+    'Using it ends the pulse for good');
+  const focusSource = await read('../turn/garage/garage-focus.js');
+  assert.match(focusSource, /#turnGarage \.is-suggested:not\(\.is-introduced\) \{ animation: turn-garage-suggest 2\.4s ease-in-out infinite; \}/);
+  assert.match(focusSource, /prefers-reduced-motion: reduce\) \{\s*#turnGarage \.is-introduced,\s*#turnGarage \.is-suggested:not\(\.is-introduced\) \{\s*animation: none;/,
+    'Reduced Motion: a steady outline instead');
   assert.match(source, /if \(ownVisit && \(points\.length \|\| pointedGarage === garage \|\| garageOpenedForCar\(garage\)\)\) continue;/,
     'Only on a visit the player opened themselves, with nothing else to point out');
   assert.match(source, /selector: '\.garage-all-cars-button, #garageCatalogTitle'/,
     'On tablets, where ALL CARS is shown inline and its button hidden, the inline heading is pointed out');
   assert.match(source, /const target = \[\.\.\.documentRef\.querySelectorAll\(selector\)\]\.find\(\(element\) => !element\.hidden && element\.offsetParent\);/);
+
+  // Consumed during the speech delay: no stale hint is announced, while other
+  // current guidance in the same call still gets its turn.
+  const { pointOutInGarage } = await import('../turn/garage/garage-focus.js');
+  const delayed = [];
+  const statuses = [];
+  const section = { append: (status) => statuses.push(status) };
+  const target = { isConnected: true, classList: { add() {}, remove() {} }, closest: () => section };
+  let current = true;
+  pointOutInGarage([
+    { element: target, say: 'ALL CARS', isCurrent: () => current },
+    { element: target, say: 'Still relevant' }
+  ], {
+    documentRef: { getElementById: () => ({}), createElement: () => ({ textContent: '', setAttribute() {}, remove() {} }) },
+    windowRef: { setTimeout: (fn, ms) => delayed.push({ fn, ms }) }
+  });
+  assert.equal(statuses[0].textContent, '', 'The hint waits for GARAGE to speak first');
+  current = false;
+  delayed.find(({ ms }) => ms === 1200).fn();
+  assert.equal(statuses[0].textContent, 'Still relevant', 'Used hints are removed from the pending announcement');
 
   const reminder = await import('../turn/garage/shift-race-reminder.js');
   const trigger = (classes = [], extra = {}) => ({

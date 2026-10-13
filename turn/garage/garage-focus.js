@@ -51,15 +51,38 @@ function installStyles(documentRef) {
     @keyframes turn-garage-point {
       50% { box-shadow: 0 0 0 var(--turn-space-2) var(--turn-action-primary); }
     }
+    /* Until it is used: a calmer, slower pulse on every visit (#1189). */
+    #turnGarage .is-suggested:not(.is-introduced) { animation: turn-garage-suggest 2.4s ease-in-out infinite; }
+    @keyframes turn-garage-suggest {
+      50% { box-shadow: 0 0 0 var(--turn-space-1) color-mix(in srgb, var(--turn-action-primary) 70%, transparent); }
+    }
     @media (prefers-reduced-motion: reduce) {
-      #turnGarage .is-introduced {
+      #turnGarage .is-introduced,
+      #turnGarage .is-suggested:not(.is-introduced) {
         animation: none;
         outline: var(--turn-border-control) solid var(--turn-action-primary);
         outline-offset: var(--turn-space-1);
       }
     }
+    @media (forced-colors: active) {
+      #turnGarage .is-introduced,
+      #turnGarage .is-suggested:not(.is-introduced) {
+        animation: none;
+        outline: var(--turn-border-control) solid Highlight;
+        outline-offset: var(--turn-space-1);
+      }
+    }
   `;
   documentRef.head.appendChild(style);
+}
+
+// A control the player has not used yet: a calm pulse until they do, silent and with no
+// scrolling (progression/unlock-introductions.js ends it).
+export function suggestInGarage(element, { documentRef = globalThis.document } = {}) {
+  if (!element?.isConnected || element.classList.contains('is-suggested')) return false;
+  installStyles(documentRef);
+  element.classList.add('is-suggested');
+  return true;
 }
 
 // Points out GARAGE controls: the first brought into view, each pulsed, and one
@@ -82,13 +105,17 @@ export function pointOutInGarage(points, {
     windowRef.setTimeout?.(() => element.classList.remove('is-introduced'), POINT_SECONDS * 1000);
   }
   const section = shown[0].element.closest('section') || shown[0].element.parentElement;
-  const said = shown.map(({ say }) => say).filter(Boolean);
-  if (section && said.length) {
+  // A retained hint may be used in this or another tab during GARAGE's speech
+  // delay. Recheck its owner before announcing it, just as its pulse is cleared.
+  const currentMessages = () => shown
+    .filter(({ element, isCurrent }) => element.isConnected && (!isCurrent || isCurrent()))
+    .map(({ say }) => say).filter(Boolean);
+  if (section && currentMessages().length) {
     const status = documentRef.createElement('p');
     status.className = 'turn-sr-only m8-unlock-hint-status';
     status.setAttribute('role', 'status');
     section.append(status);
-    windowRef.setTimeout?.(() => { status.textContent = said.join(' '); }, sayAfterMs);
+    windowRef.setTimeout?.(() => { status.textContent = currentMessages().join(' '); }, sayAfterMs);
     windowRef.setTimeout?.(() => status.remove(), sayAfterMs + POINT_SECONDS * 1000);
   }
   return true;
