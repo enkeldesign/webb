@@ -308,6 +308,30 @@ try {
     'A visit without a completed lap shows no summary');
   await context.close();
 
+  // ---------- Lesson + ordinary pause layering (#1190) ----------
+  {
+    const opened = await openRace({ width: 844, height: 390 });
+    const lessonPage = opened.page;
+    await startLap(lessonPage);
+    await lessonPage.keyboard.up('ArrowUp');
+    await lessonPage.evaluate(() => globalThis.__turnRacePause.hold());
+    const held = await race(lessonPage);
+    assert.equal(held.reason, 'lesson');
+    assert.equal(held.dialog, false, 'A lesson hold does not open PAUSED');
+    for (const reason of ['player', 'background', 'rotation']) {
+      await lessonPage.evaluate((value) => globalThis.__turnRacePause.pause(value), reason);
+      await lessonPage.locator('[data-pause-action="resume"]').click();
+      await lessonPage.waitForFunction(() => globalThis.__turnRacePause.reason === 'lesson');
+      await lessonPage.waitForTimeout(150);
+      const returned = await race(lessonPage);
+      assert.deepEqual(frozen(returned), frozen(held), 'RESUME cannot advance the race beneath its lesson');
+      assert.notEqual(returned.status, 'Race resumed.', 'Returning to a lesson does not announce driving');
+    }
+    await lessonPage.evaluate(() => globalThis.__turnRacePause.letGo());
+    assert.equal((await race(lessonPage)).paused, false, 'Only TRY IT’s release lets the race continue');
+    await opened.context.close();
+  }
+
   // ---------- THIS VISIT (#1061) ----------
   {
     const opened = await openRace({ width: 844, height: 390 });

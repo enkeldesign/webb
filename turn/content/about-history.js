@@ -397,5 +397,14 @@ export const CHANGELOG = Object.freeze([
         "A quick reference to steering, the drive pad, BOOST and rivals, each card acting out the real control. DRIFT ATTACK, SHIFT and FLOW join as you unlock them. LEARN TO PLAY now asks for its five parts."
       ]
     ]
+  },
+  {
+    "date": "13 October 2026",
+    "entries": [
+      [
+        "Tutorials pause to teach",
+        "TURN, DRIFT ATTACK and FLOW tutorials pause for each new lesson. Read or hear the instruction, then choose TRY IT. RESTART LAP starts the tutorial over too."
+      ]
+    ]
   }
 ]);

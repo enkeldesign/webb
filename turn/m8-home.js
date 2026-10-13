@@ -698,6 +698,17 @@ export async function installM8HomeNavigation() {
     tutorialCoach = null;
   }
 
+  // RESTART LAP restarts the active teaching lap too: a new coach owns fresh
+  // lesson progress, acknowledgement state and speech. Graduated ordinary laps
+  // keep their normal restart behaviour.
+  window.addEventListener('turn:ui-state-change', (event) => {
+    if (event.detail?.reason !== 'race-reset' || !tutorialCoach || setupPending) return;
+    const tutorial = [...TUTORIALS.values()].find(({ session }) => session.active && !session.graduated);
+    if (!tutorial) return;
+    stopTutorialCoach();
+    tutorialCoach = tutorial.coach({ runtime });
+  });
+
   async function startTutorial(moduleId = TURN_TUTORIAL.id) {
     const tutorial = TUTORIALS.get(moduleId);
     if (!tutorial || setupPending || rewardPreview.active || tutorialActive() || runtime.state.running) return false;

@@ -14,12 +14,12 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
   Object.freeze({
     id: 'drive',
     title: 'DRIVE',
-    prompt: 'Steer into the bend and hold GAS.',
+    prompt: 'Hold GAS to drive off, then steer into the bend.',
     // With Tutorial steering help on (steering-help.js).
-    assistedPrompt: 'Steering help is on: TURN steers. Hold GAS.',
+    assistedPrompt: 'Steering help is on: TURN steers. Hold GAS to drive off.',
     from: 0,
     to: 0.14,
-    speedCap: 0.3,
+    targets: ['.drive-gas-zone'],
     // About a second and a half of GAS is enough to have felt the car respond.
     done: (progress) => progress.gasSeconds >= 1.5
   }),
@@ -29,12 +29,12 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     title: 'DRIFT',
     // LOCK is on the drive pad from the first lap, so it is named here, where DRIFT is.
     // It is offered, not required: the slide is the lesson.
-    prompt: 'Hold DRIFT through the bend. Slide outward into LOCK for a stronger slide.',
+    prompt: 'Keep GAS on into the bend, then hold DRIFT through it. Slide outward into LOCK for a stronger slide.',
     // LOCK has no key (input/qe-drive-controls.js): keyboard players are told only DRIFT.
-    keyboardPrompt: 'Hold DRIFT through the bend.',
+    keyboardPrompt: 'Keep GAS on into the bend, then hold DRIFT through it.',
     from: 0.17,
     to: 0.4,
-    speedCap: 0.4,
+    targets: ['.drive-drift-zone'],
     done: (progress) => progress.driftSeconds >= 1.5
   }),
   Object.freeze({
@@ -49,6 +49,7 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     from: 0.42,
     to: 0.6,
     speedCap: 0.6,
+    targets: ['.drive-boost-zone'],
     done: (progress) => progress.boostSpent
   }),
   Object.freeze({
@@ -61,7 +62,6 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     doneText: 'That chime was the bend ahead. Higher means tighter.',
     from: 0.6,
     to: 0.8,
-    speedCap: 0.4,
     needs: 'routeCues',
     done: (progress) => progress.cueHeard
   })

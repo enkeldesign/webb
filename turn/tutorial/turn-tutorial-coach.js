@@ -3,8 +3,8 @@ import { TURN_TUTORIAL_LESSONS, TUTORIAL_GRADUATION_MESSAGE } from './turn-tutor
 // The TURN TUTORIAL coach (#1132): runs the teaching lap's lessons on top of an
 // ordinary race. A lesson starts when the car reaches its stretch of COUNTRYSIDE, waits
 // for its action (no failure state: a missed lesson simply gives way to the next), and
-// eases the car's speed down while it waits. The coach only reads game state; the
-// lesson speed cap is the one value it writes, as state.sessionSpeedCap.
+// presents a card before practice. The coach only reads game state; BOOST's driving
+// cap is the one value it writes, as state.sessionSpeedCap.
 const CAP_EASE_PER_SECOND = 12;
 const DONE_MESSAGE_SECONDS = 1.4;
 // Long enough to read, or hear, a lesson's doneText.
@@ -45,7 +45,8 @@ export function createTurnTutorialCoach({
   maxSpeed,
   lessons = TURN_TUTORIAL_LESSONS,
   signals = () => readTutorialSignals(state),
-  present = () => {}
+  present = () => {},
+  isHeld = () => false
 }) {
   const outcome = new Map(lessons.map((lesson) => [lesson.id, 'pending']));
   const progress = { gasSeconds: 0, driftSeconds: 0, boostSpent: false, boostSeen: false, cueHeard: false, cuesBefore: 0 };
@@ -69,7 +70,7 @@ export function createTurnTutorialCoach({
     current = lesson;
     resetProgress();
     progress.cuesBefore = input.paceNotes || 0;
-    show({ kind: 'lesson', id: lesson.id, title: lesson.title, prompt: lesson.prompt });
+    show({ kind: 'lesson', id: lesson.id, title: lesson.title, prompt: lesson.prompt, targets: lesson.targets });
   }
 
   // A lesson it cannot teach right now, such as READ THE ROAD with DRIVE BY EAR off.
@@ -87,7 +88,7 @@ export function createTurnTutorialCoach({
   }
 
   function update(dt) {
-    if (finished) return;
+    if (finished || isHeld()) return;
     const input = signals();
     const zoned = lessonAt(lessons, input.progress);
 
@@ -96,6 +97,7 @@ export function createTurnTutorialCoach({
       if (current && outcome.get(current.id) === 'pending') outcome.set(current.id, 'missed');
       if (zoned.needs === 'routeCues' && !input.routeCues) skip(zoned);
       else begin(zoned, input);
+      if (isHeld()) return;
     }
     // Cues can stop mid-lesson (SETTINGS during a pause): nothing is left to listen for.
     if (current?.needs === 'routeCues' && outcome.get(current.id) === 'pending' && !input.routeCues) skip(current);
@@ -142,6 +144,7 @@ export function createTurnTutorialCoach({
   }
 
   return Object.freeze({
+    start() { if (!current && !finished && lessons.length) begin(lessons[0], signals()); },
     update,
     graduate,
     stop,

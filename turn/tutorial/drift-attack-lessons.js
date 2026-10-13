@@ -6,20 +6,19 @@
 // ends the lesson either way. Every prompt names OVERCHARGE: on the meter it is only
 // a purple segment.
 //
-// speedCap: share of the car's top speed while the lesson waits, eased in (null: none).
 // pauseAfter: seconds the doneText stays before the next lesson. needsOvercharge: the
 // lesson cannot go on once OVERCHARGE is gone. keyboardPrompt: for players driving by
 // keyboard, where it differs (LOCK has no key).
 export const DRIFT_ATTACK_LESSONS = Object.freeze([
   Object.freeze({
     id: 'score',
+    targets: ['.drive-boost-zone', '.drive-drift-zone'],
     title: 'DRIFT SCORING',
     // LOCK first: it may be what starts the slide at all.
-    prompt: 'Hold DRIFT into the bend. If the car will not slide, slide outward into LOCK. Straighten out to BANK the points.',
-    keyboardPrompt: 'Hold DRIFT into the bend, then straighten out to BANK the points.',
+    prompt: 'BOOST into the bend, then hold DRIFT. If the car will not slide, slide outward into LOCK. Straighten out to BANK the points.',
+    keyboardPrompt: 'BOOST into the bend, then hold DRIFT. Straighten out to BANK the points.',
     doneText: 'Banked. Longer, faster slides score more.',
     pauseAfter: 3,
-    speedCap: 0.45,
     done: (progress) => progress.banks > 0
   }),
   Object.freeze({
@@ -30,18 +29,18 @@ export const DRIFT_ATTACK_LESSONS = Object.freeze([
     prompt: 'Bank a slide, then drift the other way straight away. Linked drifts raise COMBO.',
     doneText: 'Linked. Keep switching sides to keep COMBO climbing.',
     pauseAfter: 3,
-    speedCap: 0.45,
     done: (progress) => progress.links > 0
   }),
   Object.freeze({
     id: 'build',
+    targets: ['.drive-drift-zone'],
     title: 'BUILD',
     prompt: 'With BOOST full, keep holding DRIFT. OVERCHARGE builds past the end of the BOOST meter.',
-    speedCap: 0.45,
     done: (progress) => progress.overcharge >= 0.3
   }),
   Object.freeze({
     id: 'catch',
+    targets: ['.drive-gas-zone'],
     title: 'CATCH',
     prompt: 'Slide to GAS now, before OVERCHARGE leaks away.',
     needsOvercharge: true,
@@ -56,6 +55,7 @@ export const DRIFT_ATTACK_LESSONS = Object.freeze([
   }),
   Object.freeze({
     id: 'spend',
+    targets: ['.drive-boost-zone'],
     title: 'SPEND',
     prompt: 'Slide to BOOST. OVERCHARGE burns first, as a stronger burst.',
     doneText: 'That was OVERCHARGE. Build, catch, hold, spend.',

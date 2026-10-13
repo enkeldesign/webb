@@ -5,19 +5,20 @@ import { createTutorialPrompt } from './tutorial-prompt.js';
 // COMBO. Lessons follow each other. There is no failure state: a chain that runs out
 // is said, and the next one counts.
 //
-// speedCap: share of the car's top speed while the lesson waits, eased in (null: none).
+// Lesson cards hold the race while teaching; practice keeps ordinary driving speed.
 export const FLOW_LESSONS = Object.freeze([
   Object.freeze({
     id: 'slide',
+    targets: ['.drive-drift-zone'],
     title: 'DRIFT AND EXIT',
-    prompt: 'Hold DRIFT through the bend, then straighten out. FLOW scores the slide and the clean exit.',
-    speedCap: 0.45,
+    prompt: 'Hold DRIFT through the bend, then straighten out. FLOW scores both: DRIFT, then a clean EXIT.',
     done: (progress) => progress.techniques.has('drift')
   }),
   Object.freeze({
     id: 'combo',
+    targets: ['.drive-drift-zone', '.drive-boost-zone'],
     title: 'COMBO',
-    prompt: 'Chain three different techniques, each within 5 seconds: DRIFT, a clean EXIT, then BOOST.',
+    prompt: 'Now all three in a row, each within 5 seconds: DRIFT, a clean EXIT, then BOOST.',
     doneText: 'That is a COMBO. Each different technique in a row raises it.',
     // BOOST, the move it asks for, at COMBO ×2 or more: one slide with LOCK scores LOCK,
     // DRIFT and EXIT, already ×2, and is not yet the chain the lesson is about.
@@ -29,13 +30,12 @@ export const FLOW_CHAIN_ENDED_PROMPT = 'The chain ran out. Start again: DRIFT, a
 export const FLOW_GRADUATION_MESSAGE = 'Tutorial complete. LOCK, CATCH and SHIFT count too: mix them to climb higher.';
 export const FLOW_PRACTICE_MESSAGE = 'Tutorial complete. Keep chaining: DRIFT, a clean EXIT, then BOOST.';
 
-const CAP_EASE_PER_SECOND = 12;
 const DONE_TEXT_SECONDS = 3;
 const GRADUATION_SECONDS = 4;
 
 // The coach reads FLOW's own announcements: each technique it scores, with the COMBO
 // it reached, and the chain running out. It writes nothing but state.sessionSpeedCap.
-export function createFlowCoach({ state, maxSpeed, lessons = FLOW_LESSONS, present = () => {} }) {
+export function createFlowCoach({ state, lessons = FLOW_LESSONS, present = () => {}, isHeld = () => false }) {
   const outcome = new Map(lessons.map((lesson) => [lesson.id, 'pending']));
   const progress = { techniques: new Set(), last: '', multiplier: 1 };
   let current = null;
@@ -50,7 +50,7 @@ export function createFlowCoach({ state, maxSpeed, lessons = FLOW_LESSONS, prese
   function begin(index, prompt = null) {
     current = lessons[index];
     nextIndex = index + 1;
-    present({ kind: 'lesson', id: current.id, title: current.title, prompt: prompt || current.prompt });
+    present({ kind: 'lesson', id: current.id, title: current.title, prompt: prompt || current.prompt, targets: current.targets });
   }
 
   function complete() {
@@ -68,7 +68,7 @@ export function createFlowCoach({ state, maxSpeed, lessons = FLOW_LESSONS, prese
   }
 
   function technique(detail) {
-    if (finished) return;
+    if (finished || isHeld()) return;
     if (detail?.technique) progress.techniques.add(detail.technique);
     progress.last = detail?.technique || '';
     progress.multiplier = Math.max(1, Number(detail?.multiplier) || 1);
@@ -76,15 +76,15 @@ export function createFlowCoach({ state, maxSpeed, lessons = FLOW_LESSONS, prese
   }
 
   function chainEnded() {
-    if (finished) return;
+    if (finished || isHeld()) return;
     progress.techniques.clear();
     progress.last = '';
     progress.multiplier = 1;
-    if (current?.id === 'combo') present({ kind: 'lesson', id: current.id, title: current.title, prompt: FLOW_CHAIN_ENDED_PROMPT });
+    if (current?.id === 'combo') present({ kind: 'lesson', id: current.id, title: current.title, prompt: FLOW_CHAIN_ENDED_PROMPT, hold: false });
   }
 
-  function update(dt, speed = 0) {
-    if (finished) return;
+  function update(dt) {
+    if (finished || isHeld()) return;
     if (doneLeft > 0) {
       doneLeft -= dt;
       if (doneLeft <= 0) present({ kind: 'idle' });
@@ -94,15 +94,7 @@ export function createFlowCoach({ state, maxSpeed, lessons = FLOW_LESSONS, prese
       if (nextIndex >= lessons.length) return;
       begin(nextIndex);
     }
-    if (current.speedCap) {
-      // The car's own top speed (vehicle/physics.js), not the untuned base limit.
-      const top = Number(state.vehicleEffectiveMaxSpeed) > 0 ? Number(state.vehicleEffectiveMaxSpeed) : maxSpeed;
-      const target = current.speedCap * top;
-      const from = Number.isFinite(state.sessionSpeedCap) ? state.sessionSpeedCap : Math.max(target, speed);
-      state.sessionSpeedCap = Math.max(target, from - CAP_EASE_PER_SECOND * dt);
-    } else {
-      release();
-    }
+    release();
   }
 
   function graduate() {
@@ -136,7 +128,8 @@ export function createFlowCoach({ state, maxSpeed, lessons = FLOW_LESSONS, prese
 export function startFlowCoach({ runtime, events = globalThis }) {
   const { state } = runtime;
   const prompt = createTutorialPrompt();
-  const coach = createFlowCoach({ state, maxSpeed: runtime.maxSpeed, present: prompt.present });
+  const coach = createFlowCoach({ state, present: prompt.present, isHeld: () => prompt.holding });
+  coach.update(0);
   const onFlow = (event) => {
     if (event.detail?.type === 'technique') coach.technique(event.detail);
     else if (event.detail?.type === 'chain-expired') coach.chainEnded();
@@ -150,9 +143,8 @@ export function startFlowCoach({ runtime, events = globalThis }) {
     if (stopped) return;
     const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
     last = now;
-    if (state.running && globalThis.__turnRacePause?.paused !== true) {
-      coach.update(dt, Math.max(0, Number(state.speed) || 0));
-      prompt.pace({ state, dt, maxSpeed: runtime.maxSpeed });
+    if (state.running && !prompt.holding && globalThis.__turnRacePause?.paused !== true) {
+      coach.update(dt);
       if (graduationLeft > 0) {
         graduationLeft -= dt;
         if (graduationLeft <= 0) {

@@ -137,8 +137,10 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
         if (!racePause.resume()) return;
         documentRef.querySelector('#calibrateButton')?.click();
         syncButton();
-        button.focus();
-        announce('Race resumed.');
+        if (!racePause.paused) {
+          button.focus();
+          announce('Race resumed.');
+        }
         return;
       }
       countdown.textContent = String(count);
@@ -157,15 +159,17 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
     closeDialog();
     if (!racePause.resume()) return;
     syncButton();
-    button.focus();
-    announce('Race resumed.');
+    if (!racePause.paused) {
+      button.focus();
+      announce('Race resumed.');
+    }
   }
 
   // Escape, back, or any other close while still paused resumes. The actions lift the
   // pause themselves before the dialog's close event arrives. That event comes a task
   // later: if a new pause has opened PAUSED again by then, it is not this close's.
   dialog.addEventListener('close', () => {
-    if (racePause.paused && !dialog.open && !countTimer) resume();
+    if (racePause.paused && racePause.reason !== 'lesson' && !dialog.open && !countTimer) resume();
   });
 
   dialog.addEventListener('click', (event) => {
@@ -201,7 +205,7 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
 
   windowRef.addEventListener('turn:ui-state-change', (event) => {
     const change = event.detail?.reason;
-    if (change === 'race-paused') openDialog();
+    if (change === 'race-paused' && event.detail.pauseReason !== 'lesson') openDialog();
     else if (change === 'race-pause-ended') {
       stopCountdown();
       closeDialog();
@@ -209,7 +213,7 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
       // Turned back: race on, unless SETTINGS (or another dialog) is open over PAUSED;
       // then the pause holds until the player resumes. Turned elsewhere, even
       // mid-count: ask again.
-      const covered = [...documentRef.querySelectorAll('dialog[open]')].some((open) => open !== dialog);
+      const covered = [...documentRef.querySelectorAll('dialog[open]')].some((open) => open !== dialog && !open.classList.contains('turn-tutorial-card'));
       if (event.detail?.rotatedBack && !covered) resumeAfterCountdown();
       else if (event.detail?.rotatedBack) syncDialog();
       else {
