@@ -1,5 +1,4 @@
 import { createTutorialPrompt } from './tutorial-prompt.js';
-import { startFlowPulses } from '../ui/flow-pulses.js';
 
 // FLOW TUTORIAL (#1149): one teaching lap that points out what earns FLOW, as the FLOW
 // meter scores it (scoring/flow-runtime.js), then has the player chain techniques into
@@ -138,8 +137,6 @@ export function startFlowCoach({ runtime, events = globalThis }) {
   const { state } = runtime;
   const prompt = createTutorialPrompt();
   const coach = createFlowCoach({ state, maxSpeed: runtime.maxSpeed, present: prompt.present });
-  // What earns FLOW pulses on the drive pad as it scores (#1171).
-  const stopPulses = startFlowPulses({ events });
   const onFlow = (event) => {
     if (event.detail?.type === 'technique') coach.technique(event.detail);
     else if (event.detail?.type === 'chain-expired') coach.chainEnded();
@@ -178,7 +175,6 @@ export function startFlowCoach({ runtime, events = globalThis }) {
     cancelAnimationFrame(frame);
     events.removeEventListener?.('turn:session-graduated', onGraduated);
     events.removeEventListener?.('turn:flow-score-event', onFlow);
-    stopPulses();
     coach.stop();
     prompt.remove();
   }

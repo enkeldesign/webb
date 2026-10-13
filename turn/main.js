@@ -43,6 +43,7 @@ import {
 import { resolveVehiclePerkStatusFeedback } from '/turn/vehicle/perk-presentation.js';
 import { showCompactRacePill } from '/turn/achievements/support-challenge-feedback.js';
 import { createScoreFeedback } from '/turn/scoring/score-feedback.js';
+import { startFlowPulses } from '/turn/ui/flow-pulses.js';
 import {
   DRIFT_ATTACK_FEATURE_ID,
   createDriftAttackRuntime
@@ -173,6 +174,9 @@ const flowAttack = createFlowRuntime({
   isUnlocked: () => isFeatureUnlocked(FLOW_FEATURE_ID)
 });
 globalThis.__turnFlow = flowAttack;
+// The control that earned FLOW pulses in every race (#1171, #1189), while FLOW's
+// scorekeeper is shown.
+startFlowPulses({ events: window, isVisible: () => flowAttack.isHudVisible() });
 
 function publishUiState(reason) {
   window.dispatchEvent(new CustomEvent('turn:ui-state-change', {

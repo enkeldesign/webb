@@ -1,8 +1,9 @@
 // FLOW pulses (#1171): each technique FLOW scores gives the control that earned it one
-// short pulse in FLOW's colour, so the player sees what counts. Nothing is said: the
-// FLOW TUTORIAL's lesson text already does. It reacts to FLOW's own announcements
-// (scoring/flow-runtime.js) with a class, and does no work per frame. FLOW TUTORIAL
-// starts it; regular races may follow once it has been tried on a device.
+// short pulse in FLOW's colour, so the player sees what counts. Nothing is said: FLOW's
+// own scorekeeper, and FLOW TUTORIAL's lesson text, already do. It reacts to FLOW's own
+// announcements (scoring/flow-runtime.js) with a class, and does no work per frame.
+// main.js starts it once, for every race FLOW scores in (#1189), while FLOW's
+// scorekeeper is shown.
 export const FLOW_PULSE_CLASS = 'is-flow-pulse';
 export const FLOW_PULSE_TARGETS = Object.freeze({
   drift: '.drive-drift-zone',
@@ -73,7 +74,7 @@ function installStyles(documentRef) {
 }
 
 // Starts the pulses and returns a stop function, which also clears any pulse showing.
-export function startFlowPulses({ events = globalThis, documentRef = globalThis.document } = {}) {
+export function startFlowPulses({ events = globalThis, documentRef = globalThis.document, isVisible = () => true } = {}) {
   if (!documentRef?.head) return () => {};
   installStyles(documentRef);
   const timers = new Map();
@@ -98,7 +99,7 @@ export function startFlowPulses({ events = globalThis, documentRef = globalThis.
     for (const element of [...timers.keys()]) clear(element);
   };
   const onFlow = (event) => {
-    if (event.detail?.type === 'technique') pulse(event.detail.technique);
+    if (event.detail?.type === 'technique' && isVisible()) pulse(event.detail.technique);
   };
   // Nothing of a race runs on through a pause, a restart or leaving (race/race-pause.js).
   const onRaceState = (event) => {
