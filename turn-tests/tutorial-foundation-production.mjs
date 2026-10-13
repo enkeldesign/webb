@@ -920,9 +920,20 @@ test('FLOW pulses: each technique FLOW scores pulses the control that earned it 
   const runtime = await read('../turn/scoring/flow-runtime.js');
   const scored = [...runtime.matchAll(/accept\('([a-z-]+)'/g)].map(([, technique]) => technique).sort();
   assert.deepEqual(Object.keys(FLOW_PULSE_TARGETS).sort(), scored);
-  const tutorial = await read('../turn/tutorial/flow-tutorial.js');
-  assert.match(tutorial, /const stopPulses = startFlowPulses\(\{ events \}\);/, 'FLOW TUTORIAL starts them');
-  assert.match(tutorial, /stopPulses\(\);\n    coach\.stop\(\);/, 'and stops them with the coach');
+  // #1189: every race FLOW scores in, while its scorekeeper is shown; FLOW TUTORIAL no
+  // longer starts its own.
+  let shown = false;
+  const hidden = startFlowPulses({ events: bus, documentRef, isVisible: () => shown });
+  send({ type: 'technique', technique: 'boost' });
+  assert.equal(made.has('.drive-boost-zone'), false, 'FLOW hidden: nothing pulses');
+  shown = true;
+  send({ type: 'technique', technique: 'boost' });
+  assert.equal(pulsing('.drive-boost-zone'), true, 'FLOW shown: BOOST pulses');
+  hidden();
+  const main = await read('../turn/main.js');
+  assert.match(main, /globalThis\.__turnFlow = flowAttack;\n[\s\S]{0,200}startFlowPulses\(\{ events: window, isVisible: \(\) => flowAttack\.isHudVisible\(\) \}\);/,
+    'Started once, for every race');
+  assert.doesNotMatch(await read('../turn/tutorial/flow-tutorial.js'), /startFlowPulses/, 'FLOW TUTORIAL does not start a second set');
 });
 
 test('PAINTJOB is pointed out in GARAGE without a sheet: its reward toast says it', async () => {
