@@ -189,6 +189,9 @@ export function installRacePause({ windowRef = window, documentRef = document } 
     resume,
     hold,
     letGo,
+    get lessonHeld() {
+      return lessonHeld;
+    },
     get paused() {
       return currentReason() !== null;
     },

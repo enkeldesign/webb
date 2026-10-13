@@ -314,7 +314,13 @@ try {
     const lessonPage = opened.page;
     await startLap(lessonPage);
     await lessonPage.keyboard.up('ArrowUp');
-    await lessonPage.evaluate(() => globalThis.__turnRacePause.hold());
+    await lessonPage.evaluate(async () => {
+      const imports = JSON.parse(document.querySelector('[type="importmap"]').textContent).imports;
+      const { createTutorialPrompt } = await import(imports['/turn/tutorial/tutorial-prompt.js']);
+      const prompt = createTutorialPrompt();
+      prompt.present({ kind: 'lesson', id: 'rotation-check', title: 'DRIVE', prompt: 'Hold GAS to drive.' });
+    });
+    await lessonPage.locator('.turn-tutorial-card[open]').waitFor();
     const held = await race(lessonPage);
     assert.equal(held.reason, 'lesson');
     assert.equal(held.dialog, false, 'A lesson hold does not open PAUSED');
@@ -325,9 +331,22 @@ try {
       await lessonPage.waitForTimeout(150);
       const returned = await race(lessonPage);
       assert.deepEqual(frozen(returned), frozen(held), 'RESUME cannot advance the race beneath its lesson');
-      assert.notEqual(returned.status, 'Race resumed.', 'Returning to a lesson does not announce driving');
+      assert.doesNotMatch(returned.status, /Resuming in|Race resumed/, 'Returning to a lesson does not announce driving or a countdown');
+      assert.equal(await lessonPage.locator('.turn-race-countdown').isVisible(), false);
     }
-    await lessonPage.evaluate(() => globalThis.__turnRacePause.letGo());
+    // Turning back with the real lesson modal beneath PAUSED returns directly to it.
+    await lessonPage.setViewportSize({ width: 390, height: 844 });
+    await lessonPage.waitForFunction(() => globalThis.__turnRacePause.reason === 'rotation');
+    assert.equal(await lessonPage.locator('.turn-race-pause-resume').textContent(), 'CONTINUE IN PORTRAIT');
+    await lessonPage.setViewportSize({ width: 844, height: 390 });
+    await lessonPage.waitForFunction(() => globalThis.__turnRacePause.reason === 'lesson');
+    await lessonPage.waitForTimeout(150);
+    const returned = await race(lessonPage);
+    assert.deepEqual(frozen(returned), frozen(held));
+    assert.doesNotMatch(returned.status, /Resuming in|Race resumed/);
+    assert.equal(await lessonPage.locator('.turn-race-countdown').isVisible(), false);
+    assert.equal(await lessonPage.locator('.turn-tutorial-card[open]').count(), 1);
+    await lessonPage.locator('.turn-tutorial-card[open] button').click();
     assert.equal((await race(lessonPage)).paused, false, 'Only TRY IT’s release lets the race continue');
     await opened.context.close();
   }
