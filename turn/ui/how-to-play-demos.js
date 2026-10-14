@@ -537,7 +537,7 @@ const STYLES = `
     content: "";
     position: absolute;
     inset: -50%;
-    background: linear-gradient(var(--turn-blue-200) 0 52%, var(--turn-control-gas) 52% 100%);
+    background: linear-gradient(var(--turn-blue-200) 0 52%, var(--turn-demo-ground) 52% 100%);
   }
   .turn-demo-recalibrate {
     display: grid;
