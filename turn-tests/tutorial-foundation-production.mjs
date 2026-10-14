@@ -429,8 +429,7 @@ test('the coach teaches DRIVE, DRIFT and BOOST by doing, with no failure state',
     'DRIFT is taught before BOOST, and READ THE ROAD comes last');
   const zone = (id) => TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === id);
   assert.ok(zone('drift').from < 0.24 && zone('drift').to > 0.24, 'DRIFT is said on the straight and runs into the long curve');
-  assert.equal(zone('boost').speedCap, 0.6, 'BOOST retains its curve-driving aid');
-  assert.ok(TURN_TUTORIAL_LESSONS.filter((lesson) => lesson.id !== 'boost').every((lesson) => !lesson.speedCap), 'Reading caps are gone');
+  assert.ok(TURN_TUTORIAL_LESSONS.every((lesson) => !lesson.speedCap), 'Every lesson, including BOOST, keeps ordinary gameplay speed');
 
   run(1);
   assert.equal(views.at(-1).id, 'drive');
@@ -454,7 +453,7 @@ test('the coach teaches DRIVE, DRIFT and BOOST by doing, with no failure state',
   assert.equal(views.at(-1).id, 'boost');
   assert.equal(coach.outcome().drift, 'missed', 'BOOST\'s stretch begins: the waiting DRIFT gives way');
   assert.equal(coach.outcome().boost, 'pending', 'BOOST waits until the meter is spent');
-  assert.ok(state.sessionSpeedCap >= zone('boost').speedCap * 88 - 1e-9, 'BOOST is capped, but above DRIFT speed');
+  assert.equal(state.sessionSpeedCap, null, 'The very first BOOST update has no teaching speed cap');
   run(0.5, { boostCharge: 0.1 });
   assert.equal(coach.outcome().boost, 'done', 'Emptying the meter completes BOOST');
   coach.graduate();
@@ -473,16 +472,20 @@ test('lesson holds compose with player, background and rotation pauses', async (
   const state = { mode: 'staged', running: true };
   windowRef.__turnRuntime = { state };
   windowRef.performance = globalThis.performance;
+  const silences = [];
+  windowRef.__turnAudio = { silence: (options) => silences.push(options) };
   const pause = installRacePause({ windowRef, documentRef });
   assert.equal(pause.hold(), false, 'The start-line card does not freeze the staged clock');
   state.mode = 'racing';
   for (const reason of ['player', 'background', 'rotation']) {
     assert.equal(pause.hold(), true);
     assert.equal(pause.reason, 'lesson');
+    assert.deepEqual(silences.at(-1), { fadeSeconds: 0.14 }, 'Only lesson audio fades; simulation freezes immediately');
     assert.equal(raceClockFrozen(), true);
     assert.equal(pause.resume(), false, 'Generic RESUME cannot dismiss the lesson');
     pause.pause(reason);
     assert.equal(pause.reason, reason);
+    assert.equal(silences.at(-1), undefined, 'An outer pause still hard-mutes immediately');
     pause.resume();
     assert.equal(pause.reason, 'lesson', 'RESUME returns to the lesson');
     assert.equal(raceClockFrozen(), true, 'The race clock never thawed underneath it');
@@ -579,14 +582,14 @@ test('pace notes count as available only when they can actually play', () => {
   }
 });
 
-test('a drifted bend completes DRIFT and the physics honour the lesson cap', async () => {
+test('a drifted bend completes DRIFT and separate session safety caps remain available', async () => {
   const state = { sessionSpeedCap: null };
   let input = { progress: 0.3, speed: 40, gas: true, drift: true, boostActive: false, boostCharge: 0.4 };
   const coach = createTurnTutorialCoach({ state, maxSpeed: 88, signals: () => input });
   for (let t = 0; t < 2; t += 0.1) coach.update(0.1);
   assert.equal(coach.outcome().drift, 'done');
   const physics = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8'));
-  assert.match(physics, /Math\.min\(speedLimit, sessionSpeedCap\)/, 'The lesson cap limits the vehicle speed');
+  assert.match(physics, /Math\.min\(speedLimit, sessionSpeedCap\)/, 'Separate session safety caps still limit vehicle speed');
 });
 
 test('Tutorial steering help aims at the road ahead and the player still steers', async () => {
@@ -1167,6 +1170,7 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
 test('the DRIFT lesson names LOCK, which is on the drive pad from the first lap', async () => {
   const { TURN_TUTORIAL_LESSONS } = await import('../turn/tutorial/turn-tutorial-lessons.js');
   const drift = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'drift');
+  assert.match(drift.prompt, /^Hold DRIFT through the turn\./, 'DRIFT is the current action, not an upcoming one');
   assert.match(drift.prompt, /LOCK/, 'Taught where DRIFT is');
   const boost = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'boost');
   assert.match(boost.doneText, /refills BOOST/, 'The BOOST loop is said once BOOST has been spent, where a slide shows it');

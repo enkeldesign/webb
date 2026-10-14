@@ -292,17 +292,26 @@ export function cue(name, options = {}) {
   });
 }
 
-export function silence() {
+export function silence({ fadeSeconds = 0 } = {}) {
   if (!context || context.state !== 'running') return;
   const now = context.currentTime;
-  hardMute(engineGain.gain, now);
-  hardMute(driftGain.gain, now);
-  hardMute(gritGain.gain, now);
-  hardMute(skidGain.gain, now);
-  hardMute(boostGain.gain, now);
-  if (sirenGain) hardMute(sirenGain.gain, now);
-  if (sliderGain) hardMute(sliderGain.gain, now);
-  if (surfaceGain) hardMute(surfaceGain.gain, now);
+  // A lesson freezes simulation now, but lets the continuous driving voices fade.
+  // Background/leave still hard-mute. Scheduling on AudioParams needs no race timer;
+  // the next update's smooth() cancels this ramp if the player acts immediately.
+  const mute = (param) => {
+    if (!(fadeSeconds > 0)) return hardMute(param, now);
+    smooth(param, 0, now, fadeSeconds / 4);
+    try { param.linearRampToValueAtTime(0, now + fadeSeconds); }
+    catch (_) { hardMute(param, now); }
+  };
+  mute(engineGain.gain);
+  mute(driftGain.gain);
+  mute(gritGain.gain);
+  mute(skidGain.gain);
+  mute(boostGain.gain);
+  if (sirenGain) mute(sirenGain.gain);
+  if (sliderGain) mute(sliderGain.gain);
+  if (surfaceGain) mute(surfaceGain.gain);
   if (DRIVE_BY_EAR_ENABLED) releaseRouteMix();
   lastBoostActive = false;
   rivalNearLatched = false;

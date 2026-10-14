@@ -108,7 +108,7 @@ export function installRacePause({ windowRef = window, documentRef = document } 
   }
 
   // Lessons share the pause owner, but sit underneath player/background/rotation
-  // pauses. RESUME only removes that upper pause; TRY IT alone releases the lesson.
+  // pauses. RESUME only removes that upper pause; the lesson action releases its hold.
   function hold() {
     if (lessonHeld) return true;
     if (!racing()) return false;
@@ -117,7 +117,7 @@ export function installRacePause({ windowRef = window, documentRef = document } 
     pausedAt = windowRef.performance.now();
     freezeRaceClock();
     body.classList.add('turn-runtime-paused', 'turn-race-paused');
-    windowRef.__turnAudio?.silence?.();
+    windowRef.__turnAudio?.silence?.({ fadeSeconds: 0.14 });
     windowRef.dispatchEvent(new CustomEvent('turn:pace-note-silence'));
     publish('race-paused');
     return true;

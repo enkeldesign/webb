@@ -1,11 +1,11 @@
 // TURN TUTORIAL teaching lap (#1132): the lessons, as semantic beats placed on
 // production COUNTRYSIDE (1,135 m, every bend to the right): the opening bend (4–16% of
 // the lap), a short straight (16–24%), one long curve (24–79%) and the bend through the
-// line. A lesson is the thing to experience; the prompt, speech and speed cap are how
+// line. A lesson is the thing to experience; the prompt, speech and pause are how
 // it is presented. DRIFT comes where the long curve begins, BOOST after it (#1166).
 //
-// from/to: lap progress where the lesson is taught. speedCap: share of the car's top
-// speed while the lesson waits for its action (null: no cap).
+// from/to: lap progress where the lesson is taught. The first target is the action
+// that releases the teaching hold; all practice runs at ordinary gameplay speed.
 // doneText: said when it is done. keyboardPrompt: the prompt for players driving by
 // keyboard, where it differs. needs: 'routeCues' for a lesson that needs DRIVE BY
 // EAR's pace notes; with them off it is skipped. Placement is a first pass for device
@@ -29,17 +29,16 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     title: 'DRIFT',
     // LOCK is on the drive pad from the first lap, so it is named here, where DRIFT is.
     // It is offered, not required: the slide is the lesson.
-    prompt: 'Keep GAS on into the bend, then hold DRIFT through it. Slide outward into LOCK for a stronger slide.',
+    prompt: 'Hold DRIFT through the turn. Slide outward into LOCK for a stronger slide.',
     // LOCK has no key (input/qe-drive-controls.js): keyboard players are told only DRIFT.
-    keyboardPrompt: 'Keep GAS on into the bend, then hold DRIFT through it.',
+    keyboardPrompt: 'Hold DRIFT through the turn.',
     from: 0.17,
     to: 0.4,
     targets: ['.drive-drift-zone'],
     done: (progress) => progress.driftSeconds >= 1.5
   }),
   Object.freeze({
-    // In the long curve, so capped: the burst is felt from DRIFT's speed, and a new
-    // player keeps the car on the road.
+    // The real burst, without a teaching speed cap. Course rescue remains available.
     id: 'boost',
     title: 'BOOST',
     prompt: 'Press BOOST and watch the meter empty.',
@@ -48,7 +47,6 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     doneText: 'Drifting refills BOOST.',
     from: 0.42,
     to: 0.6,
-    speedCap: 0.6,
     targets: ['.drive-boost-zone'],
     done: (progress) => progress.boostSpent
   }),
