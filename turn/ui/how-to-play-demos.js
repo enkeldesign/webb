@@ -525,9 +525,18 @@ const STYLES = `
     background: var(--turn-road);
   }
   .turn-demo-device > i {
+    position: relative;
     display: block;
     height: 100%;
+    overflow: hidden;
     border-radius: 8px;
+  }
+  /* Keep the screen's clip with the phone, but counter-rotate its scenery. The
+     overscan covers the screen's corners throughout the tilt. */
+  .turn-demo-device > i::after {
+    content: "";
+    position: absolute;
+    inset: -50%;
     background: linear-gradient(var(--turn-blue-200) 0 52%, var(--turn-control-gas) 52% 100%);
   }
   .turn-demo-recalibrate {
@@ -546,6 +555,7 @@ const STYLES = `
     letter-spacing: normal;
   }
   details[open] .turn-demo-steer .turn-demo-device { animation: turn-demo-steer-device 8s ease-in-out infinite; }
+  details[open] .turn-demo-steer .turn-demo-device > i::after { animation: turn-demo-steer-horizon 8s ease-in-out infinite; }
   details[open] .turn-demo-steer .turn-demo-message { animation: turn-demo-steer-message 8s linear infinite; }
   details[open] .turn-demo-steer .turn-demo-recalibrate {
     animation:
@@ -557,6 +567,18 @@ const STYLES = `
     18% { transform: rotate(-16deg); }
     32% { transform: rotate(16deg); }
     44%, 90% { transform: rotate(7deg); }
+    100% { transform: rotate(0deg); }
+  }
+  /* Match the phone's stops and easing while it moves, so the horizon stays level
+     between poses too. Only while the phone holds at 7deg do we introduce an
+     offset, then level it as RECALIBRATE is pressed and STEERING CENTRED appears. */
+  @keyframes turn-demo-steer-horizon {
+    0%, 6% { transform: rotate(0deg); }
+    18% { transform: rotate(16deg); }
+    32% { transform: rotate(-16deg); }
+    44% { transform: rotate(-7deg); }
+    50%, 56% { transform: rotate(0deg); }
+    57.75%, 90% { transform: rotate(-7deg); }
     100% { transform: rotate(0deg); }
   }
   @keyframes turn-demo-steer-press {
@@ -921,6 +943,7 @@ ${countUp(44, 66, 600, 12)}
     .turn-demo-stack[data-demo="overcharge"] .turn-demo-bar > b { opacity: 1; }
     .turn-demo-stack[data-demo="overcharge"] .turn-demo-bar > i { left: 21.375px; }
     .turn-demo-steer .turn-demo-device { transform: rotate(7deg); }
+    .turn-demo-steer .turn-demo-device > i::after { transform: rotate(-7deg); }
     .turn-demo-steer .turn-demo-message { opacity: 1; }
     .turn-demo-steer .turn-demo-recalibrate { background-color: var(--yellow); color: var(--turn-ink); }
     .turn-demo-manual-steer > i { left: 24%; }
