@@ -264,7 +264,7 @@ function installEntryPoints(openTraining) {
   const homeButton = document.createElement('button');
   homeButton.type = 'button';
   homeButton.className = 'm8-feedback-button turn-dbe-training-home';
-  homeButton.textContent = 'DRIVE BY EAR TUTORIAL';
+  homeButton.textContent = 'DRIVE BY EAR';
   homeButton.setAttribute('aria-haspopup', 'dialog');
   howButton.after(homeButton);
 
