@@ -68,6 +68,9 @@
   --turn-action-reset: var(--turn-red-200);
   --turn-action-navigation: var(--turn-orange-500);
 
+  /* HOW TO PLAY scenery: keep the ground distinct from the sky in both themes. */
+  --turn-demo-ground: #337700;
+
   /* Native form and disclosure roles. */
   --turn-form-control-idle: var(--turn-surface-page);
   --turn-form-control-selected: var(--turn-pink-500);

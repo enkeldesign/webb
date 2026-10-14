@@ -41,6 +41,11 @@
   cursor: pointer;
 }
 
+.turn-dbe-training-how button {
+  background: var(--turn-action-utility);
+  color: var(--turn-text);
+}
+
 .turn-dbe-training-settings {
   margin-top: 12px;
 }

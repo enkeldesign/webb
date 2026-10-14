@@ -47,10 +47,7 @@ function installStyles() {
       font-weight: var(--turn-weight-display);
       cursor: pointer;
     }
-    .m8-tutorial-actions [data-tutorial-start],
-    .m8-tutorial-entry button,
-    .m8-drift-attack-entry button,
-    .m8-flow-tutorial-entry button {
+    .m8-tutorial-actions [data-tutorial-start] {
       background: var(--turn-action-primary);
       color: var(--turn-ink);
     }
@@ -88,8 +85,8 @@ function installStyles() {
       padding: var(--turn-space-3) var(--turn-space-4);
       border: var(--turn-border-control) solid var(--turn-outline);
       border-radius: var(--turn-radius-control);
-      background: var(--turn-action-primary);
-      color: var(--turn-ink);
+      background: var(--turn-action-utility);
+      color: var(--turn-text);
       font: inherit;
       font-size: var(--turn-type-body);
       font-weight: var(--turn-weight-display);
