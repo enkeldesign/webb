@@ -258,17 +258,11 @@
 }
 
 .turn-dbe-training-active .turn-dbe-training-hidden-map,
-.turn-dbe-training-active .topbar .chip:nth-child(2),
-.turn-dbe-training-active .topbar .chip:nth-child(3),
-.turn-dbe-training-active .topbar .chip:nth-child(4),
+.turn-dbe-training-active .topbar,
 .turn-dbe-training-active .spectate-button,
 .turn-dbe-training-active .turn-race-achievements-button,
 .turn-dbe-training-active .m8-race-settings-button {
   display: none !important;
-}
-
-.turn-dbe-training-active .topbar {
-  pointer-events: none;
 }
 
 @media (max-width: 540px) {
