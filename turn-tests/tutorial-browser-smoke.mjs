@@ -107,9 +107,11 @@ async function crossFinish(page) {
     state.heading = Math.atan2(start.tangent.x, start.tangent.z);
     state.velocity.copy(start.tangent).multiplyScalar(35);
     state.speed = 35;
-    state.recording = Array.from({ length: 25 }, (_, i) => ({
-      t: i, x: start.point.x, z: start.point.z, h: state.heading, p: i / 25
-    }));
+    state.recording = Array.from({ length: 120 }, (_, i) => {
+      const sample = samples[Math.floor(samples.length * i / 120)];
+      return { t: 90 * i / 120, x: sample.point.x, z: sample.point.z,
+        h: Math.atan2(sample.tangent.x, sample.tangent.z), p: i / 120 };
+    });
   });
   if (await page.evaluate(() => globalThis.__turnRacePause.reason === 'lesson')) await acceptLesson(page);
   await page.waitForFunction((previous) => globalThis.__turnRuntime.state.lap > previous, lap);
@@ -308,8 +310,32 @@ try {
     await crossFinish(page);
     assert.equal(await page.locator('.turn-tutorial-prompt').getAttribute('data-state'), 'graduated',
       'Crossing the line says the tutorial is complete');
-    assert.doesNotMatch(await page.locator('.turn-tutorial-voice').textContent(), /TUTORIAL COMPLETE/,
+    assert.match(await page.locator('.turn-tutorial-prompt').textContent(),
+      /^TUTORIAL COMPLETE!The ghost of your last lap is now your rival\. Can you beat it\?$/);
+    assert.doesNotMatch(await page.locator('.turn-tutorial-voice').textContent(), /Tutorial complete/i,
       'The lap result is said first: the line waits for it');
+    await page.waitForFunction(() => {
+      const { state, competitorCars, camera } = globalThis.__turnRuntime;
+      const rival = competitorCars[0];
+      const screen = rival.position.clone().project(camera);
+      const delta = rival.position.clone().sub(state.position);
+      return rival.visible && delta.x * Math.sin(state.heading) + delta.z * Math.cos(state.heading) > 15
+        && Math.abs(screen.x) < 0.9 && Math.abs(screen.y) < 0.95 && screen.z > -1 && screen.z < 1;
+    }, null, { timeout: 5000 });
+    await page.evaluate(() => globalThis.__turnRacePause.pause('player'));
+    for (const viewport of [{ width: 1024, height: 768 }, { width: 844, height: 390 }]) {
+      await page.setViewportSize(viewport);
+      const visible = await page.evaluate(() => {
+        const { state, competitorCars, camera, lapFrameAt } = globalThis.__turnRuntime;
+        const rival = competitorCars[0];
+        const screen = rival.position.clone().project(camera);
+        const official = lapFrameAt(state.competitorLaps[0], state.lapElapsed);
+        return rival.visible && Math.abs(screen.x) < 1 && Math.abs(screen.y) < 1
+          && Math.hypot(rival.position.x - official.x, rival.position.z - official.z) > 15;
+      });
+      assert.equal(visible, true, `Tutorial rival is visibly advanced at ${viewport.width}×${viewport.height}`);
+    }
+    await page.evaluate(() => globalThis.__turnRacePause.resume());
     assert.ok(await leaveRoad(page, 40) > rescueLimit + 1.5, 'After the line, ordinary TURN has no rescue');
     // Back onto the road: far off it, slow CI renderers draw too few frames for the
     // race-time checks below.
@@ -328,7 +354,7 @@ try {
     await page.waitForTimeout(4500);
     assert.equal(await page.locator('.turn-tutorial-prompt').count(), 1, 'TUTORIAL COMPLETE is still there after a pause');
     await page.evaluate(() => globalThis.__turnRacePause.resume());
-    await page.waitForFunction(() => /^TUTORIAL COMPLETE\. /.test(document.querySelector('.turn-tutorial-voice')?.textContent || ''),
+    await page.waitForFunction(() => /^Tutorial complete! /.test(document.querySelector('.turn-tutorial-voice')?.textContent || ''),
       null, { timeout: 10000 });
     // The run ends once its last words have been said: the award is not said over them.
     await page.waitForFunction(() => !document.querySelector('.turn-tutorial-prompt'), null, { timeout: 15000 });

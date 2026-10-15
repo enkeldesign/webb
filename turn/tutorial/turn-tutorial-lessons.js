@@ -87,9 +87,9 @@ export function turnTutorialLessons(state) {
     ? GRADUATED_LESSONS : TURN_TUTORIAL_LESSONS;
 }
 
-export const TUTORIAL_GRADUATION_MESSAGE = 'Tutorial complete. Your lap is now the rival ahead. Catch it!';
+export const TUTORIAL_GRADUATION_MESSAGE = 'Tutorial complete! The ghost of your last lap is now your rival. Can you beat it?';
 // Help never pretends to be the player's own steering: it ends at the line, and says so.
-export const TUTORIAL_GRADUATION_WITH_HELP_MESSAGE = 'Tutorial complete. Steering help ends here. Your lap is now the rival ahead. Catch it!';
+export const TUTORIAL_GRADUATION_WITH_HELP_MESSAGE = 'Tutorial complete! Steering help ends here. The ghost of your last lap is now your rival. Can you beat it?';
 // After repeated rescues with help off: where the stronger help is.
 export const STEERING_HELP_HINT = Object.freeze({
   title: 'STEERING HELP',
