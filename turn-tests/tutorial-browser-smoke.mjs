@@ -98,6 +98,10 @@ async function crossFinish(page) {
     state.lapStartedAt = raceNow() - 90_000;
     state.lapCheckpointIndex = LAP_CHECKPOINTS.length;
     state.lapInvalid = false;
+    // Teleport the whole race position together: stale progress near a lesson
+    // boundary could otherwise open a new teaching hold before this finish tick.
+    state.nearestTrackIndex = samples.length - 1;
+    state.progress = state.nearestTrackIndex / samples.length;
     state.position.copy(start.point).addScaledVector(start.tangent, -1);
     state.lapPreviousPosition = { x: state.position.x, z: state.position.z };
     state.heading = Math.atan2(start.tangent.x, start.tangent.z);
@@ -107,6 +111,7 @@ async function crossFinish(page) {
       t: i, x: start.point.x, z: start.point.z, h: state.heading, p: i / 25
     }));
   });
+  if (await page.evaluate(() => globalThis.__turnRacePause.reason === 'lesson')) await acceptLesson(page);
   await page.waitForFunction((previous) => globalThis.__turnRuntime.state.lap > previous, lap);
 }
 
