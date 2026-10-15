@@ -24,7 +24,8 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     done: (progress) => progress.gasSeconds >= 1.5
   }),
   Object.freeze({
-    // Said on the straight, so the slide starts as the long curve does.
+    // Pause at the long curve's entry (~24.3%), so the same DRIFT press starts
+    // practice in the bend rather than on the preceding straight (#1204).
     id: 'drift',
     title: 'DRIFT',
     // LOCK is on the drive pad from the first lap, so it is named here, where DRIFT is.
@@ -32,7 +33,7 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     prompt: 'Hold DRIFT through the turn. Slide outward into LOCK for a stronger slide.',
     // LOCK has no key (input/qe-drive-controls.js): keyboard players are told only DRIFT.
     keyboardPrompt: 'Hold DRIFT through the turn.',
-    from: 0.17,
+    from: 0.245,
     to: 0.4,
     targets: ['.drive-drift-zone'],
     done: (progress) => progress.driftSeconds >= 1.5
