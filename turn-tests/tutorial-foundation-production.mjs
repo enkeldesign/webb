@@ -447,20 +447,46 @@ test('the coach teaches DRIVE, DRIFT and BOOST by doing, with no failure state',
   assert.equal(state.sessionSpeedCap, null, 'DRIFT uses ordinary driving speed');
   run(1, { progress: 0.39 });
   assert.equal(coach.outcome().drift, 'pending', 'A late DRIFT still counts: the prompt stays');
-  run(0.5, { progress: 0.41 });
-  assert.equal(state.sessionSpeedCap, null, 'No cap outside the lesson stretch');
+  run(0.5, { progress: 0.5 });
+  assert.equal(views.at(-1).id, 'drift', 'More of the long bend belongs to DRIFT before BOOST interrupts');
+  assert.equal(state.sessionSpeedCap, null, 'No cap in the extended DRIFT stretch');
 
-  run(1, { progress: 0.45, gas: true, boostActive: true, boostCharge: 0.6 });
+  run(0.1, { progress: 0.55, gas: true, boostActive: false, boostCharge: 0.6 });
   assert.equal(views.at(-1).id, 'boost');
   assert.equal(coach.outcome().drift, 'missed', 'BOOST\'s stretch begins: the waiting DRIFT gives way');
-  assert.equal(coach.outcome().boost, 'pending', 'BOOST waits until the meter is spent');
+  assert.equal(coach.outcome().boost, 'pending', 'A partly filled meter does not auto-complete BOOST');
   assert.equal(state.sessionSpeedCap, null, 'The very first BOOST update has no teaching speed cap');
-  run(0.5, { boostCharge: 0.1 });
-  assert.equal(coach.outcome().boost, 'done', 'Emptying the meter completes BOOST');
+  run(0.3, { boostActive: true, boostCharge: 0.55 });
+  assert.equal(coach.outcome().boost, 'pending', 'A brief tap is not the full practice burst');
+  run(0.8, { boostCharge: 0.4 });
+  assert.equal(coach.outcome().boost, 'done', 'A visible burst completes before READ THE ROAD');
   coach.graduate();
   assert.equal(views.at(-1).kind, 'graduated');
   run(1, { progress: 0.05 });
   assert.equal(views.at(-1).kind, 'graduated', 'After the line the coach stays out of ordinary racing');
+});
+
+test('GRADUATED replays reserve the earlier cue without changing speed or moving active lessons', () => {
+  const state = { vehicleId: 'classic', vehiclePerkUnlocked: true, sessionSpeedCap: null };
+  const views = [];
+  let input = { progress: 0.25, drift: true, boostActive: false, boostCharge: 1, routeCues: true, paceNotes: 1 };
+  const coach = createTurnTutorialCoach({ state, signals: () => input, present: (view) => views.push(view) });
+  for (let i = 0; i < 21; i += 1) coach.update(0.1);
+  assert.equal(coach.outcome().drift, 'done', 'The faster replay still gets a sustained slide');
+  input = { ...input, progress: 0.445, drift: false };
+  coach.update(0.1);
+  assert.equal(views.at(-1).id, 'boost');
+  state.vehiclePerkProgress = 0; // A lost streak cannot move the already-selected windows.
+  input = { ...input, boostActive: true, boostCharge: 0.8 };
+  for (let i = 0; i < 11; i += 1) coach.update(0.1);
+  assert.equal(coach.outcome().boost, 'done');
+  input = { ...input, progress: 0.58 };
+  coach.update(0.1);
+  assert.equal(views.at(-1).id, 'read', 'Listen before the fully built perk can fire the following cue');
+  input = { ...input, paceNotes: 2 };
+  coach.update(0.1);
+  assert.equal(coach.outcome().read, 'done');
+  assert.equal(state.sessionSpeedCap, null);
 });
 
 test('lesson holds compose with player, background and rotation pauses', async () => {
@@ -514,7 +540,7 @@ test('lesson holds compose with player, background and rotation pauses', async (
 test('READ THE ROAD is done when the pace note for the next bend plays', () => {
   const state = { sessionSpeedCap: null };
   const views = [];
-  let input = { progress: 0.62, speed: 50, gas: true, drift: false, boostActive: false, boostCharge: 0.5, routeCues: true, paceNotes: 6 };
+  let input = { progress: 0.64, speed: 50, gas: true, drift: false, boostActive: false, boostCharge: 0.5, routeCues: true, paceNotes: 6 };
   const coach = createTurnTutorialCoach({ state, maxSpeed: 88, signals: () => input, present: (view) => views.push(view) });
   const run = (seconds, change = {}) => {
     input = { ...input, ...change };
@@ -523,6 +549,7 @@ test('READ THE ROAD is done when the pace note for the next bend plays', () => {
   run(1);
   assert.equal(views.at(-1).id, 'read');
   assert.match(views.at(-1).prompt, /chime/i, 'The prompt says what to listen for, before the cue plays');
+  assert.match(views.at(-1).prompt, /Higher means tighter/, 'The explanation is heard during the hold, before approaching the bend');
   assert.equal(coach.outcome().read, 'pending', 'Cues heard before the lesson do not count');
   assert.equal(state.sessionSpeedCap, null, 'Listening does not impose a driving cap');
   run(0.2, { progress: 0.7, paceNotes: 7 });
@@ -601,10 +628,45 @@ test('a drifted bend completes DRIFT and separate session safety caps remain ava
   assert.equal(coach.outcome().drift, 'pending', 'Earlier DRIFT input does not count toward practice');
   for (let step = 0; step < 12; step += 1) coach.update(0.1);
   assert.equal(coach.outcome().drift, 'pending', 'The lesson still requires its full practice time');
-  for (let step = 0; step < 3; step += 1) coach.update(0.1);
+  for (let step = 0; step < 20; step += 1) coach.update(0.1);
+  assert.equal(coach.outcome().drift, 'pending', 'DRIFT now lasts well beyond the old 1.5-second beat');
+  input = { ...input, progress: 0.49 };
+  for (let step = 0; step < 8; step += 1) coach.update(0.1);
   assert.equal(coach.outcome().drift, 'done', 'Holding DRIFT in the curve completes the lesson');
   const physics = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8'));
   assert.match(physics, /Math\.min\(speedLimit, sessionSpeedCap\)/, 'Separate session safety caps still limit vehicle speed');
+});
+
+test('the BOOST burst counts overcharge and a small remaining tank without altering either', () => {
+  for (const initial of [{ boostCharge: 1, boostOvercharge: 0.5 }, { boostCharge: 0.1, boostOvercharge: 0 }]) {
+    let input = { progress: 0.55, ...initial, boostActive: false };
+    const state = { sessionSpeedCap: null };
+    const coach = createTurnTutorialCoach({ state, signals: () => input });
+    coach.update(0.1);
+    input = { ...input, boostActive: true };
+    coach.update(0.1);
+    assert.equal(coach.outcome().boost, 'pending', 'The first press still needs to consume resource');
+    input = initial.boostOvercharge
+      ? { ...input, boostOvercharge: 0.29 }
+      : { ...input, boostActive: false, boostCharge: 0 };
+    for (let step = 0; step < 12; step += 1) coach.update(0.1);
+    assert.equal(coach.outcome().boost, 'done', 'Actual use of overcharge or the remaining tank completes practice');
+    assert.equal(state.sessionSpeedCap, null);
+  }
+});
+
+test('BOOST practice can use a refill after entering with an empty or partial tank', () => {
+  for (const charge of [0, 0.1]) {
+    let input = { progress: 0.55, boostCharge: charge, boostActive: false };
+    const coach = createTurnTutorialCoach({ state: {}, signals: () => input });
+    coach.update(0.1);
+    input = { ...input, boostCharge: 0.8 };
+    coach.update(0.1);
+    assert.equal(coach.outcome().boost, 'pending', 'Refilling alone does not complete BOOST');
+    input = { ...input, boostCharge: 0.6, boostActive: true };
+    for (let step = 0; step < 11; step += 1) coach.update(0.1);
+    assert.equal(coach.outcome().boost, 'done', 'The genuine burst counts even above the lesson-entry charge');
+  }
 });
 
 test('Tutorial steering help aims at the road ahead and the player still steers', async () => {
