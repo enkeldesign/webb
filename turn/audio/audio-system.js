@@ -310,8 +310,9 @@ export function silence({ fadeSeconds = 0 } = {}) {
   mute(skidGain.gain);
   mute(boostGain.gain);
   if (sirenGain) mute(sirenGain.gain);
-  if (sliderGain) mute(sliderGain.gain);
-  if (surfaceGain) mute(surfaceGain.gain);
+  // Guidance retains its immediate shutdown contract; only the racing voices fade.
+  if (sliderGain) hardMute(sliderGain.gain, now);
+  if (surfaceGain) hardMute(surfaceGain.gain, now);
   if (DRIVE_BY_EAR_ENABLED) releaseRouteMix();
   lastBoostActive = false;
   rivalNearLatched = false;

@@ -377,6 +377,11 @@ try {
     assert.equal(await card.locator('button').count(), 0);
     assert.equal(await page.locator('.drive-boost-zone').evaluate((el) => globalThis.getComputedStyle(el).animationName), 'none', 'Reduce Motion keeps a static target');
     assert.equal(await page.locator('.turn-tutorial-dim').evaluate((el) => globalThis.getComputedStyle(el).opacity), '0.13');
+    await page.locator('.drive-reverse-bubble').focus();
+    await page.keyboard.down('Enter');
+    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.touchReverse), false, 'Native REVERSE cannot queue an action behind the lesson');
+    await page.keyboard.up('Enter');
+    await page.evaluate(() => document.activeElement.blur());
     await page.keyboard.press('KeyQ');
     assert.equal(await page.evaluate(() => globalThis.__turnRacePause.reason), 'lesson', 'DRIFT cannot release BOOST');
     await page.keyboard.down('KeyE');

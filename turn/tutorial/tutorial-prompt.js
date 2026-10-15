@@ -333,6 +333,13 @@ export function createTutorialPrompt(parent = document.body) {
   globalThis.addEventListener?.('turn:before-driving-input', onDrivingInput);
   const onKeyDown = (event) => {
     if (DRIVING_KEYS.has(event.code)) useKeyboard(true);
+    if (pendingCard && ['Enter', ' '].includes(event.key)
+      && event.target?.closest?.('.drive-stack')) {
+      // REVERSE has its own native key hold, outside keyboard driving ownership.
+      // It must not leave a held action queued behind another control's lesson.
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
     if (event.key === 'Escape' && pendingCard && !externallyPaused()) {
       if (pauseOwner()?.pause('player')) event.preventDefault();
     }
