@@ -437,6 +437,8 @@ try {
     await page.locator('label.m8-steering-help-setting').click();
     assert.equal(await page.locator('#m8SteeringHelp').isChecked(), false);
     assert.equal(await page.locator('.m8-settings-status').textContent(), 'Tutorial steering help off.');
+    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.sessionSteeringTarget), null,
+      'Switching help off clears the steering target while still paused');
     await page.evaluate(() => {
       for (const dialog of document.querySelectorAll('dialog[open]:not(.turn-tutorial-card)')) dialog.close();
       globalThis.__turnRacePause.resume();

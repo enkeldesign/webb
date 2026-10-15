@@ -466,6 +466,29 @@ test('the coach teaches DRIVE, DRIFT and BOOST by doing, with no failure state',
   assert.equal(views.at(-1).kind, 'graduated', 'After the line the coach stays out of ordinary racing');
 });
 
+test('GRADUATED replays reserve the earlier cue without changing speed or moving active lessons', () => {
+  const state = { vehicleId: 'classic', vehiclePerkUnlocked: true, sessionSpeedCap: null };
+  const views = [];
+  let input = { progress: 0.25, drift: true, boostActive: false, boostCharge: 1, routeCues: true, paceNotes: 1 };
+  const coach = createTurnTutorialCoach({ state, signals: () => input, present: (view) => views.push(view) });
+  for (let i = 0; i < 21; i += 1) coach.update(0.1);
+  assert.equal(coach.outcome().drift, 'done', 'The faster replay still gets a sustained slide');
+  input = { ...input, progress: 0.445, drift: false };
+  coach.update(0.1);
+  assert.equal(views.at(-1).id, 'boost');
+  state.vehiclePerkProgress = 0; // A lost streak cannot move the already-selected windows.
+  input = { ...input, boostActive: true, boostCharge: 0.8 };
+  for (let i = 0; i < 11; i += 1) coach.update(0.1);
+  assert.equal(coach.outcome().boost, 'done');
+  input = { ...input, progress: 0.58 };
+  coach.update(0.1);
+  assert.equal(views.at(-1).id, 'read', 'Listen before the fully built perk can fire the following cue');
+  input = { ...input, paceNotes: 2 };
+  coach.update(0.1);
+  assert.equal(coach.outcome().read, 'done');
+  assert.equal(state.sessionSpeedCap, null);
+});
+
 test('lesson holds compose with player, background and rotation pauses', async () => {
   const { installRacePause } = await import('../turn/race/race-pause.js');
   const { raceClockFrozen } = await import('../turn/race/race-clock.js');

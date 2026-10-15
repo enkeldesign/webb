@@ -502,6 +502,8 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
 
   function onSteeringHelpChanged(event) {
     steeringHelp = event.detail?.enabled === true;
+    // SETTINGS can change this behind a lesson hold, before another driving tick.
+    if (!steeringHelp) state.sessionSteeringTarget = null;
     if (lastView.kind === 'lesson') prompt.present(forPlayer(lastView));
   }
 

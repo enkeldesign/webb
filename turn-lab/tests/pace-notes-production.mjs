@@ -542,31 +542,40 @@ assert.match(menu, /nearby-rival warnings are directional/);
 // even at the LEARNER CAR's full BOOST ceiling. Use the real 720-sample course and
 // scheduler, rather than assuming a fixed cue percentage at every driving speed.
 {
-  const { TURN_TUTORIAL_LESSONS } = await import('../../turn/tutorial/turn-tutorial-lessons.js');
+  const { turnTutorialLessons } = await import('../../turn/tutorial/turn-tutorial-lessons.js');
   const { getEffectiveVehicleTuning } = await import('../../turn/vehicle/catalog.js');
-  const boost = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'boost');
-  const readRoad = TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === 'read');
-  const tuning = getEffectiveVehicleTuning({ carId: 'classic' });
-  const maxBoostSpeed = 88 * tuning.topSpeedMultiplier * tuning.boostSpeedMultiplier;
+  const { GRADUATED_MAX_TOP_SPEED_MULTIPLIER } = await import('../../turn/vehicle/perk-runtime.js');
   const track = createTrackRuntime('countryside');
   const runtime = { trackId: 'countryside', samples: track.samples, state: { running: true, mode: 'racing' } };
   const route = routeForSamples(runtime.samples, runtime.trackId);
-  const next = route.segments.find((segment) => segment.startDistance / route.trackLength > readRoad.to - 0.03);
-  assert.ok(next, 'There is a real following bend to teach');
-  const boostIndex = Math.ceil(boost.from * runtime.samples.length);
-  const readIndex = Math.ceil(readRoad.from * runtime.samples.length);
-  const burstRoom = (readIndex - boostIndex) * route.sampleSpacing / maxBoostSpeed;
-  assert.ok(burstRoom >= boost.boostPracticeSeconds + 0.1, 'Full-speed BOOST has practice time plus a coach frame before READ THE ROAD');
-  for (const speed of [25, 50, maxBoostSpeed]) {
-    resetSwooshDelivery('tutorial timing');
-    const startDistance = readIndex * route.sampleSpacing;
-    const { played } = drive(runtime, createRouteAudio(), {
-      speed, startDistance, seconds: (next.startDistance - startDistance) / speed
-    });
-    const cue = played.find((entry) => entry.id === next.id);
-    assert.ok(cue, `READ THE ROAD hears the following bend at ${speed} m/s`);
-    assert.ok(cue.distance > startDistance, 'The lesson begins before the cue is due');
-    assert.ok(cue.margin >= 0.9, 'The chime still ends with useful steering lead');
+  for (const unlocked of [false, true]) {
+    const lessons = turnTutorialLessons({ vehicleId: 'classic', vehiclePerkUnlocked: unlocked });
+    const drift = lessons.find((lesson) => lesson.id === 'drift');
+    const boost = lessons.find((lesson) => lesson.id === 'boost');
+    const readRoad = lessons.find((lesson) => lesson.id === 'read');
+    const tuning = getEffectiveVehicleTuning({ carId: 'classic' });
+    const maxSpeed = 88 * (unlocked ? GRADUATED_MAX_TOP_SPEED_MULTIPLIER : tuning.topSpeedMultiplier);
+    const maxBoostSpeed = maxSpeed * tuning.boostSpeedMultiplier;
+    assert.equal(drift.done({ driftSeconds: 1.5 }), false, 'Neither schedule ends DRIFT at the old short duration');
+    const driftRoom = (boost.from - drift.from) * route.trackLength / maxSpeed - 0.1;
+    assert.equal(drift.done({ driftSeconds: driftRoom }), true, 'Unboosted full-speed DRIFT fits its longer practice before BOOST');
+    const next = route.segments.find((segment) => segment.startDistance / route.trackLength > readRoad.to - 0.03);
+    assert.ok(next, 'There is a real following bend to teach');
+    const boostIndex = Math.ceil(boost.from * runtime.samples.length);
+    const readIndex = Math.ceil(readRoad.from * runtime.samples.length);
+    const burstRoom = (readIndex - boostIndex) * route.sampleSpacing / maxBoostSpeed;
+    assert.ok(burstRoom >= boost.boostPracticeSeconds + 0.1, 'Full-speed BOOST has practice time plus a coach frame before READ THE ROAD');
+    for (const speed of [25, 50, maxBoostSpeed]) {
+      resetSwooshDelivery('tutorial timing');
+      const startDistance = readIndex * route.sampleSpacing;
+      const { played } = drive(runtime, createRouteAudio(), {
+        speed, startDistance, seconds: (next.startDistance - startDistance) / speed
+      });
+      const cue = played.find((entry) => entry.id === next.id);
+      assert.ok(cue, `READ THE ROAD hears the following bend at ${speed} m/s`);
+      assert.ok(cue.distance > startDistance, 'The lesson begins before the cue is due');
+      assert.ok(cue.margin >= 0.9, 'The chime still ends with useful steering lead');
+    }
   }
   resetSwooshDelivery('tutorial timing done');
 }

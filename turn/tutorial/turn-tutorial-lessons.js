@@ -71,6 +71,22 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
   })
 ]);
 
+// GRADUATED replays can reach 129.888 m/s under BOOST (90.9216 without the perk).
+// Their following chime is due near 59%, so reserve an earlier listening window.
+// Select once for the run: a perk building/resetting mid-lesson must not move a hold.
+// DRIFT still gets more of the curve and two seconds of practice at that higher speed.
+const GRADUATED_LESSONS = Object.freeze(TURN_TUTORIAL_LESSONS.map((lesson) => {
+  if (lesson.id === 'drift') return Object.freeze({ ...lesson, to: 0.445, done: (progress) => progress.driftSeconds >= 2 });
+  if (lesson.id === 'boost') return Object.freeze({ ...lesson, from: 0.445, to: 0.575 });
+  if (lesson.id === 'read') return Object.freeze({ ...lesson, from: 0.575 });
+  return lesson;
+}));
+
+export function turnTutorialLessons(state) {
+  return state?.vehicleId === 'classic' && state.vehiclePerkUnlocked === true
+    ? GRADUATED_LESSONS : TURN_TUTORIAL_LESSONS;
+}
+
 export const TUTORIAL_GRADUATION_MESSAGE = 'Tutorial complete. Your lap is now the rival ahead. Catch it!';
 // Help never pretends to be the player's own steering: it ends at the line, and says so.
 export const TUTORIAL_GRADUATION_WITH_HELP_MESSAGE = 'Tutorial complete. Steering help ends here. Your lap is now the rival ahead. Catch it!';

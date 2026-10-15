@@ -1,4 +1,4 @@
-import { TURN_TUTORIAL_LESSONS, TUTORIAL_GRADUATION_MESSAGE } from './turn-tutorial-lessons.js';
+import { turnTutorialLessons, TUTORIAL_GRADUATION_MESSAGE } from './turn-tutorial-lessons.js';
 
 // The TURN TUTORIAL coach (#1132): runs the teaching lap's lessons on top of an
 // ordinary race. A lesson starts when the car reaches its stretch of COUNTRYSIDE, waits
@@ -45,7 +45,7 @@ function boostResource(input) {
 
 export function createTurnTutorialCoach({
   state,
-  lessons = TURN_TUTORIAL_LESSONS,
+  lessons = turnTutorialLessons(state),
   signals = () => readTutorialSignals(state),
   present = () => {},
   isHeld = () => false
