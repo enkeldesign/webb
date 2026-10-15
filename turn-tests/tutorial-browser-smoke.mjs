@@ -111,15 +111,32 @@ async function crossFinish(page) {
 }
 
 async function acceptLesson(page, id = null) {
-  const card = page.locator('.turn-tutorial-card[open]');
+  const card = page.locator('.turn-tutorial-card[data-ready="true"]');
   await card.waitFor();
   if (id) assert.equal(await card.getAttribute('data-lesson'), id);
   assert.equal(await card.getAttribute('aria-labelledby'), 'turnTutorialCardTitle');
-  assert.equal(await card.getAttribute('aria-describedby'), 'turnTutorialCardText');
-  await page.waitForFunction(() => document.activeElement === document.querySelector('.turn-tutorial-card[open] button'));
-  assert.equal(await page.locator('.turn-tutorial-voice').textContent(), '', 'The card has no duplicate live-region speech');
-  await card.locator('button').click();
-  await page.waitForFunction(() => !document.querySelector('.turn-tutorial-card[open]'));
+  const action = await card.getAttribute('data-resume-action');
+  if (action) {
+    assert.equal(await card.locator('button').count(), 0, 'Control lessons have no continuation button');
+    assert.equal(await page.locator('dialog.turn-tutorial-card').count(), 0, 'The lesson does not make the live controls modal/inert');
+    const secondary = page.locator(`#controls .is-tutorial-target:not(.drive-${action}-zone)`);
+    if (await secondary.count()) {
+      await secondary.first().click();
+      assert.equal(await card.count(), 1, 'A later action in the sequence cannot dismiss the lesson');
+    }
+    const control = page.locator(`.drive-${action}-zone`);
+    assert.match(await control.getAttribute('aria-describedby'), /turnTutorialResumeText/, 'The live control describes how to resume');
+    assert.equal(await control.evaluate((el) => Boolean(el.closest('[inert]'))), false);
+    const box = await control.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForFunction((zone) => !globalThis.__turnRacePause.paused
+      && document.querySelector('.drive-pad').dataset.driveZone === zone
+      && (zone !== 'boost' || (globalThis.__turnBoostActive && globalThis.__turnBoostCharge < 1)), action);
+    await page.mouse.up();
+  } else await card.locator('button').click();
+  await page.waitForFunction(() => !document.querySelector('.turn-tutorial-card[data-ready="true"]'));
+  assert.equal(await page.locator('.turn-tutorial-voice').textContent(), '', 'Resuming adds no duplicate announcement');
 }
 
 async function restartTutorial(page, first, paused = true) {
@@ -127,7 +144,7 @@ async function restartTutorial(page, first, paused = true) {
     await page.evaluate(() => globalThis.__turnRacePause.pause('player'));
     await page.locator('[data-pause-action="restart"]').click();
   } else await page.locator('#resetButton').click();
-  await page.locator('.turn-tutorial-card[open]').waitFor();
+  await page.locator('.turn-tutorial-card[data-ready="true"]').waitFor();
   assert.deepEqual(await page.evaluate(() => ({
     mode: globalThis.__turnRuntime.state.mode,
     paused: globalThis.__turnRacePause.paused,
@@ -206,10 +223,11 @@ try {
     await showLaunchCard(page);
     await page.locator('[data-tutorial-start]').click();
     await page.waitForFunction(() => globalThis.__turnRuntime.state.running);
-    await page.locator('.turn-tutorial-card[open]').waitFor();
+    await page.locator('.turn-tutorial-card[data-ready="true"]').waitFor();
     assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.mode), 'staged', 'DRIVE teaches before the first action');
-    await page.keyboard.press('ArrowUp');
-    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.mode), 'staged', 'A driving key cannot bypass the card');
+    await page.keyboard.press('KeyE');
+    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.mode), 'staged', 'The wrong control cannot bypass the lesson');
+    assert.equal(await page.locator('.turn-tutorial-card[data-ready="true"]').count(), 1);
     await acceptLesson(page, 'drive');
     await page.dispatchEvent('#controls', 'pointerdown');
     let current = await inspect(page);
@@ -259,8 +277,12 @@ try {
     });
     await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt')?.dataset.lesson === 'drift');
     assert.match(await page.locator('.turn-tutorial-prompt').textContent(), /Slide outward into LOCK/);
-    await page.keyboard.press('KeyQ');
-    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt').textContent === 'DRIFTKeep GAS on into the bend, then hold DRIFT through it.');
+    await page.locator('.turn-tutorial-card[data-ready="true"]').waitFor();
+    await page.keyboard.down('KeyQ');
+    assert.equal(await page.evaluate(() => globalThis.__turnRacePause.paused), false, 'The first Q releases the hold');
+    assert.equal(await page.evaluate(() => globalThis.__turnDriftHeld), true, 'That same Q is already drifting');
+    await page.keyboard.up('KeyQ');
+    await page.waitForFunction(() => document.querySelector('.turn-tutorial-prompt').textContent === 'DRIFTHold DRIFT through the turn.');
 
     // RESTART LAP from PAUSED over a lesson discards its old progress and card.
     await restartTutorial(page, 'drive');
@@ -328,6 +350,49 @@ try {
     assert.equal(current.active, false);
     assert.equal(current.policy, 'normal');
     assert.equal(current.card, false, 'A completed tutorial does not start again');
+  });
+
+  await run('real BOOST input from a teaching hold', { steeringHelp: true }, async (page) => {
+    await showLaunchCard(page);
+    await page.locator('[data-tutorial-start]').click();
+    await acceptLesson(page, 'drive');
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * 0.45)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(60);
+      state.speed = 60;
+      state.lapActive = true;
+    });
+    const card = page.locator('.turn-tutorial-card[data-ready="true"][data-lesson="boost"]');
+    await card.waitFor();
+    const frozen = () => page.evaluate(() => {
+      const { state } = globalThis.__turnRuntime;
+      return [state.position.x, state.position.z, state.speed, state.lapElapsed, globalThis.__turnBoostCharge];
+    });
+    const before = await frozen();
+    await page.waitForTimeout(200);
+    assert.deepEqual(await frozen(), before, 'The world, clock and resource freeze immediately');
+    assert.equal(await card.locator('button').count(), 0);
+    assert.equal(await page.locator('.drive-boost-zone').evaluate((el) => globalThis.getComputedStyle(el).animationName), 'none', 'Reduce Motion keeps a static target');
+    assert.equal(await page.locator('.turn-tutorial-dim').evaluate((el) => globalThis.getComputedStyle(el).opacity), '0.13');
+    await page.locator('.drive-reverse-bubble').focus();
+    await page.keyboard.down('Enter');
+    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.touchReverse), false, 'Native REVERSE cannot queue an action behind the lesson');
+    await page.keyboard.up('Enter');
+    await page.evaluate(() => document.activeElement.blur());
+    await page.keyboard.press('KeyQ');
+    assert.equal(await page.evaluate(() => globalThis.__turnRacePause.reason), 'lesson', 'DRIFT cannot release BOOST');
+    await page.keyboard.down('KeyE');
+    await page.waitForFunction(() => globalThis.__turnBoostActive && globalThis.__turnBoostCharge < 1);
+    assert.equal(await page.evaluate(() => globalThis.__turnRacePause.paused), false);
+    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.sessionSpeedCap), null, 'No capped teaching frame after release');
+    await page.waitForFunction((speed) => globalThis.__turnRuntime.state.speed > speed, before[2]);
+    await page.keyboard.up('KeyE');
+    assert.equal(await page.locator('.turn-tutorial-voice').textContent(), '');
+    await page.waitForTimeout(150);
+    assert.equal(await page.locator('.turn-tutorial-dim').evaluate((el) => globalThis.getComputedStyle(el).opacity), '0');
   });
 
   // Tutorial steering help (#1133): chosen in SETTINGS, it steers the teaching lap.

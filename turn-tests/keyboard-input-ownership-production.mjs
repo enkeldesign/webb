@@ -68,6 +68,10 @@ function createEnvironment() {
 
   const window = {
     document,
+    dispatchEvent(event) {
+      dispatchWindow(event.type, event);
+      return !event.defaultPrevented;
+    },
     addEventListener(name, listener) {
       const listeners = windowListeners.get(name) || [];
       listeners.push(listener);
@@ -92,10 +96,12 @@ function createEnvironment() {
     window,
     document,
     Element: FakeElement,
+    CustomEvent: globalThis.CustomEvent,
     MutationObserver: FakeMutationObserver
   };
 
   function dispatchWindow(name, event = {}) {
+    if (!event.type) event.type = name;
     for (const listener of windowListeners.get(name) || []) listener(event);
   }
 
@@ -295,6 +301,39 @@ harness.environment.document.hidden = true;
 harness.dispatchDocument('visibilitychange');
 assert.equal(state.touchBrake, false, 'Backgrounding the document must clear held BRAKE');
 harness.environment.document.hidden = false;
+
+// A nonmodal tutorial uses the same owner: the lesson gate runs before a held
+// key is recorded, and outer pauses cannot be released through that gate.
+const lessonPause = { paused: true, reason: 'lesson' };
+harness.environment.__turnRacePause = lessonPause;
+let requests = 0;
+const onLessonInput = (request) => {
+  requests += 1;
+  const input = request.detail.event;
+  if (input.code !== 'KeyW' || input.repeat) request.preventDefault();
+  else { lessonPause.paused = false; lessonPause.reason = null; }
+};
+harness.environment.window.addEventListener('turn:before-driving-input', onLessonInput);
+harness.dispatchWindow('keydown', keyEvent({ code: 'KeyS', key: 's' }));
+assert.equal(state.touchBrake, false, 'A wrong lesson action is not queued');
+assert.equal(controller.getHeldCount(), 0);
+harness.dispatchWindow('keydown', keyEvent({ code: 'KeyW', key: 'w', repeat: true }));
+assert.equal(lessonPause.paused, true, 'A key repeat is not a new lesson action');
+harness.dispatchWindow('keydown', keyEvent({ code: 'KeyW', key: 'w' }));
+assert.equal(lessonPause.paused, false);
+assert.equal(state.touchGas, true, 'The releasing key already applies GAS, without a second press');
+lessonPause.paused = true;
+lessonPause.reason = 'lesson';
+harness.dispatchWindow('turn:ui-state-change', { detail: { reason: 'race-paused' } });
+assert.equal(state.touchGas, false, 'A new nonmodal lesson releases every old held key');
+assert.equal(controller.getHeldCount(), 0);
+lessonPause.reason = 'player';
+const beforeOuterPause = requests;
+harness.dispatchWindow('keydown', keyEvent({ code: 'KeyW', key: 'w' }));
+assert.equal(requests, beforeOuterPause, 'An outer pause never reaches the lesson input gate');
+assert.equal(state.touchGas, false);
+harness.environment.window.removeEventListener('turn:before-driving-input', onLessonInput);
+delete harness.environment.__turnRacePause;
 
 controller.release();
 

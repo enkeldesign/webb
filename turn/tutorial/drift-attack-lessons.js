@@ -25,6 +25,7 @@ export const DRIFT_ATTACK_LESSONS = Object.freeze([
     // DRIFT ATTACK links a drift started the other way within 1.4 s of a bank
     // (scoring/drift-attack.js), and announces the higher COMBO.
     id: 'link',
+    targets: ['.drive-drift-zone'],
     title: 'LINK',
     prompt: 'Bank a slide, then drift the other way straight away. Linked drifts raise COMBO.',
     doneText: 'Linked. Keep switching sides to keep COMBO climbing.',

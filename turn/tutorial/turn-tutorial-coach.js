@@ -3,9 +3,7 @@ import { TURN_TUTORIAL_LESSONS, TUTORIAL_GRADUATION_MESSAGE } from './turn-tutor
 // The TURN TUTORIAL coach (#1132): runs the teaching lap's lessons on top of an
 // ordinary race. A lesson starts when the car reaches its stretch of COUNTRYSIDE, waits
 // for its action (no failure state: a missed lesson simply gives way to the next), and
-// presents a card before practice. The coach only reads game state; BOOST's driving
-// cap is the one value it writes, as state.sessionSpeedCap.
-const CAP_EASE_PER_SECOND = 12;
+// presents a card before practice. Lessons never impose a driving speed cap.
 const DONE_MESSAGE_SECONDS = 1.4;
 // Long enough to read, or hear, a lesson's doneText.
 const DONE_TEXT_SECONDS = 4;
@@ -42,7 +40,6 @@ function lessonAt(lessons, progress) {
 
 export function createTurnTutorialCoach({
   state,
-  maxSpeed,
   lessons = TURN_TUTORIAL_LESSONS,
   signals = () => readTutorialSignals(state),
   present = () => {},
@@ -114,11 +111,6 @@ export function createTurnTutorialCoach({
         doneFor = current.doneText ? DONE_TEXT_SECONDS : DONE_MESSAGE_SECONDS;
         release();
         show({ kind: 'done', id: current.id, title: current.title, text: current.doneText });
-      } else if (current.speedCap && zoned === current) {
-        // Ease toward the cap rather than braking the car at the zone edge.
-        const target = current.speedCap * maxSpeed;
-        const from = Number.isFinite(state.sessionSpeedCap) ? state.sessionSpeedCap : Math.max(target, input.speed);
-        state.sessionSpeedCap = Math.max(target, from - CAP_EASE_PER_SECOND * dt);
       } else {
         release();
       }

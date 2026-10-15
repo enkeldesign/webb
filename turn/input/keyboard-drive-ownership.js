@@ -50,18 +50,30 @@ export function createKeyboardDriveOwnership({
       && !dialog.closest?.('[hidden], dialog:not([open])'));
   }
 
-  function ownsGameplay() {
+  function ownsGameplay({ lessonInput = false } = {}) {
     const state = getState?.();
     if (!state?.running || documentRef?.hidden) return false;
     if (controlsRef?.hidden) return false;
+    const pause = environment.__turnRacePause;
+    if (pause?.paused && !(lessonInput && pause.reason === 'lesson')) return false;
     return !hasBlockingOverlay();
   }
 
   function accepts(event = {}) {
-    if (!ownsGameplay()) return false;
+    if (!ownsGameplay({ lessonInput: true })) return false;
     if (event.defaultPrevented || event.isComposing) return false;
     if (event.altKey || event.ctrlKey || event.metaKey) return false;
-    return !isKeyboardDriveInteractiveTarget(event.target, { environment });
+    if (isKeyboardDriveInteractiveTarget(event.target, { environment })) return false;
+    // Ask the lesson before a keyboard owner records the press (Q/E runs in
+    // capture). A valid first press releases the hold, then follows its usual path.
+    if (event.type === 'keydown' && typeof environment.CustomEvent === 'function') {
+      const request = new environment.CustomEvent('turn:before-driving-input', {
+        cancelable: true, detail: { event }
+      });
+      windowRef.dispatchEvent?.(request);
+      if (request.defaultPrevented) return false;
+    }
+    return environment.__turnRacePause?.paused !== true;
   }
 
   return Object.freeze({
