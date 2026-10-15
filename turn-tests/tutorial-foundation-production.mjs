@@ -424,11 +424,12 @@ test('the coach teaches DRIVE, DRIFT and BOOST by doing, with no failure state',
     input = { ...input, ...change };
     for (let t = 0; t < seconds; t += 0.1) coach.update(0.1);
   };
-  // #1166: DRIFT where COUNTRYSIDE's long curve begins (24% of the lap), BOOST after it.
+  // #1204: pause-and-act DRIFT starts at COUNTRYSIDE's long curve entry, BOOST after it.
   assert.deepEqual(TURN_TUTORIAL_LESSONS.map((lesson) => lesson.id), ['drive', 'drift', 'boost', 'read'],
     'DRIFT is taught before BOOST, and READ THE ROAD comes last');
   const zone = (id) => TURN_TUTORIAL_LESSONS.find((lesson) => lesson.id === id);
-  assert.ok(zone('drift').from < 0.24 && zone('drift').to > 0.24, 'DRIFT is said on the straight and runs into the long curve');
+  assert.ok(zone('drift').from >= 0.24 && zone('drift').from <= 0.25,
+    'DRIFT starts at the long curve entry, after the short straight');
   assert.ok(TURN_TUTORIAL_LESSONS.every((lesson) => !lesson.speedCap), 'Every lesson, including BOOST, keeps ordinary gameplay speed');
 
   run(1);
@@ -441,7 +442,7 @@ test('the coach teaches DRIVE, DRIFT and BOOST by doing, with no failure state',
   run(1, { progress: 0.15, gas: true });
   assert.equal(views.at(-1).kind, 'idle', 'No prompt between lessons');
 
-  run(0.5, { progress: 0.2 });
+  run(0.5, { progress: 0.25 });
   assert.equal(views.at(-1).id, 'drift');
   assert.equal(state.sessionSpeedCap, null, 'DRIFT uses ordinary driving speed');
   run(1, { progress: 0.39 });
@@ -584,10 +585,24 @@ test('pace notes count as available only when they can actually play', () => {
 
 test('a drifted bend completes DRIFT and separate session safety caps remain available', async () => {
   const state = { sessionSpeedCap: null };
-  let input = { progress: 0.3, speed: 40, gas: true, drift: true, boostActive: false, boostCharge: 0.4 };
-  const coach = createTurnTutorialCoach({ state, maxSpeed: 88, signals: () => input });
-  for (let t = 0; t < 2; t += 0.1) coach.update(0.1);
-  assert.equal(coach.outcome().drift, 'done');
+  const views = [];
+  let input = { progress: 0.17, speed: 40, gas: true, drift: true, boostActive: false, boostCharge: 0.4 };
+  const coach = createTurnTutorialCoach({ state, maxSpeed: 88, signals: () => input, present: (view) => views.push(view) });
+  for (const position of [0.17, 0.2, 0.239]) {
+    input = { ...input, progress: position };
+    for (let step = 0; step < 20; step += 1) coach.update(0.1);
+    assert.equal(coach.outcome().drift, 'pending', 'DRIFT cannot complete on the preceding straight');
+    assert.equal(views.length, 0, 'The short straight has no new lesson pause');
+    assert.equal(state.sessionSpeedCap, null, 'The car builds natural entry speed');
+  }
+  input = { ...input, progress: 0.25 };
+  coach.update(0.1);
+  assert.equal(views.at(-1).id, 'drift', 'DRIFT begins as the car enters the curve');
+  assert.equal(coach.outcome().drift, 'pending', 'Earlier DRIFT input does not count toward practice');
+  for (let step = 0; step < 12; step += 1) coach.update(0.1);
+  assert.equal(coach.outcome().drift, 'pending', 'The lesson still requires its full practice time');
+  for (let step = 0; step < 3; step += 1) coach.update(0.1);
+  assert.equal(coach.outcome().drift, 'done', 'Holding DRIFT in the curve completes the lesson');
   const physics = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8'));
   assert.match(physics, /Math\.min\(speedLimit, sessionSpeedCap\)/, 'Separate session safety caps still limit vehicle speed');
 });
