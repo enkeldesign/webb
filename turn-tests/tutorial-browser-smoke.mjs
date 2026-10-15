@@ -358,7 +358,7 @@ try {
     await acceptLesson(page, 'drive');
     await page.evaluate(() => {
       const { state, samples } = globalThis.__turnRuntime;
-      const sample = samples[Math.round(samples.length * 0.45)];
+      const sample = samples[Math.round(samples.length * 0.55)];
       state.position.copy(sample.point);
       state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
       state.velocity.copy(sample.tangent).multiplyScalar(60);

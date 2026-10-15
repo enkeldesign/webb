@@ -34,20 +34,24 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     // LOCK has no key (input/qe-drive-controls.js): keyboard players are told only DRIFT.
     keyboardPrompt: 'Hold DRIFT through the turn.',
     from: 0.245,
-    to: 0.4,
+    to: 0.53,
     targets: ['.drive-drift-zone'],
-    done: (progress) => progress.driftSeconds >= 1.5
+    // Time to feel a sustained slide, with more of the bend free before BOOST.
+    done: (progress) => progress.driftSeconds >= 4
   }),
   Object.freeze({
     // The real burst, without a teaching speed cap. Course rescue remains available.
     id: 'boost',
     title: 'BOOST',
-    prompt: 'Press BOOST and watch the meter empty.',
+    prompt: 'Hold BOOST. Feel the acceleration and watch the meter drop.',
     // BOOST starts the lap full, so the refill is said once it has been spent: still in
     // the long curve, where the next slide shows it.
     doneText: 'Drifting refills BOOST.',
-    from: 0.42,
-    to: 0.6,
+    // At maximum LEARNER CAR BOOST speed the next chime can start near 65%.
+    // A visible burst fits here; emptying the 5.61 s tank would miss that cue.
+    from: 0.53,
+    to: 0.63,
+    boostPracticeSeconds: 1,
     targets: ['.drive-boost-zone'],
     done: (progress) => progress.boostSpent
   }),
@@ -57,9 +61,10 @@ export const TURN_TUTORIAL_LESSONS = Object.freeze([
     // the cue plays, and the text says what it meant at that moment.
     id: 'read',
     title: 'READ THE ROAD',
-    prompt: 'Listen. A chime sweeps toward the next bend before you reach it.',
-    doneText: 'That chime was the bend ahead. Higher means tighter.',
-    from: 0.6,
+    // Explain pitch during the teaching hold, before the chime's short steering lead.
+    prompt: 'Listen. A chime sweeps toward the next bend. Higher means tighter.',
+    doneText: 'That chime was the bend ahead.',
+    from: 0.63,
     to: 0.8,
     needs: 'routeCues',
     done: (progress) => progress.cueHeard

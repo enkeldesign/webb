@@ -29,6 +29,7 @@ export function readTutorialSignals(state = globalThis.__turnRuntime?.state) {
     drift: globalThis.__turnDriftHeld === true,
     boostActive: globalThis.__turnBoostActive === true,
     boostCharge: Number.isFinite(globalThis.__turnBoostCharge) ? globalThis.__turnBoostCharge : 1,
+    boostOvercharge: Number(globalThis.__turnBoostOvercharge) || 0,
     routeCues: routeCuesOn(),
     paceNotes: Number(globalThis.__turnSwooshPaceNotes?.counts?.fired) || 0
   };
@@ -36,6 +37,10 @@ export function readTutorialSignals(state = globalThis.__turnRuntime?.state) {
 
 function lessonAt(lessons, progress) {
   return lessons.find((lesson) => progress >= lesson.from && progress < lesson.to) || null;
+}
+
+function boostResource(input) {
+  return Math.max(0, Number(input.boostCharge) || 0) + Math.max(0, Number(input.boostOvercharge) || 0);
 }
 
 export function createTurnTutorialCoach({
@@ -46,7 +51,7 @@ export function createTurnTutorialCoach({
   isHeld = () => false
 }) {
   const outcome = new Map(lessons.map((lesson) => [lesson.id, 'pending']));
-  const progress = { gasSeconds: 0, driftSeconds: 0, boostSpent: false, boostSeen: false, cueHeard: false, cuesBefore: 0 };
+  const progress = { gasSeconds: 0, driftSeconds: 0, boostSpent: false, boostSeconds: 0, boostAtStart: 0, cueHeard: false, cuesBefore: 0 };
   let current = null;
   let doneFor = 0;
   let finished = false;
@@ -59,13 +64,14 @@ export function createTurnTutorialCoach({
     progress.gasSeconds = 0;
     progress.driftSeconds = 0;
     progress.boostSpent = false;
-    progress.boostSeen = false;
+    progress.boostSeconds = 0;
     progress.cueHeard = false;
   }
 
   function begin(lesson, input) {
     current = lesson;
     resetProgress();
+    progress.boostAtStart = boostResource(input);
     progress.cuesBefore = input.paceNotes || 0;
     show({ kind: 'lesson', id: lesson.id, title: lesson.title, prompt: lesson.prompt, targets: lesson.targets });
   }
@@ -102,8 +108,12 @@ export function createTurnTutorialCoach({
     if (current && outcome.get(current.id) === 'pending') {
       if (input.gas) progress.gasSeconds += dt;
       if (input.drift) progress.driftSeconds += dt;
-      if (input.boostActive) progress.boostSeen = true;
-      if (progress.boostSeen && input.boostCharge <= 0.2) progress.boostSpent = true;
+      if (input.boostActive) progress.boostSeconds += dt;
+      const boostLeft = boostResource(input);
+      // A real burst, including OVERCHARGE on replays; a tiny remaining tank may
+      // empty sooner. Never count a press that did not consume any resource.
+      if (progress.boostSeconds > 0 && boostLeft < progress.boostAtStart
+        && (progress.boostSeconds >= current.boostPracticeSeconds || boostLeft === 0)) progress.boostSpent = true;
       if ((input.paceNotes || 0) > progress.cuesBefore) progress.cueHeard = true;
 
       if (current.done(progress)) {
