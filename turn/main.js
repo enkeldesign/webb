@@ -13,7 +13,7 @@ import { updateVehiclePhysicsState } from '/turn/vehicle/physics.js?build=202607
 import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from '/turn/race/game-state.js';
 import { createRaceSessionOrchestrator } from '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
 import { beginTimedLapState, completeLapState, updateLapProgressState } from '/turn/race/lap-system.js?build=20260720-r19';
-import { recordReplayFrame, replayFrameAt } from '/turn/race/replay-system.js';
+import { recordReplayFrame, replayFrameAt, tutorialRivalPlaybackTime } from '/turn/race/replay-system.js';
 import { raceClockFrozen, raceNow } from '/turn/race/race-clock.js';
 import { RIVAL_LIMIT, loadRivalsState, scheduleRivalsStateSave } from '/turn/race/rival-storage.js?build=20260720-r19';
 import { createTrackSpatialIndex } from '/turn/race/track-spatial-index.js?build=20260720-r19';
@@ -1168,7 +1168,7 @@ function placeCompetitorCars(dt) {
       continue;
     }
 
-    const frame = lapFrameAt(lap, state.lapElapsed);
+    const frame = lapFrameAt(lap, tutorialRivalPlaybackTime(lap, state.lapElapsed, state));
     if (!frame) {
       car.visible = false;
       continue;

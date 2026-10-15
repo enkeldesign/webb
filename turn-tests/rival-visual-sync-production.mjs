@@ -42,7 +42,11 @@ assert.match(syncSection, /void syncCompetitorVisual\(car, lap\)/, 'Only the exp
 assert.doesNotMatch(syncSection, /requestAnimationFrame|setAnimationLoop|setInterval/, 'Rival identity sync must create no recurring scheduler');
 
 const placementSection = section(main, 'function placeCompetitorCars(dt)', '\nfunction updateScene');
-assert.match(placementSection, /lapFrameAt\(lap, state\.lapElapsed\)/, 'The frame loop must continue sampling rival replay transforms');
+assert.match(placementSection, /lapFrameAt\(lap, tutorialRivalPlaybackTime\(lap, state\.lapElapsed, state\)\)/,
+  'Car placement alone applies the tutorial presentation lead to the recorded replay');
+const lapFrameSection = section(main, 'function lapFrameAt(', '\nfunction ');
+assert.match(lapFrameSection, /return replayFrameAt\(lap, time\)/,
+  'Official replay consumers, including HUD ranking, retain the unshifted lap time');
 assert.match(placementSection, /trackSampleAtProgress\(samples, frame\.p\)/, 'Rival elevation must remain frame-driven from replay progress');
 assert.match(placementSection, /car\.position\.set\(frame\.x, trackSurfaceY\(surfaceSample\), frame\.z\)/, 'Rival X, Z and road height must remain frame-driven');
 assert.match(placementSection, /car\.rotation\.x = trackPitch\(surfaceSample\)/, 'Rival road pitch must remain visual-frame work');

@@ -38,6 +38,7 @@ const {
 const { createTutorialSession } = await import('../turn/tutorial/tutorial-session.js');
 const { createTurnTutorialCoach, readTutorialSignals } = await import('../turn/tutorial/turn-tutorial-coach.js');
 const { TURN_TUTORIAL_LESSONS } = await import('../turn/tutorial/turn-tutorial-lessons.js');
+const { beginTutorialRivalLead, tutorialRivalPlaybackTime, replayFrameAt } = await import('../turn/race/replay-system.js');
 
 const tests = [];
 const test = (name, fn) => tests.push([name, fn]);
@@ -154,6 +155,58 @@ test('the teaching lap earns nothing, becomes a session ghost and graduates at t
     globalThis.removeEventListener('turn:session-graduated', onGraduated);
     delete globalThis.__turnRuntime;
   }
+});
+
+test('the tutorial rival gets a temporary visual lead without changing its official lap', () => {
+  const state = makeState({ sessionPolicy: tutorialLapPolicy(), recording: Array.from({ length: 61 }, (_, i) => ({
+    t: i * 0.5, x: i * 10, z: 0, h: Math.PI / 2, p: i / 60
+  })) });
+  const onGraduated = () => assert.equal(beginTutorialRivalLead(state.competitorLaps[0], state), true);
+  globalThis.addEventListener('turn:session-graduated', onGraduated);
+  let finish;
+  try { finish = finishLap(state, 60_000); }
+  finally { globalThis.removeEventListener('turn:session-graduated', onGraduated); }
+  const rival = state.competitorLaps[0];
+  const original = JSON.stringify(rival);
+  const officialStart = replayFrameAt(rival, 0);
+  assert.equal(officialStart.x, 0, 'The official recording still starts on the line');
+  const firstTime = tutorialRivalPlaybackTime(rival, 0, state);
+  assert.ok(replayFrameAt(rival, firstTime).x >= 47, 'The first visible pose has a modest head start');
+  assert.equal(tutorialRivalPlaybackTime(rival, 0, state), firstTime, 'Paused race time freezes the lead too');
+  let previous = firstTime;
+  for (let time = 0.05; time <= 12; time += 0.05) {
+    const next = tutorialRivalPlaybackTime(rival, time, state);
+    assert.ok(next > previous && next - previous <= 0.051, 'The handoff never reverses or jumps forward');
+    previous = next;
+  }
+  assert.equal(tutorialRivalPlaybackTime(rival, 12, state), 12, 'After the handoff, playback is exactly the original lap');
+  assert.equal(JSON.stringify(rival), original, 'No presentation metadata or changed frames enter the lap');
+  assert.equal(state.bestTime, 60);
+  assert.equal(rival.time, 60);
+  assert.equal(finish.result.ranked, false);
+  assert.equal(finish.ghostSaves, 0);
+  assert.deepEqual(replayFrameAt(rival, 0), officialStart);
+
+  for (const change of [{ lap: 3 }, { lap: 1 }, { running: false }]) {
+    state.lap = 1;
+    state.running = true;
+    assert.equal(beginTutorialRivalLead(rival, state), true);
+    state.lap = 2;
+    assert.ok(tutorialRivalPlaybackTime(rival, 0, state) > 0);
+    Object.assign(state, change);
+    assert.equal(tutorialRivalPlaybackTime(rival, 1, state), 1, 'A later lap, restart or leave ends the lead');
+    Object.assign(state, { lap: 2, running: true });
+    assert.equal(tutorialRivalPlaybackTime(rival, 1, state), 1, 'The ended lead cannot reactivate');
+  }
+  const unarmed = { ...rival };
+  assert.equal(tutorialRivalPlaybackTime(unarmed, 1, state), 1, 'Other session-only rivals get no automatic lead');
+  assert.equal(beginTutorialRivalLead({ ...rival, sessionOnly: false }, state), false, 'Stored rivals cannot be armed');
+});
+
+test('TURN graduation describes the last lap as a rival to beat', async () => {
+  const { TUTORIAL_GRADUATION_MESSAGE, TUTORIAL_GRADUATION_WITH_HELP_MESSAGE } = await import('../turn/tutorial/turn-tutorial-lessons.js');
+  assert.equal(TUTORIAL_GRADUATION_MESSAGE, 'Tutorial complete! The ghost of your last lap is now your rival. Can you beat it?');
+  assert.equal(TUTORIAL_GRADUATION_WITH_HELP_MESSAGE, 'Tutorial complete! Steering help ends here. The ghost of your last lap is now your rival. Can you beat it?');
 });
 
 test('a replay graduates into a sandbox: ordinary racing, no stored rivals written', () => {

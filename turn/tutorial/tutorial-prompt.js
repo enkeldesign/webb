@@ -1,6 +1,7 @@
 import { LEARNING_FEEDBACK_READY_EVENT } from '../achievements/learning-progress.js?revision=r1-learning-achievements';
 import { KEYBOARD_DRIVE_BINDINGS, keyboardDriveActionForEvent } from '../input/keyboard-driving-controls.js';
 import { QE_DRIVE_BINDINGS, qeDriveZoneForEvent } from '../input/qe-drive-controls.js';
+import { beginTutorialRivalLead } from '../race/replay-system.js';
 import { setLiveAnnouncement } from '../ui/race-announcements.js';
 import { estimatedSpeechMs, holdSpeechFloor, releaseSpeechFloor, speechFloorWait } from '../ui/speech-floor.js';
 import { applyCourseRescue } from './course-rescue.js';
@@ -393,8 +394,8 @@ export function createTutorialPrompt(parent = document.body) {
       title.textContent = view.title;
       text.textContent = view.text;
     } else if (view.kind === 'graduated') {
-      title.textContent = 'TUTORIAL COMPLETE';
-      text.textContent = view.message.replace(/^Tutorial complete\.\s*/, '');
+      title.textContent = view.message.startsWith('Tutorial complete!') ? 'TUTORIAL COMPLETE!' : 'TUTORIAL COMPLETE';
+      text.textContent = view.message.replace(/^Tutorial complete[.!]\s*/, '');
     }
     if (view.kind === 'lesson' && view.hold !== false && !acknowledged.has(view.id)) {
       if (pendingCard !== view.id) {
@@ -410,6 +411,7 @@ export function createTutorialPrompt(parent = document.body) {
     } else {
       closeCard();
       unsaid = view.kind === 'lesson' && view.hold !== false ? ''
+        : view.kind === 'graduated' ? view.message
         : `${title.textContent.replace(/ ✓$/, ' done')}. ${text.textContent}`;
     }
     sayWhenFree();
@@ -564,6 +566,7 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
   function onGraduated() {
     graduated = true;
     state.sessionSteeringTarget = null;
+    beginTutorialRivalLead(state.competitorLaps[0], state);
     coach.graduate();
     graduationLeft = GRADUATION_SECONDS;
   }
