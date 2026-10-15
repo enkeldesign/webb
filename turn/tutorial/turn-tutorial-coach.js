@@ -51,7 +51,7 @@ export function createTurnTutorialCoach({
   isHeld = () => false
 }) {
   const outcome = new Map(lessons.map((lesson) => [lesson.id, 'pending']));
-  const progress = { gasSeconds: 0, driftSeconds: 0, boostSpent: false, boostSeconds: 0, boostAtStart: 0, cueHeard: false, cuesBefore: 0 };
+  const progress = { gasSeconds: 0, driftSeconds: 0, boostSpent: false, boostSeconds: 0, boostPeak: 0, cueHeard: false, cuesBefore: 0 };
   let current = null;
   let doneFor = 0;
   let finished = false;
@@ -71,7 +71,7 @@ export function createTurnTutorialCoach({
   function begin(lesson, input) {
     current = lesson;
     resetProgress();
-    progress.boostAtStart = boostResource(input);
+    progress.boostPeak = boostResource(input);
     progress.cuesBefore = input.paceNotes || 0;
     show({ kind: 'lesson', id: lesson.id, title: lesson.title, prompt: lesson.prompt, targets: lesson.targets });
   }
@@ -110,9 +110,12 @@ export function createTurnTutorialCoach({
       if (input.drift) progress.driftSeconds += dt;
       if (input.boostActive) progress.boostSeconds += dt;
       const boostLeft = boostResource(input);
+      // An empty/partial tank may refill during practice. Measure use from the
+      // fullest level seen in this lesson, rather than its possibly empty entry.
+      progress.boostPeak = Math.max(progress.boostPeak, boostLeft);
       // A real burst, including OVERCHARGE on replays; a tiny remaining tank may
       // empty sooner. Never count a press that did not consume any resource.
-      if (progress.boostSeconds > 0 && boostLeft < progress.boostAtStart
+      if (progress.boostSeconds > 0 && boostLeft < progress.boostPeak
         && (progress.boostSeconds >= current.boostPracticeSeconds || boostLeft === 0)) progress.boostSpent = true;
       if ((input.paceNotes || 0) > progress.cuesBefore) progress.cueHeard = true;
 

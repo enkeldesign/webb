@@ -655,6 +655,20 @@ test('the BOOST burst counts overcharge and a small remaining tank without alter
   }
 });
 
+test('BOOST practice can use a refill after entering with an empty or partial tank', () => {
+  for (const charge of [0, 0.1]) {
+    let input = { progress: 0.55, boostCharge: charge, boostActive: false };
+    const coach = createTurnTutorialCoach({ state: {}, signals: () => input });
+    coach.update(0.1);
+    input = { ...input, boostCharge: 0.8 };
+    coach.update(0.1);
+    assert.equal(coach.outcome().boost, 'pending', 'Refilling alone does not complete BOOST');
+    input = { ...input, boostCharge: 0.6, boostActive: true };
+    for (let step = 0; step < 11; step += 1) coach.update(0.1);
+    assert.equal(coach.outcome().boost, 'done', 'The genuine burst counts even above the lesson-entry charge');
+  }
+});
+
 test('Tutorial steering help aims at the road ahead and the player still steers', async () => {
   const help = await import('../turn/tutorial/steering-help.js');
   const { updateMotionInputState } = await import('../turn/input/motion.js');
