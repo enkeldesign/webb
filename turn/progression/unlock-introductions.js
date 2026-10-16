@@ -517,10 +517,20 @@ export function installUnlockIntroductions({
   watchHints();
   schedule();
 
-  // UNLOCK DRIFT ATTACK, SHIFT and FLOW (their sheets), then PAINTJOB (a GARAGE hint).
+  // UNLOCK DRIFT ATTACK, SHIFT and FLOW (their sheets), then PAINTJOB (a GARAGE hint),
+  // and ALL CARS's hint again: an admin profile has usually used ALL CARS long ago (#1168).
   const adminButtons = () => [...Object.keys(UNLOCK_INTRODUCTIONS), ...Object.keys(UNLOCK_HINTS)]
     .map((id) => `<button type="button" data-admin-unlock="${id}">UNLOCK ${(UNLOCK_INTRODUCTIONS[id] || UNLOCK_HINTS[id]).title}</button>`)
+    .concat(`<button type="button" data-admin-hint="${ALL_CARS_HINT}">SHOW ALL CARS HINT</button>`)
     .join('');
+  const adminButton = (event) => event.target.closest?.('[data-admin-unlock], [data-admin-hint]');
+  function replayAdmin(button) {
+    // Pointed out again on the next GARAGE the player opens, then its calm pulse until used.
+    if (button.dataset.adminHint) {
+      queue.armHint(button.dataset.adminHint);
+      watchHints();
+    } else replay(button.dataset.adminUnlock);
+  }
 
   // Admin profiles have every reward already: these replay an unlock to test it.
   function installAdminRow() {
@@ -533,9 +543,8 @@ export function installUnlockIntroductions({
     row.innerHTML = `<h2 id="roadbookAdminTitle">ADMIN</h2><div>${adminButtons()}</div>`;
     list.after(row);
     row.addEventListener('click', (event) => {
-      const id = event.target.closest?.('[data-admin-unlock]')?.dataset.adminUnlock;
-      if (!id) return;
-      replay(id);
+      const button = adminButton(event);
+      if (button) replayAdmin(button);
     });
     return row;
   }
@@ -552,13 +561,13 @@ export function installUnlockIntroductions({
       const group = documentRef.createElement('div');
       group.className = 'm8-admin-unlocks';
       group.setAttribute('role', 'group');
-      group.setAttribute('aria-label', 'Replay an unlock');
+      group.setAttribute('aria-label', 'Replay an unlock or hint');
       group.innerHTML = adminButtons();
       group.addEventListener('click', (event) => {
-        const id = event.target.closest?.('[data-admin-unlock]')?.dataset.adminUnlock;
-        if (!id) return;
+        const button = adminButton(event);
+        if (!button) return;
         group.closest('dialog')?.close?.();
-        replay(id);
+        replayAdmin(button);
       });
       card.append(group);
       const settings = card.closest('dialog');

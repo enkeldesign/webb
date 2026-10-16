@@ -666,8 +666,27 @@ try {
   // #1168 and #1167: the first GARAGE the player opens points at ALL CARS; after SHIFT
   // unlocks, the first RACE on a car with no SHIFT setup points at ACTIVATE SHIFT.
   await run('GARAGE points at ALL CARS, then RACE at ACTIVATE SHIFT', { rewards: ['shift'], introductions: true }, async (page) => {
+    // With motion, as most players see it: the pulse itself has to be drawn, not only
+    // its class set (#1168).
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
     await page.waitForFunction(() => document.querySelector('.garage-all-cars-button')?.classList.contains('is-introduced'), null, { timeout: 60000 });
+    // The ring around ALL CARS at its widest over `ms`, as the cascade resolves it:
+    // a declaration that outranks the animation leaves nothing drawn. ALL CARS is a
+    // coloured control whose box-shadow is !important (controls.css), which hid both
+    // pulses on phones until r458.
+    const ringPeak = (ms) => page.locator('.garage-all-cars-button').evaluate(async (button, ms) => {
+      let peak = 0;
+      const end = globalThis.performance.now() + ms;
+      while (globalThis.performance.now() < end) {
+        const style = globalThis.getComputedStyle(button);
+        if (style.outlineStyle !== 'none') peak = Math.max(peak, parseFloat(style.outlineWidth) || 0);
+        await new Promise((resolve) => globalThis.requestAnimationFrame(resolve));
+      }
+      return peak;
+    }, ms);
+    const pointing = await ringPeak(2400);
+    assert.ok(pointing >= 5, `The first pointing-out draws a ring around ALL CARS (${pointing}px)`);
     await page.waitForFunction(() => document.querySelector('#turnGarage .m8-unlock-hint-status')?.textContent
       === 'New in GARAGE: ALL CARS, every car and what unlocks it.', null, { timeout: 5000 });
     // #1189: said once, then a calm pulse until ALL CARS is used.
@@ -678,6 +697,9 @@ try {
     });
     assert.deepEqual(await queueState(), { armed: true, pointedOut: true, suggested: true }, 'ALL CARS keeps a calm pulse until it is used');
     await page.waitForFunction(() => !document.querySelector('.garage-all-cars-button').classList.contains('is-introduced'));
+    const calm = await ringPeak(3000);
+    assert.ok(calm >= 2 && calm < pointing, `Then a calmer ring, still drawn (${calm}px)`);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     assert.equal(await page.locator('.garage-all-cars-button').evaluate((button) => globalThis.getComputedStyle(button).animationName),
       'none', 'Reduce Motion stays static after the first introduction ends');
     await page.emulateMedia({ forcedColors: 'active', reducedMotion: 'no-preference' });
@@ -791,7 +813,7 @@ try {
 
   await run('admin UNLOCK replays an introduction', { driftAttack: true, admin: true }, async (page) => {
     const admin = page.locator('.roadbook-admin');
-    assert.deepEqual(await admin.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PAINTJOB']);
+    assert.deepEqual(await admin.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PAINTJOB', 'SHOW ALL CARS HINT']);
     await admin.locator('[data-admin-unlock="drift-attack"]').click();
     await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open);
     const sheet = page.locator('.m8-unlock-sheet');
@@ -819,6 +841,21 @@ try {
       === 'New in GARAGE: PAINT, below the car’s name.', null, { timeout: 5000 });
   });
 
+  // An admin profile has long since used ALL CARS: SHOW ALL CARS HINT arms its hint again,
+  // pointed out on the next GARAGE the player opens and then pulsing until used (#1168).
+  await run('admin SHOW ALL CARS HINT points it out again', { admin: true }, async (page) => {
+    const queueState = () => page.evaluate(() => {
+      const queue = globalThis.__turnNextHome.unlockIntroductions.queue;
+      return { armed: queue.hasHint('garage-all-cars'), pointedOut: queue.pointedOut('garage-all-cars') };
+    });
+    assert.deepEqual(await queueState(), { armed: false, pointedOut: false }, 'Not armed in automated runs by itself');
+    await page.locator('.roadbook-admin [data-admin-hint="garage-all-cars"]').click();
+    assert.deepEqual(await queueState(), { armed: true, pointedOut: false });
+    await page.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
+    await page.waitForFunction(() => document.querySelector('.garage-all-cars-button')?.classList.contains('is-introduced'), null, { timeout: 60000 });
+    assert.deepEqual(await queueState(), { armed: true, pointedOut: true }, 'Pointed out, then the calm pulse until used');
+  });
+
   // The same buttons in SETTINGS, on the Admin card with the other admin tools.
   await run('admin UNLOCK SHIFT from SETTINGS', { admin: true }, async (page) => {
     // SETTINGS, from the ☰ menu sheet as a player reaches it.
@@ -826,7 +863,7 @@ try {
     await page.locator('.m8-home-settings').click();
     await page.waitForFunction(() => document.querySelector('.m8-settings-dialog')?.open);
     const unlocks = page.locator('[data-turn-route-test-hud-setting] .m8-admin-unlocks');
-    assert.deepEqual(await unlocks.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PAINTJOB']);
+    assert.deepEqual(await unlocks.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PAINTJOB', 'SHOW ALL CARS HINT']);
     await unlocks.locator('[data-admin-unlock="shift"]').click();
     assert.equal(await page.evaluate(() => document.querySelector('.m8-settings-dialog').open), false,
       'SETTINGS closes so the unlock plays on Home');

@@ -1252,9 +1252,17 @@ test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT onc
   assert.match(source, /if \(!untilUsed \|\| !queue\.hasHint\(hint\) \|\| !event\.target\?\.closest\?\.\(untilUsed\)\) continue;\n\s*queue\.consumeHint\(hint\);/,
     'Using it ends the pulse for good');
   const focusSource = await read('../turn/garage/garage-focus.js');
-  assert.match(focusSource, /#turnGarage \.is-suggested:not\(\.is-introduced\) \{ animation: turn-garage-suggest 2\.4s ease-in-out infinite; \}/);
-  assert.match(focusSource, /prefers-reduced-motion: reduce\) \{\s*#turnGarage \.is-introduced,\s*#turnGarage \.is-suggested:not\(\.is-introduced\) \{\s*animation: none;/,
+  assert.match(focusSource, /#turnGarage \.is-suggested:not\(\.is-introduced, :focus-visible\) \{ animation: turn-garage-suggest 2\.4s ease-in-out infinite; \}/);
+  assert.match(focusSource, /prefers-reduced-motion: reduce\) \{\s*#turnGarage \.is-introduced:not\(:focus-visible\),\s*#turnGarage \.is-suggested:not\(\.is-introduced, :focus-visible\) \{\s*animation: none;/,
     'Reduced Motion: a steady outline instead');
+  // ALL CARS is a coloured control: controls.css keeps its box-shadow with !important,
+  // which outranks any animation, so its pulses are drawn as an outline (#1168).
+  const pulses = focusSource.match(/@keyframes turn-garage-(?:point|suggest) \{[\s\S]*?\n {4}\}/g) || [];
+  assert.equal(pulses.length, 2, 'The pointing-out and the calm pulse');
+  for (const pulse of pulses) {
+    assert.match(pulse, /50% \{ outline: var\(--turn-space-[12]\) solid /);
+    assert.doesNotMatch(pulse, /box-shadow/, 'A box-shadow pulse is never drawn on a coloured control');
+  }
   assert.match(source, /if \(ownVisit && \(points\.length \|\| pointedGarage === garage \|\| garageOpenedForCar\(garage\)\)\) continue;/,
     'Only on a visit the player opened themselves, with nothing else to point out');
   assert.match(source, /selector: '\.garage-all-cars-button, #garageCatalogTitle'/,
