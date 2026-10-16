@@ -278,11 +278,14 @@ export function updateRaceCameraState({
 
   const targetFov = resolveRaceCameraFov({ speedRatio, speedResponsiveCamera, reducedMotion });
   // The kick sits on top of the eased speed FOV and is taken off again before easing,
-  // so it never builds into the speed cue.
+  // so it never builds into the speed cue. Only from the FOV set here last frame:
+  // spectating and the track intro set their own FOV in between, with no kick in it.
   const kick = resolveCameraKickFov({ kick: state.cameraKickFov, reducedMotion });
-  const speedFov = camera.fov - finiteNumber(state.cameraKickApplied, 0);
+  const applied = camera.fov === state.cameraKickFovSet ? finiteNumber(state.cameraKickApplied, 0) : 0;
+  const speedFov = camera.fov - applied;
   camera.fov = lerp(speedFov, targetFov, Math.min(1, dt * 4.5)) + kick;
   state.cameraKickApplied = kick;
+  state.cameraKickFovSet = camera.fov;
   camera.updateProjectionMatrix();
 }
 

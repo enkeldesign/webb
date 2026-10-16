@@ -200,13 +200,15 @@ assert.equal(low.group.children.length, 2);
 assert.equal(resolveCameraKickFov({ kick: 4, reducedMotion: true }), 0);
 assert.equal(resolveCameraKickFov({ kick: 4, reducedMotion: false }), 4);
 assert.equal(resolveCameraKickFov({ kick: 40, reducedMotion: false }), 6, 'Never more than 6°');
-function cameraRun({ kicks, reducedMotion }) {
+function cameraRun({ kicks, reducedMotion, setBy = {} }) {
   const camera = new THREE.PerspectiveCamera(68, 1.5, 0.1, 900);
   const cameraState = {
     ...race(), speed: 30, heading: 0, nearestTrackIndex: 0, driftCameraYawOffset: 0, sensorMode: false
   };
   const fovs = [];
-  for (const kick of kicks) {
+  for (const [frame, kick] of kicks.entries()) {
+    // Another owner of the FOV for a while (spectating), then the race camera again.
+    if (setBy[frame] !== undefined) camera.fov = setBy[frame];
     cameraState.cameraKickFov = kick;
     updateRaceCameraState({
       state: cameraState,
@@ -228,6 +230,11 @@ const steady = cameraRun({ kicks: Array(240).fill(0), reducedMotion: false });
 const kicked = cameraRun({ kicks: [...Array(120).fill(0), ...Array(20).fill(5), ...Array(100).fill(0)], reducedMotion: false });
 assert.ok(kicked[130] > steady[130] + 4, 'The kick widens the view on top of the speed FOV');
 assert.ok(Math.abs(kicked.at(-1) - steady.at(-1)) < 1e-9, 'and leaves nothing behind once it ends');
+// Spectating takes the FOV (72°) mid-kick and gives it back: the race camera eases on
+// from 72°, without taking the old kick off a FOV that no longer has it (#1213).
+const handedBack = cameraRun({ kicks: [...Array(120).fill(0), ...Array(20).fill(5), ...Array(100).fill(0)], reducedMotion: false, setBy: { 140: 72 } });
+assert.ok(Math.abs(handedBack[140] - 72) < 0.5, `Easing on from spectating's 72°, no jump (${handedBack[140].toFixed(2)}°)`);
+assert.ok(Math.abs(handedBack.at(-1) - steady.at(-1)) < 0.05, 'and back to the speed FOV');
 const still = cameraRun({ kicks: [...Array(120).fill(0), ...Array(20).fill(5), ...Array(100).fill(0)], reducedMotion: true });
 assert.ok(still.every((fov) => Math.abs(fov - 68) < 1e-6), 'Reduced Motion keeps the base view, through a burst too');
 
