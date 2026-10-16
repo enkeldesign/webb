@@ -12,8 +12,9 @@
 // BUILD's headroom (#1212): the share of OVERCHARGE taken back as it starts (within the
 // 25–50% asked for), then the rise it asks for. OVERCHARGE is a share of its meter, 0–1
 // (input/boost-overcharge.js), which a qualifying slide fills in 1.8 s. The rise is the
-// 0.3 BUILD always asked for, now counted from where it starts: about half a second of
-// sliding, and from a full meter taken back to 0.6 it ends before the peak.
+// 0.3 BUILD always asked for, now counted from the lowest point since BUILD began: about
+// half a second of sliding. From a full meter taken back to 0.6 it ends before the peak,
+// and after OVERCHARGE leaked away it is 0.3 from empty, as before.
 export const BUILD_OVERCHARGE_TRIM = 0.4;
 export const BUILD_OVERCHARGE_RISE = 0.3;
 
@@ -48,7 +49,7 @@ export const DRIFT_ATTACK_LESSONS = Object.freeze([
     title: 'BUILD',
     prompt: 'With BOOST full, keep holding DRIFT. OVERCHARGE builds past the end of the BOOST meter.',
     trimOvercharge: BUILD_OVERCHARGE_TRIM,
-    done: (progress) => progress.overcharge >= progress.overchargeAtStart + BUILD_OVERCHARGE_RISE
+    done: (progress) => progress.overcharge >= progress.overchargeLow + BUILD_OVERCHARGE_RISE
   }),
   Object.freeze({
     id: 'catch',

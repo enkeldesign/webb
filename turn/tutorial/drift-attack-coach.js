@@ -58,7 +58,7 @@ export function createDriftAttackCoach({
     input.overcharge = overcharge;
     lastOvercharge = overcharge;
     Object.assign(progress, {
-      banks: 0, links: 0, overcharge, overchargeAtStart: overcharge, caught: false, caughtSeconds: 0, spentAmount: 0, spent: false
+      banks: 0, links: 0, overcharge, overchargeLow: overcharge, caught: false, caughtSeconds: 0, spentAmount: 0, spent: false
     });
     present({
       kind: 'lesson',
@@ -104,6 +104,7 @@ export function createDriftAttackCoach({
     progress.banks = input.banks - banksAtStart;
     progress.links = input.links - linksAtStart;
     progress.overcharge = input.overcharge;
+    progress.overchargeLow = Math.min(progress.overchargeLow, input.overcharge);
     if (input.caught) {
       progress.caught = true;
       progress.caughtSeconds += dt;

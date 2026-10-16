@@ -12,6 +12,7 @@ import {
   boostOverchargeVisualWidth,
   qualifiesForBoostOvercharge,
   resolveBoostSlipAngle,
+  takeBackBoostOvercharge,
   transferBoostAcrossShift
 } from '../input/boost-overcharge.js?revision=r219-overcharge-state';
 import {
@@ -702,17 +703,18 @@ function installGameplayUi() {
   globalThis.__turnRefillBoost = refillBoost;
 
   // DRIFT ATTACK TUTORIAL's BUILD (#1212): take back part of the OVERCHARGE already
-  // built, so BUILD is a real stretch of drifting before CATCH. Only that lesson calls
-  // it (tutorial/drift-attack-coach.js); ordinary racing never does.
+  // built, so BUILD is a real stretch of drifting before CATCH, and let what is left
+  // build again. Only that lesson calls it (tutorial/drift-attack-coach.js); ordinary
+  // racing never does.
   function trimBoostOvercharge(share = 0) {
-    const fraction = Math.min(1, Math.max(0, Number(share) || 0));
-    if (!(boostOvercharge > 0) || !fraction) return 0;
-    const removed = boostOvercharge * fraction;
-    boostOvercharge -= removed;
+    const taken = takeBackBoostOvercharge({ amount: boostOvercharge, phase: boostOverchargePhase, share });
+    if (!taken.removed) return 0;
+    boostOvercharge = taken.amount;
+    boostOverchargePhase = taken.phase;
     globalThis.__turnBoostOvercharge = boostOvercharge;
     boostVisualDirty = true;
     lastBoostVisualAt = -Infinity;
-    return removed;
+    return taken.removed;
   }
   globalThis.__turnTrimBoostOvercharge = trimBoostOvercharge;
 

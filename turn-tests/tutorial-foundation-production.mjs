@@ -861,12 +861,25 @@ test('DRIFT ATTACK BUILD starts with headroom, so OVERCHARGE is visibly built be
   const lessons = await import('../turn/tutorial/drift-attack-lessons.js');
   assert.ok(lessons.BUILD_OVERCHARGE_TRIM >= 0.25 && lessons.BUILD_OVERCHARGE_TRIM <= 0.5, 'Takes back 25–50%');
   const model = await import('../turn/input/boost-overcharge.js');
+  const { BUILDING, DECAYING } = model.BOOST_OVERCHARGE_PHASE;
   const build = lessons.DRIFT_ATTACK_LESSONS.findIndex((lesson) => lesson.id === 'build');
   const trims = [];
-  // OVERCHARGE as the game keeps it: a share of its meter, 0–1. SCORE and LINK can
-  // leave it full.
+  // OVERCHARGE as the game keeps it: a share of its meter, 0–1, and its phase. SCORE and
+  // LINK can leave it full, past its peak or let go of: decaying either way.
   let overcharge = 1;
+  let phase = DECAYING;
   const input = () => ({ speed: 40, overcharge, caught: false, boosting: false, banks: 1, links: 1 });
+  // One 60 fps frame of the game's own model: a qualifying slide, DRIFT held before the
+  // slide qualifies, or no control at all.
+  const frame = (zone, qualifyingDrift) => {
+    ({ amount: overcharge, phase } = model.advanceBoostOvercharge({ amount: overcharge, phase, dt: 1 / 60, zone, qualifyingDrift }));
+  };
+  // The game's trim (ui/gameplay-controls.js takes OVERCHARGE back through this).
+  const trimOvercharge = (share) => {
+    let removed;
+    ({ amount: overcharge, phase, removed } = model.takeBackBoostOvercharge({ amount: overcharge, phase, share }));
+    return removed;
+  };
   const views = [];
   const coach = createDriftAttackCoach({
     lessons: lessons.DRIFT_ATTACK_LESSONS.slice(build),
@@ -874,34 +887,62 @@ test('DRIFT ATTACK BUILD starts with headroom, so OVERCHARGE is visibly built be
     present: (view) => views.push(view),
     trimOvercharge: (share) => {
       trims.push(share);
-      const removed = overcharge * share;
-      overcharge -= removed;
-      return removed;
+      return trimOvercharge(share);
     }
   });
   coach.update(0.016);
   assert.equal(views.at(-1).id, 'build');
   assert.deepEqual(trims, [lessons.BUILD_OVERCHARGE_TRIM], 'BUILD takes back part of a full OVERCHARGE as it begins');
   assert.ok(Math.abs(overcharge - 0.6) < 1e-9);
+  assert.equal(phase, BUILDING, 'What is left builds again under DRIFT (CODEX on #1215)');
   coach.update(0.016);
   assert.equal(coach.lesson, 'build', 'Still above the old 0.3 mark, BUILD does not end at once');
+  // DRIFT pressed to continue: the slide takes a moment to qualify, and OVERCHARGE leaks
+  // a little meanwhile without giving up building.
+  for (let held = 0; held < 0.3; held += 1 / 60) {
+    frame('drift', false);
+    coach.update(1 / 60);
+  }
+  assert.equal(phase, BUILDING);
   // Built by the game's own model, frame by frame, as a qualifying slide builds it
   // (CODEX on #1215: the rise is a share of the meter, not seconds).
-  let phase = model.BOOST_OVERCHARGE_PHASE.BUILDING;
   let sliding = 0;
   while (coach.lesson === 'build' && sliding < 5) {
-    ({ amount: overcharge, phase } = model.advanceBoostOvercharge({ amount: overcharge, phase, dt: 1 / 60, zone: 'drift', qualifyingDrift: true }));
+    frame('drift', true);
     sliding += 1 / 60;
     coach.update(1 / 60);
   }
   assert.equal(coach.lesson, 'catch', 'A real rise ends BUILD, and CATCH follows');
   assert.ok(sliding >= 0.45 && sliding <= 0.7, `About half a second of sliding builds it (${sliding.toFixed(2)} s)`);
-  assert.ok(overcharge < 1 && phase === model.BOOST_OVERCHARGE_PHASE.BUILDING, 'It ends while OVERCHARGE is still building, before the peak');
+  assert.ok(overcharge < 1 && phase === BUILDING, 'It ends while OVERCHARGE is still building, before the peak');
+  const leftDecaying = model.advanceBoostOvercharge({ amount: 0.6, phase: DECAYING, dt: 0.5, zone: 'drift', qualifyingDrift: true });
+  assert.ok(leftDecaying.amount < 0.6, 'Left decaying, the same slide would only have shrunk it');
   // From any amount, the rise BUILD asks for is there to build before the meter peaks.
   for (let before = 0.05; before <= 1; before += 0.05) {
     const start = before * (1 - lessons.BUILD_OVERCHARGE_TRIM);
     assert.ok(start + lessons.BUILD_OVERCHARGE_RISE < 1, `Reachable from ${before.toFixed(2)}`);
   }
+
+  // Letting go of DRIFT during BUILD commits OVERCHARGE to leaking away (the game's
+  // rule). Once it is gone, BUILD asks for the same rise from empty, not from 0.6.
+  overcharge = 1;
+  phase = DECAYING;
+  const released = createDriftAttackCoach({
+    lessons: lessons.DRIFT_ATTACK_LESSONS.slice(build),
+    signals: input,
+    trimOvercharge
+  });
+  released.update(0.016);
+  frame('', false);
+  assert.equal(phase, DECAYING);
+  let leaking = 0;
+  while (released.lesson === 'build' && leaking < 10) {
+    frame('drift', true);
+    leaking += 1 / 60;
+    released.update(1 / 60);
+  }
+  assert.equal(released.lesson, 'catch', `BUILD ends after OVERCHARGE leaked away (${leaking.toFixed(2)} s)`);
+  assert.ok(overcharge >= 0.3 && overcharge < 0.35, `From empty, 0.3 ends BUILD (${overcharge.toFixed(2)})`);
 
   // Building again after OVERCHARGE leaked away takes nothing (there is nothing to take).
   const retryTrims = [];
@@ -923,6 +964,8 @@ test('DRIFT ATTACK BUILD starts with headroom, so OVERCHARGE is visibly built be
   const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
   const controls = await read('../turn/ui/gameplay-controls.js');
   assert.match(controls, /globalThis\.__turnTrimBoostOvercharge = trimBoostOvercharge;/);
+  assert.match(controls, /takeBackBoostOvercharge\(\{ amount: boostOvercharge, phase: boostOverchargePhase, share \}\)/);
+  assert.match(controls, /boostOverchargePhase = taken\.phase;/, 'The trim keeps the phase it leaves, not only the amount');
   const callers = (await Promise.all(['../turn/main.js', '../turn/ui/gameplay-controls.js', '../turn/tutorial/drift-attack-coach.js',
     '../turn/tutorial/tutorial-prompt.js', '../turn/tutorial/flow-tutorial.js'].map(read)))
     .filter((source) => /__turnTrimBoostOvercharge\?\.\(/.test(source)).length;
