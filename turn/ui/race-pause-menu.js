@@ -218,7 +218,7 @@ export function installRacePauseMenu({ windowRef = window, documentRef = documen
       // Turned back: race on, unless SETTINGS (or another dialog) is open over PAUSED;
       // then the pause holds until the player resumes. Turned elsewhere, even
       // mid-count: ask again.
-      const covered = [...documentRef.querySelectorAll('dialog[open]')].some((open) => open !== dialog && !open.classList.contains('turn-tutorial-card'));
+      const covered = [...documentRef.querySelectorAll('dialog[open]')].some((open) => open !== dialog);
       if (event.detail?.rotatedBack && !covered) resume();
       else if (event.detail?.rotatedBack) syncDialog();
       else {

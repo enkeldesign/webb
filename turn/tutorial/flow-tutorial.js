@@ -34,18 +34,14 @@ const DONE_TEXT_SECONDS = 3;
 const GRADUATION_SECONDS = 4;
 
 // The coach reads FLOW's own announcements: each technique it scores, with the COMBO
-// it reached, and the chain running out. It writes nothing but state.sessionSpeedCap.
-export function createFlowCoach({ state, lessons = FLOW_LESSONS, present = () => {}, isHeld = () => false }) {
+// it reached, and the chain running out. It writes nothing to the game.
+export function createFlowCoach({ lessons = FLOW_LESSONS, present = () => {}, isHeld = () => false }) {
   const outcome = new Map(lessons.map((lesson) => [lesson.id, 'pending']));
   const progress = { techniques: new Set(), last: '', multiplier: 1 };
   let current = null;
   let nextIndex = 0;
   let doneLeft = 0;
   let finished = false;
-
-  function release() {
-    state.sessionSpeedCap = null;
-  }
 
   function begin(index, prompt = null) {
     current = lessons[index];
@@ -57,7 +53,6 @@ export function createFlowCoach({ state, lessons = FLOW_LESSONS, present = () =>
     const lesson = current;
     outcome.set(lesson.id, 'done');
     current = null;
-    release();
     if (lesson.doneText) {
       present({ kind: 'done', id: lesson.id, title: lesson.title, text: lesson.doneText });
       doneLeft = DONE_TEXT_SECONDS;
@@ -94,14 +89,12 @@ export function createFlowCoach({ state, lessons = FLOW_LESSONS, present = () =>
       if (nextIndex >= lessons.length) return;
       begin(nextIndex);
     }
-    release();
   }
 
   function graduate() {
     if (finished) return;
     finished = true;
     for (const [id, status] of outcome) if (status === 'pending') outcome.set(id, 'missed');
-    release();
     const message = [...outcome.values()].every((status) => status === 'done')
       ? FLOW_GRADUATION_MESSAGE
       : FLOW_PRACTICE_MESSAGE;
@@ -110,7 +103,6 @@ export function createFlowCoach({ state, lessons = FLOW_LESSONS, present = () =>
 
   function stop() {
     finished = true;
-    release();
   }
 
   return Object.freeze({
@@ -128,7 +120,7 @@ export function createFlowCoach({ state, lessons = FLOW_LESSONS, present = () =>
 export function startFlowCoach({ runtime, events = globalThis }) {
   const { state } = runtime;
   const prompt = createTutorialPrompt();
-  const coach = createFlowCoach({ state, present: prompt.present, isHeld: () => prompt.holding });
+  const coach = createFlowCoach({ present: prompt.present, isHeld: () => prompt.holding });
   coach.update(0);
   const onFlow = (event) => {
     if (event.detail?.type === 'technique') coach.technique(event.detail);

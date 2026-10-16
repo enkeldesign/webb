@@ -493,7 +493,7 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
     prompt.present(forPlayer(view));
   }
 
-  const coach = createTurnTutorialCoach({ state, maxSpeed: runtime.maxSpeed, present, isHeld: () => prompt.holding });
+  const coach = createTurnTutorialCoach({ state, present, isHeld: () => prompt.holding });
   coach.start();
   let frame = 0;
   let last = 0;
@@ -516,6 +516,7 @@ export function startTurnTutorialCoach({ runtime, events = globalThis }) {
     if (state.running && !prompt.holding && globalThis.__turnRacePause?.paused !== true) {
       coach.update(dt);
       // The teaching lap only: ordinary racing after the line has no rescue or help.
+      // Asked again: the update above may have just begun a lesson hold.
       if (!graduated && dt > 0 && !prompt.holding) {
         if (steeringHelp) helped = true;
         state.sessionSteeringTarget = steeringHelp ? steeringHelpTarget({ state, samples: runtime.samples }) : null;

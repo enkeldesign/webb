@@ -492,7 +492,8 @@ function updateVehiclePhysicsStateCore({
     driftSlipAngle,
     driftLockAmount
   }) * overdriveSpeedMultiplier;
-  // A TURN TUTORIAL lesson eases the car down for thinking time (#1132).
+  // A session's speed cap, in m/s. Tutorial lessons no longer set one: they pause to
+  // teach instead (#1190).
   const sessionSpeedCap = Number(state.sessionSpeedCap);
   const cappedSpeedLimit = sessionSpeedCap > 0 ? Math.min(speedLimit, sessionSpeedCap) : speedLimit;
 
