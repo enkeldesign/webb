@@ -860,9 +860,12 @@ test('DRIFT ATTACK BUILD starts with headroom, so OVERCHARGE is visibly built be
   const { createDriftAttackCoach } = await import('../turn/tutorial/drift-attack-coach.js');
   const lessons = await import('../turn/tutorial/drift-attack-lessons.js');
   assert.ok(lessons.BUILD_OVERCHARGE_TRIM >= 0.25 && lessons.BUILD_OVERCHARGE_TRIM <= 0.5, 'Takes back 25–50%');
+  const model = await import('../turn/input/boost-overcharge.js');
   const build = lessons.DRIFT_ATTACK_LESSONS.findIndex((lesson) => lesson.id === 'build');
   const trims = [];
-  let overcharge = 0.6;
+  // OVERCHARGE as the game keeps it: a share of its meter, 0–1. SCORE and LINK can
+  // leave it full.
+  let overcharge = 1;
   const input = () => ({ speed: 40, overcharge, caught: false, boosting: false, banks: 1, links: 1 });
   const views = [];
   const coach = createDriftAttackCoach({
@@ -879,15 +882,26 @@ test('DRIFT ATTACK BUILD starts with headroom, so OVERCHARGE is visibly built be
   coach.update(0.016);
   assert.equal(views.at(-1).id, 'build');
   assert.deepEqual(trims, [lessons.BUILD_OVERCHARGE_TRIM], 'BUILD takes back part of a full OVERCHARGE as it begins');
-  assert.ok(Math.abs(overcharge - 0.36) < 1e-9);
+  assert.ok(Math.abs(overcharge - 0.6) < 1e-9);
   coach.update(0.016);
   assert.equal(coach.lesson, 'build', 'Still above the old 0.3 mark, BUILD does not end at once');
-  overcharge = 0.5;
-  coach.update(0.016);
-  assert.equal(coach.lesson, 'build', 'A small rise is not yet a build');
-  overcharge = 0.36 + lessons.BUILD_OVERCHARGE_RISE;
-  coach.update(0.016);
+  // Built by the game's own model, frame by frame, as a qualifying slide builds it
+  // (CODEX on #1215: the rise is a share of the meter, not seconds).
+  let phase = model.BOOST_OVERCHARGE_PHASE.BUILDING;
+  let sliding = 0;
+  while (coach.lesson === 'build' && sliding < 5) {
+    ({ amount: overcharge, phase } = model.advanceBoostOvercharge({ amount: overcharge, phase, dt: 1 / 60, zone: 'drift', qualifyingDrift: true }));
+    sliding += 1 / 60;
+    coach.update(1 / 60);
+  }
   assert.equal(coach.lesson, 'catch', 'A real rise ends BUILD, and CATCH follows');
+  assert.ok(sliding >= 0.45 && sliding <= 0.7, `About half a second of sliding builds it (${sliding.toFixed(2)} s)`);
+  assert.ok(overcharge < 1 && phase === model.BOOST_OVERCHARGE_PHASE.BUILDING, 'It ends while OVERCHARGE is still building, before the peak');
+  // From any amount, the rise BUILD asks for is there to build before the meter peaks.
+  for (let before = 0.05; before <= 1; before += 0.05) {
+    const start = before * (1 - lessons.BUILD_OVERCHARGE_TRIM);
+    assert.ok(start + lessons.BUILD_OVERCHARGE_RISE < 1, `Reachable from ${before.toFixed(2)}`);
+  }
 
   // Building again after OVERCHARGE leaked away takes nothing (there is nothing to take).
   const retryTrims = [];
