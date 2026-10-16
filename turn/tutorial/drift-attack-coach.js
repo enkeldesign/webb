@@ -7,8 +7,8 @@ import {
 import { createTutorialPrompt } from './tutorial-prompt.js';
 
 // The DRIFT ATTACK TUTORIAL coach (#1150), on top of an ordinary teaching lap. Like the
-// TURN TUTORIAL coach it only reads the game, writes nothing but state.sessionSpeedCap,
-// and presents through the shared lesson card and feedback voice (tutorial-prompt.js).
+// TURN TUTORIAL coach it only reads the game, writes nothing to it, and presents
+// through the shared lesson card and feedback voice (tutorial-prompt.js).
 const DONE_TEXT_SECONDS = 3;
 const GRADUATION_SECONDS = 4;
 // OVERCHARGE burned by BOOST before SPEND counts as done.
@@ -28,7 +28,6 @@ export function readDriftAttackSignals(counters, state = globalThis.__turnRuntim
 }
 
 export function createDriftAttackCoach({
-  state,
   lessons = DRIFT_ATTACK_LESSONS,
   signals,
   present = () => {},
@@ -45,10 +44,6 @@ export function createDriftAttackCoach({
   let linksAtStart = 0;
   let lastOvercharge = 0;
   const progress = {};
-
-  function release() {
-    state.sessionSpeedCap = null;
-  }
 
   function begin(index, input, prompt = null) {
     current = lessons[index];
@@ -74,7 +69,6 @@ export function createDriftAttackCoach({
   function complete(lesson, input) {
     outcome.set(lesson.id, 'done');
     current = null;
-    release();
     if (lesson.doneText) {
       present({ kind: 'done', id: lesson.id, title: lesson.title, text: lesson.doneText });
       pauseLeft = lesson.pauseAfter || DONE_TEXT_SECONDS;
@@ -126,16 +120,13 @@ export function createDriftAttackCoach({
     // Leaked away before it was spent: build it again.
     if (current.needsOvercharge && input.overcharge <= 0) {
       begin(buildIndex, input, DRIFT_ATTACK_RETRY_PROMPT);
-      return;
     }
-    release();
   }
 
   function graduate() {
     if (finished) return;
     finished = true;
     for (const [id, status] of outcome) if (status === 'pending') outcome.set(id, 'missed');
-    release();
     const message = [...outcome.values()].every((status) => status === 'done')
       ? DRIFT_ATTACK_GRADUATION_MESSAGE
       : DRIFT_ATTACK_PRACTICE_MESSAGE;
@@ -144,7 +135,6 @@ export function createDriftAttackCoach({
 
   function stop() {
     finished = true;
-    release();
   }
 
   return Object.freeze({
@@ -167,7 +157,6 @@ export function startDriftAttackCoach({ runtime, events = globalThis }) {
     if (event.detail?.type === 'milestone' && Number(event.detail.multiplier) >= 2) counters.links += 1;
   };
   const coach = createDriftAttackCoach({
-    state,
     signals: () => readDriftAttackSignals(counters, state),
     present: prompt.present,
     isHeld: () => prompt.holding

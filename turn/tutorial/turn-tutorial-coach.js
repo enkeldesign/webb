@@ -82,12 +82,7 @@ export function createTurnTutorialCoach({
     const showing = current && outcome.get(current.id) !== 'done';
     outcome.set(lesson.id, 'skipped');
     current = null;
-    release();
     if (showing) show({ kind: 'idle' });
-  }
-
-  function release() {
-    state.sessionSpeedCap = null;
   }
 
   function update(dt) {
@@ -122,10 +117,7 @@ export function createTurnTutorialCoach({
       if (current.done(progress)) {
         outcome.set(current.id, 'done');
         doneFor = current.doneText ? DONE_TEXT_SECONDS : DONE_MESSAGE_SECONDS;
-        release();
         show({ kind: 'done', id: current.id, title: current.title, text: current.doneText });
-      } else {
-        release();
       }
     } else if (doneFor > 0) {
       doneFor -= dt;
@@ -138,13 +130,11 @@ export function createTurnTutorialCoach({
     if (finished) return;
     if (current && outcome.get(current.id) === 'pending') outcome.set(current.id, 'missed');
     finished = true;
-    release();
     show({ kind: 'graduated', message: TUTORIAL_GRADUATION_MESSAGE });
   }
 
   function stop() {
     finished = true;
-    release();
     show({ kind: 'idle' });
   }
 

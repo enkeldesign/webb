@@ -1,7 +1,7 @@
 import {
   createKeyboardDriveOwnership,
   installKeyboardDriveOwnershipLossHandlers
-} from './keyboard-drive-ownership.js?build=20261015-r455';
+} from './keyboard-drive-ownership.js?build=20261016-r456';
 
 const KEYBOARD_POINTER_ID = 2147483002;
 

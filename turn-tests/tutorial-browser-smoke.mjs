@@ -418,7 +418,7 @@ try {
     await page.keyboard.down('KeyE');
     await page.waitForFunction(() => globalThis.__turnBoostActive && globalThis.__turnBoostCharge < 1);
     assert.equal(await page.evaluate(() => globalThis.__turnRacePause.paused), false);
-    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.sessionSpeedCap), null, 'No capped teaching frame after release');
+    assert.equal(await page.evaluate(() => globalThis.__turnRuntime.state.sessionSpeedCap ?? null), null, 'No capped teaching frame after release');
     await page.waitForFunction((speed) => globalThis.__turnRuntime.state.speed > speed, before[2]);
     await page.keyboard.up('KeyE');
     assert.equal(await page.locator('.turn-tutorial-voice').textContent(), '');
