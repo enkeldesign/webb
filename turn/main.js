@@ -669,25 +669,59 @@ const skidRightWheel = new THREE.Vector3();
 
 // DRIFT smoke, BOOST wakes and OVERCHARGE (#1209): render/drive-effects.js, two draw
 // calls in all, compiled now so the first slide or burst does not stall a frame.
-const driveEffects = createDriveEffects({ THREE, parent: world, lowGraphics: graphicsProfile.lowGraphics });
+const driveEffects = createDriveEffects({ THREE, parent: world, lowGraphics: graphicsProfile.lowGraphics, surfaceY: surfaceYNear });
 driveEffects.warm(renderer, camera, scene);
 
+// One input object, refilled each frame.
+const driveEffectsInput = { dt: 0, state, forward: null, right: null, boostActive: false, overcharge: 0, driftHeld: false, slip: 0 };
 function updateDriveEffects(dt) {
-  driveEffects.update({
-    dt,
-    state,
-    forward: getForward(),
-    right: getRight(),
-    boostActive: globalThis.__turnBoostActive === true,
-    overcharge: Number(globalThis.__turnBoostOvercharge) || 0,
-    driftHeld: globalThis.__turnDriftHeld === true && Math.abs(state.steering) > 0.08,
-    slip: state.driftSlipAngle
-  });
+  driveEffectsInput.dt = dt;
+  driveEffectsInput.forward = getForward();
+  driveEffectsInput.right = getRight();
+  driveEffectsInput.boostActive = globalThis.__turnBoostActive === true;
+  driveEffectsInput.overcharge = Number(globalThis.__turnBoostOvercharge) || 0;
+  driveEffectsInput.driftHeld = globalThis.__turnDriftHeld === true && Math.abs(state.steering) > 0.08;
+  driveEffectsInput.slip = state.driftSlipAngle;
+  driveEffects.update(driveEffectsInput);
 }
 
-// A new race, a restart, GARAGE or Home: no smoke, wake or camera kick carries over.
+// The car's resting height on the road at a point near it: along the track between
+// the two samples nearest the point, searched around the car's own. A few samples a
+// call, no scene queries.
+function surfaceYNear(x, z) {
+  const count = samples.length;
+  if (!count) return NaN;
+  const center = Number.isFinite(state.nearestTrackIndex) ? state.nearestTrackIndex : 0;
+  let nearest = -1;
+  let nearestDistance = Infinity;
+  for (let step = -8; step <= 4; step += 1) {
+    const index = (center + step + count) % count;
+    const point = samples[index].point;
+    const distance = (point.x - x) ** 2 + (point.z - z) ** 2;
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearest = index;
+    }
+  }
+  const here = samples[nearest];
+  const before = samples[(nearest - 1 + count) % count];
+  const after = samples[(nearest + 1) % count];
+  // Between this sample and the neighbour on the point's side of it.
+  const towardAfter = (after.point.x - here.point.x) * (x - here.point.x) + (after.point.z - here.point.z) * (z - here.point.z);
+  const other = towardAfter >= 0 ? after : before;
+  const dx = other.point.x - here.point.x;
+  const dz = other.point.z - here.point.z;
+  const length = dx * dx + dz * dz;
+  const t = length > 0 ? Math.min(1, Math.max(0, ((x - here.point.x) * dx + (z - here.point.z) * dz) / length)) : 0;
+  return trackSurfaceY(here) + (trackSurfaceY(other) - trackSurfaceY(here)) * t;
+}
+
+// A new race, a restart, GARAGE, Home or a spectated replay: no smoke, wake or camera
+// kick carries over.
 window.addEventListener('turn:ui-state-change', (event) => {
-  if (['race-started', 'race-reset', 'lot-open', 'home-open'].includes(event.detail?.reason)) driveEffects.clear(state);
+  if (['race-started', 'race-reset', 'lot-open', 'home-open', 'spectate-started'].includes(event.detail?.reason)) {
+    driveEffects.clear(state);
+  }
 });
 
 const forwardVector = new THREE.Vector3();

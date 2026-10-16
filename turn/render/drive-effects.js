@@ -23,7 +23,11 @@ const WAKE_HALF_WIDTH = 0.56;
 const OVERCHARGE_WIDTH = 1.35;
 const WAKE_SIDE_OFFSET = 0.78;
 const WAKE_REAR_OFFSET = 2.6;
-const WAKE_LIFT = 0.12;
+// Above the car's resting height on the road at that point (tracks/elevation.js). That
+// height is at or above every track's road deck to within 0.15 m (MOUNTAIN's steepest
+// descent), so the wake clears the asphalt everywhere.
+const WAKE_LIFT = 0.2;
+const PUFF_LIFT = 0.3;
 const FLARE_SECONDS = 0.28;
 const FLARE_WIDTH = 0.45;
 const COLOUR_BLEND_PER_SECOND = 6;
@@ -33,6 +37,9 @@ export const BOOST_CAMERA_KICK_DEGREES = 2.5;
 export const OVERCHARGE_CAMERA_KICK_DEGREES = 5;
 const KICK_ATTACK_SECONDS = 0.08;
 const KICK_DECAY_SECONDS = 0.32;
+// Letting go of BOOST, or running dry, eases the kick away rather than snapping the
+// view back: from wherever it was, gently at first, gone after this long.
+const KICK_RELEASE_SECONDS = 0.25;
 
 const PUFFS = 40;
 const LOW_GRAPHICS_PUFFS = 20;
@@ -42,31 +49,28 @@ const PUFF_LIFE = 0.85;
 const PUFF_START_ALPHA = 0.34;
 const OVERCHARGE_SPARK_PUFFS = 6;
 
-// The wake's warm tail and the smoke are render colours with no UI counterpart; the
-// tail is the orange BOOST's flames have always used.
-const BOOST_TAIL_COLOUR = '#ff922b';
-const SMOKE_COLOUR = '#d9d4cc';
 // Only for a page without the design tokens (tests, tools): the tokens' sRGB values.
 const TOKEN_FALLBACKS = Object.freeze({
-  '--turn-yellow-400': '#ffd43b',
+  '--turn-effect-boost': '#ffd43b',
+  '--turn-effect-boost-tail': '#ff922b',
+  '--turn-effect-drift-smoke': '#d9d4cc',
   '--turn-control-overcharge': '#8b5cf6',
   '--turn-control-overcharge-light': '#d0bfff',
   '--turn-control-overcharge-deep': '#5f3dc4'
 });
 
-// BOOST's yellow and the OVERCHARGE pair, as the drive pad and BOOST bar show them
-// (design-tokens.css). The palette yellow, not --turn-control-boost, which dark mode
-// dims for the pad; the road keeps its daylight colours.
+// The effect roles and the OVERCHARGE palette from the design tokens (design-tokens.css).
+// The effect roles are not dimmed by dark mode: the road keeps its daylight colours.
 export function readEffectColours(documentRef = globalThis.document) {
   const style = documentRef?.documentElement && globalThis.getComputedStyle?.(documentRef.documentElement);
   const read = (name) => style?.getPropertyValue(name)?.trim() || TOKEN_FALLBACKS[name];
   return Object.freeze({
-    boost: read('--turn-yellow-400'),
-    boostTail: BOOST_TAIL_COLOUR,
+    boost: read('--turn-effect-boost'),
+    boostTail: read('--turn-effect-boost-tail'),
     overcharge: read('--turn-control-overcharge'),
     overchargeLight: read('--turn-control-overcharge-light'),
     overchargeDeep: read('--turn-control-overcharge-deep'),
-    smoke: SMOKE_COLOUR
+    smoke: read('--turn-effect-drift-smoke')
   });
 }
 
@@ -94,9 +98,17 @@ function withInstanceAlpha(material) {
   return material;
 }
 
-export function createDriveEffects({ THREE, parent, lowGraphics = false, colours = readEffectColours() }) {
+// surfaceY(x, z): the car's resting height on the road at a point near it (main.js
+// reads it from the track), so the wake and smoke start on the road on climbs and
+// descents rather than at the car's own height.
+export function createDriveEffects({
+  THREE, parent, lowGraphics = false, colours = readEffectColours(), surfaceY = null
+}) {
   const group = new THREE.Group();
   group.name = 'turn-drive-effects';
+  // Moved with the cars and skid marks into the shared race layer, so it shows on
+  // every track, not only the one whose world it was created in (tracks/track-manager.js).
+  group.userData.turnRaceLayer = true;
   parent.add(group);
 
   const colour = (value) => effectColour(THREE, value);
@@ -169,9 +181,11 @@ export function createDriveEffects({ THREE, parent, lowGraphics = false, colours
   group.add(puffs);
 
   const puffState = Array.from({ length: puffCount }, () => ({
-    life: 0, maxLife: 1, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, size: 0, grow: 0, alpha: 0, spin: 0, turn: 0
+    life: 0, maxLife: 1, x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, size: 0, grow: 0, alpha: 0, spin: 0, turn: 0, shown: false
   }));
   let puffCursor = 0;
+  // False once every slot has been written out: an idle pool costs nothing per frame.
+  let puffsAwake = false;
   let puffCooldown = 0;
   const puffMatrix = new THREE.Matrix4();
   const puffQuaternion = new THREE.Quaternion();
@@ -186,27 +200,69 @@ export function createDriveEffects({ THREE, parent, lowGraphics = false, colours
   let overchargeMix = 0;
   let pulsePhase = 0;
   let kick = 0;
+  let kickNow = 0;
+  let releasedKick = 0;
+  let releaseAge = 0;
+  // The car at the previous update, so a slow frame's wake samples follow its path.
+  let lastX = 0;
+  let lastZ = 0;
+  let lastForwardX = 0;
+  let lastForwardZ = 1;
+  let lastRightX = 1;
+  let lastRightZ = 0;
 
-  function launchPuff({ x, y, z, vx, vy, vz, size, grow, life, alpha, tint }) {
+  // The road at a point, or the car's own level where no reading is given.
+  const groundAt = (state, x, z) => {
+    const y = surfaceY ? Number(surfaceY(x, z)) : NaN;
+    return Number.isFinite(y) ? y : Number(state.position.y) || 0;
+  };
+
+  // The next slot in the pool, recoloured; the caller sets where it goes and how it moves.
+  function nextPuff(tint, life) {
     const puff = puffState[puffCursor];
-    Object.assign(puff, { life, maxLife: life, x, y, z, vx, vy, vz, size, grow, alpha });
+    puff.life = life;
+    puff.maxLife = life;
     puff.spin = Math.random() * Math.PI * 2;
     puff.turn = (Math.random() - 0.5) * 3;
     puffs.setColorAt(puffCursor, tint);
     puffs.instanceColor.needsUpdate = true;
     puffCursor = (puffCursor + 1) % puffCount;
+    puffsAwake = true;
+    return puff;
   }
 
-  function pushHistory(state, forward, right) {
+  function rememberPose(state, forward, right) {
+    lastX = state.position.x;
+    lastZ = state.position.z;
+    lastForwardX = forward.x;
+    lastForwardZ = forward.z;
+    lastRightX = right.x;
+    lastRightZ = right.z;
+  }
+
+  // t: how far between the previous update (0) and this one (1) the sample fell due.
+  function pushHistory(state, forward, right, t) {
+    const x = lastX + (state.position.x - lastX) * t;
+    const z = lastZ + (state.position.z - lastZ) * t;
+    let forwardX = lastForwardX + (forward.x - lastForwardX) * t;
+    let forwardZ = lastForwardZ + (forward.z - lastForwardZ) * t;
+    const forwardLength = Math.hypot(forwardX, forwardZ) || 1;
+    forwardX /= forwardLength;
+    forwardZ /= forwardLength;
+    let rightX = lastRightX + (right.x - lastRightX) * t;
+    let rightZ = lastRightZ + (right.z - lastRightZ) * t;
+    const rightLength = Math.hypot(rightX, rightZ) || 1;
+    rightX /= rightLength;
+    rightZ /= rightLength;
     for (let side = 0; side < 2; side += 1) {
       const sign = side === 0 ? -1 : 1;
       const samples = history[side];
       samples.copyWithin(5, 0, (historyLength - 1) * 5);
-      samples[0] = state.position.x - forward.x * WAKE_REAR_OFFSET + right.x * sign * WAKE_SIDE_OFFSET;
-      samples[1] = state.position.y + WAKE_LIFT;
-      samples[2] = state.position.z - forward.z * WAKE_REAR_OFFSET + right.z * sign * WAKE_SIDE_OFFSET;
-      samples[3] = right.x;
-      samples[4] = right.z;
+      samples[0] = x - forwardX * WAKE_REAR_OFFSET + rightX * sign * WAKE_SIDE_OFFSET;
+      samples[2] = z - forwardZ * WAKE_REAR_OFFSET + rightZ * sign * WAKE_SIDE_OFFSET;
+      samples[1] = groundAt(state, samples[0], samples[2]) + WAKE_LIFT;
+      samples[3] = rightX;
+      samples[4] = rightZ;
     }
     historyCount = Math.min(historyLength, historyCount + 1);
   }
@@ -236,10 +292,10 @@ export function createDriveEffects({ THREE, parent, lowGraphics = false, colours
         const x = section === 0
           ? state.position.x - forward.x * WAKE_REAR_OFFSET + right.x * sign * WAKE_SIDE_OFFSET
           : samples[offset];
-        const y = section === 0 ? state.position.y + WAKE_LIFT : samples[offset + 1];
         const z = section === 0
           ? state.position.z - forward.z * WAKE_REAR_OFFSET + right.z * sign * WAKE_SIDE_OFFSET
           : samples[offset + 2];
+        const y = section === 0 ? groundAt(state, x, z) + WAKE_LIFT : samples[offset + 1];
         const rx = section === 0 ? right.x : samples[offset + 3];
         const rz = section === 0 ? right.z : samples[offset + 4];
         const u = Math.min(1, section / (sections - 1));
@@ -268,7 +324,9 @@ export function createDriveEffects({ THREE, parent, lowGraphics = false, colours
   }
 
   function updatePuffs(dt) {
+    if (!puffsAwake) return;
     let alive = 0;
+    let written = false;
     for (let index = 0; index < puffCount; index += 1) {
       const puff = puffState[index];
       if (puff.life > 0) {
@@ -279,9 +337,13 @@ export function createDriveEffects({ THREE, parent, lowGraphics = false, colours
         puff.vy *= 1 - Math.min(0.9, dt * 1.6);
         puff.spin += puff.turn * dt;
       }
-      const ratio = puff.life / puff.maxLife;
       const visible = puff.life > 0;
+      // A spent slot is written out once, then left alone until it is reused.
+      if (!visible && !puff.shown) continue;
+      puff.shown = visible;
+      written = true;
       if (visible) alive += 1;
+      const ratio = puff.life / puff.maxLife;
       const size = visible ? puff.size * (1 + (1 - ratio) * puff.grow) : 0;
       puffAlpha[index] = visible ? puff.alpha * ratio * ratio : 0;
       puffPosition.set(puff.x, puff.y, puff.z);
@@ -291,10 +353,11 @@ export function createDriveEffects({ THREE, parent, lowGraphics = false, colours
       puffMatrix.compose(puffPosition, puffQuaternion, puffScale);
       puffs.setMatrixAt(index, puffMatrix);
     }
+    puffsAwake = alive > 0;
     puffs.count = alive ? puffCount : 0;
     puffs.visible = alive > 0;
-    puffs.instanceMatrix.needsUpdate = alive > 0;
-    puffGeometry.attributes.instanceAlpha.needsUpdate = alive > 0;
+    puffs.instanceMatrix.needsUpdate = written;
+    puffGeometry.attributes.instanceAlpha.needsUpdate = written;
   }
 
   // dt is race time. Inputs are read by main.js from the live race.
@@ -316,21 +379,24 @@ export function createDriveEffects({ THREE, parent, lowGraphics = false, colours
         for (let index = 0; index < OVERCHARGE_SPARK_PUFFS; index += 1) {
           const sign = index % 2 ? 1 : -1;
           const spread = (Math.random() - 0.5) * 2;
-          launchPuff({
-            x: state.position.x - forward.x * WAKE_REAR_OFFSET + right.x * sign * WAKE_SIDE_OFFSET,
-            y: state.position.y + 0.45,
-            z: state.position.z - forward.z * WAKE_REAR_OFFSET + right.z * sign * WAKE_SIDE_OFFSET,
-            vx: -forward.x * (6 + Math.random() * 4) + right.x * sign * 3 + spread,
-            vy: 2.4 + Math.random() * 1.2,
-            vz: -forward.z * (6 + Math.random() * 4) + right.z * sign * 3 + spread,
-            size: 0.32,
-            grow: 0.8,
-            life: 0.45,
-            alpha: 0.95,
-            tint: index % 2 ? palette.overchargeLight : palette.overcharge
-          });
+          const sparkX = state.position.x - forward.x * WAKE_REAR_OFFSET + right.x * sign * WAKE_SIDE_OFFSET;
+          const sparkZ = state.position.z - forward.z * WAKE_REAR_OFFSET + right.z * sign * WAKE_SIDE_OFFSET;
+          const spark = nextPuff(index % 2 ? palette.overchargeLight : palette.overcharge, 0.45);
+          spark.x = sparkX;
+          spark.y = groundAt(state, sparkX, sparkZ) + 0.45;
+          spark.z = sparkZ;
+          spark.vx = -forward.x * (6 + Math.random() * 4) + right.x * sign * 3 + spread;
+          spark.vy = 2.4 + Math.random() * 1.2;
+          spark.vz = -forward.z * (6 + Math.random() * 4) + right.z * sign * 3 + spread;
+          spark.size = 0.32;
+          spark.grow = 0.8;
+          spark.alpha = 0.95;
         }
       }
+    }
+    if (boosting && !burning) {
+      releasedKick = kickNow;
+      releaseAge = 0;
     }
     boosting = burning;
 
@@ -338,41 +404,55 @@ export function createDriveEffects({ THREE, parent, lowGraphics = false, colours
       burstAge += step;
       overchargeMix += ((spendingOvercharge ? 1 : 0) - overchargeMix) * Math.min(1, step * COLOUR_BLEND_PER_SECOND);
       pulsePhase = (pulsePhase + step * 4) % 1;
+      if (historyCount === 0) {
+        rememberPose(state, forward, right);
+        pushHistory(state, forward, right, 1);
+      }
+      // A slow frame owes several samples: each goes where the car was when it fell
+      // due, so the wake keeps the path's shape rather than repeating one point.
+      const clockBefore = sampleClock;
       sampleClock += step;
-      if (historyCount === 0) pushHistory(state, forward, right);
+      let due = 0;
       while (sampleClock >= WAKE_SAMPLE_SECONDS) {
         sampleClock -= WAKE_SAMPLE_SECONDS;
-        pushHistory(state, forward, right);
+        due += 1;
+        pushHistory(state, forward, right, step > 0 ? Math.min(1, (due * WAKE_SAMPLE_SECONDS - clockBefore) / step) : 1);
       }
       writeWake(state, forward, right);
     }
     wake.visible = burning;
+    rememberPose(state, forward, right);
 
-    // Camera kick: a quick rise, then it eases away while the burst goes on.
-    const envelope = burning
-      ? Math.min(1, burstAge / KICK_ATTACK_SECONDS) * Math.exp(-Math.max(0, burstAge - KICK_ATTACK_SECONDS) / KICK_DECAY_SECONDS)
+    // Camera kick: a quick rise, then it eases away while the burst goes on. The end of
+    // a burst eases out from where the kick was; a new burst rises from there too.
+    const burstKick = burning
+      ? kick * Math.min(1, burstAge / KICK_ATTACK_SECONDS)
+        * Math.exp(-Math.max(0, burstAge - KICK_ATTACK_SECONDS) / KICK_DECAY_SECONDS)
       : 0;
-    state.cameraKickFov = kick * envelope;
+    releaseAge += step;
+    const easing = Math.min(1, releaseAge / KICK_RELEASE_SECONDS);
+    const releaseKick = releasedKick * (1 - easing * easing * (3 - 2 * easing));
+    kickNow = Math.max(burstKick, releaseKick);
+    state.cameraKickFov = kickNow;
 
     puffCooldown -= step;
     if (driftHeld === true && speed > 13 && puffCooldown <= 0) {
       const strength = Math.max(0.35, Math.min(1, Math.abs(Number(slip) || 0) / 0.45));
-      for (const sign of [-1, 1]) {
+      for (let sign = -1; sign <= 1; sign += 2) {
         const lateral = (Math.random() - 0.5) * 0.4;
-        launchPuff({
-          x: state.position.x - forward.x * (WAKE_REAR_OFFSET - 0.4) + right.x * (sign * 1.05 + lateral),
-          y: state.position.y + 0.3,
-          z: state.position.z - forward.z * (WAKE_REAR_OFFSET - 0.4) + right.z * (sign * 1.05 + lateral),
-          // Kicked out sideways, against the slide, and left behind as the car goes on.
-          vx: right.x * sign * (1 + Math.random()) + (Number(state.velocity?.x) || 0) * 0.25,
-          vy: 1.6 + Math.random() * 0.9,
-          vz: right.z * sign * (1 + Math.random()) + (Number(state.velocity?.z) || 0) * 0.25,
-          size: 0.3 + strength * 0.2,
-          grow: 2.4,
-          life: PUFF_LIFE * (0.8 + Math.random() * 0.4),
-          alpha: PUFF_START_ALPHA * strength,
-          tint: palette.smoke
-        });
+        const tyreX = state.position.x - forward.x * (WAKE_REAR_OFFSET - 0.4) + right.x * (sign * 1.05 + lateral);
+        const tyreZ = state.position.z - forward.z * (WAKE_REAR_OFFSET - 0.4) + right.z * (sign * 1.05 + lateral);
+        const smoke = nextPuff(palette.smoke, PUFF_LIFE * (0.8 + Math.random() * 0.4));
+        smoke.x = tyreX;
+        smoke.y = groundAt(state, tyreX, tyreZ) + PUFF_LIFT;
+        smoke.z = tyreZ;
+        // Kicked out sideways, against the slide, and left behind as the car goes on.
+        smoke.vx = right.x * sign * (1 + Math.random()) + (Number(state.velocity?.x) || 0) * 0.25;
+        smoke.vy = 1.6 + Math.random() * 0.9;
+        smoke.vz = right.z * sign * (1 + Math.random()) + (Number(state.velocity?.z) || 0) * 0.25;
+        smoke.size = 0.3 + strength * 0.2;
+        smoke.grow = 2.4;
+        smoke.alpha = PUFF_START_ALPHA * strength;
       }
       puffCooldown = puffInterval / strength;
     }
@@ -385,9 +465,13 @@ export function createDriveEffects({ THREE, parent, lowGraphics = false, colours
     burstAge = 0;
     historyCount = 0;
     kick = 0;
+    kickNow = 0;
+    releasedKick = 0;
     overchargeMix = 0;
     wake.visible = false;
     for (const puff of puffState) puff.life = 0;
+    // The next update writes out whatever was showing.
+    puffsAwake = true;
     puffs.count = 0;
     puffs.visible = false;
     if (state) state.cameraKickFov = 0;
