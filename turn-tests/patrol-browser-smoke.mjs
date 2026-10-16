@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import { chromium } from 'playwright';
 import { TROPHY_ROAD_STORAGE_VERSION } from '../turn/progression/trophy-road.js';
 
 // Run against the same production server as support-feedback-browser-smoke.mjs.
 const target = process.env.TURN_SUPPORT_FEEDBACK_URL || 'http://127.0.0.1:8000/';
+const rules = JSON.parse(await fs.readFile(new URL('../turn/support-challenges.json', import.meta.url), 'utf8'));
 const browser = await chromium.launch({ headless: true });
 async function runPreview(challenge) {
   const context = await browser.newContext({ viewport: { width: 844, height: 390 }, reducedMotion: 'reduce' });
@@ -11,16 +13,18 @@ async function runPreview(challenge) {
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.addInitScript(({ completed, previousChallenge, storageVersion }) => {
+  await page.addInitScript(({ completed, previousChallenge, storageVersion, gap }) => {
     localStorage.setItem('turn-low-graphics-v1', '1');
     localStorage.setItem('turn-steering-mode-v1', 'manual');
     localStorage.setItem('turn-audio-enabled-v1', 'off');
     localStorage.setItem('turn-racing-music-volume-v1', '0');
     // Returning players have resolved earlier challenges, but have no trophies
-    // unlocking these rewards. Existing history must survive the upgrade.
+    // unlocking these rewards. Existing history must survive the upgrade. They have
+    // driven the laps without a trophy that offer the next challenge, as every
+    // challenge waits for them, PATROL and EXCURSION too (#1218).
     localStorage.setItem('turn-support-challenges-v1', JSON.stringify({
       version: 1, completed: completed.filter((key) => key !== previousChallenge?.key),
-      skipped: ['winner:airport'], active: previousChallenge || null, dryValidLaps: 0
+      skipped: ['winner:airport'], active: previousChallenge || null, dryValidLaps: gap
     }));
     if (previousChallenge) {
       // The third challenge's underlying achievement was earned outside its
@@ -31,7 +35,7 @@ async function runPreview(challenge) {
       }));
     }
     Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
-  }, { ...challenge, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
+  }, { ...challenge, storageVersion: TROPHY_ROAD_STORAGE_VERSION, gap: rules.offerAfterValidLapsWithoutTrophy });
 
   const inspect = () => page.evaluate(async ({ key, trackId, vehicleId }) => {
     const map = JSON.parse(document.querySelector('[type="importmap"]').textContent).imports;

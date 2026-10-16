@@ -6,7 +6,8 @@ import {
   loadSupportChallengeConfig,
   normalizeSupportChallengeConfig,
   normalizeSupportChallengeState,
-  selectSupportChallenge
+  selectSupportChallenge,
+  supportChallengeOfferDue
 } from '../turn/achievements/support-challenges.js';
 import {
   isRaceSupportBonusId,
@@ -155,6 +156,42 @@ assert.equal(select({ excluded: firstFour, completed: firstFour }).type, 'safety
 assert.equal(select({ config: normalizeSupportChallengeConfig({ ...rawConfig, excursion: { enabled: false } }),
   excluded: firstThree, completed: firstThree }).type, 'safety', 'Live rules can disable EXCURSION');
 assert.equal(isRaceSupportBonusId(`support:${EXCURSION_CHALLENGE.key}`), true);
+
+// #1218: one cadence for every challenge. The fixed ones keep their places (DID YOU READ
+// ALL OF IT?, PATROL, the first procedural challenge, EXCURSION), but each waits, like any
+// other, for the same run of valid laps without a trophy after the one before it ends.
+{
+  const gap = config.offerAfterValidLapsWithoutTrophy;
+  const run = { active: null, dryValidLaps: 0, completed: [] };
+  const offers = [];
+  for (let offer = 0; offer < 5; offer += 1) {
+    let laps = 0;
+    while (!supportChallengeOfferDue(run, config)) {
+      run.dryValidLaps += 1;
+      laps += 1;
+    }
+    run.active = select({ excluded: run.completed, completed: run.completed });
+    offers.push(`${run.active.type} after ${laps} laps`);
+    run.dryValidLaps += 3;
+    assert.equal(supportChallengeOfferDue(run, config), false, 'Nothing else is offered while one is active');
+    // Finishing it earns trophies, which starts the count again.
+    run.completed.push(run.active.key);
+    run.active = null;
+    run.dryValidLaps = 0;
+  }
+  assert.deepEqual(offers, ['learning', 'patrol', 'safety', 'excursion', 'safety'].map((type) => `${type} after ${gap} laps`),
+    'DID YOU READ ALL OF IT?, PATROL, slot three, EXCURSION and the next procedural challenge each follow a full gap');
+  assert.equal(supportChallengeOfferDue({ dryValidLaps: gap - 0.5 }, config), false);
+  assert.equal(supportChallengeOfferDue({}, config), false);
+}
+assert.match(source, /if \(!force && !supportChallengeOfferDue\(state, config\)\) return false;/,
+  'Every challenge is offered on the one cadence');
+assert.doesNotMatch(source, /getRewardPreviewChallenge\(candidate\)/,
+  'PATROL and EXCURSION have no way around the cadence');
+assert.equal(source.match(/finishActiveChallenge\(\);/g)?.length, 2,
+  'A race challenge and HOW TO PLAY finish the same way, starting the count again');
+assert.match(source, /trigger\.hidden = !challenge \|\| completionShowing;/,
+  'A new challenge\'s button waits while Home shows the last one\'s completion');
 
 // PATROL and EXCURSION preview EXPERT TRACKS: once it is unlocked neither is offered,
 // and an active one is withdrawn.
