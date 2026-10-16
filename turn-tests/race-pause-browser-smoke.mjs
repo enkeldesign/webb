@@ -599,8 +599,137 @@ try {
     await opened.context.close();
   }
 
+  // ---------- SPECTATE shows how a lap was driven (#1217) ----------
+  // A lap records its controls on its own clock: what was held as it began, then each
+  // change, from keys and the drive pad alike, and keeps the setup it began with.
+  // SPECTATE plays them back beside the followed rival on HOW TO PLAY's pad and steering,
+  // laid out as the lap was set up, and shows nothing for a lap recorded before them.
+  {
+    const opened = await openRace({ width: 844, height: 390, handedness: 'left' });
+    const { page } = opened;
+    const recording = () => page.evaluate(() => globalThis.__turnRuntime.state.inputRecording.slice());
+    await startLap(page);
+    assert.deepEqual((await recording()).slice(0, 2), [0, 1], 'The lap begins with GAS held, from the keyboard');
+    assert.deepEqual(await page.evaluate(() => globalThis.__turnRuntime.state.lapSetup),
+      { version: 1, controls: { steering: 'screen', hand: 'left' }, build: {} },
+      'and keeps its setup: steered on screen, the pad on the left, a car that cannot SHIFT yet');
+    const drift = await page.locator('.drive-drift-zone').boundingBox();
+    await page.mouse.move(drift.x + drift.width / 2, drift.y + drift.height / 2);
+    await page.mouse.down();
+    await page.waitForFunction(() => (globalThis.__turnRuntime.state.inputRecording.at(-1) & 2) === 2);
+    await page.mouse.up();
+    await page.waitForFunction(() => (globalThis.__turnRuntime.state.inputRecording.at(-1) & 2) === 0);
+    await page.keyboard.up('ArrowUp');
+    const changes = await recording();
+    for (let index = 2; index < changes.length; index += 2) {
+      assert.ok(Number.isInteger(changes[index]) && changes[index] >= changes[index - 2], 'Whole milliseconds that only grow');
+      assert.notEqual(changes[index + 1], changes[index - 1], 'A pair only for a change');
+    }
+
+    await page.locator('#resetButton').click();
+    await page.waitForFunction(() => !globalThis.__turnRuntime.state.lapActive);
+    // Three rivals on the line: two recorded with their controls and setups, one from before.
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const frames = () => Array.from({ length: 400 }, (_, index) => {
+        const sample = samples[(index * 3) % samples.length];
+        return { t: index * 0.045, x: sample.point.x, z: sample.point.z, h: Math.atan2(sample.tangent.x, sample.tangent.z),
+          s: index < 111 ? 0.5 : -0.5, d: 0, p: ((index * 3) % samples.length) / samples.length };
+      });
+      const shift = { reducedStats: ['speed', 'acceleration', 'boostPower'], amount: 1 };
+      state.competitorLaps = [
+        // On screen, right-handed, set up to SHIFT: GAS · DRIFT into LOCK · BRAKE into
+        // REVERSE · out into SHIFT, turning it on · GAS with SHIFT on.
+        { time: 17, hitAt: Date.now(), carId: 'sedan', frames: frames(),
+          inputs: { version: 1, changes: [0, 1, 2000, 2 | 32, 4000, 8 | 16, 6000, 1 | 64 | 128, 9000, 1 | 64] },
+          setup: { version: 1, controls: { steering: 'screen', hand: 'right' }, build: { shift } } },
+        // Tilted, left-handed, on a car that could not SHIFT: GAS, then BOOST.
+        { time: 18, hitAt: Date.now() - 1000, carId: 'sedan', frames: frames(),
+          inputs: { version: 1, changes: [0, 1, 3000, 4] },
+          setup: { version: 1, controls: { steering: 'tilt', hand: 'left' }, build: {} } },
+        { time: 19, hitAt: Date.now() - 2000, carId: 'sedan', frames: frames() }
+      ];
+      const clock = globalThis.performance;
+      const realNow = clock.now.bind(clock);
+      globalThis.__spectateClock = { realNow, frozen: null };
+      clock.now = () => globalThis.__spectateClock.frozen ?? realNow();
+    });
+    assert.equal(await page.evaluate(() => globalThis.__turnStartSpectateV3()), true);
+    // Hold SPECTATE's clock at a moment of the lap and read what the controls show.
+    const at = async (seconds) => {
+      await page.evaluate((time) => {
+        const now = globalThis.__spectateClock.realNow();
+        globalThis.__turnSpectateV3.startedAt = now - time * 1000;
+        globalThis.__spectateClock.frozen = now;
+      }, seconds);
+      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      return page.evaluate(() => {
+        const root = document.querySelector('.spectate-controls');
+        const stack = root.querySelector('.turn-demo-stack');
+        const box = (element) => {
+          const rect = element.getBoundingClientRect();
+          return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+        };
+        const shown = (selector) => globalThis.getComputedStyle(root.querySelector(selector)).display !== 'none';
+        return {
+          hidden: root.hidden,
+          ariaHidden: root.getAttribute('aria-hidden'),
+          hand: root.dataset.hand,
+          steer: root.dataset.steer,
+          thumb: stack.dataset.thumb,
+          states: [...stack.classList].filter((name) => name.startsWith('is-')).sort(),
+          steering: Number(root.style.getPropertyValue('--turn-demo-steer')),
+          touch: shown('.spectate-controls-touch'),
+          tilt: shown('.spectate-controls-tilt'),
+          realControls: root.querySelectorAll('.drive-stack, .drive-pad, .manual-steer').length,
+          cluster: box(root),
+          bar: box(document.querySelector('.spectate-bar')),
+          liveSteering: globalThis.getComputedStyle(document.querySelector('#manualSteer')).display,
+          scoreCards: globalThis.getComputedStyle(document.querySelector('#scoreFeedback')).display
+        };
+      });
+    };
+    const apart = (a, b) => a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top;
+    let shown = await at(1);
+    assert.equal(shown.hidden, false);
+    assert.equal(shown.ariaHidden, 'true', 'A picture, like HOW TO PLAY\'s demos');
+    assert.equal(shown.realControls, 0, 'Nothing that looks for the real controls finds it');
+    assert.deepEqual([shown.thumb, shown.states, shown.steer, shown.hand], ['gas', ['is-gas-ready', 'is-shift-available'], 'touch', 'right'],
+      'GAS, on a car set up to SHIFT');
+    assert.equal(shown.steering, 0.5, 'The steering box shows the lap\'s steering');
+    assert.deepEqual([shown.touch, shown.tilt], [true, false]);
+    assert.ok(apart(shown.cluster, shown.bar), 'Beside the bar, not over it');
+    assert.ok(shown.cluster.left > 844 / 2, 'On the side a right-handed lap held them');
+    assert.deepEqual([shown.liveSteering, shown.scoreCards], ['none', 'none'], 'Live steering and the score cards give way');
+    shown = await at(3);
+    assert.deepEqual([shown.thumb, shown.states], ['lock', ['is-drift-locking', 'is-drift-ready', 'is-shift-available']], 'DRIFT, out into LOCK');
+    shown = await at(5);
+    assert.deepEqual([shown.thumb, shown.states], ['reverse', ['is-brake-ready', 'is-reversing', 'is-shift-available']], 'BRAKE, out into REVERSE');
+    shown = await at(7.5);
+    assert.deepEqual([shown.thumb, shown.states], ['shift', ['is-gas-ready', 'is-shift-active', 'is-shift-available', 'is-shift-pressing']],
+      'Out into SHIFT, turning it on');
+    assert.equal(shown.steering, -0.5);
+    shown = await at(10);
+    assert.deepEqual([shown.thumb, shown.states], ['gas', ['is-gas-ready', 'is-shift-active', 'is-shift-available']], 'GAS with SHIFT on');
+    assert.equal(await page.evaluate(() => globalThis.__turnNextSpectateV3()), true);
+    shown = await at(1);
+    assert.deepEqual([shown.steer, shown.hand, shown.thumb, shown.states], ['tilt', 'left', 'gas', ['is-gas-ready']],
+      'A tilted, left-handed lap on a car that could not SHIFT');
+    assert.deepEqual([shown.touch, shown.tilt, shown.steering], [false, true, 0.5], 'shows the phone, tilted as the lap was steered');
+    assert.ok(shown.cluster.right < 844 / 2 && apart(shown.cluster, shown.bar), 'on the left, the bar clear of it');
+    shown = await at(4);
+    assert.deepEqual([shown.thumb, shown.states], ['boost', ['is-boost-ready']]);
+    assert.equal(await page.evaluate(() => globalThis.__turnNextSpectateV3()), true);
+    assert.equal((await at(3)).hidden, true, 'A lap from before input tracks shows no controls');
+    await page.locator('.spectate-close').click();
+    assert.equal(await page.evaluate(() => document.querySelector('.spectate-controls').hidden), true, 'STOP takes them away');
+    assert.equal(await page.evaluate(() => document.body.classList.contains('turn-spectating')), false,
+      'and the race HUD comes back');
+    await opened.context.close();
+  }
+
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Race pause: Ⅱ beside RESTART LAP during a lap; frozen car, lap time, BOOST and race clock; released controls; Settings, Escape, back, background, RESTART LAP and LEAVE RACE; landscape, portrait (turned while paused) and left-handed; a running lap locks the screen where the platform can; a rotation mid-lap pauses as SCREEN ROTATED and resumes after 3-2-1; THIS VISIT in PAUSED and over ROADBOOK after LEAVE RACE, with reward banners after it closes, passed.');
+  console.log('Race pause: Ⅱ beside RESTART LAP during a lap; frozen car, lap time, BOOST and race clock; released controls; Settings, Escape, back, background, RESTART LAP and LEAVE RACE; landscape, portrait (turned while paused) and left-handed; a running lap locks the screen where the platform can; a rotation mid-lap pauses as SCREEN ROTATED and resumes after 3-2-1; THIS VISIT in PAUSED and over ROADBOOK after LEAVE RACE, with reward banners after it closes; a lap records its controls and setup, and SPECTATE plays them back as it was set up, passed.');
 } finally {
   await browser.close();
   server.close();

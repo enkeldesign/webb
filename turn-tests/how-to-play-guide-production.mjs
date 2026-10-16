@@ -148,7 +148,23 @@ for (const demo of [
 assert.match(guide, /if \(demo\) shell\.querySelector\('\.m8-guide-card-panel'\)\.prepend\(demo\(documentRef\)\);/);
 assert.match(demos, /function demoElement\(className, documentRef\) \{[\s\S]*?demo\.setAttribute\('aria-hidden', 'true'\);/);
 const factories = [...demos.matchAll(/export function (create\w+)\([^)]*\) \{([\s\S]*?)\n\}/g)];
-assert.equal(factories.length, 5);
+assert.equal(factories.length, 6);
+// #1217: SPECTATE plays the same pad and steering back from a recorded lap. The pad takes
+// the race's own state names (drive-pad.css), never animates on its own, follows the
+// lap's hand, and under Reduced Motion still shows the lap's steering.
+for (const name of ['is-gas-ready', 'is-drift-ready', 'is-drift-locking', 'is-brake-ready', 'is-reversing',
+  'is-shift-available', 'is-shift-active']) {
+  assert.match(drivePad, new RegExp(`\\.drive-stack[^{]*\\.${name}\\b`), `The race pad has ${name}`);
+  assert.match(demoCode, new RegExp(`\\.turn-demo-stack\\[data-demo="replay"\\][^{]*\\.${name}\\b`), `and so does the replay pad`);
+}
+assert.match(demos, /createDrivePadDemo\(kind, documentRef = globalThis\.document\)/);
+assert.match(demos, /export function createTiltDemo\(documentRef = globalThis\.document\)/);
+assert.match(demoCode, /\[data-hand="left"\] \.turn-demo \.turn-demo-stack\[data-demo="replay"\] \{ margin-inline: 0 42px; transform: scaleX\(-1\); \}/);
+assert.match(demoCode, /\[data-hand="right"\] \.turn-demo \.turn-demo-stack\[data-demo="replay"\] \{ margin-inline: 42px 0; transform: none; \}/);
+assert.match(demoCode, /@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\.turn-demo-stack\[data-demo="replay"\] :is\(\.turn-demo-thumb, \.turn-demo-bubble\) \{ transition: none; \}/);
+assert.match(demoCode, /\.turn-demo-manual-steer:not\(\.is-replay\) > i \{ left: 24%; \}/, 'The still frame never pins a replay\'s steering');
+assert.match(demoCode, /\.turn-demo-manual-steer\.is-replay > i \{\s*transform: translate\(calc\(-50% - var\(--turn-demo-steer, 0\) \* 39px\), -50%\);/);
+assert.match(demoCode, /\.turn-demo-tilt \.turn-demo-device \{ transform: rotate\(calc\(var\(--turn-demo-steer, 0\) \* -16deg\)\); \}/);
 for (const [, name, body] of factories) assert.match(body, /demoElement\(/, `${name} is a decorative demo`);
 assert.doesNotMatch(demoCode, /(?<![\w-])(drive-(stack|pad\b|zone|gas|brake|drift|boost|lock|shift|reverse)|boost-hud|manual-steer\b|score-feedback|race-position-hud)/,
   'The demos never use the race controls\' classes');

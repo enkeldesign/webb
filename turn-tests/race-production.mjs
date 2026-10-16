@@ -21,6 +21,17 @@ import {
   replayFrameAt
 } from '../turn/race/replay-system.js';
 import {
+  REPLAY_CONTROL,
+  beginReplayInputs,
+  lapReplayInputs,
+  lapReplaySetup,
+  readableReplayInputs,
+  readableReplaySetup,
+  recordReplayInputs,
+  replayControlsAt,
+  replaySetup
+} from '../turn/race/replay-inputs.js';
+import {
   COURSE_SAFETY_ROAD_EDGE_FACTOR,
   isOutsideCourseForSafety,
   recordLapCourseSafetyState
@@ -488,6 +499,127 @@ test('replay recording respects its interval and normalization pins the start fr
     p: 0
   });
   assert.equal(normalized[1].p, 0.5);
+});
+
+// #1217: the controls as the player held them, recorded beside the trajectory. The
+// trajectory alone still places the car; this only says what the player was doing.
+test('a lap keeps its controls as [ms, mask] pairs on its own clock, only when they change', () => {
+  const bits = Object.values(REPLAY_CONTROL);
+  assert.equal(new Set(bits).size, bits.length);
+  for (const bit of bits) assert.ok(bit > 0 && (bit & (bit - 1)) === 0 && bit <= 128, `${bit} is one bit`);
+  assert.deepEqual(Object.keys(REPLAY_CONTROL), ['GAS', 'DRIFT', 'BOOST', 'BRAKE', 'REVERSE', 'LOCK', 'SHIFT',
+    'SHIFT_PRESS'], 'Every control of the drive pad and SHIFT; how the lap was set up is its setup');
+
+  const { GAS, DRIFT, LOCK, SHIFT } = REPLAY_CONTROL;
+  const state = { lapActive: true, lapElapsed: 0 };
+  beginReplayInputs(state);
+  assert.equal(recordReplayInputs(state, GAS | SHIFT), true, 'A lap starts with what is already held');
+  state.lapElapsed = 0.016;
+  assert.equal(recordReplayInputs(state, GAS | SHIFT), false, 'An unchanged step adds nothing');
+  state.lapElapsed = 1.2346;
+  assert.equal(recordReplayInputs(state, DRIFT | LOCK | SHIFT), true);
+  state.lapElapsed = 2;
+  assert.equal(recordReplayInputs(state, 256 | DRIFT | LOCK | SHIFT), false, 'Bits beyond the controls are not kept');
+  state.lapActive = false;
+  assert.equal(recordReplayInputs(state, 0), false, 'Nothing is kept outside a timed lap');
+  assert.deepEqual(lapReplayInputs(state), { version: 1, changes: [0, GAS | SHIFT, 1235, DRIFT | LOCK | SHIFT] });
+  beginReplayInputs(state);
+  assert.equal(lapReplayInputs(state), null, 'An empty recording keeps no track');
+});
+
+test('a lap keeps the setup it began with: how it was steered, the pad\'s side and its build', () => {
+  const shift = { reducedStats: ['speed', 'drift', 'boostDuration'], amount: 2 };
+  let taken = 0;
+  const setupNow = () => {
+    taken += 1;
+    return replaySetup({ steering: 'tilt', hand: 'left', shift });
+  };
+  const state = { lapActive: true, lapElapsed: 0 };
+  beginReplayInputs(state);
+  assert.equal(lapReplaySetup(state), null);
+  recordReplayInputs(state, REPLAY_CONTROL.GAS, setupNow);
+  state.lapElapsed = 1;
+  recordReplayInputs(state, REPLAY_CONTROL.DRIFT, setupNow);
+  recordReplayInputs(state, REPLAY_CONTROL.DRIFT, setupNow);
+  assert.equal(taken, 1, 'Taken once, with the lap\'s first controls');
+  assert.deepEqual(lapReplaySetup(state), {
+    version: 1,
+    controls: { steering: 'tilt', hand: 'left' },
+    build: { shift: { reducedStats: ['speed', 'drift', 'boostDuration'], amount: 2 } }
+  });
+  beginReplayInputs(state);
+  assert.equal(lapReplaySetup(state), null, 'Each lap takes its own');
+
+  assert.deepEqual(replaySetup(), { version: 1, controls: { steering: 'screen', hand: 'right' }, build: {} },
+    'A car that cannot SHIFT has no SHIFT in its build');
+  assert.deepEqual(replaySetup({ steering: 'gyro', hand: 'up', shift: { reducedStats: ['speed', 7], amount: 'x' } }),
+    { version: 1, controls: { steering: 'screen', hand: 'right' }, build: { shift: { reducedStats: ['speed'], amount: 1 } } });
+});
+
+test('a completed lap carries its input track to its rival, and each lap records its own', () => {
+  const samples = makeSamples();
+  const state = makeState({ recording: makeFrames(), lapStartedAt: 0, vehicleId: 'sedan' });
+  state.lapActive = true;
+  state.inputRecording = [0, 1, 500, 3];
+  state.lapSetup = replaySetup({ hand: 'left' });
+  completeLapState({ state, samples, now: 9000, competitorLimit: 4, saveGhost: () => {} });
+  assert.deepEqual(state.competitorLaps[0].inputs, { version: 1, changes: [0, 1, 500, 3] });
+  assert.deepEqual(state.competitorLaps[0].setup, { version: 1, controls: { steering: 'screen', hand: 'left' }, build: {} });
+  assert.deepEqual(state.inputRecording, [], 'The next lap begins its own track');
+  assert.equal(state.lapSetup, null, 'and takes its own setup');
+
+  const unrecorded = makeState({ recording: makeFrames(), lapStartedAt: 0, vehicleId: 'sedan' });
+  unrecorded.lapActive = true;
+  completeLapState({ state: unrecorded, samples, now: 9000, competitorLimit: 4, saveGhost: () => {} });
+  assert.equal('inputs' in unrecorded.competitorLaps[0], false, 'A lap with nothing recorded keeps no track');
+  assert.equal('setup' in unrecorded.competitorLaps[0], false, 'or setup');
+
+  state.inputRecording = [0, 1];
+  state.lapSetup = replaySetup();
+  state.lapActive = false;
+  beginTimedLapState({ state, samples, now: 12000 });
+  assert.deepEqual(state.inputRecording, [], 'Crossing the line starts a fresh track');
+  assert.equal(state.lapSetup, null);
+});
+
+test('SPECTATE reads the controls held at any moment, and trusts only a sound track', () => {
+  const changes = [0, 1, 1235, 3, 4000, 0];
+  assert.equal(replayControlsAt(changes, 0), 1);
+  assert.equal(replayControlsAt(changes, 1.234), 1);
+  assert.equal(replayControlsAt(changes, 1.235), 3);
+  assert.equal(replayControlsAt(changes, 3.999), 3);
+  assert.equal(replayControlsAt(changes, 4), 0);
+  assert.equal(replayControlsAt(changes, 99), 0);
+  assert.equal(replayControlsAt([0, 7], 12), 7);
+  const lap = { inputs: { version: 1, changes } };
+  assert.equal(readableReplayInputs(lap), changes);
+  assert.equal(readableReplayInputs(lap), changes, 'Checked once, then remembered');
+  for (const inputs of [undefined, null, 'changes', { version: 2, changes }, { version: 1, changes: 'x' },
+    { version: 1, changes: [] }, { version: 1, changes: [0, 1, 500] }, { version: 1, changes: [0, 1, -5, 2] },
+    { version: 1, changes: [500, 1, 400, 2] }, { version: 1, changes: [0, 256] }, { version: 1, changes: [0, 1.5] },
+    { version: 1, changes: [0.5, 1] }]) {
+    assert.equal(readableReplayInputs({ inputs }), null, `${JSON.stringify(inputs)} shows no controls`);
+  }
+});
+
+test('SPECTATE reads any lap\'s setup: a missing part reads as the default, an unknown one is left alone', () => {
+  const none = { controls: { steering: 'screen', hand: 'right' }, build: { shift: null } };
+  assert.deepEqual(readableReplaySetup({}), none, 'A lap from before setups');
+  assert.deepEqual(readableReplaySetup(null), none);
+  const shift = { reducedStats: ['speed', 'drift', 'boostDuration'], amount: 1 };
+  assert.deepEqual(readableReplaySetup({ setup: replaySetup({ steering: 'tilt', hand: 'left', shift }) }),
+    { controls: { steering: 'tilt', hand: 'left' }, build: { shift } });
+  assert.deepEqual(readableReplaySetup({ setup: replaySetup({ hand: 'left' }) }),
+    { controls: { steering: 'screen', hand: 'left' }, build: { shift: null } }, 'A car that could not SHIFT');
+  // A later release adds to the build (#1219: the perks a lap was driven with) or to the
+  // controls without a new version; this one reads what it knows.
+  assert.deepEqual(readableReplaySetup({ setup: { version: 1, controls: { steering: 'tilt', sensitivity: 2 },
+    build: { shift, perk: { original: 'clean-drift', installed: 'clean-drift' } }, track: 'beachfront' } }),
+  { controls: { steering: 'tilt', hand: 'right' }, build: { shift } });
+  for (const setup of ['tilt', 7, { controls: { steering: 'tilt' } }, { version: 2, controls: { steering: 'tilt' } },
+    { version: 1, controls: 'tilt', build: 'shift' }, { version: 1, build: { shift: { reducedStats: 'speed' } } }]) {
+    assert.deepEqual(readableReplaySetup({ setup }), none, `${JSON.stringify(setup)} reads as the defaults`);
+  }
 });
 
 let failures = 0;
