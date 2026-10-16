@@ -483,19 +483,6 @@ body .m8-feedback-content * {
   border-left: var(--turn-drive-divider) solid var(--turn-outline);
 }
 
-.drive-boost-zone.is-locked::after {
-  content: "LEAVE";
-  position: absolute;
-  right: 5.25px;
-  bottom: 4.5px;
-  padding: 1.5px 3.75px;
-  border: 2px solid var(--turn-outline);
-  border-radius: 749.25px;
-  background: var(--turn-surface-page);
-  font-size: max(var(--turn-text-floor, 11px), 0.33rem);
-  letter-spacing: 0.06em;
-}
-
 @media (max-height: 322.5px) {
   .drive-stack {
     --drive-pad-height: clamp(130.5px, 23.5vw, 153.75px);
