@@ -9,6 +9,13 @@
 // pauseAfter: seconds the doneText stays before the next lesson. needsOvercharge: the
 // lesson cannot go on once OVERCHARGE is gone. keyboardPrompt: for players driving by
 // keyboard, where it differs (LOCK has no key).
+// BUILD's headroom (#1212): the share of OVERCHARGE taken back as it starts (within the
+// 25–50% asked for), and the rise it then asks for, in seconds of OVERCHARGE (the meter
+// holds 0.6; a qualifying slide builds about a third of a second's worth per second).
+export const BUILD_OVERCHARGE_TRIM = 0.4;
+export const BUILD_OVERCHARGE_TARGET = 0.3;
+export const BUILD_OVERCHARGE_RISE = 0.2;
+
 export const DRIFT_ATTACK_LESSONS = Object.freeze([
   Object.freeze({
     id: 'score',
@@ -33,11 +40,14 @@ export const DRIFT_ATTACK_LESSONS = Object.freeze([
     done: (progress) => progress.links > 0
   }),
   Object.freeze({
+    // OVERCHARGE built while scoring and linking would finish BUILD at once, so it
+    // starts by taking back part of it, and asks for a real rise from there (#1212).
     id: 'build',
     targets: ['.drive-drift-zone'],
     title: 'BUILD',
     prompt: 'With BOOST full, keep holding DRIFT. OVERCHARGE builds past the end of the BOOST meter.',
-    done: (progress) => progress.overcharge >= 0.3
+    trimOvercharge: BUILD_OVERCHARGE_TRIM,
+    done: (progress) => progress.overcharge >= Math.max(BUILD_OVERCHARGE_TARGET, progress.overchargeAtStart + BUILD_OVERCHARGE_RISE)
   }),
   Object.freeze({
     id: 'catch',

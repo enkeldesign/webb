@@ -854,6 +854,67 @@ test('DRIFT ATTACK TUTORIAL teaches scoring, then LINK, BUILD, CATCH, HOLD and S
   }
 });
 
+// #1212: OVERCHARGE built while scoring and linking would end BUILD at once (BUILD,
+// then straight to CATCH). BUILD takes back part of it and asks for a real rise.
+test('DRIFT ATTACK BUILD starts with headroom, so OVERCHARGE is visibly built before CATCH', async () => {
+  const { createDriftAttackCoach } = await import('../turn/tutorial/drift-attack-coach.js');
+  const lessons = await import('../turn/tutorial/drift-attack-lessons.js');
+  assert.ok(lessons.BUILD_OVERCHARGE_TRIM >= 0.25 && lessons.BUILD_OVERCHARGE_TRIM <= 0.5, 'Takes back 25–50%');
+  const build = lessons.DRIFT_ATTACK_LESSONS.findIndex((lesson) => lesson.id === 'build');
+  const trims = [];
+  let overcharge = 0.6;
+  const input = () => ({ speed: 40, overcharge, caught: false, boosting: false, banks: 1, links: 1 });
+  const views = [];
+  const coach = createDriftAttackCoach({
+    lessons: lessons.DRIFT_ATTACK_LESSONS.slice(build),
+    signals: input,
+    present: (view) => views.push(view),
+    trimOvercharge: (share) => {
+      trims.push(share);
+      const removed = overcharge * share;
+      overcharge -= removed;
+      return removed;
+    }
+  });
+  coach.update(0.016);
+  assert.equal(views.at(-1).id, 'build');
+  assert.deepEqual(trims, [lessons.BUILD_OVERCHARGE_TRIM], 'BUILD takes back part of a full OVERCHARGE as it begins');
+  assert.ok(Math.abs(overcharge - 0.36) < 1e-9);
+  coach.update(0.016);
+  assert.equal(coach.lesson, 'build', 'Still above the old 0.3 mark, BUILD does not end at once');
+  overcharge = 0.5;
+  coach.update(0.016);
+  assert.equal(coach.lesson, 'build', 'A small rise is not yet a build');
+  overcharge = 0.36 + lessons.BUILD_OVERCHARGE_RISE;
+  coach.update(0.016);
+  assert.equal(coach.lesson, 'catch', 'A real rise ends BUILD, and CATCH follows');
+
+  // Building again after OVERCHARGE leaked away takes nothing (there is nothing to take).
+  const retryTrims = [];
+  overcharge = 0;
+  const retry = createDriftAttackCoach({
+    lessons: lessons.DRIFT_ATTACK_LESSONS.slice(build),
+    signals: input,
+    trimOvercharge: (share) => { retryTrims.push(share); return 0; }
+  });
+  retry.update(0.016);
+  overcharge = 0.25;
+  retry.update(0.016);
+  assert.equal(retry.lesson, 'build', 'From empty, BUILD still needs OVERCHARGE past 0.3');
+  overcharge = 0.31;
+  retry.update(0.016);
+  assert.equal(retry.lesson, 'catch');
+
+  // Only the tutorial takes OVERCHARGE back: ordinary racing never calls the hook.
+  const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
+  const controls = await read('../turn/ui/gameplay-controls.js');
+  assert.match(controls, /globalThis\.__turnTrimBoostOvercharge = trimBoostOvercharge;/);
+  const callers = (await Promise.all(['../turn/main.js', '../turn/ui/gameplay-controls.js', '../turn/tutorial/drift-attack-coach.js',
+    '../turn/tutorial/tutorial-prompt.js', '../turn/tutorial/flow-tutorial.js'].map(read)))
+    .filter((source) => /__turnTrimBoostOvercharge\?\.\(/.test(source)).length;
+  assert.equal(callers, 1, 'One caller: the DRIFT ATTACK coach');
+});
+
 test('DRIFT ATTACK TUTORIAL has no failure state: an early BOOST or the line ends it kindly', async () => {
   const { createDriftAttackCoach } = await import('../turn/tutorial/drift-attack-coach.js');
   const lessons = await import('../turn/tutorial/drift-attack-lessons.js');

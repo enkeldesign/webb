@@ -31,7 +31,9 @@ export function createDriftAttackCoach({
   lessons = DRIFT_ATTACK_LESSONS,
   signals,
   present = () => {},
-  isHeld = () => false
+  isHeld = () => false,
+  // Takes back a share of the OVERCHARGE built so far, and says how much (#1212).
+  trimOvercharge = () => 0
 }) {
   const outcome = new Map(lessons.map((lesson) => [lesson.id, 'pending']));
   const buildIndex = Math.max(0, lessons.findIndex((lesson) => lesson.id === 'build'));
@@ -50,9 +52,13 @@ export function createDriftAttackCoach({
     nextIndex = index + 1;
     banksAtStart = input.banks;
     linksAtStart = input.links;
-    lastOvercharge = input.overcharge;
+    const trimmed = !prompt && current.trimOvercharge > 0 ? Math.max(0, Number(trimOvercharge(current.trimOvercharge)) || 0) : 0;
+    const overcharge = Math.max(0, input.overcharge - trimmed);
+    // This frame's reading predates the trim: the rest of it sees what is left.
+    input.overcharge = overcharge;
+    lastOvercharge = overcharge;
     Object.assign(progress, {
-      banks: 0, links: 0, overcharge: input.overcharge, caught: false, caughtSeconds: 0, spentAmount: 0, spent: false
+      banks: 0, links: 0, overcharge, overchargeAtStart: overcharge, caught: false, caughtSeconds: 0, spentAmount: 0, spent: false
     });
     present({
       kind: 'lesson',
@@ -159,7 +165,8 @@ export function startDriftAttackCoach({ runtime, events = globalThis }) {
   const coach = createDriftAttackCoach({
     signals: () => readDriftAttackSignals(counters, state),
     present: prompt.present,
-    isHeld: () => prompt.holding
+    isHeld: () => prompt.holding,
+    trimOvercharge: (share) => globalThis.__turnTrimBoostOvercharge?.(share) || 0
   });
   coach.update(0);
   let frame = 0;
