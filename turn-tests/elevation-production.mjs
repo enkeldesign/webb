@@ -175,7 +175,10 @@ const [mainSource, replaySource, spatialSource] = await Promise.all([
 assert.match(mainSource, /trackSampleAtProgress\(samples, frame\.p\)/, 'Rival visuals must derive elevation from saved track progress');
 assert.match(mainSource, /car\.position\.set\(frame\.x, trackSurfaceY\(surfaceSample\), frame\.z\)/);
 assert.match(mainSource, /playerCar\.rotation\.x = trackPitch\(surfaceSample\)/);
-assert.match(mainSource, /effectRear\.y \+= 0\.54/);
+// DRIFT smoke and BOOST wakes follow the car's height, not world zero (#1209).
+const effectsSource = await fs.readFile(new URL('../turn/render/drive-effects.js', import.meta.url), 'utf8');
+assert.match(effectsSource, /samples\[1\] = state\.position\.y \+ WAKE_LIFT/, 'The BOOST wake rides on the road it was left on');
+assert.match(effectsSource, /y: state\.position\.y \+ 0\.3,/, 'DRIFT smoke starts at the tyres, at the car\'s height');
 assert.match(mainSource, /skidLeftWheel\.y = state\.position\.y \+ 0\.05/);
 assert.doesNotMatch(mainSource, /car\.position\.set\(frame\.x, 0\.18, frame\.z\)/, 'Rivals may no longer be pinned to world zero');
 assert.doesNotMatch(mainSource, /playerCar\.position\.y = 0\.18/, 'Preview cars may no longer be pinned to world zero');

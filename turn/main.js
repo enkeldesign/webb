@@ -3,6 +3,8 @@
 
 import * as THREE from 'three';
 import { createCarShadows } from '/turn/render/car-shadows.js';
+import { createDriveEffects } from '/turn/render/drive-effects.js';
+import { graphicsProfile } from '/turn/graphics-profile.js';
 import { installKenneyWorld } from '/turn/world-assets.js';
 import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19&revision=r270-camera-hotpath';
 import { updateHudState } from '/turn/ui/hud.js?build=20261002-r363';
@@ -665,122 +667,28 @@ const skidRearCenter = new THREE.Vector3();
 const skidLeftWheel = new THREE.Vector3();
 const skidRightWheel = new THREE.Vector3();
 
-const smokePool = Array.from({ length: 24 }, () => {
-  const mesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.72, 7, 5),
-    new THREE.MeshBasicMaterial({ color: 0xb9c0c7, transparent: true, opacity: 0 })
-  );
-  mesh.visible = false;
-  mesh.userData.life = 0;
-  mesh.userData.velocity = new THREE.Vector3();
-  world.add(mesh);
-  return mesh;
-});
-
-const flamePool = Array.from({ length: 16 }, (_, index) => {
-  const mesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.62, 7, 5),
-    new THREE.MeshBasicMaterial({
-      color: index % 2 ? 0xff922b : 0xffd43b,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false
-    })
-  );
-  mesh.visible = false;
-  mesh.userData.life = 0;
-  mesh.userData.velocity = new THREE.Vector3();
-  world.add(mesh);
-  return mesh;
-});
-
-let smokeCursor = 0;
-let flameCursor = 0;
-let smokeCooldown = 0;
-let flameCooldown = 0;
-const effectForward = new THREE.Vector3();
-const effectRight = new THREE.Vector3();
-const effectRear = new THREE.Vector3();
-const effectPosition = new THREE.Vector3();
-const effectVelocity = new THREE.Vector3();
-const effectScale = new THREE.Vector3();
-
-function launchParticle(pool, cursor, position, velocity, life, scale, opacity) {
-  const particle = pool[cursor % pool.length];
-  particle.visible = true;
-  particle.position.copy(position);
-  particle.scale.copy(scale);
-  particle.material.opacity = opacity;
-  particle.userData.life = life;
-  particle.userData.maxLife = life;
-  particle.userData.velocity.copy(velocity);
-  return cursor + 1;
-}
-
-function updateParticlePool(pool, dt, smoke = false) {
-  for (const particle of pool) {
-    if (!particle.visible) continue;
-    particle.userData.life -= dt;
-    if (particle.userData.life <= 0) {
-      particle.visible = false;
-      continue;
-    }
-    const ratio = particle.userData.life / particle.userData.maxLife;
-    particle.position.addScaledVector(particle.userData.velocity, dt);
-    particle.material.opacity = ratio * (smoke ? 0.42 : 0.9);
-    if (smoke) particle.scale.multiplyScalar(1 + dt * 1.7);
-    else particle.scale.multiplyScalar(1 - Math.min(0.65, dt * 3.2));
-  }
-}
+// DRIFT smoke, BOOST wakes and OVERCHARGE (#1209): render/drive-effects.js, two draw
+// calls in all, compiled now so the first slide or burst does not stall a frame.
+const driveEffects = createDriveEffects({ THREE, parent: world, lowGraphics: graphicsProfile.lowGraphics });
+driveEffects.warm(renderer, camera, scene);
 
 function updateDriveEffects(dt) {
-  effectForward.copy(getForward());
-  effectRight.copy(getRight());
-  effectRear.copy(state.position).addScaledVector(effectForward, -3.2);
-  effectRear.y += 0.54;
-
-  flameCooldown -= dt;
-  if (globalThis.__turnBoostActive && state.speed > 4 && flameCooldown <= 0) {
-    for (const side of [-1, 1]) {
-      effectPosition.copy(effectRear).addScaledVector(effectRight, side * 0.78);
-      effectVelocity.copy(effectForward).multiplyScalar(-8 - state.speed * 0.08);
-      effectVelocity.y += 1.2;
-      flameCursor = launchParticle(
-        flamePool,
-        flameCursor,
-        effectPosition,
-        effectVelocity,
-        0.22,
-        effectScale.set(0.5, 0.48, 1.8),
-        0.95
-      );
-    }
-    flameCooldown = 0.035;
-  }
-
-  smokeCooldown -= dt;
-  if (globalThis.__turnDriftHeld && state.speed > 13 && Math.abs(state.steering) > 0.08 && smokeCooldown <= 0) {
-    for (const side of [-1, 1]) {
-      effectPosition.copy(effectRear).addScaledVector(effectRight, side * 1.28);
-      effectPosition.y = state.position.y + 0.27;
-      effectVelocity.copy(effectRight).multiplyScalar(-side * state.steering * 2.8);
-      effectVelocity.y += 2.1;
-      smokeCursor = launchParticle(
-        smokePool,
-        smokeCursor,
-        effectPosition,
-        effectVelocity,
-        0.72,
-        effectScale.set(0.78, 0.52, 0.78),
-        0.42
-      );
-    }
-    smokeCooldown = 0.075;
-  }
-
-  updateParticlePool(smokePool, dt, true);
-  updateParticlePool(flamePool, dt, false);
+  driveEffects.update({
+    dt,
+    state,
+    forward: getForward(),
+    right: getRight(),
+    boostActive: globalThis.__turnBoostActive === true,
+    overcharge: Number(globalThis.__turnBoostOvercharge) || 0,
+    driftHeld: globalThis.__turnDriftHeld === true && Math.abs(state.steering) > 0.08,
+    slip: state.driftSlipAngle
+  });
 }
+
+// A new race, a restart, GARAGE or Home: no smoke, wake or camera kick carries over.
+window.addEventListener('turn:ui-state-change', (event) => {
+  if (['race-started', 'race-reset', 'lot-open', 'home-open'].includes(event.detail?.reason)) driveEffects.clear(state);
+});
 
 const forwardVector = new THREE.Vector3();
 const rightVector = new THREE.Vector3();

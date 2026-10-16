@@ -147,6 +147,16 @@ export function resolveRaceCameraFov({
   return BASE_CAMERA_FOV + ratio * (maxFov - BASE_CAMERA_FOV);
 }
 
+// A BOOST or OVERCHARGE burst widens the view for a moment, on top of the speed cue
+// (render/drive-effects.js sets state.cameraKickFov in degrees and lets it ease away).
+// Reduced Motion keeps the base view, as it does for the speed cue.
+const MAX_CAMERA_KICK_FOV = 6;
+
+export function resolveCameraKickFov({ kick = 0, reducedMotion = REDUCED_MOTION_AT_STARTUP } = {}) {
+  if (reducedMotion) return 0;
+  return clamp(Number(kick) || 0, 0, MAX_CAMERA_KICK_FOV);
+}
+
 export function updateRaceCameraState({
   state,
   camera,
@@ -156,7 +166,8 @@ export function updateRaceCameraState({
   getRight,
   samples,
   maxSpeed,
-  dt
+  dt,
+  reducedMotion = REDUCED_MOTION_AT_STARTUP
 }) {
   const carForward = getForward();
   const carRight = getRight();
@@ -265,8 +276,13 @@ export function updateRaceCameraState({
     state.horizonCameraRoll = 0;
   }
 
-  const targetFov = resolveRaceCameraFov({ speedRatio, speedResponsiveCamera });
-  camera.fov = lerp(camera.fov, targetFov, Math.min(1, dt * 4.5));
+  const targetFov = resolveRaceCameraFov({ speedRatio, speedResponsiveCamera, reducedMotion });
+  // The kick sits on top of the eased speed FOV and is taken off again before easing,
+  // so it never builds into the speed cue.
+  const kick = resolveCameraKickFov({ kick: state.cameraKickFov, reducedMotion });
+  const speedFov = camera.fov - finiteNumber(state.cameraKickApplied, 0);
+  camera.fov = lerp(speedFov, targetFov, Math.min(1, dt * 4.5)) + kick;
+  state.cameraKickApplied = kick;
   camera.updateProjectionMatrix();
 }
 

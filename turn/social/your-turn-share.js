@@ -40,7 +40,7 @@ function installStylesheet() {
 
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = '/turn/social/your-turn-share.css?build=20261016-r456';
+  link.href = '/turn/social/your-turn-share.css?build=20261016-r457';
   link.setAttribute('data-turn-yourturn-share', '');
   const ready = new Promise((resolve, reject) => {
     link.addEventListener('load', () => resolve(link), { once: true });
