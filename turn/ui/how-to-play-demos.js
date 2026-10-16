@@ -9,7 +9,9 @@
 // change when the race does. They are pictures: hidden from assistive technology,
 // since the card's text says the same, and built from their own classes, so nothing
 // that looks for the real controls finds them. They move only while their card is open;
-// with Reduced Motion each is one still frame.
+// with Reduced Motion each is one still frame. SPECTATE plays the same pad and steering
+// back from a recorded lap (#1217, ui/spectate-controls.js): there the race's own state
+// names set the pad, and the lap's steering the knob or the phone, instead of a loop.
 const STYLE_ID = 'turn-how-to-play-demo-styles';
 
 // A score counts up as the race's does, one held value after another, each its own
@@ -641,6 +643,71 @@ const STYLES = `
     73.83%, 100% { left: 50%; }
   }
 
+  /* REPLAY (#1217): a recorded lap sets the pad by the race's own state names
+     (drive-pad.css) and data-thumb, where the thumb is. The steering box's knob and the
+     phone follow the lap's steering, --turn-demo-steer: -1 right to 1 left, as far as
+     the steering demos go. Nothing moves on its own. */
+  .turn-demo-stack[data-demo="replay"] .turn-demo-thumb {
+    opacity: 0;
+    transition: left 120ms ease-out, top 120ms ease-out, opacity 120ms ease-out;
+  }
+  .turn-demo-stack[data-demo="replay"]:not([data-thumb=""]) .turn-demo-thumb { opacity: 1; }
+  .turn-demo-stack[data-demo="replay"][data-thumb="drift"] .turn-demo-thumb { left: 25%; top: 16%; }
+  .turn-demo-stack[data-demo="replay"][data-thumb="lock"] .turn-demo-thumb { left: -12%; top: 16%; }
+  .turn-demo-stack[data-demo="replay"][data-thumb="boost"] .turn-demo-thumb { left: 75%; top: 16%; }
+  .turn-demo-stack[data-demo="replay"][data-thumb="shift"] .turn-demo-thumb { left: -13%; top: 54%; }
+  .turn-demo-stack[data-demo="replay"][data-thumb="brake"] .turn-demo-thumb { left: 50%; top: 88%; }
+  .turn-demo-stack[data-demo="replay"][data-thumb="reverse"] .turn-demo-thumb { left: -12%; top: 88%; }
+  .turn-demo-stack[data-demo="replay"] .turn-demo-bubble {
+    transition:
+      opacity var(--turn-drive-bubble-fade) ease-out,
+      transform var(--turn-drive-bubble-slide) var(--turn-drive-bubble-slide-easing),
+      background-color var(--turn-drive-bubble-colour-change) ease;
+  }
+  .turn-demo-stack[data-demo="replay"].is-drift-ready .is-lock,
+  .turn-demo-stack[data-demo="replay"]:is(.is-brake-ready, .is-reversing) .is-reverse,
+  .turn-demo-stack[data-demo="replay"]:is(.is-shift-available.is-gas-ready, .is-shift-active, .is-shift-pressing) .is-shift {
+    opacity: 1;
+    transform: var(--turn-demo-out);
+  }
+  .turn-demo-stack[data-demo="replay"].is-drift-ready .turn-demo-pad { border-top-left-radius: 0; }
+  .turn-demo-stack[data-demo="replay"]:is(.is-brake-ready, .is-reversing) .turn-demo-pad { border-bottom-left-radius: 0; }
+  .turn-demo-stack[data-demo="replay"].is-gas-ready .is-gas,
+  .turn-demo-stack[data-demo="replay"].is-drift-ready .is-drift,
+  .turn-demo-stack[data-demo="replay"].is-boost-ready .is-boost,
+  .turn-demo-stack[data-demo="replay"].is-brake-ready .is-brake { box-shadow: var(--turn-drive-zone-pressed); }
+  .turn-demo-stack[data-demo="replay"].is-boost-ready .is-boost { --turn-demo-boost-fill: var(--turn-yellow-600); }
+  .turn-demo-stack[data-demo="replay"].is-drift-locking .is-lock {
+    background-color: var(--turn-control-overcharge);
+    box-shadow: var(--turn-drive-bubble-pressed);
+  }
+  .turn-demo-stack[data-demo="replay"].is-reversing .is-reverse {
+    background-color: var(--turn-orange-200);
+    box-shadow: var(--turn-drive-bubble-pressed);
+  }
+  .turn-demo-stack[data-demo="replay"].is-shift-active .is-shift { background-color: var(--turn-control-shift-on); }
+  .turn-demo-stack[data-demo="replay"].is-shift-active .is-shift i { width: 0.72em; opacity: 1; }
+  /* Laid out for the hand the lap was driven with (data-hand), whatever this device's. */
+  [data-hand="right"] .turn-demo .turn-demo-stack[data-demo="replay"] { margin-inline: 42px 0; transform: none; }
+  [data-hand="right"] .turn-demo .turn-demo-stack[data-demo="replay"] .turn-demo-pad {
+    box-shadow: var(--turn-drive-pad-shadow-x) var(--turn-drive-pad-shadow-y) 0 var(--turn-shadow-color);
+  }
+  [data-hand="right"] .turn-demo .turn-demo-stack[data-demo="replay"] .turn-demo-pad > span,
+  [data-hand="right"] .turn-demo .turn-demo-stack[data-demo="replay"] .turn-demo-bubble.is-reverse > b { transform: none; }
+  [data-hand="right"] .turn-demo .turn-demo-stack[data-demo="replay"] .turn-demo-bubble > b { transform: rotate(-90deg); }
+  [data-hand="left"] .turn-demo .turn-demo-stack[data-demo="replay"] { margin-inline: 0 42px; transform: scaleX(-1); }
+  [data-hand="left"] .turn-demo .turn-demo-stack[data-demo="replay"] .turn-demo-pad {
+    box-shadow: calc(-1 * var(--turn-drive-pad-shadow-x)) var(--turn-drive-pad-shadow-y) 0 var(--turn-shadow-color);
+  }
+  [data-hand="left"] .turn-demo .turn-demo-stack[data-demo="replay"] .turn-demo-pad > span,
+  [data-hand="left"] .turn-demo .turn-demo-stack[data-demo="replay"] .turn-demo-bubble.is-reverse > b { transform: scaleX(-1); }
+  [data-hand="left"] .turn-demo .turn-demo-stack[data-demo="replay"] .turn-demo-bubble > b { transform: scaleX(-1) rotate(-90deg); }
+  .turn-demo-manual-steer.is-replay > i {
+    transform: translate(calc(-50% - var(--turn-demo-steer, 0) * 39px), -50%);
+  }
+  .turn-demo-tilt .turn-demo-device { transform: rotate(calc(var(--turn-demo-steer, 0) * -16deg)); }
+  .turn-demo-tilt .turn-demo-device > i::after { transform: rotate(calc(var(--turn-demo-steer, 0) * 16deg)); }
+
   /* RIVALS: the race's POSITION and BEST chips (styles.css, position-hud-r83.css). */
   .turn-demo-rivals { gap: var(--turn-space-3); }
   .turn-demo-chip {
@@ -925,6 +992,8 @@ ${countUp(44, 66, 600, 12)}
     .turn-demo,
     .turn-demo *,
     .turn-demo *::after { animation: none !important; }
+    /* A replay changes state at once; its steering still moves, since that is the lap. */
+    .turn-demo-stack[data-demo="replay"] :is(.turn-demo-thumb, .turn-demo-bubble) { transition: none; }
     .turn-demo-stack[data-demo="drive"] .turn-demo-thumb { left: -12%; top: 16%; }
     .turn-demo-stack:is([data-demo="drive"], [data-demo="boost"], [data-demo="overcharge"]) .turn-demo-pad { border-top-left-radius: 0; }
     .turn-demo-stack:is([data-demo="drive"], [data-demo="boost"], [data-demo="overcharge"]) .is-drift { box-shadow: var(--turn-drive-zone-pressed); }
@@ -946,7 +1015,7 @@ ${countUp(44, 66, 600, 12)}
     .turn-demo-steer .turn-demo-device > i::after { transform: rotate(-7deg); }
     .turn-demo-steer .turn-demo-message { opacity: 1; }
     .turn-demo-steer .turn-demo-recalibrate { background-color: var(--yellow); color: var(--turn-ink); }
-    .turn-demo-manual-steer > i { left: 24%; }
+    .turn-demo-manual-steer:not(.is-replay) > i { left: 24%; }
     .turn-demo-score[data-demo="drift"] { --turn-demo-score: 420; }
     .turn-demo-score[data-demo="drift"] .turn-demo-callout { display: none; }
     .turn-demo-score[data-demo="drift"] .turn-demo-swap > * { opacity: 0; }
@@ -990,7 +1059,8 @@ function demoElement(className, documentRef) {
 }
 
 // kind: 'drive' (GAS, DRIFT into LOCK, BOOST, BRAKE into REVERSE), 'shift', or 'boost'
-// and 'overcharge', which add the BOOST bar above the pad.
+// and 'overcharge', which add the BOOST bar above the pad; 'replay' is SPECTATE's, set
+// from a recorded lap.
 export function createDrivePadDemo(kind, documentRef = globalThis.document) {
   const demo = demoElement('', documentRef);
   const bar = kind === 'boost' || kind === 'overcharge';
@@ -1064,9 +1134,17 @@ export function createScoreDemo(kind, documentRef = globalThis.document) {
   return demo;
 }
 
-// STEER with on-screen steering: the race's steering control, dragged left and right.
-export function createManualSteerDemo(documentRef = globalThis.document) {
+// STEER with on-screen steering: the race's steering control, dragged left and right,
+// or, as a replay's, held where the lap's steering puts it.
+export function createManualSteerDemo(documentRef = globalThis.document, { replay = false } = {}) {
   const demo = demoElement('', documentRef);
-  demo.innerHTML = '<div class="turn-demo-manual-steer"><span>←</span><span>→</span><i></i></div>';
+  demo.innerHTML = `<div class="turn-demo-manual-steer${replay ? ' is-replay' : ''}"><span>←</span><span>→</span><i></i></div>`;
+  return demo;
+}
+
+// The phone alone, tilted by a replay's steering (#1217).
+export function createTiltDemo(documentRef = globalThis.document) {
+  const demo = demoElement('turn-demo-tilt', documentRef);
+  demo.innerHTML = '<span class="turn-demo-device"><i></i></span>';
   return demo;
 }

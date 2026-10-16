@@ -16,6 +16,7 @@ import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStag
 import { createRaceSessionOrchestrator } from '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
 import { beginTimedLapState, completeLapState, updateLapProgressState } from '/turn/race/lap-system.js?build=20260720-r19';
 import { recordReplayFrame, replayFrameAt, tutorialRivalPlaybackTime } from '/turn/race/replay-system.js';
+import { REPLAY_CONTROL, recordReplayInputs } from '/turn/race/replay-inputs.js';
 import { raceClockFrozen, raceNow } from '/turn/race/race-clock.js';
 import { RIVAL_LIMIT, loadRivalsState, scheduleRivalsStateSave } from '/turn/race/rival-storage.js?build=20260720-r19';
 import { createTrackSpatialIndex } from '/turn/race/track-spatial-index.js?build=20260720-r19';
@@ -134,6 +135,7 @@ const state = {
   bestTime: Infinity,
   ghostFrames: [],
   recording: [],
+  inputRecording: [],
   ghostVisible: false,
   competitorLaps: [],
   vehicleId: initialVehicleSelection.carId,
@@ -987,6 +989,17 @@ function updatePhysics(dt, now) {
 
 function recordGhostFrame() {
   recordReplayFrame(state);
+  recordReplayInputs(state, replayControls());
+}
+
+// The controls as a replay keeps them (#1217): the drive pad publishes its own; keys and
+// tilt steering are read here.
+function replayControls() {
+  return (globalThis.__turnDriveControlMask | 0)
+    | (state.touchGas ? REPLAY_CONTROL.GAS : 0)
+    | (state.touchBrake ? REPLAY_CONTROL.BRAKE : 0)
+    | (state.touchReverse ? REPLAY_CONTROL.REVERSE : 0)
+    | (state.sensorMode ? REPLAY_CONTROL.TILT : 0);
 }
 
 function completeLap(now) {

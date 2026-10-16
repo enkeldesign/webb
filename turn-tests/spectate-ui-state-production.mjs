@@ -72,4 +72,17 @@ assert.match(
   'The regression must continue covering a consumer that treats missing running as stopped'
 );
 
-console.log('Spectate UI-state snapshot regression passed.');
+// #1217: the followed lap's recorded controls play back on every SPECTATE frame, and go
+// with SPECTATE. Live steering and the score cards, which show none of the replay, give
+// way while it runs.
+assert.match(spectateSource, /const frame = lap \? replayFrameAt\(lap, spectate\.elapsed\) : null;\n  spectateControls\?\.update\(lap, frame, spectate\.elapsed\);/);
+assert.match(spectateSource, /spectate\.active = false;\n    spectate\.elapsed = 0;\n    spectateControls\?\.hide\(\);/);
+assert.match(spectateSource, /if \(!current\.active\) spectateControls\?\.hide\(\);/);
+const spectateCss = await fs.readFile(new URL('../turn/spectate-v3.css', import.meta.url), 'utf8');
+assert.match(spectateCss, /\.turn-spectating \.controls,\n\.turn-spectating \.manual-steer,\n\.turn-spectating \.boost-hud,\n\.turn-spectating \.race-position-hud,\n\.turn-spectating #scoreFeedback \{\n  display: none !important;/);
+const controlsSource = await fs.readFile(new URL('../turn/ui/spectate-controls.js', import.meta.url), 'utf8');
+assert.match(controlsSource, /root\.setAttribute\('aria-hidden', 'true'\);/, 'A picture, hidden from assistive technology');
+assert.doesNotMatch(controlsSource, /__turn(AnalogGas|DriftHeld|BoostActive|DriveControlMask)|\.touch(Gas|Brake|Reverse)|manualSteering/,
+  'It never touches the live controls');
+
+console.log('Spectate UI-state snapshot and replay controls regression passed.');

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GAME_MODE } from '../race/game-state.js';
 import { replayFrameAt } from '../race/replay-system.js';
 import { trackPitch, trackSampleAtProgress, trackSurfaceY } from '../tracks/elevation.js?build=20260811-r164';
+import { createSpectateControls } from './spectate-controls.js';
 
 const spectate = {
   active: false,
@@ -10,6 +11,8 @@ const spectate = {
   elapsed: 0,
   snapshot: null
 };
+// The followed lap's controls, played back beside it (#1217).
+let spectateControls = null;
 
 function notifyUiState(runtime, reason) {
   const state = runtime?.state || {};
@@ -50,6 +53,7 @@ function install(runtime) {
   runtime.__spectateInstalled = true;
 
   const scratch = createSpectateScratch();
+  spectateControls = createSpectateControls(document);
   runtime.setSceneOverride((dt) => updateSpectatorScene(runtime, dt, scratch));
   installPublicApi(runtime);
   installUi(runtime);
@@ -108,6 +112,7 @@ function updateSpectatorScene(runtime, dt, scratch) {
 
   const lap = state.competitorLaps[spectate.index];
   const frame = lap ? replayFrameAt(lap, spectate.elapsed) : null;
+  spectateControls?.update(lap, frame, spectate.elapsed);
   if (!frame) return true;
 
   const surfaceSample = replaySurfaceSample(runtime, frame);
@@ -185,6 +190,7 @@ function installPublicApi(runtime) {
 
     spectate.active = false;
     spectate.elapsed = 0;
+    spectateControls?.hide();
     runtime.setGameMode(GAME_MODE.STAGED);
 
     if (spectate.snapshot) {
@@ -247,6 +253,7 @@ function installUi(runtime) {
     if (current) {
       spectateButton.hidden = !current.available;
       bar.hidden = !current.active;
+      if (!current.active) spectateControls?.hide();
       document.body.classList.toggle('turn-spectating', current.active);
       rankEl.textContent = current.rank ? `${current.rank}.` : '';
       nameEl.textContent = current.name || 'Ghost';

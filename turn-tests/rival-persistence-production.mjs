@@ -302,7 +302,22 @@ try {
   clearRivalsState(more);
   assert.deepEqual(getStoredRivalSummaries('harbor'), [], 'A reset empties the list');
 
-  console.log('TURN rival persistence: reset, pending precedence, Home/share/reload, bounded retries, lifecycle recovery, two-window merge and reset, compact replays, full storage and the Track sheet’s rival list passed.');
+  // #1217: a lap's input track is kept with it as recorded, beside its compact frames,
+  // and a lap saved before input tracks still loads as before, without one.
+  reset();
+  const driven = state('harbor', 10);
+  const track = { version: 1, changes: [0, 1, 1250, 3, 2600, 35] };
+  driven.competitorLaps[0].inputs = track;
+  saveRivalsState(driven);
+  const drivenLap = JSON.parse(disk.get(key('harbor'))).laps[0];
+  assert.deepEqual(drivenLap.inputs, track, 'The input track is stored as recorded');
+  assert.equal(drivenLap.frames.codec, 'q1', 'beside the compact frames');
+  assert.deepEqual(reload('harbor').competitorLaps[0].inputs, track, 'and loads back with its lap');
+  reset();
+  saveRivalsState(state('harbor', 10));
+  assert.equal(reload('harbor').competitorLaps[0].inputs, undefined, 'A lap without one loads as before');
+
+  console.log('TURN rival persistence: reset, pending precedence, Home/share/reload, bounded retries, lifecycle recovery, two-window merge and reset, compact replays, input tracks, full storage and the Track sheet’s rival list passed.');
 } finally {
   reset();
   for (const [name, descriptor] of originals) {

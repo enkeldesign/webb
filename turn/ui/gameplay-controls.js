@@ -6,6 +6,7 @@ import {
   resolveDriftBoostRechargeMultiplier
 } from '../input/drift-lock.js?revision=r218-boost-balance';
 import { raceNow } from '../race/race-clock.js';
+import { REPLAY_CONTROL } from '../race/replay-inputs.js';
 import {
   BOOST_OVERCHARGE_PHASE,
   advanceBoostOvercharge,
@@ -232,6 +233,7 @@ function installGameplayUi() {
   let controlHandedness = installControlHandedness();
   globalThis.addEventListener?.('turn:control-handedness-change', (event) => {
     controlHandedness = normalizeControlHandedness(event.detail?.handedness);
+    publishDriveControls();
   });
 
   let drivePointerId = null;
@@ -285,6 +287,22 @@ function installGameplayUi() {
   let publishedChargePercent = null;
   let publishedMeterValue = null;
   let publishedAriaValueText = null;
+
+  // What the pad is held for, as a replay keeps it (#1217, race/replay-inputs.js): set on
+  // each change, read once a step by the replay recorder (main.js).
+  function publishDriveControls() {
+    globalThis.__turnDriveControlMask = (driveZone === 'gas' ? REPLAY_CONTROL.GAS : 0)
+      | (driveZone === 'drift' ? REPLAY_CONTROL.DRIFT : 0)
+      | (driveZone === 'boost' ? REPLAY_CONTROL.BOOST : 0)
+      | (driveZone === 'brake' ? REPLAY_CONTROL.BRAKE : 0)
+      | (reverseRequested ? REPLAY_CONTROL.REVERSE : 0)
+      | (driftLockRequested ? REPLAY_CONTROL.LOCK : 0)
+      | (shiftActive ? REPLAY_CONTROL.SHIFT : 0)
+      | (shiftPointerInside ? REPLAY_CONTROL.SHIFT_PRESS : 0)
+      | (shiftAvailable ? REPLAY_CONTROL.SHIFT_READY : 0)
+      | (controlHandedness === 'left' ? REPLAY_CONTROL.LEFT_HANDED : 0);
+  }
+  publishDriveControls();
 
   function safeVibrate(pattern) {
     try {
@@ -513,6 +531,7 @@ function installGameplayUi() {
     shiftActive = nextActive;
     globalThis.__turnShiftActive = shiftActive;
     if (runtime?.state) runtime.state.shiftActive = shiftActive;
+    publishDriveControls();
     shiftOverchargeGain = before ? transferShiftBoost(before, runtime.state) : 0;
     syncShiftVisual();
     publishShiftState({ announce });
@@ -576,6 +595,7 @@ function installGameplayUi() {
       unlocked = isFeatureUnlocked(VEHICLE_SHIFT_FEATURE_ID);
     } catch (_) {}
     shiftAvailable = Boolean(unlocked && car && profile?.enabled && profile.shiftedStats);
+    publishDriveControls();
     if (reset || !shiftAvailable) {
       applyShiftMode(false, { announce, easeTopSpeedReduction: !reset });
       return;
@@ -826,6 +846,7 @@ function installGameplayUi() {
     driveStack.classList.toggle('is-gas-ready', nextZone === 'gas' && shiftAvailable);
     driveStack.classList.toggle('is-brake-ready', nextZone === 'brake');
     driveStack.classList.toggle('is-reversing', nextReverseRequested);
+    publishDriveControls();
     gasButton.classList.toggle('is-active', nextZone === 'gas');
     driftZone.classList.toggle('is-active', nextZone === 'drift');
     boostZone.classList.toggle('is-active', nextZone === 'boost');
@@ -861,6 +882,7 @@ function installGameplayUi() {
     if (enteredShiftToggle(shiftPointerInside, input.shiftRequested)) toggleShift();
     shiftPointerInside = input.shiftRequested;
     setDriveZone(input.zone, input.lockRequested, { reverse: input.reverseRequested });
+    publishDriveControls();
   }
 
   function releaseDrive(event) {
@@ -883,6 +905,7 @@ function installGameplayUi() {
     boostRequested = false;
     boostExhausted = false;
     shiftPointerInside = false;
+    publishDriveControls();
     globalThis.__turnBoostActive = false;
     drivePad.classList.remove('is-boosting', 'is-boost-locked');
     restoreShiftControlAfterInterruption();

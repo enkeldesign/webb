@@ -406,5 +406,14 @@ export const CHANGELOG = Object.freeze([
         "TURN, DRIFT ATTACK and FLOW tutorials pause for each new lesson. Read or hear the instruction, then choose TRY IT. RESTART LAP starts the tutorial over too."
       ]
     ]
+  },
+  {
+    "date": "16 October 2026",
+    "entries": [
+      [
+        "SPECTATE shows how a lap was driven",
+        "Laps you race from now on keep their controls. SPECTATE plays them back beside the car: the drive pad with LOCK, SHIFT and REVERSE, and the phone tilting or the steering knob moving as the lap was steered."
+      ]
+    ]
   }
 ]);
