@@ -330,8 +330,10 @@ assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_POSITION_RESPONS
   'The responsive camera must cancel speed-dependent world-space follow lag');
 assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_TARGET_RESPONSE_RATE, dt\)/,
   'The responsive look target must cancel speed-dependent world-space follow lag');
-assert.match(cameraSource, /const targetFov = resolveRaceCameraFov\(\{ speedRatio, speedResponsiveCamera \}\)/,
+assert.match(cameraSource, /const targetFov = resolveRaceCameraFov\(\{ speedRatio, speedResponsiveCamera, reducedMotion \}\)/,
   'Race camera updates must use the reduced-motion-aware FOV resolver');
+assert.match(cameraSource, /reducedMotion = REDUCED_MOTION_AT_STARTUP\n\}\) \{/,
+  'and default it to the player\'s Reduced Motion setting at startup (#1209)');
 assert.match(gameplayCss, /--boost-hud-downshift: 15px/,
   'Boost bar must move down by approximately its own racing height');
 assert.match(

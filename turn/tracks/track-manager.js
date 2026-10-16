@@ -144,7 +144,8 @@ function ensureTrackInfrastructure(currentRuntime) {
   ]);
 
   for (const child of [...currentRuntime.world.children]) {
-    if (dynamicNodes.has(child) || child?.isLineSegments || isRaceParticle(child)) {
+    // Race effects mark themselves (render/drive-effects.js, #1209).
+    if (dynamicNodes.has(child) || child?.isLineSegments || isRaceParticle(child) || child?.userData?.turnRaceLayer === true) {
       dynamicWorld.attach(child);
     }
   }

@@ -103,6 +103,12 @@
   /* OVERCHARGE's deep and light ends, where it widens the BOOST bar past full. */
   --turn-control-overcharge-deep: #5f3dc4;
   --turn-control-overcharge-light: #d0bfff;
+  /* What the car leaves behind (#1209, render/drive-effects.js): BOOST's wake runs from
+     BOOST yellow into a warm tail, and a slide throws pale tyre smoke. OVERCHARGE's wake
+     uses the OVERCHARGE roles above. */
+  --turn-effect-boost: var(--turn-yellow-400);
+  --turn-effect-boost-tail: #ff922b;
+  --turn-effect-drift-smoke: #d9d4cc;
   /* The cream ring on a pressed drive-pad zone, and on a pressed LOCK or REVERSE. */
   --turn-control-pressed: color-mix(in srgb, var(--turn-paper) 78%, transparent);
   --turn-control-pressed-bubble: color-mix(in srgb, var(--turn-paper) 62%, transparent);

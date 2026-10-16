@@ -16,7 +16,7 @@ assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} 
 assert.match(index, new RegExp(`render/skid-continuity-r198\\.js\\?revision=r198-skid-continuity&build=${release.cacheKey}`),
   'Production TURN must load the fresh skid continuity renderer');
 
-const declarations = section(main, 'const SKID_HISTORY_CAPACITY', '\nconst smokePool');
+const declarations = section(main, 'const SKID_HISTORY_CAPACITY', '\n// DRIFT smoke, BOOST wakes and OVERCHARGE (#1209)');
 assert.match(declarations, /SKID_HISTORY_CAPACITY = 90/, 'Skid history must preserve the previous 90 sample pairs');
 assert.match(declarations, /SKID_WHEEL_COUNT = 2/, 'Skid history must preserve left and right wheel tracks');
 assert.match(declarations, /SKID_COMPONENT_COUNT = 3/, 'Each stored wheel point must retain x, y and z');

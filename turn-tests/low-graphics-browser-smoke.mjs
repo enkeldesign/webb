@@ -615,6 +615,18 @@ async function inspectRaceContours(page, outputDir, browser, expectClean = true)
         || /outer road contour/i.test(node.name)
         || materials.some((m) => m?.side === THREE.BackSide);
     }
+    // DRIFT smoke and BOOST wakes (#1209) live in the shared race layer, so every
+    // track shows them, not only the world they were created in.
+    function driveEffectsPlacement() {
+      const effects = scene.getObjectByName('turn-drive-effects');
+      let shown = Boolean(effects);
+      let root = effects;
+      for (let node = effects; node; node = node.parent) {
+        if (!node.visible) shown = false;
+        root = node;
+      }
+      return { parent: effects?.parent?.name || null, shown, inScene: root === scene };
+    }
     for (const trackId of ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain']) {
       await activateTrack(trackId, runtime);
       await new Promise((resolve) => globalThis.setTimeout(resolve, 4000));
@@ -642,12 +654,16 @@ async function inspectRaceContours(page, outputDir, browser, expectClean = true)
       renderer.render(scene, camera);
       results.push({ trackId, contourMeshes: shells.length,
         names: shells.slice(0, 10).map((node) => node.name || node.parent?.name || node.type),
-        frames, image: renderer.domElement.toDataURL() });
+        frames, driveEffects: driveEffectsPlacement(), image: renderer.domElement.toDataURL() });
     }
     await activateTrack('countryside', runtime);
+    results.push({ trackId: 'countryside-again', driveEffects: driveEffectsPlacement() });
     return results;
   });
   for (const report of reports) {
+    assert.deepEqual(report.driveEffects, { parent: 'TURN Dynamic Race Layer', shown: true, inScene: true },
+      `${report.trackId}: DRIFT smoke and BOOST wakes must show on every track`);
+    if (!report.image) continue;
     await fs.writeFile(`${outputDir}/contours-${browser}-${report.trackId}.png`, Buffer.from(report.image.split(',')[1], 'base64'));
     delete report.image;
     if (expectClean) assert.equal(report.contourMeshes, 0, `${report.trackId}: racing must not allocate contour shells`);

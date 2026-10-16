@@ -1,5 +1,5 @@
 {
-  "release": "20261016-r456",
+  "release": "20261016-r457",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -332,6 +332,7 @@
     "/turn/render/camera.js",
     "/turn/render/car-shadows.js",
     "/turn/render/covered-rendering.js",
+    "/turn/render/drive-effects.js",
     "/turn/render/frame-cadence.js",
     "/turn/render/skid-continuity-r198.js",
     "/turn/render/track-intro-camera.js",

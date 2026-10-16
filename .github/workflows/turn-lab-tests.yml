@@ -374,6 +374,9 @@ jobs:
       - name: Run drift camera regression
         run: node turn-tests/drift-camera-production.mjs
 
+      - name: Run DRIFT and BOOST effects regression
+        run: node turn-tests/drive-effects-production.mjs
+
       - name: Run Harbor production regression
         run: node turn-tests/harbor-production.mjs
 
