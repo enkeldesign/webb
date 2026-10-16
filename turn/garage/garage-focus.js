@@ -47,26 +47,32 @@ function installStyles(documentRef) {
   const style = documentRef.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
-    #turnGarage .is-introduced { animation: turn-garage-point 1.5s ease-in-out 3; }
+    /* An outline that pulses, not a box-shadow: coloured controls such as ALL CARS keep
+       their frame and elevation in an !important box-shadow (controls.css), which no
+       animation can override, so a shadow pulse is never drawn on them (#1168). Not
+       while focused: the focus ring already says where it is. */
+    #turnGarage .is-introduced:not(:focus-visible) { animation: turn-garage-point 1.5s ease-in-out 3; }
     @keyframes turn-garage-point {
-      50% { box-shadow: 0 0 0 var(--turn-space-2) var(--turn-action-primary); }
+      0%, 100% { outline: 0 solid var(--turn-action-primary); outline-offset: 0; }
+      50% { outline: var(--turn-space-2) solid var(--turn-action-primary); outline-offset: 0; }
     }
     /* Until it is used: a calmer, slower pulse on every visit (#1189). */
-    #turnGarage .is-suggested:not(.is-introduced) { animation: turn-garage-suggest 2.4s ease-in-out infinite; }
+    #turnGarage .is-suggested:not(.is-introduced, :focus-visible) { animation: turn-garage-suggest 2.4s ease-in-out infinite; }
     @keyframes turn-garage-suggest {
-      50% { box-shadow: 0 0 0 var(--turn-space-1) color-mix(in srgb, var(--turn-action-primary) 70%, transparent); }
+      0%, 100% { outline: 0 solid color-mix(in srgb, var(--turn-action-primary) 70%, transparent); outline-offset: 0; }
+      50% { outline: var(--turn-space-1) solid color-mix(in srgb, var(--turn-action-primary) 70%, transparent); outline-offset: 0; }
     }
     @media (prefers-reduced-motion: reduce) {
-      #turnGarage .is-introduced,
-      #turnGarage .is-suggested:not(.is-introduced) {
+      #turnGarage .is-introduced:not(:focus-visible),
+      #turnGarage .is-suggested:not(.is-introduced, :focus-visible) {
         animation: none;
         outline: var(--turn-border-control) solid var(--turn-action-primary);
         outline-offset: var(--turn-space-1);
       }
     }
     @media (forced-colors: active) {
-      #turnGarage .is-introduced,
-      #turnGarage .is-suggested:not(.is-introduced) {
+      #turnGarage .is-introduced:not(:focus-visible),
+      #turnGarage .is-suggested:not(.is-introduced, :focus-visible) {
         animation: none;
         outline: var(--turn-border-control) solid Highlight;
         outline-offset: var(--turn-space-1);
