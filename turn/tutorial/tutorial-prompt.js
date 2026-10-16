@@ -17,6 +17,11 @@ const STYLE_ID = 'turn-tutorial-prompt-styles';
 const FLOOR_MARGIN_MS = 50;
 const GRADUATION_SECONDS = 4;
 const PRESENTATION_OUT_MS = 120;
+// The pads a lesson box must leave visible, and how it keeps clear of them (#1212).
+const PAD_SELECTOR = '#controls .drive-stack, #controls .drive-pad, .drive-lock-bubble, .drive-shift-bubble, .drive-reverse-bubble, #manualSteer';
+const PAD_CLEARANCE = 8;
+const MIN_BESIDE_PADS_WIDTH = 220;
+const MIN_CARD_HEIGHT = 64;
 const CONTROL_ACTIONS = Object.freeze({
   '.drive-gas-zone': 'gas', '.drive-drift-zone': 'drift', '.drive-boost-zone': 'boost'
 });
@@ -34,11 +39,14 @@ function installStyles() {
       position: fixed;
       /* Set from the HUD stat row so the prompt never covers it. */
       top: var(--turn-tutorial-prompt-top, calc(env(safe-area-inset-top) + var(--turn-space-12)));
-      left: 50%;
+      /* Moved aside or capped by keepClearOfPads() so it never covers the pads (#1212). */
+      left: var(--turn-tutorial-left, 50%);
       z-index: 40;
       display: grid;
       gap: var(--turn-space-1);
-      width: min(calc(100vw - 2 * var(--turn-gutter)), 30rem);
+      width: var(--turn-tutorial-width, min(calc(100vw - 2 * var(--turn-gutter)), 30rem));
+      max-height: var(--turn-tutorial-max-height, none);
+      overflow: hidden;
       box-sizing: border-box;
       padding: var(--turn-space-3) var(--turn-space-4);
       border: var(--turn-border-default) solid var(--turn-outline);
@@ -53,14 +61,14 @@ function installStyles() {
     .turn-tutorial-prompt[hidden] { display: none; }
     .turn-tutorial-card {
       position: fixed;
-      inset: var(--turn-tutorial-prompt-top, calc(env(safe-area-inset-top) + var(--turn-space-12))) auto auto 50%;
+      inset: var(--turn-tutorial-prompt-top, calc(env(safe-area-inset-top) + var(--turn-space-12))) auto auto var(--turn-tutorial-left, 50%);
       margin: 0;
       z-index: 40;
       opacity: 0;
       transition: opacity 120ms ease-out;
       transform: translateX(-50%);
-      width: min(calc(100vw - 2 * var(--turn-gutter)), 30rem);
-      max-height: calc(100dvh - var(--turn-tutorial-prompt-top, var(--turn-space-12)) - var(--turn-gutter));
+      width: var(--turn-tutorial-width, min(calc(100vw - 2 * var(--turn-gutter)), 30rem));
+      max-height: var(--turn-tutorial-max-height, calc(100dvh - var(--turn-tutorial-prompt-top, var(--turn-space-12)) - var(--turn-gutter)));
       overflow: auto;
       box-sizing: border-box;
       padding: var(--turn-space-3) var(--turn-space-4);
@@ -88,6 +96,12 @@ function installStyles() {
     .turn-tutorial-dim.is-visible { opacity: .13; transition-duration: 140ms; }
     .turn-tutorial-card h2 { margin: 0; font-size: var(--turn-type-body); }
     .turn-tutorial-card p { margin: var(--turn-space-2) 0; font-size: var(--turn-type-small); line-height: var(--turn-leading-body); }
+    /* Which control continues: low emphasis, in the card's bottom-right corner (#1212). */
+    .turn-tutorial-card .turn-tutorial-card-hint {
+      margin: var(--turn-space-2) 0 0;
+      color: var(--turn-text-muted);
+      text-align: end;
+    }
     .turn-tutorial-card button {
       min-height: var(--turn-target-min);
       padding: var(--turn-space-2) var(--turn-space-5);
@@ -147,7 +161,7 @@ export function createTutorialPrompt(parent = document.body) {
   card.className = 'turn-tutorial-card';
   card.hidden = true;
   card.setAttribute('aria-labelledby', 'turnTutorialCardTitle');
-  card.innerHTML = '<h2 id="turnTutorialCardTitle"></h2><p></p><p id="turnTutorialResumeText"></p>';
+  card.innerHTML = '<h2 id="turnTutorialCardTitle"></h2><p></p><p class="turn-tutorial-card-hint" id="turnTutorialResumeText"></p>';
   const continueButton = document.createElement('button');
   continueButton.type = 'button';
   continueButton.textContent = 'CONTINUE';
@@ -165,6 +179,22 @@ export function createTutorialPrompt(parent = document.body) {
   let firstTarget = null;
   let hideTimer = 0;
   const pauseOwner = () => globalThis.__turnRacePause;
+  // Controls held right now (#1212): pointers by their last position, keys by their
+  // action. A lesson whose control is already held when it appears waits for that
+  // hold to end, then takes the next press. No timer: a fresh press works at once.
+  const heldPointers = new Map();
+  const heldKeys = new Map();
+  let rearm = null;
+  function actionAt(x, y) {
+    const under = document.elementFromPoint?.(x, y);
+    for (const [selector, action] of Object.entries(CONTROL_ACTIONS)) if (under?.closest?.(selector)) return action;
+    return null;
+  }
+  const heldAction = (action) => [...heldKeys.values()].includes(action)
+    || [...heldPointers.values()].some((point) => actionAt(point.x, point.y) === action);
+  function settleRearm() {
+    if (rearm && !heldAction(rearm)) rearm = null;
+  }
   const externallyPaused = () => document.hidden || (pauseOwner()?.paused && pauseOwner().reason !== 'lesson');
 
   function clearTargets() {
@@ -195,12 +225,13 @@ export function createTutorialPrompt(parent = document.body) {
   function closeCard() {
     pendingCard = null;
     firstTarget = null;
+    rearm = null;
     voice.textContent = '';
     hideCard();
     pauseOwner()?.letGo?.();
   }
   function acceptLesson() {
-    if (externallyPaused() || !pendingCard || card.dataset.ready !== 'true') return false;
+    if (externallyPaused() || !pendingCard || card.dataset.ready !== 'true' || rearm) return false;
     acknowledged.add(pendingCard);
     closeCard();
     return true;
@@ -222,7 +253,7 @@ export function createTutorialPrompt(parent = document.body) {
     card.querySelector('h2').textContent = title.textContent;
     card.querySelector('p').textContent = text.textContent;
     const action = CONTROL_ACTIONS[firstTarget];
-    resumeText.textContent = action ? `Hold ${action.toUpperCase()} to resume.` : '';
+    resumeText.textContent = action ? `Hold ${action.toUpperCase()} to continue` : '';
     resumeText.hidden = !action;
     // There is no hidden continuation control for gameplay lessons.
     if (action) continueButton.remove();
@@ -265,7 +296,7 @@ export function createTutorialPrompt(parent = document.body) {
     if (pendingCard) {
       showCard();
       announced.add(pendingCard);
-      unsaid = `${title.textContent}. ${text.textContent} ${resumeText.textContent}`.trim();
+      unsaid = `${title.textContent}. ${text.textContent} ${resumeText.textContent ? `${resumeText.textContent}.` : ''}`.trim();
     }
     const message = unsaid;
     unsaid = '';
@@ -306,6 +337,44 @@ export function createTutorialPrompt(parent = document.body) {
       element.style.setProperty('--turn-tutorial-prompt-top', top);
       card.style.setProperty('--turn-tutorial-prompt-top', top);
     }
+    keepClearOfPads(card);
+    keepClearOfPads(element);
+  }
+
+  // Never over the drive pad (with its LOCK, SHIFT and REVERSE bubbles) or the
+  // steering pad (#1212), measured from where they are now, in any orientation,
+  // handedness or text size. First beside them, at the widest free span across the
+  // box's height; if that is too narrow, above them, its height capped (it scrolls).
+  function keepClearOfPads(box) {
+    if (box.hidden) return;
+    for (const name of ['--turn-tutorial-left', '--turn-tutorial-width', '--turn-tutorial-max-height']) box.style.removeProperty(name);
+    const pads = [...document.querySelectorAll(PAD_SELECTOR)]
+      .filter((pad) => !pad.closest('[hidden]'))
+      .map((pad) => pad.getBoundingClientRect())
+      .filter((rect) => rect.width > 0 && rect.height > 0);
+    const hits = (rect) => pads.some((pad) => rect.left < pad.right && rect.right > pad.left
+      && rect.top < pad.bottom && rect.bottom > pad.top);
+    let rect = box.getBoundingClientRect();
+    if (!pads.length || !hits(rect)) return;
+    const viewport = document.documentElement.clientWidth || globalThis.innerWidth;
+    let left = PAD_CLEARANCE;
+    let right = viewport - PAD_CLEARANCE;
+    for (const pad of pads) {
+      if (pad.top >= rect.bottom || pad.bottom <= rect.top) continue;
+      if (pad.left + pad.width / 2 > viewport / 2) right = Math.min(right, pad.left - PAD_CLEARANCE);
+      else left = Math.max(left, pad.right + PAD_CLEARANCE);
+    }
+    const width = Math.min(right - left, rect.width);
+    if (width >= MIN_BESIDE_PADS_WIDTH) {
+      box.style.setProperty('--turn-tutorial-left', `${Math.round((left + right) / 2)}px`);
+      box.style.setProperty('--turn-tutorial-width', `${Math.floor(width)}px`);
+      rect = box.getBoundingClientRect();
+      if (!hits(rect)) return;
+    }
+    const below = pads.filter((pad) => rect.left < pad.right && rect.right > pad.left && pad.top >= rect.top);
+    if (!below.length) return;
+    const ceiling = Math.min(...below.map((pad) => pad.top)) - PAD_CLEARANCE;
+    box.style.setProperty('--turn-tutorial-max-height', `${Math.max(MIN_CARD_HEIGHT, Math.floor(ceiling - rect.top))}px`);
   }
   let placing = 0;
   const onResize = () => {
@@ -333,6 +402,7 @@ export function createTutorialPrompt(parent = document.body) {
   };
   globalThis.addEventListener?.('turn:before-driving-input', onDrivingInput);
   const onKeyDown = (event) => {
+    onKeyHeld(event);
     if (DRIVING_KEYS.has(event.code)) useKeyboard(true);
     if (pendingCard && ['Enter', ' '].includes(event.key)
       && event.target?.closest?.('.drive-stack')) {
@@ -345,7 +415,31 @@ export function createTutorialPrompt(parent = document.body) {
       if (pauseOwner()?.pause('player')) event.preventDefault();
     }
   };
+  const onPointerTrack = (event) => {
+    if (event.type === 'pointerdown' || heldPointers.has(event.pointerId)) {
+      heldPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+  };
+  const onPointerEnd = (event) => {
+    heldPointers.delete(event.pointerId);
+    settleRearm();
+  };
+  const onKeyHeld = (event) => {
+    const action = qeDriveZoneForEvent(event) || keyboardDriveActionForEvent(event);
+    if (action) heldKeys.set(event.code || event.key, action);
+  };
+  const onKeyUp = (event) => {
+    heldKeys.delete(event.code || event.key);
+    settleRearm();
+  };
+  // Leaving the page can swallow the ups: nothing stays held.
+  const forgetHeld = () => {
+    heldPointers.clear();
+    heldKeys.clear();
+    settleRearm();
+  };
   const onPointerDown = (event) => {
+    onPointerTrack(event);
     if (!event.target?.closest?.('#controls')) return;
     if (event.pointerType !== 'keyboard') useKeyboard(false);
     if (!pendingCard || !event.target.closest('.drive-stack, #manualSteer')) return;
@@ -365,7 +459,12 @@ export function createTutorialPrompt(parent = document.body) {
     }
   };
   globalThis.addEventListener?.('keydown', onKeyDown, true);
+  globalThis.addEventListener?.('keyup', onKeyUp, true);
   globalThis.addEventListener?.('pointerdown', onPointerDown, true);
+  globalThis.addEventListener?.('pointermove', onPointerTrack, true);
+  globalThis.addEventListener?.('pointerup', onPointerEnd, true);
+  globalThis.addEventListener?.('pointercancel', onPointerEnd, true);
+  globalThis.addEventListener?.('blur', forgetHeld);
   globalThis.addEventListener?.('click', onClick, true);
 
   function present(view) {
@@ -403,8 +502,11 @@ export function createTutorialPrompt(parent = document.body) {
         card.dataset.ready = 'false';
         voice.textContent = '';
       }
+      const fresh = pendingCard !== view.id;
       pendingCard = view.id;
       firstTarget = view.targets?.[0] || null;
+      // Already holding this lesson's control as it appears: let go, then press.
+      if (fresh) rearm = CONTROL_ACTIONS[firstTarget] && heldAction(CONTROL_ACTIONS[firstTarget]) ? CONTROL_ACTIONS[firstTarget] : null;
       unsaid = '';
       pauseOwner()?.hold?.();
       if (!externallyPaused()) dim.classList.add('is-visible');
@@ -452,7 +554,12 @@ export function createTutorialPrompt(parent = document.body) {
     globalThis.removeEventListener?.('resize', onResize);
     globalThis.removeEventListener?.('orientationchange', onResize);
     globalThis.removeEventListener?.('keydown', onKeyDown, true);
+    globalThis.removeEventListener?.('keyup', onKeyUp, true);
     globalThis.removeEventListener?.('pointerdown', onPointerDown, true);
+    globalThis.removeEventListener?.('pointermove', onPointerTrack, true);
+    globalThis.removeEventListener?.('pointerup', onPointerEnd, true);
+    globalThis.removeEventListener?.('pointercancel', onPointerEnd, true);
+    globalThis.removeEventListener?.('blur', forgetHeld);
     globalThis.removeEventListener?.('click', onClick, true);
     globalThis.removeEventListener?.('turn:before-driving-input', onDrivingInput);
     for (const target of controls) target.classList.remove('turn-tutorial-control');

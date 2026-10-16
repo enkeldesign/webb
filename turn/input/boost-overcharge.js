@@ -93,6 +93,23 @@ export function advanceBoostOvercharge({
   return Object.freeze({ amount: nextAmount, phase: nextPhase, peaked });
 }
 
+// DRIFT ATTACK TUTORIAL's BUILD (#1212) takes back a share of OVERCHARGE. What is left
+// is below the peak and builds again under DRIFT: left decaying, a qualifying slide
+// would only shrink it until it was gone.
+export function takeBackBoostOvercharge({
+  amount = 0,
+  phase = BOOST_OVERCHARGE_PHASE.READY,
+  share = 0
+} = {}) {
+  const held = clamp(finiteNumber(amount), 0, 1);
+  const removed = held * clamp(finiteNumber(share), 0, 1);
+  if (!(removed > 0)) return Object.freeze({ amount: held, phase: validPhase(phase), removed: 0 });
+  const left = held - removed;
+  return left > 0.000001
+    ? Object.freeze({ amount: left, phase: BOOST_OVERCHARGE_PHASE.BUILDING, removed })
+    : Object.freeze({ amount: 0, phase: BOOST_OVERCHARGE_PHASE.READY, removed: held });
+}
+
 // SHIFT (#1172): BOOST is kept in seconds across a SHIFT, so a bigger tank is left part
 // full and a SHIFT never tops BOOST up. A full bar shifting to a smaller tank with more
 // BOOST POWER turns the seconds that no longer fit into OVERCHARGE (0.6 s is a full

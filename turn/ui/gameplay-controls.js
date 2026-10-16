@@ -12,6 +12,7 @@ import {
   boostOverchargeVisualWidth,
   qualifiesForBoostOvercharge,
   resolveBoostSlipAngle,
+  takeBackBoostOvercharge,
   transferBoostAcrossShift
 } from '../input/boost-overcharge.js?revision=r219-overcharge-state';
 import {
@@ -701,6 +702,22 @@ function installGameplayUi() {
 
   globalThis.__turnRefillBoost = refillBoost;
 
+  // DRIFT ATTACK TUTORIAL's BUILD (#1212): take back part of the OVERCHARGE already
+  // built, so BUILD is a real stretch of drifting before CATCH, and let what is left
+  // build again. Only that lesson calls it (tutorial/drift-attack-coach.js); ordinary
+  // racing never does.
+  function trimBoostOvercharge(share = 0) {
+    const taken = takeBackBoostOvercharge({ amount: boostOvercharge, phase: boostOverchargePhase, share });
+    if (!taken.removed) return 0;
+    boostOvercharge = taken.amount;
+    boostOverchargePhase = taken.phase;
+    globalThis.__turnBoostOvercharge = boostOvercharge;
+    boostVisualDirty = true;
+    lastBoostVisualAt = -Infinity;
+    return taken.removed;
+  }
+  globalThis.__turnTrimBoostOvercharge = trimBoostOvercharge;
+
   function zoneFromPointer(event, rect = drivePad.getBoundingClientRect()) {
     const margin = 24;
     if (
@@ -859,7 +876,9 @@ function installGameplayUi() {
     }
     const releasedPointerId = drivePointerId;
     drivePointerId = null;
-    drivePad.releasePointerCapture?.(releasedPointerId);
+    // Q/E drive the pad with a keyboard pointer that never holds a capture: a pause or a
+    // lesson hold while one is down must not throw here and leave BOOST requested (#1212).
+    if (drivePad.hasPointerCapture?.(releasedPointerId)) drivePad.releasePointerCapture(releasedPointerId);
     setDriveZone(null, false, { announce: false });
     boostRequested = false;
     boostExhausted = false;

@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { TROPHY_ROAD_STORAGE_VERSION } from '../turn/progression/trophy-road.js';
+import { DRIFT_ATTACK_LESSONS } from '../turn/tutorial/drift-attack-lessons.js';
+import { FLOW_LESSONS } from '../turn/tutorial/flow-tutorial.js';
+import { TURN_TUTORIAL_LESSONS } from '../turn/tutorial/turn-tutorial-lessons.js';
 
 // TURN TUTORIAL entry (#1132) on the production page: the first-launch card, STOP
 // TUTORIAL, and a full teaching lap through graduation. Same server as the
@@ -11,10 +14,16 @@ const browser = await chromium.launch({ headless: true });
 
 async function openTurn({
   played = false, launch = false, steeringHelp = false, driftAttack = false, rewards = [], admin = false, introductions = false,
-  howToPlayRead = []
+  howToPlayRead = [], viewport = { width: 844, height: 390 }, handedness = null, textSize = 0
 } = {}) {
-  const context = await browser.newContext({ viewport: { width: 844, height: 390 }, reducedMotion: 'reduce' });
+  const context = await browser.newContext({ viewport, reducedMotion: 'reduce' });
   const page = await context.newPage();
+  // The browser's own text size (Chromium), as the GARAGE smoke sets it.
+  if (textSize) {
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Page.setFontSizes', { fontSizes: { standard: textSize, fixed: Math.round(textSize * 0.8) } });
+  }
+  if (handedness) await page.addInitScript((hand) => localStorage.setItem('turn-control-handedness-v1', hand), handedness);
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -133,6 +142,12 @@ async function acceptLesson(page, id = null) {
     }
     const control = page.locator(`.drive-${action}-zone`);
     assert.match(await control.getAttribute('aria-describedby'), /turnTutorialResumeText/, 'The live control describes how to resume');
+    // #1212: a quiet line in the card's bottom-right corner says which control continues.
+    const hint = await card.locator('.turn-tutorial-card-hint').evaluate((el) => ({
+      text: el.textContent, align: globalThis.getComputedStyle(el).textAlign, last: el === el.parentElement.lastElementChild
+    }));
+    assert.deepEqual(hint, { text: `Hold ${action.toUpperCase()} to continue`, align: 'end', last: true });
+    assert.deepEqual(await padOverlaps(page), [], 'The lesson card leaves the pads clear');
     assert.equal(await control.evaluate((el) => Boolean(el.closest('[inert]'))), false);
     const box = await control.boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -145,6 +160,21 @@ async function acceptLesson(page, id = null) {
   await page.waitForFunction(() => !document.querySelector('.turn-tutorial-card[data-ready="true"]'));
   assert.equal(await page.locator('.turn-tutorial-voice').textContent(), '', 'Resuming adds no duplicate announcement');
 }
+
+const LONGEST_LESSON_PROMPT = [...TURN_TUTORIAL_LESSONS, ...DRIFT_ATTACK_LESSONS, ...FLOW_LESSONS]
+  .map((lesson) => lesson.prompt).sort((a, b) => b.length - a.length)[0];
+
+// Where the lesson card overlaps the drive pad, its bubbles or the steering pad (#1212).
+const padOverlaps = (page) => page.evaluate(() => {
+  const card = document.querySelector('.turn-tutorial-card[data-ready="true"]')?.getBoundingClientRect();
+  if (!card) return ['no card'];
+  return [...document.querySelectorAll('#controls .drive-stack, #controls .drive-pad, .drive-lock-bubble, .drive-shift-bubble, .drive-reverse-bubble, #manualSteer')]
+    .filter((pad) => !pad.closest('[hidden]'))
+    .map((pad) => ({ name: pad.className || pad.id, rect: pad.getBoundingClientRect() }))
+    .filter(({ rect }) => rect.width > 0 && rect.height > 0
+      && card.left < rect.right && card.right > rect.left && card.top < rect.bottom && card.bottom > rect.top)
+    .map(({ name }) => name);
+});
 
 async function restartTutorial(page, first, paused = true) {
   if (paused) {
@@ -383,10 +413,40 @@ try {
     assert.equal(current.card, false, 'A completed tutorial does not start again');
   });
 
+  // #1212: a lesson card never covers the drive pad or the steering pad: either hand,
+  // landscape and portrait, phone and tablet, and with the browser's text at 200%.
+  const sizes = [[844, 390], [667, 375], [932, 430], [390, 844], [1180, 820], [820, 1180]];
+  for (const [label, options, screens] of [
+    ['right hand', { handedness: 'right' }, sizes],
+    ['left hand', { handedness: 'left' }, sizes],
+    ['200% text', { textSize: 32 }, [[844, 390], [390, 844], [1180, 820]]]
+  ]) {
+    await run(`lesson cards leave the pads clear (${label})`, { launch: true, ...options }, async (page) => {
+      await showLaunchCard(page);
+      await page.locator('[data-tutorial-start]').click();
+      await page.locator('.turn-tutorial-card[data-ready="true"]').waitFor();
+      // The tallest card any lesson shows: DRIFT SCORING's prompt, with its hint.
+      await page.evaluate((prompt) => {
+        document.querySelector('.turn-tutorial-card[data-ready="true"] p').textContent = prompt;
+        globalThis.dispatchEvent(new globalThis.Event('resize'));
+      }, LONGEST_LESSON_PROMPT);
+      for (const [width, height] of screens) {
+        await page.setViewportSize({ width, height });
+        await page.waitForTimeout(250);
+        await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        assert.deepEqual(await padOverlaps(page), [], `${width}×${height}: the card leaves the pads clear`);
+        const card = await page.locator('.turn-tutorial-card[data-ready="true"]').boundingBox();
+        assert.ok(card.x >= 0 && card.x + card.width <= width && card.height > 40, `${width}×${height}: the card stays on screen and readable`);
+      }
+    });
+  }
+
   await run('real BOOST input from a teaching hold', { steeringHelp: true }, async (page) => {
     await showLaunchCard(page);
     await page.locator('[data-tutorial-start]').click();
     await acceptLesson(page, 'drive');
+    // #1212: BOOST is already held as its lesson appears.
+    await page.keyboard.down('KeyE');
     await page.evaluate(() => {
       const { state, samples } = globalThis.__turnRuntime;
       const sample = samples[Math.round(samples.length * 0.55)];
@@ -398,6 +458,16 @@ try {
     });
     const card = page.locator('.turn-tutorial-card[data-ready="true"][data-lesson="boost"]');
     await card.waitFor();
+    // That hold cannot dismiss it, nor can another BOOST press while it lasts; letting
+    // go re-arms it, with no wait (#1212).
+    const boostBox = await page.locator('.drive-boost-zone').boundingBox();
+    await page.mouse.move(boostBox.x + boostBox.width / 2, boostBox.y + boostBox.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(150);
+    assert.equal(await page.evaluate(() => globalThis.__turnRacePause.reason), 'lesson',
+      'A control already held as its lesson appears cannot dismiss it');
+    await page.mouse.up();
+    await page.keyboard.up('KeyE');
     const frozen = () => page.evaluate(() => {
       const { state } = globalThis.__turnRuntime;
       return [state.position.x, state.position.z, state.speed, state.lapElapsed, globalThis.__turnBoostCharge];
