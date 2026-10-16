@@ -16,6 +16,7 @@ export function installGameModeState(state) {
   state.lapCourseViolation = state.lapCourseViolation === true;
   state.recording = Array.isArray(state.recording) ? state.recording : [];
   state.inputRecording = Array.isArray(state.inputRecording) ? state.inputRecording : [];
+  state.lapSetup = state.lapSetup && typeof state.lapSetup === 'object' ? state.lapSetup : null;
   state.lapPreviousPosition = validPosition(state.lapPreviousPosition)
     ? { x: Number(state.lapPreviousPosition.x), z: Number(state.lapPreviousPosition.z) }
     : null;
@@ -85,6 +86,7 @@ export function resetRaceToStage({
   state.lapPreviousPosition = { x: state.position.x, z: state.position.z };
   state.recording = [];
   state.inputRecording = [];
+  state.lapSetup = null;
 
   setRacePosition?.(null, state.competitorLaps.length + 1);
 }

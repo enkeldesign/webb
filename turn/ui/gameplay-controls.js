@@ -233,7 +233,6 @@ function installGameplayUi() {
   let controlHandedness = installControlHandedness();
   globalThis.addEventListener?.('turn:control-handedness-change', (event) => {
     controlHandedness = normalizeControlHandedness(event.detail?.handedness);
-    publishDriveControls();
   });
 
   let drivePointerId = null;
@@ -298,11 +297,19 @@ function installGameplayUi() {
       | (reverseRequested ? REPLAY_CONTROL.REVERSE : 0)
       | (driftLockRequested ? REPLAY_CONTROL.LOCK : 0)
       | (shiftActive ? REPLAY_CONTROL.SHIFT : 0)
-      | (shiftPointerInside ? REPLAY_CONTROL.SHIFT_PRESS : 0)
-      | (shiftAvailable ? REPLAY_CONTROL.SHIFT_READY : 0)
-      | (controlHandedness === 'left' ? REPLAY_CONTROL.LEFT_HANDED : 0);
+      | (shiftPointerInside ? REPLAY_CONTROL.SHIFT_PRESS : 0);
   }
   publishDriveControls();
+
+  // The pad's part of a lap's setup, read as each lap begins: its side, and the car's
+  // SHIFT profile when it can SHIFT.
+  globalThis.__turnDriveSetup = () => {
+    const profile = shiftAvailable ? shiftContext().profile : null;
+    return {
+      hand: controlHandedness,
+      shift: profile ? { reducedStats: [...profile.reducedStats], amount: profile.shiftAmount } : null
+    };
+  };
 
   function safeVibrate(pattern) {
     try {
@@ -595,7 +602,6 @@ function installGameplayUi() {
       unlocked = isFeatureUnlocked(VEHICLE_SHIFT_FEATURE_ID);
     } catch (_) {}
     shiftAvailable = Boolean(unlocked && car && profile?.enabled && profile.shiftedStats);
-    publishDriveControls();
     if (reset || !shiftAvailable) {
       applyShiftMode(false, { announce, easeTopSpeedReduction: !reset });
       return;

@@ -1,9 +1,10 @@
-import { REPLAY_CONTROL, readableReplayInputs, replayControlsAt } from '../race/replay-inputs.js';
+import { REPLAY_CONTROL, readableReplayInputs, readableReplaySetup, replayControlsAt } from '../race/replay-inputs.js';
 import { createDrivePadDemo, createManualSteerDemo, createTiltDemo } from './how-to-play-demos.js';
 
 // SPECTATE's controls (#1217): the lap SPECTATE follows, played back on HOW TO PLAY's
 // drive pad, with the phone it was tilted on or the steering box it was steered on above
-// it, on the side the player held them. Like the demos it is a picture, hidden from
+// it, on the side the player held them. Its setup says which, and whether the car could
+// SHIFT; its inputs say what was held. Like the demos it is a picture, hidden from
 // assistive technology and built from the demos' own classes, so it never touches the
 // real controls. A lap recorded before input tracks shows none.
 const PAD_STATES = Object.freeze([
@@ -13,7 +14,6 @@ const PAD_STATES = Object.freeze([
   ['is-boost-ready', REPLAY_CONTROL.BOOST],
   ['is-brake-ready', REPLAY_CONTROL.BRAKE],
   ['is-reversing', REPLAY_CONTROL.REVERSE],
-  ['is-shift-available', REPLAY_CONTROL.SHIFT_READY],
   ['is-shift-active', REPLAY_CONTROL.SHIFT],
   ['is-shift-pressing', REPLAY_CONTROL.SHIFT_PRESS]
 ]);
@@ -45,18 +45,25 @@ export function createSpectateControls(documentRef = globalThis.document) {
   root.append(tilt, touch, pad);
   documentRef.body.append(root);
 
+  let shownLap = null;
   let shownMask = -1;
   let shownSteering = NaN;
+
+  function showSetup(lap) {
+    const { controls, build } = readableReplaySetup(lap);
+    root.dataset.steer = controls.steering === 'tilt' ? 'tilt' : 'touch';
+    root.dataset.hand = controls.hand;
+    stack.classList.toggle('is-shift-available', Boolean(build.shift));
+  }
 
   function showControls(mask) {
     for (const [className, bit] of PAD_STATES) stack.classList.toggle(className, (mask & bit) !== 0);
     stack.dataset.thumb = thumbFor(mask);
-    root.dataset.steer = mask & REPLAY_CONTROL.TILT ? 'tilt' : 'touch';
-    root.dataset.hand = mask & REPLAY_CONTROL.LEFT_HANDED ? 'left' : 'right';
   }
 
   function hide() {
     root.hidden = true;
+    shownLap = null;
     shownMask = -1;
     shownSteering = NaN;
   }
@@ -68,6 +75,10 @@ export function createSpectateControls(documentRef = globalThis.document) {
     if (!changes || !frame) {
       if (!root.hidden) hide();
       return;
+    }
+    if (lap !== shownLap) {
+      shownLap = lap;
+      showSetup(lap);
     }
     const time = Number.isFinite(lap.time) && lap.time > 0 ? seconds % lap.time : seconds;
     const mask = replayControlsAt(changes, time);

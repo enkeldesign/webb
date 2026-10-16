@@ -315,6 +315,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     runtime.state.lapPreviousPosition = { x: runtime.state.position.x, z: runtime.state.position.z };
     runtime.state.recording = [];
     runtime.state.inputRecording = [];
+    runtime.state.lapSetup = null;
     runtime.playerCar.position.copy(runtime.state.position);
     runtime.playerCar.rotation.y = runtime.state.heading + Math.PI;
     runtime.setRacePosition?.(null, 1);

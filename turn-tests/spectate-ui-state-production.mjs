@@ -82,7 +82,7 @@ const spectateCss = await fs.readFile(new URL('../turn/spectate-v3.css', import.
 assert.match(spectateCss, /\.turn-spectating \.controls,\n\.turn-spectating \.manual-steer,\n\.turn-spectating \.boost-hud,\n\.turn-spectating \.race-position-hud,\n\.turn-spectating #scoreFeedback \{\n  display: none !important;/);
 const controlsSource = await fs.readFile(new URL('../turn/ui/spectate-controls.js', import.meta.url), 'utf8');
 assert.match(controlsSource, /root\.setAttribute\('aria-hidden', 'true'\);/, 'A picture, hidden from assistive technology');
-assert.doesNotMatch(controlsSource, /__turn(AnalogGas|DriftHeld|BoostActive|DriveControlMask)|\.touch(Gas|Brake|Reverse)|manualSteering/,
+assert.doesNotMatch(controlsSource, /__turn(AnalogGas|DriftHeld|BoostActive|DriveControlMask|DriveSetup)|\.touch(Gas|Brake|Reverse)|manualSteering/,
   'It never touches the live controls');
 
 console.log('Spectate UI-state snapshot and replay controls regression passed.');

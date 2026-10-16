@@ -1,6 +1,6 @@
 import { normalizeStoredVehiclePaint } from '../vehicle/catalog.js';
 import { graduateSessionPolicy, sessionPolicy } from './session-policy.js';
-import { beginReplayInputs, lapReplayInputs } from './replay-inputs.js';
+import { beginReplayInputs, lapReplayInputs, lapReplaySetup } from './replay-inputs.js';
 
 export const LAP_CHECKPOINTS = Object.freeze([
   0.08,
@@ -196,8 +196,10 @@ export function completeLapState({
         };
       }
 
-      // The controls as they were held, beside the trajectory (#1217), moved like it.
+      // The controls as they were held and the setup the lap began with, beside the
+      // trajectory (#1217), moved like it.
       const inputs = lapReplayInputs(state);
+      const setup = inputs ? lapReplaySetup(state) : null;
       const paint = normalizeStoredVehiclePaint({
         carId: state.vehicleId || 'sedan',
         color: state.vehicleColor,
@@ -212,6 +214,7 @@ export function completeLapState({
         factoryPaint: paint.factoryPaint,
         frames: candidateFrames,
         ...(inputs ? { inputs } : {}),
+        ...(setup ? { setup } : {}),
         ...(ghostMode === 'session' ? { sessionOnly: true } : {})
       };
 

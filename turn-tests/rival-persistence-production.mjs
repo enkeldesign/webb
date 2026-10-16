@@ -302,22 +302,28 @@ try {
   clearRivalsState(more);
   assert.deepEqual(getStoredRivalSummaries('harbor'), [], 'A reset empties the list');
 
-  // #1217: a lap's input track is kept with it as recorded, beside its compact frames,
-  // and a lap saved before input tracks still loads as before, without one.
+  // #1217: a lap's input track and setup are kept with it as recorded, beside its compact
+  // frames, and a lap saved before them still loads as before, without them.
   reset();
   const driven = state('harbor', 10);
   const track = { version: 1, changes: [0, 1, 1250, 3, 2600, 35] };
+  const setup = { version: 1, controls: { steering: 'tilt', hand: 'left' },
+    build: { shift: { reducedStats: ['speed', 'drift', 'boostDuration'], amount: 2 } } };
   driven.competitorLaps[0].inputs = track;
+  driven.competitorLaps[0].setup = setup;
   saveRivalsState(driven);
   const drivenLap = JSON.parse(disk.get(key('harbor'))).laps[0];
   assert.deepEqual(drivenLap.inputs, track, 'The input track is stored as recorded');
+  assert.deepEqual(drivenLap.setup, setup, 'and the setup');
   assert.equal(drivenLap.frames.codec, 'q1', 'beside the compact frames');
   assert.deepEqual(reload('harbor').competitorLaps[0].inputs, track, 'and loads back with its lap');
+  assert.deepEqual(reload('harbor').competitorLaps[0].setup, setup);
   reset();
   saveRivalsState(state('harbor', 10));
-  assert.equal(reload('harbor').competitorLaps[0].inputs, undefined, 'A lap without one loads as before');
+  assert.equal(reload('harbor').competitorLaps[0].inputs, undefined, 'A lap without them loads as before');
+  assert.equal(reload('harbor').competitorLaps[0].setup, undefined);
 
-  console.log('TURN rival persistence: reset, pending precedence, Home/share/reload, bounded retries, lifecycle recovery, two-window merge and reset, compact replays, input tracks, full storage and the Track sheet’s rival list passed.');
+  console.log('TURN rival persistence: reset, pending precedence, Home/share/reload, bounded retries, lifecycle recovery, two-window merge and reset, compact replays, input tracks and setups, full storage and the Track sheet’s rival list passed.');
 } finally {
   reset();
   for (const [name, descriptor] of originals) {
