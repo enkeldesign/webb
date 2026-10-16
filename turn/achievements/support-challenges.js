@@ -324,6 +324,15 @@ export function selectSupportChallenge({
   return null;
 }
 
+// One cadence for every challenge, fixed (DID YOU READ ALL OF IT?, PATROL, EXCURSION) or
+// procedural (#1218): fixed ones keep their place in the order, but none is offered
+// until the player has driven enough valid laps without earning a trophy. Finishing a
+// challenge starts that count again, so no challenge follows another straight away.
+export function supportChallengeOfferDue(state, config) {
+  return !state?.active
+    && Math.floor(Number(state?.dryValidLaps) || 0) >= config.offerAfterValidLapsWithoutTrophy;
+}
+
 // PATROL and EXCURSION preview the EXPERT TRACKS reward. Once it is unlocked there is
 // nothing left to preview, so neither is offered and an active one is withdrawn.
 function rewardPreviewRetired(achievements) {
@@ -671,6 +680,9 @@ export async function installSupportChallenges({
   let toastConcealTimer = 0;
   let toastShowFrame = 0;
   let restoreTriggerFocus = true;
+  // While Home shows the last challenge's completion (support-challenge-feedback.js),
+  // the next challenge's button waits for it, so two never show at once (#1218).
+  let completionShowing = false;
 
   function save() {
     saveSupportState(state, storage);
@@ -725,7 +737,7 @@ export async function installSupportChallenges({
       save();
     }
     const challenge = state.active;
-    trigger.hidden = !challenge;
+    trigger.hidden = !challenge || completionShowing;
     if (!challenge) {
       if (dialog.open) dialog.close();
       return;
@@ -787,6 +799,16 @@ export async function installSupportChallenges({
     return bonus;
   }
 
+  // A challenge is done: it joins the history and the cadence starts again (#1218).
+  function finishActiveChallenge() {
+    const active = state.active;
+    if (active && !state.completed.includes(active.key)) state.completed.push(active.key);
+    state.active = null;
+    state.seenActiveKey = '';
+    state.dryValidLaps = 0;
+    state.lapsSinceChallengeProgress = 0;
+  }
+
   function activate(candidate) {
     if (!candidate) return false;
     state.active = {
@@ -807,19 +829,16 @@ export async function installSupportChallenges({
   }
 
   function chooseChallenge({ force = false } = {}) {
-    if (!config.enabled) return false;
-    if (state.active) return false;
-    const candidate = selectSupportChallenge({
+    if (!config.enabled || state.active) return false;
+    if (!force && !supportChallengeOfferDue(state, config)) return false;
+    return activate(selectSupportChallenge({
       config,
       achievements,
       runtime,
       storage,
       excluded: excludedKeys(),
       completed: state.completed
-    });
-    if (!force && !getRewardPreviewChallenge(candidate)
-      && state.dryValidLaps < config.offerAfterValidLapsWithoutTrophy) return false;
-    return activate(candidate);
+    }));
   }
 
   function scheduleChallengeSelection() {
@@ -876,11 +895,7 @@ export async function installSupportChallenges({
       title: `+${reward} 🏆`
     });
     if (!granted && !achievements.store.hasBonus?.(`support:${active.key}`)) return false;
-    if (!state.completed.includes(active.key)) state.completed.push(active.key);
-    state.active = null;
-    state.seenActiveKey = '';
-    state.dryValidLaps = 0;
-    state.lapsSinceChallengeProgress = 0;
+    finishActiveChallenge();
     save();
     render();
     scheduleChallengeSelection();
@@ -1018,13 +1033,20 @@ export async function installSupportChallenges({
       achievements.store.isUnlocked(LEARN_TO_PLAY_ACHIEVEMENT_ID)
       || HOW_TO_PLAY_DISCLOSURE_IDS.every((id) => opened.includes(id))
     ) {
-      if (!state.completed.includes(active.key)) state.completed.push(active.key);
-      state.active = null;
-      state.seenActiveKey = '';
+      finishActiveChallenge();
     }
     save();
     render();
     if (!state.active) scheduleChallengeSelection();
+  });
+
+  window.addEventListener('turn:support-home-feedback-started', () => {
+    completionShowing = true;
+    render();
+  });
+  window.addEventListener('turn:support-home-feedback-ended', () => {
+    completionShowing = false;
+    render();
   });
 
   // Reward unlocks can be nested inside the normal achievement lap handler.

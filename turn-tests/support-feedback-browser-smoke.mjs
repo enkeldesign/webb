@@ -3,6 +3,10 @@ import fs from 'node:fs/promises';
 import { chromium, webkit } from 'playwright';
 
 const TARGET = process.env.TURN_SUPPORT_FEEDBACK_URL || 'http://127.0.0.1:8000/';
+const rules = JSON.parse(await fs.readFile(new URL('../turn/support-challenges.json', import.meta.url), 'utf8'));
+const GAP = rules.offerAfterValidLapsWithoutTrophy;
+const HOW_TO_PLAY_PARTS = ['turn-device-to-steer', 'drive-with-one-thumb', 'build-and-use-overcharge',
+  'choose-track-and-car', 'drive-by-ear-sounds'];
 const entry = await fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8');
 const importMap = entry.match(/<script type="importmap">([\s\S]*?)<\/script>/)[1];
 const fixture = `<!doctype html><html class="turn-home-ready"><head>
@@ -16,7 +20,7 @@ const fixture = `<!doctype html><html class="turn-home-ready"><head>
 <div class="drive-pad"></div><button id="calibrateButton">Calibrate</button>
 </body></html>`;
 
-async function setup(browser, { type = 'safety', trophies = 975, persisted = null, home = false } = {}) {
+async function setup(browser, { type = 'safety', trophies = 975, persisted = null, home = false, support = null } = {}) {
   const context = await browser.newContext({ viewport: { width: 844, height: 390 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
   const errors = [];
@@ -25,7 +29,7 @@ async function setup(browser, { type = 'safety', trophies = 975, persisted = nul
   await page.goto(new URL('__support-feedback-fixture', TARGET).href);
   await page.clock.install({ time: new Date('2026-09-14T12:00:00Z') });
   await page.clock.pauseAt(new Date('2026-09-14T12:00:01Z'));
-  await page.evaluate(async ({ type, trophies, persisted, home }) => {
+  await page.evaluate(async ({ type, trophies, persisted, home, support }) => {
     const map = JSON.parse(document.querySelector('[type="importmap"]').textContent).imports;
     const url = (path) => map[path] || Object.values(map).find((target) => target.split('?')[0] === path) || path;
     globalThis.testModuleUrl = url;
@@ -38,7 +42,7 @@ async function setup(browser, { type = 'safety', trophies = 975, persisted = nul
       store.grantBonus('test:seed', trophies - store.trophyTotal());
       store.syncRewards();
       store.markAllSeen();
-      localStorage.setItem('turn-support-challenges-v1', JSON.stringify({
+      localStorage.setItem('turn-support-challenges-v1', JSON.stringify(support || {
         version: 1, dryValidLaps: 6, lapsSinceChallengeProgress: 0,
         active: { key: `${type}:countryside`, type, trackId: 'countryside', vehicleId: 'sedan-sports',
           sourceAchievementId: `countryside-${type}`, baselineParts: [] },
@@ -74,7 +78,7 @@ async function setup(browser, { type = 'safety', trophies = 975, persisted = nul
     achievements.installAchievements(globalThis.__turnRuntime);
     achievements.installAchievementChallengeExpansion();
     await ready;
-  }, { type, trophies, persisted, home });
+  }, { type, trophies, persisted, home, support });
   await page.clock.runFor(32);
   return { page, errors, close: async () => { assert.deepEqual(errors, [], 'No browser runtime errors'); await context.close(); } };
 }
@@ -87,6 +91,32 @@ async function lap(page, detail = {}) {
     } }));
   }, detail);
   await page.clock.runFor(32);
+}
+
+// The challenge on offer once its idle-time selection has had its chance.
+async function offered(page) {
+  await page.clock.runFor(1000);
+  return page.evaluate(() => globalThis.__turnSupportChallenges.state.active);
+}
+
+// How many valid laps without a trophy it takes until a challenge is offered.
+async function lapsUntilOffered(page) {
+  for (let laps = 1; laps <= GAP * 2; laps += 1) {
+    await lap(page);
+    if (await offered(page)) return laps;
+  }
+  return null;
+}
+
+async function race(page, state) {
+  await page.evaluate((state) => Object.assign(globalThis.__turnRuntime.state, state), state);
+}
+
+// The challenge buttons on screen: the finished challenge's fading copy, or the button.
+async function challengeButtons(page) {
+  return page.evaluate(() => [...document.querySelectorAll('.turn-support-challenge-trigger')]
+    .filter((node) => !node.hidden && globalThis.getComputedStyle(node).display !== 'none')
+    .map((node) => (node.classList.contains('turn-support-completion-indicator') ? 'finished' : 'offered')));
 }
 
 async function showHome(page, open = true) {
@@ -238,7 +268,61 @@ for (const [name, browserType] of [['Chromium', chromium], ['WebKit', webkit]]) 
       assert.deepEqual(state.replay.pending, []);
       await paired.close();
     }
-    console.log(`${name}: real support completion, same-lap awards, reward ordering, interruptions and reload passed.`);
+    // #1218: every challenge, PATROL and EXCURSION included, waits for the same run of
+    // valid laps without a trophy after the one before it ends. Driven through the real
+    // runtime: HOW TO PLAY's parts, then laps, previews and a procedural challenge.
+    const reading = { key: 'learning:how-to-play', type: 'learning', trackId: '', vehicleId: '',
+      sourceAchievementId: 'learn-to-play', baselineParts: [] };
+    const cadence = await setup(browser, { support: { version: 1, dryValidLaps: GAP, lapsSinceChallengeProgress: 0,
+      active: reading, seenActiveKey: reading.key, completed: [], skipped: [] } });
+    const normal = { trackId: 'countryside', vehicleId: 'sedan-sports', rewardPreview: null };
+    await cadence.page.evaluate((parts) => {
+      for (const disclosureId of parts) {
+        window.dispatchEvent(new CustomEvent('turn:how-to-play-disclosure-opened', { detail: { disclosureId } }));
+      }
+    }, HOW_TO_PLAY_PARTS);
+    assert.ok((await snapshot(cadence.page)).completed.includes(reading.key), 'Opening every part ends DID YOU READ ALL OF IT?');
+    assert.equal(await offered(cadence.page), null, `${name}: PATROL does not follow DID YOU READ ALL OF IT? straight away`);
+    assert.equal(await lapsUntilOffered(cadence.page), GAP, `PATROL waits ${GAP} valid laps`);
+    assert.equal((await offered(cadence.page)).key, 'patrol:midnight-city');
+    await race(cadence.page, { trackId: 'midnight-city', vehicleId: 'police', rewardPreview: { key: 'patrol:midnight-city' } });
+    await lap(cadence.page);
+    assert.ok((await snapshot(cadence.page)).completed.includes('patrol:midnight-city'), 'A valid PATROL lap completes it');
+    assert.equal(await offered(cadence.page), null, 'Nothing follows PATROL straight away');
+    await race(cadence.page, normal);
+    assert.equal(await lapsUntilOffered(cadence.page), GAP, 'Slot three waits the same gap');
+    const third = await offered(cadence.page);
+    assert.equal(third.key, 'safety:countryside', 'Slot three is a procedural challenge');
+    await race(cadence.page, { trackId: third.trackId, vehicleId: third.vehicleId });
+    await lap(cadence.page);
+    assert.ok((await snapshot(cadence.page)).completed.includes(third.key));
+    assert.equal(await offered(cadence.page), null, 'EXCURSION does not follow slot three straight away');
+    await race(cadence.page, normal);
+    assert.equal(await lapsUntilOffered(cadence.page), GAP, `EXCURSION waits ${GAP} valid laps`);
+    assert.equal((await offered(cadence.page)).key, 'excursion:mountain');
+    await race(cadence.page, { trackId: 'mountain', vehicleId: 'monster-truck', rewardPreview: { key: 'excursion:mountain' } });
+    await lap(cadence.page);
+    assert.ok((await snapshot(cadence.page)).completed.includes('excursion:mountain'), 'A valid EXCURSION lap completes it');
+    assert.equal(await offered(cadence.page), null, 'Nothing follows EXCURSION straight away');
+    await race(cadence.page, normal);
+    assert.equal(await lapsUntilOffered(cadence.page), GAP, 'Procedural challenges continue on the same cadence');
+    assert.match((await offered(cadence.page)).key, /^(winner|safety|drift):/);
+    await cadence.close();
+
+    // #1218: a challenge offered while the last one's completion still waits for Home
+    // shows its button only once that completion has played: never two buttons at once.
+    const overlap = await setup(browser);
+    await lap(overlap.page);
+    assert.deepEqual((await snapshot(overlap.page)).completed, ['safety:countryside']);
+    assert.equal(await lapsUntilOffered(overlap.page), GAP, 'The next challenge is offered during the same race');
+    await showHome(overlap.page);
+    assert.deepEqual(await challengeButtons(overlap.page), ['finished'], `${name}: Home plays the finished challenge alone`);
+    await overlap.page.clock.runFor(3000);
+    assert.deepEqual(await challengeButtons(overlap.page), ['finished'], 'and keeps it alone as it fades');
+    await overlap.page.clock.runFor(500);
+    assert.deepEqual(await challengeButtons(overlap.page), ['offered'], 'Then the new challenge\'s button appears');
+    await overlap.close();
+    console.log(`${name}: real support completion, same-lap awards, reward ordering, interruptions, reload, the challenge cadence and one button at a time passed.`);
   } finally {
     await browser.close();
   }
