@@ -226,4 +226,10 @@ assert.ok(
   'YOUR TURN must apply the shared composition after its canonical steering styles'
 );
 
-console.log('TURN persisted handedness, complete mirrored HUD composition and accessible focus order passed.');
+// An exhausted BOOST still held stays locked until the thumb leaves the zone, with no
+// label under the thumb: LEAVE was unreadable there and read like LEAVE RACE (#1200).
+assert.match(controls, /const locked = boostRequested && boostExhausted;/);
+assert.match(controls, /boostZone\.classList\.toggle\('is-locked', locked\);/);
+assert.doesNotMatch(driveCss, /is-locked::after|content: "LEAVE"/, 'A locked BOOST zone carries no label');
+
+console.log('TURN persisted handedness, complete mirrored HUD composition, accessible focus order and an unlabelled locked BOOST passed.');

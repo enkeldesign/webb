@@ -297,7 +297,7 @@ assert.match(controls, /flashBoostHud\('is-boost-empty-flash'\)/, 'Empty boost m
 assert.match(controls, /flashBoostHud\('is-boost-full-flash'\)/, 'Full boost must trigger its distinct HUD feedback class');
 assert.match(css, /--turn-drive-pad-rows: 32% 44% 24%;[\s\S]*grid-template-rows: var\(--turn-drive-pad-rows\)/, 'The integrated surface must preserve a large Gas zone and a reachable bottom Brake zone');
 assert.match(css, /place-items: center/, 'Drive-zone labels must be vertically and horizontally centered');
-assert.match(css, /content: "LEAVE"/, 'Boost lock hint must explain that leaving the Boost zone re-arms it');
+assert.doesNotMatch(css, /content: "LEAVE"/, 'An exhausted Boost under the thumb carries no label; leaving the zone still re-arms it (#1200)');
 assert.match(css, /\.drive-pad \.drive-brake-zone \{/, 'BRAKE must be styled as an internal drive-pad zone');
 assert.match(css, /\.drive-brake-zone\.is-active/, 'Brake must have visible active feedback');
 assert.match(css, /\.drive-lock-bubble \{[\s\S]*right: calc\(100% - 3px\);[\s\S]*background: var\(--turn-control-lock\)/,
