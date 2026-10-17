@@ -88,7 +88,6 @@ const semanticMappings = new Map([
   ['--turn-surface-page', '--turn-paper'],
   ['--turn-surface-raised', '--turn-white'],
   ['--turn-action-primary', '--turn-pink-200'],
-  ['--turn-action-share', '--turn-pink-200'],
   ['--turn-action-utility', '--turn-surface-page'],
   ['--turn-action-information', '--turn-blue-500'],
   ['--turn-action-game', '--turn-blue-500'],
@@ -131,6 +130,13 @@ for (const [semanticToken, primitiveToken] of semanticMappings) {
   assert.ok(design.includes(`<code>${semanticToken}</code>`), `Missing visible semantic variable ${semanticToken}`);
   assert.ok(design.includes(`<code>var(${primitiveToken})</code>`), `Missing visible semantic mapping ${semanticToken}`);
 }
+// Only ever one primary action (#1243): SHARE takes the role of its place, so it has no
+// token of its own.
+assert.doesNotMatch(tokens, /--turn-action-share/, 'SHARE is primary or utility by its place');
+assert.doesNotMatch(design, /--turn-action-share/);
+assert.match(design, /data-semantic="--turn-action-primary"[\s\S]*?<td>Main forward action: race, install, continue\. One per view\. SHARE is the primary only where sharing is the view's main action\.<\/td>/,
+  'the reference states one primary action per view');
+assert.match(design, /data-semantic="--turn-action-utility"[\s\S]*?<td>Settings, How to Play, SHARE beside another main action, and neutral utilities\.<\/td>/);
 
 const compatibilityAliases = new Map([
   ['--ink', '--turn-ink'],

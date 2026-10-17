@@ -201,7 +201,7 @@
 }
 
 .turn-yourturn-share-submit {
-  background: var(--turn-action-share, #ea5da1);
+  background: var(--turn-action-primary, #ff8caf);
 }
 
 .turn-yourturn-share-back {

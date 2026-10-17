@@ -131,7 +131,9 @@ assert.doesNotMatch(sessionSource, /devicemotion|neutralRoll\s*=|horizonRollRefe
 assert.match(uiSource, /action\.share/);
 assert.match(uiSource, /action\.game/);
 assert.match(uiSource, /action\.back/);
-assert.match(uiSource, /is-share/);
+// Share is behaviour, not a colour (#1243): a share action checks a requested name first.
+assert.match(uiSource, /if \(requestName && action\.share\)/);
+assert.doesNotMatch(uiSource, /is-share/, 'SHARE has no colour role of its own');
 assert.match(uiSource, /is-game/);
 assert.match(uiSource, /is-back/);
 assert.match(uiSource, /const PAUSE_ICON[\s\S]*<rect[\s\S]*<rect/);
@@ -140,8 +142,9 @@ assert.doesNotMatch(uiSource, /⏸|▶/);
 
 // YOUR TURN's buttons take TURN's semantic roles from one place (#1238).
 const semanticCss = await fs.readFile(new URL('../turn/design-semantic.css', import.meta.url), 'utf8');
-assert.match(semanticCss, /\.yourturn-actions button\.is-share \{\s*background: var\(--turn-action-share\) !important;/,
-  'Share is the share role');
+assert.doesNotMatch(semanticCss, /is-share|--turn-action-share/, 'SHARE takes the role of its place (#1243)');
+assert.match(semanticCss, /\.turn-yourturn-share-submit,\s*\.yourturn-actions button\.is-primary \{\s*background: var\(--turn-action-primary\) !important;/,
+  'Where sharing is the main action, in TURN\'s share sheet or YOUR TURN\'s lap result, SHARE is the primary');
 assert.match(semanticCss, /\.yourturn-actions button\.is-game,\s*\.yourturn-full-game-button \{\s*background: var\(--turn-action-game\) !important;/,
   'Get the Game, in a dialog or the start row, is the game role rather than navigation orange');
 assert.match(semanticCss, /\.yourturn-actions button\.is-primary \{\s*background: var\(--turn-action-primary\) !important;/,
@@ -150,6 +153,31 @@ assert.match(semanticCss, /\.yourturn-actions button:is\(\.is-navigation, \.is-b
   'Close, back and leaving are navigation');
 for (const source of [cssSource, growingCssSource]) {
   assert.doesNotMatch(source, /#8ce99a|#ff9b66|#ffb4ab|#ff4fa3/, 'No button colour of its own');
+}
+// Only ever one primary action (#1243): every YOUR TURN dialog has at most one.
+for (const [file, source] of [['app.js', appSource], ['session.js', sessionSource], ['ui.js', uiSource]]) {
+  let lists = 0;
+  for (const start of source.matchAll(/actionList: \[/g)) {
+    let depth = 0;
+    let end = start.index + start[0].length - 1;
+    for (; end < source.length; end += 1) {
+      if (source[end] === '[') depth += 1;
+      else if (source[end] === ']' && --depth === 0) break;
+    }
+    const list = source.slice(start.index, end + 1);
+    assert.ok((list.match(/primary: true/g) || []).length <= 1, `${file}: one primary action per dialog\n${list}`);
+    lists += 1;
+  }
+  assert.ok(lists > 0, `${file} declares its dialogs' actions`);
+}
+// SHARE is the primary only where sharing is the dialog's main action; beside another
+// main action it carries no role, so it is a paper utility.
+assert.match(sessionSource, /\{ label: 'SHARE YOUR TURN', primary: true, share: true,/);
+assert.match(uiSource, /label: 'YES, THAT’S ME',\s*primary: true,/);
+for (const label of ['SHARE', 'SHARE ORIGINAL']) {
+  const actions = [...sessionSource.matchAll(new RegExp(`\\{ label: '${label}', ([^}]*)\\}`, 'g'))];
+  assert.ok(actions.length > 0, `${label} is offered`);
+  for (const [, flags] of actions) assert.doesNotMatch(flags, /primary|navigation|game|back|destructive/, `${label} is a utility beside the main action`);
 }
 assert.match(cssSource, /\.yourturn-challenge-button \{\s*background: var\(--turn-action-utility\) !important;/,
   'THE CHALLENGE is a utility, as TURN\'s pause button is');

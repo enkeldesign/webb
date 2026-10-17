@@ -94,10 +94,11 @@ export function createYourTurnUi() {
       if (action.primary) button.classList.add('is-primary');
       if (action.destructive) button.classList.add('is-destructive');
       if (action.navigation) button.classList.add('is-navigation');
-      if (action.share) button.classList.add('is-share');
       if (action.game) button.classList.add('is-game');
       if (action.back) button.classList.add('is-back');
       button.addEventListener('click', (event) => {
+        // A share action sends the challenge, so a requested name is checked first. Its
+        // colour is its place's role: primary only where sharing is the main action (#1243).
         if (requestName && action.share) {
           if (!validateRequestedName()) return;
           if (offerExistingRacerClaim({ action, event, returnConfig: config })) return;
@@ -113,7 +114,7 @@ export function createYourTurnUi() {
     if (requestName && (focusName || !nameInput.value)) {
       nameInput.focus();
     } else {
-      actions.querySelector('.is-primary, .is-share, button')?.focus();
+      actions.querySelector('.is-primary, button')?.focus();
     }
   }
 
@@ -149,7 +150,7 @@ export function createYourTurnUi() {
       actionList: [
         {
           label: 'YES, THAT’S ME',
-          share: true,
+          primary: true,
           action: () => {
             sessionState.racerId = existing.id;
             adoptSocialRacerIdentity({ id: existing.id, name: typedName });

@@ -1,5 +1,5 @@
-@import url('./design-tokens.css?build=20261017-r475');
-@import url('./controls.css?build=20261017-r475');
+@import url('./design-tokens.css?build=20261017-r476');
+@import url('./controls.css?build=20261017-r476');
 
 /*
   Normative production roles.
@@ -22,19 +22,17 @@
   background: var(--turn-action-primary) !important;
 }
 
-/* Social challenge actions keep their meaning across TURN and YOUR TURN. */
-.turn-yourturn-share-submit,
-.yourturn-actions button.is-share {
-  background: var(--turn-action-share) !important;
-}
-
 .yourturn-actions button.is-game,
 .yourturn-full-game-button {
   background: var(--turn-action-game) !important;
 }
 
 /* YOUR TURN's actions take the roles TURN's buttons have (#1238): ACCEPT CHALLENGE and
-   RESUME are the main forward action, as RACE and RESUME are in TURN. */
+   RESUME are the main forward action, as RACE and RESUME are in TURN. One primary action
+   per view (#1243): SHARE takes the role of its place. Where sharing is the view's main
+   action (TURN's share sheet, YOUR TURN's lap result) it is the primary; beside another
+   main action it is a utility, as TURN's Share your best lap is. */
+.turn-yourturn-share-submit,
 .yourturn-actions button.is-primary {
   background: var(--turn-action-primary) !important;
 }
