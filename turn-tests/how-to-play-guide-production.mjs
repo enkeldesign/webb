@@ -77,6 +77,9 @@ for (const step of ['FILL', 'BUILD', 'CATCH', 'SPEND']) {
   assert.match(guide, new RegExp(`<li><strong>${step}</strong><span>`), `OVERCHARGE: ${step}`);
 }
 assert.match(guide, /At its peak, uncaught OVERCHARGE leaks even while you keep using DRIFT/);
+// The OVERCHARGE part of a BOOST, stronger than BOOST alone, is its KICK (Erik, #1232):
+// TORQUE's copy names it.
+assert.match(guide, /<li><strong>SPEND<\/strong><span>Slide to BOOST\. OVERCHARGE burns first, as a stronger burst called KICK\.<\/span><\/li>/);
 assert.match(guide, /const boostKind = overchargeUnlocked\(\) \? 'overcharge' : 'boost'/);
 assert.doesNotMatch(guide, /catch-and-use-overcharge/, 'One BOOST card, without a nested OVERCHARGE disclosure');
 

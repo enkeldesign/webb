@@ -68,7 +68,10 @@ const lockedCar = memoryStorage({ ...ADMIN_MARKER, ...rewardState(everyReward.fi
 assert.equal(isPerkAvailable('driftage', lockedCar), false, 'Not while its car is locked on Trophy Road');
 const lockedPerk = memoryStorage({ ...ADMIN_MARKER, ...rewardState(everyReward.filter((id) => id !== 'suv-full-tank')) });
 assert.equal(isPerkAvailable('full-tank', lockedPerk), false, 'Not while the perk is locked on Trophy Road');
-assert.equal(isPerkAvailable('torque', lockedPerk), true, 'TORQUE comes with the Truck');
+assert.equal(isPerkAvailable('torque', lockedPerk), true, 'TORQUE comes with the Truck once DRIFT ATTACK is unlocked');
+const beforeDriftAttack = memoryStorage({ ...ADMIN_MARKER, ...rewardState(everyReward.filter((id) => id !== 'drift-attack')) });
+assert.equal(isPerkAvailable('torque', beforeDriftAttack), false,
+  'TORQUE works through OVERCHARGE, so it waits for DRIFT ATTACK (#1232)');
 
 // Installing: on any car but the perk's own, one per car; replacing never touches the
 // car's own perk.

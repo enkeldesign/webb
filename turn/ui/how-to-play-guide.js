@@ -77,7 +77,7 @@ const BOOST_CARD = Object.freeze({
         <li><strong>FILL</strong><span>DRIFT fills BOOST.</span></li>
         <li><strong>BUILD</strong><span>On a full bar, keep using DRIFT: purple OVERCHARGE grows past it.</span></li>
         <li><strong>CATCH</strong><span>Slide to GAS before it leaks away, and stay on GAS to hold it.</span></li>
-        <li><strong>SPEND</strong><span>Slide to BOOST. OVERCHARGE burns first, as a stronger burst.</span></li>
+        <li><strong>SPEND</strong><span>Slide to BOOST. OVERCHARGE burns first, as a stronger burst called KICK.</span></li>
       </ol>
       <p class="m8-overcharge-leak"><strong>WATCH THE PEAK</strong> At its peak, uncaught OVERCHARGE leaks even while you keep using DRIFT.</p>`
   })

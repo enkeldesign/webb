@@ -534,7 +534,9 @@ export function showGarage({
       perkState.innerHTML = unlocked
         ? '<span aria-hidden="true">✓</span><span class="garage-visually-hidden">Unlocked</span>'
         : `<span class="turn-pr-lock-icon" aria-hidden="true">${LOCK_ICON}</span><span>${reward.threshold}</span>`;
-      perkCopy.innerHTML = `${escapeHtml(presented.description)}${unlocked ? '' : `<br><span class="garage-perk-lock">Unlocks at ${reward.threshold} trophies on Trophy Road.</span>`}`;
+      // A perk that comes with another reward says which: TORQUE with DRIFT ATTACK (#1232).
+      const unlocksWith = reward && reward.type !== 'vehicle-perk' ? ` with ${escapeHtml(reward.title)}` : '';
+      perkCopy.innerHTML = `${escapeHtml(presented.description)}${unlocked ? '' : `<br><span class="garage-perk-lock">Unlocks${unlocksWith} at ${reward.threshold} trophies on Trophy Road.</span>`}`;
       // With an installed perk, the closed disclosure names both.
       const installed = perkulator.sync(car, { playable: !selection.state().preview });
       perkTitle.innerHTML = `${escapeHtml(titleCase(presented.title))}${installed

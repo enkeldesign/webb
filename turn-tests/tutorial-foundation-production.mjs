@@ -791,6 +791,9 @@ test('Tutorial steering help is a saved SETTINGS choice that works mid-lap', asy
 test('DRIFT ATTACK TUTORIAL teaches scoring, then LINK, BUILD, CATCH, HOLD and SPEND in order', async () => {
   const { createDriftAttackCoach } = await import('../turn/tutorial/drift-attack-coach.js');
   const lessons = await import('../turn/tutorial/drift-attack-lessons.js');
+  // The OVERCHARGE part of a BOOST is its KICK (Erik, #1232): SPEND names it.
+  assert.equal(lessons.DRIFT_ATTACK_LESSONS.find(({ id }) => id === 'spend').prompt,
+    'Slide to BOOST. OVERCHARGE burns first, as a stronger burst called KICK.');
   const state = { sessionSpeedCap: null };
   let input = { speed: 60, overcharge: 0, caught: false, boosting: false, banks: 0, links: 0 };
   const views = [];

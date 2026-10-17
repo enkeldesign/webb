@@ -70,7 +70,7 @@ export const DRIFT_ATTACK_LESSONS = Object.freeze([
     id: 'spend',
     targets: ['.drive-boost-zone'],
     title: 'SPEND',
-    prompt: 'Slide to BOOST. OVERCHARGE burns first, as a stronger burst.',
+    prompt: 'Slide to BOOST. OVERCHARGE burns first, as a stronger burst called KICK.',
     doneText: 'That was OVERCHARGE. Build, catch, hold, spend.',
     needsOvercharge: true,
     done: (progress) => progress.spent
