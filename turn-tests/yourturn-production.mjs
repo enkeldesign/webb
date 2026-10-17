@@ -138,12 +138,21 @@ assert.match(uiSource, /const PAUSE_ICON[\s\S]*<rect[\s\S]*<rect/);
 assert.match(uiSource, /const PLAY_ICON[\s\S]*<path/);
 assert.doesNotMatch(uiSource, /⏸|▶/);
 
-assert.match(growingCssSource, /\.is-share[\s\S]*#ff4fa3/,
-  'Share is the pink CTA');
-assert.match(growingCssSource, /\.is-game[\s\S]*#38d9ff/,
-  'Get the Game uses blue rather than navigation orange');
-assert.match(growingCssSource, /\.is-back[\s\S]*#ff9b66/,
-  'Back remains the design-system orange');
+// YOUR TURN's buttons take TURN's semantic roles from one place (#1238).
+const semanticCss = await fs.readFile(new URL('../turn/design-semantic.css', import.meta.url), 'utf8');
+assert.match(semanticCss, /\.yourturn-actions button\.is-share \{\s*background: var\(--turn-action-share\) !important;/,
+  'Share is the share role');
+assert.match(semanticCss, /\.yourturn-actions button\.is-game,\s*\.yourturn-full-game-button \{\s*background: var\(--turn-action-game\) !important;/,
+  'Get the Game, in a dialog or the start row, is the game role rather than navigation orange');
+assert.match(semanticCss, /\.yourturn-actions button\.is-primary \{\s*background: var\(--turn-action-primary\) !important;/,
+  'ACCEPT CHALLENGE and RESUME are the main forward action, as in TURN');
+assert.match(semanticCss, /\.yourturn-actions button:is\(\.is-navigation, \.is-back\),\s*\.yourturn-settings-close,\s*\.turn-yourturn-share-close,\s*\.turn-yourturn-share-back \{\s*background: var\(--turn-action-navigation\) !important;/,
+  'Close, back and leaving are navigation');
+for (const source of [cssSource, growingCssSource]) {
+  assert.doesNotMatch(source, /#8ce99a|#ff9b66|#ffb4ab|#ff4fa3/, 'No button colour of its own');
+}
+assert.match(cssSource, /\.yourturn-challenge-button \{\s*background: var\(--turn-action-utility\) !important;/,
+  'THE CHALLENGE is a utility, as TURN\'s pause button is');
 assert.match(growingCssSource, /\.yourturn-racer-summary/);
 assert.match(growingCssSource, /\.yourturn-racer-label/);
 assert.match(labelsSource, /lap\.challengerName/,

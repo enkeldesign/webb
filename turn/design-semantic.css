@@ -1,11 +1,19 @@
-@import url('./design-tokens.css?build=20261017-r472');
-@import url('./controls.css?build=20261017-r472');
+@import url('./design-tokens.css?build=20261017-r473');
+@import url('./controls.css?build=20261017-r473');
 
 /*
   Normative production roles.
   Existing component selectors remain intact; this layer only assigns shared
   semantic colour and shape decisions.
 */
+
+/* Focus moved for screen readers, to a dialog's title, a note or a region, lands on
+   something that is not a control: it never shows a focus ring, in TURN or YOUR TURN
+   (#1238). Controls, including any given tabindex="-1", keep theirs. */
+:root body [tabindex="-1"]:not(a[href], button, input, select, textarea, summary, [contenteditable], [role="button"], [role="link"], [role="checkbox"], [role="radio"], [role="switch"], [role="tab"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="option"], [role="slider"], [role="spinbutton"], [role="textbox"], [role="searchbox"], [role="combobox"], [role="treeitem"], [role="gridcell"]):focus,
+:root body dialog:focus {
+  outline: none;
+}
 
 /* Main forward flow: one colour and one shape (the shared rounded-rectangle
    control radius from design-scale.css). */
@@ -20,8 +28,19 @@
   background: var(--turn-action-share) !important;
 }
 
-.yourturn-actions button.is-game {
+.yourturn-actions button.is-game,
+.yourturn-full-game-button {
   background: var(--turn-action-game) !important;
+}
+
+/* YOUR TURN's actions take the roles TURN's buttons have (#1238): ACCEPT CHALLENGE and
+   RESUME are the main forward action, as RACE and RESUME are in TURN. */
+.yourturn-actions button.is-primary {
+  background: var(--turn-action-primary) !important;
+}
+
+.yourturn-actions button.is-destructive {
+  background: var(--turn-action-danger) !important;
 }
 
 /* Close, leave and back always communicate navigation or context change. */
@@ -30,7 +49,11 @@
 .sound-guide-close,
 .m8-dialog-head > button,
 .back-to-lot-button,
-[data-turn-navigation-action] {
+[data-turn-navigation-action],
+.yourturn-actions button:is(.is-navigation, .is-back),
+.yourturn-settings-close,
+.turn-yourturn-share-close,
+.turn-yourturn-share-back {
   background: var(--turn-action-navigation) !important;
 }
 

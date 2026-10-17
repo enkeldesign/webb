@@ -98,7 +98,7 @@
   padding: 0;
   border: 3px solid var(--turn-outline);
   border-radius: 50%;
-  background: #ff9b66;
+  background: var(--turn-action-navigation, #ff7b54);
   color: var(--turn-ink);
   box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: inherit;

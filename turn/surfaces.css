@@ -24,12 +24,6 @@
   box-shadow: var(--turn-shadow-dialog);
 }
 
-/* Dialog and screen titles take focus when they open, so screen readers start
-   there, but they are not controls: no focus ring. Buttons keep theirs. */
-:root body :is(h1, h2, h3, [role="heading"])[tabindex="-1"]:focus {
-  outline: none;
-}
-
 /* The support-challenge dialog drew its own frame around the card, so the card's
    larger corners showed notches. The card is the one surface now. */
 :root body dialog.turn-support-challenge-dialog {

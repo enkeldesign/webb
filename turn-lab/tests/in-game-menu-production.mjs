@@ -127,8 +127,9 @@ assert.match(menu, /classList\.contains\('is-invalid-lap'\)/);
 assert.match(menu, /new MutationObserver\(\(\) => syncLapValidity\(\)\)/);
 assert.match(menu, /classList\.toggle\('is-lap-invalid', invalid\)/);
 assert.match(menu, /classList\.add\('is-lap-invalid-pulse'\)/);
-assert.match(menu, /boostHud\?\.classList\.toggle\('is-racing', racing\)/);
-assert.match(menu, /event\.detail\?\.running === true/);
+// The BOOST label has one owner, the meter's, so YOUR TURN hides it too (#1238).
+assert.match(controls, /boostHud\.classList\.toggle\('is-racing', event\.detail\?\.running === true && reason !== 'race-reset'\)/);
+assert.doesNotMatch(menu, /is-racing|boostHud/);
 assert.match(menu, /event\.detail\?\.reason === 'race-reset'/);
 assert.doesNotMatch(menu, /setInterval|setAnimationLoop/);
 

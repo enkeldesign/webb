@@ -1,15 +1,3 @@
-.yourturn-actions button.is-share {
-  background: #ff4fa3;
-}
-
-.yourturn-actions button.is-game {
-  background: #38d9ff;
-}
-
-.yourturn-actions button.is-back {
-  background: #ff9b66;
-}
-
 .yourturn-card h1 {
   text-transform: uppercase;
 }

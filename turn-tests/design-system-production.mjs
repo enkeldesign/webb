@@ -309,6 +309,26 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.match(tokens, /:root\[data-theme="dark"\] :is\(button, \[role="button"\]\):is\(:disabled, \[aria-disabled="true"\], \.is-locked\)[^{]*\{\s*border-color: var\(--turn-outline-muted\);/, 'a locked or disabled control keeps the muted outline');
 }
 
+// Focus moved for screen readers lands on something that is not a control: no focus
+// ring, in TURN and YOUR TURN alike, which both load this layer (#1238).
+const focusRule = semantic.match(/:root body \[tabindex="-1"\]:not\(([^)]*)\):focus,\s*:root body dialog:focus \{\s*outline: none;\s*\}/);
+assert.ok(focusRule, 'Non-interactive focus targets draw no focus ring');
+for (const control of ['a[href]', 'button', 'input', 'select', 'textarea', 'summary', '[role="button"]', '[role="slider"]', '[role="tab"]', '[role="option"]']) {
+  assert.ok(focusRule[1].includes(control), `${control} keeps its focus ring`);
+}
+const surfacesCss = await fs.readFile(new URL('../turn/surfaces.css', import.meta.url), 'utf8');
+assert.doesNotMatch(surfacesCss, /\[tabindex="-1"\]:focus/, 'One rule, in the layer both apps load');
+const yourTurnPage = await fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8');
+assert.match(yourTurnPage, /<link rel="stylesheet" href="\/turn\/design-semantic\.css\?build=/);
+assert.match(index, /<link rel="stylesheet" href="\.\/install-gate\.css\?build=/);
+assert.match(await fs.readFile(new URL('../turn/install-gate.css', import.meta.url), 'utf8'), /^@import url\('\.\/design-semantic\.css\?build=/);
+
+// Over a staged race the rotate TIP is a compact chip under the race message (#1238).
+const responsiveCss = await fs.readFile(new URL('../turn/responsive.css', import.meta.url), 'utf8');
+assert.match(responsiveCss, /:root body \.turn-orientation-hint\.is-staged \{\s*z-index: 30; top: 22%; bottom: auto; margin-top: 56px;\s*display: flex; align-items: center; gap: 10px;/);
+assert.match(responsiveCss, /:root body \.turn-orientation-hint\.is-staged \.turn-orientation-icon \{\s*position: static;/,
+  'The symbol sits beside the line, not on a badge above it');
+
 console.log('TURN current product-language design system, palette, gameplay, progression and dialog reference passed.');
 
 function escapeRegex(value) {

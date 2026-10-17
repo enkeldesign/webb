@@ -244,7 +244,6 @@ function install(runtime) {
   const resetRivalsButton = document.querySelector('.reset-rivals-button');
   const spectateButton = document.querySelector('.spectate-button');
   const lapTimeChip = document.querySelector('#lapTime')?.closest('.chip');
-  const boostHud = document.querySelector('.boost-hud');
 
   if (!utilityGroup || !backToStartButton || !recalibrateButton || !backToLotButton || !resetRivalsButton || !spectateButton) {
     requestAnimationFrame(() => install(runtime));
@@ -307,10 +306,6 @@ function install(runtime) {
     setRestartLapInvalid(invalid, { pulse: pulseOnEntry });
   }
 
-  function syncBoostLabel(racing = runtime.state?.lapActive === true) {
-    boostHud?.classList.toggle('is-racing', racing);
-  }
-
   const lapValidityObserver = lapTimeChip && typeof MutationObserver === 'function'
     ? new MutationObserver(() => syncLapValidity())
     : null;
@@ -336,7 +331,6 @@ function install(runtime) {
   window.addEventListener('turn:ui-state-change', (event) => {
     syncMenu();
     const raceReset = event.detail?.reason === 'race-reset';
-    syncBoostLabel(event.detail?.running === true && !raceReset);
     if (!event.detail?.running || raceReset) {
       setRestartLapInvalid(false);
     } else {
@@ -346,7 +340,6 @@ function install(runtime) {
 
   syncMenu();
   syncLapValidity({ pulseOnEntry: false });
-  syncBoostLabel();
 }
 
 waitForRuntime();

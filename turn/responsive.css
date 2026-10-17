@@ -188,7 +188,20 @@
 .turn-orientation-phone { transform-box: fill-box; transform-origin: center; animation: turn-orientation-rotate 1.2s cubic-bezier(.3, 0, .2, 1) .35s both; }
 @keyframes turn-orientation-rotate { from { transform: rotate(0deg); } to { transform: rotate(90deg); } }
 .turn-orientation-hint strong { display: block; font-size: max(var(--turn-text-floor, 11px), 1rem); font-weight: 1000; line-height: 1.15; letter-spacing: .02em; }
-:root body .turn-orientation-hint.is-staged { z-index: 30; top: 22%; bottom: auto; margin-top: 30px; }
+/* Over a staged race the TIP is a compact chip: the symbol beside its line, just under
+   the race message (STEERING CENTRED), so the cars and HUD stay in view (#1238). */
+:root body .turn-orientation-hint.is-staged {
+  z-index: 30; top: 22%; bottom: auto; margin-top: 56px;
+  display: flex; align-items: center; gap: 10px;
+  width: max-content; max-width: min(340px, calc(100% - 2 * var(--turn-edge)));
+  padding: 6px 14px 6px 6px; border-radius: 12px; text-align: start;
+}
+:root body .turn-orientation-hint.is-staged .turn-orientation-icon {
+  position: static; flex: none; width: 40px; height: 36px;
+  border-width: 2px; border-radius: 9px; box-shadow: none; transform: none;
+}
+:root body .turn-orientation-hint.is-staged .turn-orientation-icon svg { width: 28px; height: 28px; }
+:root body .turn-orientation-hint.is-staged strong { font-size: max(var(--turn-text-floor, 11px), 0.8125rem); }
 @media (prefers-reduced-motion: reduce) {
   .turn-orientation-phone { animation: none; }
 }
