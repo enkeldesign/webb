@@ -61,7 +61,6 @@ const ROOT_ID = 'turnGarage';
 const ENTRY_TAP_GUARD_MS = 600;
 const PAINT_REWARD_ID = 'paintjob';
 const SECRET_NAME = 'SATAN’S SPORTS CAR';
-const STAT_KEYS = VEHICLE_STAT_LEGEND.map((entry) => entry.key);
 // Specifications are always open where the screen has room for them.
 const SPACIOUS_QUERY = '(min-width: 768px) and (min-height: 640px)';
 // Where ALL CARS stays on the page instead of in a sheet: beside the featured car on a
@@ -269,7 +268,6 @@ export function showGarage({
               <h3 class="garage-disclosure-head">
                 <button class="garage-disclosure-toggle" type="button" aria-expanded="false" aria-controls="garageSpecs">
                   <span class="garage-disclosure-title">Specifications</span>
-                  <span class="garage-setup-label"></span>
                   <span class="garage-disclosure-chevron" aria-hidden="true"></span>
                 </button>
               </h3>
@@ -350,7 +348,6 @@ export function showGarage({
     const specs = $('.garage-specs');
     const specsToggle = specs.querySelector('.garage-disclosure-toggle');
     const specsPanel = specs.querySelector('.garage-disclosure-panel');
-    const setupLabel = $('.garage-setup-label');
     const specList = $('.garage-spec-list');
     const shiftNote = $('.garage-shift-note');
     const explainToggle = $('#garageSpecExplain');
@@ -517,8 +514,6 @@ export function showGarage({
 
     function syncSpecs(car, secretActive) {
       const stats = getEffectiveVehicleStats(effectiveSelection());
-      const stock = STAT_KEYS.every((key) => Number(stats[key]) === Number(car.stats[key]));
-      setupLabel.textContent = stock ? 'Stock' : 'Current setup';
       const changes = selection.state().preview || secretActive ? null : shiftChanges(car);
       specList.innerHTML = statRows(stats, changes, explained);
       specNote.hidden = !explained;

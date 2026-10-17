@@ -184,14 +184,15 @@ async function phoneFlow(browserType, name) {
     assert.equal(phone.specsOpen, false, `${name}: phones start with Specifications closed`);
     assert.equal(phone.lastClearsDock, true, `${name}: the last disclosure scrolls clear of the dock`);
 
-    // Specifications: stock stats with meters, and the 18-point note.
+    // Specifications: the car's stats with meters, and the 18-point note.
     await page.locator('.garage-specs .garage-disclosure-toggle').click();
     const specs = await page.evaluate(() => ({
       expanded: document.querySelector('.garage-specs .garage-disclosure-toggle').getAttribute('aria-expanded'),
       rows: document.querySelectorAll('.garage-spec').length,
-      label: document.querySelector('.garage-setup-label').textContent.trim()
+      // Only the title and the chevron: no STOCK label beside them (#1240).
+      head: document.querySelector('.garage-specs .garage-disclosure-toggle').textContent.trim()
     }));
-    assert.deepEqual(specs, { expanded: 'true', rows: 6, label: 'Stock' }, `${name}: Specifications open on a tap`);
+    assert.deepEqual(specs, { expanded: 'true', rows: 6, head: 'Specifications' }, `${name}: Specifications open on a tap`);
     // Clean by default: explanations appear only when asked for, and stay on.
     const explanations = () => page.evaluate(() => ({
       checked: document.querySelector('#garageSpecExplain').checked,
