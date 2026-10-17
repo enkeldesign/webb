@@ -44,6 +44,7 @@ import {
   resolveGraduatedStageFeedback
 } from '/turn/vehicle/perk-runtime.js?revision=r233-graduated';
 import { resolveVehiclePerkStatusFeedback } from '/turn/vehicle/perk-presentation.js';
+import { PERKULATOR_CHANGE_EVENT, installedPerkFor } from '/turn/vehicle/perkulator.js';
 import { showCompactRacePill } from '/turn/achievements/support-challenge-feedback.js';
 import { createScoreFeedback } from '/turn/scoring/score-feedback.js';
 import { startFlowPulses } from '/turn/ui/flow-pulses.js';
@@ -146,7 +147,9 @@ const state = {
   vehicleTuning: initialVehicleDefinition.tuning,
   vehicleEffectiveTuning: initialVehicleDefinition.tuning,
   vehiclePerkUnlocked: isVehiclePerkUnlocked(initialVehicleSelection.carId),
+  vehicleInstalledPerkId: installedPerkFor(initialVehicleSelection.carId),
   vehiclePerkProgress: 0,
+  vehicleInstalledPerkProgress: 0,
   vehiclePerkStage: 0,
   lastFrame: performance.now(),
   messageTimer: 0
@@ -563,6 +566,7 @@ async function applyVehicleSelection(selection, { persist = true } = {}) {
   state.vehicleStats = definition.stats;
   state.vehicleTuning = definition.tuning;
   state.vehiclePerkUnlocked = isVehiclePerkUnlocked(saved.carId);
+  state.vehicleInstalledPerkId = installedPerkFor(saved.carId);
   resetVehiclePerkRuntimeState(state);
   globalThis.__turnVehicleTuning = definition.tuning;
 
@@ -943,6 +947,7 @@ function beginTimedLap(now) {
 function updatePhysics(dt, now) {
   const previousVehiclePerkStage = state.vehiclePerkStage;
   const previousVehiclePerkProgress = state.vehiclePerkProgress;
+  const previousInstalledPerkProgress = state.vehicleInstalledPerkProgress;
   const nearestAfter = updateVehiclePhysicsState({
     state,
     dt,
@@ -960,11 +965,15 @@ function updatePhysics(dt, now) {
     driftLock: globalThis.__turnDriftLockAmount || 0,
     vehicleTuning: state.vehicleTuning
   });
+  // The car's own perk and its installed perk each fill their own slot (perk-runtime.js).
   const perkStatusFeedback = resolveVehiclePerkStatusFeedback({
-    vehicleId: state.vehicleId,
-    perkUnlocked: state.vehiclePerkUnlocked,
+    perkId: state.vehiclePerkRuntimeOriginalId,
     previousProgress: previousVehiclePerkProgress,
     nextProgress: state.vehiclePerkProgress
+  }) || resolveVehiclePerkStatusFeedback({
+    perkId: state.vehiclePerkRuntimeInstalledId,
+    previousProgress: previousInstalledPerkProgress,
+    nextProgress: state.vehicleInstalledPerkProgress
   });
   if (perkStatusFeedback) showCompactRacePill(perkStatusFeedback, { tone: 'blue' });
 
@@ -1339,13 +1348,17 @@ const turnRuntime = {
 globalThis.__turnRuntime = turnRuntime;
 function syncSelectedVehiclePerkEntitlement() {
   const unlocked = isVehiclePerkUnlocked(state.vehicleId);
-  if (unlocked === state.vehiclePerkUnlocked) return;
+  const installed = installedPerkFor(state.vehicleId);
+  if (unlocked === state.vehiclePerkUnlocked && installed === state.vehicleInstalledPerkId) return;
   state.vehiclePerkUnlocked = unlocked;
+  state.vehicleInstalledPerkId = installed;
   resetVehiclePerkRuntimeState(state);
 }
 
 window.addEventListener('turn:trophy-road-updated', syncSelectedVehiclePerkEntitlement);
 window.addEventListener('turn:achievements-ready', syncSelectedVehiclePerkEntitlement);
+// Installing, replacing or removing a perk in GARAGE (PERKULATOR, #1219).
+window.addEventListener(PERKULATOR_CHANGE_EVENT, syncSelectedVehiclePerkEntitlement);
 // Leaving TURN (another app, the lock screen, another window) pauses an active lap
 // (race-pause.js), which then resumes exactly where it stood. Outside a lap there is
 // nothing to pause, and the perk resets as before.

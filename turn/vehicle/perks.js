@@ -102,9 +102,9 @@ export const VEHICLE_PERKS = Object.freeze([
     id: 'twitchy-turny',
     title: 'TWITCHY TURNY',
     vehicleIds: ['toy-racer'],
-    rarity: PERK_RARITY.EPIC,
-    cloneable: true,
-    installable: true,
+    rarity: PERK_RARITY.LEGENDARY,
+    cloneable: false,
+    installable: false,
     description: 'DRIFT fills BOOST even faster than normal.',
     tuning: { driftBoostRechargeMultiplier: 3.6 }
   }),

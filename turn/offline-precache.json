@@ -1,5 +1,5 @@
 {
-  "release": "20261017-r463",
+  "release": "20261017-r464",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -251,6 +251,7 @@
     "/turn/garage/garage-cars.js",
     "/turn/garage/garage-catalog.js",
     "/turn/garage/garage-focus.js",
+    "/turn/garage/garage-perkulator.js",
     "/turn/garage/garage-selection.js",
     "/turn/garage/garage.css",
     "/turn/garage/garage.js",
@@ -511,6 +512,7 @@
     "/turn/vehicle/perk-presentation.js",
     "/turn/vehicle/perk-runtime.js",
     "/turn/vehicle/perks.js",
+    "/turn/vehicle/perkulator.js",
     "/turn/vehicle/physics.js",
     "/turn/vehicle/semantic-car-finish.js",
     "/turn/vehicle/shift-profile.js",
