@@ -4,6 +4,7 @@ import {
 } from '../ui/authored-icons.js?revision=r247-paintjob-icon';
 import { TRACK_ICON_MARKUP } from '../ui/track-icons.js?revision=r1-track-reward-icons';
 import { AUTHORED_PERK_ICON } from '../ui/perk-icon.js';
+import { originalVehiclePerk } from '../vehicle/perks.js';
 
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
 export const TROPHY_ROAD_STORAGE_VERSION = 10;
@@ -380,8 +381,12 @@ export function rewardForFeature(featureId) {
   return REWARD_BY_FEATURE.get(featureId) || null;
 }
 
+// A car's perk unlocks with its own Trophy Road reward, or with the one its perk names:
+// TORQUE works through OVERCHARGE, so it unlocks with DRIFT ATTACK (#1232).
 export function rewardForVehiclePerk(vehicleId) {
-  return REWARD_BY_VEHICLE_PERK.get(vehicleId) || null;
+  return REWARD_BY_VEHICLE_PERK.get(vehicleId)
+    || REWARD_BY_ID.get(originalVehiclePerk(vehicleId)?.rewardId)
+    || null;
 }
 
 // Historical reward ids, including rewards that no longer exist (the individual

@@ -208,7 +208,8 @@ assert.equal(rewardForVehicle('convertible'), null,
 assert.equal(rewardForVehicle('truck'), null,
   'A vehicle-perk reward must not lock the already-owned Truck');
 assert.equal(rewardForVehiclePerk('convertible')?.id, 'awd-traction');
-assert.equal(rewardForVehiclePerk('truck'), null, 'TRUCK ships with TORQUE out of the box');
+assert.equal(rewardForVehiclePerk('truck')?.id, 'drift-attack',
+  'TORQUE works through OVERCHARGE, so it unlocks with DRIFT ATTACK (#1232)');
 assert.equal(rewardForVehiclePerk('van')?.id, 'van-carry-on');
 assert.equal(rewardForVehiclePerk('suv')?.id, 'suv-full-tank');
 assert.equal(rewardForVehiclePerk('sedan')?.id, 'sedan-double-shift');
@@ -247,8 +248,8 @@ assert.equal(getCarDefinition('race').perk?.description,
   'OVERCHARGE increases CONTROL and ACCELERATION beyond their ordinary limits.');
 
 assert.equal(getCarDefinition('truck').perk?.title, 'TORQUE');
-assert.equal(getCarDefinition('truck').perk?.rewardId, undefined, 'TORQUE has no Trophy Road gate');
-assert.equal(getCarDefinition('truck').perk?.threshold, undefined);
+assert.equal(getCarDefinition('truck').perk?.rewardId, 'drift-attack', 'TORQUE unlocks with DRIFT ATTACK (#1232)');
+assert.equal(getCarDefinition('truck').perk?.threshold, 600);
 assert.equal(getCarDefinition('truck').perk?.description,
   'OVERCHARGE builds BOOST TANK to 5/5 and has a stronger KICK.');
 
@@ -463,8 +464,8 @@ assert.equal(isVehicleUnlocked('convertible', freshStorage), true,
 assert.equal(isVehicleUnlocked('truck', freshStorage), true,
   'A locked TORQUE perk must not lock Truck');
 assert.equal(isVehiclePerkUnlocked('convertible', freshStorage), false);
-assert.equal(isVehiclePerkUnlocked('truck', freshStorage), true,
-  'TRUCK TORQUE is intrinsic, with no Trophy Road entitlement');
+assert.equal(isVehiclePerkUnlocked('truck', freshStorage), false,
+  'TORQUE waits for DRIFT ATTACK, which brings OVERCHARGE (#1232)');
 assert.equal(isVehiclePerkUnlocked('van', freshStorage), false);
 assert.equal(isVehiclePerkUnlocked('race', freshStorage), true,
   'Existing bundled perks remain owned with their cars');
@@ -733,7 +734,9 @@ assert.match(garage, /vehiclePerkPresentation\(car\.id, car\.perk\)/,
 assert.match(garage, /rewardForVehiclePerk\(car\.id\)/,
   'GARAGE must look up the independent entitlement without treating the car as locked');
 assert.match(garage, /isVehiclePerkUnlocked\(car\.id\)/);
-assert.match(garage, /Unlocks at \$\{reward\.threshold\} trophies on Trophy Road/);
+assert.match(garage, /Unlocks\$\{unlocksWith\} at \$\{reward\.threshold\} trophies on Trophy Road/);
+// A perk that comes with another reward says which: "Unlocks with DRIFT ATTACK at 600" (#1232).
+assert.match(garage, /const unlocksWith = reward && reward\.type !== 'vehicle-perk' \? ` with \$\{escapeHtml\(reward\.title\)\}` : '';/);
 assert.match(garage, /perk\.hidden = !presented/, 'Cars without a perk show no Perk disclosure');
 assert.match(garage, /aria-controls="garagePerk"/, 'The Perk disclosure exposes what it opens');
 assert.match(garage, /setAttribute\('aria-expanded', String\(open\)\)/);

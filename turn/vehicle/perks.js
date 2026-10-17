@@ -127,6 +127,9 @@ export const VEHICLE_PERKS = Object.freeze([
     rarity: PERK_RARITY.EPIC,
     installable: true,
     description: 'OVERCHARGE builds BOOST TANK to 5/5 and has a stronger KICK.',
+    // TORQUE works through OVERCHARGE, so it unlocks with DRIFT ATTACK, which brings it.
+    rewardId: 'drift-attack',
+    threshold: 600,
     // The KICK: BOOST's thrust while spending OVERCHARGE (vehicle/physics.js), stronger
     // than every car's own (#1232).
     tuning: { overchargeBoostPowerMultiplier: 1.4 }
