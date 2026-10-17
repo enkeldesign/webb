@@ -136,6 +136,12 @@ html[data-turn-deployment="yourturn"] #intro {
   display: none;
 }
 
+/* The pause and play symbols take the toggle's text colour: an unfilled SVG draws black,
+   which vanished on the dark utility in dark mode (#1238). */
+.yourturn-motion-toggle svg {
+  fill: currentColor;
+}
+
 .yourturn-card-head {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
