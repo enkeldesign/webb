@@ -496,6 +496,96 @@ try {
     assert.equal(await page.locator('.turn-tutorial-dim').evaluate((el) => globalThis.getComputedStyle(el).opacity), '0');
   });
 
+  // #1236: a lesson is one small card, there at once with the control that continues it,
+  // even while the race is still speaking. On the drive pad a held finger continues by
+  // sliding onto the lesson's control; one already on it as the lesson appears slides
+  // off and back.
+  await run('one small card at once; a held finger slides off and back', {}, async (page) => {
+    const speechFloor = (hold) => page.evaluate(async (holding) => {
+      const map = JSON.parse(document.querySelector('[type="importmap"]').textContent).imports;
+      const floor = await import(map['/turn/ui/speech-floor.js']);
+      if (holding) floor.holdSpeechFloor(60_000, 'smoke');
+      else floor.releaseSpeechFloor('smoke');
+    }, hold);
+    await speechFloor(true);
+    await showLaunchCard(page);
+    await page.locator('[data-tutorial-start]').click();
+    const drive = page.locator('.turn-tutorial-card[data-ready="true"][data-lesson="drive"]');
+    await drive.waitFor();
+    assert.equal(await page.locator('.turn-tutorial-prompt').isHidden(), true, 'No smaller box first: the card is the box');
+    assert.equal(await page.locator('.turn-tutorial-voice').textContent(), '', 'Only the voice waits its turn');
+    assert.equal(await drive.locator('.turn-tutorial-card-hint').textContent(), 'Hold GAS to continue');
+    const type = await page.evaluate(() => {
+      const of = (selector) => {
+        const style = globalThis.getComputedStyle(document.querySelector(selector));
+        return [style.fontSize, style.fontWeight, style.lineHeight].join(' ');
+      };
+      return {
+        card: [of('.turn-tutorial-card h2'), of('.turn-tutorial-card p'), of('.turn-tutorial-card-hint')],
+        prompt: [of('.turn-tutorial-prompt strong'), of('.turn-tutorial-prompt span'), of('.turn-tutorial-prompt span')]
+      };
+    });
+    assert.deepEqual(type.card, type.prompt, 'The card is the same small box as the prompt: its title, text and hint');
+    await acceptLesson(page, 'drive');
+    await speechFloor(false);
+
+    const centre = async (selector) => {
+      const box = await page.locator(selector).boundingBox();
+      return [box.x + box.width / 2, box.y + box.height / 2];
+    };
+    const padZone = () => page.evaluate(() => document.querySelector('.drive-pad').dataset.driveZone);
+    const held = () => page.evaluate(() => globalThis.__turnRacePause.reason);
+    const toStretch = (share) => page.evaluate((at) => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const sample = samples[Math.round(samples.length * at)];
+      state.position.copy(sample.point);
+      state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
+      state.velocity.copy(sample.tangent).multiplyScalar(20);
+      state.speed = 20;
+      // Past the line without crossing it: the lap is under way, so a lesson holds it.
+      state.lapActive = true;
+    }, share);
+    await page.mouse.move(...await centre('.drive-gas-zone'));
+    await page.mouse.down();
+    await page.waitForFunction(() => document.querySelector('.drive-pad').dataset.driveZone === 'gas');
+
+    // DRIFT appears under a held GAS. The hold keeps that finger on the pad, so a second
+    // finger's DRIFT would press nothing; sliding the first onto DRIFT continues.
+    await toStretch(0.25);
+    await page.locator('.turn-tutorial-card[data-ready="true"][data-lesson="drift"]').waitFor();
+    assert.equal(await held(), 'lesson');
+    assert.equal(await padZone(), 'gas', 'The lesson hold keeps the finger on the pad');
+    await page.evaluate(() => {
+      const zone = document.querySelector('.drive-drift-zone');
+      const box = zone.getBoundingClientRect();
+      const init = { bubbles: true, cancelable: true, pointerId: 7, isPrimary: false, button: 0, pointerType: 'touch', clientX: box.left + box.width / 2, clientY: box.top + box.height / 2 };
+      zone.dispatchEvent(new globalThis.PointerEvent('pointerdown', init));
+      zone.dispatchEvent(new globalThis.PointerEvent('pointerup', init));
+    });
+    assert.equal(await held(), 'lesson', 'A second finger cannot press what the pad\'s finger holds');
+    await page.mouse.move(...await centre('.drive-drift-zone'), { steps: 4 });
+    await page.waitForFunction(() => !globalThis.__turnRacePause.paused
+      && document.querySelector('.drive-pad').dataset.driveZone === 'drift');
+
+    // BOOST appears under a held BOOST: that hold, and moving within BOOST, cannot
+    // continue it, nor can sliding onto another control. Sliding back onto BOOST does.
+    await page.mouse.move(...await centre('.drive-boost-zone'), { steps: 4 });
+    await page.waitForFunction(() => document.querySelector('.drive-pad').dataset.driveZone === 'boost');
+    await toStretch(0.55);
+    await page.locator('.turn-tutorial-card[data-ready="true"][data-lesson="boost"]').waitFor();
+    const [boostX, boostY] = await centre('.drive-boost-zone');
+    await page.mouse.move(boostX + 6, boostY + 4, { steps: 2 });
+    await page.waitForTimeout(150);
+    assert.equal(await held(), 'lesson', 'A control already held as its lesson appears cannot dismiss it');
+    await page.mouse.move(...await centre('.drive-gas-zone'), { steps: 4 });
+    await page.waitForFunction(() => document.querySelector('.drive-pad').dataset.driveZone === 'gas');
+    assert.equal(await held(), 'lesson', 'Another control does not continue');
+    await page.mouse.move(boostX, boostY, { steps: 4 });
+    await page.waitForFunction(() => !globalThis.__turnRacePause.paused
+      && document.querySelector('.drive-pad').dataset.driveZone === 'boost');
+    await page.mouse.up();
+  });
+
   // Tutorial steering help (#1133): chosen in SETTINGS, it steers the teaching lap.
   await run('Tutorial steering help', { steeringHelp: true }, async (page) => {
     await showLaunchCard(page);

@@ -57,6 +57,9 @@ function installStyles() {
       text-align: center;
       transform: translateX(-50%);
       pointer-events: none;
+      /* iOS Safari enlarges text in landscape unless told not to (#1236). */
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
     .turn-tutorial-prompt[hidden] { display: none; }
     .turn-tutorial-card {
@@ -78,6 +81,8 @@ function installStyles() {
       color: var(--turn-text);
       box-shadow: var(--turn-shadow-default);
       text-align: center;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
     .turn-tutorial-card.is-visible { opacity: 1; animation: turn-tutorial-in 140ms ease-out; }
     @keyframes turn-tutorial-in {
@@ -94,15 +99,21 @@ function installStyles() {
       transition: opacity 120ms ease-out;
     }
     .turn-tutorial-dim.is-visible { opacity: .13; transition-duration: 140ms; }
-    .turn-tutorial-card h2 { margin: 0; font-size: var(--turn-type-body); }
-    .turn-tutorial-card p { margin: var(--turn-space-2) 0; font-size: var(--turn-type-small); line-height: var(--turn-leading-body); }
+    /* The card reads exactly as the prompt below it, the same small box (#1236). */
+    .turn-tutorial-card h2 {
+      margin: 0;
+      font-size: var(--turn-type-body);
+      font-weight: var(--turn-weight-display);
+      line-height: var(--turn-leading-title);
+    }
+    .turn-tutorial-card p { margin: var(--turn-space-1) 0 0; font-size: var(--turn-type-small); line-height: var(--turn-leading-body); }
     /* Which control continues: low emphasis, in the card's bottom-right corner (#1212). */
     .turn-tutorial-card .turn-tutorial-card-hint {
-      margin: var(--turn-space-2) 0 0;
       color: var(--turn-text-muted);
       text-align: end;
     }
     .turn-tutorial-card button {
+      margin-top: var(--turn-space-2);
       min-height: var(--turn-target-min);
       padding: var(--turn-space-2) var(--turn-space-5);
       border: var(--turn-border-control) solid var(--turn-outline);
@@ -179,19 +190,15 @@ export function createTutorialPrompt(parent = document.body) {
   let firstTarget = null;
   let hideTimer = 0;
   const pauseOwner = () => globalThis.__turnRacePause;
-  // Controls held right now (#1212): pointers by their last position, keys by their
-  // action. A lesson whose control is already held when it appears waits for that
-  // hold to end, then takes the next press. No timer: a fresh press works at once.
-  const heldPointers = new Map();
+  // Controls held right now (#1212): the drive pad's own zone, which follows a finger
+  // across the pad, LOCK and SHIFT included, and keys by their action. A lesson whose
+  // control is already held when it appears waits for that hold to end, by lifting or
+  // by sliding off the control; then pressing it again, or sliding back onto it,
+  // continues (#1236). No timer: a fresh press works at once.
   const heldKeys = new Map();
   let rearm = null;
-  function actionAt(x, y) {
-    const under = document.elementFromPoint?.(x, y);
-    for (const [selector, action] of Object.entries(CONTROL_ACTIONS)) if (under?.closest?.(selector)) return action;
-    return null;
-  }
-  const heldAction = (action) => [...heldKeys.values()].includes(action)
-    || [...heldPointers.values()].some((point) => actionAt(point.x, point.y) === action);
+  const padZone = () => document.querySelector('#controls .drive-pad')?.dataset.driveZone || '';
+  const heldAction = (action) => padZone() === action || [...heldKeys.values()].includes(action);
   function settleRearm() {
     if (rearm && !heldAction(rearm)) rearm = null;
   }
@@ -283,18 +290,16 @@ export function createTutorialPrompt(parent = document.body) {
     clearTimeout(sayTimer);
     sayTimer = 0;
     if (externallyPaused() || (!pendingCard && (!unsaid || paused()))) return;
-    // Returning from PAUSED restores the same visual instruction, without repeating it.
-    if (pendingCard && announced.has(pendingCard)) {
-      showCard();
-      return;
-    }
+    // The card, and the control that continues it, are there at once (#1236); only the
+    // voice waits for the floor. Returning from PAUSED restores the same card, unrepeated.
+    if (pendingCard) showCard();
+    if (pendingCard && announced.has(pendingCard)) return;
     const wait = speechFloorWait();
     if (wait > 0) {
       sayTimer = setTimeout(sayWhenFree, wait + FLOOR_MARGIN_MS);
       return;
     }
     if (pendingCard) {
-      showCard();
       announced.add(pendingCard);
       unsaid = `${title.textContent}. ${text.textContent} ${resumeText.textContent ? `${resumeText.textContent}.` : ''}`.trim();
     }
@@ -415,14 +420,13 @@ export function createTutorialPrompt(parent = document.body) {
       if (pauseOwner()?.pause('player')) event.preventDefault();
     }
   };
-  const onPointerTrack = (event) => {
-    if (event.type === 'pointerdown' || heldPointers.has(event.pointerId)) {
-      heldPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    }
-  };
-  const onPointerEnd = (event) => {
-    heldPointers.delete(event.pointerId);
+  // The pad changes zone under a held finger: leaving the lesson's control ends an old
+  // hold, and arriving on it presses it, as a fresh press does (#1236).
+  const onPadZone = (event) => {
+    if (!pendingCard) return;
     settleRearm();
+    const { zone = '', previousZone = '' } = event.detail || {};
+    if (zone && zone === CONTROL_ACTIONS[firstTarget] && previousZone !== zone) acceptLesson();
   };
   const onKeyHeld = (event) => {
     const action = qeDriveZoneForEvent(event) || keyboardDriveActionForEvent(event);
@@ -432,18 +436,18 @@ export function createTutorialPrompt(parent = document.body) {
     heldKeys.delete(event.code || event.key);
     settleRearm();
   };
-  // Leaving the page can swallow the ups: nothing stays held.
+  // Leaving the page can swallow the ups: no key stays held.
   const forgetHeld = () => {
-    heldPointers.clear();
     heldKeys.clear();
     settleRearm();
   };
   const onPointerDown = (event) => {
-    onPointerTrack(event);
     if (!event.target?.closest?.('#controls')) return;
     if (event.pointerType !== 'keyboard') useKeyboard(false);
     if (!pendingCard || !event.target.closest('.drive-stack, #manualSteer')) return;
-    if (event.button !== 0 || !firstTarget || !event.target.closest(firstTarget) || !acceptLesson()) {
+    // A finger still on the pad keeps it through the hold, and the pad takes one finger:
+    // another's press would press nothing, so only sliding that finger continues (#1236).
+    if (event.button !== 0 || !firstTarget || !event.target.closest(firstTarget) || padZone() || !acceptLesson()) {
       event.preventDefault();
       event.stopImmediatePropagation();
     }
@@ -461,9 +465,7 @@ export function createTutorialPrompt(parent = document.body) {
   globalThis.addEventListener?.('keydown', onKeyDown, true);
   globalThis.addEventListener?.('keyup', onKeyUp, true);
   globalThis.addEventListener?.('pointerdown', onPointerDown, true);
-  globalThis.addEventListener?.('pointermove', onPointerTrack, true);
-  globalThis.addEventListener?.('pointerup', onPointerEnd, true);
-  globalThis.addEventListener?.('pointercancel', onPointerEnd, true);
+  globalThis.addEventListener?.('turn:drive-zone-change', onPadZone);
   globalThis.addEventListener?.('blur', forgetHeld);
   globalThis.addEventListener?.('click', onClick, true);
 
@@ -556,9 +558,7 @@ export function createTutorialPrompt(parent = document.body) {
     globalThis.removeEventListener?.('keydown', onKeyDown, true);
     globalThis.removeEventListener?.('keyup', onKeyUp, true);
     globalThis.removeEventListener?.('pointerdown', onPointerDown, true);
-    globalThis.removeEventListener?.('pointermove', onPointerTrack, true);
-    globalThis.removeEventListener?.('pointerup', onPointerEnd, true);
-    globalThis.removeEventListener?.('pointercancel', onPointerEnd, true);
+    globalThis.removeEventListener?.('turn:drive-zone-change', onPadZone);
     globalThis.removeEventListener?.('blur', forgetHeld);
     globalThis.removeEventListener?.('click', onClick, true);
     globalThis.removeEventListener?.('turn:before-driving-input', onDrivingInput);

@@ -7,7 +7,7 @@ function installSharedAboutStyles() {
   if (document.querySelector('link[data-turn-about-privacy]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
-  link.href = '/turn/about-privacy.css?build=20261017-r471';
+  link.href = '/turn/about-privacy.css?build=20261017-r472';
   link.setAttribute('data-turn-about-privacy', '');
   document.head.appendChild(link);
 }
