@@ -66,9 +66,7 @@ export const VEHICLE_PERKS = Object.freeze([
     rarity: PERK_RARITY.RARE,
     cloneable: true,
     installable: true,
-    description: 'DRIFT builds during sustained DRIFT or LOCK, up to 5/5.',
-    rewardId: 'sports-car-drift-demon',
-    threshold: 2100
+    description: 'DRIFT builds during sustained DRIFT or LOCK, up to 5/5.'
   }),
   definePerk({
     id: 'carry-on',

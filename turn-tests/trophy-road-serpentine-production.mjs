@@ -37,8 +37,8 @@ const expectedRoad = [
   ['suv-full-tank', 1700],
   ['monster', 1800],
   ['sedan-double-shift', 1900],
-  ['rally-racer', 2000],
-  ['sports-car-drift-demon', 2100],
+  ['perkulator', 2000],
+  ['rally-racer', 2100],
   ['learner-graduated', 2200],
   ['supercar', 2300]
 ];

@@ -12,15 +12,13 @@ import { getVehiclePerk, originalVehiclePerk } from './perks.js';
 import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked,
-  isVehicleUnlocked,
-  rewardForFeature
+  isVehicleUnlocked
 } from '../progression/trophy-road.js';
 
 export const PERKULATOR_FEATURE_ID = 'perkulator';
 export const PERKULATOR_STORAGE_KEY = 'turn-perkulator-v1';
 export const PERKULATOR_STORAGE_VERSION = 1;
 export const PERKULATOR_CHANGE_EVENT = 'turn:perkulator-change';
-const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 const CAR_IDS = new Set(CAR_CATALOG.map(({ id }) => id));
 
 function storageFor(storage) {
@@ -87,20 +85,9 @@ function writePerkulatorState(next, detail, storage) {
   return true;
 }
 
-function hasAdminMarker(storage) {
-  try {
-    return storageFor(storage)?.getItem?.(ADMIN_UNLOCK_MARKER) != null;
-  } catch (_) {
-    return false;
-  }
-}
-
-// PERKULATOR unlocks at 2000 trophies on Trophy Road. Until its reward is on the road,
-// admin profiles alone have it, to try on device.
+// PERKULATOR is a Trophy Road reward.
 export function isPerkulatorUnlocked(storage) {
-  const target = storageFor(storage);
-  if (rewardForFeature(PERKULATOR_FEATURE_ID)) return isFeatureUnlocked(PERKULATOR_FEATURE_ID, target);
-  return hasAdminMarker(target);
+  return isFeatureUnlocked(PERKULATOR_FEATURE_ID, storageFor(storage));
 }
 
 // A car's own perk, when it may be cloned: from a car you have, once its perk is

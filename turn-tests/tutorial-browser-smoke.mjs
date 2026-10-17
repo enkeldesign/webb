@@ -733,6 +733,22 @@ try {
     'ALL CARS neither pulses nor waits with a calm pulse before its own introduction');
   });
 
+  // PERKULATOR (#1219) came with a release: a player who already has it is introduced
+  // once as Home opens, and OPEN GARAGE points out PERK.
+  await run('PERKULATOR introduction for a player who has it, and the GARAGE PERK hint', { rewards: ['perkulator'], introductions: true }, async (page) => {
+    const sheet = page.locator('.m8-unlock-sheet');
+    await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open, null, { timeout: 30000 });
+    assert.equal(await sheet.locator('h2').textContent(), 'PERKULATOR');
+    assert.match(await sheet.textContent(), /In GARAGE, under PERK, clone a perk you have unlocked/);
+    assert.match(await sheet.locator('.m8-unlock-note').textContent(), /GARAGE highlights PERK/);
+    assert.equal(await sheet.locator('[data-unlock-action]').textContent(), 'OPEN GARAGE');
+    await sheet.locator('[data-unlock-action]').click();
+    await page.waitForFunction(() => Boolean(document.querySelector('.garage-perk .garage-disclosure-toggle.is-introduced')), null, { timeout: 30000 });
+    const queue = await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.snapshot());
+    assert.deepEqual([queue.pending, queue.shown], [[], ['perkulator']], 'Introduced, and only once');
+    assert.equal(queue.hints.includes('garage-perk'), false, 'PERK is pointed out once');
+  });
+
   // #1168 and #1167: the first GARAGE the player opens points at ALL CARS; after SHIFT
   // unlocks, the first RACE on a car with no SHIFT setup points at ACTIVATE SHIFT.
   await run('GARAGE points at ALL CARS, then RACE at ACTIVATE SHIFT', { rewards: ['shift'], introductions: true }, async (page) => {
@@ -883,7 +899,7 @@ try {
 
   await run('admin UNLOCK replays an introduction', { driftAttack: true, admin: true }, async (page) => {
     const admin = page.locator('.roadbook-admin');
-    assert.deepEqual(await admin.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PAINTJOB', 'SHOW ALL CARS HINT']);
+    assert.deepEqual(await admin.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PERKULATOR', 'UNLOCK PAINTJOB', 'SHOW ALL CARS HINT']);
     await admin.locator('[data-admin-unlock="drift-attack"]').click();
     await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open);
     const sheet = page.locator('.m8-unlock-sheet');
@@ -933,7 +949,7 @@ try {
     await page.locator('.m8-home-settings').click();
     await page.waitForFunction(() => document.querySelector('.m8-settings-dialog')?.open);
     const unlocks = page.locator('[data-turn-route-test-hud-setting] .m8-admin-unlocks');
-    assert.deepEqual(await unlocks.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PAINTJOB', 'SHOW ALL CARS HINT']);
+    assert.deepEqual(await unlocks.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PERKULATOR', 'UNLOCK PAINTJOB', 'SHOW ALL CARS HINT']);
     await unlocks.locator('[data-admin-unlock="shift"]').click();
     assert.equal(await page.evaluate(() => document.querySelector('.m8-settings-dialog').open), false,
       'SETTINGS closes so the unlock plays on Home');

@@ -13,6 +13,7 @@ import {
   TROPHY_ROAD_STORAGE_VERSION,
   getTrophyRoadReward,
   grandfatheredRewardIdsForVersion,
+  keptMovedRewardIds,
   legacyTrackIdsForState,
   migrateStoredRewardIdsForVersion,
   rewardIdsForTrophies
@@ -158,7 +159,8 @@ export function normalizeAchievementState(value) {
     : [];
   const grandfatheredRewardIds = [...new Set([
     ...storedGrandfatheredIds,
-    ...migrationGrandfatheredIds
+    ...migrationGrandfatheredIds,
+    ...keptMovedRewardIds(storedRewardIds, earnedRewardIdSet)
   ])];
   const unlockedRewards = [...new Set([
     ...storedRewardIds,

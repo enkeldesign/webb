@@ -1,13 +1,15 @@
 import { getTrophyRoadReward } from './trophy-road.js';
 import { garageOpenedForCar, pointOutInGarage, suggestInGarage, viewCarWhenGarageOpens } from '../garage/garage-focus.js';
 
-// Unlock introductions (#1149, #1150): when DRIFT ATTACK, SHIFT or FLOW unlocks, Home
-// explains it in a bottom sheet that stays until the player closes it, instead of
-// leaving them to find HOW TO PLAY. DRIFT ATTACK and FLOW offer their tutorials; SHIFT points
-// GARAGE at ACTIVATE SHIFT the next time it opens, then the drive pad's SHIFT in the
-// next races (ui/shift-race-callout.js). PAINTJOB needs no sheet: its reward toast says
-// it, and GARAGE points out PAINT. Only unlocks that happen from now on are introduced:
-// players who already have these keep their HOW TO PLAY guide.
+// Unlock introductions (#1149, #1150): when DRIFT ATTACK, SHIFT, FLOW or PERKULATOR
+// unlocks, Home explains it in a bottom sheet that stays until the player closes it,
+// instead of leaving them to find HOW TO PLAY. DRIFT ATTACK and FLOW offer their
+// tutorials; SHIFT points GARAGE at ACTIVATE SHIFT the next time it opens, then the drive
+// pad's SHIFT in the next races (ui/shift-race-callout.js); PERKULATOR opens GARAGE,
+// which points out PERK (#1219). PAINTJOB needs no sheet: its reward toast says it, and
+// GARAGE points out PAINT. Only unlocks that happen from now on are introduced: players
+// who already have these keep their HOW TO PLAY guide. PERKULATOR is the exception
+// (INTRODUCED_WHEN_HELD).
 export const UNLOCK_INTRODUCTIONS_KEY = 'turn-unlock-introductions-v1';
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 // As with TURN TUTORIAL's launch card (tutorial-entry.js), introductions open by
@@ -29,6 +31,7 @@ export const UNLOCK_HINTS = Object.freeze({
 const GARAGE_HINT_TARGETS = Object.freeze({
   'garage-shift': Object.freeze({ selector: '.garage-shift', say: 'New in GARAGE: ACTIVATE SHIFT, below the car’s name.' }),
   'garage-paint': Object.freeze({ selector: '.garage-paint-toggle', say: 'New in GARAGE: PAINT, below the car’s name.' }),
+  'garage-perk': Object.freeze({ selector: '.garage-perk .garage-disclosure-toggle', say: 'New in GARAGE: PERKULATOR, under PERK.' }),
   // The button on phones; the inline catalog's heading where GARAGE shows ALL CARS
   // beside or below the car (tablets), and hides the button.
   'garage-all-cars': Object.freeze({
@@ -76,8 +79,22 @@ export const UNLOCK_INTRODUCTIONS = Object.freeze({
     ]),
     action: Object.freeze({ id: 'flow-tutorial', label: 'START FLOW TUTORIAL' }),
     note: 'You can play FLOW TUTORIAL any time from HOW TO PLAY.'
+  }),
+  perkulator: Object.freeze({
+    title: 'PERKULATOR',
+    copy: Object.freeze([
+      'In GARAGE, under PERK, clone a perk you have unlocked, then install it on another car, where it runs beside that car’s own perk.',
+      'Each car runs its own perk and at most one installed perk. LEGENDARY perks stay with their car.'
+    ]),
+    action: Object.freeze({ id: 'perkulator-garage', label: 'OPEN GARAGE' }),
+    note: 'GARAGE highlights PERK for you.',
+    hints: Object.freeze(['garage-perk'])
   })
 });
+// Introduced to a player who has it, not only as it unlocks: PERKULATOR came with a
+// release, so a player already past its trophies had it as that release loaded, with
+// no unlock to announce it (#1219).
+const INTRODUCED_WHEN_HELD = Object.freeze(['perkulator']);
 
 function readState(storage, fallback = null) {
   try {
@@ -425,6 +442,7 @@ export function installUnlockIntroductions({
       viewCarWhenGarageOpens('sedan');
       void openGarage?.();
     }
+    if (action === 'perkulator-garage') void openGarage?.();
   });
   dialog.addEventListener('close', finish);
 
@@ -514,11 +532,19 @@ export function installUnlockIntroductions({
   });
   windowRef.addEventListener?.('turn:trophy-road-toast-shown', () => schedule());
   documentRef.addEventListener?.('turn:home-ready', () => schedule());
+  // Once the achievements are read: the queue introduces each of these once.
+  function introduceHeld() {
+    const store = windowRef.__turnAchievements?.store;
+    if (store && queue.unlocked(INTRODUCED_WHEN_HELD.filter((id) => store.isRewardUnlocked(id)))) schedule();
+  }
+  windowRef.addEventListener?.('turn:achievements-ready', introduceHeld);
+  introduceHeld();
   watchHints();
   schedule();
 
-  // UNLOCK DRIFT ATTACK, SHIFT and FLOW (their sheets), then PAINTJOB (a GARAGE hint),
-  // and ALL CARS's hint again: an admin profile has usually used ALL CARS long ago (#1168).
+  // UNLOCK DRIFT ATTACK, SHIFT, FLOW and PERKULATOR (their sheets), then PAINTJOB (a
+  // GARAGE hint), and ALL CARS's hint again: an admin profile has usually used ALL CARS
+  // long ago (#1168).
   const adminButtons = () => [...Object.keys(UNLOCK_INTRODUCTIONS), ...Object.keys(UNLOCK_HINTS)]
     .map((id) => `<button type="button" data-admin-unlock="${id}">UNLOCK ${(UNLOCK_INTRODUCTIONS[id] || UNLOCK_HINTS[id]).title}</button>`)
     .concat(`<button type="button" data-admin-hint="${ALL_CARS_HINT}">SHOW ALL CARS HINT</button>`)

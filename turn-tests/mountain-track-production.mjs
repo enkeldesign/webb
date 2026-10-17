@@ -281,7 +281,7 @@ const reward = rewardForTrack('mountain');
 assert.equal(reward?.id, 'expert-tracks', 'MOUNTAIN unlocks with the EXPERT tier');
 assert.deepEqual(reward?.trackIds, ['midnight-city', 'mountain']);
 assert.equal(reward?.threshold, 1300);
-assert.equal(TROPHY_ROAD_REWARDS.find(({ id }) => id === 'rally-racer')?.threshold, 2000);
+assert.equal(TROPHY_ROAD_REWARDS.find(({ id }) => id === 'rally-racer')?.threshold, 2100);
 assert.equal(TROPHY_ROAD_REWARDS.at(-1)?.id, 'supercar');
 assert.match(trophyGate, /rewardForTrack\(trackId\)/);
 assert.doesNotMatch(trophyGate, /trackId === ['"]mountain['"]/);

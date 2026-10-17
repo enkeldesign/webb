@@ -17,6 +17,7 @@ Kenney Racing Pack is CC0. These small primitives are kept as original PNGs rath
 | COMPACT | `compact.svg` (drawn from the Compact's own side profile in `vehicle/compact-car.js`) |
 | VINTAGE RACER | `vintage-racer.svg` |
 | SHIFT | `shift.svg` |
+| PERKULATOR | `perkulator.svg` (a handheld diagnostic unit, its screen showing a waveform, cabled to a plug; drawn for #1219) |
 | RACE CAR | `race-car.svg` |
 | FUTURE RACER | `future-racer.svg` |
 | RALLY RACER | `rally-racer.svg` |
@@ -45,7 +46,7 @@ They are reused for the six `… WINNER` achievements. MIDNIGHT CITY and MOUNTAI
 - The supplied VINTAGE RACER path geometry is preserved and uses `currentColor`.
 - The supplied SHIFT H-pattern / gear-lever geometry is preserved and uses `currentColor`.
 - The track pictograms are filled single-colour vectors exposed through same-origin CSS masks so each surface can inherit its existing `currentColor`.
-- The car silhouettes are filled SVGs; SHIFT is stroke-based. Trophy Road integration must support both rather than globally forcing every reward SVG to `fill: none`.
+- The car silhouettes are filled SVGs; SHIFT and PERKULATOR are stroke-based. Trophy Road integration must support both rather than globally forcing every reward SVG to `fill: none`.
 - Decorative instances remain hidden from assistive technology; the surrounding reward or achievement control owns the accessible name.
 
 ## Integration boundaries

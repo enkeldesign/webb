@@ -583,7 +583,7 @@ async function unlockedFlow() {
   }
 }
 
-// PERKULATOR (#1219), on an admin profile until Trophy Road carries it: CLONE PERK on
+// PERKULATOR (#1219), on a profile with every reward, its own among them: CLONE PERK on
 // a car's own perk, INSTALL CLONED PERK from a sheet, REPLACE and REMOVE, each with a
 // name of its own and focus where the player expects it, and a race that runs the
 // installed perk beside the car's own.

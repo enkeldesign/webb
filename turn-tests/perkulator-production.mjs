@@ -19,8 +19,8 @@ import {
 } from '../turn/vehicle/perkulator.js';
 
 // PERKULATOR (#1219): a car's own perk may be cloned, once, from a car you have whose
-// perk is unlocked; any other car may install one cloned perk beside its own. Until
-// Trophy Road carries the reward, admin profiles alone have it.
+// perk is unlocked; any other car may install one cloned perk beside its own. It is a
+// Trophy Road reward, at 2000 trophies.
 function memoryStorage(entries = {}) {
   const values = new Map(Object.entries(entries));
   return {
@@ -37,17 +37,22 @@ const everyReward = TROPHY_ROAD_REWARDS.map(({ id }) => id);
 const events = [];
 globalThis.dispatchEvent = (event) => events.push([event.type, event.detail]);
 
-assert.equal(rewardForFeature(PERKULATOR_FEATURE_ID), null, 'Not on Trophy Road yet');
-const player = memoryStorage(rewardState(everyReward));
-assert.equal(isPerkulatorUnlocked(player), false, 'A player profile has no PERKULATOR before Trophy Road carries it');
+assert.equal(rewardForFeature(PERKULATOR_FEATURE_ID)?.id, 'perkulator', 'PERKULATOR is a Trophy Road reward');
+assert.equal(rewardForFeature(PERKULATOR_FEATURE_ID)?.threshold, 2000);
+assert.equal(isPerkulatorUnlocked(memoryStorage()), false, 'A new player has no PERKULATOR');
+// An admin profile holds the rewards of its last admin unlock: one from before PERKULATOR
+// joined the road has it once the admin unlock grants every reward again.
+const beforePerkulator = { ...ADMIN_MARKER, ...rewardState(everyReward.filter((id) => id !== 'perkulator')) };
+const player = memoryStorage(beforePerkulator);
+assert.equal(isPerkulatorUnlocked(player), false, 'Every other reward, but no PERKULATOR without its own');
 assert.equal(clonePerk('vintage-racer', player), false);
 assert.equal(installedPerkFor('suv', memoryStorage({
-  ...rewardState(everyReward),
+  ...beforePerkulator,
   [PERKULATOR_STORAGE_KEY]: JSON.stringify({ cloned: ['driftage'], installed: { suv: 'driftage' } })
 })), '', 'Without PERKULATOR, a stored installed perk does not run');
 
 const admin = memoryStorage({ ...ADMIN_MARKER, ...rewardState(everyReward) });
-assert.equal(isPerkulatorUnlocked(admin), true, 'Admin profiles have PERKULATOR to try on device');
+assert.equal(isPerkulatorUnlocked(admin), true, 'Its reward unlocks PERKULATOR');
 
 // Cloning: eight perks may be cloned; LEGENDARY perks, TWITCHY TURNY among them, never.
 const cloneable = VEHICLE_PERKS.filter((perk) => perk.cloneable).map(({ id }) => id).sort();
@@ -109,8 +114,9 @@ const [perkulatorSource, mainSource, garageSource, garagePerkulatorSource, prese
 ]);
 assert.match(perkulatorSource, /return globalThis\.localStorage;/);
 assert.doesNotMatch(perkulatorSource, /__TURN_SHARED_LOCAL_STORAGE__/, 'Never the storage TURN shares with YOUR TURN');
-assert.match(perkulatorSource, /if \(rewardForFeature\(PERKULATOR_FEATURE_ID\)\) return isFeatureUnlocked\(PERKULATOR_FEATURE_ID, target\);/,
-  'Once on Trophy Road, the reward unlocks it');
+assert.match(perkulatorSource, /export function isPerkulatorUnlocked\(storage\) \{\s*return isFeatureUnlocked\(PERKULATOR_FEATURE_ID, storageFor\(storage\)\);\s*\}/,
+  'Its Trophy Road reward alone unlocks it');
+assert.doesNotMatch(perkulatorSource, /turn-admin-unlock-v1/, 'No admin path of its own');
 
 // The race runs the selected car's installed perk, read where the car is chosen and
 // again whenever an entitlement or PERKULATOR changes.
@@ -130,4 +136,4 @@ assert.match(garageSource, /perkulator\.sync\(car, \{ playable: !selection\.stat
 assert.match(garagePerkulatorSource, /const active = Boolean\(own\) && playable && isPerkulatorUnlocked\(\);/);
 assert.match(garagePerkulatorSource, /<span class="garage-visually-hidden">Rarity <\/span>\$\{label\}/, 'Rarity is written, never colour alone');
 
-console.log('PERKULATOR clones eight perks, installs one per car beside its own, stays with admin profiles until Trophy Road and never reaches YOUR TURN.');
+console.log('PERKULATOR unlocks at 2000 trophies, clones eight perks, installs one per car beside its own and never reaches YOUR TURN.');
