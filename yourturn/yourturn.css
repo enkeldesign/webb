@@ -124,8 +124,9 @@ html[data-turn-deployment="yourturn"] #intro {
   place-items: center;
   border: 3px solid var(--turn-outline);
   border-radius: 50%;
-  background: #ff9b66;
-  color: var(--turn-ink);
+  /* A toggle, not navigation: TURN's utility role (#1238). */
+  background: var(--turn-action-utility);
+  color: var(--turn-text);
   box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: 1000 max(var(--turn-text-floor, 11px), 0.9rem)/1 system-ui, sans-serif;
   touch-action: manipulation;
@@ -272,18 +273,6 @@ html[data-turn-deployment="yourturn"] #intro {
   touch-action: manipulation;
 }
 
-.yourturn-actions button.is-primary {
-  background: #8ce99a;
-}
-
-.yourturn-actions button.is-navigation {
-  background: #ff9b66;
-}
-
-.yourturn-actions button.is-destructive {
-  background: #ffb4ab;
-}
-
 .yourturn-actions button[data-kind="quiet"] {
   border-width: 0 0 2.25px;
   border-radius: 0;
@@ -331,9 +320,11 @@ body.yourturn-racing .best-chip {
   display: none !important;
 }
 
+/* THE CHALLENGE pauses and opens the race's menu, as TURN's pause button does: a
+   utility (#1238). An invalid lap still turns it red, as RESTART LAP does in TURN. */
 .yourturn-challenge-button {
-  background: #ff9b66 !important;
-  color: var(--turn-ink) !important;
+  background: var(--turn-action-utility) !important;
+  color: var(--turn-text) !important;
 }
 
 body.yourturn-racing #resetButton {

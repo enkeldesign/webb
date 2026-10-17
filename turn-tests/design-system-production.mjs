@@ -287,7 +287,9 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.ok(surfaces, 'one colour-surface list in design-tokens.css');
   assert.match(surfaces[2], /--turn-text: var\(--turn-ink\);[\s\S]*--turn-surface-page: var\(--turn-paper\)|--turn-surface-page: var\(--turn-paper\);[\s\S]*--turn-text: var\(--turn-ink\);/, 'a colour surface carries the light roles');
   assert.match(surfaces[2], /\n  color: var\(--turn-ink\);/);
-  for (const component of ['.turn-pr-button:is(.is-primary, .is-sheet):not(.is-locked)', '.turn-home-sheet-head', '.turn-pr-sheet-head', '.turn-trophy-road-marker', '.roadbook-goal:is(.is-earned, .is-gated, .is-next)', '.back-to-lot-button', '.turn-achievement-toast', '.drive-reverse-bubble']) {
+  for (const component of ['.turn-pr-button:is(.is-primary, .is-sheet):not(.is-locked)', '.turn-home-sheet-head', '.turn-pr-sheet-head', '.turn-trophy-road-marker', '.roadbook-goal:is(.is-earned, .is-gated, .is-next)', '.back-to-lot-button', '.turn-achievement-toast', '.drive-reverse-bubble',
+    // YOUR TURN's start-row GET THE GAME and an invalid lap's THE CHALLENGE are coloured too (#1238).
+    '.yourturn-full-game-button', '.yourturn-challenge-button.is-lap-invalid']) {
     assert.ok(surfaces[1].includes(component), `${component} is a colour surface`);
   }
   // The dark drive pad is muted with cream labels (Erik's design): its zones are not
@@ -308,6 +310,26 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.match(dark, /--turn-outline-muted: var\(--turn-warm-grey-500\);/, 'inactive dark outlines use the quieter warm grey palette');
   assert.match(tokens, /:root\[data-theme="dark"\] :is\(button, \[role="button"\]\):is\(:disabled, \[aria-disabled="true"\], \.is-locked\)[^{]*\{\s*border-color: var\(--turn-outline-muted\);/, 'a locked or disabled control keeps the muted outline');
 }
+
+// Focus moved for screen readers lands on something that is not a control: no focus
+// ring, in TURN and YOUR TURN alike, which both load this layer (#1238).
+const focusRule = semantic.match(/:root body \[tabindex="-1"\]:not\(([^)]*)\):focus,\s*:root body dialog:focus \{\s*outline: none;\s*\}/);
+assert.ok(focusRule, 'Non-interactive focus targets draw no focus ring');
+for (const control of ['a[href]', 'button', 'input', 'select', 'textarea', 'summary', '[role="button"]', '[role="slider"]', '[role="tab"]', '[role="option"]']) {
+  assert.ok(focusRule[1].includes(control), `${control} keeps its focus ring`);
+}
+const surfacesCss = await fs.readFile(new URL('../turn/surfaces.css', import.meta.url), 'utf8');
+assert.doesNotMatch(surfacesCss, /\[tabindex="-1"\]:focus/, 'One rule, in the layer both apps load');
+const yourTurnPage = await fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8');
+assert.match(yourTurnPage, /<link rel="stylesheet" href="\/turn\/design-semantic\.css\?build=/);
+assert.match(index, /<link rel="stylesheet" href="\.\/install-gate\.css\?build=/);
+assert.match(await fs.readFile(new URL('../turn/install-gate.css', import.meta.url), 'utf8'), /^@import url\('\.\/design-semantic\.css\?build=/);
+
+// Over a staged race the rotate TIP is a compact chip under the race message (#1238).
+const responsiveCss = await fs.readFile(new URL('../turn/responsive.css', import.meta.url), 'utf8');
+assert.match(responsiveCss, /:root body \.turn-orientation-hint\.is-staged \{\s*z-index: 30; top: 22%; bottom: auto; margin-top: 56px;\s*display: flex; align-items: center; gap: 10px;/);
+assert.match(responsiveCss, /:root body \.turn-orientation-hint\.is-staged \.turn-orientation-icon \{\s*position: static;/,
+  'The symbol sits beside the line, not on a badge above it');
 
 console.log('TURN current product-language design system, palette, gameplay, progression and dialog reference passed.');
 

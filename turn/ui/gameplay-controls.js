@@ -1047,6 +1047,8 @@ function installGameplayUi() {
   });
   window.addEventListener('turn:ui-state-change', (event) => {
     const reason = event.detail?.reason;
+    // The BOOST label names the meter until a race runs, in TURN and YOUR TURN (#1238).
+    boostHud.classList.toggle('is-racing', event.detail?.running === true && reason !== 'race-reset');
     // A pause lets go of the pads, BOOST and DRIFT: after RESUME the player presses again.
     // A lesson's hold keeps the drive pad's finger, so sliding it onto the lesson's control
     // continues (tutorial-prompt.js, #1236); the frozen race applies nothing meanwhile.

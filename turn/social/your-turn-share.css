@@ -120,7 +120,7 @@
   padding: 0;
   border: 3px solid var(--turn-outline);
   border-radius: 50%;
-  background: #ff9b66;
+  background: var(--turn-action-navigation, #ff7b54);
   color: var(--turn-ink);
   box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: 1000 max(var(--turn-text-floor, 11px), 1.275rem)/1 system-ui, sans-serif;
@@ -205,7 +205,7 @@
 }
 
 .turn-yourturn-share-back {
-  background: #ff9b66;
+  background: var(--turn-action-navigation, #ff7b54);
 }
 
 .turn-yourturn-share-actions button:focus-visible,

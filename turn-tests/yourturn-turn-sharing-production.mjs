@@ -107,8 +107,8 @@ assert.doesNotMatch(shareCss, /\.turn-yourturn-track-(?:share|slot)/, 'The old t
 assert.match(shareCss, /\.lap-result-yourturn-share/);
 assert.match(shareCss, /\.turn-yourturn-share-submit \{\s*background: var\(--turn-action-share, #ea5da1\)/,
   'SHARE YOUR TURN remains the pink CTA');
-assert.match(shareCss, /\.turn-yourturn-share-back[\s\S]*#ff9b66/,
-  'Back remains the navigation orange');
+assert.match(shareCss, /\.turn-yourturn-share-back \{\s*background: var\(--turn-action-navigation, #ff7b54\);/,
+  'Back is the navigation role (#1238)');
 assert.match(profileSource, /turn-social-racer-id-v1/);
 assert.match(profileSource, /turn-social-racer-name-v1/);
 assert.match(profileSource, /__TURN_SHARED_LOCAL_STORAGE__/,
