@@ -651,6 +651,19 @@ async function perkulatorFlow() {
     assert.deepEqual([installed.title, installed.installed, installed.actions, installed.small],
       ['Torque + Driftage', 'Driftage Rarity EPIC', ['Replace installed perk: Driftage', 'Remove installed perk: Driftage'], []],
       'The closed perk names both perks; REPLACE and REMOVE name the installed one');
+    // One perk per row: the installed perk sits under the car's own, with the chip, check
+    // and chevron still beside them.
+    const rows = await page.evaluate(() => {
+      const toggle = document.querySelector('.garage-perk .garage-disclosure-toggle');
+      const box = (selector) => toggle.querySelector(selector).getBoundingClientRect();
+      const [chip, title, plus, chevron] = ['.garage-perk-chip', '.garage-perk-title', '.garage-perk-plus', '.garage-disclosure-chevron'].map(box);
+      const beside = (part) => part.top < title.bottom && part.bottom > title.top;
+      return {
+        ownRow: plus.top >= title.top + plus.height * 0.9,
+        beside: beside(chip) && beside(chevron) && chevron.left > title.right
+      };
+    });
+    assert.deepEqual(rows, { ownRow: true, beside: true }, 'One perk per row, the chevron beside them');
 
     // REPLACE opens the sheet with the installed perk marked; Escape returns to REPLACE.
     await page.locator('.garage-perk-replace').click();

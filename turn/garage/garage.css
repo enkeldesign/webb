@@ -765,8 +765,10 @@ html[data-theme="dark"] .garage-bar {
 
 /* ---------- PERKULATOR (#1219): the original perk, CLONE PERK, the installed perk ---------- */
 
-/* The closed disclosure names the installed perk after the car's own. */
+/* The closed disclosure names the installed perk on a row of its own, under the
+   car's own perk, so the row keeps its check and chevron beside the car's perk. */
 .garage-perk-plus {
+  display: block;
   color: var(--turn-pr-muted);
 }
 
