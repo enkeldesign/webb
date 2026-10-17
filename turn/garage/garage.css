@@ -593,7 +593,6 @@ html[data-theme="dark"] .garage-bar {
   font-weight: 900;
 }
 
-.garage-setup-label,
 .garage-perk-state {
   display: inline-flex;
   align-items: center;
