@@ -877,6 +877,11 @@ function installGameplayUi() {
         at: raceNow()
       });
     }
+    // The pad's own zone as a held finger slides across it, lap or not: a tutorial lesson
+    // reads it to tell a hold from a new press (tutorial-prompt.js, #1236).
+    if (zoneChanged) {
+      publishDrivingOutcome('turn:drive-zone-change', { zone: nextZone || '', previousZone: previousZone || '' });
+    }
   }
 
   function consumeDrivePointer(event) {
@@ -1043,9 +1048,11 @@ function installGameplayUi() {
   window.addEventListener('turn:ui-state-change', (event) => {
     const reason = event.detail?.reason;
     // A pause lets go of the pads, BOOST and DRIFT: after RESUME the player presses again.
+    // A lesson's hold keeps the drive pad's finger, so sliding it onto the lesson's control
+    // continues (tutorial-prompt.js, #1236); the frozen race applies nothing meanwhile.
     // A SHIFT outcome still being measured waits, on race time, until RESUME.
     if (reason === 'race-paused') {
-      releaseDrive();
+      if (event.detail?.pauseReason !== 'lesson') releaseDrive();
       centerManualSteerVisual();
       window.clearTimeout(shiftOutcomeTimer);
       shiftOutcomeTimer = 0;

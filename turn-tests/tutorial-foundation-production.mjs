@@ -1544,6 +1544,31 @@ test('tutorial guidance waits for the race to finish speaking: one voice at a ti
   }
 });
 
+test('a lesson is one small card, there at once with the control that continues it (#1236)', async () => {
+  const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
+  const prompt = await read('../turn/tutorial/tutorial-prompt.js');
+  // The card reads as the prompt does, and iOS Safari does not enlarge either in landscape.
+  for (const box of ['turn-tutorial-prompt', 'turn-tutorial-card']) {
+    assert.match(prompt, new RegExp(`\\.${box} \\{[^}]*-webkit-text-size-adjust: 100%;\\s*text-size-adjust: 100%;`), box);
+  }
+  assert.match(prompt, /\.turn-tutorial-card h2 \{\s*margin: 0;\s*font-size: var\(--turn-type-body\);\s*font-weight: var\(--turn-weight-display\);\s*line-height: var\(--turn-leading-title\);/,
+    'The title as the prompt\'s');
+  assert.match(prompt, /\.turn-tutorial-card p \{ margin: var\(--turn-space-1\) 0 0; font-size: var\(--turn-type-small\);/,
+    'The text as the prompt\'s, as close together');
+  // Shown before the voice waits for the floor: only the voice waits.
+  assert.match(prompt, /if \(pendingCard\) showCard\(\);\n    if \(pendingCard && announced\.has\(pendingCard\)\) return;\n    const wait = speechFloorWait\(\);/);
+  // A held control is the drive pad's own zone: sliding off ends a hold, sliding on presses.
+  assert.match(prompt, /const heldAction = \(action\) => padZone\(\) === action \|\|/);
+  assert.match(prompt, /globalThis\.addEventListener\?\.\('turn:drive-zone-change', onPadZone\);/);
+  assert.match(prompt, /if \(zone && zone === CONTROL_ACTIONS\[firstTarget\] && previousZone !== zone\) acceptLesson\(\);/);
+  assert.match(prompt, /!event\.target\.closest\(firstTarget\) \|\| padZone\(\) \|\| !acceptLesson\(\)/,
+    'A second finger cannot press what the pad\'s finger holds');
+  const controls = await read('../turn/ui/gameplay-controls.js');
+  assert.match(controls, /if \(zoneChanged\) \{\n      publishDrivingOutcome\('turn:drive-zone-change', \{ zone: nextZone \|\| '', previousZone: previousZone \|\| '' \}\);/);
+  assert.match(controls, /if \(reason === 'race-paused'\) \{\n      if \(event\.detail\?\.pauseReason !== 'lesson'\) releaseDrive\(\);/,
+    'A lesson hold keeps the drive pad\'s finger; every other pause lets go');
+});
+
 let failed = 0;
 for (const [name, fn] of tests) {
   try {
