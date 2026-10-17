@@ -57,7 +57,6 @@
 
   /* Semantic UI roles. */
   --turn-action-primary: var(--turn-pink-200);
-  --turn-action-share: var(--turn-pink-200);
   --turn-action-utility: var(--turn-surface-page);
   --turn-action-information: var(--turn-blue-500);
   --turn-accessibility-mark: #154F91;
@@ -226,7 +225,7 @@
   .nuke-ghosts-button, .nuke-confirm, .nuke-dialog-icon,
   .garage-shift-cancel, .garage-shift-save, .garage .garage-shift.is-active,
   .turn-yourturn-share-submit, .turn-yourturn-share-back,
-  .yourturn-actions button:is(.is-primary, .is-navigation, .is-destructive, .is-share, .is-game, .is-back),
+  .yourturn-actions button:is(.is-primary, .is-navigation, .is-destructive, .is-game, .is-back),
   .yourturn-full-game-button, .yourturn-challenge-button.is-lap-invalid,
   .yourturn-details, .yourturn-order-1, .yourturn-order-2, .yourturn-order-3, .yourturn-order-4, .yourturn-order-5,
   .turn-dbe-training-actions button, .turn-dbe-training-race-nav button[data-training-race-restart],
@@ -280,7 +279,7 @@
   .nuke-ghosts-button, .nuke-confirm, .nuke-dialog-icon,
   .garage-shift-cancel, .garage-shift-save, .garage .garage-shift.is-active,
   .turn-yourturn-share-submit, .turn-yourturn-share-back,
-  .yourturn-actions button:is(.is-primary, .is-navigation, .is-destructive, .is-share, .is-game, .is-back),
+  .yourturn-actions button:is(.is-primary, .is-navigation, .is-destructive, .is-game, .is-back),
   .yourturn-full-game-button, .yourturn-challenge-button.is-lap-invalid,
   .yourturn-details, .yourturn-order-1, .yourturn-order-2, .yourturn-order-3, .yourturn-order-4, .yourturn-order-5,
   .turn-dbe-training-actions button, .turn-dbe-training-race-nav button[data-training-race-restart],
@@ -328,7 +327,7 @@
   .nuke-ghosts-button, .nuke-confirm, .nuke-dialog-icon,
   .garage-shift-cancel, .garage-shift-save, .garage .garage-shift.is-active,
   .turn-yourturn-share-submit, .turn-yourturn-share-back,
-  .yourturn-actions button:is(.is-primary, .is-navigation, .is-destructive, .is-share, .is-game, .is-back),
+  .yourturn-actions button:is(.is-primary, .is-navigation, .is-destructive, .is-game, .is-back),
   .yourturn-full-game-button, .yourturn-challenge-button.is-lap-invalid,
   .yourturn-details, .yourturn-order-1, .yourturn-order-2, .yourturn-order-3, .yourturn-order-4, .yourturn-order-5,
   .turn-dbe-training-actions button, .turn-dbe-training-race-nav button[data-training-race-restart],

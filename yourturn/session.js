@@ -369,7 +369,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
       requestName: true,
       className: 'result',
       actionList: [
-        { label: 'SHARE YOUR TURN', share: true, action: () => void shareContribution(candidate) },
+        { label: 'SHARE YOUR TURN', primary: true, share: true, action: () => void shareContribution(candidate) },
         { label: 'RACE AGAIN', action: raceAgain },
         { label: 'GET THE GAME', game: true, action: getTheGame },
         { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(() => showShareResult(candidate)) }
