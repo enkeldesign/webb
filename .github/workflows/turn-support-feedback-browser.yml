@@ -10,6 +10,9 @@ on:
       - 'turn/achievements/view.js'
       - 'turn/m8-home.js'
       - 'turn/scripts/release.mjs'
+      - 'turn/scripts/build-wiki.mjs'
+      - 'turn/wiki/**'
+      - 'turn-tests/wiki-browser-smoke.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
       - 'turn-tests/patrol-browser-smoke.mjs'
       - 'turn-tests/tutorial-browser-smoke.mjs'
@@ -66,6 +69,9 @@ on:
       - 'turn/achievements/view.js'
       - 'turn/m8-home.js'
       - 'turn/scripts/release.mjs'
+      - 'turn/scripts/build-wiki.mjs'
+      - 'turn/wiki/**'
+      - 'turn-tests/wiki-browser-smoke.mjs'
       - 'turn-tests/support-feedback-browser-smoke.mjs'
       - 'turn-tests/patrol-browser-smoke.mjs'
       - 'turn-tests/tutorial-browser-smoke.mjs'
@@ -150,6 +156,7 @@ jobs:
             tests: >-
               turn-tests/app-navigation-browser-smoke.mjs
               turn-tests/harbor-surface-browser-smoke.mjs
+              turn-tests/wiki-browser-smoke.mjs
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
