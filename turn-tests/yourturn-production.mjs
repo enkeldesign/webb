@@ -242,4 +242,35 @@ assert.equal(legacy.v, 2);
 assert.equal(legacy.racers.length, 1, 'Old one-car links must transparently upgrade into a challenge field');
 assert.equal(legacy.racers[0].name, 'SOL');
 
+// #1219: each racer's lap names the perks it ran, its car's own and any installed perk,
+// carried with that racer through every share. The car is the challenge's; the perks are
+// the run's. Laps that kept none, and links from before, carry none.
+const perkLap = (time, perks) => ({ ...lap(time), setup: { version: 1, build: { perks } } });
+let perked = challengeFromLap({
+  challengerName: 'ERIK',
+  racerId: 'r-erik',
+  trackId: 'countryside',
+  trackRevision: 'countryside',
+  trackName: 'Countryside',
+  lap: perkLap(15.4, { original: 'drift-demon', installed: 'full-tank' })
+});
+assert.deepEqual(perked.racers[0].perks, { original: 'drift-demon', installed: 'full-tank' });
+perked = challengeWithLap({ challenge: perked, racerId: 'r-sol', racerName: 'SOL', lap: lap(15.9) });
+perked = challengeWithLap({ challenge: perked, racerId: 'r-arvid', racerName: 'ARVID',
+  lap: perkLap(16.2, { original: 'no-such-perk', installed: 'apex-grip' }) });
+const perkedRoundTrip = await decodeChallenge(await encodeChallenge(perked));
+assert.deepEqual(perkedRoundTrip.racers.map((racer) => racer.perks || null), [
+  { original: 'drift-demon', installed: 'full-tank' },
+  null,
+  { original: '', installed: 'apex-grip' }
+], 'Each racer keeps their own run\'s perks; an id TURN does not know is dropped');
+assert.equal('perks' in (await decodeChallenge(await encodeChallenge(chain))).racers[0], false,
+  'Racers whose laps kept no perks carry none');
+assert.match(sessionSource, /const perks = lapPerksLabel\(racer\.perks\);[\s\S]*<small class="yourturn-racer-perks"><span class="visually-hidden">Perks <\/span>\$\{escapeHtml\(perks\)\}<\/small>/,
+  'The challenge summary names each racer\'s perks');
+assert.match(sessionSource, /\.\.\.\(racer\.perks \? \{ setup: \{ version: REPLAY_SETUP_VERSION, build: \{ perks: \{ \.\.\.racer\.perks \} \} \} \} : \{\}\)/,
+  'SPECTATE names the perks of the racer it follows');
+assert.match(sessionSource, /const setup = lapReplaySetup\(runtime\.state\);\s*const candidate = \{[\s\S]*?\.\.\.\(setup \? \{ setup \} : \{\}\)\s*\};\s*queueMicrotask\(\(\) => finishAttempt\(candidate\)\)/,
+  'A racer who passes the challenge on keeps the perks their own lap ran');
+
 console.log('YOUR TURN growing four-car social challenge, named racers, share CTA and compatibility regression passed.');

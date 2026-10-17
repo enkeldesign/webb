@@ -1012,9 +1012,13 @@ function replayControls() {
 }
 
 // How the lap is set up as it begins: steering here, the drive pad's side and the car's
-// SHIFT profile from the drive pad.
+// SHIFT profile from the drive pad, and the perks running (#1219).
 function lapSetupNow() {
-  return replaySetup({ ...globalThis.__turnDriveSetup?.(), steering: state.sensorMode ? 'tilt' : 'screen' });
+  return replaySetup({
+    ...globalThis.__turnDriveSetup?.(),
+    steering: state.sensorMode ? 'tilt' : 'screen',
+    perks: { original: state.vehiclePerkRuntimeOriginalId, installed: state.vehiclePerkRuntimeInstalledId }
+  });
 }
 
 function completeLap(now) {

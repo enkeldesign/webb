@@ -68,6 +68,24 @@
   letter-spacing: -0.035em;
 }
 
+/* The perks the followed lap ran (#1219). */
+.spectate-perks {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.625rem, 2vw, 0.8125rem));
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.spectate-perks[hidden] {
+  display: none;
+}
+
 .turn-spectating .controls,
 .turn-spectating .manual-steer,
 .turn-spectating .boost-hud,

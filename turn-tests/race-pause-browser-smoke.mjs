@@ -642,7 +642,7 @@ try {
         // REVERSE · out into SHIFT, turning it on · GAS with SHIFT on.
         { time: 17, hitAt: Date.now(), carId: 'sedan', frames: frames(),
           inputs: { version: 1, changes: [0, 1, 2000, 2 | 32, 4000, 8 | 16, 6000, 1 | 64 | 128, 9000, 1 | 64] },
-          setup: { version: 1, controls: { steering: 'screen', hand: 'right' }, build: { shift } } },
+          setup: { version: 1, controls: { steering: 'screen', hand: 'right' }, build: { shift, perks: { original: 'torque', installed: 'driftage' } } } },
         // Tilted, left-handed, on a car that could not SHIFT: GAS, then BOOST.
         { time: 18, hitAt: Date.now() - 1000, carId: 'sedan', frames: frames(),
           inputs: { version: 1, changes: [0, 1, 3000, 4] },
@@ -685,7 +685,8 @@ try {
           cluster: box(root),
           bar: box(document.querySelector('.spectate-bar')),
           liveSteering: globalThis.getComputedStyle(document.querySelector('#manualSteer')).display,
-          scoreCards: globalThis.getComputedStyle(document.querySelector('#scoreFeedback')).display
+          scoreCards: globalThis.getComputedStyle(document.querySelector('#scoreFeedback')).display,
+          perks: document.querySelector('.spectate-perks').hidden ? null : document.querySelector('.spectate-perks').textContent
         };
       });
     };
@@ -701,6 +702,7 @@ try {
     assert.ok(apart(shown.cluster, shown.bar), 'Beside the bar, not over it');
     assert.ok(shown.cluster.left > 844 / 2, 'On the side a right-handed lap held them');
     assert.deepEqual([shown.liveSteering, shown.scoreCards], ['none', 'none'], 'Live steering and the score cards give way');
+    assert.equal(shown.perks, 'PERKS · Torque + Driftage', 'The bar names the perks the lap ran (#1219)');
     shown = await at(3);
     assert.deepEqual([shown.thumb, shown.states], ['lock', ['is-drift-locking', 'is-drift-ready', 'is-shift-available']], 'DRIFT, out into LOCK');
     shown = await at(5);
@@ -715,6 +717,7 @@ try {
     shown = await at(1);
     assert.deepEqual([shown.steer, shown.hand, shown.thumb, shown.states], ['tilt', 'left', 'gas', ['is-gas-ready']],
       'A tilted, left-handed lap on a car that could not SHIFT');
+    assert.equal(shown.perks, null, 'A lap that ran no perks names none');
     assert.deepEqual([shown.touch, shown.tilt, shown.steering], [false, true, 0.5], 'shows the phone, tilted as the lap was steered');
     assert.ok(shown.cluster.right < 844 / 2 && apart(shown.cluster, shown.bar), 'on the left, the bar clear of it');
     shown = await at(4);
