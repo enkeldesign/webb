@@ -223,7 +223,7 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     type: 'scoring-system',
     featureId: 'perkulator',
     icon: 'perkulator',
-    description: 'Unlock PERKULATOR in GARAGE. Clone any perk you have unlocked and install it on another car, where it runs beside that car’s own perk. LEGENDARY perks stay with their car.'
+    description: 'Unlock PERKULATOR in GARAGE. Install any perk you have unlocked on another car, where it runs beside that car’s own perk. LEGENDARY perks stay with their car.'
   }),
   Object.freeze({
     id: 'suv-full-tank',

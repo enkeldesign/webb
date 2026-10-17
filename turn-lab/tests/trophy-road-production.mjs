@@ -318,7 +318,7 @@ assert.equal(perkulatorReward?.title, 'PERKULATOR');
 assert.equal(perkulatorReward?.type, 'scoring-system');
 assert.equal(perkulatorReward?.featureId, 'perkulator');
 assert.equal(perkulatorReward?.major, true);
-assert.match(perkulatorReward?.description || '', /Clone any perk you have unlocked and install it on another car/);
+assert.match(perkulatorReward?.description || '', /Install any perk you have unlocked on another car/);
 assert.match(perkulatorReward?.description || '', /LEGENDARY perks stay with their car/);
 assert.match(roadSource, /perkulator: authoredRewardIcon\('perkulator'\)/);
 

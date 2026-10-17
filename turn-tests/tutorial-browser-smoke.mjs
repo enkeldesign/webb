@@ -739,7 +739,7 @@ try {
     const sheet = page.locator('.m8-unlock-sheet');
     await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open, null, { timeout: 30000 });
     assert.equal(await sheet.locator('h2').textContent(), 'PERKULATOR');
-    assert.match(await sheet.textContent(), /In GARAGE, under PERK, clone a perk you have unlocked/);
+    assert.match(await sheet.textContent(), /In GARAGE, under PERK, install any perk you have unlocked/);
     assert.match(await sheet.locator('.m8-unlock-note').textContent(), /GARAGE highlights PERK/);
     assert.equal(await sheet.locator('[data-unlock-action]').textContent(), 'OPEN GARAGE');
     await sheet.locator('[data-unlock-action]').click();

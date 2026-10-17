@@ -1199,7 +1199,7 @@ test('PERKULATOR is introduced once: as it unlocks, or to a player who already h
   const intro = await import('../turn/progression/unlock-introductions.js');
   const perkulator = intro.UNLOCK_INTRODUCTIONS.perkulator;
   assert.equal(perkulator.title, 'PERKULATOR');
-  assert.match(perkulator.copy.join(' '), /In GARAGE, under PERK, clone a perk you have unlocked, then install it on another car/);
+  assert.match(perkulator.copy.join(' '), /In GARAGE, under PERK, install any perk you have unlocked on another car/);
   assert.match(perkulator.copy.join(' '), /LEGENDARY perks stay with their car/);
   assert.equal(perkulator.action.label, 'OPEN GARAGE');
   assert.equal(perkulator.note, 'GARAGE highlights PERK for you.');
