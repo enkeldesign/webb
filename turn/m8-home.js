@@ -134,6 +134,7 @@ function createHowToPlayDialog() {
         <section><strong>4</strong><div><h3>Build and use OVERCHARGE</h3><p>DRIFT charges BOOST as you slide. With BOOST full, keep using DRIFT to build purple OVERCHARGE. GAS catches it; BOOST spends it first as a short stronger burst before normal BOOST.</p></div></section>
         <section class="m8-guide-wide"><strong>♪</strong><div><h3>Drive By Ear™</h3><p>Drive By Ear turns the racing line, upcoming corners, grip, off-road recovery and nearby rivals into spatial sound. Steer toward the warm guiding hum. Headphones provide the clearest left and right information. Together with a screen reader, it is designed to support complete non-visual play.</p></div></section>
       </div>
+      <p class="m8-wiki-link"><a href="/turn/wiki/">TURN WIKI <span aria-hidden="true">↗</span></a><span>Cars, tracks, builds and driving techniques.</span></p>
     </article>`;
   document.body.appendChild(dialog);
   installDialogDismissal(dialog);
