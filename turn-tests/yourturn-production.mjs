@@ -179,6 +179,8 @@ for (const label of ['SHARE', 'SHARE ORIGINAL']) {
   assert.ok(actions.length > 0, `${label} is offered`);
   for (const [, flags] of actions) assert.doesNotMatch(flags, /primary|navigation|game|back|destructive/, `${label} is a utility beside the main action`);
 }
+assert.match(cssSource, /\.yourturn-motion-toggle svg \{\s*fill: currentColor;/,
+  'The pause and play symbols follow the toggle\'s text colour, in light and dark (#1238)');
 assert.match(cssSource, /\.yourturn-challenge-button \{\s*background: var\(--turn-action-utility\) !important;/,
   'THE CHALLENGE is a utility, as TURN\'s pause button is');
 assert.match(growingCssSource, /\.yourturn-racer-summary/);
