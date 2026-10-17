@@ -40,6 +40,10 @@ assert.match(garage, /title\.focus\(\{ preventScroll: true \}\)/);
 assert.match(garage, /<section class="garage-feature" aria-labelledby="garageCarName">[\s\S]*<h2 class="garage-name" id="garageCarName"><\/h2>/,
   'The featured car is an H2 section named by the car');
 assert.match(garage, /<h3 class="garage-disclosure-head">[\s\S]*?Specifications/, 'Specifications is an H3 disclosure');
+// The Specifications head is its title and chevron: no STOCK label (#1240).
+assert.match(garage, /<span class="garage-disclosure-title">Specifications<\/span>\s*<span class="garage-disclosure-chevron" aria-hidden="true"><\/span>/,
+  'Specifications has no setup label beside its title');
+assert.doesNotMatch(garage, /garage-setup-label|'Stock'|Current setup/, 'GARAGE names no STOCK or current setup');
 assert.match(garage, /<h3 class="garage-disclosure-head">[\s\S]*?garage-perk-chip">PERK/, 'The perk is an H3 disclosure');
 assert.match(garage, /<div class="garage-view" aria-hidden="true"><\/div>/, 'The 3D view is decorative');
 assert.match(garage, /aria-label="Previous car"/);
