@@ -4,6 +4,7 @@
 // PERKULATOR holds that this car may run (#1228). Nothing here shows without
 // PERKULATOR, and nothing for a locked preview. What may be installed is
 // vehicle/perkulator.js's to say; GARAGE re-renders on its change event.
+import { cornerMarkMarkup } from '../ui/corner-mark.js';
 import { getCarDefinition } from '../vehicle/catalog.js';
 import { getVehiclePerk, originalVehiclePerk } from '../vehicle/perks.js';
 import {
@@ -86,7 +87,10 @@ export function createGaragePerkulator({
         <button class="turn-pr-close" type="button" aria-label="Close Install perk"><span aria-hidden="true">×</span></button>
       </header>
       <div class="turn-pr-sheet-body">
-        <p class="garage-install-perk-lead" id="garageInstallPerkLead"></p>
+        <div class="garage-install-perk-intro">
+          ${cornerMarkMarkup('perkulator')}
+          <p class="garage-install-perk-lead" id="garageInstallPerkLead"></p>
+        </div>
         <ul class="garage-install-perk-list" role="list"></ul>
       </div>
     </div>`;

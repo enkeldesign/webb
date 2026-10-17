@@ -348,6 +348,8 @@ async function phoneFlow(browserType, name) {
     // Paint is a Trophy Road reward: a new profile sees why it is locked.
     await page.locator('.garage-paint-toggle').click();
     await page.waitForSelector('.garage-paint-locked');
+    assert.deepEqual(await cornerMarkFacts(page, '.garage-paint'), CORNER_MARK,
+      `${name}: PAINTJOB's corner mark sits clear of the locked note`);
     const dialog = page.locator('dialog[open]');
     if (await dialog.count()) await page.keyboard.press('Escape');
 
@@ -401,17 +403,21 @@ async function unlockedFlow() {
     await page.locator('.garage-paint-toggle').click();
     await page.waitForSelector('.garage-paint-fixed');
     assert.equal(await page.locator('.garage-swatch input[type="color"]').count(), 0, 'A fixed livery has no paint inputs');
+    assert.deepEqual(await cornerMarkFacts(page, '.garage-paint'), CORNER_MARK, 'PAINTJOB\'s corner mark sits clear of the livery note');
 
     // SHIFT opens its gearbox for a playable car and closes back to GARAGE.
     await page.evaluate(() => globalThis.__turnGarage.viewCar('classic'));
     await page.locator('.garage-shift').click();
     await page.waitForSelector('.garage-shift-dialog[open]');
+    assert.deepEqual(await cornerMarkFacts(page, '.garage-shift-dialog[open] .garage-shift-intro'), CORNER_MARK,
+      'SHIFT setup: SHIFT\'s corner mark, its description wrapping around it');
     await page.locator('.garage-shift-cancel').click();
     await page.waitForFunction(() => !document.querySelector('.garage-shift-dialog').open);
 
     // Sport trim #666 on the Sports Car is the secret.
     await page.evaluate(() => globalThis.__turnGarage.viewCar('sedan-sports'));
     await page.waitForSelector('.garage-swatch input[type="color"]');
+    assert.deepEqual(await cornerMarkFacts(page, '.garage-paint'), CORNER_MARK, 'PAINTJOB\'s corner mark sits clear of the swatches');
     // Paint is TURN's native colour input: unstyled, explicitly labelled, a full-height row.
     const paint = await page.evaluate(() => [...document.querySelectorAll('.garage-swatch')].map((row) => {
       const input = row.querySelector('input[type="color"]');
@@ -646,6 +652,8 @@ async function perkulatorFlow() {
       options: ['clean-exit', 'traction', 'drift-demon', 'carry-on', 'driftage', 'apex-grip', 'full-tank'],
       origin: 'From Vintage Racer'
     }, 'The sheet opens on its heading and offers every perk PERKULATOR holds but the car\'s own');
+    assert.deepEqual(await cornerMarkFacts(page, '.garage-install-perk .garage-install-perk-intro'), CORNER_MARK,
+      'INSTALL PERK: PERKULATOR\'s corner mark, its lead wrapping around it');
     await page.locator('.garage-install-perk-option[data-perk-id="driftage"]').click();
     await page.waitForFunction(() => !document.querySelector('.garage-install-perk').open);
     assert.deepEqual([await focused(), await page.locator('.garage-announcer').textContent()],
@@ -698,6 +706,8 @@ async function perkulatorFlow() {
       const card = document.querySelector('.garage-install-perk .turn-pr-sheet-card').getBoundingClientRect();
       return { overflowX: body.scrollWidth - body.clientWidth, inside: card.left >= 0 && card.right <= globalThis.innerWidth };
     });
+    assert.deepEqual(await cornerMarkFacts(page, '.garage-install-perk .garage-install-perk-intro'), CORNER_MARK,
+      '320: INSTALL PERK keeps its corner mark clear of the lead');
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => !document.querySelector('.garage-install-perk').open);
     assert.deepEqual([narrowPanel <= 0, narrowSheet], [true, { overflowX: 0, inside: true }], '320: PERKULATOR fits without sideways scroll');
@@ -726,6 +736,43 @@ async function perkulatorFlow() {
   } finally {
     await browser.close();
   }
+}
+
+// A corner mark (#1230): in the top-right corner of its host's content, 2.5rem, in the
+// text colour, hidden from assistive technology, and no text or control reaching into it.
+const CORNER_MARK = Object.freeze({ hidden: 'true', size: [40, 40], corner: true, ink: true, overlaps: 0 });
+async function cornerMarkFacts(page, host) {
+  return page.evaluate((selector) => {
+    const root = document.querySelector(selector);
+    const mark = root?.querySelector(':scope > .turn-corner-mark');
+    if (!mark) return null;
+    const box = mark.getBoundingClientRect();
+    const frame = root.getBoundingClientRect();
+    const style = globalThis.getComputedStyle(root);
+    const right = frame.right - parseFloat(style.borderRightWidth) - parseFloat(style.paddingRight);
+    const top = frame.top + parseFloat(style.borderTopWidth) + parseFloat(style.paddingTop);
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--turn-text)';
+    root.append(probe);
+    const ink = globalThis.getComputedStyle(probe).color;
+    probe.remove();
+    const rects = [...root.querySelectorAll('button, input, .garage-swatch')].map((control) => control.getBoundingClientRect());
+    const walker = document.createTreeWalker(root, globalThis.NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (mark.contains(node) || !node.textContent.trim()) continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      rects.push(...range.getClientRects());
+    }
+    return {
+      hidden: mark.getAttribute('aria-hidden'),
+      size: [Math.round(box.width), Math.round(box.height)],
+      corner: Math.abs(box.right - right) <= 1 && Math.abs(box.top - top) <= 1,
+      ink: globalThis.getComputedStyle(mark).color === ink,
+      overlaps: rects.filter((rect) => rect.width && rect.height && rect.left < box.right - 0.5 && rect.right > box.left + 0.5
+        && rect.top < box.bottom - 0.5 && rect.bottom > box.top + 0.5).length
+    };
+  }, host);
 }
 
 // The ALL CARS sheet at the current size: columns, bounds and whole names.

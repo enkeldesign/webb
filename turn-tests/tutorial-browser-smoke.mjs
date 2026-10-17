@@ -715,6 +715,26 @@ try {
     await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open);
     assert.equal(await sheet.locator('h2').textContent(), 'SHIFT');
     assert.match(await sheet.locator('.m8-unlock-note').textContent(), /GARAGE/);
+    // #1230: SHIFT's Trophy Road icon in the corner below the title, hidden from assistive
+    // technology, the copy wrapping around it.
+    assert.deepEqual(await page.evaluate(() => {
+      const copy = document.querySelector('.m8-unlock-sheet .m8-unlock-copy');
+      const mark = copy.querySelector(':scope > .turn-corner-mark');
+      const box = mark.getBoundingClientRect();
+      const frame = copy.getBoundingClientRect();
+      const lines = [...copy.querySelectorAll('p')].flatMap((paragraph) => {
+        const range = document.createRange();
+        range.selectNodeContents(paragraph);
+        return [...range.getClientRects()];
+      });
+      return {
+        hidden: mark.getAttribute('aria-hidden'),
+        shift: Boolean(mark.querySelector('.turn-trophy-road-authored-icon.is-shift')),
+        corner: Math.abs(box.right - frame.right) <= 1 && Math.abs(box.top - frame.top) <= 1,
+        belowTitle: box.top >= document.querySelector('#turnUnlockTitle').getBoundingClientRect().bottom,
+        overlaps: lines.filter((line) => line.left < box.right && line.right > box.left && line.top < box.bottom && line.bottom > box.top).length
+      };
+    }), { hidden: 'true', shift: true, corner: true, belowTitle: true, overlaps: 0 }, 'SHIFT\'s corner mark sits below the title, clear of the copy');
     assert.equal(await page.evaluate(() => document.activeElement?.id), 'turnUnlockTitle', 'Focus starts on the title');
     assert.match(await sheet.textContent(), /SEDAN has 3 in every attribute/);
     // No preset: the SEDAN (any trade is legal) is where the player builds a setup.

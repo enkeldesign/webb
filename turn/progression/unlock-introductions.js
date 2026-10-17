@@ -1,4 +1,5 @@
 import { getTrophyRoadReward } from './trophy-road.js';
+import { cornerMarkMarkup } from '../ui/corner-mark.js';
 import { garageOpenedForCar, pointOutInGarage, suggestInGarage, viewCarWhenGarageOpens } from '../garage/garage-focus.js';
 
 // Unlock introductions (#1149, #1150): when DRIFT ATTACK, SHIFT, FLOW or PERKULATOR
@@ -397,6 +398,8 @@ export function installUnlockIntroductions({
       paragraph.textContent = text;
       return paragraph;
     }));
+    // The unlock's Trophy Road icon, in the corner below the title (#1230).
+    copy.insertAdjacentHTML('afterbegin', cornerMarkMarkup(getTrophyRoadReward(id)?.icon));
     note.textContent = introduction.note || '';
     actionButton.hidden = !introduction.action;
     actionButton.textContent = introduction.action?.label || '';

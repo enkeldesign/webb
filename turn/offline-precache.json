@@ -1,5 +1,5 @@
 {
-  "release": "20261017-r468",
+  "release": "20261017-r469",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -456,6 +456,7 @@
     "/turn/ui/authored-icons.js",
     "/turn/ui/back-to-lot.js",
     "/turn/ui/control-handedness.js",
+    "/turn/ui/corner-mark.js",
     "/turn/ui/drift-attack-setting.js",
     "/turn/ui/drift-camera-setting.js",
     "/turn/ui/drive-by-ear-setting.js",
