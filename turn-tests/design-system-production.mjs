@@ -287,7 +287,9 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   assert.ok(surfaces, 'one colour-surface list in design-tokens.css');
   assert.match(surfaces[2], /--turn-text: var\(--turn-ink\);[\s\S]*--turn-surface-page: var\(--turn-paper\)|--turn-surface-page: var\(--turn-paper\);[\s\S]*--turn-text: var\(--turn-ink\);/, 'a colour surface carries the light roles');
   assert.match(surfaces[2], /\n  color: var\(--turn-ink\);/);
-  for (const component of ['.turn-pr-button:is(.is-primary, .is-sheet):not(.is-locked)', '.turn-home-sheet-head', '.turn-pr-sheet-head', '.turn-trophy-road-marker', '.roadbook-goal:is(.is-earned, .is-gated, .is-next)', '.back-to-lot-button', '.turn-achievement-toast', '.drive-reverse-bubble']) {
+  for (const component of ['.turn-pr-button:is(.is-primary, .is-sheet):not(.is-locked)', '.turn-home-sheet-head', '.turn-pr-sheet-head', '.turn-trophy-road-marker', '.roadbook-goal:is(.is-earned, .is-gated, .is-next)', '.back-to-lot-button', '.turn-achievement-toast', '.drive-reverse-bubble',
+    // YOUR TURN's start-row GET THE GAME and an invalid lap's THE CHALLENGE are coloured too (#1238).
+    '.yourturn-full-game-button', '.yourturn-challenge-button.is-lap-invalid']) {
     assert.ok(surfaces[1].includes(component), `${component} is a colour surface`);
   }
   // The dark drive pad is muted with cream labels (Erik's design): its zones are not
