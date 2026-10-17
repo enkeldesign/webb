@@ -6,7 +6,7 @@ import { getAchievement as getProductionAchievement } from '../../turn/achieveme
 const root = process.cwd();
 const turnDir = path.join(root, 'turn');
 const catalogSource = await fs.readFile(path.join(turnDir, 'vehicle/catalog.js'), 'utf8');
-const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const catalog = await import('../../turn/vehicle/catalog.js');
 
 const expected = new Map([
   ['firetruck', { name: 'Fire Truck', stats: { speed: 2, acceleration: 2, control: 4, drift: 4, boostPower: 1, boostDuration: 5 } }],

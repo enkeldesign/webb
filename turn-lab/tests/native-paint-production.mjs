@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
 const catalogSource = await fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8');
-const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const catalog = await import('../../turn/vehicle/catalog.js');
 
 assert.equal(catalog.normalizeVehicleColor('#12AbEf'), '#12abef', 'Native picker colours must not be palette-limited');
 assert.equal(catalog.normalizeVehicleColor('#fff'), catalog.DEFAULT_VEHICLE_COLOR, 'Invalid short hex must use the body fallback');

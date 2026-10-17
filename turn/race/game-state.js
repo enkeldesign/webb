@@ -69,6 +69,7 @@ export function resetRaceToStage({
   state.driftSlipAngle = 0;
   state.collided = false;
   state.vehiclePerkProgress = 0;
+  state.vehicleInstalledPerkProgress = 0;
   state.vehiclePerkStage = 0;
   state.vehicleEffectiveTuning = state.vehicleTuning || null;
   state.vehicleEffectiveMaxSpeed = 0;

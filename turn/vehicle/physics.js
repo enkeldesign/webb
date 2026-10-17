@@ -3,10 +3,12 @@ import { recordLapCourseSafetyState } from '../race/course-safety.js?revision=r1
 import { trackPitch, trackSurfaceY } from '../tracks/elevation.js?build=20260725-r67';
 import { showCompactRacePill } from '../achievements/support-challenge-feedback.js';
 import {
+  activeVehiclePerkIds,
   advanceVehiclePerkRuntimeState,
   resolveVehicleLockDragAdd,
   resolveVehicleOffRoadPenalty,
-  resolveVehiclePerkTuning
+  resolveVehiclePerkTuning,
+  vehiclePerkIdsFor
 } from './perk-runtime.js?revision=r233-graduated';
 
 const OFFROAD_CAPABLE_VEHICLE_IDS = new Set(['monster-truck']);
@@ -55,13 +57,13 @@ export function vehicleIgnoresOffRoadPenalty(vehicleId) {
 export function resolveVehicleShoulderDragScale({
   vehicleId = '',
   perkUnlocked = false,
+  perkIds = vehiclePerkIdsFor(vehicleId, perkUnlocked),
   trackDistance = 0,
   trackWidth = 1
 } = {}) {
   if (vehicleIgnoresOffRoadPenalty(vehicleId)) return 0;
   return resolveVehicleOffRoadPenalty({
-    vehicleId,
-    perkUnlocked,
+    perkIds,
     offRoad: true,
     trackDistance,
     trackWidth
@@ -106,17 +108,17 @@ export function resolveOverchargedControlMultiplier({
   );
 }
 
+// APEX GRIP and TORQUE, on whichever car runs them, lift ACCELERATION in OVERCHARGE.
 export function resolveVehicleOverchargedAccelerationMultiplier({
   vehicleId = '',
   perkUnlocked = false,
+  perkIds = vehiclePerkIdsFor(vehicleId, perkUnlocked),
   accelerationMultiplier = 1,
   overchargeAccelerationMultiplier = accelerationMultiplier,
   overcharge = 0
 } = {}) {
   const baseAccelerationMultiplier = positiveNumber(accelerationMultiplier, 1);
-  const normalizedVehicleId = String(vehicleId || '');
-  const ownsOverchargeAcceleration = normalizedVehicleId === 'race'
-    || (normalizedVehicleId === 'truck' && perkUnlocked === true);
+  const ownsOverchargeAcceleration = perkIds.includes('apex-grip') || perkIds.includes('torque');
   if (!ownsOverchargeAcceleration || nonNegativeNumber(overcharge, 0) <= 0) {
     return baseAccelerationMultiplier;
   }
@@ -248,10 +250,10 @@ function updateVehiclePhysicsStateCore({
 
   const baseTuning = vehicleTuning || globalThis.__turnVehicleTuning;
   const tuning = resolveVehiclePerkTuning({ state, tuning: baseTuning });
+  const perkIds = activeVehiclePerkIds(state);
   const baseAccelerationMultiplier = positiveNumber(tuning?.accelerationMultiplier, 1);
   const accelerationMultiplier = resolveVehicleOverchargedAccelerationMultiplier({
-    vehicleId: state.vehicleId,
-    perkUnlocked: state.vehiclePerkUnlocked,
+    perkIds,
     accelerationMultiplier: baseAccelerationMultiplier,
     overchargeAccelerationMultiplier: tuning?.overchargeAccelerationMultiplier,
     overcharge: boostOvercharge
@@ -262,11 +264,10 @@ function updateVehiclePhysicsStateCore({
     overchargeControlMultiplier: tuning?.overchargeControlMultiplier,
     overcharge: boostOvercharge
   });
-  state.apexGripActive = String(state.vehicleId || '') === 'race'
+  state.apexGripActive = perkIds.includes('apex-grip')
     && (controlMultiplier > baseControlMultiplier
       || accelerationMultiplier > baseAccelerationMultiplier);
-  state.torqueActive = String(state.vehicleId || '') === 'truck'
-    && state.vehiclePerkUnlocked === true
+  state.torqueActive = perkIds.includes('torque')
     && accelerationMultiplier > baseAccelerationMultiplier;
   const driftEngineMultiplier = positiveNumber(tuning?.driftEngineMultiplier, 0.86);
   const driftDragAdd = nonNegativeNumber(tuning?.driftDragAdd, 0.1);
@@ -288,8 +289,7 @@ function updateVehiclePhysicsStateCore({
   const lockGripMultiplier = lerp(1, 0.22, driftLockAmount);
   const lockSlideMultiplier = lerp(1, 1.25, driftLockAmount);
   const lockDragAdd = resolveVehicleLockDragAdd({
-    vehicleId: state.vehicleId,
-    perkUnlocked: state.vehiclePerkUnlocked,
+    perkIds,
     perkLockDragAdd: tuning?.lockDragAdd
   });
   state.driftLockAmount = driftLockAmount;
@@ -312,8 +312,7 @@ function updateVehiclePhysicsStateCore({
   state.offRoad = nearestBefore.distance > trackWidth * 0.58 && !isForgivingSurface(state.position);
   const physicsOffRoad = state.offRoad && !vehicleIgnoresOffRoadPenalty(state.vehicleId);
   const offRoadPenalty = resolveVehicleOffRoadPenalty({
-    vehicleId: state.vehicleId,
-    perkUnlocked: state.vehiclePerkUnlocked,
+    perkIds,
     offRoad: physicsOffRoad,
     trackDistance: state.trackDistance,
     trackWidth
@@ -516,7 +515,7 @@ function updateVehiclePhysicsStateCore({
     collisionProfile: currentCollisionProfile(),
     shoulderDragScale: resolveVehicleShoulderDragScale({
       vehicleId: state.vehicleId,
-      perkUnlocked: state.vehiclePerkUnlocked,
+      perkIds,
       trackDistance: nearestAfter.distance,
       trackWidth
     }),

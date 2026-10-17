@@ -16,7 +16,7 @@ const [
   fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/garage-cars.js', import.meta.url), 'utf8')
 ]);
-const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const catalog = await import('../../turn/vehicle/catalog.js');
 const rally = catalog.getCarDefinition('toy-racer');
 
 assert.equal(rally.name, 'Rally Racer');

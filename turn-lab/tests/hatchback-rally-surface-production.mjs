@@ -5,7 +5,7 @@ const [catalogSource, semanticSource] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8')
 ]);
-const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const catalog = await import('../../turn/vehicle/catalog.js');
 
 const hatchback = catalog.getCarDefinition('sedan-sports');
 const vintage = catalog.getCarDefinition('vintage-racer');

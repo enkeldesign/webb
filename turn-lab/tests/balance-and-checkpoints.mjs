@@ -14,7 +14,7 @@ import {
 import { resetRaceToStage } from '../../turn/race/game-state.js';
 
 const catalogSource = await fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8');
-const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const catalog = await import('../../turn/vehicle/catalog.js');
 
 assert.equal(catalog.VEHICLE_STAT_BUDGET, 18, 'TURN vehicle stat budget must remain 18');
 assert.equal(catalog.CAR_CATALOG.length, 18, 'all 18 Lot cars must remain in the catalog');
