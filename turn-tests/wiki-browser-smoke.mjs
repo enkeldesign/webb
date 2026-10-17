@@ -97,6 +97,30 @@ try {
   assert.equal(await fallback.locator('h1').textContent(), 'Harbor');
   assert(await fallback.locator('#find-time').isVisible());
   await noJs.close();
+  // Older Safari exposes only MediaQueryList.addListener. Theme updates must
+  // still work, and must not prevent search or achievement deep links starting.
+  const legacyContext = await browser.newContext({ colorScheme: 'light' });
+  await legacyContext.addInitScript(() => {
+    const matchMedia = globalThis.matchMedia.bind(globalThis);
+    globalThis.matchMedia = (query) => {
+      const media = matchMedia(query);
+      Object.defineProperty(media, 'addEventListener', { value: undefined });
+      return media;
+    };
+  });
+  const legacy = await legacyContext.newPage();
+  const legacyErrors = [];
+  legacy.on('pageerror', (error) => legacyErrors.push(error.message));
+  await legacy.goto(`${origin}/turn/wiki/search/?q=harbor`);
+  assert.equal(await legacy.locator('.search-results li:visible strong', { hasText: /^Harbor$/ }).count(), 1);
+  await legacy.emulateMedia({ colorScheme: 'dark' });
+  await legacy.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
+  await legacy.emulateMedia({ colorScheme: 'light' });
+  await legacy.waitForFunction(() => document.documentElement.dataset.theme === 'light');
+  await legacy.goto(`${origin}/turn/wiki/reference/achievements/#golden-hour`);
+  assert(await legacy.locator('#golden-hour').isVisible());
+  assert.deepEqual(legacyErrors, []);
+  await legacyContext.close();
   assert(![...requests].some((request) => /three|\/turn\/(?:app|main)\.js|\.glb$/.test(request)), 'No game renderer or race modules in the wiki browser');
   assert.deepEqual(failures, []);
   if (process.env.TURN_WIKI_SCREENSHOTS) {

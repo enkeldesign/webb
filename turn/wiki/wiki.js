@@ -17,7 +17,8 @@
       applyTheme();
     });
   }
-  media.addEventListener('change', applyTheme);
+  if (typeof media.addEventListener === 'function') media.addEventListener('change', applyTheme);
+  else if (typeof media.addListener === 'function') media.addListener(applyTheme);
   applyTheme();
 
   const input = document.querySelector('#wiki-query');

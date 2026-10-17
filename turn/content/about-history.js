@@ -425,7 +425,7 @@ export const CHANGELOG = Object.freeze([
       ],
       [
         "TURN WIKI",
-        "A visual player guide to every track, car and perk, with driving techniques, builds, play modes and the complete Trophy Road and achievement reference. Open it from HOW TO PLAY."
+        "Visual player guide."
       ]
     ]
   }
