@@ -85,8 +85,8 @@ const through1600 = [...through1500, 'future-racer'];
 const through1700 = [...through1600, 'suv-full-tank'];
 const through1800 = [...through1700, 'monster'];
 const through1900 = [...through1800, 'sedan-double-shift'];
-const through2000 = [...through1900, 'rally-racer'];
-const through2100 = [...through2000, 'sports-car-drift-demon'];
+const through2000 = [...through1900, 'perkulator'];
+const through2100 = [...through2000, 'rally-racer'];
 const through2200 = [...through2100, 'learner-graduated'];
 const through2300 = [...through2200, 'supercar'];
 // Pre-SHIFT grandfathering also granted MIDNIGHT CITY and MOUNTAIN; since the
@@ -130,8 +130,8 @@ assert.deepEqual(
     ['suv-full-tank', 1700],
     ['monster', 1800],
     ['sedan-double-shift', 1900],
-    ['rally-racer', 2000],
-    ['sports-car-drift-demon', 2100],
+    ['perkulator', 2000],
+    ['rally-racer', 2100],
     ['learner-graduated', 2200],
     ['supercar', 2300]
   ]
@@ -172,7 +172,11 @@ assert.equal(getProductionTrophyRoadReward('truck-torque'), null, 'TRUCK · TORQ
 assert.equal(getProductionTrophyRoadReward('expert-tracks')?.threshold, 1300);
 assert.equal(getProductionTrophyRoadReward('paintjob')?.threshold, 800);
 assert.equal(getProductionTrophyRoadReward('future-racer')?.threshold, 1600);
-assert.equal(getProductionTrophyRoadReward('rally-racer')?.threshold, 2000);
+assert.equal(getProductionTrophyRoadReward('rally-racer')?.threshold, 2100,
+  'RALLY RACER moved up to 2100 when PERKULATOR took 2000 (#1219)');
+assert.equal(getProductionTrophyRoadReward('perkulator')?.threshold, 2000);
+assert.equal(getProductionTrophyRoadReward('sports-car-drift-demon'), null,
+  'DRIFT DEMON is standard on the Sports Car, no longer a reward');
 assert.equal(getProductionTrophyRoadReward('shift')?.threshold, 1000);
 assert.equal(getProductionTrophyRoadReward('awd-traction')?.threshold, 500);
 assert.equal(getProductionTrophyRoadReward('drift-attack')?.threshold, 600);
@@ -198,6 +202,7 @@ assert.equal(rewardForVehicle('toy-racer')?.id, 'rally-racer');
 assert.equal(rewardForVehicle('supercar')?.id, 'supercar');
 assert.equal(rewardForFeature('vehicle-paint')?.id, 'paintjob');
 assert.equal(rewardForFeature('vehicle-shift')?.id, 'shift');
+assert.equal(rewardForFeature('perkulator')?.id, 'perkulator');
 assert.equal(rewardForVehicle('convertible'), null,
   'A vehicle-perk reward must not lock the already-owned AWD');
 assert.equal(rewardForVehicle('truck'), null,
@@ -207,7 +212,7 @@ assert.equal(rewardForVehiclePerk('truck'), null, 'TRUCK ships with TORQUE out o
 assert.equal(rewardForVehiclePerk('van')?.id, 'van-carry-on');
 assert.equal(rewardForVehiclePerk('suv')?.id, 'suv-full-tank');
 assert.equal(rewardForVehiclePerk('sedan')?.id, 'sedan-double-shift');
-assert.equal(rewardForVehiclePerk('sedan-sports')?.id, 'sports-car-drift-demon');
+assert.equal(rewardForVehiclePerk('sedan-sports'), null, 'The Sports Car ships with DRIFT DEMON');
 assert.equal(rewardForVehiclePerk('classic')?.id, 'learner-graduated');
 assert.equal(rewardForVehiclePerk('race'), null,
   'Bundled perks must not gain a Trophy Road entitlement');
@@ -289,7 +294,6 @@ const trophyPerks = Object.freeze([
   ['van', 'van-carry-on', 1400, 'CARRY ON'],
   ['suv', 'suv-full-tank', 1700, 'FULL TANK'],
   ['sedan', 'sedan-double-shift', 1900, 'DOUBLE SHIFT'],
-  ['sedan-sports', 'sports-car-drift-demon', 2100, 'DRIFT DEMON'],
   ['classic', 'learner-graduated', 2200, 'GRADUATED']
 ]);
 for (const [vehicleId, rewardId, threshold, title] of trophyPerks) {
@@ -303,6 +307,20 @@ for (const [vehicleId, rewardId, threshold, title] of trophyPerks) {
   assert.equal(reward?.threshold, threshold);
   assert.match(reward?.description || '', new RegExp(title.replace(' ', '\\s')));
 }
+
+assert.equal(getCarDefinition('sedan-sports').perk?.title, 'DRIFT DEMON');
+assert.equal(getCarDefinition('sedan-sports').perk?.rewardId, undefined, 'DRIFT DEMON has no Trophy Road gate');
+assert.equal(getCarDefinition('sedan-sports').perk?.threshold, undefined);
+
+// PERKULATOR (#1219): a major GARAGE system on the pink scoring tile, with its own icon.
+const perkulatorReward = getProductionTrophyRoadReward('perkulator');
+assert.equal(perkulatorReward?.title, 'PERKULATOR');
+assert.equal(perkulatorReward?.type, 'scoring-system');
+assert.equal(perkulatorReward?.featureId, 'perkulator');
+assert.equal(perkulatorReward?.major, true);
+assert.match(perkulatorReward?.description || '', /Clone any perk you have unlocked and install it on another car/);
+assert.match(perkulatorReward?.description || '', /LEGENDARY perks stay with their car/);
+assert.match(roadSource, /perkulator: authoredRewardIcon\('perkulator'\)/);
 
 assert.deepEqual(
   grandfatheredRewardIdsForVersion(3),
@@ -382,6 +400,29 @@ for (const trackId of ['airport', 'harbor', 'midnight-city', 'mountain']) {
 assert.equal(isTrackUnlocked('beachfront', preSwapSnapshotStorage), false,
   'Before its store derives the new tiers, a stored profile gains no new track from legacy access');
 
+// RALLY RACER moved from 2000 to 2100 without a storage version (#1219). A profile that
+// had it below 2100 keeps it as a kept reward; one that reaches 2100 earns it as before.
+// The retired SPORTS CAR · DRIFT DEMON reward leaves the profile: the perk is standard.
+const trophiesProfile = (trophies, rewardIds) => normalizeAchievementState({
+  version: TROPHY_ROAD_STORAGE_VERSION,
+  unlocked: {},
+  bonuses: { 'test-trophies': { trophies, grantedAt: 1 } },
+  seen: [],
+  progress: { tracks: [], blankTracks: [] },
+  rewards: { unlocked: rewardIds, seen: rewardIds }
+});
+const keptRally = trophiesProfile(2050, [...through1900, 'rally-racer', 'sports-car-drift-demon']);
+assert.deepEqual(new Set(keptRally.rewards.unlocked), new Set([...through2000, 'rally-racer']),
+  'A 2050-trophy player keeps RALLY RACER, earns PERKULATOR and loses the retired DRIFT DEMON reward');
+assert.deepEqual(keptRally.rewards.grandfathered, ['rally-racer']);
+assert.equal(keptRally.rewards.seen.includes('perkulator'), false, 'PERKULATOR is new to them');
+assert.equal(keptRally.rewards.seen.includes('sports-car-drift-demon'), false);
+const earnedRally = trophiesProfile(2150, [...through2000, 'rally-racer']);
+assert.deepEqual(earnedRally.rewards.grandfathered, [], 'At 2100 RALLY RACER is earned, not kept');
+const newRally = trophiesProfile(2050, through2000);
+assert.equal(newRally.rewards.unlocked.includes('rally-racer'), false, 'Below 2100 a new player has no RALLY RACER');
+assert.deepEqual(newRally.rewards.grandfathered, []);
+
 const preRoadTwoMountainProfile = normalizeAchievementState({
   version: 7,
   unlocked: {},
@@ -414,6 +455,9 @@ assert.equal(isPaintUnlocked(freshStorage), false);
 assert.equal(isFeatureUnlocked('vehicle-shift', freshStorage), false);
 assert.equal(isFeatureUnlocked('drift-attack', freshStorage), false);
 assert.equal(isFeatureUnlocked('flow', freshStorage), false);
+assert.equal(isFeatureUnlocked('perkulator', freshStorage), false);
+assert.equal(isVehiclePerkUnlocked('sedan-sports', freshStorage), true,
+  'DRIFT DEMON is the Sports Car\'s from the start');
 assert.equal(isVehicleUnlocked('convertible', freshStorage), true,
   'A locked TRACTION perk must not lock AWD');
 assert.equal(isVehicleUnlocked('truck', freshStorage), true,

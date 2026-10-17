@@ -1195,6 +1195,64 @@ test('PAINTJOB is pointed out in GARAGE without a sheet: its reward toast says i
   assert.match(source, /viewCarWhenGarageOpens\('sedan'\);/, 'TRY SHIFT IN THE SEDAN opens the SEDAN as a challenge opens its car');
 });
 
+test('PERKULATOR is introduced once: as it unlocks, or to a player who already has it (#1219)', async () => {
+  const intro = await import('../turn/progression/unlock-introductions.js');
+  const perkulator = intro.UNLOCK_INTRODUCTIONS.perkulator;
+  assert.equal(perkulator.title, 'PERKULATOR');
+  assert.match(perkulator.copy.join(' '), /In GARAGE, under PERK, clone a perk you have unlocked, then install it on another car/);
+  assert.match(perkulator.copy.join(' '), /LEGENDARY perks stay with their car/);
+  assert.equal(perkulator.action.label, 'OPEN GARAGE');
+  assert.equal(perkulator.note, 'GARAGE highlights PERK for you.');
+  assert.deepEqual(perkulator.hints, ['garage-perk']);
+  const source = await import('node:fs').then((fs) => fs.readFileSync(new URL('../turn/progression/unlock-introductions.js', import.meta.url), 'utf8'));
+  assert.match(source, /'garage-perk': Object\.freeze\(\{ selector: '\.garage-perk \.garage-disclosure-toggle', say: 'New in GARAGE: PERKULATOR, under PERK\.' \}\)/,
+    'GARAGE points out PERK, said as well as shown');
+  assert.match(source, /if \(action === 'perkulator-garage'\) void openGarage\?\.\(\);/, 'OPEN GARAGE opens the car the player has');
+
+  // Home with the sheet's markup stubbed: only the queue matters here.
+  const element = () => ({
+    dataset: {},
+    classList: { add() {}, remove() {}, contains: () => false },
+    setAttribute() {},
+    addEventListener() {},
+    appendChild: (child) => child,
+    querySelector: () => element(),
+    querySelectorAll: () => []
+  });
+  const documentRef = {
+    head: element(),
+    body: element(),
+    createElement: element,
+    getElementById: () => null,
+    querySelector: () => null,
+    addEventListener() {}
+  };
+  const home = (store) => Object.assign(new globalThis.EventTarget(), {
+    location: { hostname: 'localhost' },
+    navigator: {},
+    __turnAchievements: store ? { store } : undefined
+  });
+  const holds = (ids) => ({ isRewardUnlocked: (id) => ids.includes(id) });
+  const install = (windowRef) => intro.installUnlockIntroductions({ storage: globalThis.localStorage, documentRef, windowRef });
+
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
+  assert.equal(install(home(holds(['shift', 'flow']))).queue.next(), null,
+    'Without PERKULATOR, nothing; SHIFT and FLOW held from before are never introduced late');
+  const waiting = home(null);
+  const installed = install(waiting);
+  assert.equal(installed.queue.next(), null, 'Nothing before the achievements are read');
+  waiting.__turnAchievements = { store: holds(['perkulator']) };
+  waiting.dispatchEvent(new globalThis.Event('turn:achievements-ready'));
+  assert.equal(installed.queue.next(), 'perkulator', 'A player already past 2000 trophies is introduced to PERKULATOR');
+  installed.queue.introduced('perkulator');
+  assert.equal(installed.queue.hasHint('garage-perk'), true, 'Then GARAGE points out PERK');
+  assert.equal(install(home(holds(['perkulator']))).queue.next(), null, 'Introduced once only');
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
+  const queue = intro.createUnlockIntroductionQueue(globalThis.localStorage);
+  assert.equal(queue.unlocked(['perkulator']), true, 'Unlocked in a race, it waits for Home like the others');
+  clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);
+});
+
 test('GARAGE points at ALL CARS until it is used, and RACE at ACTIVATE SHIFT once per car', async () => {
   const intro = await import('../turn/progression/unlock-introductions.js');
   clearIntroductionState(intro.UNLOCK_INTRODUCTIONS_KEY);

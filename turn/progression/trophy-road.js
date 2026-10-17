@@ -38,6 +38,7 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   shift: authoredRewardIcon('shift'),
   drift: AUTHORED_DRIFT_ICON,
   flow: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 24c8-16 18-16 28 0s20 16 28 0"></path><path d="M4 34c8-16 18-16 28 0s20 16 28 0"></path></svg>',
+  perkulator: authoredRewardIcon('perkulator'),
   perk: AUTHORED_PERK_ICON
 });
 
@@ -216,6 +217,15 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     description: 'Unlock FLOW scoring on every normal lap. Link varied driving techniques and clever SHIFT outcomes while DRIFT and lap timing continue alongside it.'
   }),
   Object.freeze({
+    id: 'perkulator',
+    title: 'PERKULATOR',
+    shortTitle: 'Perkulator',
+    type: 'scoring-system',
+    featureId: 'perkulator',
+    icon: 'perkulator',
+    description: 'Unlock PERKULATOR in GARAGE. Clone any perk you have unlocked and install it on another car, where it runs beside that car’s own perk. LEGENDARY perks stay with their car.'
+  }),
+  Object.freeze({
     id: 'suv-full-tank',
     title: 'SUV · FULL TANK',
     shortTitle: 'SUV Full Tank',
@@ -236,17 +246,6 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     perkTitle: 'DOUBLE SHIFT',
     perkDescription: 'SHIFT moves 2 points between attributes instead of 1.',
     description: 'Unlock <strong>DOUBLE SHIFT</strong> for Sedan. SHIFT moves 2 points between attributes instead of 1.'
-  }),
-  Object.freeze({
-    id: 'sports-car-drift-demon',
-    title: 'SPORTS CAR · DRIFT DEMON',
-    shortTitle: 'Sports Car Drift Demon',
-    type: 'vehicle-perk',
-    vehicleId: 'sedan-sports',
-    icon: 'perk',
-    perkTitle: 'DRIFT DEMON',
-    perkDescription: 'DRIFT builds during sustained DRIFT or LOCK, up to 5/5.',
-    description: 'Unlock <strong>DRIFT DEMON</strong> for Sports Car. DRIFT builds during sustained DRIFT or LOCK, up to 5/5.'
   }),
   Object.freeze({
     id: 'learner-graduated',
@@ -280,8 +279,8 @@ const REWARD_ORDER = Object.freeze([
   Object.freeze(['suv-full-tank', 1700]),
   Object.freeze(['monster', 1800]),
   Object.freeze(['sedan-double-shift', 1900]),
-  Object.freeze(['rally-racer', 2000]),
-  Object.freeze(['sports-car-drift-demon', 2100]),
+  Object.freeze(['perkulator', 2000]),
+  Object.freeze(['rally-racer', 2100]),
   Object.freeze(['learner-graduated', 2200]),
   Object.freeze(['supercar', 2300])
 ]);
@@ -291,7 +290,8 @@ const MAJOR_REWARD_IDS = new Set([
   'advanced-tracks',
   'shift',
   'expert-tracks',
-  'flow'
+  'flow',
+  'perkulator'
 ]);
 const REWARD_DEFINITION_BY_ID = new Map(
   TROPHY_ROAD_REWARD_DEFINITIONS.map((reward) => [reward.id, reward])
@@ -344,6 +344,11 @@ const PRE_TIER_TRACK_REWARDS = Object.freeze([
   Object.freeze({ rewardId: 'mountain', trackId: 'mountain', threshold: 1300 })
 ]);
 const VERSION_FOUR_GRANDFATHERED_REWARDS = Object.freeze(['vintage-racer', 'rally-racer']);
+// Rewards that moved further up the road without a new storage version. A profile that
+// had one before its trophies reach the new threshold keeps it, as a kept reward, the
+// way a storage migration keeps one: RALLY RACER moved from 2000 to 2100 when
+// PERKULATOR took its place (#1219).
+const MOVED_UP_REWARD_IDS = Object.freeze(['rally-racer']);
 const PRE_SHIFT_GRANDFATHERED_REWARDS = Object.freeze([
   'vintage-racer',
   'midnight-city',
@@ -407,6 +412,13 @@ export function grandfatheredRewardIdsForVersion(version) {
 
 export function migrateStoredRewardIdsForVersion(ids, version) {
   return historicalStoredRewardIds(ids, version).filter((id) => REWARD_BY_ID.has(id));
+}
+
+// The stored rewards a profile keeps although its trophies no longer reach them.
+export function keptMovedRewardIds(storedIds, earnedIds) {
+  const stored = new Set(storedIds || []);
+  const earned = new Set(earnedIds || []);
+  return MOVED_UP_REWARD_IDS.filter((id) => stored.has(id) && !earned.has(id));
 }
 
 // Tracks this profile may use regardless of its difficulty-tier rewards. A profile

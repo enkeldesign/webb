@@ -376,7 +376,7 @@ export const CHANGELOG = Object.freeze([
       ],
       [
         "Unlock introductions",
-        "When DRIFT ATTACK, SHIFT or FLOW unlocks, Home explains it in a sheet that stays until you close it. DRIFT ATTACK offers its tutorial; SHIFT is then pointed out in GARAGE and beside the drive pad in your next race."
+        "When DRIFT ATTACK, SHIFT or FLOW unlocks, Home explains it in a sheet that stays until you close it. DRIFT ATTACK offers its tutorial; GARAGE and your next race point out SHIFT."
       ]
     ]
   },
@@ -412,7 +412,16 @@ export const CHANGELOG = Object.freeze([
     "entries": [
       [
         "SPECTATE shows how a lap was driven",
-        "Laps you race from now on keep their controls. SPECTATE plays them back beside the car: the drive pad with LOCK, SHIFT and REVERSE, and the phone tilting or the steering knob moving as the lap was steered."
+        "Laps now keep their controls. SPECTATE plays them back beside the car: the drive pad with LOCK, SHIFT and REVERSE, and the phone or steering knob as the lap was steered."
+      ]
+    ]
+  },
+  {
+    "date": "17 October 2026",
+    "entries": [
+      [
+        "PERKULATOR",
+        "At 2000 trophies, clone a perk you have unlocked and install it on another car. SPECTATE and YOUR TURN name each lap’s perks. DRIFT DEMON is now standard on the Sports Car."
       ]
     ]
   }
