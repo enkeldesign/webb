@@ -2,23 +2,23 @@ export const TIME_TRIALS = Object.freeze([
   Object.freeze({
     id: 'countryside-sprint',
     trackId: 'countryside',
-    targetSeconds: 11,
+    targetSeconds: 10,
     title: 'COUNTRYSIDE SPRINT',
-    description: 'Finish Countryside in under 11 seconds.'
+    description: 'Finish Countryside in under 10 seconds.'
   }),
   Object.freeze({
     id: 'cliffside-sprint',
     trackId: 'cliffside',
-    targetSeconds: 14,
+    targetSeconds: 12,
     title: 'CLIFFSIDE SPRINT',
-    description: 'Finish Cliffside in under 14 seconds.'
+    description: 'Finish Cliffside in under 12 seconds.'
   }),
   Object.freeze({
     id: 'airport-sprint',
     trackId: 'airport',
-    targetSeconds: 15,
+    targetSeconds: 14,
     title: 'AIRPORT SPRINT',
-    description: 'Finish Airport in under 15 seconds.'
+    description: 'Finish Airport in under 14 seconds.'
   }),
   Object.freeze({
     id: 'beachfront-sprint',
@@ -37,23 +37,23 @@ export const TIME_TRIALS = Object.freeze([
   Object.freeze({
     id: 'dead-canyon-sprint',
     trackId: 'dead-canyon',
-    targetSeconds: 33,
+    targetSeconds: 32,
     title: 'DEAD CANYON SPRINT',
-    description: 'Finish Dead Canyon in under 33 seconds.'
+    description: 'Finish Dead Canyon in under 32 seconds.'
   }),
   Object.freeze({
     id: 'midnight-sprint',
     trackId: 'midnight-city',
-    targetSeconds: 50,
+    targetSeconds: 48,
     title: 'MIDNIGHT SPRINT',
-    description: 'Finish Midnight City in under 50 seconds.'
+    description: 'Finish Midnight City in under 48 seconds.'
   }),
   Object.freeze({
     id: 'mountain-sprint',
     trackId: 'mountain',
-    targetSeconds: 47,
+    targetSeconds: 46,
     title: 'MOUNTAIN SPRINT',
-    description: 'Finish Mountain in under 47 seconds.'
+    description: 'Finish Mountain in under 46 seconds.'
   })
 ]);
 

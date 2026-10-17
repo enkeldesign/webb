@@ -260,18 +260,18 @@ assert.equal(byId('faster-than-the-dev')?.trophies, 300,
 assert.deepEqual(
   TIME_TRIALS.map(({ trackId, targetSeconds }) => [trackId, targetSeconds]),
   [
-    ['countryside', 11],
-    ['cliffside', 14],
-    ['airport', 15],
+    ['countryside', 10],
+    ['cliffside', 12],
+    ['airport', 14],
     ['beachfront', 22],
     ['harbor', 22],
-    ['dead-canyon', 33],
-    ['midnight-city', 50],
-    ['mountain', 47]
+    ['dead-canyon', 32],
+    ['midnight-city', 48],
+    ['mountain', 46]
   ]
 );
-assert.equal(byId('midnight-sprint')?.description, 'Finish Midnight City in under 50 seconds.');
-assert.equal(byId('mountain-sprint')?.description, 'Finish Mountain in under 47 seconds.');
+assert.equal(byId('midnight-sprint')?.description, 'Finish Midnight City in under 48 seconds.');
+assert.equal(byId('mountain-sprint')?.description, 'Finish Mountain in under 46 seconds.');
 for (const trial of TIME_TRIALS) {
   assert.equal(qualifyingTimeTrial(trial.trackId, trial.targetSeconds - 0.001)?.id, trial.id);
   assert.equal(qualifyingTimeTrial(trial.trackId, trial.targetSeconds), null,
@@ -530,14 +530,14 @@ assert.match(lilyaSource, /signalSecretAchievement\('find-lilya'/);
 assert.match(darvidSource, /signalSecretAchievement\('find-darvid'/);
 assert.match(sedanSource, /signalSecretAchievement\('satans-sedan'/);
 
-assert.match(timeTrialSource, /targetSeconds: 11/);
-assert.match(timeTrialSource, /targetSeconds: 15/);
-assert.match(timeTrialSource, /targetSeconds: 14/);
-assert.match(timeTrialSource, /targetSeconds: 22/);
-assert.match(timeTrialSource, /targetSeconds: 50/);
-assert.match(timeTrialSource, /targetSeconds: 47/);
+assert.match(timeTrialSource, /trackId: 'countryside',\n    targetSeconds: 10,/);
+assert.match(timeTrialSource, /trackId: 'cliffside',\n    targetSeconds: 12,/);
+assert.match(timeTrialSource, /trackId: 'airport',\n    targetSeconds: 14,/);
 assert.match(timeTrialSource, /trackId: 'beachfront',\n    targetSeconds: 22,/);
-assert.match(timeTrialSource, /targetSeconds: 33/);
+assert.match(timeTrialSource, /trackId: 'harbor',\n    targetSeconds: 22,/);
+assert.match(timeTrialSource, /trackId: 'dead-canyon',\n    targetSeconds: 32,/);
+assert.match(timeTrialSource, /trackId: 'midnight-city',\n    targetSeconds: 48,/);
+assert.match(timeTrialSource, /trackId: 'mountain',\n    targetSeconds: 46,/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 for (const entry of [productionEntry]) {
   const release = JSON.parse(await fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'));
