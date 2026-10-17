@@ -1,18 +1,16 @@
 // PERKULATOR in GARAGE (#1219), inside the car's PERK disclosure: the car's ORIGINAL
-// perk with its rarity and, where that perk may be cloned, CLONE PERK; then the car's
-// INSTALLED perk, with INSTALL CLONED PERK, REPLACE and REMOVE. Installing opens a
-// sheet of the cloned perks this car may run. Nothing here shows without PERKULATOR,
-// and nothing for a locked preview. What may be cloned or installed is
+// perk with its rarity and whether other cars may install it; then the car's INSTALLED
+// perk, with INSTALL PERK, REPLACE and REMOVE. Installing opens a sheet of every perk
+// PERKULATOR holds that this car may run (#1228). Nothing here shows without
+// PERKULATOR, and nothing for a locked preview. What may be installed is
 // vehicle/perkulator.js's to say; GARAGE re-renders on its change event.
 import { getCarDefinition } from '../vehicle/catalog.js';
 import { getVehiclePerk, originalVehiclePerk } from '../vehicle/perks.js';
 import {
-  clonePerk,
-  cloneablePerkFor,
   installPerk,
   installablePerksFor,
   installedPerkFor,
-  isPerkCloned,
+  isPerkAvailable,
   isPerkulatorUnlocked,
   removeInstalledPerk
 } from '../vehicle/perkulator.js';
@@ -68,13 +66,13 @@ export function createGaragePerkulator({
   tools.className = 'garage-perkulator';
   tools.hidden = true;
   tools.innerHTML = `
-    <div class="garage-perk-clone"></div>
+    <p class="garage-perk-note garage-perk-reach" hidden></p>
     <section class="garage-perk-installed" aria-labelledby="garageInstalledPerkTitle">
       <h4 class="garage-perk-installed-title" id="garageInstalledPerkTitle">INSTALLED PERK</h4>
       <div class="garage-perk-installed-body"></div>
     </section>`;
   copy.after(tools);
-  const cloneSlot = tools.querySelector('.garage-perk-clone');
+  const reach = tools.querySelector('.garage-perk-reach');
   const installedBody = tools.querySelector('.garage-perk-installed-body');
 
   const sheet = documentRef.createElement('dialog');
@@ -84,8 +82,8 @@ export function createGaragePerkulator({
   sheet.innerHTML = `
     <div class="turn-pr-sheet-card">
       <header class="turn-pr-sheet-head">
-        <h2 class="turn-pr-sheet-title" id="garageInstallPerkTitle" tabindex="-1">INSTALL CLONED PERK</h2>
-        <button class="turn-pr-close" type="button" aria-label="Close Install cloned perk"><span aria-hidden="true">×</span></button>
+        <h2 class="turn-pr-sheet-title" id="garageInstallPerkTitle" tabindex="-1">INSTALL PERK</h2>
+        <button class="turn-pr-close" type="button" aria-label="Close Install perk"><span aria-hidden="true">×</span></button>
       </header>
       <div class="turn-pr-sheet-body">
         <p class="garage-install-perk-lead" id="garageInstallPerkLead"></p>
@@ -109,20 +107,14 @@ export function createGaragePerkulator({
     return getCarDefinition(perk.vehicleIds[0]).name;
   }
 
-  function syncClone(own) {
-    const cloneable = cloneablePerkFor(carId);
-    if (cloneable && !isPerkCloned(cloneable.id)) {
-      cloneSlot.innerHTML = `
-        <button class="turn-pr-button is-secondary is-compact garage-perk-clone-button" type="button" aria-label="Clone perk: ${escapeHtml(perkName(own))}">CLONE PERK</button>
-        <p class="garage-perk-note">Then install it on any other car.</p>`;
-    } else if (cloneable) {
-      cloneSlot.innerHTML = `<p class="garage-perk-note garage-perk-cloned" tabindex="-1"><span aria-hidden="true">✓</span> CLONED · Install it on any other car.</p>`;
-    } else if (own.cloneable !== true) {
-      cloneSlot.innerHTML = '<p class="garage-perk-note">LEGENDARY perks stay with their car.</p>';
-    } else {
-      // A cloneable perk still locked on Trophy Road: its lock note says when.
-      cloneSlot.replaceChildren();
-    }
+  // Whether the car's own perk may run on other cars. A perk still locked on Trophy Road
+  // says nothing here: its lock note says when.
+  function syncReach(own) {
+    const note = own.installable !== true
+      ? 'LEGENDARY perks stay with their car.'
+      : isPerkAvailable(own.id) ? 'Any other car can install it.' : '';
+    reach.textContent = note;
+    reach.hidden = !note;
   }
 
   function syncInstalled(own) {
@@ -141,10 +133,10 @@ export function createGaragePerkulator({
     }
     if (choices.length) {
       installedBody.innerHTML = `
-        <p class="garage-perk-note garage-perk-none" tabindex="-1">None. One cloned perk can run beside ${escapeHtml(perkName(own))}.</p>
-        <button class="turn-pr-button is-secondary is-compact garage-perk-install" type="button" aria-haspopup="dialog" aria-label="Install cloned perk on ${escapeHtml(car.name)}">INSTALL CLONED PERK</button>`;
+        <p class="garage-perk-note garage-perk-none" tabindex="-1">None. Another perk can run beside ${escapeHtml(perkName(own))}.</p>
+        <button class="turn-pr-button is-secondary is-compact garage-perk-install" type="button" aria-haspopup="dialog" aria-label="Install perk on ${escapeHtml(car.name)}">INSTALL PERK</button>`;
     } else {
-      installedBody.innerHTML = `<p class="garage-perk-note garage-perk-none" tabindex="-1">None. Clone a perk on another car to install it here.</p>`;
+      installedBody.innerHTML = `<p class="garage-perk-note garage-perk-none" tabindex="-1">None. Unlock perks on Trophy Road to install one here.</p>`;
     }
     return null;
   }
@@ -161,7 +153,7 @@ export function createGaragePerkulator({
       return null;
     }
     meta.innerHTML = `<span class="garage-perk-role">ORIGINAL PERK</span> ${rarityChip(own)}`;
-    syncClone(own);
+    syncReach(own);
     const installed = syncInstalled(own);
     if (focusAfterSync) {
       // The first of the listed controls that is there now.
@@ -203,12 +195,7 @@ export function createGaragePerkulator({
     const button = event.target.closest?.('button');
     if (!button || !carId) return;
     const car = getCarDefinition(carId);
-    if (button.classList.contains('garage-perk-clone-button')) {
-      const own = originalVehiclePerk(carId);
-      focusAfterSync = '.garage-perk-cloned';
-      if (clonePerk(carId)) announce(`${perkName(own)} cloned. Install it on any other car.`);
-      else focusAfterSync = '';
-    } else if (button.classList.contains('garage-perk-install') || button.classList.contains('garage-perk-replace')) {
+    if (button.classList.contains('garage-perk-install') || button.classList.contains('garage-perk-replace')) {
       openSheet(button);
     } else if (button.classList.contains('garage-perk-remove')) {
       const removed = getVehiclePerk(installedPerkFor(carId));

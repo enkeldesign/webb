@@ -83,7 +83,7 @@ export const UNLOCK_INTRODUCTIONS = Object.freeze({
   perkulator: Object.freeze({
     title: 'PERKULATOR',
     copy: Object.freeze([
-      'In GARAGE, under PERK, clone a perk you have unlocked, then install it on another car, where it runs beside that car’s own perk.',
+      'In GARAGE, under PERK, install any perk you have unlocked on another car, where it runs beside that car’s own perk.',
       'Each car runs its own perk and at most one installed perk. LEGENDARY perks stay with their car.'
     ]),
     action: Object.freeze({ id: 'perkulator-garage', label: 'OPEN GARAGE' }),

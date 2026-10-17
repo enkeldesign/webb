@@ -489,7 +489,7 @@ assert.match(mainSource, /pagehide[\s\S]*pauseOrResetPerk\(\)/);
 assert.match(gameStateSource, /state\.vehiclePerkProgress = 0/);
 
 // #1219: every perk has an identity of its own, apart from its cars: a stable id, a
-// rarity, and whether it may be cloned and installed. Rarity is presentation only.
+// rarity, and whether it may be installed on another car. Rarity is presentation only.
 const PERK_TABLE = {
   'clean-exit': ['CLEAN EXIT', ['compact'], 'common', true],
   traction: ['TRACTION', ['convertible'], 'rare', true],
@@ -510,14 +510,15 @@ const PERK_TABLE = {
 };
 assert.deepEqual(VEHICLE_PERKS.map(({ id }) => id).sort(), Object.keys(PERK_TABLE).sort(), 'Sixteen perks, each id once');
 assert.deepEqual(Object.values(PERK_RARITY).sort(), ['common', 'epic', 'legendary', 'rare']);
-for (const [id, [title, vehicleIds, rarity, cloneable]] of Object.entries(PERK_TABLE)) {
+for (const [id, [title, vehicleIds, rarity, installable]] of Object.entries(PERK_TABLE)) {
   const perk = getVehiclePerk(id);
-  assert.deepEqual([perk.title, [...perk.vehicleIds], perk.rarity, perk.cloneable, perk.installable],
-    [title, vehicleIds, rarity, cloneable, cloneable], `${title}: its cars, rarity and whether it may be cloned and installed`);
+  assert.deepEqual([perk.title, [...perk.vehicleIds], perk.rarity, perk.installable],
+    [title, vehicleIds, rarity, installable], `${title}: its cars, rarity and whether it may be installed on another car`);
+  assert.equal('cloneable' in perk, false, `${title}: no clone step (#1228)`);
   assert.ok(Object.isFrozen(perk) && Object.isFrozen(perk.vehicleIds));
   for (const vehicleId of vehicleIds) assert.equal(originalVehiclePerk(vehicleId), perk, `${vehicleId} comes with ${title}`);
 }
-assert.equal(VEHICLE_PERKS.filter(({ cloneable }) => cloneable).length, 8, 'Eight perks may be cloned');
+assert.equal(VEHICLE_PERKS.filter(({ installable }) => installable).length, 8, 'Eight perks may be installed on another car');
 for (const car of CAR_CATALOG) {
   assert.equal(car.perk, originalVehiclePerk(car.id), `${car.name}'s perk is its entry in the perk table`);
   // A perk's fixed values are part of its car's tuning, under STANDARD and SHIFT alike.

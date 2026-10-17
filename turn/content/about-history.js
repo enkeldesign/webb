@@ -421,7 +421,7 @@ export const CHANGELOG = Object.freeze([
     "entries": [
       [
         "PERKULATOR",
-        "At 2000 trophies, clone a perk you have unlocked and install it on another car. SPECTATE and YOUR TURN name each lap’s perks. DRIFT DEMON is now standard on the Sports Car."
+        "At 2000 trophies, install any perk you have unlocked on another car. SPECTATE and YOUR TURN name each lap’s perks. DRIFT DEMON is now standard on the Sports Car."
       ]
     ]
   }

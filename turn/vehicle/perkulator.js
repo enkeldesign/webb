@@ -1,14 +1,13 @@
-// PERKULATOR (#1219): the perk a car comes with may be CLONED, and one cloned perk
-// INSTALLED on each car, which races run beside the car's ORIGINAL perk
-// (perk-runtime.js). A clone is a lasting entitlement to the perk, not a copy with a
-// state of its own: cloned once, any other car may install it. Which perks may be
-// cloned and installed is perks.js's to say, never their rarity.
+// PERKULATOR (#1219): one perk INSTALLED on each car, which races run beside the car's
+// ORIGINAL perk (perk-runtime.js). PERKULATOR holds every perk you have unlocked that may
+// leave its car (#1228): there is nothing to collect first. Which perks may move is
+// perks.js's to say, never their rarity.
 //
 // Stored in the page's own localStorage, never the storage TURN shares with YOUR TURN,
 // so a challenger in YOUR TURN races without the installed perks of a TURN player on
 // the same device.
 import { CAR_CATALOG } from './catalog.js';
-import { getVehiclePerk, originalVehiclePerk } from './perks.js';
+import { VEHICLE_PERKS, getVehiclePerk, originalVehiclePerk } from './perks.js';
 import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked,
@@ -39,26 +38,25 @@ function parse(raw) {
   }
 }
 
-// An installed perk is a cloned one, and never the car's own: no perk runs twice.
-function mayInstall(vehicleId, perkId, cloned) {
+// A perk a car may install: one that may leave its own car, and never the car's own, so
+// no perk runs twice.
+function mayInstall(vehicleId, perkId) {
   const perk = getVehiclePerk(perkId);
   return CAR_IDS.has(vehicleId)
     && perk?.installable === true
-    && cloned.includes(perk.id)
     && perk.id !== originalVehiclePerk(vehicleId)?.id;
 }
 
+// Only the installed perks are kept. A list of clones saved before #1228 is let go:
+// PERKULATOR now holds every unlocked perk without one.
 export function normalizePerkulatorState(value) {
   const parsed = parse(value);
-  const cloned = [...new Set((Array.isArray(parsed?.cloned) ? parsed.cloned : [])
-    .filter((perkId) => getVehiclePerk(perkId)?.cloneable === true))];
   const installed = {};
   for (const [vehicleId, perkId] of Object.entries(parsed?.installed || {})) {
-    if (mayInstall(vehicleId, perkId, cloned)) installed[vehicleId] = perkId;
+    if (mayInstall(vehicleId, perkId)) installed[vehicleId] = perkId;
   }
   return Object.freeze({
     version: PERKULATOR_STORAGE_VERSION,
-    cloned: Object.freeze(cloned),
     installed: Object.freeze(installed)
   });
 }
@@ -90,52 +88,35 @@ export function isPerkulatorUnlocked(storage) {
   return isFeatureUnlocked(PERKULATOR_FEATURE_ID, storageFor(storage));
 }
 
-// A car's own perk, when it may be cloned: from a car you have, once its perk is
-// unlocked. LEGENDARY perks stay with their car.
-export function cloneablePerkFor(vehicleId, storage) {
+// Whether PERKULATOR holds a perk: one that may leave its car, once one of its cars and
+// the perk are unlocked on Trophy Road. LEGENDARY perks stay with their car.
+export function isPerkAvailable(perkId, storage) {
   const target = storageFor(storage);
-  const perk = originalVehiclePerk(vehicleId);
-  if (perk?.cloneable !== true || !isPerkulatorUnlocked(target)) return null;
-  if (!isVehicleUnlocked(vehicleId, target) || !isVehiclePerkUnlocked(vehicleId, target)) return null;
-  return perk;
+  const perk = getVehiclePerk(perkId);
+  return perk?.installable === true
+    && isPerkulatorUnlocked(target)
+    && perk.vehicleIds.some((vehicleId) => isVehicleUnlocked(vehicleId, target)
+      && isVehiclePerkUnlocked(vehicleId, target));
 }
 
-export function isPerkCloned(perkId, storage) {
-  return readPerkulatorState(storage).cloned.includes(perkId);
-}
-
-export function clonePerk(vehicleId, storage) {
-  const target = storageFor(storage);
-  const perk = cloneablePerkFor(vehicleId, target);
-  const state = readPerkulatorState(target);
-  if (!perk || state.cloned.includes(perk.id)) return false;
-  return writePerkulatorState(
-    { ...state, cloned: [...state.cloned, perk.id] },
-    { action: 'clone', vehicleId, perkId: perk.id },
-    target
-  );
-}
-
-// The cloned perks a car may install: every one but its own.
+// The perks a car may install: every one PERKULATOR holds but its own.
 export function installablePerksFor(vehicleId, storage) {
   const target = storageFor(storage);
-  if (!isPerkulatorUnlocked(target)) return [];
-  const { cloned } = readPerkulatorState(target);
-  return cloned.filter((perkId) => mayInstall(vehicleId, perkId, cloned)).map(getVehiclePerk);
+  return VEHICLE_PERKS.filter((perk) => mayInstall(vehicleId, perk.id) && isPerkAvailable(perk.id, target));
 }
 
-// The perk a car runs beside its own. Without PERKULATOR, none.
+// The perk a car runs beside its own, while PERKULATOR holds it. Without PERKULATOR, none.
 export function installedPerkFor(vehicleId, storage) {
   const target = storageFor(storage);
-  if (!isPerkulatorUnlocked(target)) return '';
-  return readPerkulatorState(target).installed[vehicleId] || '';
+  const perkId = readPerkulatorState(target).installed[vehicleId] || '';
+  return perkId && isPerkAvailable(perkId, target) ? perkId : '';
 }
 
 // Installing replaces the car's installed perk, never its own.
 export function installPerk(vehicleId, perkId, storage) {
   const target = storageFor(storage);
   const state = readPerkulatorState(target);
-  if (!isPerkulatorUnlocked(target) || !mayInstall(vehicleId, perkId, state.cloned)) return false;
+  if (!mayInstall(vehicleId, perkId) || !isPerkAvailable(perkId, target)) return false;
   if (state.installed[vehicleId] === perkId) return false;
   return writePerkulatorState(
     { ...state, installed: { ...state.installed, [vehicleId]: perkId } },

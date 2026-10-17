@@ -763,7 +763,7 @@ html[data-theme="dark"] .garage-bar {
   font-size: var(--turn-pr-type-spec);
 }
 
-/* ---------- PERKULATOR (#1219): the original perk, CLONE PERK, the installed perk ---------- */
+/* ---------- PERKULATOR (#1219): the original perk and the installed perk ---------- */
 
 /* The closed disclosure names the installed perk on a row of its own, under the
    car's own perk, so the row keeps its check and chevron beside the car's perk. */
@@ -810,16 +810,11 @@ html[data-theme="dark"] .garage-bar {
   margin-top: 12px;
 }
 
-.garage-perk-clone,
 .garage-perk-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
-}
-
-.garage-perk-clone:empty {
-  display: none;
 }
 
 .garage-perk-note {
@@ -850,7 +845,7 @@ html[data-theme="dark"] .garage-bar {
   overflow-wrap: anywhere;
 }
 
-/* INSTALL CLONED PERK: one button per cloned perk this car may run. */
+/* INSTALL PERK: one button per perk PERKULATOR holds that this car may run. */
 .garage-install-perk-lead {
   margin: 0;
   font-size: var(--turn-pr-type-body);

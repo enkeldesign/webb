@@ -213,7 +213,7 @@ function installMusicStylesheet() {
   const link = document.createElement('link');
   link.id = 'turn-racing-music-stylesheet';
   link.rel = 'stylesheet';
-  link.href = '/turn/audio/music/music-controls.css?build=20261017-r467';
+  link.href = '/turn/audio/music/music-controls.css?build=20261017-r468';
   document.head.appendChild(link);
 }
 

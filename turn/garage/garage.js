@@ -362,7 +362,7 @@ export function showGarage({
     const perkTitle = $('.garage-perk-title');
     const perkState = $('.garage-perk-state');
     const perkCopy = $('.garage-perk-copy');
-    // PERKULATOR (#1219): the original perk's rarity, CLONE PERK and the installed perk.
+    // PERKULATOR (#1219): the original perk's rarity and the installed perk.
     const perkulator = createGaragePerkulator({
       documentRef,
       panel: perkPanel,
