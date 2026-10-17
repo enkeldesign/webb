@@ -270,5 +270,7 @@ assert.match(sessionSource, /const perks = lapPerksLabel\(racer\.perks\);[\s\S]*
   'The challenge summary names each racer\'s perks');
 assert.match(sessionSource, /\.\.\.\(racer\.perks \? \{ setup: \{ version: REPLAY_SETUP_VERSION, build: \{ perks: \{ \.\.\.racer\.perks \} \} \} \} : \{\}\)/,
   'SPECTATE names the perks of the racer it follows');
+assert.match(sessionSource, /const setup = lapReplaySetup\(runtime\.state\);\s*const candidate = \{[\s\S]*?\.\.\.\(setup \? \{ setup \} : \{\}\)\s*\};\s*queueMicrotask\(\(\) => finishAttempt\(candidate\)\)/,
+  'A racer who passes the challenge on keeps the perks their own lap ran');
 
 console.log('YOUR TURN growing four-car social challenge, named racers, share CTA and compatibility regression passed.');

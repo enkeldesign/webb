@@ -6,7 +6,7 @@ import { getTrackDefinition } from '/turn/tracks/catalog.js?source=20260729-r118
 import { getTrackStorageRevision } from '/turn/tracks/definitions.js';
 import { getCarDefinition } from '/turn/vehicle/catalog.js?build=20260720-r19';
 import { lapPerksLabel } from '/turn/vehicle/perk-presentation.js';
-import { REPLAY_SETUP_VERSION } from '/turn/race/replay-inputs.js';
+import { REPLAY_SETUP_VERSION, lapReplaySetup } from '/turn/race/replay-inputs.js';
 import {
   challengeLeader,
   challengeSender,
@@ -318,13 +318,17 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     const time = Number(event.detail?.time);
     const recording = runtime.state.recording;
     if (!Number.isFinite(time) || !Array.isArray(recording) || recording.length < 21) return;
+    // The setup the lap began with names the perks it ran (#1219), so each racer's own
+    // perks travel with the challenge they pass on.
+    const setup = lapReplaySetup(runtime.state);
     const candidate = {
       time,
       hitAt: Date.now(),
       carId: state.challenge.carId,
       carColor: state.challenge.carColor,
       carSecondaryColor: state.challenge.carSecondaryColor,
-      frames: recording.map((frame) => ({ ...frame }))
+      frames: recording.map((frame) => ({ ...frame })),
+      ...(setup ? { setup } : {})
     };
     queueMicrotask(() => finishAttempt(candidate));
   }
