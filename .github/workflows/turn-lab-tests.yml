@@ -197,8 +197,11 @@ jobs:
       - name: Run Trophy Road vehicle perk regression
         run: node turn-lab/tests/vehicle-perks-production.mjs
 
-      - name: Run PERKULATOR clone and install regression
+      - name: Run PERKULATOR install regression
         run: node turn-tests/perkulator-production.mjs
+
+      - name: Run corner mark regression (#1230)
+        run: node turn-tests/corner-mark-production.mjs
 
       - name: Run vehicle stat legend regression
         run: node turn-lab/tests/stat-legend-production.mjs

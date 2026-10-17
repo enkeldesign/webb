@@ -421,6 +421,7 @@ html[data-theme="dark"] .garage-bar {
 }
 
 .garage-paint {
+  position: relative;
   display: grid;
   gap: 12px;
   padding: 14px;
@@ -431,6 +432,19 @@ html[data-theme="dark"] .garage-bar {
 
 .garage-paint[hidden] {
   display: none;
+}
+
+/* PAINTJOB's corner mark (#1230), in the panel's corner as the Track sheet's track is
+   in its frame: the swatches and notes keep clear of it. */
+.garage-paint > .turn-corner-mark {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  margin: 0;
+}
+
+.garage-paint > :not(.turn-corner-mark, .garage-paint-save) {
+  padding-right: calc(2.5rem + 12px);
 }
 
 .garage-swatches {

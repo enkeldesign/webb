@@ -43,6 +43,7 @@ import {
   rewardForVehiclePerk,
   showTrophyUnlockNotice
 } from '../progression/trophy-road.js';
+import { cornerMarkMarkup } from '../ui/corner-mark.js';
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
 import { getSavedCarPaint, carPaintMatches, resetCarPaint, resolveCarPaint, saveCarPaint } from './saved-car-paint.js';
@@ -650,6 +651,7 @@ export function showGarage({
         paintPanel.append(swatches, action);
         syncPaintAction();
       }
+      paintPanel.insertAdjacentHTML('afterbegin', cornerMarkMarkup('paint'));
       paintToggle.textContent = car.fixedLivery ? 'LIVERY' : 'PAINT';
       paintToggle.classList.toggle('is-locked', !car.fixedLivery && !isPaintUnlocked());
       paintPanel.hidden = !disclosureState.paint;

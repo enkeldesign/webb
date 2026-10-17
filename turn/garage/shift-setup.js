@@ -5,6 +5,7 @@ import {
   rewardForFeature,
   showTrophyUnlockNotice
 } from '../progression/trophy-road.js';
+import { cornerMarkMarkup } from '../ui/corner-mark.js';
 import {
   VEHICLE_SHIFT_FEATURE_ID,
   VEHICLE_SHIFT_STAT_FIELDS,
@@ -74,7 +75,10 @@ export function createShiftSetup({
         <div><span>ALTERNATE SETUP</span><h2 id="${titleId}">SHIFT</h2></div>
         <button type="button" class="garage-shift-close" aria-label="Close SHIFT setup">×</button>
       </header>
-      <p id="${descriptionId}" class="garage-shift-description">Move three attribute levers up by 1. The other three move down by 1 automatically. Attributes at 1 must move up; attributes at 5 must move down. During a race, slide from GAS into SHIFT to switch on or off.</p>
+      <div class="garage-shift-intro">
+        ${cornerMarkMarkup('shift')}
+        <p id="${descriptionId}" class="garage-shift-description">Move three attribute levers up by 1. The other three move down by 1 automatically. Attributes at 1 must move up; attributes at 5 must move down. During a race, slide from GAS into SHIFT to switch on or off.</p>
+      </div>
       <div class="garage-shift-options" role="group" aria-label="SHIFT attribute gearbox. Choose three attributes to gain one point."></div>
       <p class="garage-shift-status" role="status" aria-live="polite"></p>
       <div class="garage-shift-actions">
