@@ -250,7 +250,7 @@ assert.equal(getCarDefinition('truck').perk?.title, 'TORQUE');
 assert.equal(getCarDefinition('truck').perk?.rewardId, undefined, 'TORQUE has no Trophy Road gate');
 assert.equal(getCarDefinition('truck').perk?.threshold, undefined);
 assert.equal(getCarDefinition('truck').perk?.description,
-  'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.');
+  'OVERCHARGE builds BOOST TANK to 5/5 and has a stronger KICK.');
 
 const emergencyPerk = getProductionTrophyRoadReward('emergency-pack');
 assert.equal(emergencyPerk?.perkTitle, 'SIRENS');

@@ -363,26 +363,39 @@ const truck = CAR_CATALOG.find((car) => car.id === 'truck');
 assert.ok(truck, 'Truck must remain in the vehicle catalog');
 assert.equal(truck.defaultColor, '#b93632', 'Truck factory paint must be the former Race Car red');
 assert.equal(truck.perk?.description,
-  'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.');
-assert.equal(truck.tuning.overchargeAccelerationMultiplier, 1.24,
-  'TORQUE must use the same beyond-5/5 ACCELERATION target as APEX GRIP');
+  'OVERCHARGE builds BOOST TANK to 5/5 and has a stronger KICK.');
+// TORQUE's KICK (#1232): BOOST spending OVERCHARGE pushes ×1.4 instead of every car's ×1.2,
+// on whichever car runs TORQUE. It no longer lifts ACCELERATION: that is APEX GRIP's.
+assert.equal(truck.tuning.overchargeBoostPowerMultiplier, 1.4,
+  'TORQUE doubles OVERCHARGE\'s extra BOOST thrust');
+assert.equal(truck.tuning.overchargeAccelerationMultiplier, undefined, 'TORQUE has no ACCELERATION target');
+const kick = (perkIds, overrides = {}) => resolveOverchargedBoostPowerMultiplier({
+  boostActive: true,
+  overcharge: 0.001,
+  perkIds,
+  overchargeBoostPowerMultiplier: truck.tuning.overchargeBoostPowerMultiplier,
+  ...overrides
+});
+assert.equal(kick(['torque']), 1.4, 'TORQUE: the stronger KICK on any live OVERCHARGE');
+assert.equal(kick(['clean-exit', 'torque']), 1.4, 'TORQUE installed on another car brings its KICK');
+assert.equal(kick([]), OVERCHARGE_BOOST_POWER_MULTIPLIER, 'Locked TORQUE keeps the ordinary KICK');
+assert.equal(kick(['torque'], { overcharge: 0 }), 1, 'No OVERCHARGE, no KICK');
+assert.equal(kick(['torque'], { boostActive: false }), 1, 'Stored OVERCHARGE pushes only once BOOST is active');
+for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'truck')) {
+  assert.equal(resolveOverchargedBoostPowerMultiplier({
+    boostActive: true,
+    overcharge: 1,
+    perkIds: [car.perk?.id].filter(Boolean),
+    overchargeBoostPowerMultiplier: car.tuning.overchargeBoostPowerMultiplier
+  }), OVERCHARGE_BOOST_POWER_MULTIPLIER, `${car.name} keeps the ordinary OVERCHARGE KICK`);
+}
 assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
-  vehicleId: truck.id,
-  perkUnlocked: false,
+  perkIds: ['torque'],
   accelerationMultiplier: truck.tuning.accelerationMultiplier,
-  overchargeAccelerationMultiplier: truck.tuning.overchargeAccelerationMultiplier,
+  overchargeAccelerationMultiplier: 1.24,
   overcharge: 1
-}), truck.tuning.accelerationMultiplier,
-  'Locked TORQUE must not change ACCELERATION');
-assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
-  vehicleId: truck.id,
-  perkUnlocked: true,
-  accelerationMultiplier: truck.tuning.accelerationMultiplier,
-  overchargeAccelerationMultiplier: truck.tuning.overchargeAccelerationMultiplier,
-  overcharge: 0.001
-}), 1.24,
-  'Unlocked TORQUE must immediately apply the APEX-style ACCELERATION buff on any live OVERCHARGE');
-for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race' && candidate.id !== 'truck')) {
+}), truck.tuning.accelerationMultiplier, 'TORQUE no longer lifts ACCELERATION in OVERCHARGE');
+for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race')) {
   assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
     vehicleId: car.id,
     perkUnlocked: true,
@@ -391,8 +404,8 @@ for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race' && c
     overcharge: 1
   }), car.tuning.accelerationMultiplier, `${car.name} must not inherit the OVERCHARGE ACCELERATION perk`);
 }
-assert.match(physicsSource, /state\.torqueActive = perkIds\.includes\('torque'\)/,
-  'Physics must expose whether unlocked TORQUE is actively receiving its OVERCHARGE ACCELERATION buff');
+assert.match(physicsSource, /overchargeBoostPowerMultiplier: tuning\?\.overchargeBoostPowerMultiplier\n  \}\);\n  state\.torqueActive = overchargedBoostPowerMultiplier > OVERCHARGE_BOOST_POWER_MULTIPLIER;/,
+  'Physics must feed TORQUE\'s KICK from the car\'s tuning and expose when it pushes');
 
 assert.match(
   showcaseSource,

@@ -38,13 +38,20 @@ export const OVERDRIVE_BUILD_SECONDS = 5;
 export const OVERDRIVE_SPEED_GAIN_PER_BUILD = 0.05;
 export const OVERCHARGE_BOOST_POWER_MULTIPLIER = 1.2;
 
+// OVERCHARGE's KICK: BOOST pushes harder while it spends OVERCHARGE. TORQUE, on whichever
+// car runs it, makes the kick stronger (#1232).
 export function resolveOverchargedBoostPowerMultiplier({
   boostActive = false,
-  overcharge = 0
+  overcharge = 0,
+  perkIds = [],
+  overchargeBoostPowerMultiplier = OVERCHARGE_BOOST_POWER_MULTIPLIER
 } = {}) {
-  return boostActive === true && nonNegativeNumber(overcharge, 0) > 0
-    ? OVERCHARGE_BOOST_POWER_MULTIPLIER
-    : 1;
+  if (boostActive !== true || nonNegativeNumber(overcharge, 0) <= 0) return 1;
+  if (!perkIds.includes('torque')) return OVERCHARGE_BOOST_POWER_MULTIPLIER;
+  return Math.max(
+    OVERCHARGE_BOOST_POWER_MULTIPLIER,
+    positiveNumber(overchargeBoostPowerMultiplier, OVERCHARGE_BOOST_POWER_MULTIPLIER)
+  );
 }
 
 export function vehicleIgnoresOffRoadPenalty(vehicleId) {
@@ -108,7 +115,7 @@ export function resolveOverchargedControlMultiplier({
   );
 }
 
-// APEX GRIP and TORQUE, on whichever car runs them, lift ACCELERATION in OVERCHARGE.
+// APEX GRIP, on whichever car runs it, lifts ACCELERATION in OVERCHARGE.
 export function resolveVehicleOverchargedAccelerationMultiplier({
   vehicleId = '',
   perkUnlocked = false,
@@ -118,8 +125,7 @@ export function resolveVehicleOverchargedAccelerationMultiplier({
   overcharge = 0
 } = {}) {
   const baseAccelerationMultiplier = positiveNumber(accelerationMultiplier, 1);
-  const ownsOverchargeAcceleration = perkIds.includes('apex-grip') || perkIds.includes('torque');
-  if (!ownsOverchargeAcceleration || nonNegativeNumber(overcharge, 0) <= 0) {
+  if (!perkIds.includes('apex-grip') || nonNegativeNumber(overcharge, 0) <= 0) {
     return baseAccelerationMultiplier;
   }
   return Math.max(
@@ -267,8 +273,6 @@ function updateVehiclePhysicsStateCore({
   state.apexGripActive = perkIds.includes('apex-grip')
     && (controlMultiplier > baseControlMultiplier
       || accelerationMultiplier > baseAccelerationMultiplier);
-  state.torqueActive = perkIds.includes('torque')
-    && accelerationMultiplier > baseAccelerationMultiplier;
   const driftEngineMultiplier = positiveNumber(tuning?.driftEngineMultiplier, 0.86);
   const driftDragAdd = nonNegativeNumber(tuning?.driftDragAdd, 0.1);
   const driftSpeedMultiplier = clamp(positiveNumber(tuning?.driftSpeedMultiplier, 0.84), 0.5, 0.99);
@@ -335,8 +339,11 @@ function updateVehiclePhysicsStateCore({
     (driftHeld ? driftEngineMultiplier : 1);
   const overchargedBoostPowerMultiplier = resolveOverchargedBoostPowerMultiplier({
     boostActive: effectiveBoostActive,
-    overcharge: boostOvercharge
+    overcharge: boostOvercharge,
+    perkIds,
+    overchargeBoostPowerMultiplier: tuning?.overchargeBoostPowerMultiplier
   });
+  state.torqueActive = overchargedBoostPowerMultiplier > OVERCHARGE_BOOST_POWER_MULTIPLIER;
   const boostPower = effectiveBoostActive
     ? lerp(36, 16, offRoadPenalty)
       * tuningBoostPowerMultiplier

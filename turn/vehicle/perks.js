@@ -126,8 +126,10 @@ export const VEHICLE_PERKS = Object.freeze([
     vehicleIds: ['truck'],
     rarity: PERK_RARITY.EPIC,
     installable: true,
-    description: 'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.',
-    tuning: { overchargeAccelerationMultiplier: 1.24 }
+    description: 'OVERCHARGE builds BOOST TANK to 5/5 and has a stronger KICK.',
+    // The KICK: BOOST's thrust while spending OVERCHARGE (vehicle/physics.js), stronger
+    // than every car's own (#1232).
+    tuning: { overchargeBoostPowerMultiplier: 1.4 }
   }),
   definePerk({
     id: 'graduated',

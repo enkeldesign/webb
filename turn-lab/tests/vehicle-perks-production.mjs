@@ -77,7 +77,7 @@ assert.ok(awd && truck && van && suv && sportsCar && learner,
 assert.equal(awd.perk?.title, 'TRACTION');
 assert.equal(truck.perk?.title, 'TORQUE');
 assert.equal(truck.perk?.description,
-  'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.');
+  'OVERCHARGE builds BOOST TANK to 5/5 and has a stronger KICK.');
 assert.equal(van.perk?.title, 'CARRY ON');
 
 // TRACTION is a partial shoulder-depth curve, never an OVERSIZED-style exemption.
@@ -137,9 +137,9 @@ const partialLimit = getVehicleSpeedLimit({
 assert.ok(Math.abs(partialLimit - (100 + (73 - 100) * shallowPenalty)) < 1e-12,
   'The AWD shoulder factor must blend the real speed ceiling rather than toggle a cosmetic state');
 
-// TORQUE is activated by OVERCHARGE, not sustained GAS. OVERCHARGE immediately
-// unlocks the acceleration perk in physics while runtime progress grows only the
-// normalized BOOST TANK capacity toward 5/5 from the active STANDARD/SHIFT base.
+// TORQUE is activated by OVERCHARGE, not sustained GAS. OVERCHARGE builds the
+// normalized BOOST TANK capacity toward 5/5 from the active STANDARD/SHIFT base, and
+// its KICK is stronger in physics (vehicle-drift-production.mjs, #1232).
 const lockedTruck = perkState(truck.id, false, truck.tuning);
 lockedTruck.vehiclePerkProgress = 1;
 advanceVehiclePerkRuntimeState({ state: lockedTruck, dt: 0.1, overcharge: 0.4 });
