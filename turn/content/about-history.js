@@ -422,6 +422,10 @@ export const CHANGELOG = Object.freeze([
       [
         "PERKULATOR",
         "At 2000 trophies, install any perk you have unlocked on another car. SPECTATE and YOUR TURN name each lap’s perks. DRIFT DEMON is now standard on the Sports Car."
+      ],
+      [
+        "TURN WIKI",
+        "Visual player guide."
       ]
     ]
   }

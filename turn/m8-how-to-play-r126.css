@@ -421,3 +421,31 @@
     padding: 7.5px 9px;
   }
 }
+.m8-wiki-link {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--turn-space-4);
+  margin: var(--turn-space-8) 0 0;
+  color: var(--turn-text-muted);
+  font-size: var(--turn-type-small);
+}
+
+.m8-wiki-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--turn-space-2);
+  min-height: var(--turn-target-min);
+  padding: var(--turn-space-3) var(--turn-space-4);
+  color: var(--turn-text);
+  background: var(--turn-action-utility);
+  border: var(--turn-border-control) solid var(--turn-outline);
+  border-radius: var(--turn-radius-control);
+  box-shadow: var(--turn-shadow-control), var(--turn-shadow-frame-inner);
+  font-weight: var(--turn-weight-label);
+}
+
+.m8-wiki-link a:focus-visible {
+  outline: var(--turn-border-default) solid var(--turn-form-control-focus);
+  outline-offset: 4px;
+}

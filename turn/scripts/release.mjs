@@ -827,6 +827,11 @@ export async function checkReleaseFiles({ write = false } = {}) {
         `${entry.list} does not list the files ${entry.entry} loads. Run: node turn/scripts/release.mjs --write`);
     }
   }
+  // Player reference pages are a release output, keeping their catalog facts and
+  // shared asset URLs synchronized without loading the race in a wiki browser.
+  const { buildWiki } = await import('./build-wiki.mjs');
+  const wiki = await buildWiki({ write });
+  changed = wiki.changed || changed;
   return { release, changed };
 }
 
