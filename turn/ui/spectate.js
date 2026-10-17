@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { GAME_MODE } from '../race/game-state.js';
 import { replayFrameAt } from '../race/replay-system.js';
+import { readableReplaySetup } from '../race/replay-inputs.js';
 import { trackPitch, trackSampleAtProgress, trackSurfaceY } from '../tracks/elevation.js?build=20260811-r164';
 import { createSpectateControls } from './spectate-controls.js';
+import { lapPerksLabel } from '../vehicle/perk-presentation.js';
 
 const spectate = {
   active: false,
@@ -147,7 +149,9 @@ function installPublicApi(runtime) {
       rank: lap ? spectate.index + 1 : null,
       total: state.competitorLaps.length,
       name: spectateDateLabel(lap, state.competitorLaps),
-      record: lap ? formatTime(lap.time) : ''
+      record: lap ? formatTime(lap.time) : '',
+      // The perks the lap ran (#1219), as it kept them; none for laps from before.
+      perks: lap ? lapPerksLabel(readableReplaySetup(lap).build.perks) : ''
     };
   };
 
@@ -229,13 +233,14 @@ function installUi(runtime) {
   bar.hidden = true;
   bar.innerHTML = `
     <button class="spectate-close" type="button" aria-label="Stop spectating">×</button>
-    <div class="spectate-following"><strong><span class="spectate-rank"></span><span class="spectate-name"></span></strong><b></b></div>
+    <div class="spectate-following"><strong><span class="spectate-rank"></span><span class="spectate-name"></span></strong><b></b><small class="spectate-perks" hidden></small></div>
     <button class="spectate-next" type="button">NEXT &gt;</button>`;
   document.body.appendChild(bar);
 
   const rankEl = bar.querySelector('.spectate-rank');
   const nameEl = bar.querySelector('.spectate-name');
   const recordEl = bar.querySelector('b');
+  const perksEl = bar.querySelector('.spectate-perks');
   const closeButton = bar.querySelector('.spectate-close');
   const nextButton = bar.querySelector('.spectate-next');
 
@@ -258,6 +263,8 @@ function installUi(runtime) {
       rankEl.textContent = current.rank ? `${current.rank}.` : '';
       nameEl.textContent = current.name || 'Ghost';
       recordEl.textContent = current.record || '';
+      perksEl.hidden = !current.perks;
+      perksEl.textContent = current.perks ? `${current.perks.includes(' + ') ? 'PERKS' : 'PERK'} · ${current.perks}` : '';
       nextButton.hidden = current.total < 2;
     }
   }

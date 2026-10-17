@@ -1,3 +1,5 @@
+import { getVehiclePerk } from './perks.js';
+
 // OVERDRIVE deliberately has no top-end ceiling; player-facing copy describes the fast, clean-driving requirement without exposing tuning numbers.
 export const FUTURE_RACER_REWARD_PERK_DESCRIPTION =
   'The longer you drive fast and clean, the higher the speed cap becomes. Leaving the track or colliding resets it.';
@@ -42,4 +44,14 @@ export function vehiclePerkPresentation(vehicleId, perk) {
     });
   }
   return perk;
+}
+
+// The perks a lap ran (#1219), as SPECTATE and SHARE name them: its car's own, then the
+// one installed beside it. "Torque + Driftage"; empty when it ran none.
+export function lapPerksLabel(perks) {
+  return [perks?.original, perks?.installed]
+    .map((id) => getVehiclePerk(id)?.title)
+    .filter(Boolean)
+    .map((title) => title.toLocaleLowerCase('en').replace(/(^|\s)\p{L}/gu, (letter) => letter.toLocaleUpperCase('en')))
+    .join(' + ');
 }

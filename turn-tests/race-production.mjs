@@ -554,6 +554,12 @@ test('a lap keeps the setup it began with: how it was steered, the pad\'s side a
     'A car that cannot SHIFT has no SHIFT in its build');
   assert.deepEqual(replaySetup({ steering: 'gyro', hand: 'up', shift: { reducedStats: ['speed', 7], amount: 'x' } }),
     { version: 1, controls: { steering: 'screen', hand: 'right' }, build: { shift: { reducedStats: ['speed'], amount: 1 } } });
+  // #1219: the perks running as the lap began, its car's own and the installed one.
+  assert.deepEqual(replaySetup({ perks: { original: 'torque', installed: 'driftage' } }).build,
+    { perks: { original: 'torque', installed: 'driftage' } });
+  assert.deepEqual(replaySetup({ perks: { original: '', installed: 'driftage' } }).build, { perks: { installed: 'driftage' } },
+    'A car whose own perk is still locked ran only the installed one');
+  assert.deepEqual(replaySetup({ perks: { original: 'no-such-perk', installed: '' } }).build, {}, 'Only perks TURN knows');
 });
 
 test('a completed lap carries its input track to its rival, and each lap records its own', () => {
@@ -603,19 +609,25 @@ test('SPECTATE reads the controls held at any moment, and trusts only a sound tr
 });
 
 test('SPECTATE reads any lap\'s setup: a missing part reads as the default, an unknown one is left alone', () => {
-  const none = { controls: { steering: 'screen', hand: 'right' }, build: { shift: null } };
+  const none = { controls: { steering: 'screen', hand: 'right' }, build: { shift: null, perks: null } };
   assert.deepEqual(readableReplaySetup({}), none, 'A lap from before setups');
   assert.deepEqual(readableReplaySetup(null), none);
   const shift = { reducedStats: ['speed', 'drift', 'boostDuration'], amount: 1 };
   assert.deepEqual(readableReplaySetup({ setup: replaySetup({ steering: 'tilt', hand: 'left', shift }) }),
-    { controls: { steering: 'tilt', hand: 'left' }, build: { shift } });
+    { controls: { steering: 'tilt', hand: 'left' }, build: { shift, perks: null } });
   assert.deepEqual(readableReplaySetup({ setup: replaySetup({ hand: 'left' }) }),
-    { controls: { steering: 'screen', hand: 'left' }, build: { shift: null } }, 'A car that could not SHIFT');
+    { controls: { steering: 'screen', hand: 'left' }, build: { shift: null, perks: null } }, 'A car that could not SHIFT');
+  // #1219: the perks the lap ran, as it kept them; an id this release does not know is none.
+  assert.deepEqual(readableReplaySetup({ setup: replaySetup({ perks: { original: 'torque', installed: 'driftage' } }) }).build.perks,
+    { original: 'torque', installed: 'driftage' });
+  assert.deepEqual(readableReplaySetup({ setup: { version: 1, build: { perks: { installed: 'full-tank' } } } }).build.perks,
+    { original: '', installed: 'full-tank' });
+  assert.equal(readableReplaySetup({ setup: { version: 1, build: { perks: { original: 'warp-drive' } } } }).build.perks, null);
   // A later release adds to the build (#1219: the perks a lap was driven with) or to the
   // controls without a new version; this one reads what it knows.
   assert.deepEqual(readableReplaySetup({ setup: { version: 1, controls: { steering: 'tilt', sensitivity: 2 },
     build: { shift, perk: { original: 'clean-drift', installed: 'clean-drift' } }, track: 'beachfront' } }),
-  { controls: { steering: 'tilt', hand: 'right' }, build: { shift } });
+  { controls: { steering: 'tilt', hand: 'right' }, build: { shift, perks: null } });
   for (const setup of ['tilt', 7, { controls: { steering: 'tilt' } }, { version: 2, controls: { steering: 'tilt' } },
     { version: 1, controls: 'tilt', build: 'shift' }, { version: 1, build: { shift: { reducedStats: 'speed' } } }]) {
     assert.deepEqual(readableReplaySetup({ setup }), none, `${JSON.stringify(setup)} reads as the defaults`);

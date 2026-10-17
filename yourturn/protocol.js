@@ -1,3 +1,6 @@
+import { readableReplaySetup } from '../turn/race/replay-inputs.js';
+import { getVehiclePerk } from '../turn/vehicle/perks.js';
+
 const CHALLENGE_SCHEMA_VERSION = 2;
 const LEGACY_SCHEMA_VERSION = 1;
 const WIRE_VERSION = 2;
@@ -262,8 +265,17 @@ function racerFromLap({ racerId, racerName, challengeOrder = 1, lap }) {
     name: racerName,
     time,
     order: challengeOrder,
-    frames
+    frames,
+    perks: readableReplaySetup(lap).build.perks
   }, 0);
+}
+
+// The perks a racer's lap ran (#1219), as the lap kept them: ids TURN knows, or none.
+// Each racer has their own: the car is the challenge's, the perks are the run's.
+function racerPerks(value) {
+  const original = getVehiclePerk(value?.original) ? value.original : '';
+  const installed = getVehiclePerk(value?.installed) ? value.installed : '';
+  return original || installed ? Object.freeze({ original, installed }) : null;
 }
 
 function normalizeRacer(value, index) {
@@ -274,7 +286,8 @@ function normalizeRacer(value, index) {
   const name = normalizeChallengeName(source.name || source.challengerName);
   const id = normalizeRacerId(source.id || source.racerId, legacyRacerId(name, time, frames, index));
   const order = normalizeRacerOrder(source.order ?? source.challengeOrder, index + 1);
-  return Object.freeze({ id, name, time, order, frames });
+  const perks = racerPerks(source.perks);
+  return Object.freeze({ id, name, time, order, frames, ...(perks ? { perks } : {}) });
 }
 
 function legacyRacerFromChallenge(source) {
@@ -300,12 +313,14 @@ function toWireChallenge(challenge) {
     c: challenge.carId,
     pc: challenge.carColor,
     sc: challenge.carSecondaryColor,
+    // A racer's perks ride last, only when the lap kept them: older readers ignore them.
     rs: challenge.racers.map((racer) => [
       racer.id,
       racer.name,
       quantize(racer.time, TIME_SCALE),
       encodeFrames(racer.frames),
-      racer.order
+      racer.order,
+      ...(racer.perks ? [[racer.perks.original, racer.perks.installed]] : [])
     ]),
     r: challenge.replyTo ? [
       challenge.replyTo.kind === 'win' ? 'w' : 'g',
@@ -323,7 +338,8 @@ function fromWireChallengeV2(wire) {
     name: row?.[1],
     time: integer(row?.[2]) / TIME_SCALE,
     frames: decodeFrames(row?.[3]),
-    order: row?.[4]
+    order: row?.[4],
+    perks: Array.isArray(row?.[5]) ? { original: row[5][0], installed: row[5][1] } : null
   })) : [];
   return {
     v: CHALLENGE_SCHEMA_VERSION,

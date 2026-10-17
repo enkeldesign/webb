@@ -7,10 +7,12 @@
 // each time the mask changes: a few hundred pairs for a whole lap. Steering is already in
 // the trajectory's frames, so it is not repeated here.
 // setup: how the lap was set up as it began, beside the car the lap already names.
-// controls: how it was steered and the side the drive pad was on. build: the car's setup,
-// of which SHIFT is the first part kept. More parts can join either (#1219: perks) under
-// the same version, and a lap without them simply has none; the version changes only
-// when a part already kept changes meaning.
+// controls: how it was steered and the side the drive pad was on. build: the car's setup:
+// its SHIFT profile, and the perks it ran (#1219). More parts can join either under the
+// same version, and a lap without them simply has none; the version changes only when a
+// part already kept changes meaning.
+import { getVehiclePerk } from '../vehicle/perks.js';
+
 export const REPLAY_CONTROL = Object.freeze({
   GAS: 1,
   DRIFT: 2,
@@ -50,10 +52,22 @@ export function recordReplayInputs(state, mask, setup = null) {
   return true;
 }
 
+const perkId = (id) => (getVehiclePerk(id) ? id : '');
+
+// The perks a lap ran, or null when it ran none: the car's own once unlocked, and the
+// perk installed beside it (perk-runtime.js). What ran then, never the car's setup now.
+function lapPerks(perks) {
+  const original = perkId(perks?.original);
+  const installed = perkId(perks?.installed);
+  if (!original && !installed) return null;
+  return { ...(original ? { original } : {}), ...(installed ? { installed } : {}) };
+}
+
 // A lap's setup as the replay keeps it. steering: 'tilt', or 'screen' for on-screen
 // steering and keys. hand: the drive pad's side. shift: the car's SHIFT profile (the
-// stats it reduces and by how much), when it can SHIFT.
-export function replaySetup({ steering = 'screen', hand = 'right', shift = null } = {}) {
+// stats it reduces and by how much), when it can SHIFT. perks: the perks running as the
+// lap began.
+export function replaySetup({ steering = 'screen', hand = 'right', shift = null, perks = null } = {}) {
   const build = {};
   if (Array.isArray(shift?.reducedStats)) {
     build.shift = {
@@ -61,6 +75,8 @@ export function replaySetup({ steering = 'screen', hand = 'right', shift = null 
       amount: Number(shift.amount) || 1
     };
   }
+  const ran = lapPerks(perks);
+  if (ran) build.perks = ran;
   return {
     version: REPLAY_SETUP_VERSION,
     controls: { steering: steering === 'tilt' ? 'tilt' : 'screen', hand: hand === 'left' ? 'left' : 'right' },
@@ -107,13 +123,15 @@ export function readableReplaySetup(lap) {
   const setup = lap?.setup?.version === REPLAY_SETUP_VERSION ? lap.setup : {};
   const controls = setup.controls || {};
   const shift = setup.build?.shift;
+  const perks = lapPerks(setup.build?.perks);
   return {
     controls: {
       steering: controls.steering === 'tilt' ? 'tilt' : 'screen',
       hand: controls.hand === 'left' ? 'left' : 'right'
     },
     build: {
-      shift: Array.isArray(shift?.reducedStats) ? shift : null
+      shift: Array.isArray(shift?.reducedStats) ? shift : null,
+      perks: perks ? { original: perks.original || '', installed: perks.installed || '' } : null
     }
   };
 }

@@ -5,6 +5,8 @@ import { activateTrack } from '/turn/tracks/track-manager.js?source=20260729-r11
 import { getTrackDefinition } from '/turn/tracks/catalog.js?source=20260729-r118-m8';
 import { getTrackStorageRevision } from '/turn/tracks/definitions.js';
 import { getCarDefinition } from '/turn/vehicle/catalog.js?build=20260720-r19';
+import { lapPerksLabel } from '/turn/vehicle/perk-presentation.js';
+import { REPLAY_SETUP_VERSION } from '/turn/race/replay-inputs.js';
 import {
   challengeLeader,
   challengeSender,
@@ -691,7 +693,9 @@ function racerToLap(racer, challenge) {
     carId: challenge.carId,
     carColor: challenge.carColor,
     carSecondaryColor: challenge.carSecondaryColor,
-    frames: racer.frames.map((frame) => ({ ...frame }))
+    frames: racer.frames.map((frame) => ({ ...frame })),
+    // SPECTATE names the perks the racer's lap ran (#1219).
+    ...(racer.perks ? { setup: { version: REPLAY_SETUP_VERSION, build: { perks: { ...racer.perks } } } } : {})
   };
 }
 
@@ -703,13 +707,18 @@ function challengeVehicle(challenge) {
   };
 }
 
+// Each car with its time and, when its lap kept them, the perks it ran (#1219).
 function racerSummaryHtml(challenge) {
   if (!challenge?.racers?.length) return '';
-  return `<div class="yourturn-racer-summary" aria-label="Cars in this challenge">${challenge.racers.map((racer, index) => `
+  return `<div class="yourturn-racer-summary" aria-label="Cars in this challenge">${challenge.racers.map((racer, index) => {
+    const perks = lapPerksLabel(racer.perks);
+    return `
     <span${index === 0 ? ' data-leader="true"' : ''}>
       <b>${escapeHtml(racer.name)}</b>
-      <small>${formatChallengeTime(racer.time)}</small>
-    </span>`).join('')}</div>`;
+      <small>${formatChallengeTime(racer.time)}</small>${perks ? `
+      <small class="yourturn-racer-perks"><span class="visually-hidden">Perks </span>${escapeHtml(perks)}</small>` : ''}
+    </span>`;
+  }).join('')}</div>`;
 }
 
 function joinRacerNames(racers) {

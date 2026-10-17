@@ -85,4 +85,16 @@ assert.match(controlsSource, /root\.setAttribute\('aria-hidden', 'true'\);/, 'A 
 assert.doesNotMatch(controlsSource, /__turn(AnalogGas|DriftHeld|BoostActive|DriveControlMask|DriveSetup)|\.touch(Gas|Brake|Reverse)|manualSteering/,
   'It never touches the live controls');
 
+// #1219: the bar names the perks the followed lap ran, from the lap's own setup, never
+// the car's GARAGE setup now. Laps from before perks were kept name none.
+assert.match(spectateSource, /perks: lap \? lapPerksLabel\(readableReplaySetup\(lap\)\.build\.perks\) : ''/);
+assert.match(spectateSource, /<small class="spectate-perks" hidden><\/small>/);
+assert.match(spectateSource, /perksEl\.hidden = !current\.perks;/);
+assert.match(spectateCss, /\.spectate-perks \{[^}]*text-overflow: ellipsis;[^}]*white-space: nowrap;/);
+const { lapPerksLabel } = await import('../turn/vehicle/perk-presentation.js');
+assert.equal(lapPerksLabel({ original: 'torque', installed: 'driftage' }), 'Torque + Driftage', 'Its car\'s own perk first');
+assert.equal(lapPerksLabel({ original: '', installed: 'full-tank' }), 'Full Tank');
+assert.equal(lapPerksLabel({ original: 'warp-drive' }), '');
+assert.equal(lapPerksLabel(null), '');
+
 console.log('Spectate UI-state snapshot and replay controls regression passed.');
