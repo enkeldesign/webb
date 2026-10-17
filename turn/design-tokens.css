@@ -86,6 +86,13 @@
   --turn-difficulty-hard: var(--turn-difficulty-expert);
   --turn-difficulty-locked: var(--turn-muted);
 
+  /* Perk rarity (#1219): always named in words beside its colour, and presentation
+     only. EPIC is OVERCHARGE's light violet. */
+  --turn-rarity-common: var(--turn-green-200);
+  --turn-rarity-rare: var(--turn-blue-200);
+  --turn-rarity-epic: #d0bfff;
+  --turn-rarity-legendary: var(--turn-orange-200);
+
   /* Driving-control roles. */
   --turn-control-gas: var(--turn-green-500);
   --turn-control-drift: var(--turn-blue-500);
@@ -301,7 +308,7 @@
    --turn-pill) on its text and border, over Ink. On a colour surface a pill keeps its
    fill, as in light. */
 :root[data-theme="dark"] :is(
-  .turn-pr-chip:is(.is-easy, .is-medium, .is-advanced, .is-expert), .garage-perk-chip,
+  .turn-pr-chip:is(.is-easy, .is-medium, .is-advanced, .is-expert, .is-common, .is-rare, .is-epic, .is-legendary), .garage-perk-chip,
   .roadbook-goal-pill, .roadbook-goal-tag.is-hidden, .turn-achievement-tag:is([data-achievement-tag="hidden"], [data-achievement-tag="new"]),
   .turn-support-challenge-topline > b, .m8-guide-card-number, .m8-guide-wide > strong, .garage-car-card.is-selected .garage-car-ordinal
 ):not(:is(

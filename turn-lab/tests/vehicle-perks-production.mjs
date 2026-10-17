@@ -314,28 +314,28 @@ assert.ok(fromDriftFour > fromDriftOne && fromDriftFour < 0.92,
   'DRIFT DEMON must immediately recompose from the active STANDARD/SHIFT base');
 
 assert.equal(resolveVehiclePerkStatusFeedback({
-  vehicleId: suv.id, perkUnlocked: true, previousProgress: 0.99, nextProgress: 1
+  perkId: 'full-tank', previousProgress: 0.99, nextProgress: 1
 }), 'FULL TANK');
 assert.equal(resolveVehiclePerkStatusFeedback({
-  vehicleId: suv.id, perkUnlocked: true, previousProgress: 1, nextProgress: 0
+  perkId: 'full-tank', previousProgress: 1, nextProgress: 0
 }), 'FULL TANK LOST');
 assert.equal(resolveVehiclePerkStatusFeedback({
-  vehicleId: truck.id, perkUnlocked: true, previousProgress: 0.99, nextProgress: 1
+  perkId: 'torque', previousProgress: 0.99, nextProgress: 1
 }), 'BOOST TANK 5/5');
 assert.equal(resolveVehiclePerkStatusFeedback({
-  vehicleId: truck.id, perkUnlocked: true, previousProgress: 1, nextProgress: 0
+  perkId: 'torque', previousProgress: 1, nextProgress: 0
 }), null, 'Truck must not announce LOST when temporary OVERCHARGE capacity returns to baseline');
 assert.equal(resolveVehiclePerkStatusFeedback({
-  vehicleId: sportsCar.id, perkUnlocked: true, previousProgress: 0.99, nextProgress: 1
+  perkId: 'drift-demon', previousProgress: 0.99, nextProgress: 1
 }), 'DRIFT 5/5');
 assert.equal(resolveVehiclePerkStatusFeedback({
-  vehicleId: sportsCar.id, perkUnlocked: true, previousProgress: 1, nextProgress: 0.5
+  perkId: 'drift-demon', previousProgress: 1, nextProgress: 0.5
 }), null, 'Sports Car DRIFT decay must not announce LOST');
 assert.equal(resolveVehiclePerkStatusFeedback({
-  vehicleId: suv.id, perkUnlocked: false, previousProgress: 0.99, nextProgress: 1
-}), null);
+  perkId: '', previousProgress: 0.99, nextProgress: 1
+}), null, 'A locked perk runs in no slot, so it has no cue');
 assert.equal(resolveVehiclePerkStatusFeedback({
-  vehicleId: suv.id, perkUnlocked: true, previousProgress: 1, nextProgress: 1
+  perkId: 'full-tank', previousProgress: 1, nextProgress: 1
 }), null, 'Status feedback must fire only on threshold crossings');
 assert.match(mainSource,
   /resolveVehiclePerkStatusFeedback\([\s\S]*previousVehiclePerkProgress[\s\S]*state\.vehiclePerkProgress[\s\S]*showCompactRacePill\(perkStatusFeedback, \{\s*tone: 'blue'/,
@@ -473,7 +473,7 @@ assert.ok(twoDrifts.bonusSeconds > CLEAN_EXIT_SECONDS * 1.4 && twoDrifts.bonusSe
 const shiftedToFive = cleanExitRun([[1, straight], [1.5, drifting], [1, straight]], compactControlFive);
 assert.equal(shiftedToFive.peak, compactControlFive.controlMultiplier, 'CLEAN EXIT never lifts CONTROL past 5/5');
 assert.equal(resolveVehiclePerkStatusFeedback({
-  vehicleId: compact.id, perkUnlocked: true, previousProgress: 0.4, nextProgress: 1
+  perkId: 'clean-exit', previousProgress: 0.4, nextProgress: 1
 }), null, 'CLEAN EXIT triggers too often for a race pill: it has no cue');
 
 // Ownership and lifecycle are canonical race state, not a cached UI guess.
@@ -496,7 +496,6 @@ const PERK_TABLE = {
   'drift-demon': ['DRIFT DEMON', ['sedan-sports'], 'rare', true],
   'carry-on': ['CARRY ON', ['van'], 'rare', true],
   driftage: ['DRIFTAGE', ['vintage-racer'], 'epic', true],
-  'twitchy-turny': ['TWITCHY TURNY', ['toy-racer'], 'epic', true],
   'apex-grip': ['APEX GRIP', ['race'], 'epic', true],
   'full-tank': ['FULL TANK', ['suv'], 'epic', true],
   torque: ['TORQUE', ['truck'], 'epic', true],
@@ -506,7 +505,8 @@ const PERK_TABLE = {
   overdrive: ['OVERDRIVE', ['race-future'], 'legendary', false],
   'flow-shift': ['FLOW SHIFT', ['supercar'], 'legendary', false],
   sirens: ['SIRENS', ['firetruck', 'police', 'ambulance'], 'legendary', false],
-  smv: ['SMV', ['tractor'], 'legendary', false]
+  smv: ['SMV', ['tractor'], 'legendary', false],
+  'twitchy-turny': ['TWITCHY TURNY', ['toy-racer'], 'legendary', false]
 };
 assert.deepEqual(VEHICLE_PERKS.map(({ id }) => id).sort(), Object.keys(PERK_TABLE).sort(), 'Sixteen perks, each id once');
 assert.deepEqual(Object.values(PERK_RARITY).sort(), ['common', 'epic', 'legendary', 'rare']);
@@ -517,7 +517,7 @@ for (const [id, [title, vehicleIds, rarity, cloneable]] of Object.entries(PERK_T
   assert.ok(Object.isFrozen(perk) && Object.isFrozen(perk.vehicleIds));
   for (const vehicleId of vehicleIds) assert.equal(originalVehiclePerk(vehicleId), perk, `${vehicleId} comes with ${title}`);
 }
-assert.equal(VEHICLE_PERKS.filter(({ cloneable }) => cloneable).length, 9, 'Nine perks may be cloned');
+assert.equal(VEHICLE_PERKS.filter(({ cloneable }) => cloneable).length, 8, 'Eight perks may be cloned');
 for (const car of CAR_CATALOG) {
   assert.equal(car.perk, originalVehiclePerk(car.id), `${car.name}'s perk is its entry in the perk table`);
   // A perk's fixed values are part of its car's tuning, under STANDARD and SHIFT alike.
@@ -614,7 +614,9 @@ assert.deepEqual([sportsBoth.driftDragAdd, sportsBoth.driftSpeedMultiplier, spor
 
 // The other fixed and stateless perks follow the perk, not the car.
 const twitchyVan = perkState(van.id, true, van.tuning, 'twitchy-turny');
-assert.equal(resolveVehiclePerkTuning({ state: twitchyVan, tuning: van.tuning }).driftBoostRechargeMultiplier, 3.6);
+assert.deepEqual(activeVehiclePerkIds(twitchyVan), ['carry-on'], 'TWITCHY TURNY is LEGENDARY: it stays with the Rally Racer');
+assert.equal(resolveVehiclePerkTuning({ state: twitchyVan, tuning: van.tuning }).driftBoostRechargeMultiplier,
+  van.tuning.driftBoostRechargeMultiplier);
 const carryOnTruck = truckWith('carry-on');
 assert.equal(resolveVehicleLockDragAdd({
   perkIds: activeVehiclePerkIds(carryOnTruck),
@@ -624,7 +626,7 @@ assert.equal(resolveVehicleOffRoadPenalty({
   perkIds: activeVehiclePerkIds(truckWith('traction')), offRoad: true, trackDistance: 58.01, trackWidth
 }), TRACTION_MIN_OFFROAD_PENALTY, 'An installed TRACTION eases shallow off-road on any car');
 assert.match(controlsSource, /vehicleEffectiveTuning\?\.driftBoostRechargeMultiplier[\s\S]*__turnVehicleTuning\?\.driftBoostRechargeMultiplier/,
-  'DRIFT recharge reads the effective tuning, where an installed TWITCHY TURNY is');
+  'DRIFT recharge reads the tuning the race runs with');
 assert.match(gameStateSource, /state\.vehicleInstalledPerkProgress = 0/);
 assert.doesNotMatch(perkRuntimeSource, /activePerk\(state, '|vehicleId === '(truck|suv|sedan-sports|classic|compact|van|convertible)'/,
   'Perks are known by their ids, never by the car they come from');

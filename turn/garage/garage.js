@@ -53,6 +53,8 @@ import { createShowroomViewer } from './showroom-viewer.js';
 import { createGarageCatalog } from './garage-catalog.js';
 import { GARAGE_STARTER_CAR_ID, garageCarDescription, garageCarOrder } from './garage-cars.js';
 import { createGarageSelection } from './garage-selection.js';
+import { createGaragePerkulator } from './garage-perkulator.js';
+import { PERKULATOR_CHANGE_EVENT } from '../vehicle/perkulator.js';
 
 const ROOT_ID = 'turnGarage';
 const ENTRY_TAP_GUARD_MS = 600;
@@ -360,6 +362,15 @@ export function showGarage({
     const perkTitle = $('.garage-perk-title');
     const perkState = $('.garage-perk-state');
     const perkCopy = $('.garage-perk-copy');
+    // PERKULATOR (#1219): the original perk's rarity, CLONE PERK and the installed perk.
+    const perkulator = createGaragePerkulator({
+      documentRef,
+      panel: perkPanel,
+      copy: perkCopy,
+      dialogHost: root,
+      announce: (message) => { announcer.textContent = message; },
+      onSheetToggle: (open) => (open ? viewer.pause() : viewer.resume())
+    });
     const dockCar = $('.garage-dock-car');
     const leavePreviewButton = $('.garage-leave-preview');
     const raceButton = $('.garage-race');
@@ -519,11 +530,15 @@ export function showGarage({
       if (!presented) return;
       const reward = rewardForVehiclePerk(car.id);
       const unlocked = !reward || isVehiclePerkUnlocked(car.id);
-      perkTitle.textContent = titleCase(presented.title);
       perkState.innerHTML = unlocked
         ? '<span aria-hidden="true">✓</span><span class="garage-visually-hidden">Unlocked</span>'
         : `<span class="turn-pr-lock-icon" aria-hidden="true">${LOCK_ICON}</span><span>${reward.threshold}</span>`;
       perkCopy.innerHTML = `${escapeHtml(presented.description)}${unlocked ? '' : `<br><span class="garage-perk-lock">Unlocks at ${reward.threshold} trophies on Trophy Road.</span>`}`;
+      // With an installed perk, the closed disclosure names both.
+      const installed = perkulator.sync(car, { playable: !selection.state().preview });
+      perkTitle.innerHTML = `${escapeHtml(titleCase(presented.title))}${installed
+        ? ` <span class="garage-perk-plus">+ ${escapeHtml(titleCase(installed.title))}</span>`
+        : ''}`;
     }
 
     // A real HTML colour input with an explicit label: the whole row is its label, so
@@ -811,12 +826,14 @@ export function showGarage({
       disposed = true;
       windowRef.removeEventListener('turn:trophy-road-updated', handleProgress);
       windowRef.removeEventListener('turn:shift-profile-change', handleShiftChange);
+      windowRef.removeEventListener(PERKULATOR_CHANGE_EVENT, handlePerkulatorChange);
       windowRef.removeEventListener('storage', handleStorage);
       documentRef.removeEventListener('keydown', leavePreviewByKey);
       spaciousMedia?.removeEventListener?.('change', syncDisclosures);
       catalogSideMedia?.removeEventListener?.('change', placeCatalog);
       catalogBelowMedia?.removeEventListener?.('change', placeCatalog);
       closeAllCars();
+      perkulator.release();
       resizeObserver?.disconnect();
       shift.release();
       viewer.stop();
@@ -854,6 +871,7 @@ export function showGarage({
       render();
     };
     const handleShiftChange = () => render({ viewer: false });
+    const handlePerkulatorChange = () => render({ viewer: false });
     const handleStorage = (event) => {
       if (event.key === 'turn-achievements-v1') handleProgress();
     };
@@ -917,6 +935,7 @@ export function showGarage({
     });
     windowRef.addEventListener('turn:trophy-road-updated', handleProgress);
     windowRef.addEventListener('turn:shift-profile-change', handleShiftChange);
+    windowRef.addEventListener(PERKULATOR_CHANGE_EVENT, handlePerkulatorChange);
     windowRef.addEventListener('storage', handleStorage);
     spaciousMedia?.addEventListener?.('change', syncDisclosures);
     catalogSideMedia?.addEventListener?.('change', placeCatalog);
@@ -1022,6 +1041,7 @@ export function showGarage({
       openAllCars,
       closeAllCars,
       allCarsSheet,
+      installPerkSheet: perkulator.sheet,
       catalogPlacement,
       leavePreview: () => leavePreviewButton.click(),
       raceButton,

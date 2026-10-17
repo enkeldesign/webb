@@ -221,9 +221,14 @@ html body .turn-pr-app-logo {
 .turn-pr-chip.is-medium { --turn-pill: var(--turn-difficulty-medium, #ffe087); background: var(--turn-pill); }
 .turn-pr-chip.is-advanced { --turn-pill: var(--turn-difficulty-advanced, #ffb89f); background: var(--turn-pill); }
 .turn-pr-chip.is-expert { --turn-pill: var(--turn-difficulty-expert, #ff9b91); background: var(--turn-pill); }
+/* Perk rarity (#1219): its name, on its colour. */
+.turn-pr-chip.is-common { --turn-pill: var(--turn-rarity-common); background: var(--turn-pill); }
+.turn-pr-chip.is-rare { --turn-pill: var(--turn-rarity-rare); background: var(--turn-pill); }
+.turn-pr-chip.is-epic { --turn-pill: var(--turn-rarity-epic); background: var(--turn-pill); }
+.turn-pr-chip.is-legendary { --turn-pill: var(--turn-rarity-legendary); background: var(--turn-pill); }
 
-/* A difficulty chip is a semantic colour: Ink on it in both themes. */
-.turn-pr-chip:is(.is-easy, .is-medium, .is-advanced, .is-expert) {
+/* A difficulty or rarity chip is a semantic colour: Ink on it in both themes. */
+.turn-pr-chip:is(.is-easy, .is-medium, .is-advanced, .is-expert, .is-common, .is-rare, .is-epic, .is-legendary) {
   border-color: var(--turn-ink);
   color: var(--turn-ink);
 }
