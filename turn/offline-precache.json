@@ -1,5 +1,5 @@
 {
-  "release": "20261016-r462",
+  "release": "20261017-r463",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -510,6 +510,7 @@
     "/turn/vehicle/learner-car-livery.js",
     "/turn/vehicle/perk-presentation.js",
     "/turn/vehicle/perk-runtime.js",
+    "/turn/vehicle/perks.js",
     "/turn/vehicle/physics.js",
     "/turn/vehicle/semantic-car-finish.js",
     "/turn/vehicle/shift-profile.js",

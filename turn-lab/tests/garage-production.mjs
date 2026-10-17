@@ -5,7 +5,8 @@ import path from 'node:path';
 const root = process.cwd();
 const turnDir = path.join(root, 'turn');
 const catalogSource = await fs.readFile(path.join(turnDir, 'vehicle/catalog.js'), 'utf8');
-const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const perksSource = await fs.readFile(path.join(turnDir, 'vehicle/perks.js'), 'utf8');
+const catalog = await import('../../turn/vehicle/catalog.js');
 const expectedIds = [
   'convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck',
   'race-future', 'race', 'sedan-sports', 'compact', 'tractor', 'sedan', 'suv', 'firetruck',
@@ -277,9 +278,9 @@ assert.doesNotMatch(catalogSource, /monster-truck-rgsdev\.glb/,
 assert.match(catalogSource, /SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666'/);
 assert.match(catalogSource, /MAXED_VEHICLE_STATS/);
 assert.match(catalogSource, /'toy-racer', 'Rally Racer'/);
-assert.match(catalogSource, /title: 'DRIFTAGE'/);
-assert.match(catalogSource, /title: 'TWITCHY TURNY'/);
-assert.match(catalogSource, /title: 'SMV'/);
+assert.match(perksSource, /title: 'DRIFTAGE'/);
+assert.match(perksSource, /title: 'TWITCHY TURNY'/);
+assert.match(perksSource, /title: 'SMV'/);
 assert.match(carModels, /loadCarSource\(car\.id\)/);
 // The secret Sports Car: maxed stats, named, explained beside RACE, never ranked.
 assert.match(garage, /getEffectiveVehicleStats\(effectiveSelection\(\)\)/);

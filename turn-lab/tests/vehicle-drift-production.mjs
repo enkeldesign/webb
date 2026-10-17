@@ -324,12 +324,14 @@ assert.equal(resolveOverchargedControlMultiplier({
   'Any live OVERCHARGE must activate APEX GRIP CONTROL without requiring a separate catch flag');
 assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
   vehicleId: raceCar.id,
+  perkUnlocked: true,
   accelerationMultiplier: raceCar.tuning.accelerationMultiplier,
   overchargeAccelerationMultiplier: raceCar.tuning.overchargeAccelerationMultiplier,
   overcharge: 0
 }), 1.08);
 assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
   vehicleId: raceCar.id,
+  perkUnlocked: true,
   accelerationMultiplier: raceCar.tuning.accelerationMultiplier,
   overchargeAccelerationMultiplier: raceCar.tuning.overchargeAccelerationMultiplier,
   overcharge: 0.001
@@ -339,6 +341,7 @@ const visibleFiveAcceleration = deriveVehicleTuning({ ...raceCar.stats, accelera
 assert.equal(visibleFiveAcceleration, 1.16);
 assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
   vehicleId: raceCar.id,
+  perkUnlocked: true,
   accelerationMultiplier: visibleFiveAcceleration,
   overchargeAccelerationMultiplier: raceCar.tuning.overchargeAccelerationMultiplier,
   overcharge: 1
@@ -353,8 +356,8 @@ for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race')) {
 }
 assert.match(mainSource, /boostOvercharge: globalThis\.__turnBoostOvercharge \|\| 0/,
   'The current OVERCHARGE amount must reach vehicle physics every frame');
-assert.match(physicsSource, /state\.apexGripActive = String\(state\.vehicleId \|\| ''\) === 'race'/,
-  'Physics must expose whether Race Car is actively receiving APEX GRIP');
+assert.match(physicsSource, /state\.apexGripActive = perkIds\.includes\('apex-grip'\)/,
+  'Physics must expose whether a car is actively receiving APEX GRIP');
 
 const truck = CAR_CATALOG.find((car) => car.id === 'truck');
 assert.ok(truck, 'Truck must remain in the vehicle catalog');
@@ -388,7 +391,7 @@ for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race' && c
     overcharge: 1
   }), car.tuning.accelerationMultiplier, `${car.name} must not inherit the OVERCHARGE ACCELERATION perk`);
 }
-assert.match(physicsSource, /state\.torqueActive = String\(state\.vehicleId \|\| ''\) === 'truck'/,
+assert.match(physicsSource, /state\.torqueActive = perkIds\.includes\('torque'\)/,
   'Physics must expose whether unlocked TORQUE is actively receiving its OVERCHARGE ACCELERATION buff');
 
 assert.match(

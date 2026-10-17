@@ -25,7 +25,7 @@ const [
   fs.readFile(new URL('../../turn/assets/cars/COSMO-LOW-POLY-CARS.md', import.meta.url), 'utf8')
 ]);
 
-const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const catalog = await import('../../turn/vehicle/catalog.js');
 const release = JSON.parse(releaseSource);
 
 const [releaseMajor, releaseMinor, releasePatch] = release.version.split('.').map(Number);

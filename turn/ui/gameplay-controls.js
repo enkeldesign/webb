@@ -672,7 +672,10 @@ function installGameplayUi() {
   }
 
   function getDriftRechargeMultiplier() {
-    const multiplier = Number(globalThis.__turnVehicleTuning?.driftBoostRechargeMultiplier);
+    const multiplier = Number(
+      globalThis.__turnRuntime?.state?.vehicleEffectiveTuning?.driftBoostRechargeMultiplier
+      ?? globalThis.__turnVehicleTuning?.driftBoostRechargeMultiplier
+    );
     if (!Number.isFinite(multiplier)) return DRIFT_RECHARGE_MULTIPLIER;
     return Math.max(1, Math.min(6, multiplier));
   }

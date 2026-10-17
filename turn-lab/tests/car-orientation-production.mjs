@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
 
 const catalogSource = await fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8');
-const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const catalog = await import('../../turn/vehicle/catalog.js');
 const frontWheelSteeringSource = await fs.readFile(
   new URL('../../turn/vehicle/front-wheel-steering.js', import.meta.url),
   'utf8'

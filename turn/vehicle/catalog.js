@@ -1,3 +1,5 @@
+import { originalVehiclePerk } from './perks.js';
+
 export const DEFAULT_VEHICLE_ID = 'classic';
 export const LEGACY_VEHICLE_ID = 'sedan';
 export const DEFAULT_VEHICLE_COLOR = '#ffcc00';
@@ -117,112 +119,6 @@ const REPLACED_FACTORY_PAINT_BY_ID = Object.freeze({
   ])
 });
 
-const SIRENS_PERK = Object.freeze({
-  title: 'SIRENS',
-  description: 'Boost activates flashing emergency lights and sirens.'
-});
-
-const VEHICLE_PERK_BY_ID = Object.freeze({
-  convertible: Object.freeze({
-    title: 'TRACTION',
-    description: 'Shallow off-road driving causes much less slowdown, while deep off-road remains punishing.',
-    rewardId: 'awd-traction',
-    threshold: 500
-  }),
-  classic: Object.freeze({
-    title: 'GRADUATED',
-    description: 'Clean driving improves CONTROL, then ACCELERATION, then TOP SPEED.',
-    rewardId: 'learner-graduated',
-    threshold: 2200
-  }),
-  'vintage-racer': Object.freeze({
-    title: 'DRIFTAGE',
-    description: 'DRIFT drains less speed, steering becomes more aggressive and the car can hold larger slip angles.'
-  }),
-  'toy-racer': Object.freeze({
-    title: 'TWITCHY TURNY',
-    description: 'DRIFT fills BOOST even faster than normal.'
-  }),
-  'monster-truck': Object.freeze({
-    title: 'OVERSIZED',
-    description: 'Going off-road doesn’t slow it down.'
-  }),
-  race: Object.freeze({
-    title: 'APEX GRIP',
-    description: 'OVERCHARGE increases CONTROL and ACCELERATION beyond their ordinary limits.'
-  }),
-  supercar: Object.freeze({
-    title: 'FLOW SHIFT',
-    description: 'At FLOW ×3 or higher, SHIFT adds its three attribute points without reductions. SHIFT again moves the boost to the other three attributes.'
-  }),
-  'sedan-sports': Object.freeze({
-    title: 'DRIFT DEMON',
-    description: 'DRIFT builds during sustained DRIFT or LOCK, up to 5/5.',
-    rewardId: 'sports-car-drift-demon',
-    threshold: 2100
-  }),
-  tractor: Object.freeze({
-    title: 'SMV',
-    description: 'A Slow-Moving Vehicle that’s not much to look at. Which makes it ideal for blank screen and non-visual driving practice.'
-  }),
-  sedan: Object.freeze({
-    title: 'DOUBLE SHIFT',
-    description: 'SHIFT moves 2 points between attributes instead of 1.',
-    rewardId: 'sedan-double-shift',
-    threshold: 1900
-  }),
-  suv: Object.freeze({
-    title: 'FULL TANK',
-    description: 'Clean driving builds BOOST TANK up to 5/5 and fills it as you go.',
-    rewardId: 'suv-full-tank',
-    threshold: 1700
-  }),
-  truck: Object.freeze({
-    title: 'TORQUE',
-    description: 'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.'
-  }),
-  van: Object.freeze({
-    title: 'CARRY ON',
-    description: 'LOCK loses much less speed.',
-    rewardId: 'van-carry-on',
-    threshold: 1400
-  }),
-  compact: Object.freeze({
-    title: 'CLEAN EXIT',
-    description: 'A clean DRIFT, one that ends without hitting a wall or spinning out, adds 1 CONTROL for a few seconds, up to 5/5.'
-  }),
-  'race-future': Object.freeze({
-    title: 'OVERDRIVE',
-    description: 'The longer you drive fast and clean, the higher the speed cap becomes. Leaving the track or colliding resets it.'
-  }),
-  firetruck: SIRENS_PERK,
-  police: SIRENS_PERK,
-  ambulance: SIRENS_PERK
-});
-
-const TUNING_OVERRIDE_BY_ID = Object.freeze({
-  'vintage-racer': Object.freeze({
-    driftDragAdd: 0.045,
-    driftSpeedMultiplier: 0.95,
-    driftYawMultiplier: 1.28,
-    driftGripMultiplier: 0.72,
-    driftSlideMultiplier: 1.18
-  }),
-  'toy-racer': Object.freeze({
-    driftBoostRechargeMultiplier: 3.6
-  }),
-  race: Object.freeze({
-    overchargeControlMultiplier: 1.21,
-    overchargeAccelerationMultiplier: 1.24
-  }),
-  truck: Object.freeze({
-    overchargeAccelerationMultiplier: 1.24
-  }),
-  van: Object.freeze({
-    lockDragAdd: 0.07
-  })
-});
-
 const RAW_CARS = [
   ['convertible', 'AWD', 'car', { speed: 2, acceleration: 3, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }, 0.98, 0, 0.90],
   ['classic', 'Learner Car', 'car', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 0, 0.88],
@@ -339,10 +235,10 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   visualUpgrade: VISUAL_CUSTOMIZATION_BY_ID[id]?.visualUpgrade || null,
   emergencyService: EMERGENCY_SERVICE_BY_ID[id] || null,
   fixedLivery: FIXED_LIVERY_IDS.has(id),
-  perk: VEHICLE_PERK_BY_ID[id] || null,
+  perk: originalVehiclePerk(id),
   tuning: Object.freeze({
     ...deriveVehicleTuning(stats),
-    ...(TUNING_OVERRIDE_BY_ID[id] || {}),
+    ...(originalVehiclePerk(id)?.tuning || {}),
     enginePitch
   })
 })));
@@ -448,7 +344,7 @@ export function deriveVehicleTuningForCar(id, stats) {
   const car = getBaseCarDefinition(id);
   return Object.freeze({
     ...deriveVehicleTuning(stats),
-    ...(TUNING_OVERRIDE_BY_ID[car.id] || {}),
+    ...(originalVehiclePerk(car.id)?.tuning || {}),
     enginePitch: car.tuning.enginePitch
   });
 }

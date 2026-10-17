@@ -26,7 +26,7 @@ const [
   fs.readFile(new URL('../../turn/audio/racing-music-health.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8')
 ]);
-const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const catalog = await import('../../turn/vehicle/catalog.js');
 const release = JSON.parse(releaseSource);
 const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
 assert.ok(importMapText, 'Production must expose its import map');

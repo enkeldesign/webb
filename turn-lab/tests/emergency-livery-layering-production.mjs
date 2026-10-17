@@ -19,7 +19,7 @@ const [
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../yourturn/index.html', import.meta.url), 'utf8')
 ]);
-const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const catalog = await import('../../turn/vehicle/catalog.js');
 
 function importMapFrom(source) {
   const json = source.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];

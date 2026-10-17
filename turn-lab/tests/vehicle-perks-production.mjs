@@ -6,7 +6,12 @@ import {
   deriveVehicleTuning
 } from '../../turn/vehicle/catalog.js';
 import { resolveVehiclePerkStatusFeedback } from '../../turn/vehicle/perk-presentation.js';
-import { getVehicleSpeedLimit } from '../../turn/vehicle/physics.js';
+import {
+  getVehicleSpeedLimit,
+  resolveOverchargedControlMultiplier,
+  resolveVehicleOverchargedAccelerationMultiplier
+} from '../../turn/vehicle/physics.js';
+import { PERK_RARITY, VEHICLE_PERKS, getVehiclePerk, originalVehiclePerk } from '../../turn/vehicle/perks.js';
 import {
   CARRY_ON_LOCK_DRAG_ADD,
   CLEAN_EXIT_CONTROL_BONUS,
@@ -23,6 +28,7 @@ import {
   STANDARD_LOCK_DRAG_ADD,
   TORQUE_BUILD_SECONDS,
   TRACTION_MIN_OFFROAD_PENALTY,
+  activeVehiclePerkIds,
   advanceVehiclePerkRuntimeState,
   resetVehiclePerkRuntimeState,
   resolveGraduatedStageFeedback,
@@ -31,19 +37,21 @@ import {
   resolveVehiclePerkTuning
 } from '../../turn/vehicle/perk-runtime.js';
 
-const [indexSource, mainSource, physicsSource, controlsSource, gameStateSource, achievementsRuntimeSource] = await Promise.all([
+const [indexSource, mainSource, physicsSource, controlsSource, gameStateSource, achievementsRuntimeSource, perkRuntimeSource] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/game-state.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/achievements/runtime.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/achievements/runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/vehicle/perk-runtime.js', import.meta.url), 'utf8')
 ]);
 
-function perkState(vehicleId, perkUnlocked, tuning) {
+function perkState(vehicleId, perkUnlocked, tuning, installedPerkId = '') {
   const state = {
     vehicleId,
     vehiclePerkUnlocked: perkUnlocked,
+    vehicleInstalledPerkId: installedPerkId,
     vehicleTuning: tuning,
     vehicleEffectiveTuning: tuning
   };
@@ -480,4 +488,145 @@ assert.match(mainSource, /visibilitychange[\s\S]*pauseOrResetPerk\(\)/);
 assert.match(mainSource, /pagehide[\s\S]*pauseOrResetPerk\(\)/);
 assert.match(gameStateSource, /state\.vehiclePerkProgress = 0/);
 
-console.log('TURN seven gated 1200–2000 Trophy Road vehicle perk behaviors passed.');
+// #1219: every perk has an identity of its own, apart from its cars: a stable id, a
+// rarity, and whether it may be cloned and installed. Rarity is presentation only.
+const PERK_TABLE = {
+  'clean-exit': ['CLEAN EXIT', ['compact'], 'common', true],
+  traction: ['TRACTION', ['convertible'], 'rare', true],
+  'drift-demon': ['DRIFT DEMON', ['sedan-sports'], 'rare', true],
+  'carry-on': ['CARRY ON', ['van'], 'rare', true],
+  driftage: ['DRIFTAGE', ['vintage-racer'], 'epic', true],
+  'twitchy-turny': ['TWITCHY TURNY', ['toy-racer'], 'epic', true],
+  'apex-grip': ['APEX GRIP', ['race'], 'epic', true],
+  'full-tank': ['FULL TANK', ['suv'], 'epic', true],
+  torque: ['TORQUE', ['truck'], 'epic', true],
+  graduated: ['GRADUATED', ['classic'], 'legendary', false],
+  oversized: ['OVERSIZED', ['monster-truck'], 'legendary', false],
+  'double-shift': ['DOUBLE SHIFT', ['sedan'], 'legendary', false],
+  overdrive: ['OVERDRIVE', ['race-future'], 'legendary', false],
+  'flow-shift': ['FLOW SHIFT', ['supercar'], 'legendary', false],
+  sirens: ['SIRENS', ['firetruck', 'police', 'ambulance'], 'legendary', false],
+  smv: ['SMV', ['tractor'], 'legendary', false]
+};
+assert.deepEqual(VEHICLE_PERKS.map(({ id }) => id).sort(), Object.keys(PERK_TABLE).sort(), 'Sixteen perks, each id once');
+assert.deepEqual(Object.values(PERK_RARITY).sort(), ['common', 'epic', 'legendary', 'rare']);
+for (const [id, [title, vehicleIds, rarity, cloneable]] of Object.entries(PERK_TABLE)) {
+  const perk = getVehiclePerk(id);
+  assert.deepEqual([perk.title, [...perk.vehicleIds], perk.rarity, perk.cloneable, perk.installable],
+    [title, vehicleIds, rarity, cloneable, cloneable], `${title}: its cars, rarity and whether it may be cloned and installed`);
+  assert.ok(Object.isFrozen(perk) && Object.isFrozen(perk.vehicleIds));
+  for (const vehicleId of vehicleIds) assert.equal(originalVehiclePerk(vehicleId), perk, `${vehicleId} comes with ${title}`);
+}
+assert.equal(VEHICLE_PERKS.filter(({ cloneable }) => cloneable).length, 9, 'Nine perks may be cloned');
+for (const car of CAR_CATALOG) {
+  assert.equal(car.perk, originalVehiclePerk(car.id), `${car.name}'s perk is its entry in the perk table`);
+  // A perk's fixed values are part of its car's tuning, under STANDARD and SHIFT alike.
+  for (const [key, value] of Object.entries(car.perk.tuning || {})) assert.equal(car.tuning[key], value, `${car.name} ${key}`);
+}
+
+// A car runs its ORIGINAL perk once unlocked and at most one INSTALLED perk, each in a
+// slot of its own. Nothing installs one yet (PERKULATOR comes later); the runtime is
+// ready, and with nothing installed every car behaves exactly as before.
+const truckWith = (installed, tuning = truck.tuning) => perkState(truck.id, true, tuning, installed);
+assert.deepEqual(activeVehiclePerkIds(perkState(truck.id, true, truck.tuning)), ['torque']);
+assert.deepEqual(activeVehiclePerkIds(truckWith('full-tank')), ['torque', 'full-tank']);
+assert.deepEqual(activeVehiclePerkIds(truckWith('torque')), ['torque'], 'A car never runs its own perk twice');
+assert.deepEqual(activeVehiclePerkIds(truckWith('overdrive')), ['torque'], 'A LEGENDARY perk cannot be installed');
+assert.deepEqual(activeVehiclePerkIds(truckWith('no-such-perk')), ['torque']);
+const lockedTankSuv = perkState(suv.id, false, suv.tuning, 'torque');
+assert.deepEqual(activeVehiclePerkIds(lockedTankSuv), ['torque'], 'An installed perk runs while the car\'s own is still locked');
+const reinstalled = truckWith('full-tank');
+advanceForSeconds(reinstalled, 1, { speed: 40, overcharge: 0.5 });
+assert.ok(reinstalled.vehiclePerkProgress > 0 && reinstalled.vehicleInstalledPerkProgress > 0, 'Both slots build');
+reinstalled.vehicleInstalledPerkId = 'apex-grip';
+assert.deepEqual(activeVehiclePerkIds(reinstalled), ['torque', 'apex-grip']);
+assert.deepEqual([reinstalled.vehiclePerkProgress, reinstalled.vehicleInstalledPerkProgress], [0, 0],
+  'Changing the installed perk starts both slots afresh');
+
+// FULL TANK + TORQUE: each builds BOOST TANK on its own terms; the stronger applies.
+const tankTruck = truckWith('full-tank');
+advanceForSeconds(tankTruck, TORQUE_BUILD_SECONDS / 2, { speed: 40, overcharge: 0.4 });
+const bothBuilding = resolveVehiclePerkTuning({ state: tankTruck, tuning: truck.tuning }).boostDurationSeconds;
+assert.ok(tankTruck.vehiclePerkProgress > tankTruck.vehicleInstalledPerkProgress, 'TORQUE builds faster than FULL TANK');
+assert.equal(bothBuilding, resolveVehiclePerkTuning({
+  state: Object.assign(perkState(truck.id, true, truck.tuning), { vehiclePerkProgress: tankTruck.vehiclePerkProgress }),
+  tuning: truck.tuning
+}).boostDurationSeconds, 'The stronger build applies; the two never add up');
+assert.ok(tankTruck.vehiclePerkBoostRefill > 0, 'An installed FULL TANK fills the tank too');
+advanceVehiclePerkRuntimeState({ state: tankTruck, dt: 0.1, speed: 40, overcharge: 0, boostActive: false });
+assert.equal(tankTruck.vehiclePerkProgress, 0, 'TORQUE returns to baseline when OVERCHARGE ends');
+assert.ok(tankTruck.vehicleInstalledPerkProgress > 0, 'while FULL TANK keeps what clean driving built');
+const fullTankOnly = resolveVehiclePerkTuning({ state: tankTruck, tuning: truck.tuning }).boostDurationSeconds;
+assert.ok(fullTankOnly > truck.tuning.boostDurationSeconds && fullTankOnly < 3.74);
+
+// APEX GRIP on another CONTROL/ACCELERATION modifier: its fixed OVERCHARGE values join
+// the car's, the stronger of each applying.
+const apexTruck = truckWith('apex-grip');
+const apexTuning = resolveVehiclePerkTuning({ state: apexTruck, tuning: truck.tuning });
+assert.notEqual(apexTuning, truck.tuning);
+assert.deepEqual([apexTuning.overchargeControlMultiplier, apexTuning.overchargeAccelerationMultiplier], [1.21, 1.24]);
+assert.equal(resolveOverchargedControlMultiplier({
+  controlMultiplier: apexTuning.controlMultiplier,
+  overchargeControlMultiplier: apexTuning.overchargeControlMultiplier,
+  overcharge: 0.5
+}), 1.21, 'An installed APEX GRIP lifts CONTROL in OVERCHARGE');
+assert.equal(resolveVehicleOverchargedAccelerationMultiplier({
+  perkIds: activeVehiclePerkIds(apexTruck),
+  accelerationMultiplier: apexTuning.accelerationMultiplier,
+  overchargeAccelerationMultiplier: apexTuning.overchargeAccelerationMultiplier,
+  overcharge: 0.5
+}), 1.24, 'TORQUE and APEX GRIP lift ACCELERATION once, not twice');
+
+// CLEAN EXIT + another CONTROL modification: GRADUATED's CONTROL and CLEAN EXIT's +1
+// never add up; the higher applies.
+const learnerTuning = learner.tuning;
+const cleanLearner = perkState(learner.id, true, learnerTuning, 'clean-exit');
+cleanLearner.vehiclePerkProgress = 1 / 6;
+cleanLearner.vehicleInstalledPerkProgress = 1;
+const halfControl = resolveVehiclePerkTuning({ state: cleanLearner, tuning: learnerTuning }).controlMultiplier;
+assert.equal(halfControl, Math.max(
+  learnerTuning.controlMultiplier + (GRADUATED_MAX_CONTROL_MULTIPLIER - learnerTuning.controlMultiplier) * 0.5,
+  learnerTuning.controlMultiplier
+));
+assert.ok(halfControl < GRADUATED_MAX_CONTROL_MULTIPLIER);
+cleanLearner.vehiclePerkProgress = 0;
+assert.equal(resolveVehiclePerkTuning({ state: cleanLearner, tuning: learnerTuning }).controlMultiplier,
+  learnerTuning.controlMultiplier, 'CLEAN EXIT never lifts CONTROL past 5/5, where the Learner Car already is');
+
+// DRIFT DEMON with DRIFTAGE, and with SHIFT: DRIFT DEMON builds DRIFT up to 5/5 from the
+// configured car and never weakens what DRIFTAGE sets beyond 5/5.
+const vintage = CAR_CATALOG.find(({ id }) => id === 'vintage-racer');
+const demonVintage = perkState(vintage.id, true, vintage.tuning, 'drift-demon');
+demonVintage.vehicleInstalledPerkProgress = 1;
+const demonDriftage = resolveVehiclePerkTuning({ state: demonVintage, tuning: vintage.tuning });
+assert.deepEqual([demonDriftage.driftDragAdd, demonDriftage.driftSpeedMultiplier], [0.045, 0.95],
+  'DRIFTAGE stays where it is stronger than 5/5');
+const vintageDriftTwo = deriveVehicleTuning({ ...vintage.stats, drift: 2 });
+const shiftedVintage = resolveVehiclePerkTuning({ state: demonVintage, tuning: { ...vintageDriftTwo, ...vintage.perk.tuning } });
+assert.equal(shiftedVintage.driftEngineMultiplier, 0.94, 'DRIFT DEMON builds DRIFT from a SHIFTed base up to 5/5');
+const driftageSports = perkState(sportsCar.id, true, sportsCar.tuning, 'driftage');
+const sportsDriftage = resolveVehiclePerkTuning({ state: driftageSports, tuning: sportsCar.tuning });
+assert.deepEqual([sportsDriftage.driftDragAdd, sportsDriftage.driftYawMultiplier, sportsDriftage.driftGripMultiplier],
+  [0.045, 1.28, 0.72], 'An installed DRIFTAGE sets its values on any car');
+driftageSports.vehiclePerkProgress = 1;
+const sportsBoth = resolveVehiclePerkTuning({ state: driftageSports, tuning: sportsCar.tuning });
+assert.deepEqual([sportsBoth.driftDragAdd, sportsBoth.driftSpeedMultiplier, sportsBoth.driftEngineMultiplier], [0.045, 0.95, 0.94]);
+
+// The other fixed and stateless perks follow the perk, not the car.
+const twitchyVan = perkState(van.id, true, van.tuning, 'twitchy-turny');
+assert.equal(resolveVehiclePerkTuning({ state: twitchyVan, tuning: van.tuning }).driftBoostRechargeMultiplier, 3.6);
+const carryOnTruck = truckWith('carry-on');
+assert.equal(resolveVehicleLockDragAdd({
+  perkIds: activeVehiclePerkIds(carryOnTruck),
+  perkLockDragAdd: resolveVehiclePerkTuning({ state: carryOnTruck, tuning: truck.tuning }).lockDragAdd
+}), CARRY_ON_LOCK_DRAG_ADD, 'An installed CARRY ON eases LOCK on any car');
+assert.equal(resolveVehicleOffRoadPenalty({
+  perkIds: activeVehiclePerkIds(truckWith('traction')), offRoad: true, trackDistance: 58.01, trackWidth
+}), TRACTION_MIN_OFFROAD_PENALTY, 'An installed TRACTION eases shallow off-road on any car');
+assert.match(controlsSource, /vehicleEffectiveTuning\?\.driftBoostRechargeMultiplier[\s\S]*__turnVehicleTuning\?\.driftBoostRechargeMultiplier/,
+  'DRIFT recharge reads the effective tuning, where an installed TWITCHY TURNY is');
+assert.match(gameStateSource, /state\.vehicleInstalledPerkProgress = 0/);
+assert.doesNotMatch(perkRuntimeSource, /activePerk\(state, '|vehicleId === '(truck|suv|sedan-sports|classic|compact|van|convertible)'/,
+  'Perks are known by their ids, never by the car they come from');
+
+console.log('TURN seven gated 1200–2000 Trophy Road vehicle perk behaviors, the perk table and installed-perk composition passed.');
