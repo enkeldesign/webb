@@ -12,7 +12,9 @@ const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
 const list = (items) => `<ul>${items.map((item) => `<li>${item}</li>`).join('')}</ul>`;
 const section = (title, body, id = slug(title)) => `<section aria-labelledby="${id}"><h2 id="${id}">${escapeHtml(title)}</h2>${body}</section>`;
 const paragraph = (value) => `<p>${value}</p>`;
-const badge = (text, type = '') => `<span class="badge ${type}">${escapeHtml(text)}</span>`;
+// TURN's own chip (pre-race.css): a track's difficulty or a perk's rarity on its colour.
+const chip = (text, tone = '') => `<span class="turn-pr-chip${tone ? ` is-${tone.toLowerCase()}` : ''}">${escapeHtml(text)}</span>`;
+const titleCase = (value) => String(value).toLowerCase().replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
 
 // Build time only: reuse the game's precise track sampling with the already-vendored
 // Three copy. Neither Three nor any game module is shipped to the wiki's browser.
@@ -23,14 +25,14 @@ async function gameData() {
     register(`data:text/javascript,${encodeURIComponent(`export async function resolve(s,c,n){return s==='three'?{url:${JSON.stringify(three)},shortCircuit:true}:n(s,c);}`)}`);
     registered = true;
   }
-  const [cars, tracks, perks, road, achievements, categories, maps, history, icons, view, shift] = await Promise.all([
+  const [cars, tracks, perks, road, achievements, categories, maps, history, icons, view, shift, trackIcons] = await Promise.all([
     import('../vehicle/catalog.js'), import('../tracks/definitions.js'), import('../vehicle/perks.js'),
     import('../progression/trophy-road.js'), import('../achievements/catalog.js'),
     import('../achievements/catalog-base.js'), import('../tracks/catalog.js'),
     import('../content/about-history.js'), import('../ui/authored-icons.js'),
-    import('../garage/car-view.js'), import('../vehicle/shift-profile.js')
+    import('../garage/car-view.js'), import('../vehicle/shift-profile.js'), import('../ui/track-icons.js')
   ]);
-  return { ...cars, ...tracks, ...perks, ...road, ...achievements, CATEGORY_LABELS: categories.CATEGORY_LABELS, ...maps, ...history, ...icons, ...view, ...shift };
+  return { ...cars, ...tracks, ...perks, ...road, ...achievements, CATEGORY_LABELS: categories.CATEGORY_LABELS, ...maps, ...history, ...icons, ...view, ...shift, ...trackIcons };
 }
 
 export async function renderWiki() {
@@ -49,17 +51,60 @@ export async function renderWiki() {
     assert(!pages.has(path), `Duplicate wiki page: ${path}`);
     pages.set(path, { path, ...page });
   };
+  const authoredAssets = new Set();
   const assetIcon = (name) => `<span class="asset-icon" aria-hidden="true" style="--icon: url('/turn/assets/trophy-road/${name}.svg')"></span>`;
   const icon = (name = 'map') => ['shift', 'perkulator'].includes(name) ? assetIcon(name)
     : `<span class="line-icon" aria-hidden="true">${name === 'perk' ? game.TROPHY_ROAD_REWARD_ICONS.perk : (game.ICONS[name] || game.ICONS.map)}</span>`;
   const carImage = (id, large = false) => `<img class="car-image" src="/turn/assets/cars/stills/${id}.webp" alt="" width="${game.CAR_VIEW.still.width}" height="${game.CAR_VIEW.still.height}" ${large ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
   const trophyLink = (reward) => reward ? link(`progress/trophy-road#${reward.id}`, `${reward.threshold.toLocaleString('en-US')} trophies · ${reward.shortTitle}`) : 'Available from the start';
   const facts = (entries) => `<dl class="facts">${entries.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
-  const cards = (paths) => `<ul class="card-grid">${paths.map((path) => {
-    const p = pages.get(path);
-    assert(p, `Unknown card: ${path}`);
-    return `<li><a class="card ${p.carId ? 'car-card' : ''}" href="${url(path)}">${p.carId ? carImage(p.carId) : p.trackId ? assetIcon(p.trackId) : icon(p.icon)}<span class="card-copy"><strong>${escapeHtml(p.title)}</strong><span>${escapeHtml(p.teaser || p.intro)}</span>${p.badges || ''}</span></a></li>`;
-  }).join('')}</ul>`;
+  // Corner marks (#1230): a page or card about one feature shows that feature's own TURN
+  // icon in its top-right corner, as the Track sheet shows its track. No icon, no mark.
+  // Authored Trophy Road icons are masks whose source the game's trophy-road.css names;
+  // the wiki names it inline, from the same asset.
+  const authored = (art) => art.replace(/class="turn-trophy-road-authored-icon is-([a-z-]+)"/g, (match, name) => {
+    authoredAssets.add(name);
+    return `${match} style="--turn-trophy-road-authored-source: url('/turn/assets/trophy-road/${name}.svg')"`;
+  });
+  const mark = (key) => {
+    const art = game.TRACK_ICON_MARKUP[key] || game.TROPHY_ROAD_REWARD_ICONS[key];
+    return art ? `<span class="turn-corner-mark" aria-hidden="true">${authored(art)}</span>` : '';
+  };
+  const unlockLine = (reward) => reward ? `Unlocks at ${reward.threshold.toLocaleString('en-US')} trophies` : 'Available from the start';
+  // GARAGE's attribute meter: five segments in the colour of the control each pair feeds.
+  const STAT_CONTROL = { speed: 'gas', acceleration: 'gas', control: 'drift', drift: 'drift', boostPower: 'boost', boostDuration: 'boost' };
+  const meters = (car) => `<span class="stat-meters">${stats.map(({ key, label }) => {
+    assert(STAT_CONTROL[key], `Stat meter colour for ${key}`);
+    const value = Number(car.stats[key]) || 0;
+    return `<span class="stat-meter is-${STAT_CONTROL[key]}"><span class="stat-meter-label">${escapeHtml(titleCase(label))}</span><span class="stat-meter-segments" aria-hidden="true">${Array.from({ length: 5 }, (_, i) => `<i${i < value ? ' class="is-full"' : ''}></i>`).join('')}</span><span class="stat-meter-value">${value}<span class="sr-only"> out of </span><span aria-hidden="true">/</span>5</span></span>`;
+  }).join('')}</span>`;
+  const trackLengths = {};
+  // ROADBOOK's track card: ordinal and pictogram, difficulty and name, and the real route.
+  const trackCard = (p) => {
+    const track = tracks.find((t) => t.id === p.trackId);
+    return `<li><a class="turn-pr-card wiki-track-card" href="${url(p.path)}" style="--turn-pr-accent:${escapeHtml(track.accent)}"><span class="turn-pr-card-tab" aria-hidden="true"><span class="turn-pr-card-ordinal">${String(tracks.indexOf(track) + 1).padStart(2, '0')}</span><span class="turn-pr-icon">${game.TRACK_ICON_MARKUP[track.id]}</span></span><span class="turn-pr-card-body"><span class="turn-pr-card-meta">${chip(track.difficulty, track.difficulty)}<span class="turn-pr-card-state">≈ ${trackLengths[track.id]} km</span></span><span class="turn-pr-card-name">${escapeHtml(track.name)}</span><span class="wiki-card-line">${escapeHtml(track.description)}</span><span class="wiki-card-line">${unlockLine(game.rewardForTrack(track.id))}</span></span><span class="turn-pr-card-art" aria-hidden="true">${routeArt(track)}</span></a></li>`;
+  };
+  // A car beside its rivals: the still, its original perk, the six meters and its unlock.
+  const carCard = (p) => {
+    const car = cars.find((c) => c.id === p.carId);
+    const perk = game.originalVehiclePerk(car.id);
+    return `<li><a class="card car-card" href="${url(p.path)}">${carImage(car.id)}<span class="car-card-head"><strong>${escapeHtml(car.name)}</strong><span>${escapeHtml(perk.title)} ${chip(perk.rarity, perk.rarity)}</span></span>${meters(car)}<span class="wiki-card-line">${unlockLine(game.rewardForVehicle(car.id))}</span></a></li>`;
+  };
+  // PERKULATOR's perk row: name and rarity, the effect, the car it comes from.
+  const perkCard = (p) => {
+    const perk = perks.find((k) => k.id === p.perkId);
+    return `<li><a class="card perk-card" href="${url(p.path)}"><span class="card-copy"><strong>${escapeHtml(perk.title)}</strong>${chip(perk.rarity, perk.rarity)}<span>${escapeHtml(perk.description)}</span><span class="wiki-card-line">From ${escapeHtml(perk.vehicleIds.map((id) => cars.find((c) => c.id === id).name).join(' · '))}</span></span></a></li>`;
+  };
+  const cards = (paths) => {
+    const items = paths.map((path) => {
+      const p = pages.get(path);
+      assert(p, `Unknown card: ${path}`);
+      return p;
+    });
+    const kind = items.every((p) => p.trackId) ? 'track-list' : items.every((p) => p.carId) ? 'card-grid car-grid' : 'card-grid';
+    return `<ul class="${kind}">${items.map((p) => p.trackId ? trackCard(p) : p.carId ? carCard(p) : p.perkId ? perkCard(p)
+      : `<li><a class="card" href="${url(p.path)}">${p.mark ? mark(p.mark) : ''}<span class="card-copy"><strong>${escapeHtml(p.title)}</strong><span>${escapeHtml(p.teaser || p.intro)}</span>${p.badges || ''}</span></a></li>`).join('')}</ul>`;
+  };
   const related = (paths) => section('Related', `<ul class="related">${[...new Set(paths)].map((path) => {
     assert(pages.has(path), `Unknown related article: ${path}`);
     return `<li>${link(path, pages.get(path).title)}<span aria-hidden="true"> →</span></li>`;
@@ -75,10 +120,16 @@ export async function renderWiki() {
     const scale = Math.min(480 / (maxX - minX), 250 / (maxZ - minZ));
     const pos = (p) => [((p.x - (minX + maxX) / 2) * scale + 280).toFixed(1), ((p.z - (minZ + maxZ) / 2) * scale + 160).toFixed(1)];
     const coordinates = points.map(pos);
-    return { length: (runtime.trackLength / 1000).toFixed(2), html: `<figure class="track-map"><svg viewBox="0 0 560 320" role="img" aria-labelledby="map-title map-description"><title id="map-title">${escapeHtml(track.name)} route</title><desc id="map-description">${escapeHtml(description)}</desc><path class="map-road" d="M${coordinates.map((p) => p.join(',')).join(' L')} Z"/><path class="map-centre" d="M${coordinates.map((p) => p.join(',')).join(' L')} Z"/><circle class="map-start" cx="${coordinates[0][0]}" cy="${coordinates[0][1]}" r="9"/></svg><figcaption>Route from the game · Circle marks the start/finish.<br>${escapeHtml(description)}</figcaption></figure>` };
+    return { length: (runtime.trackLength / 1000).toFixed(2), html: `<figure class="track-map" style="--turn-pr-accent:${escapeHtml(track.accent)}"><svg class="turn-pr-route" viewBox="0 0 560 320" role="img" aria-labelledby="map-title map-description"><title id="map-title">${escapeHtml(track.name)} route</title><desc id="map-description">${escapeHtml(description)}</desc><path class="turn-pr-route-outline" d="M${coordinates.map((p) => p.join(',')).join(' L')} Z"/><path class="turn-pr-route-line" d="M${coordinates.map((p) => p.join(',')).join(' L')} Z"/><circle class="map-start" cx="${coordinates[0][0]}" cy="${coordinates[0][1]}" r="9"/></svg><figcaption>Route from the game · Circle marks the start/finish.<br>${escapeHtml(description)}</figcaption></figure>` };
   }
-  function statBars(car) {
-    return `<dl class="stat-bars">${stats.map(({ key, label }) => `<div><dt>${escapeHtml(label)}</dt><dd><span class="stat-track" aria-hidden="true"><span style="--score: ${car.stats[key]}"></span></span><strong>${car.stats[key]}<span class="sr-only"> out of </span><span aria-hidden="true">/</span>5</strong></dd></div>`).join('')}</dl>`;
+  function routeArt(track) {
+    const runtime = game.createTrackRuntime(track.id, track.sampleCount || game.TRACK_SAMPLE_COUNT);
+    const points = runtime.samples.filter((_, i) => i % Math.ceil(runtime.samples.length / 120) === 0).map(({ point }) => point);
+    const minX = Math.min(...points.map((p) => p.x)), maxX = Math.max(...points.map((p) => p.x));
+    const minZ = Math.min(...points.map((p) => p.z)), maxZ = Math.max(...points.map((p) => p.z));
+    const scale = 88 / Math.max(maxX - minX, maxZ - minZ);
+    const d = points.map((p, i) => `${i ? 'L' : 'M'}${(50 + (p.x - (minX + maxX) / 2) * scale).toFixed(1)} ${(50 + (p.z - (minZ + maxZ) / 2) * scale).toFixed(1)}`).join(' ');
+    return `<svg class="turn-pr-route" viewBox="0 0 100 100" focusable="false" aria-hidden="true"><path class="turn-pr-route-outline" d="${d} Z"></path><path class="turn-pr-route-line" d="${d} Z"></path></svg>`;
   }
   function exampleShift(car) {
     const amount = game.vehicleShiftAmount(car.id, true);
@@ -99,19 +150,19 @@ export async function renderWiki() {
     const carReward = game.rewardForVehicle(car.id);
     const perkReward = game.rewardForVehiclePerk(car.id) || carReward;
     add(carPath(car.id), { title: car.name, group: 'Cars', icon: 'wheel', carId: car.id, intro: personality, teaser: how, aliases: `${car.id} ${perk.title}`,
-      body: () => `<div class="car-hero"><figure>${carImage(car.id, true)}<figcaption>${escapeHtml(car.name)} · Factory paint</figcaption></figure><div>${statBars(car)}<p class="muted">${game.VEHICLE_STAT_BUDGET} base points · ${link('cars/stats', 'What the stats mean')}</p></div></div>`
+      body: () => `<div class="car-hero"><figure>${carImage(car.id, true)}<figcaption>${escapeHtml(car.name)} · Factory paint</figcaption></figure><div>${meters(car)}<p class="muted">${game.VEHICLE_STAT_BUDGET} base points · ${link('cars/stats', 'What the stats mean')}</p></div></div>`
         + facts([['Car unlock', trophyLink(carReward)], ['Original perk', link(`perks/${perk.id}`, perk.title)], ['Perk unlock', trophyLink(perkReward)]])
         + section('How it drives', paragraph(copy(how)))
-        + section('Original perk', paragraph(copy(perk.description)) + paragraph(`${badge(perk.rarity, `rarity-${perk.rarity}`)} ${perk.installable ? 'Can also be installed on other cars through PERKULATOR.' : 'Stays with this car.'}`))
+        + section('Original perk', paragraph(copy(perk.description)) + paragraph(`${chip(perk.rarity, perk.rarity)} ${perk.installable ? 'Can also be installed on other cars through PERKULATOR.' : 'Stays with this car.'}`))
         + section('Try a build', paragraph(copy(build)) + paragraph(`Practice: ${link(`tracks/${trackId}`, tracks.find((t) => t.id === trackId).name)}. ${link(`perks/${installedId}`, `Explore ${game.getVehiclePerk(installedId).title}`)}.`))
         + section('Example SHIFT setup', exampleShift(car)),
       related: [`perks/${perk.id}`, `tracks/${trackId}`, 'skills/shift', 'perks/perkulator', 'progress/trophy-road'] });
   }
   for (const perk of perks) {
     const [use, interaction, carId, technique] = PERK_ADVICE[perk.id];
-    add(`perks/${perk.id}`, { title: perk.title, group: 'Perks', icon: 'perk', intro: perk.description, badges: badge(perk.rarity, `rarity-${perk.rarity}`),
+    add(`perks/${perk.id}`, { title: perk.title, group: 'Perks', perkId: perk.id, mark: 'perk', intro: perk.description, badges: chip(perk.rarity, perk.rarity),
       aliases: `${perk.id} ${perk.vehicleIds.map((id) => cars.find((c) => c.id === id).name).join(' ')} ${perk.rarity}`,
-      body: () => `<div class="perk-banner">${icon('perk')}${badge(perk.rarity, `rarity-${perk.rarity}`)}<strong>${perk.installable ? 'INSTALLABLE' : 'STAYS WITH ITS CAR'}</strong></div>`
+      body: () => `<div class="perk-banner">${chip(perk.rarity, perk.rarity)}<strong>${perk.installable ? 'INSTALLABLE' : 'STAYS WITH ITS CAR'}</strong></div>`
         + facts([['Original car', perk.vehicleIds.map((id) => link(carPath(id), cars.find((c) => c.id === id).name)).join(' · ')], ['Unlock', trophyLink(game.rewardForVehiclePerk(perk.vehicleIds[0]) || game.rewardForVehicle(perk.vehicleIds[0]))]])
         + section('Use it', paragraph(copy(use))) + section('Make it work together', paragraph(copy(interaction)))
         + section('Try it on', `<div class="mini-car">${carImage(carId)}<div>${link(carPath(carId), cars.find((c) => c.id === carId).name)}${paragraph(perk.installable ? 'An illustrative pairing once the car, perk and PERKULATOR are unlocked. Compare it with the same car’s original setup.' : 'This is a vehicle-defining perk. Add an eligible INSTALLED perk beside it through PERKULATOR.')}</div></div>`)
@@ -120,8 +171,9 @@ export async function renderWiki() {
   }
   for (const track of tracks) {
     const advice = TRACK_ADVICE[track.id], map = trackMap(track, advice.map);
-    add(`tracks/${track.id}`, { title: track.name, group: 'Tracks', trackId: track.id, intro: track.description, badges: badge(track.difficulty, `difficulty-${track.difficulty.toLowerCase()}`),
-      body: () => `<div class="track-hero">${map.html}<div>${badge(track.difficulty, `difficulty-${track.difficulty.toLowerCase()}`)}${facts([['Format', 'Circuit · continuous laps'], ['Length', `≈ ${map.length} km`], ['Unlock', trophyLink(game.rewardForTrack(track.id))]])}</div></div>`
+    trackLengths[track.id] = map.length;
+    add(`tracks/${track.id}`, { title: track.name, group: 'Tracks', trackId: track.id, mark: track.id, intro: track.description, badges: chip(track.difficulty, track.difficulty),
+      body: () => `<div class="track-hero">${map.html}<div>${chip(track.difficulty, track.difficulty)}${facts([['Format', 'Circuit · continuous laps'], ['Length', `≈ ${map.length} km`], ['Unlock', trophyLink(game.rewardForTrack(track.id))]])}</div></div>`
         + section('Read the route', paragraph(copy(advice.sections)))
         + section('Find time', paragraph(copy(advice.advice)))
         + section('Practise here', paragraph(copy(advice.practice)) + paragraph(`Try ${link(carPath(advice.car), cars.find((c) => c.id === advice.car).name)} and ${link(`skills/${advice.technique}`, TECHNIQUES.find((t) => t.id === advice.technique).title)}.`))
@@ -131,8 +183,9 @@ export async function renderWiki() {
   }
   const driveSequence = (items) => `<ol class="drive-sequence">${items.map(([label, text, color]) => `<li class="cue-${color}"><strong>${label}</strong><span>${escapeHtml(text)}</span></li>`).join('')}</ol>`;
   const chargeSequence = () => driveSequence([['DRIFT', 'Fill BOOST', 'drift'], ['DRIFT', 'Build OVERCHARGE', 'overcharge'], ['GAS', 'Catch and hold', 'gas'], ['BOOST', 'Spend the KICK', 'boost']]);
-  for (const t of TECHNIQUES) add(`skills/${t.id}`, { ...t, group: 'Skills',
-    body: () => (t.id === 'overcharge' ? chargeSequence() : `<div class="technique-banner">${icon(t.icon)}<span>${escapeHtml(t.intro)}</span></div>`)
+  const SKILL_MARKS = { shift: 'shift', flow: 'flow', 'drift-attack': 'drift' };
+  for (const t of TECHNIQUES) add(`skills/${t.id}`, { ...t, group: 'Skills', mark: SKILL_MARKS[t.id],
+    body: () => (t.id === 'overcharge' ? chargeSequence() : `<div class="technique-banner"><span>${escapeHtml(t.intro)}</span></div>`)
       + (t.reward ? paragraph(`Unlock: ${trophyLink(game.getTrophyRoadReward(t.reward))}.`) : '')
       + [['What it does', t.what], ['How to do it', t.how], ['Why use it', t.why], ['Timing', t.timing], ['Advanced', t.advanced]].map(([title, text]) => section(title, paragraph(copy(text)))).join('')
       + section('Practise it', paragraph(`Try ${link(`tracks/${t.practice}`, tracks.find((track) => track.id === t.practice).name)}. ${link('start/tutorials', 'Tutorials')} give you a guided starting point.`))
@@ -142,11 +195,11 @@ export async function renderWiki() {
     start: () => `<div class="start-picture">${carImage('classic', true)}${driveSequence([['STEER', 'Find a comfortable neutral', 'gas'], ['DRIVE', 'Learn the pad', 'drift'], ['FINISH', 'Race your first rival', 'boost']])}</div>`,
     controls: controlsVisual,
     sound: () => driveSequence([['GUIDANCE', 'Where to steer', 'gas'], ['PACE NOTES', 'What comes next', 'drift'], ['CAR SOUNDS', 'What is happening now', 'boost']]),
-    build: () => `<div class="build-picture">${carImage('race', true)}<div>${badge('ORIGINAL · APEX GRIP', 'rarity-epic')}<span class="build-plus" aria-hidden="true">+</span>${badge('INSTALLED · TORQUE', 'rarity-epic')}<p>Example: Race Car with TORQUE</p></div></div>`,
+    build: () => `<div class="build-picture">${carImage('race', true)}<div>${chip('ORIGINAL · APEX GRIP', 'epic')}<span class="build-plus" aria-hidden="true">+</span>${chip('INSTALLED · TORQUE', 'epic')}<p>Example: Race Car with TORQUE</p></div></div>`,
     ideas: () => `<div class="car-lineup" aria-hidden="true">${['vintage-racer', 'race', 'toy-racer', 'race-future'].map((id) => carImage(id)).join('')}</div>`,
     tutorials: () => `<div class="car-lineup" aria-hidden="true">${['classic', 'tractor'].map((id) => carImage(id)).join('')}</div>`
   };
-  for (const article of ARTICLES) add(article.path, { ...article,
+  for (const article of ARTICLES) add(article.path, { ...article, mark: article.icon === 'perkulator' ? 'perkulator' : undefined,
     body: () => (article.visual ? visuals[article.visual]() : '')
       + (article.reward ? paragraph(`Unlock: ${trophyLink(game.getTrophyRoadReward(article.reward))}.`) : '')
       + article.sections.map(([title, text]) => section(title, paragraph(copy(text)))).join('')
@@ -162,7 +215,7 @@ export async function renderWiki() {
   };
   add('progress/trophy-road', { title: 'Trophy Road', group: 'Progress', icon: 'trophy', intro: 'The unlock route, in one place. Earn trophies through achievements and challenges.',
     body: () => paragraph('The starting cars and EASY tracks are available immediately. Older profiles may retain earlier unlocks; this is the current reward order.')
-      + `<ol class="reward-road">${rewards.map((reward) => `<li id="${reward.id}"><span class="reward-threshold">${reward.threshold.toLocaleString('en-US')}<small>trophies</small></span><div><h2>${escapeHtml(reward.title)}</h2><p>${rewardLinks(reward)}</p><p>${escapeHtml(reward.description.replace(/<[^>]+>/g, ' '))}</p>${reward.id === 'drift-attack' ? paragraph(`Also unlocks the Truck’s ${link('perks/torque', 'TORQUE')}.`) : ''}</div></li>`).join('')}</ol>`,
+      + `<ol class="reward-road">${rewards.map((reward) => `<li id="${reward.id}"><span class="reward-threshold"><span class="reward-icon" aria-hidden="true">${authored(game.TROPHY_ROAD_REWARD_ICONS[reward.icon] || '')}</span>${reward.threshold.toLocaleString('en-US')}<small>trophies</small></span><div><h2>${escapeHtml(reward.title)}</h2><p>${rewardLinks(reward)}</p><p>${escapeHtml(reward.description.replace(/<[^>]+>/g, ' '))}</p>${reward.id === 'drift-attack' ? paragraph(`Also unlocks the Truck’s ${link('perks/torque', 'TORQUE')}.`) : ''}</div></li>`).join('')}</ol>`,
     related: ['progress/achievements', 'progress/challenges', 'cars', 'tracks', 'perks/builds'] });
   const achievementEntry = (a) => `<li id="${a.id}" class="achievement"><div class="achievement-symbol">${icon(a.icon)}</div><div><h3>${escapeHtml(a.title)}</h3><p>${escapeHtml(a.description)}</p>${a.recommendation ? `<p class="muted">${escapeHtml(a.recommendation)}</p>` : ''}${a.trackId ? paragraph(link(`tracks/${a.trackId}`, tracks.find((t) => t.id === a.trackId).name)) : ''}</div><strong class="trophies">${a.trophies}<span>trophies</span></strong></li>`;
   add('progress/achievements', { title: 'Achievements', group: 'Progress', icon: 'trophy', intro: 'Every current goal, its exact requirement and its trophy reward. Hidden discoveries stay folded until you choose to reveal them.', aliases: achievements.filter((a) => !a.hidden && !a.calibrationPending).map((a) => a.title).join(' '),
@@ -222,9 +275,9 @@ export async function renderWiki() {
     const body = page.body();
     const html = `<!doctype html>
 <!-- Generated by turn/scripts/build-wiki.mjs. Edit wiki/content.mjs for advice. -->
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(page.title)}${page.home ? '' : ' · TURN Wiki'}</title><meta name="description" content="${escapeHtml(page.intro)}"><link rel="canonical" href="https://enkel.design${url(path)}"><link rel="icon" href="${logo}" type="image/png" sizes="512x512"><script>${themeBoot}</script><link rel="stylesheet" href="/turn/design-tokens.css?build=${release.cacheKey}"><link rel="stylesheet" href="/turn/design-scale.css?build=${release.cacheKey}"><link rel="stylesheet" href="${BASE}wiki.css?build=${release.cacheKey}"><script defer src="${BASE}wiki.js?build=${release.cacheKey}"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(page.title)}${page.home ? '' : ' · TURN Wiki'}</title><meta name="description" content="${escapeHtml(page.intro)}"><link rel="canonical" href="https://enkel.design${url(path)}"><link rel="icon" href="${logo}" type="image/png" sizes="512x512"><script>${themeBoot}</script><link rel="stylesheet" href="/turn/design-tokens.css?build=${release.cacheKey}"><link rel="stylesheet" href="/turn/design-scale.css?build=${release.cacheKey}"><link rel="stylesheet" href="/turn/pre-race.css?build=${release.cacheKey}"><link rel="stylesheet" href="${BASE}wiki.css?build=${release.cacheKey}"><script defer src="${BASE}wiki.js?build=${release.cacheKey}"></script></head>
 <body><a class="skip-link" href="#main">Skip to content</a><header class="site-header"><div class="header-bar"><a class="brand" href="${BASE}" aria-label="TURN Wiki home"><img src="${logo}" width="40" height="40" alt=""><span>TURN <small>WIKI</small></span></a><div class="header-actions">${page.home ? '' : `<a class="search-link" href="${url('search')}">SEARCH</a>`}<button class="menu-toggle" type="button" aria-expanded="false" aria-controls="wiki-sections" hidden>MENU</button></div></div><nav class="primary-nav" id="wiki-sections" aria-label="Wiki sections"><ul>${nav.map(([p, title]) => `<li><a href="${url(p)}"${active === p ? (path === p ? ' aria-current="page"' : ' aria-current="true"') : ''}>${title}</a></li>`).join('')}</ul><a class="button play-button" href="/turn/">PLAY TURN</a></nav></header>
-<main id="main" tabindex="-1" class="${page.home ? 'home' : page.index ? 'index-page' : 'article-page'}">${page.home ? '' : `<nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li>${link('', 'Wiki')}</li>${parent && parentTitle ? `<li>${link(parent, parentTitle)}</li>` : ''}<li aria-current="page">${escapeHtml(page.title)}</li></ol></nav>`}<header class="page-heading"><p class="eyebrow">${escapeHtml(page.home ? 'THE PLAYER GUIDE' : page.group || 'TURN')}</p><h1>${escapeHtml(page.title)}</h1><p class="intro">${escapeHtml(page.intro)}</p></header>${body}${page.related ? related(page.related) : ''}</main>
+<main id="main" tabindex="-1" class="${page.home ? 'home' : page.index ? 'index-page' : 'article-page'}">${page.home ? '' : `<nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li>${link('', 'Wiki')}</li>${parent && parentTitle ? `<li>${link(parent, parentTitle)}</li>` : ''}<li aria-current="page">${escapeHtml(page.title)}</li></ol></nav>`}<header class="page-heading">${page.mark ? mark(page.mark) : ''}<p class="eyebrow">${escapeHtml(page.home ? 'THE PLAYER GUIDE' : page.group || 'TURN')}</p><h1>${escapeHtml(page.title)}</h1><p class="intro">${escapeHtml(page.intro)}</p></header>${body}${page.related ? related(page.related) : ''}</main>
 <footer class="site-footer"><div><a class="brand footer-brand" href="${BASE}">TURN WIKI</a><p>Learn it here. Drive it in TURN.</p><small>TURN ${release.version} · ${release.id}</small></div><div class="footer-links">${footerLinks.map((p) => link(p, pages.get(p).title)).join('')}<a href="#main">Back to top</a></div><label class="theme-control" hidden>Appearance<select id="wiki-theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></footer></body></html>\n`;
     rendered.set(`${path ? path + '/' : ''}index.html`, html);
   }
@@ -247,6 +300,7 @@ export async function renderWiki() {
     rendered.set(`${from}/index.html`, page.replace('<!doctype html>\n', `<!doctype html>\n<!-- Moved to ${url(to)} (#1246) -->\n`)
       .replace(head, `${head}<meta name="robots" content="noindex"><script>location.replace(${JSON.stringify(url(to))} + location.hash)</script>`));
   }
+  for (const name of authoredAssets) await fs.access(new URL(`../assets/trophy-road/${name}.svg`, import.meta.url));
   // Fail the build on editorial dead ends, missing shared assets or a stale anchor.
   for (const [name, html] of rendered) {
     const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
