@@ -2,7 +2,7 @@
    same release; a failed update never publishes a partial store. Keep the previous
    complete release for bounded startup recovery, plus releases used by open pages. */
 
-const RELEASE = '20261018-r480';
+const RELEASE = '20261018-r481';
 const SCOPE = new URL(self.registration.scope).pathname;
 const NAME = SCOPE.replace(/\//g, '') || 'turn';
 const PRECACHE = `${NAME}-precache-${RELEASE}`;
@@ -242,6 +242,7 @@ async function navigate(request) {
 }
 
 // Other pages in the app (usage statistics, the history reader) are not stored ahead;
+// the wiki is, so its links work offline from the first launch.
 // offline, a page that was never opened says so and leads back to the game instead of
 // leaving the installed app on a browser error.
 async function otherPage(request) {
@@ -257,6 +258,10 @@ async function otherPage(request) {
   }
   const cached = await caches.match(request, { ignoreSearch: true });
   if (cached) return cached;
+  // The release stores folder pages as their index.html (the wiki's /turn/wiki/cars/).
+  const { pathname } = new URL(request.url);
+  const folder = pathname.endsWith('/') ? await caches.match(`${pathname}index.html`, { ignoreSearch: true }) : null;
+  if (folder) return folder;
   return response || new Response(OFFLINE_PAGE, { status: 503, headers: { 'content-type': 'text/html; charset=utf-8' } });
 }
 

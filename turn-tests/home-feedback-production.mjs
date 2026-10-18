@@ -77,6 +77,8 @@ assert.match(feedback, /meta\.className = 'm8-home-meta'/);
 assert.match(feedback, /buildLabel\.replaceWith\(meta\)/);
 assert.match(feedback, /meta\.appendChild\(buildLabel\)/);
 assert.match(feedback, /trigger\.className = 'm8-about-trigger'/);
+// TURN WIKI sits beside ABOUT TURN in the sheet footer, worded as HOW TO PLAY offers it (#1246).
+assert.match(feedback, /wiki\.className = 'm8-wiki-trigger';\s*wiki\.href = '\/turn\/wiki\/';\s*wiki\.innerHTML = 'TURN WIKI <span aria-hidden="true">↗<\/span>';\s*meta\.appendChild\(wiki\);/);
 assert.match(feedback, /trigger\.textContent = 'ABOUT TURN'/);
 assert.match(feedback, /trigger\.setAttribute\('aria-haspopup', 'dialog'\)/);
 assert.match(feedback, /meta\.appendChild\(trigger\)/, 'ABOUT TURN must appear directly under the build information');
@@ -98,7 +100,7 @@ assert.match(feedback, /if \(event\.target === dialog\) closeDialog\(dialog\)/, 
 // GIVE FEEDBACK and ABOUT TURN live in the Home ☰ sheet (home-app-bar.css).
 assert.match(appBarCss, /\.turn-home-sheet \.m8-home-menu > button \{[^}]*min-height: 48px;/);
 assert.match(appBarCss, /\.turn-home-sheet \.turn-home-sheet-footer \.m8-home-meta \{[^}]*display: flex !important;/);
-assert.match(appBarCss, /\.turn-home-sheet \.turn-home-sheet-footer \.m8-about-trigger \{[^}]*min-height: 44px;/);
+assert.match(appBarCss, /\.turn-home-sheet \.turn-home-sheet-footer :is\(\.m8-about-trigger, \.m8-wiki-trigger\) \{[^}]*min-height: 44px;/);
 assert.match(css, /\.m8-feedback-dialog[\s\S]*width: min\(570px, calc\(100vw - 24px\)\)/);
 assert.match(css, /\.m8-about-dialog[\s\S]*width: min\(495px, calc\(100vw - 24px\)\)/);
 assert.match(css, /\.m8-feedback-dialog \.m8-dialog-head[\s\S]*margin-bottom: clamp\(10\.5px, 2vh, 15px\)/, 'Feedback heading spacing should stay compact');
