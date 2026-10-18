@@ -63,13 +63,13 @@ li + li { margin-top: .35rem; }
 }
 main { padding-block: var(--turn-space-8) 3rem; }
 .page-heading { margin: 1.3rem 0 1.6rem; }
-.eyebrow { font-size: .75rem; font-weight: var(--turn-weight-label); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .75rem; color: var(--turn-text-muted); }
 .intro { max-width: 64ch; margin-top: .85rem; font-size: 1.15rem; color: var(--turn-text-muted); }
 .breadcrumbs ol { list-style: none; padding: 0; margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: .25rem .6rem; font-size: .85rem; }
 .breadcrumbs li { margin: 0; }
 .breadcrumbs li + li::before { content: "/"; margin-right: .6rem; color: var(--turn-text-muted); }
-.breadcrumbs a { display: inline-block; padding-block: .65rem; }
-.article-page { max-width: 960px; }
+.breadcrumbs a { display: inline-flex; align-items: center; min-height: var(--turn-target-min); }
+/* Articles start on the header's left edge; their content keeps a reading width. */
+.article-page > * { max-width: 960px; }
 main > section { margin-top: 2rem; }
 .article-page > section { border-top: var(--turn-border-micro) solid var(--turn-outline-muted); padding-top: 1.5rem; }
 .muted, figcaption { color: var(--turn-text-muted); font-size: .875rem; }
@@ -146,11 +146,12 @@ figcaption { margin-top: .8rem; line-height: 1.5; }
 .car-hero figcaption { text-align: center; }
 .car-hero .stat-meters { gap: .65rem; }
 .car-hero .muted { margin-top: 1rem; }
+.hero-facts .facts { margin-bottom: 0; }
 .facts { display: flex; flex-wrap: wrap; gap: 1rem 2rem; margin-block: 1.5rem; }
 .facts > div { flex: 1 1 150px; }
 .facts dt { font-size: .75rem; text-transform: uppercase; font-weight: var(--turn-weight-label); color: var(--turn-text-muted); margin-bottom: .35rem; }
 .facts dd { margin: 0; font-weight: 650; }
-.track-hero { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: center; }
+.track-hero { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: center; }
 .track-map { background: var(--turn-surface-card); border: var(--turn-border-control) solid var(--turn-outline); border-radius: var(--turn-radius-card); padding: 1rem; }
 .track-map svg { width: 100%; height: auto; }
 /* ROADBOOK's route at page size: an Ink outline with the track's accent inside. */
@@ -160,8 +161,7 @@ figcaption { margin-top: .8rem; line-height: 1.5; }
 .map-start { fill: var(--turn-surface-card); stroke: var(--turn-text); stroke-width: 3; }
 .track-hero .facts { display: grid; gap: 1.3rem; }
 .track-hero .facts > div { min-width: 0; }
-.perk-banner, .technique-banner { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; background: var(--turn-surface-raised); padding: 1.5rem; border: var(--turn-border-control) solid var(--turn-outline); border-radius: var(--turn-radius-card); }
-.technique-banner > span:last-child { flex: 1 1 12rem; font-weight: var(--turn-weight-label); }
+.perk-banner { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; background: var(--turn-surface-raised); padding: 1.5rem; border: var(--turn-border-control) solid var(--turn-outline); border-radius: var(--turn-radius-card); }
 .mini-car { display: grid; grid-template-columns: 180px minmax(0, 1fr); align-items: center; gap: 1rem; max-width: 70ch; }
 .mini-car > div > a { font-weight: var(--turn-weight-title); display: inline-block; padding-block: .6rem; }
 .drive-sequence { padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: .75rem; }
@@ -177,12 +177,10 @@ figcaption { margin-top: .8rem; line-height: 1.5; }
 .start-picture > img { width: 35%; }
 .start-picture .drive-sequence { flex: 1; }
 .control-figure { padding: 1.5rem; background: var(--turn-surface-card); border-radius: var(--turn-radius-card); border: var(--turn-border-control) solid var(--turn-outline); }
-.pad-picture { display: flex; align-items: center; justify-content: center; gap: .7em; max-width: 480px; margin-inline: auto; font-size: 16px; }
-.pad-face { width: 180px; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; border: var(--turn-border-control) solid var(--turn-outline); border-radius: var(--turn-radius-card); color: var(--turn-ink); font-weight: var(--turn-weight-title); }
-.pad-face span { display: grid; place-items: center; padding: 1em .5em; }
-.pad-face span:nth-child(n+3) { grid-column: 1 / -1; border-top: var(--turn-border-compact) solid var(--turn-ink); }
-.pad-face span:first-child { border-right: var(--turn-border-compact) solid var(--turn-ink); }
-.pad-extra { font-size: .75em; font-weight: var(--turn-weight-label); }
+.pad-demo summary { display: flex; align-items: center; min-height: var(--turn-target-min); font-weight: var(--turn-weight-label); text-transform: uppercase; cursor: pointer; }
+.pad-demo .turn-demo { margin-block: var(--turn-space-4); }
+.pad-demo summary::before { content: "▸"; margin-right: .5rem; }
+.pad-demo[open] summary::before { content: "▾"; }
 .build-picture { display: flex; align-items: center; gap: 1rem; }
 .build-picture > img { width: 40%; }
 .build-plus { display: block; margin: .5rem; font-size: 1.5rem; }
@@ -228,7 +226,7 @@ td { text-align: center; }
 .site-footer p, .site-footer small { font-size: .8rem; color: var(--turn-text-muted); }
 .footer-brand { font-size: 1rem; letter-spacing: 0; }
 .footer-links { display: flex; flex-direction: column; }
-.footer-links a { padding-block: .6rem; font-size: .875rem; }
+.footer-links a { display: inline-flex; align-items: center; min-height: var(--turn-target-min); font-size: .875rem; }
 .theme-control { align-self: start; display: grid; gap: .4rem; font-size: .8rem; font-weight: var(--turn-weight-label); }
 .theme-control select { min-height: var(--turn-target-min); padding: .5rem; border: var(--turn-border-compact) solid var(--turn-outline); border-radius: var(--turn-radius-compact); background: var(--turn-surface-raised); color: var(--turn-text); }
 @media (max-width: 640px) {
@@ -263,7 +261,6 @@ td { text-align: center; }
   .search-form button { width: 100%; }
   .car-grid .car-card > .car-image { flex-basis: 5rem; width: 5rem; }
   .card:not(.car-card) { flex-direction: column; }
-  .pad-picture { flex-wrap: wrap; }
 }
 @media (forced-colors: active) {
   .stat-meter-segments i { forced-color-adjust: none; border-color: CanvasText; background: Canvas; }

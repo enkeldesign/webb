@@ -21,6 +21,15 @@
   else if (typeof media.addListener === 'function') media.addListener(applyTheme);
   applyTheme();
 
+  // Controls shows HOW TO PLAY's own drive pad, from the game's module.
+  const pad = document.querySelector('.wiki-drive-pad');
+  if (pad) {
+    import(pad.dataset.module).then(({ createDrivePadDemo }) => {
+      pad.append(createDrivePadDemo('drive', document));
+      pad.closest('details').hidden = false;
+    }).catch(() => { /* The caption describes the pad without it. */ });
+  }
+
   const input = document.querySelector('#wiki-query');
   if (input) {
     const form = input.closest('form');
