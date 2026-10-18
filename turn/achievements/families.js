@@ -35,15 +35,17 @@ export function completedAchievementFamily(family, isUnlocked) {
 // Filters own each card's hidden state. The disclosure owns only its child group,
 // so filtering cannot accidentally reveal collapsed children. A track/NEW filter
 // that excludes the master must still expose its matching children.
-export function syncAchievementFamilies(list) {
+export function syncAchievementFamilies(list, { revealMatches = false } = {}) {
   for (const group of list.querySelectorAll('[data-achievement-family]')) {
     const master = group.querySelector(':scope > .turn-achievement-card');
     const children = group.querySelector(':scope > .turn-achievement-children');
     const button = group.querySelector('[data-achievement-disclosure]');
     const hasChildren = [...children.children].some((card) => !card.hidden);
     group.hidden = master.hidden && !hasChildren;
-    children.hidden = !hasChildren || (!master.hidden && button?.getAttribute('aria-expanded') === 'false');
-    if (button) button.hidden = !hasChildren;
+    children.hidden = !hasChildren || (!revealMatches && !master.hidden && button?.getAttribute('aria-expanded') === 'false');
+    // NEW/track scopes show their exact matching cards. No collapsed disclosure
+    // claims to hide children that the filter deliberately exposes.
+    if (button) button.hidden = !hasChildren || revealMatches;
   }
 }
 

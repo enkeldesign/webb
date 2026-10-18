@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { ACHIEVEMENT_STORAGE_KEY, createAchievementStore, normalizeAchievementState } from '../turn/achievements/store.js';
 import { getAchievement } from '../turn/achievements/catalog.js';
+import { achievementTrophyAward } from '../turn/achievements/awards.js';
 import { createAdminRewardState } from '../turn/testing/admin-unlock-sequence.js';
 
 // Two TURN windows share one storage, each with its own store (#1045 A1). Neither may
@@ -14,6 +15,10 @@ function sharedStorage() {
   };
 }
 const stored = (storage) => JSON.parse(storage.getItem(ACHIEVEMENT_STORAGE_KEY));
+
+assert.equal(achievementTrophyAward('faster-than-the-dev', {}, { trophies: 0 }), 300, 'Skipping the foundation release preserves old SPRINT trophies');
+assert.equal(achievementTrophyAward('drift-flow-master', {}, null), 300, 'Removing the combined master from the active catalog preserves its award');
+assert.equal(achievementTrophyAward('faster-than-the-dev', { awardedTrophies: 0 }, { trophies: 0 }), 0, 'A new perk-only completion never gets legacy trophies');
 
 {
   const storage = sharedStorage();

@@ -10,6 +10,7 @@
     "/turn/accessibility/color-cues.js",
     "/turn/achievements.css",
     "/turn/achievements.js",
+    "/turn/achievements/awards.js",
     "/turn/achievements/catalog-base.js",
     "/turn/achievements/catalog.js",
     "/turn/achievements/challenge-expansion-r166.js",

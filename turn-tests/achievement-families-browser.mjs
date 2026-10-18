@@ -55,21 +55,26 @@ try {
   assert.equal(await toggle.evaluate((node) => document.activeElement === node), true, 'Expansion keeps focus');
   await page.keyboard.press('Space');
   assert.equal(await children.isVisible(), false);
+  await page.locator('[data-achievement-filter="new"]').click();
+  assert.equal(await children.isVisible(), true, 'NEW exposes matching children even when their master is also new');
+  assert.equal(await toggle.isVisible(), false, 'No collapsed disclosure contradicts the NEW filter');
+  await page.locator('[data-achievement-filter="all"]').click();
+  assert.equal(await children.isVisible(), false, 'ALL restores the chosen collapsed state');
   await page.locator('[data-achievement-filter="unlocked"]').click();
   assert.equal(await children.isVisible(), false, 'UNLOCKED keeps completed children collapsed');
   await page.locator('[data-achievement-filter="time-trials"]').click();
   assert.equal(await toggle.isVisible(), true, 'Category filters keep the family summary');
   await page.locator('[data-achievement-filter="all"]').click();
-  await page.evaluate(() => {
-    const dialog = globalThis.__turnAchievements.dialog;
-    dialog.dataset.achievementTrackScope = 'airport';
-    dialog.querySelector('[data-achievement-filter="all"]').click();
-  });
   // Open from a track sheet to exercise its explicit track filter.
-  await page.evaluate(() => {
-    globalThis.__turnAchievements.dialog.close();
-    globalThis.__turnAchievements.open(null, { trackId: 'airport' });
+  await page.evaluate(async () => {
+    const achievements = globalThis.__turnAchievements;
+    await new Promise((resolve) => {
+      achievements.dialog.addEventListener('close', resolve, { once: true });
+      achievements.close();
+    });
+    achievements.open(null, { trackId: 'airport' });
   });
+  await page.locator('[data-achievement-id="airport-sprint"]').waitFor({ state: 'visible' });
   assert.equal(await page.locator('[data-achievement-id="airport-sprint"]').isVisible(), true, 'Track-scoped children remain reachable');
   assert.equal(await page.evaluate(() => globalThis.__turnAchievements.store.trophyTotal()), total, 'Visibility never changes trophies');
   assert.deepEqual(errors, []);

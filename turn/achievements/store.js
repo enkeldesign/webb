@@ -19,6 +19,7 @@ import {
   rewardIdsForTrophies
 } from '../progression/trophy-road.js';
 import { activeSessionPolicy } from '../race/session-policy.js';
+import { achievementTrophyAward } from './awards.js';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;
@@ -51,12 +52,9 @@ function normalizedStringArray(value, allowed = null) {
   return allowed ? unique.filter((item) => allowed.includes(item)) : unique;
 }
 
-function normalizedUnlockRecord(record, achievement) {
+function normalizedUnlockRecord(id, record, achievement) {
   if (!record || typeof record !== 'object') return null;
-  const awarded = record.awardedTrophies;
-  const awardedTrophies = typeof awarded === 'number' && Number.isFinite(awarded) && awarded >= 0
-    ? awarded
-    : achievement?.calibrationPending !== true ? achievement?.trophies : undefined;
+  const awardedTrophies = achievementTrophyAward(id, record, achievement);
   return {
     ...(Number.isFinite(awardedTrophies) ? { awardedTrophies } : {}),
     unlockedAt: Number.isFinite(Number(record.unlockedAt))
@@ -112,7 +110,7 @@ export function normalizeAchievementState(value) {
 
   const unlocked = {};
   for (const [id, record] of Object.entries(value.unlocked || {})) {
-    const normalized = normalizedUnlockRecord(record, getAchievement(id));
+    const normalized = normalizedUnlockRecord(id, record, getAchievement(id));
     if (!normalized) continue;
 
     // Preserve syntactically valid unlock records even when the current catalog

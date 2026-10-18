@@ -412,7 +412,7 @@ export const CHANGELOG = Object.freeze([
     "entries": [
       [
         "SPECTATE shows how a lap was driven",
-        "Laps now keep their controls. SPECTATE plays them back beside the car: the drive pad with LOCK, SHIFT and REVERSE, and the phone or steering knob as the lap was steered."
+        "SPECTATE replays each lap’s drive pad, LOCK, SHIFT, REVERSE and steering controls beside the car."
       ]
     ]
   },
@@ -434,7 +434,7 @@ export const CHANGELOG = Object.freeze([
     "entries": [
       [
         "Completed achievement collections",
-        "Completed SPRINT, SAFETY, WINNER and DRIFT & FLOW collections fold into their master card. Choose SHOW to inspect every achievement again."
+        "Completed collections fold under their master. Choose SHOW to inspect their achievements."
       ]
     ]
   }

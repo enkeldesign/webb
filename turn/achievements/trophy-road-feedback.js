@@ -183,7 +183,7 @@ function prepareFilters(dialog) {
       card.hidden = !visible;
       if (visible) visibleCount += 1;
     }
-    syncAchievementFamilies(list);
+    syncAchievementFamilies(list, { revealMatches: activeTags.has('new') || Boolean(activeTrack) });
     list?.toggleAttribute('data-filter-empty', visibleCount === 0);
     syncButtons();
   }
