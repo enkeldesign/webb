@@ -7,8 +7,9 @@ import { fileURLToPath } from 'node:url';
 const { chromium } = await import(process.env.TURN_PLAYWRIGHT_PATH || 'playwright');
 const root = fileURLToPath(new URL('../', import.meta.url));
 const generated = JSON.parse(await fs.readFile(new URL('../turn/wiki/generated-pages.json', import.meta.url)));
-// Pages that moved in the #1246 revamp keep their old address as a small redirect.
-const isRedirect = async (file) => (await fs.readFile(new URL(`../turn/wiki/${file}`, import.meta.url), 'utf8')).includes('http-equiv="refresh"');
+// Pages that moved in the #1246 revamp keep their old address: the new page's content,
+// which moves on to the new address when script runs.
+const isRedirect = async (file) => (await fs.readFile(new URL(`../turn/wiki/${file}`, import.meta.url), 'utf8')).includes('<!-- Moved to ');
 const redirects = [];
 for (const file of generated) if (file.endsWith('.html') && await isRedirect(file)) redirects.push(file);
 const articles = generated.filter((file) => file.endsWith('.html') && !redirects.includes(file));
@@ -119,6 +120,10 @@ try {
   assert.equal(await page.locator('html').getAttribute('data-theme'), 'light');
   const noJs = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 320, height: 568 } });
   const fallback = await noJs.newPage();
+  // Without script an old deep link still reaches its section.
+  await fallback.goto(`${origin}/turn/wiki/driving/drift/#timing`);
+  assert.equal(await fallback.locator('h1').textContent(), 'DRIFT');
+  assert(await fallback.locator('#timing').isVisible());
   await fallback.goto(`${origin}/turn/wiki/`);
   await fallback.getByRole('link', { name: 'TRACKS', exact: true }).click();
   await fallback.locator('.card').filter({ hasText: 'Harbor' }).click();
