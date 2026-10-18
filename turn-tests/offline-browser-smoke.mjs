@@ -259,6 +259,12 @@ try {
   await other.goto(`${origin}/turn/stats/`);
   assert.equal((await other.locator('h1').textContent()).trim(), "You're offline");
   assert.equal(await other.locator('a').getAttribute('href'), '/turn/', 'The offline page leads back to TURN');
+  // The wiki is part of the release: TURN WIKI and its folder links open offline before
+  // any visit (#1246).
+  for (const [route, title] of [['/turn/wiki/', 'TURN Wiki'], ['/turn/wiki/cars/', 'Cars']]) {
+    await other.goto(`${origin}${route}`);
+    assert.equal((await other.locator('h1').textContent()).trim(), title, `Offline, ${route} opens from the stored release`);
+  }
   await other.close();
 
   // Back online, a new release's worker takes over and asks to restart, after the race.
