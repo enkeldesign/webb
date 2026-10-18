@@ -140,6 +140,7 @@ jobs:
           - shard: roadbook
             tests: >-
               turn-tests/roadbook-browser-smoke.mjs
+              turn-tests/achievement-families-browser.mjs
               turn-tests/race-menu-browser-smoke.mjs
               turn-tests/support-feedback-browser-smoke.mjs
               turn-tests/patrol-browser-smoke.mjs
