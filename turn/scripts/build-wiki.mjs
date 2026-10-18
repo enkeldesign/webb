@@ -38,6 +38,14 @@ async function gameData() {
 export async function renderWiki() {
   const game = await gameData();
   const release = JSON.parse(await fs.readFile(new URL('../release.json', import.meta.url), 'utf8'));
+  // HOW TO PLAY's drive pad (ui/how-to-play-demos.js) reads the race's pad values, which
+  // drive-pad.css declares on :root beside rules the wiki must not load (they switch off
+  // text selection). The build copies just those values onto the wiki's picture.
+  const drivePadCss = await fs.readFile(new URL('../drive-pad.css', import.meta.url), 'utf8');
+  const drivePadValues = [...(drivePadCss.match(/:root \{([^}]*--turn-drive-[^}]*)\}/)?.[1] || '').replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(--turn-drive-[a-z-]+):\s*([^;]+);/g)].map(([, name, value]) => `${name}: ${value.trim()}`).join('; ');
+  for (const [, name] of (await fs.readFile(new URL('../ui/how-to-play-demos.js', import.meta.url), 'utf8')).matchAll(/var\((--turn-drive-[a-z-]+)\)/g)) {
+    assert(drivePadValues.includes(`${name}:`), `The wiki's drive pad needs ${name} from drive-pad.css`);
+  }
   const { CAR_CATALOG: cars, TRACK_DEFINITIONS: tracks, VEHICLE_PERKS: perks, TROPHY_ROAD_REWARDS: rewards, ACHIEVEMENTS: achievements, VEHICLE_STAT_LEGEND: stats } = game;
   for (const [items, advice, label] of [[cars, CAR_ADVICE, 'car'], [tracks, TRACK_ADVICE, 'track'], [perks, PERK_ADVICE, 'perk']]) {
     assert.deepEqual(Object.keys(advice).sort(), items.map(({ id }) => id).sort(), `Wiki ${label} advice must cover the current catalog exactly`);
@@ -56,7 +64,10 @@ export async function renderWiki() {
   const icon = (name = 'map') => ['shift', 'perkulator'].includes(name) ? assetIcon(name)
     : `<span class="line-icon" aria-hidden="true">${name === 'perk' ? game.TROPHY_ROAD_REWARD_ICONS.perk : (game.ICONS[name] || game.ICONS.map)}</span>`;
   const carImage = (id, large = false) => `<img class="car-image" src="/turn/assets/cars/stills/${id}.webp" alt="" width="${game.CAR_VIEW.still.width}" height="${game.CAR_VIEW.still.height}" ${large ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
+  // TURN writes track names in capitals (CLIFFSIDE), in titles and in running text alike.
+  const trackName = (id) => tracks.find((t) => t.id === id).name.toUpperCase();
   const trophyLink = (reward) => reward ? link(`progress/trophy-road#${reward.id}`, `${reward.threshold.toLocaleString('en-US')} trophies · ${reward.shortTitle}`) : 'Available from the start';
+  const thresholdLink = (reward) => reward ? link(`progress/trophy-road#${reward.id}`, `${reward.threshold.toLocaleString('en-US')} trophies`) : 'Available from the start';
   const facts = (entries) => `<dl class="facts">${entries.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
   // Corner marks (#1230): a page or card about one feature shows that feature's own TURN
   // icon in its top-right corner, as the Track sheet shows its track. No icon, no mark.
@@ -82,7 +93,7 @@ export async function renderWiki() {
   // ROADBOOK's track card: ordinal and pictogram, difficulty and name, and the real route.
   const trackCard = (p) => {
     const track = tracks.find((t) => t.id === p.trackId);
-    return `<li><a class="turn-pr-card wiki-track-card" href="${url(p.path)}" style="--turn-pr-accent:${escapeHtml(track.accent)}"><span class="turn-pr-card-tab" aria-hidden="true"><span class="turn-pr-card-ordinal">${String(tracks.indexOf(track) + 1).padStart(2, '0')}</span><span class="turn-pr-icon">${game.TRACK_ICON_MARKUP[track.id]}</span></span><span class="turn-pr-card-body"><span class="turn-pr-card-meta">${chip(track.difficulty, track.difficulty)}<span class="turn-pr-card-state">≈ ${trackLengths[track.id]} km</span></span><span class="turn-pr-card-name">${escapeHtml(track.name)}</span><span class="wiki-card-line">${escapeHtml(track.description)}</span><span class="wiki-card-line">${unlockLine(game.rewardForTrack(track.id))}</span></span><span class="turn-pr-card-art" aria-hidden="true">${routeArt(track)}</span></a></li>`;
+    return `<li><a class="turn-pr-card wiki-track-card" href="${url(p.path)}" style="--turn-pr-accent:${escapeHtml(track.accent)}"><span class="turn-pr-card-tab" aria-hidden="true"><span class="turn-pr-card-ordinal">${String(tracks.indexOf(track) + 1).padStart(2, '0')}</span><span class="turn-pr-icon">${game.TRACK_ICON_MARKUP[track.id]}</span></span><span class="turn-pr-card-body"><span class="turn-pr-card-meta">${chip(track.difficulty, track.difficulty)}<span class="turn-pr-card-state">≈ ${trackLengths[track.id]} km</span></span><span class="turn-pr-card-name">${escapeHtml(trackName(track.id))}</span><span class="wiki-card-line">${escapeHtml(track.description)}</span><span class="wiki-card-line">${unlockLine(game.rewardForTrack(track.id))}</span></span><span class="turn-pr-card-art" aria-hidden="true">${routeArt(track)}</span></a></li>`;
   };
   // A car beside its rivals: the still, its original perk, the six meters and its unlock.
   const carCard = (p) => {
@@ -120,7 +131,7 @@ export async function renderWiki() {
     const scale = Math.min(480 / (maxX - minX), 250 / (maxZ - minZ));
     const pos = (p) => [((p.x - (minX + maxX) / 2) * scale + 280).toFixed(1), ((p.z - (minZ + maxZ) / 2) * scale + 160).toFixed(1)];
     const coordinates = points.map(pos);
-    return { length: (runtime.trackLength / 1000).toFixed(2), html: `<figure class="track-map" style="--turn-pr-accent:${escapeHtml(track.accent)}"><svg class="turn-pr-route" viewBox="0 0 560 320" role="img" aria-labelledby="map-title map-description"><title id="map-title">${escapeHtml(track.name)} route</title><desc id="map-description">${escapeHtml(description)}</desc><path class="turn-pr-route-outline" d="M${coordinates.map((p) => p.join(',')).join(' L')} Z"/><path class="turn-pr-route-line" d="M${coordinates.map((p) => p.join(',')).join(' L')} Z"/><circle class="map-start" cx="${coordinates[0][0]}" cy="${coordinates[0][1]}" r="9"/></svg><figcaption>Route from the game · Circle marks the start/finish.<br>${escapeHtml(description)}</figcaption></figure>` };
+    return { length: (runtime.trackLength / 1000).toFixed(2), html: `<figure class="track-map" style="--turn-pr-accent:${escapeHtml(track.accent)}"><svg class="turn-pr-route" viewBox="0 0 560 320" role="img" aria-labelledby="map-title map-description"><title id="map-title">${escapeHtml(trackName(track.id))} route</title><desc id="map-description">${escapeHtml(description)}</desc><path class="turn-pr-route-outline" d="M${coordinates.map((p) => p.join(',')).join(' L')} Z"/><path class="turn-pr-route-line" d="M${coordinates.map((p) => p.join(',')).join(' L')} Z"/><circle class="map-start" cx="${coordinates[0][0]}" cy="${coordinates[0][1]}" r="9"/></svg><figcaption>Route from the game · Circle marks the start/finish.<br>${escapeHtml(description)}</figcaption></figure>` };
   }
   function routeArt(track) {
     const runtime = game.createTrackRuntime(track.id, track.sampleCount || game.TRACK_SAMPLE_COUNT);
@@ -150,11 +161,12 @@ export async function renderWiki() {
     const carReward = game.rewardForVehicle(car.id);
     const perkReward = game.rewardForVehiclePerk(car.id) || carReward;
     add(carPath(car.id), { title: car.name, group: 'Cars', icon: 'wheel', carId: car.id, intro: personality, teaser: how, aliases: `${car.id} ${perk.title}`,
-      body: () => `<div class="car-hero"><figure>${carImage(car.id, true)}<figcaption>${escapeHtml(car.name)} · Factory paint</figcaption></figure><div>${meters(car)}<p class="muted">${game.VEHICLE_STAT_BUDGET} base points · ${link('cars/stats', 'What the stats mean')}</p></div></div>`
-        + facts([['Car unlock', trophyLink(carReward)], ['Original perk', link(`perks/${perk.id}`, perk.title)], ['Perk unlock', trophyLink(perkReward)]])
+      body: () => `<div class="car-hero"><div class="hero-facts">${meters(car)}<p class="muted">${game.VEHICLE_STAT_BUDGET} base points · ${link('cars/stats', 'What the stats mean')}</p>${facts(perkReward === carReward
+        ? [['Unlock', thresholdLink(carReward)], ['Original perk', link(`perks/${perk.id}`, perk.title)]]
+        : [['Unlock', thresholdLink(carReward)], ['Original perk', link(`perks/${perk.id}`, perk.title)], ['Perk unlock', trophyLink(perkReward)]])}</div><figure>${carImage(car.id, true)}<figcaption>${escapeHtml(car.name)} · Factory paint</figcaption></figure></div>`
         + section('How it drives', paragraph(copy(how)))
         + section('Original perk', paragraph(copy(perk.description)) + paragraph(`${chip(perk.rarity, perk.rarity)} ${perk.installable ? 'Can also be installed on other cars through PERKULATOR.' : 'Stays with this car.'}`))
-        + section('Try a build', paragraph(copy(build)) + paragraph(`Practice: ${link(`tracks/${trackId}`, tracks.find((t) => t.id === trackId).name)}. ${link(`perks/${installedId}`, `Explore ${game.getVehiclePerk(installedId).title}`)}.`))
+        + section('Try a build', paragraph(copy(build)) + paragraph(`Practice: ${link(`tracks/${trackId}`, trackName(trackId))}. ${link(`perks/${installedId}`, `Explore ${game.getVehiclePerk(installedId).title}`)}.`))
         + section('Example SHIFT setup', exampleShift(car)),
       related: [`perks/${perk.id}`, `tracks/${trackId}`, 'skills/shift', 'perks/perkulator', 'progress/trophy-road'] });
   }
@@ -172,8 +184,8 @@ export async function renderWiki() {
   for (const track of tracks) {
     const advice = TRACK_ADVICE[track.id], map = trackMap(track, advice.map);
     trackLengths[track.id] = map.length;
-    add(`tracks/${track.id}`, { title: track.name, group: 'Tracks', trackId: track.id, mark: track.id, intro: track.description, badges: chip(track.difficulty, track.difficulty),
-      body: () => `<div class="track-hero">${map.html}<div>${chip(track.difficulty, track.difficulty)}${facts([['Format', 'Circuit · continuous laps'], ['Length', `≈ ${map.length} km`], ['Unlock', trophyLink(game.rewardForTrack(track.id))]])}</div></div>`
+    add(`tracks/${track.id}`, { title: trackName(track.id), group: 'Tracks', trackId: track.id, mark: track.id, intro: track.description, badges: chip(track.difficulty, track.difficulty),
+      body: () => `<div class="track-hero"><div class="hero-facts">${chip(track.difficulty, track.difficulty)}${facts([['Format', 'Circuit · continuous laps'], ['Length', `≈ ${map.length} km`], ['Unlock', trophyLink(game.rewardForTrack(track.id))]])}</div>${map.html}</div>`
         + section('Read the route', paragraph(copy(advice.sections)))
         + section('Find time', paragraph(copy(advice.advice)))
         + section('Practise here', paragraph(copy(advice.practice)) + paragraph(`Try ${link(carPath(advice.car), cars.find((c) => c.id === advice.car).name)} and ${link(`skills/${advice.technique}`, TECHNIQUES.find((t) => t.id === advice.technique).title)}.`))
@@ -185,12 +197,14 @@ export async function renderWiki() {
   const chargeSequence = () => driveSequence([['DRIFT', 'Fill BOOST', 'drift'], ['DRIFT', 'Build OVERCHARGE', 'overcharge'], ['GAS', 'Catch and hold', 'gas'], ['BOOST', 'Spend the KICK', 'boost']]);
   const SKILL_MARKS = { shift: 'shift', flow: 'flow', 'drift-attack': 'drift' };
   for (const t of TECHNIQUES) add(`skills/${t.id}`, { ...t, group: 'Skills', mark: SKILL_MARKS[t.id],
-    body: () => (t.id === 'overcharge' ? chargeSequence() : `<div class="technique-banner"><span>${escapeHtml(t.intro)}</span></div>`)
+    body: () => (t.id === 'overcharge' ? chargeSequence() : '')
       + (t.reward ? paragraph(`Unlock: ${trophyLink(game.getTrophyRoadReward(t.reward))}.`) : '')
       + [['What it does', t.what], ['How to do it', t.how], ['Why use it', t.why], ['Timing', t.timing], ['Advanced', t.advanced]].map(([title, text]) => section(title, paragraph(copy(text)))).join('')
-      + section('Practise it', paragraph(`Try ${link(`tracks/${t.practice}`, tracks.find((track) => track.id === t.practice).name)}. ${link('start/tutorials', 'Tutorials')} give you a guided starting point.`))
+      + section('Practise it', paragraph(`Try ${link(`tracks/${t.practice}`, trackName(t.practice))}. ${link('start/tutorials', 'Tutorials')} give you a guided starting point.`))
   });
-  const controlsVisual = () => `<figure class="control-figure"><div class="pad-picture" aria-hidden="true"><div class="pad-extra">LOCK ←</div><div class="pad-face"><span class="cue-drift">DRIFT</span><span class="cue-boost">BOOST</span><span class="cue-gas">GAS</span><span class="cue-brake">BRAKE</span></div><div class="pad-extra">→ SHIFT<br><br>→ REVERSE</div></div><figcaption>Drive pad · Slide between actions without lifting your thumb.<br>LOCK extends DRIFT, SHIFT extends GAS, and REVERSE extends BRAKE. Layout mirrors for left-handed controls.</figcaption></figure>`;
+  // HOW TO PLAY's own drive pad, drawn by the game's module once script runs. It moves while
+  // its disclosure is open, as in HOW TO PLAY, so closing it stops the motion.
+  const controlsVisual = () => `<figure class="control-figure"><details class="pad-demo" open hidden><summary>Watch the drive pad</summary><div class="wiki-drive-pad" data-module="/turn/ui/how-to-play-demos.js?build=${release.cacheKey}" style="${escapeHtml(drivePadValues)}"></div></details><figcaption>Drive pad · Slide between actions without lifting your thumb.<br>LOCK extends DRIFT, SHIFT extends GAS, and REVERSE extends BRAKE. Layout mirrors for left-handed controls.</figcaption></figure>`;
   const visuals = {
     start: () => `<div class="start-picture">${carImage('classic', true)}${driveSequence([['STEER', 'Find a comfortable neutral', 'gas'], ['DRIVE', 'Learn the pad', 'drift'], ['FINISH', 'Race your first rival', 'boost']])}</div>`,
     controls: controlsVisual,
@@ -206,7 +220,7 @@ export async function renderWiki() {
   });
 
   const rewardLinks = (reward) => {
-    if (reward.trackIds) return reward.trackIds.map((id) => link(`tracks/${id}`, tracks.find((t) => t.id === id).name)).join(' · ');
+    if (reward.trackIds) return reward.trackIds.map((id) => link(`tracks/${id}`, trackName(id))).join(' · ');
     if (reward.vehicleIds) return reward.vehicleIds.map((id) => link(carPath(id), cars.find((c) => c.id === id).name)).join(' · ');
     if (reward.vehicleId) return link(`perks/${game.originalVehiclePerk(reward.vehicleId).id}`, reward.perkTitle);
     if (reward.id === 'perkulator') return link('perks/perkulator', 'PERKULATOR');
@@ -217,7 +231,7 @@ export async function renderWiki() {
     body: () => paragraph('The starting cars and EASY tracks are available immediately. Older profiles may retain earlier unlocks; this is the current reward order.')
       + `<ol class="reward-road">${rewards.map((reward) => `<li id="${reward.id}"><span class="reward-threshold"><span class="reward-icon" aria-hidden="true">${authored(game.TROPHY_ROAD_REWARD_ICONS[reward.icon] || '')}</span>${reward.threshold.toLocaleString('en-US')}<small>trophies</small></span><div><h2>${escapeHtml(reward.title)}</h2><p>${rewardLinks(reward)}</p><p>${escapeHtml(reward.description.replace(/<[^>]+>/g, ' '))}</p>${reward.id === 'drift-attack' ? paragraph(`Also unlocks the Truck’s ${link('perks/torque', 'TORQUE')}.`) : ''}</div></li>`).join('')}</ol>`,
     related: ['progress/achievements', 'progress/challenges', 'cars', 'tracks', 'perks/builds'] });
-  const achievementEntry = (a) => `<li id="${a.id}" class="achievement"><div class="achievement-symbol">${icon(a.icon)}</div><div><h3>${escapeHtml(a.title)}</h3><p>${escapeHtml(a.description)}</p>${a.recommendation ? `<p class="muted">${escapeHtml(a.recommendation)}</p>` : ''}${a.trackId ? paragraph(link(`tracks/${a.trackId}`, tracks.find((t) => t.id === a.trackId).name)) : ''}</div><strong class="trophies">${a.trophies}<span>trophies</span></strong></li>`;
+  const achievementEntry = (a) => `<li id="${a.id}" class="achievement"><div class="achievement-symbol">${icon(a.icon)}</div><div><h3>${escapeHtml(a.title)}</h3><p>${escapeHtml(a.description)}</p>${a.recommendation ? `<p class="muted">${escapeHtml(a.recommendation)}</p>` : ''}${a.trackId ? paragraph(link(`tracks/${a.trackId}`, trackName(a.trackId))) : ''}</div><strong class="trophies">${a.trophies}<span>trophies</span></strong></li>`;
   add('progress/achievements', { title: 'Achievements', group: 'Progress', icon: 'trophy', intro: 'Every current goal, its exact requirement and its trophy reward. Hidden discoveries stay folded until you choose to reveal them.', aliases: achievements.filter((a) => !a.hidden && !a.calibrationPending).map((a) => a.title).join(' '),
     body: () => `<nav class="jump-links" aria-label="Achievement categories">${Object.entries(game.CATEGORY_LABELS).map(([id, title]) => link(`progress/achievements#${id}`, title)).join('')}${link('progress/achievements#secrets', 'Hidden discoveries')}</nav>`
       + Object.entries(game.CATEGORY_LABELS).map(([id, title]) => section(title, `<ul class="achievement-list">${achievements.filter((a) => a.category === id && !a.hidden && !a.calibrationPending).map(achievementEntry).join('')}</ul>`, id)).join('')
@@ -277,7 +291,7 @@ export async function renderWiki() {
 <!-- Generated by turn/scripts/build-wiki.mjs. Edit wiki/content.mjs for advice. -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(page.title)}${page.home ? '' : ' · TURN Wiki'}</title><meta name="description" content="${escapeHtml(page.intro)}"><link rel="canonical" href="https://enkel.design${url(path)}"><link rel="icon" href="${logo}" type="image/png" sizes="512x512"><script>${themeBoot}</script><link rel="stylesheet" href="/turn/design-tokens.css?build=${release.cacheKey}"><link rel="stylesheet" href="/turn/design-scale.css?build=${release.cacheKey}"><link rel="stylesheet" href="/turn/pre-race.css?build=${release.cacheKey}"><link rel="stylesheet" href="${BASE}wiki.css?build=${release.cacheKey}"><script defer src="${BASE}wiki.js?build=${release.cacheKey}"></script></head>
 <body><a class="skip-link" href="#main">Skip to content</a><header class="site-header"><div class="header-bar"><a class="brand" href="${BASE}" aria-label="TURN Wiki home"><img src="${logo}" width="40" height="40" alt=""><span>TURN <small>WIKI</small></span></a><div class="header-actions">${page.home ? '' : `<a class="search-link" href="${url('search')}">SEARCH</a>`}<button class="menu-toggle" type="button" aria-expanded="false" aria-controls="wiki-sections" hidden>MENU</button></div></div><nav class="primary-nav" id="wiki-sections" aria-label="Wiki sections"><ul>${nav.map(([p, title]) => `<li><a href="${url(p)}"${active === p ? (path === p ? ' aria-current="page"' : ' aria-current="true"') : ''}>${title}</a></li>`).join('')}</ul><a class="button play-button" href="/turn/">PLAY TURN</a></nav></header>
-<main id="main" tabindex="-1" class="${page.home ? 'home' : page.index ? 'index-page' : 'article-page'}">${page.home ? '' : `<nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li>${link('', 'Wiki')}</li>${parent && parentTitle ? `<li>${link(parent, parentTitle)}</li>` : ''}<li aria-current="page">${escapeHtml(page.title)}</li></ol></nav>`}<header class="page-heading">${page.mark ? mark(page.mark) : ''}<p class="eyebrow">${escapeHtml(page.home ? 'THE PLAYER GUIDE' : page.group || 'TURN')}</p><h1>${escapeHtml(page.title)}</h1><p class="intro">${escapeHtml(page.intro)}</p></header>${body}${page.related ? related(page.related) : ''}</main>
+<main id="main" tabindex="-1" class="${page.home ? 'home' : page.index ? 'index-page' : 'article-page'}">${page.home ? '' : `<nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li>${link('', 'Wiki')}</li>${parent && parentTitle ? `<li>${link(parent, parentTitle)}</li>` : ''}<li aria-current="page">${escapeHtml(page.title)}</li></ol></nav>`}<header class="page-heading">${page.mark ? mark(page.mark) : ''}<h1>${escapeHtml(page.title)}</h1><p class="intro">${escapeHtml(page.intro)}</p></header>${body}${page.related ? related(page.related) : ''}</main>
 <footer class="site-footer"><div><a class="brand footer-brand" href="${BASE}">TURN WIKI</a><p>Learn it here. Drive it in TURN.</p><small>TURN ${release.version} · ${release.id}</small></div><div class="footer-links">${footerLinks.map((p) => link(p, pages.get(p).title)).join('')}<a href="#main">Back to top</a></div><label class="theme-control" hidden>Appearance<select id="wiki-theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></footer></body></html>\n`;
     rendered.set(`${path ? path + '/' : ''}index.html`, html);
   }

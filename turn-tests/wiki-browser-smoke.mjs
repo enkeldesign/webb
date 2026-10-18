@@ -87,7 +87,7 @@ try {
   await page.waitForURL('**/search/?q=full+tank');
   assert.equal(await page.locator('.search-results li:visible a strong', { hasText: 'FULL TANK' }).count(), 1);
   assert.equal(await page.locator('#wiki-query').inputValue(), 'full tank');
-  for (const [query, title] of [['drift', 'DRIFT'], ['future-racer', 'Future Racer'], ['DBE', 'DRIVE BY EAR'], ['harbor', 'Harbor'], ['overcharge', 'OVERCHARGE']]) {
+  for (const [query, title] of [['drift', 'DRIFT'], ['future-racer', 'Future Racer'], ['DBE', 'DRIVE BY EAR'], ['harbor', 'HARBOR'], ['overcharge', 'OVERCHARGE']]) {
     await page.locator('#wiki-query').fill(query);
     await page.locator('#wiki-query').press('Enter');
     assert(await page.locator('.search-results li:visible strong').allTextContents().then((titles) => titles.includes(title)), query);
@@ -141,6 +141,31 @@ try {
     assert.equal(await mark.count(), 1, `${route}: corner mark`);
     assert(await mark.evaluate((node) => node.getBoundingClientRect().width > 0 && node.getAttribute('aria-hidden') === 'true'), `${route}: corner mark is drawn and decorative`);
   }
+  // Hierarchy and copy (#1246): breadcrumb, title and intro; facts before pictures; one
+  // unlock line that does not name the car on its own page; track names as TURN writes them.
+  await visit('skills/drift/');
+  assert.equal(await page.locator('.eyebrow, .technique-banner').count(), 0, 'No eyebrow or banner repeating the intro');
+  assert.equal(await page.locator('section a[href$="/tracks/cliffside/"]').first().textContent(), 'CLIFFSIDE');
+  const targets = await page.locator('.breadcrumbs a, .footer-links a').evaluateAll((links) => links.map((a) => Math.round(a.getBoundingClientRect().height)));
+  assert(targets.every((height) => height >= 44), `Breadcrumb and footer links are 44 px targets (${targets})`);
+  await visit('cars/rally-racer/');
+  assert.equal(await page.locator('.car-hero > :first-child').getAttribute('class'), 'hero-facts', 'A car page opens with its facts');
+  assert.deepEqual(await page.locator('.car-hero .facts dt').allTextContents(), ['Unlock', 'Original perk']);
+  assert.equal(await page.locator('.car-hero .facts dd').first().textContent(), '2,100 trophies');
+  await visit('tracks/harbor/');
+  assert.equal(await page.locator('.track-hero > :first-child').getAttribute('class'), 'hero-facts', 'A track page opens with its facts');
+  // Controls shows HOW TO PLAY's own drive pad, sized by the race's values.
+  await visit('start/controls/');
+  const drivePad = page.locator('.pad-demo .turn-demo-stack[data-demo="drive"] .turn-demo-pad');
+  await drivePad.waitFor();
+  assert.equal(await drivePad.evaluate((node) => globalThis.getComputedStyle(node).borderTopWidth), '4px');
+  assert.equal(await page.locator('.pad-demo .turn-demo').getAttribute('aria-hidden'), 'true');
+  // On a wide screen an article starts on the header's left edge.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await visit('skills/drift/');
+  const edges = await page.evaluate(() => [document.querySelector('.brand'), document.querySelector('main h1')].map((node) => Math.round(node.getBoundingClientRect().left)));
+  assert.equal(edges[0], edges[1], `Article aligns with the header (${edges})`);
+  await page.setViewportSize({ width: 390, height: 844 });
   await visit('progress/achievements/#golden-hour');
   assert(await page.locator('#golden-hour').isVisible(), 'A deep link opens its spoiler disclosure');
   await page.locator('#wiki-theme').selectOption('light');
@@ -154,9 +179,11 @@ try {
   assert(await fallback.locator('#timing').isVisible());
   await fallback.goto(`${origin}/turn/wiki/`);
   await fallback.getByRole('link', { name: 'TRACKS', exact: true }).click();
-  await fallback.locator('.wiki-track-card').filter({ hasText: 'Harbor' }).click();
-  assert.equal(await fallback.locator('h1').textContent(), 'Harbor');
+  await fallback.locator('.wiki-track-card').filter({ hasText: 'HARBOR' }).click();
+  assert.equal(await fallback.locator('h1').textContent(), 'HARBOR');
   assert(await fallback.locator('#find-time').isVisible());
+  await fallback.goto(`${origin}/turn/wiki/start/controls/`);
+  assert(await fallback.locator('.pad-demo').isHidden(), 'Without script the pad picture stays out of the way; its caption remains');
   await noJs.close();
   // Older Safari exposes only MediaQueryList.addListener. Theme updates must
   // still work, and must not prevent search or achievement deep links starting.
@@ -173,7 +200,7 @@ try {
   const legacyErrors = [];
   legacy.on('pageerror', (error) => legacyErrors.push(error.message));
   await legacy.goto(`${origin}/turn/wiki/search/?q=harbor`);
-  assert.equal(await legacy.locator('.search-results li:visible strong', { hasText: /^Harbor$/ }).count(), 1);
+  assert.equal(await legacy.locator('.search-results li:visible strong', { hasText: /^HARBOR$/ }).count(), 1);
   await legacy.emulateMedia({ colorScheme: 'dark' });
   await legacy.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
   await legacy.emulateMedia({ colorScheme: 'light' });
