@@ -62,11 +62,20 @@ try {
       }
     }
   }
-  await page.setViewportSize({ width: 320, height: 568 });
-  for (const route of samples) {
-    await visit(route);
-    await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
-    assert(await page.evaluate(() => document.documentElement.scrollWidth <= globalThis.innerWidth + 1), `${route}: 200% text reflow`);
+  // 200% text on a small and a common phone: nothing scrolls sideways or is squeezed.
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 700 });
+    for (const route of [...samples, 'tracks/', 'cars/']) {
+      await visit(route);
+      await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= globalThis.innerWidth + 1), `${width} ${route}: 200% text reflow`);
+      // Squeezed text wraps a letter at a time rather than overflowing, so each block that
+      // holds a name or label must leave room for a few characters per line.
+      const squeezed = await page.locator('.turn-pr-card-body, .car-card-head, .stat-meter-label').evaluateAll((nodes) => nodes
+        .filter((node) => node.getBoundingClientRect().width < parseFloat(globalThis.getComputedStyle(node).fontSize) * 4)
+        .map((node) => node.textContent));
+      assert.deepEqual(squeezed, [], `${width} ${route}: 200% text has room to read`);
+    }
   }
   await visit('');
   await page.keyboard.press('Tab');
