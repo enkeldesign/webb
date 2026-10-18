@@ -14,6 +14,7 @@ import {
   advanceBoostOvercharge,
   boostOverchargeVisualWidth,
   qualifiesForBoostOvercharge,
+  resolveBoostInputZone,
   resolveBoostSlipAngle,
   takeBackBoostOvercharge,
   transferBoostAcrossShift
@@ -1196,6 +1197,7 @@ function installGameplayUi() {
     // race time. Taken every frame; it only fills the tank between boosts.
     const perkState = globalThis.__turnRuntime?.state;
     const perkIds = activeVehiclePerkIds(perkState);
+    const resourceZone = resolveBoostInputZone(driveZone, perkState);
     const perkRefill = Math.max(0, Number(perkState?.vehiclePerkBoostRefill) || 0);
     if (perkState) perkState.vehiclePerkBoostRefill = 0;
     boostTank.charge = boostCharge;
@@ -1233,7 +1235,7 @@ function installGameplayUi() {
           amount: boostOvercharge,
           phase: boostOverchargePhase,
           dt,
-          zone: driveZone,
+          zone: resourceZone,
           qualifyingDrift,
           rechargeMultiplier
         });
@@ -1243,7 +1245,7 @@ function installGameplayUi() {
       }
       boostTank.charge = boostCharge;
       boostTank.overcharge = boostOvercharge;
-      decayConvertedBoost(boostTank, dt, driveZone === 'gas');
+      decayConvertedBoost(boostTank, dt, resourceZone === 'gas');
       conversion.enabled = overchargeOn && perkState?.running === true && perkIds.includes('road-rage');
       conversion.requested = boostRequested;
       conversion.offRoad = perkState?.offRoad === true;
@@ -1260,7 +1262,7 @@ function installGameplayUi() {
 
     const boosting = boostRequested && !boostExhausted && (boostOvercharge > 0 || boostCharge > 0.001);
     const totalOvercharge = boostOvercharge + boostConvertedCharge;
-    const overchargeCaught = totalOvercharge > 0 && driveZone === 'gas' && !boosting;
+    const overchargeCaught = totalOvercharge > 0 && resourceZone === 'gas' && !boosting;
     const overchargeVolatile = totalOvercharge > 0 && !overchargeCaught && !boosting;
     globalThis.__turnBoostActive = boosting;
     globalThis.__turnBoostCharge = boostCharge;

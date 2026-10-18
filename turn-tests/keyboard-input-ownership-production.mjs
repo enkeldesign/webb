@@ -6,6 +6,8 @@ import {
   keyboardDriveActionForEvent
 } from '../turn/input/keyboard-driving-controls.js';
 import { createKeyboardDriveOwnership } from '../turn/input/keyboard-drive-ownership.js';
+import { resolveBoostInputZone } from '../turn/input/boost-overcharge.js';
+import { convertBoostTank, decayConvertedBoost } from '../turn/input/boost-tank.js';
 
 class FakeElement {
   constructor(kind = 'game') {
@@ -188,6 +190,13 @@ const wDown = keyEvent({ code: 'KeyW', key: 'w' });
 harness.dispatchWindow('keydown', wDown);
 assert.equal(state.touchGas, true, 'W must accelerate while the race owns keyboard driving');
 assert.equal(wDown.defaultPrevented, true, 'Consumed driving keys must suppress browser defaults');
+const keyboardTank = { charge: 1, overcharge: 0.2, converted: 0 };
+for (let frame = 0; frame < 480; frame += 1) {
+  decayConvertedBoost(keyboardTank, 1 / 60, resolveBoostInputZone(null, state) === 'gas');
+  convertBoostTank(keyboardTank, 1 / 60, { enabled: true, speed: 30 });
+}
+assert.ok(keyboardTank.converted > 0.999999,
+  'Holding keyboard GAS lets ROAD RAGE convert a full tank without leaking it');
 
 const arrowUpDown = keyEvent({ code: 'ArrowUp', key: 'ArrowUp' });
 harness.dispatchWindow('keydown', arrowUpDown);
@@ -195,6 +204,11 @@ harness.dispatchWindow('keyup', keyEvent({ code: 'KeyW', key: 'w' }));
 assert.equal(state.touchGas, true, 'Releasing one of two held GAS keys must keep the other GAS key active');
 harness.dispatchWindow('keyup', keyEvent({ code: 'ArrowUp', key: 'ArrowUp' }));
 assert.equal(state.touchGas, false);
+decayConvertedBoost(keyboardTank, 4, resolveBoostInputZone(null, state) === 'gas');
+assert.ok(Math.abs(keyboardTank.converted - 0.5) < 1e-9, 'Releasing keyboard GAS resumes converted fuel decay');
+assert.equal(resolveBoostInputZone('drift', { touchGas: true }), 'drift');
+assert.equal(resolveBoostInputZone('boost', { touchGas: true }), 'boost');
+assert.equal(resolveBoostInputZone(null, { touchGas: true, touchBrake: true }), 'brake');
 
 harness.dispatchWindow('keydown', keyEvent({ code: 'KeyA', key: 'a' }));
 assert.equal(state.manualSteering, -1);

@@ -12,6 +12,12 @@ export const BOOST_OVERCHARGE_PHASE = Object.freeze({
   DECAYING: 'decaying'
 });
 
+// Pointer/Q/E controls own a zone; W/ArrowUp and S/ArrowDown publish to the
+// shared pedal state. Both input paths must catch the same stored OVERCHARGE.
+export function resolveBoostInputZone(zone, state) {
+  return zone || (state?.touchBrake ? 'brake' : state?.touchGas ? 'gas' : '');
+}
+
 export function resolveBoostSlipAngle({ heading = 0, velocity = null } = {}) {
   const angle = finiteNumber(heading);
   const velocityX = finiteNumber(velocity?.x);
