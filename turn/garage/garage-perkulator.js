@@ -20,7 +20,8 @@ const RARITY_LABELS = Object.freeze({
   common: 'COMMON',
   rare: 'RARE',
   epic: 'EPIC',
-  legendary: 'LEGENDARY'
+  legendary: 'LEGENDARY',
+  mythic: 'MYTHIC'
 });
 
 function escapeHtml(value) {

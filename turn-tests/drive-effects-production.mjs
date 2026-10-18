@@ -44,6 +44,7 @@ const declared = (token) => {
   return alias ? declared(alias) : value;
 };
 for (const [key, token] of [['boost', '--turn-effect-boost'], ['boostTail', '--turn-effect-boost-tail'],
+  ['turbo', '--turn-effect-turbo'], ['turboTail', '--turn-effect-turbo-tail'],
   ['smoke', '--turn-effect-drift-smoke'], ['overcharge', '--turn-control-overcharge'],
   ['overchargeLight', '--turn-control-overcharge-light'], ['overchargeDeep', '--turn-control-overcharge-deep']]) {
   assert.equal(colours[key].toLowerCase(), declared(token)?.toLowerCase(), `${key} is ${token}`);
@@ -119,6 +120,16 @@ assert.ok(boostState.cameraKickFov < kickEarly / 2, 'The kick eases away while t
 const head = boostWake.geometry.attributes.color;
 const boostHead = new THREE.Color(head.getX(1), head.getY(1), head.getZ(1));
 assert.equal(boostHead.getHexString(), effectColour(THREE, colours.boost).getHexString(), 'The wake starts in BOOST yellow');
+
+boostState.vehiclePerkIds = ['turbo'];
+drive(boost, boostState, 1, { boostActive: true, overcharge: 0 });
+const wakeHead = () => new THREE.Color(head.getX(1), head.getY(1), head.getZ(1)).getHexString();
+assert.equal(wakeHead(), effectColour(THREE, colours.turbo).getHexString(), 'Ordinary TURBO fuel burns hot red');
+drive(boost, boostState, 1, { boostActive: true, overcharge: 0.001 });
+assert.equal(wakeHead(), effectColour(THREE, colours.overchargeLight).getHexString(), 'Even one frame of OVERCHARGE is purple with TURBO');
+drive(boost, boostState, 1, { boostActive: true, overcharge: 0 });
+assert.equal(wakeHead(), effectColour(THREE, colours.turbo).getHexString(), 'Ordinary fuel immediately returns to red');
+boostState.vehiclePerkIds = [];
 
 // Letting go, or a tank that runs dry (BOOST stops being active either way), eases the
 // kick away from where it was: never a snap back, and gone within half a second.

@@ -297,8 +297,9 @@ function updateVehiclePhysicsStateCore({
     perkLockDragAdd: tuning?.lockDragAdd
   });
   state.driftLockAmount = driftLockAmount;
-  const tuningBoostPowerMultiplier = positiveNumber(tuning?.boostPowerMultiplier, 1);
-  const tuningBoostSpeedMultiplier = positiveNumber(tuning?.boostSpeedMultiplier, 1.32);
+  const boostEffectMultiplier = positiveNumber(tuning?.boostEffectMultiplier, 1);
+  const tuningBoostPowerMultiplier = positiveNumber(tuning?.boostPowerMultiplier, 1) * boostEffectMultiplier;
+  const tuningBoostSpeedMultiplier = 1 + (positiveNumber(tuning?.boostSpeedMultiplier, 1.32) - 1) * boostEffectMultiplier;
   const baseTopSpeedMultiplier = positiveNumber(baseTuning?.topSpeedMultiplier, 1);
   const effectiveTopSpeedMultiplier = positiveNumber(tuning?.topSpeedMultiplier, baseTopSpeedMultiplier);
   const effectiveMaxSpeed = maxSpeed * effectiveTopSpeedMultiplier / baseTopSpeedMultiplier;

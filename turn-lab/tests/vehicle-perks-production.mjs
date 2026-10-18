@@ -12,6 +12,7 @@ import {
   resolveVehicleOverchargedAccelerationMultiplier
 } from '../../turn/vehicle/physics.js';
 import { PERK_RARITY, VEHICLE_PERKS, getVehiclePerk, originalVehiclePerk } from '../../turn/vehicle/perks.js';
+import { consumeBoostTank, convertBoostTank, decayConvertedBoost, ROAD_RAGE_CONVERSION_SECONDS } from '../../turn/input/boost-tank.js';
 import {
   CARRY_ON_LOCK_DRAG_ADD,
   CLEAN_EXIT_CONTROL_BONUS,
@@ -509,7 +510,7 @@ const PERK_TABLE = {
   'twitchy-turny': ['TWITCHY TURNY', ['toy-racer'], 'legendary', false]
 };
 assert.deepEqual(VEHICLE_PERKS.map(({ id }) => id).sort(), Object.keys(PERK_TABLE).sort(), 'Sixteen perks, each id once');
-assert.deepEqual(Object.values(PERK_RARITY).sort(), ['common', 'epic', 'legendary', 'rare']);
+assert.deepEqual(Object.values(PERK_RARITY).sort(), ['common', 'epic', 'legendary', 'mythic', 'rare']);
 for (const [id, [title, vehicleIds, rarity, installable]] of Object.entries(PERK_TABLE)) {
   const perk = getVehiclePerk(id);
   assert.deepEqual([perk.title, [...perk.vehicleIds], perk.rarity, perk.installable],
@@ -529,6 +530,62 @@ for (const car of CAR_CATALOG) {
 // slot of its own. Nothing installs one yet (PERKULATOR comes later); the runtime is
 // ready, and with nothing installed every car behaves exactly as before.
 const truckWith = (installed, tuning = truck.tuning) => perkState(truck.id, true, tuning, installed);
+// Achievement perks use the existing installed slot and have no original car.
+for (const id of ['turbo', 'road-rage']) {
+  const perk = getVehiclePerk(id);
+  assert.equal(perk.rarity, 'mythic');
+  assert.deepEqual(perk.vehicleIds, []);
+  assert.equal(perk.installable, true);
+  assert.deepEqual(activeVehiclePerkIds(truckWith(id)), ['torque', id]);
+}
+const turboTruck = truckWith('turbo');
+const turboTuning = resolveVehiclePerkTuning({ state: turboTruck, tuning: truck.tuning });
+assert.equal(turboTuning.boostEffectMultiplier, 2.5);
+assert.equal(turboTuning.boostConsumptionMultiplier, 2);
+assert.equal(truck.tuning.boostEffectMultiplier, undefined, 'Installing TURBO never changes the original tuning');
+turboTruck.vehicleInstalledPerkId = '';
+assert.equal(resolveVehiclePerkTuning({ state: turboTruck, tuning: truck.tuning }).boostEffectMultiplier, undefined);
+
+// ROAD RAGE conserves fuel and capacity. Dirty driving/BOOST only stops conversion.
+const cleanConversion = { enabled: true, requested: false, offRoad: false, collided: false, speed: 40 };
+const seedTank = { charge: 1, overcharge: 0.5, converted: 0 };
+convertBoostTank(seedTank, ROAD_RAGE_CONVERSION_SECONDS / 2, cleanConversion);
+assert.deepEqual(seedTank, { charge: 1, overcharge: 0.5, converted: 0.5 });
+convertBoostTank(seedTank, ROAD_RAGE_CONVERSION_SECONDS, cleanConversion);
+assert.deepEqual(seedTank, { charge: 1, overcharge: 0.5, converted: 1 }, 'Conversion never adds capacity');
+for (const blocked of [{ enabled: false }, { requested: true }, { offRoad: true }, { collided: true }, { speed: 0 }]) {
+  const tank = { charge: 1, overcharge: 0.5, converted: 0.25 };
+  convertBoostTank(tank, 2, { ...cleanConversion, ...blocked });
+  assert.equal(tank.converted, 0.25, 'Losing the condition preserves stored converted fuel');
+}
+for (const tank of [{ charge: 0.9, overcharge: 0.5, converted: 0 }, { charge: 1, overcharge: 0, converted: 0 }]) {
+  convertBoostTank(tank, 2, cleanConversion);
+  assert.equal(tank.converted, 0, 'A partial tank or missing seed cannot convert');
+}
+// Consume bonus OC, then converted base fuel, then ordinary fuel, without a lost step
+// at resource boundaries. TURBO accelerates every part of the same tank's burn.
+const mixedTank = { charge: 1, overcharge: 1, converted: 0.5 };
+consumeBoostTank(mixedTank, 0.3, 2, 2);
+assert.equal(mixedTank.charge, 1);
+assert.equal(mixedTank.overcharge, 0);
+assert.equal(mixedTank.burningOvercharge, true);
+consumeBoostTank(mixedTank, 0.5, 2, 2);
+assert.equal(mixedTank.converted, 0);
+assert.equal(mixedTank.charge, 0.5);
+assert.equal(mixedTank.burningOvercharge, true, 'The final OC frame still burns purple');
+consumeBoostTank(mixedTank, 0.25, 2, 2);
+assert.equal(mixedTank.charge, 0.25);
+assert.equal(mixedTank.burningOvercharge, false, 'Ordinary fuel follows OC');
+for (const fps of [25, 60, 120]) {
+  const tank = { charge: 1, overcharge: 0.5, converted: 0.5 };
+  for (let step = 0; step < fps; step += 1) consumeBoostTank(tank, 1 / fps, 2, 2);
+  assert.ok(Math.abs(tank.charge - 0.15) < 1e-9, 'A mixed tank drains identically at different frame rates');
+}
+const heldTank = { charge: 1, overcharge: 0, converted: 0.5 };
+decayConvertedBoost(heldTank, 4, true);
+assert.equal(heldTank.converted, 0.5, 'GAS holds converted OC');
+decayConvertedBoost(heldTank, 2, false);
+assert.deepEqual(heldTank, { charge: 0.75, overcharge: 0, converted: 0.25 }, 'Loose converted OC leaks from total fuel');
 assert.deepEqual(activeVehiclePerkIds(perkState(truck.id, true, truck.tuning)), ['torque']);
 assert.deepEqual(activeVehiclePerkIds(truckWith('full-tank')), ['torque', 'full-tank']);
 assert.deepEqual(activeVehiclePerkIds(truckWith('torque')), ['torque'], 'A car never runs its own perk twice');

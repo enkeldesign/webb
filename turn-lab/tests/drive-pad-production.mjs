@@ -401,4 +401,26 @@ assert.ok(
   'Full LOCK must release gas and add modest handbrake drag'
 );
 
+// TURBO changes the canonical BOOST contribution, including its speed headroom,
+// without multiplying ordinary engine propulsion or the car's unboosted limit.
+function boostStep(installedPerkId, boostActive, initialSpeed = 20) {
+  const boosted = {
+    ...state, vehicleId: 'convertible', vehicleInstalledPerkId: installedPerkId,
+    position: new Vec3(), velocity: new Vec3(0, 0, initialSpeed),
+    touchGas: true, touchBrake: false, touchReverse: false,
+    steering: 0, heading: 0, driftAmount: 0, speed: initialSpeed
+  };
+  updateVehiclePhysicsState({ ...physicsArgs, state: boosted, dt: 0.00001, boostActive });
+  return boosted.speed;
+}
+const coasting = boostStep('', false);
+const ordinaryBoost = boostStep('', true);
+const turboBoost = boostStep('turbo', true);
+assert.ok(Math.abs((turboBoost - coasting) / (ordinaryBoost - coasting) - 2.5) < 0.00001,
+  'TURBO adds 2.5 times ordinary BOOST propulsion through the real physics path');
+assert.equal(boostStep('turbo', false), coasting, 'TURBO does not change ordinary GAS');
+assert.ok(Math.abs(boostStep('turbo', true, 200) - 80 * (1 + 0.32 * 2.5)) < 1e-9,
+  'Only the BOOST speed bonus is multiplied');
+assert.equal(boostStep('turbo', false, 200), boostStep('', false, 200));
+
 console.log(`TURN ${release.id} connected DRIFT LOCK, 50% larger Boost tanks, 2.4x→3.6x recharge balance, reliable LOCK gradient, restart refill and separate reverse passed.`);

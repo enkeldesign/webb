@@ -36,6 +36,8 @@
   --turn-orange-200: #ffb89f;
   --turn-orange-100: #ffd0ae;
 
+  --turn-violet-200: #d0bfff;
+
   /* Theme roles (#1067). Neutral surfaces and the ink on them change with the theme;
      anything on a semantic colour keeps --turn-ink. Hard shadows have their own colour,
      so they stay an elevation cue in both themes. */
@@ -85,12 +87,12 @@
   --turn-difficulty-hard: var(--turn-difficulty-expert);
   --turn-difficulty-locked: var(--turn-muted);
 
-  /* Perk rarity (#1219): always named in words beside its colour, and presentation
-     only. EPIC is OVERCHARGE's light violet. */
+  /* Perk rarity (#1247): always named in words and presentation only. */
   --turn-rarity-common: var(--turn-green-200);
   --turn-rarity-rare: var(--turn-blue-200);
-  --turn-rarity-epic: #d0bfff;
-  --turn-rarity-legendary: var(--turn-orange-200);
+  --turn-rarity-epic: var(--turn-violet-200);
+  --turn-rarity-legendary: var(--turn-yellow-600);
+  --turn-rarity-mythic: var(--turn-red-500);
 
   /* Driving-control roles. */
   --turn-control-gas: var(--turn-green-500);
@@ -114,6 +116,8 @@
      uses the OVERCHARGE roles above. */
   --turn-effect-boost: var(--turn-yellow-400);
   --turn-effect-boost-tail: #ff922b;
+  --turn-effect-turbo: var(--turn-red-500);
+  --turn-effect-turbo-tail: var(--turn-orange-500);
   --turn-effect-drift-smoke: #d9d4cc;
   /* The cream ring on a pressed drive-pad zone, and on a pressed LOCK or REVERSE. */
   --turn-control-pressed: color-mix(in srgb, var(--turn-paper) 78%, transparent);
@@ -309,7 +313,7 @@
    --turn-pill) on its text and border, over Ink. On a colour surface a pill keeps its
    fill, as in light. */
 :root[data-theme="dark"] :is(
-  .turn-pr-chip:is(.is-easy, .is-medium, .is-advanced, .is-expert, .is-common, .is-rare, .is-epic, .is-legendary), .garage-perk-chip,
+  .turn-pr-chip:is(.is-easy, .is-medium, .is-advanced, .is-expert, .is-common, .is-rare, .is-epic, .is-legendary, .is-mythic), .garage-perk-chip,
   .roadbook-goal-pill, .roadbook-goal-tag.is-hidden, .turn-achievement-tag:is([data-achievement-tag="hidden"], [data-achievement-tag="new"]),
   .turn-support-challenge-topline > b, .m8-guide-card-number, .m8-guide-wide > strong, .garage-car-card.is-selected .garage-car-ordinal
 ):not(:is(
@@ -386,6 +390,7 @@
       --turn-green-500: color(display-p3 0.581 0.924 0.583);
       --turn-orange-500: color(display-p3 0.995 0.456 0.275);
       --turn-red-500: color(display-p3 0.994 0.385 0.384);
+      --turn-violet-200: color(display-p3 0.816 0.749 1);
     }
   }
 }
