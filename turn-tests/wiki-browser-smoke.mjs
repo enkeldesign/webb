@@ -7,6 +7,11 @@ import { fileURLToPath } from 'node:url';
 const { chromium } = await import(process.env.TURN_PLAYWRIGHT_PATH || 'playwright');
 const root = fileURLToPath(new URL('../', import.meta.url));
 const generated = JSON.parse(await fs.readFile(new URL('../turn/wiki/generated-pages.json', import.meta.url)));
+// Pages that moved in the #1246 revamp keep their old address as a small redirect.
+const isRedirect = async (file) => (await fs.readFile(new URL(`../turn/wiki/${file}`, import.meta.url), 'utf8')).includes('http-equiv="refresh"');
+const redirects = [];
+for (const file of generated) if (file.endsWith('.html') && await isRedirect(file)) redirects.push(file);
+const articles = generated.filter((file) => file.endsWith('.html') && !redirects.includes(file));
 const mime = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.png': 'image/png' };
 const server = http.createServer(async (request, response) => {
   try {
@@ -34,16 +39,16 @@ const visit = (route) => page.goto(`${origin}/turn/wiki/${route}`);
 try {
   // All generated pages work as direct entries, with one main heading, labelled
   // navigation, no missing images and no horizontal page overflow on a phone.
-  for (const file of generated) {
+  for (const file of articles) {
     await visit(file.replace('index.html', ''));
     assert.equal(await page.locator('h1').count(), 1, file);
     assert.equal(await page.locator('main').count(), 1, file);
-    assert.equal(await page.locator('.primary-nav a').count(), 6, file);
+    assert.deepEqual(await page.locator('.primary-nav ul a').allTextContents(), ['START', 'TRACKS', 'CARS', 'PERKS', 'SKILLS', 'PROGRESS'], file);
     assert.equal(await page.locator('img:not([alt])').count(), 0, `${file}: image alternatives`);
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= globalThis.innerWidth + 1), `${file}: phone overflow`);
     assert.equal(await page.locator('body').evaluate((body) => [...body.querySelectorAll('a')].filter((a) => !a.textContent.trim() && !a.getAttribute('aria-label')).length), 0, `${file}: unnamed links`);
   }
-  const samples = ['', 'tracks/mountain/', 'cars/vintage-racer/', 'perks/torque/', 'getting-started/controls/', 'driving/overcharge/', 'reference/car-stats/', 'reference/trophy-road/', 'reference/achievements/'];
+  const samples = ['', 'tracks/mountain/', 'cars/vintage-racer/', 'perks/torque/', 'start/controls/', 'skills/overcharge/', 'skills/', 'cars/stats/', 'progress/trophy-road/', 'progress/achievements/'];
   for (const theme of ['light', 'dark']) {
     for (const [width, height] of [[320, 568], [852, 393], [810, 1080], [1440, 900]]) {
       await page.setViewportSize({ width, height });
@@ -83,8 +88,31 @@ try {
   assert.equal(await page.locator('#search-status img').count(), 0);
   await page.locator('#wiki-query').fill('');
   await page.locator('#wiki-query').press('Enter');
-  assert.equal(await page.locator('.search-results li:visible').count(), generated.length - 2);
-  await visit('reference/achievements/#golden-hour');
+  assert.equal(await page.locator('.search-results li:visible').count(), articles.length - 2);
+  // Old addresses land on the new page, keeping the part of the page asked for.
+  assert(redirects.length >= 30, `${redirects.length} redirects`);
+  for (const [from, to] of [['reference/achievements/#golden-hour', 'progress/achievements/#golden-hour'], ['driving/drift/', 'skills/drift/'], ['builds/perkulator/', 'perks/perkulator/'], ['getting-started/', 'start/getting-started/'], ['play/', 'start/'], ['reference/settings/', 'settings/']]) {
+    await visit(from);
+    await page.waitForURL(`**/turn/wiki/${to}`);
+  }
+  assert(await page.locator('h1').isVisible());
+  // On a phone the sections fold into MENU: one compact bar, the list on demand, Escape
+  // closes it and returns to MENU.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await visit('cars/sedan/');
+  assert(await page.locator('#wiki-sections').isHidden(), 'Sections fold into MENU on a phone');
+  assert((await page.locator('main').boundingBox()).y < 120, 'Content starts under one compact bar');
+  const menu = page.getByRole('button', { name: 'MENU' });
+  await menu.click();
+  assert.equal(await menu.getAttribute('aria-expanded'), 'true');
+  assert.equal(await page.locator('#wiki-sections a[aria-current]').textContent(), 'CARS');
+  await page.keyboard.press('Escape');
+  assert.equal(await menu.getAttribute('aria-expanded'), 'false');
+  assert.equal(await page.evaluate(() => document.activeElement.textContent), 'MENU');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  assert(await page.locator('#wiki-sections').isVisible(), 'Wide screens list the sections');
+  assert(await menu.isHidden());
+  await visit('progress/achievements/#golden-hour');
   assert(await page.locator('#golden-hour').isVisible(), 'A deep link opens its spoiler disclosure');
   await page.locator('#wiki-theme').selectOption('light');
   await page.reload();
@@ -117,7 +145,7 @@ try {
   await legacy.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
   await legacy.emulateMedia({ colorScheme: 'light' });
   await legacy.waitForFunction(() => document.documentElement.dataset.theme === 'light');
-  await legacy.goto(`${origin}/turn/wiki/reference/achievements/#golden-hour`);
+  await legacy.goto(`${origin}/turn/wiki/progress/achievements/#golden-hour`);
   assert(await legacy.locator('#golden-hour').isVisible());
   assert.deepEqual(legacyErrors, []);
   await legacyContext.close();
@@ -125,7 +153,7 @@ try {
   assert.deepEqual(failures, []);
   if (process.env.TURN_WIKI_SCREENSHOTS) {
     await fs.mkdir(process.env.TURN_WIKI_SCREENSHOTS, { recursive: true });
-    for (const [name, route, width, height, theme] of [['home', '', 1440, 1100, 'light'], ['mobile', '', 390, 844, 'dark'], ['car', 'cars/vintage-racer/', 1100, 1100, 'dark'], ['track', 'tracks/mountain/', 390, 844, 'light'], ['controls', 'getting-started/controls/', 390, 844, 'light']]) {
+    for (const [name, route, width, height, theme] of [['home', '', 1440, 1100, 'light'], ['mobile', '', 390, 844, 'dark'], ['car', 'cars/vintage-racer/', 1100, 1100, 'dark'], ['track', 'tracks/mountain/', 390, 844, 'light'], ['controls', 'start/controls/', 390, 844, 'light']]) {
       await page.setViewportSize({ width, height });
       await visit(route);
       await page.locator('#wiki-theme').selectOption(theme);
@@ -133,7 +161,7 @@ try {
       await page.screenshot({ path: path.join(process.env.TURN_WIKI_SCREENSHOTS, `${name}.png`), fullPage: true });
     }
   }
-  console.log(`Wiki browser smoke passed: ${generated.length} direct pages; light/dark, phone/tablet/desktop, 200% text, keyboard, search, no-JS and no game runtime.`);
+  console.log(`Wiki browser smoke passed: ${articles.length} direct pages, ${redirects.length} redirects; light/dark, phone/tablet/desktop, 200% text, keyboard, search, no-JS and no game runtime.`);
 } finally {
   await browser.close();
   server.close();

@@ -64,6 +64,24 @@
     fromUrl();
   }
 
+  // Phones fold the six sections into MENU; without script they stay listed (#1246).
+  const menu = document.querySelector('.menu-toggle');
+  const sections = document.querySelector('#wiki-sections');
+  if (menu && sections) {
+    const setOpen = (open) => {
+      menu.setAttribute('aria-expanded', String(open));
+      sections.classList.toggle('is-open', open);
+    };
+    document.documentElement.classList.add('has-menu');
+    menu.hidden = false;
+    menu.addEventListener('click', () => setOpen(menu.getAttribute('aria-expanded') !== 'true'));
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || menu.getAttribute('aria-expanded') !== 'true') return;
+      setOpen(false);
+      menu.focus();
+    });
+  }
+
   // Fragment links into hidden-achievement spoilers still land on readable content.
   function revealFragment() {
     const id = globalThis.location.hash.slice(1);
