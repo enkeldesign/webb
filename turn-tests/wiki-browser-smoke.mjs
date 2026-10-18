@@ -113,6 +113,25 @@ try {
   await page.setViewportSize({ width: 1440, height: 900 });
   assert(await page.locator('#wiki-sections').isVisible(), 'Wide screens list the sections');
   assert(await menu.isHidden());
+  // The wiki wears the game's own components (#1246): ROADBOOK track cards, GARAGE meters,
+  // rarity and difficulty chips, and the corner marks drawn from the game's icons.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await visit('tracks/');
+  assert.equal(await page.locator('.wiki-track-card.turn-pr-card').count(), 8, 'One ROADBOOK card per track');
+  assert.equal(await page.locator('.wiki-track-card .turn-pr-route-line').count(), 8, 'Every track card draws its route');
+  assert.equal(await page.locator('.wiki-track-card .turn-pr-chip').first().textContent(), 'EASY');
+  await visit('cars/');
+  const firstCar = page.locator('.car-grid .car-card').first();
+  assert.equal(await firstCar.locator('.stat-meter').count(), 6, 'A car card shows its six GARAGE meters');
+  assert.equal(await firstCar.locator('.stat-meter-segments i').count(), 30);
+  assert.match(await firstCar.locator('.stat-meter-value').first().evaluate((node) => [...node.childNodes].filter((child) => child.nodeType === 3 || child.getAttribute('aria-hidden') !== 'true').map((child) => child.textContent).join('')), /^\d out of 5$/, 'Meters read as a value out of 5');
+  assert.equal(await page.evaluate(() => globalThis.getComputedStyle(document.querySelector('.stat-meter.is-boost i.is-full')).backgroundColor === globalThis.getComputedStyle(document.querySelector('.stat-meter.is-gas i.is-full')).backgroundColor), false, 'Meters keep the control colours');
+  for (const route of ['tracks/harbor/', 'skills/shift/', 'perks/perkulator/']) {
+    await visit(route);
+    const mark = page.locator('.page-heading .turn-corner-mark');
+    assert.equal(await mark.count(), 1, `${route}: corner mark`);
+    assert(await mark.evaluate((node) => node.getBoundingClientRect().width > 0 && node.getAttribute('aria-hidden') === 'true'), `${route}: corner mark is drawn and decorative`);
+  }
   await visit('progress/achievements/#golden-hour');
   assert(await page.locator('#golden-hour').isVisible(), 'A deep link opens its spoiler disclosure');
   await page.locator('#wiki-theme').selectOption('light');
@@ -126,7 +145,7 @@ try {
   assert(await fallback.locator('#timing').isVisible());
   await fallback.goto(`${origin}/turn/wiki/`);
   await fallback.getByRole('link', { name: 'TRACKS', exact: true }).click();
-  await fallback.locator('.card').filter({ hasText: 'Harbor' }).click();
+  await fallback.locator('.wiki-track-card').filter({ hasText: 'Harbor' }).click();
   assert.equal(await fallback.locator('h1').textContent(), 'Harbor');
   assert(await fallback.locator('#find-time').isVisible());
   await noJs.close();

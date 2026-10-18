@@ -82,7 +82,7 @@ figcaption { margin-top: .8rem; line-height: 1.5; }
 .card:hover strong { text-decoration: underline; text-underline-offset: .2em; }
 .card-copy { display: grid; gap: .55rem; min-width: 0; }
 .card-copy strong { color: var(--turn-text-heading); font-size: var(--turn-type-title); font-weight: var(--turn-weight-title); text-transform: uppercase; padding-right: 1rem; line-height: 1.15; }
-.card-copy > span:not(.badge) { font-size: .9rem; color: var(--turn-text-muted); line-height: 1.45; }
+.card-copy > span:not(.turn-pr-chip) { font-size: .9rem; color: var(--turn-text-muted); line-height: 1.45; }
 .line-icon, .asset-icon { width: 3rem; height: 3rem; display: inline-flex; flex: 0 0 auto; color: var(--turn-text-heading); }
 .line-icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .asset-icon { background: currentColor; mask: var(--icon) center / contain no-repeat; -webkit-mask: var(--icon) center / contain no-repeat; }
@@ -96,27 +96,49 @@ figcaption { margin-top: .8rem; line-height: 1.5; }
 .search-form input { min-width: 0; width: 100%; min-height: 52px; padding: .7rem 1rem; background: var(--turn-surface-raised); color: var(--turn-text); border: var(--turn-border-control) solid var(--turn-outline); border-radius: var(--turn-radius-control); }
 .search-form input::placeholder { color: var(--turn-text-muted); opacity: 1; }
 .search-form button { white-space: nowrap; }
-.badge { display: inline-flex; align-items: center; justify-content: center; width: fit-content; padding: .3rem .65rem; background: var(--turn-action-utility); color: var(--turn-text); border: var(--turn-border-micro) solid var(--turn-outline); border-radius: var(--turn-radius-micro); font-size: .75rem; line-height: 1.4; font-weight: var(--turn-weight-label); text-transform: uppercase; letter-spacing: .035em; }
-.difficulty-easy { background: var(--turn-difficulty-easy); color: var(--turn-ink); }
-.difficulty-medium { background: var(--turn-difficulty-medium); color: var(--turn-ink); }
-.difficulty-advanced { background: var(--turn-difficulty-advanced); color: var(--turn-ink); }
-.difficulty-expert { background: var(--turn-difficulty-expert); color: var(--turn-ink); }
-.rarity-common { background: var(--turn-rarity-common); color: var(--turn-ink); }
-.rarity-rare { background: var(--turn-rarity-rare); color: var(--turn-ink); }
-.rarity-epic { background: var(--turn-rarity-epic); color: var(--turn-ink); }
-.rarity-legendary { background: var(--turn-rarity-legendary); color: var(--turn-ink); }
 .car-image { object-fit: contain; width: 100%; height: auto; }
+/* TURN's components (#1246): the track card, chips and route come from pre-race.css; the
+   attribute meter is GARAGE's (garage.css) and the corner mark the Track sheet's
+   (surfaces.css), redrawn here because the wiki loads no game screen. */
+.turn-corner-mark { float: right; display: block; width: 2.5rem; height: 2.5rem; margin: 0 0 var(--turn-space-2) var(--turn-space-3); color: var(--turn-text); }
+.turn-corner-mark > :is(svg, span) { display: block; width: 100%; height: 100%; }
+.turn-corner-mark > svg, .reward-icon > svg { fill: none; stroke: currentColor; stroke-width: 2.7; stroke-linecap: round; stroke-linejoin: round; }
+.page-heading .turn-corner-mark { width: 3rem; height: 3rem; }
+.card > .turn-corner-mark { position: absolute; top: 1rem; right: 1rem; margin: 0; width: 2.25rem; height: 2.25rem; }
+.card:has(> .turn-corner-mark) .card-copy strong { padding-right: 2.5rem; }
+.track-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem; max-width: none; margin: 0; padding: 0; list-style: none; }
+.track-list > li { margin: 0; min-width: 0; }
+.wiki-track-card { height: 100%; text-decoration: none; }
+.wiki-track-card:hover .turn-pr-card-name { text-decoration: underline; text-underline-offset: .15em; }
+.wiki-card-line { color: var(--turn-text-muted); font-size: .875rem; line-height: 1.4; }
+.stat-meters { display: grid; gap: .5rem; }
+.stat-meter { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(2.5rem, auto); align-items: center; gap: .75rem; }
+.stat-meter-label { font-size: .9rem; font-weight: 600; }
+.stat-meter-segments { display: grid; grid-template-columns: repeat(5, minmax(.5rem, 1.5rem)); gap: 4px; }
+.stat-meter-segments i { height: .625rem; border: 2px solid var(--turn-outline); border-radius: 3px; background: var(--turn-pr-card); }
+.stat-meter-segments i.is-full { background: var(--turn-ink); }
+.stat-meter.is-gas i.is-full { background: var(--turn-control-gas); }
+.stat-meter.is-drift i.is-full { background: var(--turn-control-drift); }
+.stat-meter.is-boost i.is-full { background: var(--turn-control-boost); }
+.stat-meter-value { font-family: var(--turn-pr-font-mono); font-size: .875rem; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+.car-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+/* The still and the name share a row until the name needs the room (large text), then stack. */
+.car-grid .car-card { display: flex; flex-flow: row wrap; align-items: center; gap: .75rem 1rem; padding: 1rem; }
+.car-grid .car-card > .car-image { flex: 0 0 7.5rem; width: 7.5rem; margin: 0; }
+.car-card-head { flex: 1 1 9rem; min-width: 0; display: grid; gap: .4rem; justify-items: start; }
+.car-card-head strong { color: var(--turn-text-heading); font-size: var(--turn-type-title); font-weight: var(--turn-weight-title); text-transform: uppercase; line-height: 1.1; }
+.car-card-head > span { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; font-size: .875rem; font-weight: var(--turn-weight-label); }
+.car-grid .stat-meters, .car-grid .car-card > .wiki-card-line { flex: 1 1 100%; }
+.car-grid .car-card:hover strong { text-decoration: underline; text-underline-offset: .15em; }
+.perk-card .card-copy { justify-items: start; }
+.reward-icon { display: block; width: 2.5rem; height: 2.5rem; margin-bottom: .5rem; }
+.turn-trophy-road-authored-icon { display: block; width: 100%; height: 100%; background: currentColor; -webkit-mask: var(--turn-trophy-road-authored-source) center / contain no-repeat; mask: var(--turn-trophy-road-authored-source) center / contain no-repeat; }
+.reward-icon:empty { display: none; }
 .car-card > .car-image { margin: -1.2rem 0 -.8rem; }
 .car-card { padding: 1rem; }
 .car-hero { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 2rem; padding: 1.4rem; border: var(--turn-border-control) solid var(--turn-outline); border-radius: var(--turn-radius-card); background: var(--turn-surface-card); }
 .car-hero figcaption { text-align: center; }
-.stat-bars { display: grid; gap: .55rem; }
-.stat-bars > div { display: grid; grid-template-columns: minmax(7.5rem, 1fr) 1.2fr; align-items: center; gap: .6rem; }
-.stat-bars dt { font-size: .75rem; font-weight: var(--turn-weight-label); }
-.stat-bars dd { margin: 0; display: flex; gap: .6rem; align-items: center; }
-.stat-bars strong { font-size: .875rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.stat-track { display: block; flex: 1; height: .65rem; background: var(--turn-outline-muted); border-radius: var(--turn-radius-pill); overflow: hidden; }
-.stat-track > span { display: block; height: 100%; width: calc(var(--score) * 20%); background: var(--turn-text-heading); }
+.car-hero .stat-meters { gap: .65rem; }
 .car-hero .muted { margin-top: 1rem; }
 .facts { display: flex; flex-wrap: wrap; gap: 1rem 2rem; margin-block: 1.5rem; }
 .facts > div { flex: 1 1 150px; }
@@ -125,9 +147,11 @@ figcaption { margin-top: .8rem; line-height: 1.5; }
 .track-hero { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: center; }
 .track-map { background: var(--turn-surface-card); border: var(--turn-border-control) solid var(--turn-outline); border-radius: var(--turn-radius-card); padding: 1rem; }
 .track-map svg { width: 100%; height: auto; }
-.map-road { stroke: var(--turn-text-heading); stroke-width: 12; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.map-centre { stroke: var(--turn-surface-card); stroke-width: 1; fill: none; stroke-dasharray: 4 5; }
-.map-start { fill: var(--turn-action-primary); stroke: var(--turn-ink); stroke-width: 3; }
+/* ROADBOOK's route at page size: an Ink outline with the track's accent inside. */
+.track-map .turn-pr-route { height: auto; }
+.track-map .turn-pr-route-outline { stroke-width: 12px; }
+.track-map .turn-pr-route-line { stroke-width: 6px; }
+.map-start { fill: var(--turn-surface-card); stroke: var(--turn-text); stroke-width: 3; }
 .track-hero .facts { display: grid; gap: 1.3rem; }
 .track-hero .facts > div { min-width: 0; }
 .perk-banner, .technique-banner { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; background: var(--turn-surface-raised); padding: 1.5rem; border: var(--turn-border-control) solid var(--turn-outline); border-radius: var(--turn-radius-card); }
@@ -212,8 +236,6 @@ td { text-align: center; }
   .home #explore-turn + .card-grid { grid-template-columns: 1fr; }
   .card { flex-direction: row; align-items: flex-start; gap: .9rem; padding: 1rem; }
   .card .line-icon, .card .asset-icon { width: 2.4rem; height: 2.4rem; }
-  .car-card { display: grid; grid-template-columns: 100px 1fr; align-items: center; }
-  .car-card > .car-image { margin: 0; }
   .card-copy strong { padding: 0; }
   .car-hero, .track-hero { grid-template-columns: 1fr; gap: 1rem; }
   .car-hero > figure { max-width: 320px; margin-inline: auto; }
@@ -233,16 +255,17 @@ td { text-align: center; }
 @media (max-width: 360px) {
   .search-form > div { flex-wrap: wrap; }
   .search-form button { width: 100%; }
-  .car-card { grid-template-columns: 80px 1fr; }
+  .car-grid .car-card > .car-image { flex-basis: 5rem; width: 5rem; }
+  .stat-meter { grid-template-columns: 1fr auto; }
+  .stat-meter-label { grid-column: 1 / -1; }
   .card:not(.car-card) { flex-direction: column; }
   .pad-picture { flex-wrap: wrap; }
-  .stat-bars > div { grid-template-columns: 1fr; gap: .1rem; }
 }
 @media (forced-colors: active) {
-  .stat-track { border: 1px solid CanvasText; }
-  .stat-track > span, .asset-icon { background: CanvasText; }
-  .map-road { stroke: CanvasText; }
-  .map-centre { stroke: Canvas; }
+  .stat-meter-segments i { forced-color-adjust: none; border-color: CanvasText; background: Canvas; }
+  .stat-meter-segments i.is-full, .asset-icon { background: CanvasText; }
+  .turn-pr-route-outline { stroke: CanvasText; }
+  .turn-pr-route-line { stroke: Canvas; }
   .map-start { fill: Canvas; stroke: CanvasText; }
 }
 @media print {
