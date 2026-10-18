@@ -41,6 +41,8 @@ assert.match(bootstrapEntry, /about-history-bootstrap-r165\.js\?revision=r165-br
 
 assert.match(productionEntry, /href="\.\/browser-install-r165\.css\?build=\d{8}-r\d+"/);
 assert.match(productionEntry, /id="installAboutButton"[\s\S]*aria-haspopup="dialog"[\s\S]*>ABOUT TURN<\/button>/);
+// INSTALL offers TURN WIKI beside ABOUT TURN, on one row (#1246).
+assert.match(productionEntry, /<span class="install-kicker-links"><button id="installAboutButton"[^>]*>ABOUT TURN<\/button> <span class="install-kicker-separator" aria-hidden="true">·<\/span> <a class="install-about-trigger install-wiki-link" href="\/turn\/wiki\/">TURN WIKI <span aria-hidden="true">↗<\/span><\/a><\/span>/);
 assert.match(productionEntry, /id="installTurnButton"[\s\S]*id="installNote"[\s\S]*id="playBrowserButton"/,
   'Install, recommendation and browser-play controls must appear in the requested order');
 assert.match(productionEntry, /Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);

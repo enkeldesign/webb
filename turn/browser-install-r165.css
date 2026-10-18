@@ -291,6 +291,19 @@ html.turn-browser:not(.turn-browser-launched) #installGate:not(.turn-startup-loa
   text-transform: inherit;
 }
 
+/* ABOUT TURN and TURN WIKI share one row under the build line. */
+.install-kicker-links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: var(--turn-space-4);
+}
+
+.install-wiki-link {
+  gap: 0.25em;
+}
+
 .install-about-trigger:hover {
   transform: none;
 }

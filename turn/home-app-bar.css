@@ -526,7 +526,7 @@ html body .turn-home-sheet .turn-home-sheet-footer .turn-viewport-readout {
   overflow-wrap: anywhere;
 }
 
-html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
+html body .turn-home-sheet .turn-home-sheet-footer :is(.m8-about-trigger, .m8-wiki-trigger) {
   min-height: 44px;
   margin: 0;
   padding: 0 4px;
@@ -538,8 +538,8 @@ html body .turn-home-sheet .m8-home-menu > button {
   background: var(--turn-action-utility, var(--turn-surface-page)) !important;
 }
 
-/* MUSIC and ABOUT TURN read as quiet text controls in the footer, not buttons. */
-html body .turn-home-sheet .turn-home-sheet-footer :is(.turn-music-home-toggle, .m8-about-trigger) {
+/* MUSIC, ABOUT TURN and TURN WIKI read as quiet text controls in the footer, not buttons. */
+html body .turn-home-sheet .turn-home-sheet-footer :is(.turn-music-home-toggle, .m8-about-trigger, .m8-wiki-trigger) {
   min-height: 44px;
   margin: 0;
   padding: 0 4px;
@@ -567,7 +567,7 @@ html body .turn-home-sheet .turn-home-sheet-footer .turn-music-home-toggle > spa
   letter-spacing: -0.2em;
 }
 
-html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
+html body .turn-home-sheet .turn-home-sheet-footer :is(.m8-about-trigger, .m8-wiki-trigger) {
   border-radius: 3px;
   font-size: var(--turn-type-micro, 11px);
   letter-spacing: 0.025em;
@@ -576,7 +576,18 @@ html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
   text-underline-offset: 0.18em;
 }
 
-html body .turn-home-sheet .turn-home-sheet-footer :is(.turn-music-home-toggle, .m8-about-trigger):focus-visible {
+/* ABOUT TURN and TURN WIKI share the end of the build line. */
+html body .turn-home-sheet .turn-home-sheet-footer .m8-about-trigger {
+  margin-left: auto;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer .m8-wiki-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+}
+
+html body .turn-home-sheet .turn-home-sheet-footer :is(.turn-music-home-toggle, .m8-about-trigger, .m8-wiki-trigger):focus-visible {
   outline: 3px solid var(--turn-outline);
   outline-offset: 2px;
 }

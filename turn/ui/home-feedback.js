@@ -149,6 +149,13 @@ function createAboutTrigger() {
   trigger.setAttribute('aria-haspopup', 'dialog');
   meta.appendChild(trigger);
 
+  // TURN WIKI sits beside ABOUT TURN, worded as HOW TO PLAY offers it (#1246).
+  const wiki = document.createElement('a');
+  wiki.className = 'm8-wiki-trigger';
+  wiki.href = '/turn/wiki/';
+  wiki.innerHTML = 'TURN WIKI <span aria-hidden="true">↗</span>';
+  meta.appendChild(wiki);
+
   return { meta, trigger, buildLabel };
 }
 
