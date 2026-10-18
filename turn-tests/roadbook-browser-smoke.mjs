@@ -553,3 +553,6 @@ try {
 } finally {
   server.close();
 }
+
+// Completed collections share the Track sheet's filtered achievement navigation.
+await import('./achievement-families-browser.mjs');

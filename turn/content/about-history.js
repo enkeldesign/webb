@@ -428,5 +428,14 @@ export const CHANGELOG = Object.freeze([
         "Visual player guide."
       ]
     ]
+  },
+  {
+    "date": "18 October 2026",
+    "entries": [
+      [
+        "Completed achievement collections",
+        "Completed SPRINT, SAFETY, WINNER and DRIFT & FLOW collections fold into their master card. Choose SHOW to inspect every achievement again."
+      ]
+    ]
   }
 ]);

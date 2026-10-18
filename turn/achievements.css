@@ -216,6 +216,43 @@
   display: none;
 }
 
+.turn-achievement-family,
+.turn-achievement-children {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+}
+
+.turn-achievement-children {
+  padding-inline-start: 12px;
+  border-inline-start: 3px solid var(--turn-outline);
+}
+
+.turn-achievement-family[hidden],
+.turn-achievement-children[hidden],
+.turn-achievement-disclosure[hidden] {
+  display: none;
+}
+
+.turn-achievement-disclosure {
+  margin-top: 9px;
+  padding: 6px 9px;
+  min-height: 44px;
+  border: 2px solid var(--turn-outline);
+  border-radius: var(--turn-radius-compact);
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
+  font: inherit;
+  font-weight: 900;
+  text-align: start;
+  cursor: pointer;
+}
+
+.turn-achievement-disclosure:focus-visible {
+  outline: 3px solid var(--turn-action-information);
+  outline-offset: 3px;
+}
+
 .turn-achievement-card.is-unlocked {
   background: color-mix(in srgb, var(--turn-green-200, #d9f5c2) 72%, var(--turn-surface-raised));
 }

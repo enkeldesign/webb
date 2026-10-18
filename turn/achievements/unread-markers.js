@@ -1,3 +1,5 @@
+import { revealAchievementFamily } from './families.js';
+
 const STYLE_ID = 'turn-achievement-unread-marker-styles';
 const NEW_FILTER = 'new';
 const ONBOARDING_FILTER = 'onboarding';
@@ -284,6 +286,7 @@ export function installAchievementUnreadMarkers(
     if (!target) return false;
     filters?.querySelector('[data-achievement-filter="all"]')?.click();
     target.hidden = false;
+    revealAchievementFamily(target);
     target.focus({ preventScroll: true });
     target.scrollIntoView({ block: 'center', behavior: 'auto' });
     return true;
