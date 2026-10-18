@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { ACHIEVEMENT_STORAGE_KEY, createAchievementStore } from '../turn/achievements/store.js';
+import { ACHIEVEMENT_STORAGE_KEY, createAchievementStore, normalizeAchievementState } from '../turn/achievements/store.js';
+import { getAchievement } from '../turn/achievements/catalog.js';
+import { achievementTrophyAward } from '../turn/achievements/awards.js';
 import { createAdminRewardState } from '../turn/testing/admin-unlock-sequence.js';
 
 // Two TURN windows share one storage, each with its own store (#1045 A1). Neither may
@@ -13,6 +15,32 @@ function sharedStorage() {
   };
 }
 const stored = (storage) => JSON.parse(storage.getItem(ACHIEVEMENT_STORAGE_KEY));
+
+assert.equal(achievementTrophyAward('faster-than-the-dev', {}, { trophies: 0 }), 300, 'Skipping the foundation release preserves old SPRINT trophies');
+assert.equal(achievementTrophyAward('drift-flow-master', {}, null), 300, 'Removing the combined master from the active catalog preserves its award');
+assert.equal(achievementTrophyAward('faster-than-the-dev', { awardedTrophies: 0 }, { trophies: 0 }), 0, 'A new perk-only completion never gets legacy trophies');
+
+{
+  const storage = sharedStorage();
+  storage.setItem(ACHIEVEMENT_STORAGE_KEY, JSON.stringify({
+    version: 10,
+    unlocked: {
+      'faster-than-the-dev': { unlockedAt: 123, trackId: 'airport', time: 22 },
+      'first-turn': { unlockedAt: 125, awardedTrophies: 99 },
+      'not-in-catalog': { unlockedAt: 126, awardedTrophies: 1000 }
+    }
+  }));
+  const store = createAchievementStore(storage);
+  assert.equal(store.state.unlocked['faster-than-the-dev'].awardedTrophies, 300, 'Legacy award is recorded before the catalog changes');
+  assert.equal(store.trophyTotal(), 399, 'Stored awards survive catalog changes; unknown IDs remain invisible');
+  assert.equal(store.state.unlocked['faster-than-the-dev'].unlockedAt, 123, 'Historical context is preserved');
+  assert.equal(store.unlock('faster-than-the-dev'), null, 'Migration never awards it again');
+  store.unlock('new-wheels');
+  store.syncRewards();
+  assert.equal(stored(storage).unlocked['new-wheels'].awardedTrophies, getAchievement('new-wheels').trophies);
+  assert.deepEqual(normalizeAchievementState(store.state), store.state, 'Normalization is idempotent');
+  assert.equal(createAchievementStore(storage).trophyTotal(), store.trophyTotal(), 'Reload preserves awarded amounts');
+}
 
 {
   const storage = sharedStorage();

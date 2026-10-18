@@ -361,6 +361,15 @@ export const ACHIEVEMENTS = Object.freeze(
   PRODUCTION_ACHIEVEMENTS.map(withPresentationIcon).map(withTrack)
 );
 
+// Explicit collections, derived from the canonical catalogs. Presentation never
+// guesses membership from titles, DOM order or a fixed number of tracks (#984).
+export const ACHIEVEMENT_FAMILIES = Object.freeze([
+  { masterId: 'faster-than-the-dev', label: 'SPRINT', childIds: TIME_TRIALS.map(({ id }) => id) },
+  { masterId: 'on-course-of-course', label: 'SAFETY', childIds: TRACK_SAFETY_ACHIEVEMENTS.map(({ id }) => id) },
+  { masterId: 'an-army-of-me', label: 'WINNER', childIds: TRACK_WINNER_ACHIEVEMENTS.map(({ id }) => id) },
+  { masterId: 'drift-flow-master', label: 'DRIFT & FLOW', childIds: TRACK_SCORING_ACHIEVEMENTS.map(({ id }) => id) }
+].map((family) => Object.freeze({ ...family, childIds: Object.freeze(family.childIds) })));
+
 // A track's goals are its achievements, in catalog order: the Track sheet lists them
 // (#1031) and ACHIEVEMENTS filters to them. Targets still awaiting calibration are left
 // out, as ACHIEVEMENTS leaves them out of its count.

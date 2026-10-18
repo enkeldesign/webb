@@ -1,5 +1,5 @@
 {
-  "release": "20261018-r481",
+  "release": "20261018-r482",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -10,10 +10,12 @@
     "/turn/accessibility/color-cues.js",
     "/turn/achievements.css",
     "/turn/achievements.js",
+    "/turn/achievements/awards.js",
     "/turn/achievements/catalog-base.js",
     "/turn/achievements/catalog.js",
     "/turn/achievements/challenge-expansion-r166.js",
     "/turn/achievements/chromatic-camouflage-r183.js",
+    "/turn/achievements/families.js",
     "/turn/achievements/filter-state.js",
     "/turn/achievements/home-reward-replay-r225.js",
     "/turn/achievements/learning-progress.js",

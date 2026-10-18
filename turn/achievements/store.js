@@ -19,6 +19,7 @@ import {
   rewardIdsForTrophies
 } from '../progression/trophy-road.js';
 import { activeSessionPolicy } from '../race/session-policy.js';
+import { achievementTrophyAward } from './awards.js';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;
@@ -51,15 +52,17 @@ function normalizedStringArray(value, allowed = null) {
   return allowed ? unique.filter((item) => allowed.includes(item)) : unique;
 }
 
-function normalizedUnlockRecord(record) {
+function normalizedUnlockRecord(id, record, achievement) {
   if (!record || typeof record !== 'object') return null;
+  const awardedTrophies = achievementTrophyAward(id, record, achievement);
   return {
+    ...(Number.isFinite(awardedTrophies) ? { awardedTrophies } : {}),
     unlockedAt: Number.isFinite(Number(record.unlockedAt))
       ? Number(record.unlockedAt)
       : Date.now(),
     trackId: typeof record.trackId === 'string' ? record.trackId : '',
     vehicleId: typeof record.vehicleId === 'string' ? record.vehicleId : '',
-    time: Number.isFinite(Number(record.time)) ? Number(record.time) : null
+    time: record.time != null && Number.isFinite(Number(record.time)) ? Number(record.time) : null
   };
 }
 
@@ -82,7 +85,7 @@ function totalTrophiesFromUnlocked(unlocked) {
   return Object.keys(unlocked).reduce((total, id) => {
     const achievement = getAchievement(id);
     if (achievement?.calibrationPending === true) return total;
-    const trophies = Number(achievement?.trophies);
+    const trophies = achievement ? Number(unlocked[id].awardedTrophies ?? achievement.trophies) : 0;
     return total + (Number.isFinite(trophies) ? trophies : 0);
   }, 0);
 }
@@ -107,7 +110,7 @@ export function normalizeAchievementState(value) {
 
   const unlocked = {};
   for (const [id, record] of Object.entries(value.unlocked || {})) {
-    const normalized = normalizedUnlockRecord(record);
+    const normalized = normalizedUnlockRecord(id, record, getAchievement(id));
     if (!normalized) continue;
 
     // Preserve syntactically valid unlock records even when the current catalog
@@ -338,6 +341,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     const achievement = getAchievement(id);
     if (!achievement || achievement.calibrationPending === true || isUnlocked(id)) return null;
     state.unlocked[id] = {
+      awardedTrophies: achievement.trophies,
       unlockedAt: Date.now(),
       trackId: context.trackId || '',
       vehicleId: context.vehicleId || '',

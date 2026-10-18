@@ -1,5 +1,6 @@
 import { CATEGORY, TRACK_NAMES } from './catalog.js';
 import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r253-supercar-release';
+import { syncAchievementFamilies } from './families.js';
 import {
   achievementCardMatchesFilters
 } from './filter-state.js?revision=r219-unified-achievement-filters';
@@ -182,6 +183,7 @@ function prepareFilters(dialog) {
       card.hidden = !visible;
       if (visible) visibleCount += 1;
     }
+    syncAchievementFamilies(list, { revealMatches: activeTags.has('new') || Boolean(activeTrack) });
     list?.toggleAttribute('data-filter-empty', visibleCount === 0);
     syncButtons();
   }

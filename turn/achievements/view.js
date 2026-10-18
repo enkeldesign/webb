@@ -15,6 +15,12 @@ import {
   TRACK_SCORING_ACHIEVEMENT_IDS
 } from './scoring-achievements.js?revision=r3-trophy-balance';
 import {
+  achievementGroups,
+  completedAchievementFamily,
+  setAchievementFamilyExpanded,
+  syncAchievementFamilies
+} from './families.js';
+import {
   DRIVE_BY_EAR_ACHIEVEMENT_ID,
   DRIVE_BY_EAR_PART_IDS,
   HOW_TO_PLAY_DISCLOSURE_IDS,
@@ -221,7 +227,7 @@ function statusFor(achievement, store, session) {
   return 'LOCKED';
 }
 
-function achievementCard(achievement, store, session) {
+function achievementCard(achievement, store, session, disclosure = '') {
   const unlocked = store.isUnlocked(achievement.id);
   const record = store.state.unlocked[achievement.id];
   const progress = progressFor(achievement, store, session);
@@ -250,6 +256,7 @@ function achievementCard(achievement, store, session) {
         ${achievement.recommendation && !unlocked ? `<small>${achievement.recommendation}</small>` : ''}
         ${progressMarkup}
         ${context ? `<small>Unlocked · ${context}</small>` : ''}
+        ${disclosure}
       </div>
       <strong class="turn-achievement-status">${status === 'UNLOCKED' ? '✓ UNLOCKED' : status}</strong>
     </article>`;
@@ -389,6 +396,7 @@ function installFilters(dialog) {
         || (current === 'unlocked' && card.dataset.achievementStatus === 'unlocked');
       card.hidden = !visible;
     }
+    syncAchievementFamilies(dialog.querySelector('.turn-achievements-list'));
   }
 
   for (const button of buttons) {
@@ -435,6 +443,16 @@ export function createAchievementView({ store, session, utilityGroup }) {
     { actionTitle: 'Open Achievements', showGuide: true }
   );
   const list = dialog.querySelector('.turn-achievements-list');
+  const expandedFamilies = new Set();
+  list.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-achievement-disclosure]');
+    if (!button) return;
+    const expanded = button.getAttribute('aria-expanded') !== 'true';
+    if (expanded) expandedFamilies.add(button.dataset.achievementDisclosure);
+    else expandedFamilies.delete(button.dataset.achievementDisclosure);
+    setAchievementFamilyExpanded(button, expanded);
+    syncAchievementFamilies(list);
+  });
   const totalTitle = dialog.querySelector('#turnAchievementsSummaryTitle');
   const trophyRoad = dialog.querySelector('.turn-trophy-road-progress');
   const trophyRoadFill = trophyRoad.querySelector('i');
@@ -672,10 +690,24 @@ export function createAchievementView({ store, session, utilityGroup }) {
     trophyTotal.textContent = String(trophies);
     renderTrophyRoad(trophies);
     storageNote.hidden = store.storageAvailable();
-    list.innerHTML = ACHIEVEMENTS
-      .map((achievement) => achievementCard(achievement, store, session))
-      .join('');
+    const focusedFamily = document.activeElement?.dataset?.achievementDisclosure;
+    list.innerHTML = achievementGroups(ACHIEVEMENTS).map(({ master, children, family }) => {
+      if (!family) return achievementCard(master, store, session);
+      const collapsible = completedAchievementFamily(family, store.isUnlocked);
+      const expanded = expandedFamilies.has(master.id);
+      const childGroupId = `turn-achievement-family-${master.id}`;
+      const disclosure = collapsible
+        ? `<button type="button" class="turn-achievement-disclosure" data-achievement-disclosure="${master.id}" data-family-count="${children.length}" data-family-label="${family.label}" data-family-title="${master.title}" aria-expanded="${expanded}" aria-controls="${childGroupId}" aria-label="${master.title}: ${expanded ? 'Hide' : 'Show'} ${children.length} completed achievements">${children.length} ${family.label} achievements · ${expanded ? 'HIDE' : 'SHOW'}</button>`
+        : '';
+      return `<div class="turn-achievement-family" data-achievement-family="${master.id}">
+        ${achievementCard(master, store, session, disclosure)}
+        <div class="turn-achievement-children" id="${childGroupId}"${collapsible && !expanded ? ' hidden' : ''}>
+          ${children.map((child) => achievementCard(child, store, session)).join('')}
+        </div>
+      </div>`;
+    }).join('');
     applyFilter();
+    if (focusedFamily) list.querySelector(`[data-achievement-disclosure="${focusedFamily}"]`)?.focus({ preventScroll: true });
     dialogDirty = false;
     return true;
   }
