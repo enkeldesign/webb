@@ -354,8 +354,8 @@ for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race')) {
     overcharge: 1
   }), car.tuning.controlMultiplier, `${car.name} must not inherit APEX GRIP CONTROL`);
 }
-assert.match(mainSource, /boostOvercharge: globalThis\.__turnBoostOvercharge \|\| 0/,
-  'The current OVERCHARGE amount must reach vehicle physics every frame');
+assert.match(mainSource, /boostOvercharge: globalThis\.__turnBoostBurningOvercharge === true\s*\? Math\.max\(0\.000001, globalThis\.__turnBoostOvercharge \|\| 0\)\s*: globalThis\.__turnBoostOvercharge \|\| 0/,
+  'The current OVERCHARGE amount reaches physics, retaining its effect on the final consumption frame');
 assert.match(physicsSource, /state\.apexGripActive = perkIds\.includes\('apex-grip'\)/,
   'Physics must expose whether a car is actively receiving APEX GRIP');
 
