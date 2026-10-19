@@ -44,6 +44,7 @@ on:
       - 'turn/offline.css'
       - 'turn/offline-precache.json'
       - 'turn/vendor/**'
+      - 'turn-tests/startup-recovery-production.mjs'
       - 'turn-tests/offline-browser-smoke.mjs'
       - 'turn/race/race-clock.js'
       - 'turn/race/race-pause.js'
@@ -103,6 +104,7 @@ on:
       - 'turn/offline.css'
       - 'turn/offline-precache.json'
       - 'turn/vendor/**'
+      - 'turn-tests/startup-recovery-production.mjs'
       - 'turn-tests/offline-browser-smoke.mjs'
       - 'turn/race/race-clock.js'
       - 'turn/race/race-pause.js'
@@ -148,6 +150,7 @@ jobs:
           - shard: garage
             tests: >-
               turn-tests/garage-browser-smoke.mjs
+              turn-tests/startup-recovery-production.mjs
               turn-tests/offline-browser-smoke.mjs
           - shard: responsive
             tests: >-

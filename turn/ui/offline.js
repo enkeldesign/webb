@@ -23,11 +23,41 @@ export function installOffline({ windowRef = globalThis, startup } = {}) {
   try { optedIn ||= windowRef.localStorage.getItem('turn-offline-under-test') === '1'; } catch { /* Storage blocked. */ }
   if (!nav?.serviceWorker || !windowRef.isSecureContext || !optedIn) return null;
   const release = windowRef.__TURN_BUILD__?.cacheKey;
+  const startupFailure = windowRef.__turnStartFailed;
   let registration;
   let preparing = true;
   let recovering = false;
   let preparingFirst = false;
   let preparationFailure;
+  let startupFailuresSuspended = false;
+  const startupFailures = [];
+  const preparationErrors = new Set();
+  const workerScript = new URL(`${SCOPE}sw.js`, windowRef.location.href).href;
+  const rememberStartupFailure = (event) => {
+    if (event.target?.tagName && event.target.tagName !== 'SCRIPT') return;
+    startupFailures.push(event);
+  };
+
+  // Service-worker registration and update failures are handled by prepare() itself.
+  // Retain other failures (including non-bubbling script-load errors) so preparation
+  // cannot release the game graph after an unrelated startup module failed.
+  function suspendStartupFailures() {
+    if (!startupFailure || startupFailuresSuspended) return;
+    windowRef.removeEventListener('error', startupFailure);
+    windowRef.removeEventListener('unhandledrejection', startupFailure);
+    windowRef.addEventListener('error', rememberStartupFailure, true);
+    windowRef.addEventListener('unhandledrejection', rememberStartupFailure);
+    startupFailuresSuspended = true;
+  }
+
+  function resumeStartupFailures() {
+    if (!startupFailure || !startupFailuresSuspended) return;
+    windowRef.removeEventListener('error', rememberStartupFailure, true);
+    windowRef.removeEventListener('unhandledrejection', rememberStartupFailure);
+    windowRef.addEventListener('error', startupFailure);
+    windowRef.addEventListener('unhandledrejection', startupFailure);
+    startupFailuresSuspended = false;
+  }
 
   async function completeReleases() {
     const releases = [];
@@ -141,34 +171,48 @@ export function installOffline({ windowRef = globalThis, startup } = {}) {
   }
 
   async function prepare() {
-    let complete;
-    try { complete = await completeReleases(); }
-    catch { throw failure('storage'); }
-    preparingFirst = complete.length === 0 && !nav.serviceWorker.controller;
-    startup.setState(preparingFirst ? 'install' : 'normal');
-    const url = new URL(windowRef.location.href);
-    const recoveryTarget = url.searchParams.get('turn-recovery') && url.searchParams.get('turn-release');
-    if (recoveryTarget === release && complete.some((value) => value.release === release)) {
-      preparing = false;
-      startup.arm();
-      return;
-    }
-    let problem;
-    if (nav.onLine !== false) {
-      for (let attempt = 0; attempt < 2; attempt += 1) {
-        try { await install(); problem = null; break; }
-        catch (error) { problem = error; }
+    startupFailures.length = 0;
+    preparationErrors.clear();
+    suspendStartupFailures();
+    try {
+      let complete;
+      try { complete = await completeReleases(); }
+      catch { throw failure('storage'); }
+      preparingFirst = complete.length === 0 && !nav.serviceWorker.controller;
+      startup.setState(preparingFirst ? 'install' : 'normal');
+      const url = new URL(windowRef.location.href);
+      const recoveryTarget = url.searchParams.get('turn-recovery') && url.searchParams.get('turn-release');
+      if (recoveryTarget === release && complete.some((value) => value.release === release)) {
+        preparing = false;
+        startup.arm();
+        return;
       }
-      await repairIncomplete().catch(() => {});
-      complete = await completeReleases();
+      let problem;
+      if (nav.onLine !== false) {
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          try { await install(); problem = null; break; }
+          catch (error) { preparationErrors.add(error); problem = error; }
+        }
+        await repairIncomplete().catch((error) => preparationErrors.add(error));
+        complete = await completeReleases();
+      }
+      if (!complete.length) throw problem || failure(nav.onLine === false ? 'offline' : 'preparation');
+      if (complete[0].release !== release) return switchRelease(complete[0].release);
+      preparing = false;
+      startup.setState('normal');
+      startup.arm();
+      nav.serviceWorker.controller?.postMessage({ type: 'turn-page-release', release });
+      nav.storage?.persist?.().catch?.(() => {});
+    } finally {
+      resumeStartupFailures();
+      // Only failures attributable to preparation may be ignored. Reject before
+      // __turnStartupReady releases the game graph for every other startup failure.
+      if (!preparing && startupFailures.some((event) => {
+        const error = event.reason ?? event.error;
+        return !(error !== undefined && preparationErrors.has(error)) &&
+          event.filename?.split('?')[0] !== workerScript;
+      })) throw failure('bootstrap');
     }
-    if (!complete.length) throw problem || failure(nav.onLine === false ? 'offline' : 'preparation');
-    if (complete[0].release !== release) return switchRelease(complete[0].release);
-    preparing = false;
-    startup.setState('normal');
-    startup.arm();
-    nav.serviceWorker.controller?.postMessage({ type: 'turn-page-release', release });
-    nav.storage?.persist?.().catch?.(() => {});
   }
 
   async function recover(attempts) {
