@@ -9,18 +9,20 @@ export const PERK_RARITY = Object.freeze({
   RARE: 'rare',
   EPIC: 'epic',
   // Vehicle-defining: stays with its car.
-  LEGENDARY: 'legendary'
+  LEGENDARY: 'legendary',
+  MYTHIC: 'mythic'
 });
 
 function definePerk({
   id,
   title,
-  vehicleIds,
+  vehicleIds = [],
   rarity,
   installable,
   description,
   rewardId,
   threshold,
+  achievementId,
   tuning
 }) {
   return Object.freeze({
@@ -32,6 +34,7 @@ function definePerk({
     vehicleIds: Object.freeze([...vehicleIds]),
     // The Trophy Road reward that unlocks it on its original car, when it has one.
     ...(rewardId ? { rewardId, threshold } : {}),
+    ...(achievementId ? { achievementId } : {}),
     ...(tuning ? { tuning: Object.freeze({ ...tuning }) } : {})
   });
 }
@@ -196,7 +199,24 @@ export const VEHICLE_PERKS = Object.freeze([
   })
 ]);
 
-const PERK_BY_ID = new Map(VEHICLE_PERKS.map((perk) => [perk.id, perk]));
+// Collection rewards have no original car. Availability is wired only once all
+// collection mechanics and migration/reveal paths are ready (#1247).
+export const ACHIEVEMENT_PERKS = Object.freeze([
+  definePerk({
+    id: 'turbo', title: 'TURBO', rarity: PERK_RARITY.MYTHIC, installable: true,
+    achievementId: 'faster-than-the-dev',
+    description: 'BOOST burns twice as fast and delivers 2.5 times the normal BOOST effect.',
+    tuning: { boostConsumptionMultiplier: 2, boostEffectMultiplier: 2.5 }
+  }),
+  definePerk({
+    id: 'road-rage', title: 'ROAD RAGE', rarity: PERK_RARITY.MYTHIC, installable: true,
+    achievementId: 'on-course-of-course',
+    description: 'With a full tank and some OVERCHARGE, clean driving gradually converts ordinary BOOST into OVERCHARGE. Using BOOST stops conversion.'
+  })
+]);
+
+export const PERKS = Object.freeze([...VEHICLE_PERKS, ...ACHIEVEMENT_PERKS]);
+const PERK_BY_ID = new Map(PERKS.map((perk) => [perk.id, perk]));
 const PERK_BY_VEHICLE_ID = new Map(VEHICLE_PERKS.flatMap((perk) => (
   perk.vehicleIds.map((vehicleId) => [vehicleId, perk])
 )));

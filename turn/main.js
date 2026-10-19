@@ -686,7 +686,7 @@ function updateDriveEffects(dt) {
   driveEffectsInput.forward = getForward();
   driveEffectsInput.right = getRight();
   driveEffectsInput.boostActive = globalThis.__turnBoostActive === true;
-  driveEffectsInput.overcharge = Number(globalThis.__turnBoostOvercharge) || 0;
+  driveEffectsInput.overcharge = globalThis.__turnBoostBurningOvercharge === true ? 1 : 0;
   driveEffectsInput.driftHeld = globalThis.__turnDriftHeld === true && Math.abs(state.steering) > 0.08;
   driveEffectsInput.slip = state.driftSlipAngle;
   driveEffects.update(driveEffectsInput);
@@ -960,7 +960,9 @@ function updatePhysics(dt, now) {
     maxSpeed: MAX_SPEED * state.vehicleTuning.topSpeedMultiplier,
     analogGas: globalThis.__turnAnalogGas || 0,
     boostActive: Boolean(globalThis.__turnBoostActive),
-    boostOvercharge: globalThis.__turnBoostOvercharge || 0,
+    boostOvercharge: globalThis.__turnBoostBurningOvercharge === true
+      ? Math.max(0.000001, globalThis.__turnBoostOvercharge || 0)
+      : globalThis.__turnBoostOvercharge || 0,
     driftHeld: Boolean(globalThis.__turnDriftHeld),
     driftLock: globalThis.__turnDriftLockAmount || 0,
     vehicleTuning: state.vehicleTuning

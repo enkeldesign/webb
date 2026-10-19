@@ -30,7 +30,6 @@ const WAKE_LIFT = 0.2;
 const PUFF_LIFT = 0.3;
 const FLARE_SECONDS = 0.28;
 const FLARE_WIDTH = 0.45;
-const COLOUR_BLEND_PER_SECOND = 6;
 
 // Degrees of extra field of view at the start of a burst (render/camera.js).
 export const BOOST_CAMERA_KICK_DEGREES = 2.5;
@@ -53,6 +52,8 @@ const OVERCHARGE_SPARK_PUFFS = 6;
 const TOKEN_FALLBACKS = Object.freeze({
   '--turn-effect-boost': '#ffd43b',
   '--turn-effect-boost-tail': '#ff922b',
+  '--turn-effect-turbo': '#ff6b6b',
+  '--turn-effect-turbo-tail': '#ff7b54',
   '--turn-effect-drift-smoke': '#d9d4cc',
   '--turn-control-overcharge': '#8b5cf6',
   '--turn-control-overcharge-light': '#d0bfff',
@@ -67,6 +68,8 @@ export function readEffectColours(documentRef = globalThis.document) {
   return Object.freeze({
     boost: read('--turn-effect-boost'),
     boostTail: read('--turn-effect-boost-tail'),
+    turbo: read('--turn-effect-turbo'),
+    turboTail: read('--turn-effect-turbo-tail'),
     overcharge: read('--turn-control-overcharge'),
     overchargeLight: read('--turn-control-overcharge-light'),
     overchargeDeep: read('--turn-control-overcharge-deep'),
@@ -115,6 +118,8 @@ export function createDriveEffects({
   const palette = {
     boost: colour(colours.boost),
     boostTail: colour(colours.boostTail),
+    turbo: colour(colours.turbo || colours.boost),
+    turboTail: colour(colours.turboTail || colours.boostTail),
     overcharge: colour(colours.overcharge),
     overchargeLight: colour(colours.overchargeLight),
     overchargeDeep: colour(colours.overchargeDeep),
@@ -198,6 +203,7 @@ export function createDriveEffects({
   let burstAge = 0;
   let burstPeak = 0;
   let overchargeMix = 0;
+  let turboBurn = false;
   let pulsePhase = 0;
   let kick = 0;
   let kickNow = 0;
@@ -278,9 +284,11 @@ export function createDriveEffects({
     const flare = burstAge < FLARE_SECONDS ? FLARE_WIDTH * (1 - burstAge / FLARE_SECONDS) * burstPeak : 0;
     const halfWidth = WAKE_HALF_WIDTH * (1 + (OVERCHARGE_WIDTH - 1) * overchargeMix) * (1 + flare);
     // BOOST runs yellow to orange; OVERCHARGE light to violet to deep violet.
-    headColour.copy(palette.boost).lerp(palette.overchargeLight, overchargeMix);
-    bodyColour.copy(palette.boost).lerp(palette.boostTail, 0.5).lerp(palette.overcharge, overchargeMix);
-    tailColour.copy(palette.boostTail).lerp(palette.overchargeDeep, overchargeMix);
+    const normalHead = turboBurn ? palette.turbo : palette.boost;
+    const normalTail = turboBurn ? palette.turboTail : palette.boostTail;
+    headColour.copy(normalHead).lerp(palette.overchargeLight, overchargeMix);
+    bodyColour.copy(normalHead).lerp(normalTail, 0.5).lerp(palette.overcharge, overchargeMix);
+    tailColour.copy(normalTail).lerp(palette.overchargeDeep, overchargeMix);
     for (let side = 0; side < 2; side += 1) {
       const sign = side === 0 ? -1 : 1;
       const samples = history[side];
@@ -366,6 +374,7 @@ export function createDriveEffects({
     const speed = Math.max(0, Number(state.speed) || 0);
     const burning = boostActive === true && speed > 4;
     const spendingOvercharge = burning && Number(overcharge) > 0;
+    turboBurn = state.vehiclePerkIds?.includes('turbo') === true;
 
     if (burning && !boosting) {
       // A new burst: start the wake from the car, flare it and kick the camera.
@@ -402,7 +411,8 @@ export function createDriveEffects({
 
     if (burning) {
       burstAge += step;
-      overchargeMix += ((spendingOvercharge ? 1 : 0) - overchargeMix) * Math.min(1, step * COLOUR_BLEND_PER_SECOND);
+      // Resource identity is immediate: even a short OC burst must be purple.
+      overchargeMix = spendingOvercharge ? 1 : 0;
       pulsePhase = (pulsePhase + step * 4) % 1;
       if (historyCount === 0) {
         rememberPose(state, forward, right);

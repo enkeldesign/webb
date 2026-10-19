@@ -1,5 +1,5 @@
 {
-  "release": "20261018-r482",
+  "release": "20261018-r483",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -275,6 +275,7 @@
     "/turn/index.html",
     "/turn/input/analog-gas.js",
     "/turn/input/boost-overcharge.js",
+    "/turn/input/boost-tank.js",
     "/turn/input/brake-reverse.js",
     "/turn/input/drift-lock.js",
     "/turn/input/keyboard-drive-ownership.js",

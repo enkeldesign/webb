@@ -226,9 +226,10 @@ html body .turn-pr-app-logo {
 .turn-pr-chip.is-rare { --turn-pill: var(--turn-rarity-rare); background: var(--turn-pill); }
 .turn-pr-chip.is-epic { --turn-pill: var(--turn-rarity-epic); background: var(--turn-pill); }
 .turn-pr-chip.is-legendary { --turn-pill: var(--turn-rarity-legendary); background: var(--turn-pill); }
+.turn-pr-chip.is-mythic { --turn-pill: var(--turn-rarity-mythic); background: var(--turn-pill); }
 
 /* A difficulty or rarity chip is a semantic colour: Ink on it in both themes. */
-.turn-pr-chip:is(.is-easy, .is-medium, .is-advanced, .is-expert, .is-common, .is-rare, .is-epic, .is-legendary) {
+.turn-pr-chip:is(.is-easy, .is-medium, .is-advanced, .is-expert, .is-common, .is-rare, .is-epic, .is-legendary, .is-mythic) {
   border-color: var(--turn-ink);
   color: var(--turn-ink);
 }
