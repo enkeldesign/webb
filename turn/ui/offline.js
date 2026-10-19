@@ -30,20 +30,30 @@ export function installOffline({ windowRef = globalThis, startup } = {}) {
   let preparingFirst = false;
   let preparationFailure;
   let startupFailuresSuspended = false;
+  const startupFailures = [];
+  const preparationErrors = new Set();
+  const workerScript = new URL(`${SCOPE}sw.js`, windowRef.location.href).href;
+  const rememberStartupFailure = (event) => {
+    if (event.target?.tagName && event.target.tagName !== 'SCRIPT') return;
+    startupFailures.push(event);
+  };
 
   // Service-worker registration and update failures are handled by prepare() itself.
-  // Browsers may also surface those failures globally even while an older complete
-  // release is still playable. Keep them out of bootstrap recovery until preparation
-  // finishes; real game-module failures are listened for again before the graph loads.
+  // Retain other failures (including non-bubbling script-load errors) so preparation
+  // cannot release the game graph after an unrelated startup module failed.
   function suspendStartupFailures() {
     if (!startupFailure || startupFailuresSuspended) return;
     windowRef.removeEventListener('error', startupFailure);
     windowRef.removeEventListener('unhandledrejection', startupFailure);
+    windowRef.addEventListener('error', rememberStartupFailure, true);
+    windowRef.addEventListener('unhandledrejection', rememberStartupFailure);
     startupFailuresSuspended = true;
   }
 
   function resumeStartupFailures() {
     if (!startupFailure || !startupFailuresSuspended) return;
+    windowRef.removeEventListener('error', rememberStartupFailure, true);
+    windowRef.removeEventListener('unhandledrejection', rememberStartupFailure);
     windowRef.addEventListener('error', startupFailure);
     windowRef.addEventListener('unhandledrejection', startupFailure);
     startupFailuresSuspended = false;
@@ -161,6 +171,8 @@ export function installOffline({ windowRef = globalThis, startup } = {}) {
   }
 
   async function prepare() {
+    startupFailures.length = 0;
+    preparationErrors.clear();
     suspendStartupFailures();
     try {
       let complete;
@@ -179,9 +191,9 @@ export function installOffline({ windowRef = globalThis, startup } = {}) {
       if (nav.onLine !== false) {
         for (let attempt = 0; attempt < 2; attempt += 1) {
           try { await install(); problem = null; break; }
-          catch (error) { problem = error; }
+          catch (error) { preparationErrors.add(error); problem = error; }
         }
-        await repairIncomplete().catch(() => {});
+        await repairIncomplete().catch((error) => preparationErrors.add(error));
         complete = await completeReleases();
       }
       if (!complete.length) throw problem || failure(nav.onLine === false ? 'offline' : 'preparation');
@@ -193,6 +205,13 @@ export function installOffline({ windowRef = globalThis, startup } = {}) {
       nav.storage?.persist?.().catch?.(() => {});
     } finally {
       resumeStartupFailures();
+      // Only failures attributable to preparation may be ignored. Reject before
+      // __turnStartupReady releases the game graph for every other startup failure.
+      if (!preparing && startupFailures.some((event) => {
+        const error = event.reason ?? event.error;
+        return !(error !== undefined && preparationErrors.has(error)) &&
+          event.filename?.split('?')[0] !== workerScript;
+      })) throw failure('bootstrap');
     }
   }
 
