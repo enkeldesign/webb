@@ -1,7 +1,22 @@
-import { BOOST_OVERCHARGE_MAX_SECONDS, BOOST_OVERCHARGE_DECAY_SECONDS } from './boost-overcharge.js?revision=r219-overcharge-state';
+import { BOOST_OVERCHARGE_MAX_SECONDS, BOOST_OVERCHARGE_DECAY_SECONDS, BOOST_OVERCHARGE_PHASE, boostOverchargeBuildRate } from './boost-overcharge.js?revision=r219-overcharge-state';
 
 export const ROAD_RAGE_CONVERSION_SECONDS = 8;
 export const ROAD_RAGE_MIN_SPEED = 8;
+
+// A scorer sample already includes the DRIFT/LOCK rate that earned it. Credit it
+// once, before processing the next input: a release or BOOST press cannot lose it
+// or retroactively multiply it. Only credit left after filling base fuel builds OC.
+export function rechargeScoringBoost(tank, weightedSeconds, rechargeSeconds, overchargeOn) {
+  let credit = Math.max(0, Number(weightedSeconds) || 0);
+  const filled = Math.min(Math.max(0, 1 - tank.charge), credit / rechargeSeconds);
+  tank.charge += filled;
+  credit = Math.max(0, credit - filled * rechargeSeconds);
+  if (!credit || !overchargeOn || (tank.overcharge > 0 && tank.overchargePhase === BOOST_OVERCHARGE_PHASE.DECAYING)) return false;
+  tank.overcharge = Math.min(1, tank.overcharge + credit * boostOverchargeBuildRate(1));
+  const peaked = tank.overcharge >= 1;
+  tank.overchargePhase = peaked ? BOOST_OVERCHARGE_PHASE.DECAYING : BOOST_OVERCHARGE_PHASE.BUILDING;
+  return peaked;
+}
 
 // The canonical tank keeps charge as its TOTAL base fill. converted is a purple
 // portion of that fill, never extra fuel. The existing 0.6-second OVERCHARGE bonus

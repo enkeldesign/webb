@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { rechargeScoringBoost } from '../turn/input/boost-tank.js';
 import fs from 'node:fs/promises';
 
 import {
@@ -78,6 +79,7 @@ function radians(degrees) {
 
 function scoreLap(runtime, state, startAt = 0) {
   runtime.beginLap(startAt);
+  state.driftRechargeMultiplier = 2.4;
   let now = startAt;
   state.lapActive = true;
   state.speed = 25;
@@ -135,7 +137,7 @@ const firstResult = runtime.completeLap({
   ranked: true
 });
 assert.ok(firstResult.score > 0, 'Scoring continues while the live HUD is hidden');
-assert.ok(Math.abs(state.driftScoringSeconds - 3) < 1e-9,
+assert.ok(Math.abs(state.driftScoringCharge - 3 * 2.4) < 1e-9,
   'PRECISION receives the three seconds that actually earned points while the HUD was hidden');
 assert.equal(state.driftScoring, false, 'Settling after the drift does not count as points-earning DRIFT');
 assert.equal(firstResult.newBest, true);
@@ -157,16 +159,33 @@ for (const invalid of [
   runtime.reset();
   Object.assign(state, { speed: 30, driftSlipAngle: radians(60), offRoad: false, collided: false, lapActive: true }, invalid);
   runtime.advance(1 / 12, 100);
-  assert.equal(state.driftScoringSeconds, 0, 'A sample that earns no points gives no recharge time');
+  assert.equal(state.driftScoringCharge, 0, 'A sample that earns no points gives no recharge time');
   assert.equal(state.driftScoring, false);
 }
 runtime.reset();
 Object.assign(state, { speed: 30, driftSlipAngle: radians(60), offRoad: false, collided: false, lapActive: true });
 runtime.advance(1 / 12, 200);
-assert.equal(state.driftScoringSeconds, 1 / 12);
+assert.equal(state.driftScoringCharge, 2.4 / 12);
 assert.equal(state.driftScoring, true);
+// Input can change before the next BOOST update. The earned interval keeps its
+// original rate and still fills base/bonus fuel after DRIFT is released.
+state.driftRechargeMultiplier = 0;
+const earnedCharge = state.driftScoringCharge;
+const scoredTank = { charge: 0.99, overcharge: 0, overchargePhase: 'ready' };
+rechargeScoringBoost(scoredTank, earnedCharge, 4.2, true);
+assert.equal(scoredTank.charge, 1);
+assert.ok(Math.abs(scoredTank.overcharge - (earnedCharge - 0.01 * 4.2) / (2.4 * 1.8)) < 1e-9,
+  'Only the earned time left after filling the base builds OVERCHARGE, even after release');
+state.driftScoringCharge = 0;
+state.driftRechargeMultiplier = 3.6;
+runtime.advance(1 / 12, 300);
+assert.equal(state.driftScoringCharge, 3.6 / 12, 'LOCK keeps its own captured multiplier');
+state.driftScoringCharge = 0;
+state.driftRechargeMultiplier = 0;
+runtime.advance(1 / 12, 400);
+assert.equal(state.driftScoringCharge, 0, 'A scoring interval consumed during BOOST earns no recharge');
 eventTarget.dispatchEvent({ type: 'turn:ui-state-change', detail: { reason: 'race-paused' } });
-assert.equal(state.driftScoringSeconds, 0, 'A pause discards unconsumed recharge samples');
+assert.equal(state.driftScoringCharge, 0, 'A pause discards unconsumed recharge samples');
 runtime.reset();
 assert.equal(state.driftScoring, false);
 

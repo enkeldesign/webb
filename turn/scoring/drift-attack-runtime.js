@@ -83,7 +83,7 @@ export function createDriftAttackRuntime({
   getBestDriftRecord(state.trackId, storage);
   let enabled = isUnlocked() === true;
   let hudVisible = driftHudVisible(targetStorage);
-  state.driftScoringSeconds = 0;
+  state.driftScoringCharge = 0;
   state.driftScoring = false;
 
   function publishState(snapshot, now) {
@@ -123,7 +123,7 @@ export function createDriftAttackRuntime({
     onState: publishState,
     onEvent: publishEvent,
     onScoringSample(seconds) {
-      state.driftScoringSeconds += seconds;
+      state.driftScoringCharge += seconds * Math.max(0, Number(state.driftRechargeMultiplier) || 0);
     }
   });
 
@@ -139,13 +139,13 @@ export function createDriftAttackRuntime({
   }
 
   function reset(now = 0) {
-    state.driftScoringSeconds = 0;
+    state.driftScoringCharge = 0;
     scorer.reset(now);
     scoreFeedback.clearChannel(SCORE_FEEDBACK_CHANNEL.DRIFT, now);
   }
 
   function beginLap(now = 0) {
-    state.driftScoringSeconds = 0;
+    state.driftScoringCharge = 0;
     if (!enabled) return false;
     scorer.beginLap(now);
     return true;
@@ -266,7 +266,7 @@ export function createDriftAttackRuntime({
 
   function handleUiState(event) {
     const reason = event?.detail?.reason;
-    if (reason === 'race-paused' || reason === 'lot-open') state.driftScoringSeconds = 0;
+    if (reason === 'race-paused' || reason === 'lot-open') state.driftScoringCharge = 0;
     if (reason === 'race-started' || reason === 'race-reset' || reason === 'track-changed' || reason === 'home-open') {
       reset(raceNow());
     }
