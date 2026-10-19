@@ -212,6 +212,16 @@ export const ACHIEVEMENT_PERKS = Object.freeze([
     id: 'road-rage', title: 'ROAD RAGE', rarity: PERK_RARITY.MYTHIC, installable: true,
     achievementId: 'on-course-of-course',
     description: 'With a full tank and some OVERCHARGE, clean driving gradually converts ordinary BOOST into OVERCHARGE. Using BOOST stops conversion.'
+  }),
+  definePerk({
+    id: 'precision', title: 'PRECISION', rarity: PERK_RARITY.EPIC, installable: true,
+    achievementId: 'drift-master',
+    description: 'Only DRIFT that earns DRIFT ATTACK points recharges BOOST. Loose OVERCHARGE lasts three times as long.'
+  }),
+  definePerk({
+    id: 'locked-in', title: 'LOCKED IN', rarity: PERK_RARITY.EPIC, installable: true,
+    achievementId: 'flow-master',
+    description: 'While FLOW is above ×2, gain one effective tier of CONTROL, ACCELERATION and DRIFT.'
   })
 ]);
 

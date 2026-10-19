@@ -143,6 +143,15 @@ const consumedOvercharge = advanceBoostOvercharge({
   consuming: true
 });
 assert.equal(consumedOvercharge.amount, 0);
+const precisionLoose = advanceBoostOvercharge({ amount: 1, phase: BOOST_OVERCHARGE_PHASE.DECAYING, dt: 8, decayMultiplier: 3 });
+assert.ok(Math.abs(precisionLoose.amount - 2 / 3) < 1e-12, 'PRECISION makes loose OC last 24 seconds instead of eight');
+assert.equal(advanceBoostOvercharge({ ...precisionLoose, dt: 16, decayMultiplier: 3 }).amount, 0);
+assert.equal(advanceBoostOvercharge({ amount: 1, dt: 24, zone: 'gas', decayMultiplier: 3 }).amount, 1,
+  'PRECISION never changes caught/held OC');
+assert.equal(advanceBoostOvercharge({ dt: 1, buildDt: 0, zone: 'drift', qualifyingDrift: true }).amount, 0,
+  'A frame between canonical scoring samples cannot invent recharge time');
+assert.equal(advanceBoostOvercharge({ dt: 0.01, buildDt: 0.9, zone: 'drift', qualifyingDrift: true }).amount, 0.5,
+  'The actual scoring time, not render-frame duration, determines recharge');
 assert.equal(consumedOvercharge.phase, BOOST_OVERCHARGE_PHASE.READY);
 assert.equal(boostOverchargeVisualWidth(1), BOOST_OVERCHARGE_MAX_WIDTH);
 

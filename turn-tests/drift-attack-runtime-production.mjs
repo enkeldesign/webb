@@ -135,6 +135,9 @@ const firstResult = runtime.completeLap({
   ranked: true
 });
 assert.ok(firstResult.score > 0, 'Scoring continues while the live HUD is hidden');
+assert.ok(Math.abs(state.driftScoringSeconds - 3) < 1e-9,
+  'PRECISION receives the three seconds that actually earned points while the HUD was hidden');
+assert.equal(state.driftScoring, false, 'Settling after the drift does not count as points-earning DRIFT');
 assert.equal(firstResult.newBest, true);
 assert.equal(firstResult.bestScore, firstResult.score);
 assert.equal(runtime.getBestRecord('mountain').carId, 'sedan-sports');
@@ -145,6 +148,27 @@ assert.equal(feedback.events.length, hiddenPresentationEvents,
   'Hidden-HUD scoring must not send transient presentation events');
 assert.ok(eventTarget.events.some((event) => event.type === 'turn:drift-score-event'));
 assert.ok(eventTarget.events.some((event) => event.type === 'turn:drift-lap-result'));
+
+// The real scorer, rather than another slip-angle threshold, controls recharge.
+for (const invalid of [
+  { driftSlipAngle: radians(12) }, { speed: 5 }, { offRoad: true },
+  { collided: true }, { driftSlipAngle: radians(140) }, { lapActive: false }
+]) {
+  runtime.reset();
+  Object.assign(state, { speed: 30, driftSlipAngle: radians(60), offRoad: false, collided: false, lapActive: true }, invalid);
+  runtime.advance(1 / 12, 100);
+  assert.equal(state.driftScoringSeconds, 0, 'A sample that earns no points gives no recharge time');
+  assert.equal(state.driftScoring, false);
+}
+runtime.reset();
+Object.assign(state, { speed: 30, driftSlipAngle: radians(60), offRoad: false, collided: false, lapActive: true });
+runtime.advance(1 / 12, 200);
+assert.equal(state.driftScoringSeconds, 1 / 12);
+assert.equal(state.driftScoring, true);
+eventTarget.dispatchEvent({ type: 'turn:ui-state-change', detail: { reason: 'race-paused' } });
+assert.equal(state.driftScoringSeconds, 0, 'A pause discards unconsumed recharge samples');
+runtime.reset();
+assert.equal(state.driftScoring, false);
 
 const secondLap = scoreLap(runtime, state, firstLap.now + 1000);
 const unrankedResult = runtime.completeLap({

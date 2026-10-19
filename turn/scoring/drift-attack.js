@@ -63,7 +63,7 @@ export function driftSpeedQuality(speed) {
   return 0.45 + roadSpeed * 0.55 + highSpeed * 0.28;
 }
 
-export function createDriftAttackScorer({ onState = null, onEvent = null } = {}) {
+export function createDriftAttackScorer({ onState = null, onEvent = null, onScoringSample = null } = {}) {
   const feedbackState = {
     active: false,
     score: 0,
@@ -286,6 +286,9 @@ export function createDriftAttackScorer({ onState = null, onEvent = null } = {})
     const durationQuality = 0.72 + smoothstep(0, 2.6, driftSeconds) * 0.28;
     const distance = Math.max(0, speed) * sampleDt;
     currentExact += distance * POINTS_PER_METER * angleQuality * speedQuality * durationQuality * multiplier;
+    // Consumers such as PRECISION reuse actual scoring time, including the scorer's
+    // failure and qualification rules. No second slip-angle scorer or HUD dependency.
+    if (typeof onScoringSample === 'function') onScoringSample(sampleDt);
     const intensity = clamp(
       angleQuality * 0.58 + Math.min(1, speedQuality) * 0.2 + Math.min(1, driftSeconds / 2.6) * 0.22,
       0,

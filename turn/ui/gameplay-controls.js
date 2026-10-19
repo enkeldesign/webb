@@ -1198,8 +1198,17 @@ function installGameplayUi() {
     const perkState = globalThis.__turnRuntime?.state;
     const perkIds = activeVehiclePerkIds(perkState);
     const resourceZone = resolveBoostInputZone(driveZone, perkState);
-    const perkRefill = Math.max(0, Number(perkState?.vehiclePerkBoostRefill) || 0);
-    if (perkState) perkState.vehiclePerkBoostRefill = 0;
+    const precision = perkIds.includes('precision');
+    const scoringSeconds = Math.max(0, Number(perkState?.driftScoringSeconds) || 0);
+    const rechargeDt = precision ? scoringSeconds : dt;
+    const decayMultiplier = precision ? 3 : 1;
+    // PRECISION replaces passive charging (including FULL TANK's clean-driving
+    // fill) with actual scoring DRIFT time. Discard consumed samples during BOOST.
+    const perkRefill = precision ? 0 : Math.max(0, Number(perkState?.vehiclePerkBoostRefill) || 0);
+    if (perkState) {
+      perkState.vehiclePerkBoostRefill = 0;
+      perkState.driftScoringSeconds = 0;
+    }
     boostTank.charge = boostCharge;
     boostTank.overcharge = boostOvercharge;
     boostTank.converted = boostConvertedCharge;
@@ -1217,16 +1226,16 @@ function installGameplayUi() {
       }
     } else {
       if (boostCharge < 0.999999) {
-        boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS + perkRefill);
+        boostCharge = Math.min(1, boostCharge + rechargeDt * rechargeMultiplier / BOOST_RECHARGE_SECONDS + perkRefill);
       }
 
       if (overchargeOn && (boostCharge >= 0.999999 || boostOvercharge > 0)) {
         const runtimeState = globalThis.__turnRuntime?.state;
-        const slipAngle = resolveBoostSlipAngle({
+        const slipAngle = precision ? 0 : resolveBoostSlipAngle({
           heading: runtimeState?.heading,
           velocity: runtimeState?.velocity
         });
-        const qualifyingDrift = qualifiesForBoostOvercharge({
+        const qualifyingDrift = precision ? perkState?.driftScoring === true : qualifiesForBoostOvercharge({
           driftHeld: globalThis.__turnDriftHeld === true,
           speed: runtimeState?.speed,
           slipAngle
@@ -1237,7 +1246,9 @@ function installGameplayUi() {
           dt,
           zone: resourceZone,
           qualifyingDrift,
-          rechargeMultiplier
+          rechargeMultiplier,
+          buildDt: rechargeDt,
+          decayMultiplier
         });
         boostOvercharge = overchargeState.amount;
         boostOverchargePhase = overchargeState.phase;
@@ -1245,7 +1256,7 @@ function installGameplayUi() {
       }
       boostTank.charge = boostCharge;
       boostTank.overcharge = boostOvercharge;
-      decayConvertedBoost(boostTank, dt, resourceZone === 'gas');
+      decayConvertedBoost(boostTank, dt, resourceZone === 'gas', decayMultiplier);
       conversion.enabled = overchargeOn && perkState?.running === true && perkIds.includes('road-rage');
       conversion.requested = boostRequested;
       conversion.offRoad = perkState?.offRoad === true;

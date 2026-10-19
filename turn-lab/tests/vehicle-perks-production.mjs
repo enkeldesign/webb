@@ -276,7 +276,7 @@ assert.match(controlsSource,
   /vehicleEffectiveTuning\?\.boostDurationSeconds[\s\S]*__turnVehicleTuning\?\.boostDurationSeconds/,
   'Boost consumption must read FULL TANK’s effective capacity before the ordinary base capacity');
 assert.match(controlsSource,
-  /const perkRefill = [^\n]*vehiclePerkBoostRefill[\s\S]*perkState\.vehiclePerkBoostRefill = 0;[\s\S]*if \(boostCharge < 0\.999999\) \{\s*boostCharge = Math\.min\(1, boostCharge \+ dt \* rechargeMultiplier \/ BOOST_RECHARGE_SECONDS \+ perkRefill\)/,
+  /const perkRefill = [^\n]*vehiclePerkBoostRefill[\s\S]*perkState\.vehiclePerkBoostRefill = 0;[\s\S]*if \(boostCharge < 0\.999999\) \{\s*boostCharge = Math\.min\(1, boostCharge \+ rechargeDt \* rechargeMultiplier \/ BOOST_RECHARGE_SECONDS \+ perkRefill\)/,
   'FULL TANK fill is taken every frame and fills the charge only between boosts');
 assert.match(physicsSource, /advanceVehiclePerkRuntimeState\(/, 'The fill accrues in the physics step, which only runs while the race runs');
 assert.match(controlsSource, /globalThis\.__turnBoostCharge = boostCharge/,
@@ -545,6 +545,28 @@ assert.equal(turboTuning.boostConsumptionMultiplier, 2);
 assert.equal(truck.tuning.boostEffectMultiplier, undefined, 'Installing TURBO never changes the original tuning');
 turboTruck.vehicleInstalledPerkId = '';
 assert.equal(resolveVehiclePerkTuning({ state: turboTruck, tuning: truck.tuning }).boostEffectMultiplier, undefined);
+
+const lockedStats = Object.freeze({ speed: 3, acceleration: 3, control: 3, drift: 3, boostPower: 3, boostDuration: 3 });
+const lockedBase = Object.freeze(deriveVehicleTuning(lockedStats));
+const lockedIn = perkState('sedan', false, lockedBase, 'locked-in');
+lockedIn.vehicleStats = lockedStats;
+lockedIn.flowScoreMultiplier = 2;
+assert.equal(resolveVehiclePerkTuning({ state: lockedIn, tuning: lockedBase }), lockedBase, 'FLOW exactly ×2 does not activate LOCKED IN');
+lockedIn.flowScoreMultiplier = 2.01;
+const raised = resolveVehiclePerkTuning({ state: lockedIn, tuning: lockedBase });
+const raisedExpected = deriveVehicleTuning({ ...lockedStats, acceleration: 4, control: 4, drift: 4 });
+assert.deepEqual(raised, raisedExpected, 'FLOW above ×2 raises exactly the three named effective tiers');
+assert.deepEqual(lockedIn.vehicleStats, lockedStats, 'Conditional tiers never modify the saved profile');
+lockedIn.vehicleStats = Object.freeze({ ...lockedStats, acceleration: 5, control: 5, drift: 5 });
+const ceilingBase = Object.freeze(deriveVehicleTuning(lockedIn.vehicleStats));
+lockedIn.vehicleTuning = ceilingBase;
+const beyond = resolveVehiclePerkTuning({ state: lockedIn, tuning: ceilingBase });
+assert.ok(beyond.controlMultiplier > ceilingBase.controlMultiplier && beyond.accelerationMultiplier > ceilingBase.accelerationMultiplier
+  && beyond.driftEngineMultiplier > ceilingBase.driftEngineMultiplier, 'The effect continues above the visible tier ceiling');
+lockedIn.flowScoreMultiplier = 1;
+assert.equal(resolveVehiclePerkTuning({ state: lockedIn, tuning: ceilingBase }), ceilingBase, 'A lost FLOW chain immediately restores the selected setup');
+assert.equal(getVehiclePerk('locked-in').rarity, 'epic');
+assert.equal(getVehiclePerk('precision').rarity, 'epic');
 
 // ROAD RAGE conserves fuel and capacity. Dirty driving/BOOST only stops conversion.
 const cleanConversion = { enabled: true, requested: false, offRoad: false, collided: false, speed: 40 };

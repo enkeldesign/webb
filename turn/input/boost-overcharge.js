@@ -58,11 +58,15 @@ export function advanceBoostOvercharge({
   zone = '',
   qualifyingDrift = false,
   rechargeMultiplier = BOOST_OVERCHARGE_REGULAR_RECHARGE_MULTIPLIER,
+  buildDt = dt,
+  decayMultiplier = 1,
   consuming = false
 } = {}) {
   let nextAmount = clamp(finiteNumber(amount), 0, 1);
   let nextPhase = validPhase(phase);
   const elapsed = Math.max(0, finiteNumber(dt));
+  const buildElapsed = Math.max(0, finiteNumber(buildDt));
+  const decaySeconds = BOOST_OVERCHARGE_DECAY_SECONDS * Math.max(1, finiteNumber(decayMultiplier, 1));
   let peaked = false;
 
   if (consuming && nextAmount > 0) {
@@ -72,10 +76,10 @@ export function advanceBoostOvercharge({
     // GAS catches the current pressure exactly where it is. The phase is kept so
     // a pre-peak catch may resume building, while a post-peak catch resumes decay.
   } else if (nextPhase === BOOST_OVERCHARGE_PHASE.DECAYING && nextAmount > 0) {
-    nextAmount = Math.max(0, nextAmount - elapsed / BOOST_OVERCHARGE_DECAY_SECONDS);
+    nextAmount = Math.max(0, nextAmount - elapsed / decaySeconds);
   } else if (zone === 'drift' && qualifyingDrift) {
     nextPhase = BOOST_OVERCHARGE_PHASE.BUILDING;
-    nextAmount = Math.min(1, nextAmount + elapsed * boostOverchargeBuildRate(rechargeMultiplier));
+    nextAmount = Math.min(1, nextAmount + buildElapsed * boostOverchargeBuildRate(rechargeMultiplier));
     if (nextAmount >= 1) {
       nextAmount = 1;
       nextPhase = BOOST_OVERCHARGE_PHASE.DECAYING;
@@ -84,11 +88,11 @@ export function advanceBoostOvercharge({
   } else if (zone === 'drift' && nextPhase === BOOST_OVERCHARGE_PHASE.BUILDING && nextAmount > 0) {
     // Briefly losing the slip angle while still holding DRIFT should not destroy
     // the mini-game. Pressure leaks, but the player may resume building before peak.
-    nextAmount = Math.max(0, nextAmount - elapsed / BOOST_OVERCHARGE_DECAY_SECONDS);
+    nextAmount = Math.max(0, nextAmount - elapsed / decaySeconds);
   } else if (nextAmount > 0) {
     // Releasing DRIFT without catching on GAS commits the bonus to its decay phase.
     nextPhase = BOOST_OVERCHARGE_PHASE.DECAYING;
-    nextAmount = Math.max(0, nextAmount - elapsed / BOOST_OVERCHARGE_DECAY_SECONDS);
+    nextAmount = Math.max(0, nextAmount - elapsed / decaySeconds);
   }
 
   if (nextAmount <= 0.000001) {

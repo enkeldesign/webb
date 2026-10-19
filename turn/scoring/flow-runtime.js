@@ -116,8 +116,10 @@ export function createFlowRuntime({
   let lastDriftBankAt = -Infinity;
   let chainTimer = 0;
   let lastMilestoneTier = 1;
+  state.flowScoreMultiplier = 1;
 
   function publishState(snapshot, now) {
+    state.flowScoreMultiplier = enabled ? snapshot.multiplier : 1;
     if (!enabled || !hudVisible) return;
     scoreFeedback.updateState(SCORE_FEEDBACK_CHANNEL.FLOW, snapshot, now);
   }

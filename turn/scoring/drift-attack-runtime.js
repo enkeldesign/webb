@@ -83,8 +83,12 @@ export function createDriftAttackRuntime({
   getBestDriftRecord(state.trackId, storage);
   let enabled = isUnlocked() === true;
   let hudVisible = driftHudVisible(targetStorage);
+  state.driftScoringSeconds = 0;
+  state.driftScoring = false;
 
   function publishState(snapshot, now) {
+    state.driftScoring = enabled && snapshot.active
+      && (snapshot.phase === 'build' || snapshot.phase === 'intensify');
     if (!enabled || !hudVisible) return;
     scoreFeedback.updateState(SCORE_FEEDBACK_CHANNEL.DRIFT, snapshot, now);
   }
@@ -117,7 +121,10 @@ export function createDriftAttackRuntime({
 
   const scorer = createDriftAttackScorer({
     onState: publishState,
-    onEvent: publishEvent
+    onEvent: publishEvent,
+    onScoringSample(seconds) {
+      state.driftScoringSeconds += seconds;
+    }
   });
 
   function syncPresentation(now = 0) {
@@ -132,11 +139,13 @@ export function createDriftAttackRuntime({
   }
 
   function reset(now = 0) {
+    state.driftScoringSeconds = 0;
     scorer.reset(now);
     scoreFeedback.clearChannel(SCORE_FEEDBACK_CHANNEL.DRIFT, now);
   }
 
   function beginLap(now = 0) {
+    state.driftScoringSeconds = 0;
     if (!enabled) return false;
     scorer.beginLap(now);
     return true;
@@ -257,6 +266,7 @@ export function createDriftAttackRuntime({
 
   function handleUiState(event) {
     const reason = event?.detail?.reason;
+    if (reason === 'race-paused' || reason === 'lot-open') state.driftScoringSeconds = 0;
     if (reason === 'race-started' || reason === 'race-reset' || reason === 'track-changed' || reason === 'home-open') {
       reset(raceNow());
     }
