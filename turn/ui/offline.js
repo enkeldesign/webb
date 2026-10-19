@@ -23,11 +23,31 @@ export function installOffline({ windowRef = globalThis, startup } = {}) {
   try { optedIn ||= windowRef.localStorage.getItem('turn-offline-under-test') === '1'; } catch { /* Storage blocked. */ }
   if (!nav?.serviceWorker || !windowRef.isSecureContext || !optedIn) return null;
   const release = windowRef.__TURN_BUILD__?.cacheKey;
+  const startupFailure = windowRef.__turnStartFailed;
   let registration;
   let preparing = true;
   let recovering = false;
   let preparingFirst = false;
   let preparationFailure;
+  let startupFailuresSuspended = false;
+
+  // Service-worker registration and update failures are handled by prepare() itself.
+  // Browsers may also surface those failures globally even while an older complete
+  // release is still playable. Keep them out of bootstrap recovery until preparation
+  // finishes; real game-module failures are listened for again before the graph loads.
+  function suspendStartupFailures() {
+    if (!startupFailure || startupFailuresSuspended) return;
+    windowRef.removeEventListener('error', startupFailure);
+    windowRef.removeEventListener('unhandledrejection', startupFailure);
+    startupFailuresSuspended = true;
+  }
+
+  function resumeStartupFailures() {
+    if (!startupFailure || !startupFailuresSuspended) return;
+    windowRef.addEventListener('error', startupFailure);
+    windowRef.addEventListener('unhandledrejection', startupFailure);
+    startupFailuresSuspended = false;
+  }
 
   async function completeReleases() {
     const releases = [];
@@ -141,34 +161,39 @@ export function installOffline({ windowRef = globalThis, startup } = {}) {
   }
 
   async function prepare() {
-    let complete;
-    try { complete = await completeReleases(); }
-    catch { throw failure('storage'); }
-    preparingFirst = complete.length === 0 && !nav.serviceWorker.controller;
-    startup.setState(preparingFirst ? 'install' : 'normal');
-    const url = new URL(windowRef.location.href);
-    const recoveryTarget = url.searchParams.get('turn-recovery') && url.searchParams.get('turn-release');
-    if (recoveryTarget === release && complete.some((value) => value.release === release)) {
-      preparing = false;
-      startup.arm();
-      return;
-    }
-    let problem;
-    if (nav.onLine !== false) {
-      for (let attempt = 0; attempt < 2; attempt += 1) {
-        try { await install(); problem = null; break; }
-        catch (error) { problem = error; }
+    suspendStartupFailures();
+    try {
+      let complete;
+      try { complete = await completeReleases(); }
+      catch { throw failure('storage'); }
+      preparingFirst = complete.length === 0 && !nav.serviceWorker.controller;
+      startup.setState(preparingFirst ? 'install' : 'normal');
+      const url = new URL(windowRef.location.href);
+      const recoveryTarget = url.searchParams.get('turn-recovery') && url.searchParams.get('turn-release');
+      if (recoveryTarget === release && complete.some((value) => value.release === release)) {
+        preparing = false;
+        startup.arm();
+        return;
       }
-      await repairIncomplete().catch(() => {});
-      complete = await completeReleases();
+      let problem;
+      if (nav.onLine !== false) {
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          try { await install(); problem = null; break; }
+          catch (error) { problem = error; }
+        }
+        await repairIncomplete().catch(() => {});
+        complete = await completeReleases();
+      }
+      if (!complete.length) throw problem || failure(nav.onLine === false ? 'offline' : 'preparation');
+      if (complete[0].release !== release) return switchRelease(complete[0].release);
+      preparing = false;
+      startup.setState('normal');
+      startup.arm();
+      nav.serviceWorker.controller?.postMessage({ type: 'turn-page-release', release });
+      nav.storage?.persist?.().catch?.(() => {});
+    } finally {
+      resumeStartupFailures();
     }
-    if (!complete.length) throw problem || failure(nav.onLine === false ? 'offline' : 'preparation');
-    if (complete[0].release !== release) return switchRelease(complete[0].release);
-    preparing = false;
-    startup.setState('normal');
-    startup.arm();
-    nav.serviceWorker.controller?.postMessage({ type: 'turn-page-release', release });
-    nav.storage?.persist?.().catch?.(() => {});
   }
 
   async function recover(attempts) {
