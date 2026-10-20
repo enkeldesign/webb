@@ -104,6 +104,12 @@ assert.doesNotMatch(bootstrap, /__turnStartBrowserGame|turn-browser-play|release
 
 assert.match(bootstrap, /className = 'm8-dialog turn-dialog turn-dialog--reader turn-history-dialog'/);
 assert.match(bootstrap, /scope === 'website' \? 'turnWebsiteHistory' : 'turnHistory'/);
+assert.match(bootstrap, /<h2 id="\$\{prefix\}Title">ABOUT TURN<\/h2>/,
+  'The shared reader must be named ABOUT TURN so direct Accessibility entry is announced in the right context');
+assert.match(bootstrap, /data-dialog-close aria-label="Close About TURN"/,
+  'The shared reader close control must use the same ABOUT TURN context');
+assert.doesNotMatch(bootstrap, /<h2 id="\$\{prefix\}Title">TURN HISTORY<\/h2>/,
+  'Accessibility must not open a dialog named TURN HISTORY');
 assert.match(bootstrap, /role="tablist" aria-label="ABOUT TURN sections"/);
 assert.match(bootstrap, /data-history-tab="accessibility"[\s\S]*>ACCESSIBILITY<\/button>/,
   'ABOUT TURN must expose Accessibility as the third reader tab');
