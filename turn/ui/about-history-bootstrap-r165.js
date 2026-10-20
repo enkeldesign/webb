@@ -298,7 +298,6 @@ function compactAboutDialog(aboutDialog, historyDialog, tabs) {
     setAccessibilityExpanded(true);
     const alreadyOpen = aboutDialog.open || aboutDialog.hasAttribute('open');
     if (!alreadyOpen) openDialog(aboutDialog, sourceTrigger);
-    else aboutDialog.__turnReturnFocus = sourceTrigger;
     setAccessibilityExpanded(true, { focus: true });
   }
 
