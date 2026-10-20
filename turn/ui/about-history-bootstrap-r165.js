@@ -139,7 +139,7 @@ function createHistoryDialog(scope = 'game') {
       </header>
 
       <div class="turn-history-shell">
-        <div class="turn-history-tabs" role="tablist" aria-label="TURN history sections">
+        <div class="turn-history-tabs" role="tablist" aria-label="ABOUT TURN sections">
           <button
             id="${prefix}DevelopmentTab"
             type="button"

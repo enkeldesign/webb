@@ -104,7 +104,21 @@ assert.doesNotMatch(bootstrap, /__turnStartBrowserGame|turn-browser-play|release
 
 assert.match(bootstrap, /className = 'm8-dialog turn-dialog turn-dialog--reader turn-history-dialog'/);
 assert.match(bootstrap, /scope === 'website' \? 'turnWebsiteHistory' : 'turnHistory'/);
-assert.match(bootstrap, /role="tablist" aria-label="TURN history sections"/);
+assert.match(bootstrap, /role="tablist" aria-label="ABOUT TURN sections"/);
+assert.match(bootstrap, /data-history-tab="accessibility"[\s\S]*>ACCESSIBILITY<\/button>/,
+  'ABOUT TURN must expose Accessibility as the third reader tab');
+assert.match(bootstrap, /data-history-panel="accessibility"[\s\S]*accessibilityStatementMarkup\(prefix\)/,
+  'Accessibility must be a real tabpanel in the shared reader');
+assert.match(bootstrap, /TURN is designed so more people can play in more ways\./,
+  'The Accessibility section must contain its statement');
+assert.match(bootstrap, /not yet been tested with experienced screen-reader players/,
+  'The placeholder statement must be candid about current screen-reader validation');
+assert.match(bootstrap, /createFeedbackContent\(\{ className: 'turn-accessibility-feedback' \}\)/,
+  'Accessibility must embed the shared feedback component');
+assert.match(bootstrap, /id = 'installAccessibilityButton'/,
+  'The browser install footer must add an Accessibility entry');
+assert.match(bootstrap, /history\.open\('accessibility', accessibilityTrigger\)/,
+  'The install Accessibility entry must open the reader directly on Accessibility');
 assert.match(bootstrap, /role="tab"[\s\S]*aria-selected="true"/);
 assert.match(bootstrap, /role="tabpanel"/);
 assert.match(bootstrap, /event\.key === 'ArrowRight'/);
