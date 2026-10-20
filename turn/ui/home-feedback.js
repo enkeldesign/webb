@@ -101,7 +101,7 @@ function createAboutTrigger() {
 
   const accessibilityTrigger = document.createElement('button');
   accessibilityTrigger.type = 'button';
-  accessibilityTrigger.className = 'm8-accessibility-trigger';
+  accessibilityTrigger.className = 'm8-about-trigger m8-accessibility-trigger';
   accessibilityTrigger.textContent = 'ACCESSIBILITY';
   accessibilityTrigger.setAttribute('aria-haspopup', 'dialog');
   meta.appendChild(accessibilityTrigger);
