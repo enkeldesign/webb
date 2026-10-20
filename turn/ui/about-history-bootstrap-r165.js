@@ -4,6 +4,7 @@ import {
   DEVELOPMENT_HISTORY
 } from '../content/about-history-current.js?build=20261019-r484';
 import { aboutTurnHtml } from '../content/about-turn.js?revision=r1';
+import { createFeedbackContent } from './feedback-content.js';
 
 const REVISION = 'r165-browser-about';
 const INSTALL_NOTE =
@@ -108,6 +109,19 @@ function changelogMarkup() {
     </details>`;
 }
 
+function accessibilityStatementMarkup(prefix) {
+  return `
+    <div class="turn-accessibility-statement">
+      <h3 id="${prefix}AccessibilityHeading">Accessibility in TURN</h3>
+      <p>TURN is designed so more people can play in more ways. Accessibility is part of the game design, not a separate mode, and TURN aims to meet WCAG 2.2 AA where those guidelines apply.</p>
+      <p>Current support includes non-visual racing with Drive By Ear, screen-reader support, device or on-screen steering, and controls designed for one-handed play and assistive technology.</p>
+      <p><strong>Still being validated:</strong> accessibility is an ongoing part of TURN. In particular, the complete end-to-end screen-reader experience has not yet been tested with experienced screen-reader players, so we do not claim that every path is complete.</p>
+    </div>
+    <div class="turn-accessibility-feedback-heading">
+      <h3>Tell us what gets in the way</h3>
+    </div>`;
+}
+
 function createHistoryDialog(scope = 'game') {
   const prefix = scope === 'website' ? 'turnWebsiteHistory' : 'turnHistory';
   const dialog = document.createElement('dialog');
@@ -125,7 +139,7 @@ function createHistoryDialog(scope = 'game') {
       </header>
 
       <div class="turn-history-shell">
-        <div class="turn-history-tabs" role="tablist" aria-label="TURN history sections">
+        <div class="turn-history-tabs" role="tablist" aria-label="ABOUT TURN sections">
           <button
             id="${prefix}DevelopmentTab"
             type="button"
@@ -144,6 +158,15 @@ function createHistoryDialog(scope = 'game') {
             tabindex="-1"
             data-history-tab="changelog"
           >CHANGELOG</button>
+          <button
+            id="${prefix}AccessibilityTab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="${prefix}AccessibilityPanel"
+            tabindex="-1"
+            data-history-tab="accessibility"
+          >ACCESSIBILITY</button>
         </div>
 
         <div class="turn-history-panels turn-dialog__body">
@@ -171,9 +194,29 @@ function createHistoryDialog(scope = 'game') {
             <p class="turn-history-intro">The features that became part of TURN. Dates mark their settled form, with related changes grouped together.</p>
             ${changelogMarkup()}
           </section>
+
+          <section
+            id="${prefix}AccessibilityPanel"
+            class="turn-history-panel turn-accessibility-panel"
+            role="tabpanel"
+            aria-labelledby="${prefix}AccessibilityTab"
+            tabindex="0"
+            data-history-panel="accessibility"
+            hidden
+          >
+            ${accessibilityStatementMarkup(prefix)}
+          </section>
         </div>
       </div>
     </article>`;
+
+  const accessibilityPanel = dialog.querySelector('[data-history-panel="accessibility"]');
+  const feedback = createFeedbackContent({ className: 'turn-accessibility-feedback' });
+  accessibilityPanel.append(feedback.element);
+  const clearFeedbackStatus = () => feedback.clearStatus();
+  dialog.addEventListener('close', clearFeedbackStatus);
+  dialog.addEventListener('turn-dialog-fallback-close', clearFeedbackStatus);
+
   document.body.appendChild(dialog);
   return dialog;
 }
@@ -237,15 +280,15 @@ function compactAboutDialog(aboutDialog, historyDialog, tabs) {
   const historyButton = content.querySelector('.m8-about-history');
   let reopenAbout = false;
 
-  function showHistory() {
-    tabs.select('development');
+  function showHistory(section = 'development', sourceTrigger = historyButton) {
+    tabs.select(section);
     reopenAbout = aboutDialog.open || aboutDialog.hasAttribute('open');
     if (reopenAbout) {
       aboutDialog.__turnReturnFocus = null;
       if (typeof aboutDialog.close === 'function' && aboutDialog.open) aboutDialog.close();
       else aboutDialog.removeAttribute('open');
     }
-    openDialog(historyDialog, historyButton);
+    openDialog(historyDialog, sourceTrigger);
   }
 
   function restoreAbout() {
@@ -263,7 +306,7 @@ function compactAboutDialog(aboutDialog, historyDialog, tabs) {
     }
   }
 
-  historyButton.addEventListener('click', showHistory);
+  historyButton.addEventListener('click', () => showHistory('development', historyButton));
   historyDialog.querySelector('[data-dialog-close]')?.addEventListener('click', () => closeDialog(historyDialog));
   historyDialog.addEventListener('click', (event) => {
     if (event.target === historyDialog) closeDialog(historyDialog);
@@ -271,7 +314,10 @@ function compactAboutDialog(aboutDialog, historyDialog, tabs) {
   historyDialog.addEventListener('close', restoreAbout);
   historyDialog.addEventListener('turn-dialog-fallback-close', restoreAbout);
 
-  return historyButton;
+  return Object.freeze({
+    button: historyButton,
+    open: showHistory
+  });
 }
 
 function createWebsiteAboutDialog() {
@@ -359,6 +405,39 @@ function syncInstallGatePresentation() {
   return { gate, kicker, note };
 }
 
+function createInstallAccessibilityTrigger(gate, kicker) {
+  let trigger = gate.querySelector('#installAccessibilityButton');
+  if (trigger) return trigger;
+
+  trigger = document.createElement('button');
+  trigger.id = 'installAccessibilityButton';
+  trigger.className = 'install-about-trigger install-accessibility-trigger';
+  trigger.type = 'button';
+  trigger.setAttribute('aria-haspopup', 'dialog');
+  trigger.textContent = 'ACCESSIBILITY';
+
+  const links = kicker.querySelector('.install-kicker-links');
+  const wiki = links?.querySelector('.install-wiki-link');
+  const separator = document.createElement('span');
+  separator.className = 'install-kicker-separator';
+  separator.setAttribute('aria-hidden', 'true');
+  separator.textContent = '·';
+
+  if (wiki) {
+    const existingSeparator = wiki.previousElementSibling?.classList.contains('install-kicker-separator')
+      ? wiki.previousElementSibling
+      : null;
+    if (existingSeparator) existingSeparator.after(trigger, separator);
+    else wiki.before(trigger, separator);
+  } else if (links) {
+    links.append(trigger);
+  } else {
+    kicker.append(trigger);
+  }
+
+  return trigger;
+}
+
 function installWebsiteAbout() {
   if (document.documentElement.classList.contains('turn-standalone')) return null;
 
@@ -383,10 +462,11 @@ function installWebsiteAbout() {
     kicker.append(separator, trigger);
   }
 
+  const accessibilityTrigger = createInstallAccessibilityTrigger(gate, kicker);
   const aboutDialog = createWebsiteAboutDialog();
   const historyDialog = createHistoryDialog('website');
   const tabs = installTabs(historyDialog);
-  compactAboutDialog(aboutDialog, historyDialog, tabs);
+  const history = compactAboutDialog(aboutDialog, historyDialog, tabs);
 
   const closeAbout = () => closeDialog(aboutDialog);
   aboutDialog.querySelector('[data-dialog-close]')?.addEventListener('click', closeAbout);
@@ -397,6 +477,9 @@ function installWebsiteAbout() {
   aboutDialog.addEventListener('close', restoreTrigger);
   aboutDialog.addEventListener('turn-dialog-fallback-close', restoreTrigger);
   trigger.addEventListener('click', () => openDialog(aboutDialog, trigger));
+  accessibilityTrigger.addEventListener('click', () => {
+    history.open('accessibility', accessibilityTrigger);
+  });
 
   document.addEventListener('turn-install-ready', () => {
     queueMicrotask(() => {
@@ -409,7 +492,9 @@ function installWebsiteAbout() {
     version: REVISION,
     dialog: aboutDialog,
     trigger,
+    accessibilityTrigger,
     open: () => openDialog(aboutDialog, trigger),
+    openAccessibility: () => history.open('accessibility', accessibilityTrigger),
     close: closeAbout
   });
   return globalThis.__turnWebsiteAbout;
@@ -441,6 +526,7 @@ function waitForAbout() {
 
 export async function installAboutHistory() {
   installStylesheet('../m8-home.css?revision=r224-modal-headings', 'data-turn-home-dialog-foundation');
+  installStylesheet('../home-feedback-r135.css?revision=r224-modal-headings', 'data-turn-home-feedback');
   installStylesheet('../dialog-system-r163.css?revision=r165-browser-about', 'data-turn-dialog-system');
   installStylesheet('../about-history-r163.css?revision=r165-browser-about', 'data-turn-about-history');
   installStylesheet('../browser-install-r165.css?revision=r165-browser-about', 'data-turn-browser-install');
@@ -452,16 +538,20 @@ export async function installAboutHistory() {
   const about = await waitForAbout();
   const historyDialog = createHistoryDialog('game');
   const tabs = installTabs(historyDialog);
-  const trigger = compactAboutDialog(about.dialog, historyDialog, tabs);
+  const history = compactAboutDialog(about.dialog, historyDialog, tabs);
+  about.accessibilityTrigger.addEventListener('click', () => {
+    history.open('accessibility', about.accessibilityTrigger);
+  });
 
   gameInstalled = true;
   globalThis.__turnAboutHistory = Object.freeze({
     version: REVISION,
     dialog: historyDialog,
-    trigger,
+    trigger: history.button,
+    accessibilityTrigger: about.accessibilityTrigger,
     open(section = 'development') {
-      tabs.select(section);
-      trigger.click();
+      const sourceTrigger = section === 'accessibility' ? about.accessibilityTrigger : about.trigger;
+      history.open(section, sourceTrigger);
     },
     close: () => closeDialog(historyDialog)
   });
