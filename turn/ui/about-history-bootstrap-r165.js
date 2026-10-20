@@ -55,7 +55,7 @@ function focusHeading(heading) {
   if (!heading) return;
   if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
   try {
-    heading.focus({ preventScroll: true });
+    heading.focus();
   } catch (_) {
     heading.focus?.();
   }
