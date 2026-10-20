@@ -110,10 +110,12 @@ assert.match(feedback, /if \(event\.target === dialog\) closeDialog\(dialog\)/, 
 
 assert.match(aboutHistory, /createFeedbackContent\(\{ className: 'turn-accessibility-feedback' \}\)/,
   'Accessibility must embed the same reusable feedback component as Give Feedback');
+assert.match(aboutHistory, /class="m8-about-accessibility"/,
+  'ABOUT TURN must expose the Accessibility action beside History and Changelog');
 assert.match(aboutHistory, /about\.accessibilityTrigger\.addEventListener\('click'/,
-  'The Home ACCESSIBILITY link must open the reader directly');
-assert.match(aboutHistory, /history\.open\('accessibility', about\.accessibilityTrigger\)/,
-  'The Home ACCESSIBILITY link must select the Accessibility section');
+  'The Home ACCESSIBILITY link must open ABOUT TURN directly');
+assert.match(aboutHistory, /aboutContent\.openAccessibility\(about\.accessibilityTrigger\)/,
+  'The Home ACCESSIBILITY link must expand the Accessibility section in ABOUT TURN');
 
 // GIVE FEEDBACK and the three quiet information links live in the Home ☰ sheet (home-app-bar.css).
 assert.match(appBarCss, /\.turn-home-sheet \.m8-home-menu > button \{[^}]*min-height: 48px;/);
