@@ -283,6 +283,39 @@
   margin-bottom: 12px;
 }
 
+.turn-accessibility-statement,
+.turn-accessibility-feedback-heading,
+.turn-accessibility-feedback {
+  max-width: 74ch;
+}
+
+.turn-accessibility-statement h3,
+.turn-accessibility-feedback-heading h3 {
+  margin: 0 0 7.5px;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.9rem, 2vw, 1.125rem));
+  line-height: 1.12;
+}
+
+.turn-accessibility-statement p {
+  margin: 0;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.66rem, 1.35vw, 0.75rem));
+  line-height: 1.48;
+}
+
+.turn-accessibility-statement p + p {
+  margin-top: 9px;
+}
+
+.turn-accessibility-feedback-heading {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: var(--turn-border-micro, 2px) solid var(--turn-outline);
+}
+
+.turn-accessibility-feedback {
+  margin-top: 0;
+}
+
 @media (max-height: 420px) and (orientation: landscape) {
   .turn-history-dialog {
     --turn-dialog-inline-size: calc(100vw - 7.5px);
