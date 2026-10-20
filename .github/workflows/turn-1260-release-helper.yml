@@ -1,0 +1,111 @@
+name: TURN #1260 branch release helper
+
+on:
+  push:
+    branches:
+      - sol/1260-mayday-low-graphics
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply focused MAYDAY LOW GRAPHICS fix and regression
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          source_path = Path('turn/tracks/airport-emergency-r493.js')
+          source = source_path.read_text()
+          old = "    record.pointLight.intensity = active && on ? (rig.reducedMotion ? 70 : 110) : 0;"
+          new = "    if (record.pointLight) record.pointLight.intensity = active && on ? (rig.reducedMotion ? 70 : 110) : 0;"
+          if source.count(old) != 1:
+              raise SystemExit(f'Expected exactly one unsafe MAYDAY PointLight write, found {source.count(old)}')
+          source_path.write_text(source.replace(old, new))
+
+          test_path = Path('turn-lab/tests/emergency-vehicles-production.mjs')
+          test = test_path.read_text()
+          marker = """assert.match(airportEmergency, /renderScene\\.onBeforeRender = function airportEmergencyFrame/,
+            'MAYDAY logic must keep running after the wreck leaves the camera frustum');
+"""
+          addition = marker + """
+          const responderLightStart = airportEmergency.indexOf('function updateResponderLights(rig)');
+          const responderLightEnd = airportEmergency.indexOf('\\n\\nfunction primitiveGroup', responderLightStart);
+          assert.ok(responderLightStart >= 0 && responderLightEnd > responderLightStart,
+            'The MAYDAY responder-light updater must remain available for the LOW GRAPHICS regression');
+          const responderLightSource = airportEmergency.slice(responderLightStart, responderLightEnd);
+          const updateResponderLights = Function(
+            'performance',
+            'session',
+            `\"use strict\"; return (${responderLightSource});`
+          )({ now: () => 100 }, { crashActive: true, resolved: false });
+          const lowGraphicsRecord = {
+            index: 0,
+            lamp: { visible: false },
+            halo: { visible: false },
+            wideHalo: { visible: false },
+            material: { opacity: 0 },
+            haloMaterial: { opacity: 0 },
+            wideHaloMaterial: { opacity: 0 },
+            pointLight: null
+          };
+          assert.doesNotThrow(() => updateResponderLights({
+            lastFrameAt: -Infinity,
+            periodMs: 840,
+            reducedMotion: false,
+            lamps: [lowGraphicsRecord]
+          }), 'MAYDAY responder rendering must tolerate LOW GRAPHICS omitting PointLights');
+          assert.equal(lowGraphicsRecord.lamp.visible, true,
+            'The visible LOW GRAPHICS responder lamp still updates without a real PointLight');
+"""
+          if test.count(marker) != 1:
+              raise SystemExit(f'Expected one MAYDAY render-loop regression marker, found {test.count(marker)}')
+          test_path.write_text(test.replace(marker, addition))
+
+          release_path = Path('turn/release.json')
+          release = json.loads(release_path.read_text())
+          expected = {
+              'version': '1.50.2',
+              'id': '2026.10.19-r484',
+              'cacheKey': '20261019-r484'
+          }
+          if release != expected:
+              raise SystemExit(f'Unexpected base release: {release!r}')
+          release.update({
+              'version': '1.50.3',
+              'id': '2026.10.20-r485',
+              'cacheKey': '20261020-r485'
+          })
+          release_path.write_text(json.dumps(release, indent=2) + '\n')
+          PY
+      - name: Run focused regression
+        run: node turn-lab/tests/emergency-vehicles-production.mjs
+      - name: Generate release graph
+        run: node turn/scripts/release.mjs --write
+      - name: Check release graph
+        run: node turn/scripts/release.mjs --check
+      - name: Check release composition
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          node turn-tests/release-composition-production.mjs --base origin/main
+      - name: Lint TURN
+        run: npx --yes eslint@9.39.1 turn turn-tests
+      - name: Check whitespace
+        run: git diff --check
+      - name: Commit generated release and remove helper
+        shell: bash
+        run: |
+          git config user.name "SOL"
+          git config user.email "solavatar@openai.com"
+          git rm .github/workflows/turn-1260-release-helper.yml
+          git add -A
+          git commit -m "TURN 1.50.3 r485: keep MAYDAY running in LOW GRAPHICS (#1260)" -m "Guard MAYDAY responder PointLights when LOW GRAPHICS omits them and execute the responder-light updater against the no-PointLight contract.\n\nCo-authored-by: SOL <solavatar@openai.com>"
+          git push origin HEAD:sol/1260-mayday-low-graphics
