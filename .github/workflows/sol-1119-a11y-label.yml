@@ -1,0 +1,63 @@
+name: SOL temporary #1119 accessibility-label validation
+
+on:
+  push:
+    branches:
+      - sol/1119-accessibility-about
+    paths:
+      - '.github/workflows/sol-1119-a11y-label.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Keep the expanded tablist name accurate and cover Accessibility
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const sourcePath = 'turn/ui/about-history-bootstrap-r165.js';
+          const testPath = 'turn-tests/about-history-production.mjs';
+          let source = fs.readFileSync(sourcePath, 'utf8');
+          let test = fs.readFileSync(testPath, 'utf8');
+          const oldSource = 'role="tablist" aria-label="TURN history sections"';
+          const newSource = 'role="tablist" aria-label="ABOUT TURN sections"';
+          if (!source.includes(oldSource)) throw new Error('Expected tablist label not found');
+          source = source.replace(oldSource, newSource);
+          const oldTest = "assert.match(bootstrap, /role=\"tablist\" aria-label=\"TURN history sections\"/);";
+          const newTest = `assert.match(bootstrap, /role=\"tablist\" aria-label=\"ABOUT TURN sections\"/);\nassert.match(bootstrap, /data-history-tab=\"accessibility\"[\\s\\S]*>ACCESSIBILITY<\\/button>/,\n  'ABOUT TURN must expose Accessibility as the third reader tab');\nassert.match(bootstrap, /data-history-panel=\"accessibility\"[\\s\\S]*accessibilityStatementMarkup\\(prefix\\)/,\n  'Accessibility must be a real tabpanel in the shared reader');\nassert.match(bootstrap, /TURN is designed so more people can play in more ways\\./,\n  'The Accessibility section must contain its statement');\nassert.match(bootstrap, /not yet been tested with experienced screen-reader players/,\n  'The placeholder statement must be candid about current screen-reader validation');\nassert.match(bootstrap, /createFeedbackContent\\(\\{ className: 'turn-accessibility-feedback' \\}\\)/,\n  'Accessibility must embed the shared feedback component');\nassert.match(bootstrap, /id = 'installAccessibilityButton'/,\n  'The browser install footer must add an Accessibility entry');\nassert.match(bootstrap, /history\\.open\\('accessibility', accessibilityTrigger\\)/,\n  'The install Accessibility entry must open the reader directly on Accessibility');`;
+          if (!test.includes(oldTest)) throw new Error('Expected tablist test not found');
+          test = test.replace(oldTest, newTest);
+          fs.writeFileSync(sourcePath, source);
+          fs.writeFileSync(testPath, test);
+          NODE
+
+      - name: Validate focused regressions and release
+        run: |
+          node turn-tests/home-feedback-production.mjs
+          node turn-tests/about-history-production.mjs
+          node turn/scripts/release.mjs --check
+          node turn-tests/release-composition-production.mjs --base origin/main
+          npx --yes eslint@9.39.1 turn turn-tests
+          git diff --check
+
+      - name: Commit accessibility-label refinement
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn/ui/about-history-bootstrap-r165.js turn-tests/about-history-production.mjs
+          git commit -m "TURN: name and cover the Accessibility reader section (#1119)" -m "Co-authored-by: SOL <solavatar@openai.com>"
+          git push origin HEAD:sol/1119-accessibility-about
