@@ -1,4 +1,4 @@
-/* ABOUT keeps one prominent full-width History and Changelog action. */
+/* ABOUT keeps its two prominent actions stacked in the compact dialog. */
 .m8-about-dialog {
   --turn-dialog-inline-size: min(495px, calc(100vw - 24px));
 }
@@ -41,6 +41,7 @@
 }
 
 .m8-about-history,
+.m8-about-accessibility,
 .m8-about-design-system {
   box-sizing: border-box;
   display: inline-flex;
@@ -62,6 +63,7 @@
 }
 
 .m8-about-history > span,
+.m8-about-accessibility > span,
 .m8-about-design-system > span {
   display: block;
 }
@@ -70,16 +72,19 @@
   background: var(--m8-yellow);
 }
 
+.m8-about-accessibility,
 .m8-about-design-system {
   background: var(--m8-blue);
 }
 
 .m8-about-history:hover,
+.m8-about-accessibility:hover,
 .m8-about-design-system:hover {
   transform: translateY(-1.5px);
 }
 
 .m8-about-history:active,
+.m8-about-accessibility:active,
 .m8-about-design-system:active {
   transform: translate(3px, 3px);
   box-shadow: 0.75px 0.75px 0 var(--turn-shadow-color);
@@ -283,6 +288,16 @@
   margin-bottom: 12px;
 }
 
+.turn-about-accessibility {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: var(--turn-border-micro, 2px) solid var(--turn-outline);
+}
+
+.turn-about-accessibility[hidden] {
+  display: none;
+}
+
 .turn-accessibility-statement,
 .turn-accessibility-feedback-heading,
 .turn-accessibility-feedback {
@@ -356,6 +371,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .m8-about-history,
+  .m8-about-accessibility,
   .m8-about-design-system,
   .turn-history-tabs button {
     transition: none !important;
