@@ -97,40 +97,48 @@ assert.match(bootstrap, /<h2 id="turnWebsiteAboutTitle">ABOUT TURN<\/h2>/);
 assert.match(bootstrap, /actions\.append\(installButton, note, browserButton\)/,
   'The browser-only status node stays between the two actions in DOM order');
 assert.match(bootstrap, /trigger\.addEventListener\('click', \(\) => openDialog\(aboutDialog, trigger\)\)/);
-assert.match(bootstrap, /aboutDialog\.addEventListener\('close', restoreTrigger\)/,
-  'Closing website About must return focus to the version-strip trigger');
+assert.match(bootstrap, /const restoreTrigger = \(\) => aboutDialog\.__turnReturnFocus\?\.focus\?\.\(\)/,
+  'Closing website About must return focus to whichever footer link opened it');
 assert.doesNotMatch(bootstrap, /__turnStartBrowserGame|turn-browser-play|releaseBrowserLaunch/,
   'Opening or closing website About must never release the browser game launch gate');
 
 assert.match(bootstrap, /className = 'm8-dialog turn-dialog turn-dialog--reader turn-history-dialog'/);
 assert.match(bootstrap, /scope === 'website' \? 'turnWebsiteHistory' : 'turnHistory'/);
-assert.match(bootstrap, /<h2 id="\$\{prefix\}Title">ABOUT TURN<\/h2>/,
-  'The shared reader must be named ABOUT TURN so direct Accessibility entry is announced in the right context');
-assert.match(bootstrap, /data-dialog-close aria-label="Close About TURN"/,
-  'The shared reader close control must use the same ABOUT TURN context');
-assert.doesNotMatch(bootstrap, /<h2 id="\$\{prefix\}Title">TURN HISTORY<\/h2>/,
-  'Accessibility must not open a dialog named TURN HISTORY');
-assert.match(bootstrap, /role="tablist" aria-label="ABOUT TURN sections"/);
-assert.match(bootstrap, /data-history-tab="accessibility"[\s\S]*>ACCESSIBILITY<\/button>/,
-  'ABOUT TURN must expose Accessibility as the third reader tab');
-assert.match(bootstrap, /data-history-panel="accessibility"[\s\S]*accessibilityStatementMarkup\(prefix\)/,
-  'Accessibility must be a real tabpanel in the shared reader');
-assert.match(bootstrap, /TURN is designed so more people can play in more ways\./,
-  'The Accessibility section must contain its statement');
-assert.match(bootstrap, /not yet been tested with experienced screen-reader players/,
-  'The placeholder statement must be candid about current screen-reader validation');
-assert.match(bootstrap, /createFeedbackContent\(\{ className: 'turn-accessibility-feedback' \}\)/,
-  'Accessibility must embed the shared feedback component');
-assert.match(bootstrap, /id = 'installAccessibilityButton'/,
-  'The browser install footer must add an Accessibility entry');
-assert.match(bootstrap, /history\.open\('accessibility', accessibilityTrigger\)/,
-  'The install Accessibility entry must open the reader directly on Accessibility');
+assert.match(bootstrap, /<h2 id="\$\{prefix\}Title">TURN HISTORY<\/h2>/,
+  'The dedicated history reader must retain the TURN HISTORY title');
+assert.match(bootstrap, /data-dialog-close aria-label="Close TURN history"/,
+  'The history reader close control must retain its history context');
+assert.match(bootstrap, /role="tablist" aria-label="TURN history sections"/);
+assert.doesNotMatch(bootstrap, /data-history-tab="accessibility"/,
+  'Accessibility must not be presented as a TURN HISTORY tab');
 assert.match(bootstrap, /role="tab"[\s\S]*aria-selected="true"/);
 assert.match(bootstrap, /role="tabpanel"/);
 assert.match(bootstrap, /event\.key === 'ArrowRight'/);
 assert.match(bootstrap, /event\.key === 'ArrowLeft'/);
 assert.match(bootstrap, /event\.key === 'Home'/);
 assert.match(bootstrap, /event\.key === 'End'/);
+
+assert.match(bootstrap, /class="m8-about-accessibility"[\s\S]*aria-expanded="false"[\s\S]*aria-controls="\$\{accessibilityPrefix\}AccessibilityPanel"/,
+  'ABOUT TURN must expose Accessibility beside History and Changelog');
+assert.match(bootstrap, /class="turn-about-accessibility"[\s\S]*aria-labelledby="\$\{accessibilityPrefix\}AccessibilityHeading"[\s\S]*hidden/,
+  'Accessibility must be a labelled section inside ABOUT TURN');
+assert.match(bootstrap, /accessibilityStatementMarkup\(accessibilityPrefix\)/,
+  'ABOUT TURN must render the Accessibility statement in its Accessibility section');
+assert.match(bootstrap, /TURN is designed so more people can play in more ways\./,
+  'The Accessibility section must contain its statement');
+assert.match(bootstrap, /not yet been tested with experienced screen-reader players/,
+  'The placeholder statement must be candid about current screen-reader validation');
+assert.match(bootstrap, /createFeedbackContent\(\{ className: 'turn-accessibility-feedback' \}\)/,
+  'Accessibility must embed the shared feedback component');
+assert.match(bootstrap, /accessibilityButton\.setAttribute\('aria-expanded', String\(expanded\)\)/,
+  'The ABOUT TURN Accessibility button must expose its expanded state');
+assert.match(bootstrap, /function openAccessibility\(sourceTrigger = accessibilityButton\)/,
+  'ABOUT TURN must provide one shared path for local and direct Accessibility entry');
+assert.match(bootstrap, /id = 'installAccessibilityButton'/,
+  'The browser install footer must add an Accessibility entry');
+assert.match(bootstrap, /aboutContent\.openAccessibility\(accessibilityTrigger\)/,
+  'The install Accessibility entry must open ABOUT TURN with Accessibility expanded');
+
 assert.match(bootstrap, /aboutDialog\.close\(\)/,
   'The source About dialog must close before the history dialog opens; modal dialogs must not stack');
 assert.match(bootstrap, /aboutDialog\.showModal\(\)/,
@@ -139,6 +147,8 @@ assert.match(bootstrap, /historyButton\.focus\(\{ preventScroll: true \}\)/,
   'Focus should return to the History and Changelog action inside the restored About dialog');
 assert.match(bootstrap, /<span>HISTORY AND<br>CHANGELOG<\/span>/,
   'The About history action must use the intended two-line label');
+assert.match(bootstrap, /<span>ACCESSIBILITY<\/span>/,
+  'ABOUT TURN must provide the new Accessibility action');
 assert.doesNotMatch(bootstrap, /m8-about-design-system|href="\/turn\/design\.html"|<span>DESIGN<br>SYSTEM<\/span>/,
   'The About dialog must not expose a Design System action');
 assert.match(bootstrap, /installStylesheet\('\.\.\/m8-home\.css/);
@@ -248,7 +258,11 @@ assert.match(historyCss, /\.turn-history-panel[\s\S]*overflow-y: auto/);
 assert.match(historyCss, /\.m8-about-summary[\s\S]*font-size: max\(var\(--turn-text-floor, 11px\), 0\.6rem\) !important/,
   'About supporting copy must be compact enough for short landscape viewports');
 assert.match(historyCss, /\.m8-about-actions[\s\S]*grid-template-columns: 1fr/,
-  'The sole About action must span the full available width');
+  'The About actions must stay stacked in the compact dialog');
+assert.match(historyCss, /\.m8-about-accessibility[\s\S]*background: var\(--m8-blue\)/,
+  'The Accessibility action must reuse the established secondary About treatment');
+assert.match(historyCss, /\.turn-about-accessibility\[hidden\][\s\S]*display: none/,
+  'The ABOUT TURN Accessibility section must remain out of layout until expanded');
 
 assert.match(designReference, /TURN dialogs/i);
 assert.match(designReference, /Standardize the shell, not the content/);
