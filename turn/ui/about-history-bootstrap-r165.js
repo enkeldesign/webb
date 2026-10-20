@@ -132,10 +132,10 @@ function createHistoryDialog(scope = 'game') {
       <header class="m8-dialog-head turn-dialog__header turn-history-head">
         <div>
           <span>FROM FIRST PROTOTYPE TO TODAY</span>
-          <h2 id="${prefix}Title">TURN HISTORY</h2>
+          <h2 id="${prefix}Title">ABOUT TURN</h2>
           <p class="turn-history-release">V${escapeMarkup(CURRENT_RELEASE.version)} · BUILD ${escapeMarkup(CURRENT_RELEASE.build.toUpperCase())}</p>
         </div>
-        <button type="button" data-dialog-close aria-label="Close TURN history">×</button>
+        <button type="button" data-dialog-close aria-label="Close About TURN">×</button>
       </header>
 
       <div class="turn-history-shell">
