@@ -11,8 +11,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: turn-1260-release-preparation
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   prepare:
@@ -31,7 +31,7 @@ jobs:
 
       - name: Confirm unchanged implementation and base
         env:
-          EXPECTED_PARENT: a3002090a3568e4658e80b91c6f30ca587684945
+          EXPECTED_PARENT: efe801d3a1805f2433d58c821874f620b96709cc
           EXPECTED_BASE: b5552217f6ad4722a667dd5b0b87abde4d73e481
         run: |
           test "$(git rev-parse HEAD^)" = "$EXPECTED_PARENT"
