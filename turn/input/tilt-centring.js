@@ -21,11 +21,6 @@ const START_SAMPLE_MS = 100;
 const STEADY_WINDOW = 4;
 const STEADY_RAD = 0.04;
 const STILL_SPEED = 0.5;
-// The last few starts, for the Admin card in SETTINGS (testing/route-test-hud.js).
-const START_LOG_KEY = '__turnStartCentring';
-const START_LOG_LENGTH = 6;
-const RECALIBRATE_AFTER_START_MS = 30000;
-
 // How many times each race's steering has been centred, so a start that waits out a
 // pause can tell whether its resume already centred it.
 const centrings = new WeakMap();
@@ -65,37 +60,7 @@ function blinkRecalibrate(environment) {
   button.turnCentredBlinkTimer = environment.setTimeout?.(() => button.classList.remove(BLINK_CLASS), BLINK_MS);
 }
 
-const clockNow = (environment) => environment.performance?.now?.() ?? Date.now();
 const poseOf = (state) => ({ roll: Number(state.targetRoll) || 0, pitch: Number(state.targetPitch) || 0 });
-
-function logStart(environment, entry) {
-  const log = Array.isArray(environment[START_LOG_KEY]) ? environment[START_LOG_KEY] : [];
-  environment[START_LOG_KEY] = [{ ...entry, at: clockNow(environment) }, ...log].slice(0, START_LOG_LENGTH);
-}
-
-export function startCentringLog(environment = globalThis) {
-  return Array.isArray(environment[START_LOG_KEY]) ? environment[START_LOG_KEY] : [];
-}
-
-// RECALIBRATE soon after a start: how far off the start left the steering.
-export function noteRecalibrate(state, environment = globalThis) {
-  const last = startCentringLog(environment)[0];
-  if (!last || Number.isFinite(last.recalibrate) || !state.sensorMode) return;
-  if (clockNow(environment) - last.at > RECALIBRATE_AFTER_START_MS) return;
-  last.recalibrate = (Number(state.targetRoll) || 0) - (Number(state.neutralRoll) || 0);
-}
-
-const degrees = (rad) => `${(Math.abs(rad) * 180 / Math.PI).toFixed(1)}°`;
-
-export function describeStartCentring(entry) {
-  const parts = [
-    `${entry.outcome.toUpperCase()} at ${(entry.ms / 1000).toFixed(1)} s`,
-    `${degrees(entry.fromProvisional)} from the 0.22 s pose`,
-    `spread ${degrees(entry.spread)}`
-  ];
-  if (Number.isFinite(entry.recalibrate)) parts.push(`RECALIBRATE moved it ${degrees(entry.recalibrate)}`);
-  return parts.join(' · ');
-}
 
 // Runs the race-start sequence and returns a cancel function. Never holds the race:
 // the car can drive from the first frame. Ends when the phone keeps still, when the car
@@ -108,7 +73,6 @@ export function startTiltCentring({ state, showMessage, setTimer, clearTimer = (
   let cancelled = false;
   let timer = 0;
   let elapsed = START_PROVISIONAL_MS;
-  let provisional = null;
   let recent = [];
   const ended = () => cancelled || !state.running || !state.sensorMode;
   const paused = () => environment.__turnRacePause?.paused === true;
@@ -140,7 +104,6 @@ export function startTiltCentring({ state, showMessage, setTimer, clearTimer = (
     if (outcome === 'car moved') follow(pose);
     else centreTiltSteering(state, { horizon: true, pose });
     stop();
-    logStart(environment, { outcome, ms: elapsed, roll: pose.roll, fromProvisional: pose.roll - provisional.roll, spread: spread() });
     announceSteeringCentred({ showMessage, environment });
   };
 
@@ -160,7 +123,6 @@ export function startTiltCentring({ state, showMessage, setTimer, clearTimer = (
 
   const begin = ({ resumed = false } = {}) => {
     elapsed = START_PROVISIONAL_MS;
-    provisional = null;
     recent = [];
     const centredBefore = centringsOf(state);
     const ask = () => showMessage?.(HOLD_PHONE_MESSAGE, START_GIVE_UP_MS + 400);
@@ -173,8 +135,7 @@ export function startTiltCentring({ state, showMessage, setTimer, clearTimer = (
         if (centringsOf(state) !== centredBefore) return stop();
         if (still()) ask();
       }
-      provisional = poseOf(state);
-      recent.push(provisional);
+      recent.push(poseOf(state));
       centreTiltSteering(state, { horizon: true });
       timer = setTimer(sample, START_SAMPLE_MS);
     }, START_PROVISIONAL_MS);

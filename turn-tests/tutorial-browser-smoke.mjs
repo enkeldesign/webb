@@ -13,7 +13,7 @@ const target = process.env.TURN_SUPPORT_FEEDBACK_URL || 'http://127.0.0.1:8000/'
 const browser = await chromium.launch({ headless: true });
 
 async function openTurn({
-  played = false, launch = false, steeringHelp = false, driftAttack = false, rewards = [], admin = false, introductions = false,
+  played = false, launch = false, steeringHelp = false, driftAttack = false, rewards = [], introductions = false,
   howToPlayRead = [], viewport = { width: 844, height: 390 }, handedness = null, textSize = 0
 } = {}) {
   const context = await browser.newContext({ viewport, reducedMotion: 'reduce' });
@@ -27,7 +27,7 @@ async function openTurn({
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.addInitScript(({ played, launch, steeringHelp, driftAttack, rewards, admin, introductions, howToPlayRead, storageVersion }) => {
+  await page.addInitScript(({ played, launch, steeringHelp, driftAttack, rewards, introductions, howToPlayRead, storageVersion }) => {
     if (globalThis.sessionStorage.getItem('turn-tutorial-smoke-seeded')) return;
     globalThis.sessionStorage.setItem('turn-tutorial-smoke-seeded', '1');
     localStorage.setItem('turn-low-graphics-v1', '1');
@@ -36,7 +36,6 @@ async function openTurn({
     localStorage.setItem('turn-racing-music-volume-v1', '0');
     if (launch) localStorage.setItem('turn-tutorial-launch-under-test', '1');
     if (steeringHelp) localStorage.setItem('turn-tutorial-steering-help-v1', 'on');
-    if (admin) localStorage.setItem('turn-admin-unlock-v1', JSON.stringify({ version: 2, activatedAt: Date.now() }));
     if (introductions) localStorage.setItem('turn-unlock-introductions-under-test', '1');
     const unlockedRewards = [...(driftAttack ? ['drift-attack'] : []), ...rewards];
     if (played || unlockedRewards.length) {
@@ -47,7 +46,7 @@ async function openTurn({
         ...(howToPlayRead.length ? { progress: { howToPlayDisclosures: howToPlayRead } } : {})
       }));
     }
-  }, { played, launch, steeringHelp, driftAttack, rewards, admin, introductions, howToPlayRead, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
+  }, { played, launch, steeringHelp, driftAttack, rewards, introductions, howToPlayRead, storageVersion: TROPHY_ROAD_STORAGE_VERSION });
   await page.addInitScript(() => {
     Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
   });
@@ -1007,10 +1006,8 @@ try {
       'Once the player has used SHIFT, it is not pointed out again');
   });
 
-  await run('admin UNLOCK replays an introduction', { driftAttack: true, admin: true }, async (page) => {
-    const admin = page.locator('.roadbook-admin');
-    assert.deepEqual(await admin.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PERKULATOR', 'UNLOCK PAINTJOB', 'SHOW ALL CARS HINT']);
-    await admin.locator('[data-admin-unlock="drift-attack"]').click();
+  await run('an introduction can be replayed by a test helper', { driftAttack: true }, async (page) => {
+    await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.replay('drift-attack'));
     await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open);
     const sheet = page.locator('.m8-unlock-sheet');
     assert.match(await sheet.textContent(), /OVERCHARGE comes with it/);
@@ -1022,8 +1019,8 @@ try {
   });
 
   // PAINTJOB: the reward toast, no sheet, then GARAGE scrolls to PAINT and pulses it.
-  await run('admin UNLOCK PAINTJOB points GARAGE at PAINT', { rewards: ['paintjob'], admin: true }, async (page) => {
-    await page.locator('.roadbook-admin [data-admin-unlock="paintjob"]').click();
+  await run('PAINTJOB introduction points GARAGE at PAINT', { rewards: ['paintjob'] }, async (page) => {
+    await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.replay('paintjob'));
     await page.waitForFunction(() => Boolean(document.querySelector('.turn-achievement-toast')), null, { timeout: 15000 });
     await page.waitForTimeout(1200);
     assert.equal(await page.evaluate(() => Boolean(document.querySelector('.m8-unlock-sheet')?.open)), false, 'The toast is enough');
@@ -1037,48 +1034,19 @@ try {
       === 'New in GARAGE: PAINT, below the car’s name.', null, { timeout: 5000 });
   });
 
-  // An admin profile has long since used ALL CARS: SHOW ALL CARS HINT arms its hint again,
+  // Explicitly rearm ALL CARS after it has been used,
   // pointed out on the next GARAGE the player opens and then pulsing until used (#1168).
-  await run('admin SHOW ALL CARS HINT points it out again', { admin: true }, async (page) => {
+  await run('ALL CARS hint can be rearmed by a test helper', {}, async (page) => {
     const queueState = () => page.evaluate(() => {
       const queue = globalThis.__turnNextHome.unlockIntroductions.queue;
       return { armed: queue.hasHint('garage-all-cars'), pointedOut: queue.pointedOut('garage-all-cars') };
     });
     assert.deepEqual(await queueState(), { armed: false, pointedOut: false }, 'Not armed in automated runs by itself');
-    await page.locator('.roadbook-admin [data-admin-hint="garage-all-cars"]').click();
+    await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.armHint('garage-all-cars'));
     assert.deepEqual(await queueState(), { armed: true, pointedOut: false });
     await page.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
     await page.waitForFunction(() => document.querySelector('.garage-all-cars-button')?.classList.contains('is-introduced'), null, { timeout: 60000 });
     assert.deepEqual(await queueState(), { armed: true, pointedOut: true }, 'Pointed out, then the calm pulse until used');
-  });
-
-  // The same buttons in SETTINGS, on the Admin card with the other admin tools.
-  await run('admin UNLOCK SHIFT from SETTINGS', { admin: true }, async (page) => {
-    // SETTINGS, from the ☰ menu sheet as a player reaches it.
-    await page.locator('.turn-home-menu-button').click();
-    await page.locator('.m8-home-settings').click();
-    await page.waitForFunction(() => document.querySelector('.m8-settings-dialog')?.open);
-    const unlocks = page.locator('[data-turn-route-test-hud-setting] .m8-admin-unlocks');
-    assert.deepEqual(await unlocks.locator('button').allTextContents(), ['UNLOCK DRIFT ATTACK', 'UNLOCK SHIFT', 'UNLOCK FLOW', 'UNLOCK PERKULATOR', 'UNLOCK PAINTJOB', 'SHOW ALL CARS HINT']);
-    await unlocks.locator('[data-admin-unlock="shift"]').click();
-    assert.equal(await page.evaluate(() => document.querySelector('.m8-settings-dialog').open), false,
-      'SETTINGS closes so the unlock plays on Home');
-    await page.waitForFunction(() => document.querySelector('.m8-unlock-sheet')?.open);
-    assert.equal(await page.locator('.m8-unlock-sheet h2').textContent(), 'SHIFT');
-    await page.locator('.m8-unlock-sheet [data-unlock-close]').click();
-    assert.equal(await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.hasHint('garage-shift')), true,
-      'Closing it arms the GARAGE hint, as a real unlock does');
-    // SETTINGS away from Home (a race's start screen): the introduction could not show there.
-    const hiddenAwayFromHome = await page.evaluate(async () => {
-      globalThis.__turnNextHome.hideHome();
-      const settings = document.querySelector('.m8-settings-dialog');
-      settings.showModal();
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      const hidden = document.querySelector('.m8-admin-unlocks').hidden;
-      settings.close();
-      return hidden;
-    });
-    assert.equal(hiddenAwayFromHome, true, 'Home only');
   });
 
   await run('existing player', { played: true, launch: true }, async (page) => {

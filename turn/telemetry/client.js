@@ -164,17 +164,9 @@ function isInstalledWebApp() {
 }
 
 function isDeveloperDevice() {
+  if (globalThis.__turnSessionAdmin) return true;
   try {
     return localStorage.getItem(DEVELOPER_STORAGE_KEY) === '1';
-  } catch (_) {
-    return false;
-  }
-}
-
-export function markDeveloperDevice(storage = globalThis.localStorage) {
-  try {
-    storage?.setItem?.(DEVELOPER_STORAGE_KEY, '1');
-    return storage?.getItem?.(DEVELOPER_STORAGE_KEY) === '1';
   } catch (_) {
     return false;
   }

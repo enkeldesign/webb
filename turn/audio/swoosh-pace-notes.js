@@ -21,7 +21,7 @@
 // Output goes through the engine's route channel (globalThis.__turnRouteAudio): Drive
 // By Ear's balance and on/off apply, and the car sounds and music duck underneath.
 import { routeForSamples, routeSegmentAt, upcomingRouteSegments } from './route-geometry.js';
-import { SWOOSH_LENGTHS, SWOOSH_VOICES, VOICE_VARIANTS, prepareSwooshVoices, startSwoosh, swooshLengths } from './swoosh-sound.js';
+import { SWOOSH_LENGTHS, prepareSwooshVoices, startSwoosh, swooshLengths } from './swoosh-sound.js';
 import { holdSpeechFloor } from '../ui/speech-floor.js';
 
 export const SWOOSH_PACE_TUNING = Object.freeze({
@@ -77,26 +77,6 @@ const delivery = new Map();
 const live = new Map();
 const history = [];
 const counts = { fired: 0, late: 0, phrases: 0, suppressed: 0, cancelled: 0 };
-
-// Admin sound picker: an admin-unlocked profile may race with any of these. Choice 0 is
-// the race sound every player hears; 1–15 are the polished voices. Players are unaffected.
-export const SWOOSH_SOUND_CHOICES = Object.freeze([
-  Object.freeze({ variant: SWOOSH_PACE_TUNING.variant, name: 'RACE' }),
-  ...VOICE_VARIANTS.map((variant) => Object.freeze({ variant, name: SWOOSH_VOICES[variant].name }))
-]);
-const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
-export const SWOOSH_SOUND_STORAGE_KEY = 'turn-swoosh-sound-v1';
-
-/** The chosen sound's index: the admin's stored choice, else 0 (the race sound). */
-export function swooshSoundIndex(storage = globalThis.localStorage) {
-  try {
-    if (!storage?.getItem(ADMIN_UNLOCK_MARKER)) return 0;
-    const index = Number(storage.getItem(SWOOSH_SOUND_STORAGE_KEY));
-    return Number.isInteger(index) && index >= 0 && index < SWOOSH_SOUND_CHOICES.length ? index : 0;
-  } catch (_) {
-    return 0;
-  }
-}
 
 /** Pitch anchor for a segment. */
 export function swooshTightness(segment, tuning = SWOOSH_PACE_TUNING) {
@@ -179,39 +159,6 @@ export function installSwooshPaceNotes() {
 
   globalThis.__turnSwooshPaceNotes = Object.freeze({
     tuning: SWOOSH_PACE_TUNING,
-    soundChoices: SWOOSH_SOUND_CHOICES,
-    get soundIndex() {
-      return swooshSoundIndex();
-    },
-    // Admin sound picker: store a choice (admin profiles only) and hear it once.
-    setSoundIndex(index) {
-      const next = ((Math.round(Number(index)) || 0) % SWOOSH_SOUND_CHOICES.length + SWOOSH_SOUND_CHOICES.length) % SWOOSH_SOUND_CHOICES.length;
-      try {
-        if (!globalThis.localStorage?.getItem(ADMIN_UNLOCK_MARKER)) return 0;
-        globalThis.localStorage.setItem(SWOOSH_SOUND_STORAGE_KEY, String(next));
-      } catch (_) {
-        return swooshSoundIndex();
-      }
-      return swooshSoundIndex();
-    },
-    preview({ side = 1, tightness = 'medium', long = false } = {}) {
-      const routeAudio = globalThis.__turnRouteAudio;
-      if (!routeAudio?.ready || !routeAudio.destination) return false;
-      // Heard as in the race: the car sounds and music duck under it, as in playPlanned().
-      const at = routeAudio.context.currentTime + 0.02;
-      const variant = SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant;
-      const handle = startSwoosh(routeAudio.context, routeAudio.destination, {
-        side,
-        tightness,
-        variant,
-        durationSeconds: long ? swooshLengths(variant).long : swooshLengths(variant).short,
-        level: swooshLevel(globalThis.__turnAudioPreferences?.getSettings?.()?.balance),
-        at
-      });
-      routeAudio.holdMixUntil?.(handle.endsAt + 0.05);
-      globalThis.__turnRacingMusic?.duck?.(at - routeAudio.context.currentTime, handle.endsAt - at);
-      return true;
-    },
     get audioTime() {
       return globalThis.__turnRouteAudio?.context?.currentTime ?? 0;
     },
@@ -253,7 +200,7 @@ export function updateSwooshPaceNotes(runtime, frame = {}, routeAudio = globalTh
   }
   // Whatever the cues share is built while the car still stands, not at the first bend.
   if (routeAudio?.ready && routeAudio.destination) {
-    prepareSwooshVoices(routeAudio.context, routeAudio.destination, SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant);
+    prepareSwooshVoices(routeAudio.context, routeAudio.destination, SWOOSH_PACE_TUNING.variant);
   }
 
   const index = Math.max(0, Math.round(Number(state.nearestTrackIndex) || 0)) % runtime.samples.length;
@@ -293,7 +240,7 @@ export function updateSwooshPaceNotes(runtime, frame = {}, routeAudio = globalTh
   if (startBend) upcoming.unshift({ segment: startBend, ahead: 0 });
   const speed = Math.max(0, Number(state.speed) || forwardSpeed);
   const started = [];
-  const lengths = swooshLengths(SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant);
+  const lengths = swooshLengths(SWOOSH_PACE_TUNING.variant);
   for (const item of planSwooshes(upcoming, speed, SWOOSH_PACE_TUNING, lengths)) {
     if (item.start > SWOOSH_PACE_TUNING.scheduleAheadSeconds) break;
     started.push(playPlanned(item, routeAudio));
@@ -309,7 +256,7 @@ function playPlanned(item, routeAudio) {
   const handle = startSwoosh(context, routeAudio.destination, {
     side: item.segment.direction,
     tightness: swooshTightness(item.segment),
-    variant: SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant,
+    variant: SWOOSH_PACE_TUNING.variant,
     durationSeconds: item.duration,
     level: swooshLevel(globalThis.__turnAudioPreferences?.getSettings?.()?.balance),
     at
@@ -340,7 +287,7 @@ function record(segment, status, detail = {}) {
     side: segment.side,
     angleDegrees: segment.angleDegrees,
     tightness: swooshTightness(segment),
-    length: swooshLengthClass(segment, SWOOSH_PACE_TUNING, swooshLengths(SWOOSH_SOUND_CHOICES[swooshSoundIndex()].variant)),
+    length: swooshLengthClass(segment, SWOOSH_PACE_TUNING, swooshLengths(SWOOSH_PACE_TUNING.variant)),
     status,
     ...detail
   });

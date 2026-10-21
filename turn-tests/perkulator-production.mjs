@@ -27,8 +27,7 @@ function memoryStorage(entries = {}) {
     removeItem: (key) => values.delete(key)
   };
 }
-const ADMIN_MARKER = { 'turn-admin-unlock-v1': JSON.stringify({ version: 2 }) };
-const rewardState = (ids) => ({ [TROPHY_ROAD_STORAGE_KEY]: JSON.stringify({ version: 10, rewards: { unlocked: ids } }) });
+const rewardState = (ids) => ({ [TROPHY_ROAD_STORAGE_KEY]: JSON.stringify({ version: 10, unlocked: { 'first-turn': { unlockedAt: 1 } }, rewards: { unlocked: ids } }) });
 const everyReward = TROPHY_ROAD_REWARDS.map(({ id }) => id);
 
 // Node has CustomEvent; the page's window is stood in for by a recorder.
@@ -38,9 +37,8 @@ globalThis.dispatchEvent = (event) => events.push([event.type, event.detail]);
 assert.equal(rewardForFeature(PERKULATOR_FEATURE_ID)?.id, 'perkulator', 'PERKULATOR is a Trophy Road reward');
 assert.equal(rewardForFeature(PERKULATOR_FEATURE_ID)?.threshold, 2000);
 assert.equal(isPerkulatorUnlocked(memoryStorage()), false, 'A new player has no PERKULATOR');
-// An admin profile holds the rewards of its last admin unlock: one from before PERKULATOR
-// joined the road has it once the admin unlock grants every reward again.
-const beforePerkulator = { ...ADMIN_MARKER, ...rewardState(everyReward.filter((id) => id !== 'perkulator')) };
+// A profile holding other rewards still needs PERKULATOR itself.
+const beforePerkulator = { ...rewardState(everyReward.filter((id) => id !== 'perkulator')) };
 const player = memoryStorage(beforePerkulator);
 assert.equal(isPerkulatorUnlocked(player), false, 'Every other reward, but no PERKULATOR without its own');
 assert.equal(isPerkAvailable('driftage', player), false, 'Without PERKULATOR it holds nothing');
@@ -51,7 +49,7 @@ assert.equal(installedPerkFor('suv', memoryStorage({
   [PERKULATOR_STORAGE_KEY]: JSON.stringify({ installed: { suv: 'driftage' } })
 })), '', 'Without PERKULATOR, a stored installed perk does not run');
 
-const admin = memoryStorage({ ...ADMIN_MARKER, ...rewardState(everyReward) });
+const admin = memoryStorage({ ...rewardState(everyReward) });
 assert.equal(isPerkulatorUnlocked(admin), true, 'Its reward unlocks PERKULATOR');
 
 // PERKULATOR holds the eight perks that may leave their car, each once unlocked, with
@@ -64,12 +62,12 @@ for (const perkId of ['graduated', 'twitchy-turny', 'overdrive', 'double-shift',
   assert.equal(isPerkAvailable(perkId, admin), false, `${perkId}: a LEGENDARY perk stays with its car`);
 }
 // Each once one of its cars and the perk itself are unlocked.
-const lockedCar = memoryStorage({ ...ADMIN_MARKER, ...rewardState(everyReward.filter((id) => id !== 'vintage-racer')) });
+const lockedCar = memoryStorage({ ...rewardState(everyReward.filter((id) => id !== 'vintage-racer')) });
 assert.equal(isPerkAvailable('driftage', lockedCar), false, 'Not while its car is locked on Trophy Road');
-const lockedPerk = memoryStorage({ ...ADMIN_MARKER, ...rewardState(everyReward.filter((id) => id !== 'suv-full-tank')) });
+const lockedPerk = memoryStorage({ ...rewardState(everyReward.filter((id) => id !== 'suv-full-tank')) });
 assert.equal(isPerkAvailable('full-tank', lockedPerk), false, 'Not while the perk is locked on Trophy Road');
 assert.equal(isPerkAvailable('torque', lockedPerk), true, 'TORQUE comes with the Truck once DRIFT ATTACK is unlocked');
-const beforeDriftAttack = memoryStorage({ ...ADMIN_MARKER, ...rewardState(everyReward.filter((id) => id !== 'drift-attack')) });
+const beforeDriftAttack = memoryStorage({ ...rewardState(everyReward.filter((id) => id !== 'drift-attack')) });
 assert.equal(isPerkAvailable('torque', beforeDriftAttack), false,
   'TORQUE works through OVERCHARGE, so it waits for DRIFT ATTACK (#1232)');
 
@@ -108,7 +106,6 @@ assert.deepEqual(normalizePerkulatorState(JSON.stringify({
 })), { version: 1, installed: { 'race-future': 'full-tank', truck: 'driftage' } });
 assert.deepEqual(normalizePerkulatorState('{broken'), { version: 1, installed: {} });
 assert.equal(installedPerkFor('toy-racer', memoryStorage({
-  ...ADMIN_MARKER,
   ...rewardState(everyReward),
   [PERKULATOR_STORAGE_KEY]: JSON.stringify({ version: 1, cloned: ['driftage'], installed: { 'toy-racer': 'driftage' } })
 })), 'driftage', 'A perk installed with a clone keeps running');

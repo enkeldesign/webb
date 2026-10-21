@@ -38,7 +38,7 @@ export function installHomeAppBar({ documentRef = document } = {}) {
   header.appendChild(actions);
 
   // The sheet wraps the existing menu element, so every module that looks for
-  // .m8-home-menu (achievements, Drive By Ear, feedback, the tester sequence) still
+  // .m8-home-menu (achievements, Drive By Ear, feedback) still
   // finds it.
   const sheet = documentRef.createElement('dialog');
   sheet.id = SHEET_ID;
@@ -154,6 +154,12 @@ export function installHomeAppBar({ documentRef = document } = {}) {
   observer.observe(home, { childList: true, subtree: true });
   place();
   home.classList.add('turn-app-bar-layout');
+
+  if (globalThis.__turnSessionAdmin) {
+    void import('../testing/session-admin-panel.js').then(({ installAdminPanel }) => {
+      installAdminPanel({ documentRef, menu, menuButton });
+    });
+  }
 
   const api = Object.freeze({ open, close, sheet, menuButton });
   globalThis[INSTALL_KEY] = api;

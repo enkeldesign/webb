@@ -68,8 +68,11 @@ async function openGarage(browserType, { width, height, isMobile = true, unlocke
   await ready();
   if (unlocked) {
     await page.evaluate(async () => {
-      const admin = await import('/turn/testing/admin-unlock-sequence.js');
-      admin.unlockRewardsForTesting();
+      const { TROPHY_ROAD_REWARDS } = await import('/turn/progression/trophy-road.js');
+      const store = globalThis.__turnAchievements.store;
+      store.state.rewards.unlocked = TROPHY_ROAD_REWARDS.map(({ id }) => id);
+      store.unlock('first-turn');
+      store.markAllSeen();
     });
     await page.reload();
     await ready();

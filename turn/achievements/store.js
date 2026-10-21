@@ -98,7 +98,8 @@ function totalTrophiesFromBonuses(bonuses) {
 }
 
 function totalTrophies(unlocked, bonuses) {
-  return totalTrophiesFromUnlocked(unlocked) + totalTrophiesFromBonuses(bonuses);
+  const earned = totalTrophiesFromUnlocked(unlocked) + totalTrophiesFromBonuses(bonuses);
+  return globalThis.__turnSessionAdmin?.trophyTotal(earned) ?? earned;
 }
 
 function knownUnlockedIds(unlocked) {
@@ -221,7 +222,7 @@ function mergeList(owner, key, source) {
 // Several TURN windows can share this storage, each holding its own copy. A save
 // merges the stored copy first, so one window never erases progress another has
 // saved: achievements, bonuses, progress and rewards only accumulate, keeping the
-// earliest unlock. A deliberate rewrite (the admin profile) raises `generation`;
+// earliest unlock. A deliberate profile reset raises `generation`;
 // a copy from an older generation adopts the stored one instead of merging.
 // Returns true when `target` changed.
 export function mergeAchievementState(target, source) {
@@ -322,8 +323,21 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     return totalTrophies(state.unlocked, state.bonuses);
   }
 
+  function setTemporaryTrophyTotal(total) {
+    const admin = globalThis.__turnSessionAdmin;
+    const earned = totalTrophiesFromUnlocked(state.unlocked) + totalTrophiesFromBonuses(state.bonuses);
+    if (!admin?.setTrophyTotal(total, earned)) return false;
+    // Rebuild only the session's road, so even a save above the requested threshold
+    // can test crossing it again. Achievements and their history stay as they are.
+    state.generation += 1;
+    state.rewards = { unlocked: rewardIdsForTrophies(total), seen: rewardIdsForTrophies(total), grandfathered: [], tracks: [] };
+    requestSave();
+    return true;
+  }
+
   function isRewardUnlocked(id) {
-    return state.rewards.unlocked.includes(id);
+    return Boolean(globalThis.__turnSessionAdmin?.exposes(getTrophyRoadReward(id)?.type))
+      || state.rewards.unlocked.includes(id);
   }
 
   function hasLegacyTrack(trackId) {
@@ -372,7 +386,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   function syncRewards() {
     const newlyUnlocked = [];
     for (const rewardId of rewardIdsForTrophies(trophyTotal())) {
-      if (isRewardUnlocked(rewardId)) continue;
+      if (state.rewards.unlocked.includes(rewardId)) continue;
       state.rewards.unlocked.push(rewardId);
       const reward = getTrophyRoadReward(rewardId);
       if (reward) newlyUnlocked.push(reward);
@@ -465,6 +479,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     grantBonus,
     hasBonus,
     trophyTotal,
+    setTemporaryTrophyTotal,
     isRewardUnlocked,
     hasLegacyTrack,
     syncRewards,

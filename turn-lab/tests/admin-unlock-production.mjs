@@ -1,246 +1,133 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {
-  ADMIN_UNLOCK_SEQUENCE,
-  advanceAdminUnlockSequence,
-  createAdminRewardState,
-  unlockRewardsForTesting
-} from '../../turn/testing/admin-unlock-sequence.js';
-import {
-  TROPHY_ROAD_REWARDS,
-  prepareTrophyRoadProfile,
-  readTrophyRoadSnapshot
-} from '../../turn/progression/trophy-road.js';
+import vm from 'node:vm';
+import { ACHIEVEMENT_STORAGE_KEY, createAchievementStore } from '../../turn/achievements/store.js';
+import { TROPHY_ROAD_REWARDS, prepareTrophyRoadProfile, isFeatureUnlocked, isTrackUnlocked, isVehicleUnlocked } from '../../turn/progression/trophy-road.js';
+import { isPerkAvailable, installPerk } from '../../turn/vehicle/perkulator.js';
 
-const [source, roadSource, indexSource, releaseSource, responsiveCss] = await Promise.all([
-  fs.readFile(new URL('../../turn/testing/admin-unlock-sequence.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/progression/trophy-road.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/responsive.css', import.meta.url), 'utf8')
-]);
-const release = JSON.parse(releaseSource);
-
-function createMemoryStorage(initial = {}) {
-  const memory = new Map(Object.entries(initial));
+const source = await fs.readFile(new URL('../../turn/testing/session-admin.js', import.meta.url), 'utf8');
+function memory(entries = {}) {
+  const items = new Map(Object.entries(entries));
   return {
-    get length() { return memory.size; },
-    key(index) { return [...memory.keys()][index] ?? null; },
-    getItem(key) { return memory.get(key) ?? null; },
-    setItem(key, value) { memory.set(key, String(value)); },
-    removeItem(key) { memory.delete(key); }
+    get length() { return items.size; },
+    key: (i) => [...items.keys()][i] ?? null,
+    getItem: (key) => items.get(key) ?? null,
+    setItem: (key, value) => items.set(key, String(value)),
+    removeItem: (key) => items.delete(key),
+    clear: () => items.clear(),
+    snapshot: () => [...items]
   };
 }
-
-assert.deepEqual(ADMIN_UNLOCK_SEQUENCE, [
-  'track:countryside',
-  'track:cliffside',
-  'track:countryside',
-  'track:cliffside',
-  'action:records',
-  'action:records',
-  'action:records',
-  'action:records',
-  'action:feedback'
-], 'The admin path uses only Home controls a fresh profile can reach, repeated so exploration cannot complete it');
-
-let index = 0;
-for (const irrelevant of ['action:feedback', 'action:records', 'track:cliffside']) {
-  index = advanceAdminUnlockSequence(index, irrelevant).nextIndex;
-  assert.equal(index, 0, 'Activity before the first Countryside selection must not matter');
+function boot(href, localStorage = memory(), sessionStorage = memory()) {
+  const url = new URL(href);
+  const page = vm.createContext({
+    URL, localStorage, sessionStorage,
+    location: { hostname: url.hostname, protocol: url.protocol, href, replace(value) { page.next = value; }, reload() { page.next = page.visible; } },
+    history: { state: { keep: true }, replaceState(state, _, value) { page.visible = value; assert.deepEqual(state, { keep: true }); } },
+    document: { documentElement: { dataset: {} } }
+  });
+  vm.runInContext(source, page);
+  return page;
 }
-
-for (let step = 0; step < ADMIN_UNLOCK_SEQUENCE.length; step += 1) {
-  const result = advanceAdminUnlockSequence(index, ADMIN_UNLOCK_SEQUENCE[step]);
-  assert.equal(result.completed, step === ADMIN_UNLOCK_SEQUENCE.length - 1);
-  index = result.nextIndex;
+for (const host of ['branch.turntest.pages.dev', 'a.b.turntest.pages.dev', 'localhost', '127.0.0.1', '[::1]', 'dev.localhost']) {
+  const page = boot(`http://${host}/turn/?other=keep&turn-admin=1#here`);
+  assert.ok(page.__turnSessionAdmin, `${host}: allowed`);
+  assert.equal(page.visible, `http://${host}/turn/?other=keep#here`);
+  assert.equal(page.next, undefined, 'Activation never reloads');
 }
-assert.equal(index, 0, 'The recognizer must reset after a completed sequence');
-assert.equal(advanceAdminUnlockSequence(2, 'action:race').nextIndex, 0,
-  'RACE breaks the sequence');
-assert.equal(advanceAdminUnlockSequence(5, 'action:other').nextIndex, 0,
-  'Any other Home control breaks the sequence');
-assert.equal(advanceAdminUnlockSequence(5, 'track:countryside').nextIndex, 1,
-  'A mismatch matching the first token should immediately restart the sequence');
-let casual = 0;
-for (const token of ['track:countryside', 'track:cliffside', 'action:records', 'action:records', 'action:feedback']) {
-  const result = advanceAdminUnlockSequence(casual, token);
-  assert.equal(result.completed, false, 'Casual exploration of the two tracks, records and feedback must not unlock');
-  casual = result.nextIndex;
+for (const host of ['enkel.design', 'www.enkel.design', 'turntest.pages.dev', 'evilturntest.pages.dev', 'branch.turntest.pages.dev.evil.example', 'production.example']) {
+  const storage = new Proxy({}, { get() { throw new Error('Production must not touch admin storage'); } });
+  const page = boot(`https://${host}/turn/?turn-admin=1`, storage, storage);
+  assert.equal(page.__turnSessionAdmin, undefined, `${host}: parameter inert`);
+  assert.equal(page.visible, undefined, 'Production URL is untouched');
 }
-assert.equal(advanceAdminUnlockSequence(8, 'action:feedback').completed, true);
+assert.equal(boot('http://localhost/turn/').__turnSessionAdmin, undefined, 'Local sessions need explicit activation');
 
-const rewardIds = TROPHY_ROAD_REWARDS.map(({ id }) => id);
-const existing = {
-  version: 4,
-  unlocked: {
-    'first-turn': {
-      unlockedAt: 123,
-      trackId: 'countryside',
-      vehicleId: 'classic',
-      time: 18
-    }
-  },
-  seen: ['first-turn'],
-  progress: { tracks: ['countryside'], blankTracks: [] },
-  rewards: { unlocked: [], seen: [] }
+const real = memory({
+  [ACHIEVEMENT_STORAGE_KEY]: JSON.stringify({ version: 10, bonuses: { old: { trophies: 5000, grantedAt: 1 } }, rewards: { unlocked: ['perkulator'] } }),
+  'turn-theme-v1': 'dark', 'turn-perkulator-v1': '{"installed":{"truck":"driftage"}}',
+  'turn-tutorial-v1': '{"completed":true}', 'turn-personal-rivals-v1': 'original rivals',
+  'turn-admin-unlock-v1': 'legacy marker is inert', 'unrelated-key': 'untouched'
+});
+const session = memory({ 'ordinary-session-key': 'keep' });
+const original = real.snapshot();
+let page = boot('http://localhost/turn/?turn-admin=1', real, session);
+const activateGlobals = () => {
+  globalThis.__turnSessionAdmin = page.__turnSessionAdmin;
+  globalThis.localStorage = page.localStorage;
+  const store = createAchievementStore();
+  globalThis.__turnAchievements = { store };
+  return store;
 };
-const preserved = createAdminRewardState(existing).snapshot;
-assert.deepEqual(Object.keys(preserved.unlocked), ['first-turn'],
-  'The admin sequence must not create achievement records');
-assert.deepEqual(preserved.seen, ['first-turn']);
-assert.deepEqual(preserved.progress.tracks, ['countryside']);
-assert.deepEqual(preserved.progress.blankTracks, []);
-assert.deepEqual(preserved.rewards.unlocked, rewardIds);
-assert.deepEqual(preserved.rewards.seen, rewardIds);
-assert.equal(preserved.unlocked['first-turn'].unlockedAt, 123,
-  'Real achievement history must be preserved');
-
-const cleanProfile = createAdminRewardState(null).snapshot;
-assert.deepEqual(cleanProfile.unlocked, {},
-  'A new testing profile must receive rewards without any achievements');
-assert.deepEqual(cleanProfile.seen, []);
-assert.deepEqual(cleanProfile.rewards.unlocked, rewardIds);
-
-const developerStorage = createMemoryStorage();
-assert.equal(unlockRewardsForTesting(developerStorage), true);
-assert.equal(developerStorage.getItem('turn.telemetry.developer.v1'), '1',
-  'The hidden admin rewards path must automatically mark calibration laps as developer/tester data');
-
-const allTracks = ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city'];
-const legacyAdminProfile = {
-  version: 4,
-  unlocked: {
-    'first-turn': {
-      unlockedAt: 123,
-      trackId: 'countryside',
-      vehicleId: 'classic',
-      time: 18
-    },
-    'save-bella': {
-      unlockedAt: 456,
-      trackId: '',
-      vehicleId: '',
-      time: null
-    },
-    'beyond-sight': {
-      unlockedAt: 456,
-      trackId: '',
-      vehicleId: '',
-      time: null
-    }
-  },
-  seen: ['first-turn', 'save-bella', 'beyond-sight'],
-  progress: { tracks: allTracks, blankTracks: allTracks },
-  rewards: { unlocked: rewardIds, seen: rewardIds }
-};
-const repaired = createAdminRewardState(legacyAdminProfile, 458);
-assert.equal(repaired.repairedLegacyAdminState, true);
-assert.deepEqual(Object.keys(repaired.snapshot.unlocked), ['first-turn'],
-  'Re-running the corrected sequence must remove achievements fabricated by the old admin path');
-assert.deepEqual(repaired.snapshot.seen, ['first-turn']);
-assert.deepEqual(repaired.snapshot.progress.tracks, []);
-assert.deepEqual(repaired.snapshot.progress.blankTracks, []);
-assert.deepEqual(repaired.snapshot.rewards.unlocked, rewardIds);
-assert.equal(repaired.snapshot.unlocked['save-bella'], undefined,
-  'SAVE BELLA! must remain available for real rescue testing');
-
-// A clean domain can legitimately acquire default preference/selection keys before
-// Trophy Road finishes startup. Those keys must never be mistaken for an old player.
-const freshStartupStorage = createMemoryStorage({
-  'turn-vehicle-selection-v1': JSON.stringify({ carId: 'classic' }),
-  'turn-selected-track-v1': 'countryside',
-  'turn-steering-mode-v1': 'motion',
-  'turn-drive-by-ear-v1': 'true'
-});
-assert.equal(prepareTrophyRoadProfile(freshStartupStorage), null,
-  'Default startup keys on a cleared domain must not create a grandfathered profile');
-assert.deepEqual(readTrophyRoadSnapshot(freshStartupStorage).unlockedRewardIds, [],
-  'A clean installation must begin with Trophy Road rewards locked');
-
-// Repair the exact bad state produced by the former settings-only legacy heuristic:
-// no achievements, current storage version, every reward silently grandfathered.
-const falseGrandfatherStorage = createMemoryStorage({
-  'turn-vehicle-selection-v1': JSON.stringify({ carId: 'classic' }),
-  'turn-achievements-v1': JSON.stringify({
-    version: 6,
-    unlocked: {},
-    seen: [],
-    progress: { tracks: [], blankTracks: [] },
-    rewards: { unlocked: rewardIds, seen: rewardIds }
-  })
-});
-const repairedFreshProfile = prepareTrophyRoadProfile(falseGrandfatherStorage);
-assert.equal(repairedFreshProfile?.version, 10);
-assert.deepEqual(repairedFreshProfile?.rewards?.unlocked, [],
-  'The accidental all-rewards fresh profile must self-repair without another data clear');
-assert.deepEqual(readTrophyRoadSnapshot(falseGrandfatherStorage).unlockedRewardIds, []);
-
-// The explicit hidden admin path remains intentional and must survive the repair guard.
-const intentionalAdminStorage = createMemoryStorage({
-  'turn-admin-unlock-v1': JSON.stringify({ version: 2, rewardsOnly: true }),
-  'turn-achievements-v1': JSON.stringify({
-    version: 6,
-    unlocked: {},
-    seen: [],
-    progress: { tracks: [], blankTracks: [] },
-    rewards: { unlocked: rewardIds, seen: rewardIds }
-  })
-});
-assert.deepEqual(
-  prepareTrophyRoadProfile(intentionalAdminStorage)?.rewards?.unlocked,
-  rewardIds,
-  'The hidden developer rewards profile must not be mistaken for the fresh-install bug'
-);
-
-assert.match(source, /target\.closest\('\.roadbook-sheet-button, \.roadbook-overview \.turn-pr-detail-route'\)\) return 'action:records'/,
-  'Each TRACK SHEET tap, or overview route tap where the overview replaces it, counts as a records step');
-assert.match(source, /roadbook-sheet \.turn-pr-close'\)\) return ''/,
-  'Closing the Track sheet between taps is navigation and keeps a partial sequence');
-assert.match(source, /target\.closest\('\.roadbook-card\[data-track-id\]'\)/,
-  'Track steps come from ROADBOOK cards, locked or not');
-assert.match(source, /\.m8-feedback-button:not\(\.m8-achievements-button\):not\(\.turn-dbe-training-home\)/,
-  'Only GIVE FEEDBACK finishes the sequence, not ACHIEVEMENTS or DBE, which share its styling class');
-assert.match(source, /target\.closest\('\.m8-track-continue'\)\) return 'action:race'/,
-  'RACE breaks a partial sequence');
-assert.match(source, /target\.closest\('\.m8-home button, \.m8-home a'\)\) return 'action:other'/,
-  'Every other Home control breaks a partial sequence');
-assert.doesNotMatch(source, /lot-screen|lot-race|vehicle:/, 'The admin path no longer passes through The Lot');
-assert.match(source, /unlockRewardsForTesting\(storage\)/);
-assert.match(source, /markDeveloperDevice\(storage\)/);
-assert.match(source, /snapshot\.rewards\.unlocked = \[\.\.\.rewardIds\]/);
-assert.match(source, /resetLegacyChallengeProgress\(storage\)/,
-  'The corrected path must clear challenge progress polluted by the old all-achievement unlock');
-assert.doesNotMatch(source, /ACHIEVEMENTS|TRACK_IDS/,
-  'The admin module must not enumerate achievements or fake all-track progress');
-assert.doesNotMatch(source, /turn:achievements-updated|turn:trophy-road-updated|turn:secret-achievement/,
-  'The admin path must not emit achievement or reward events');
-assert.match(source, /documentRef\.addEventListener\('click', handleClick, true\)/);
-assert.match(source, /event\.preventDefault\(\)/);
-assert.match(source, /event\.stopImmediatePropagation\(\)/);
-assert.match(source, /globalThis\.setTimeout\?\.\(reload, 0\)/,
-  'The final action must reload so all pre-rendered reward gates rebuild unlocked');
-assert.match(source, /installAdminUnlockSequence\(\);\s*$/,
-  'The isolated production module must install itself');
-assert.match(roadSource, /hasLegacyProfileEvidence\(storage\)/,
-  'Trophy Road legacy migration must require meaningful player evidence rather than any TURN setting key');
-assert.match(roadSource, /repairFalseFreshProfile\(existing, storage\)/,
-  'Known accidentally-grandfathered clean profiles must repair during startup');
-assert.match(indexSource,
-  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?build=\d{8}-r\d+&revision=r243-mountain-1300"><\/script>/,
-  'The production entry must publish the rewards-only recognizer with a fresh cache identity');
-assert.match(indexSource,
-  new RegExp(`src="\\.\\/live-steering-setting\\.js\\?build=${escapeRegex(release.cacheKey)}-live-steering"`),
-  'The hidden recognizer must not disturb the canonical steering entry');
-
-// The sequence repeats taps on one control; iOS double-tap-to-zoom would swallow them.
-assert.match(responsiveCss, /:where\(\*\) \{ touch-action: manipulation; \}/,
-  'Every element opts out of double-tap zoom at zero specificity, keeping pinch-zoom');
-assert.doesNotMatch(indexSource, /user-scalable\s*=\s*no|maximum-scale\s*=\s*1/,
-  'Pinch-zoom must stay available');
-
-console.log('TURN rewards-only admin unlock and fresh-profile reward locking regression passed.');
-
-function escapeRegex(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+let store = activateGlobals();
+assert.deepEqual(real.snapshot(), original, 'Startup cannot mutate the real profile');
+const history = JSON.stringify(store.state.unlocked);
+page.__turnSessionAdmin.configure({ tracks: true, cars: true, rewards: true });
+for (const reward of TROPHY_ROAD_REWARDS) {
+  assert.equal(store.isRewardUnlocked(reward.id), true, reward.id);
+  for (const id of reward.trackIds || []) assert.equal(isTrackUnlocked(id), true);
+  for (const id of reward.vehicleIds || []) assert.equal(isVehicleUnlocked(id), true);
 }
+assert.equal(isPerkAvailable('driftage'), true);
+assert.equal(installPerk('truck', 'driftage'), false, 'Already installed in the copied save');
+assert.equal(installPerk('suv', 'driftage'), true, 'Perks install only in the session');
+assert.equal(JSON.stringify(store.state.unlocked), history, 'Exposure never completes achievements');
+page.__turnSessionAdmin.configure({});
+assert.equal(store.setTemporaryTrophyTotal(-1), false);
+assert.equal(store.setTemporaryTrophyTotal(1.5), false);
+assert.equal(store.setTemporaryTrophyTotal(1975), true);
+assert.equal(store.trophyTotal(), 1975, 'Arbitrary total replaces even a higher saved baseline');
+assert.equal(isFeatureUnlocked('perkulator'), false, 'The 2000 gate is genuinely locked');
+page.localStorage.setItem('turn-theme-v1', 'light');
+page.localStorage.removeItem('turn-personal-rivals-v1');
+page.sessionStorage.setItem('ordinary-session-key', 'changed');
+assert.deepEqual(real.snapshot(), original);
+assert.equal(session.getItem('ordinary-session-key'), 'keep');
+// Reload uses only the session copy after the URL parameter has been removed.
+page = boot(page.visible, real, session);
+store = activateGlobals();
+assert.equal(store.trophyTotal(), 1975);
+assert.equal(store.isRewardUnlocked('perkulator'), false);
+assert.ok(store.unlock('first-turn', { trackId: 'countryside', vehicleId: 'classic' }));
+assert.equal(store.trophyTotal(), 1975 + store.state.unlocked['first-turn'].awardedTrophies);
+if (store.trophyTotal() < 2000) store.grantBonus('race-bonus', 2000 - store.trophyTotal());
+assert.ok(store.syncRewards().some(({ id }) => id === 'perkulator'), 'Ordinary trophy awards announce the real 2000 unlock');
+assert.equal(isFeatureUnlocked('perkulator'), true);
+store.markAllSeen();
+assert.deepEqual(real.snapshot(), original, 'Awards, rewards, seen state, perks and settings never leak');
+page.__turnSessionAdmin.leave();
+page.localStorage.setItem('late-unload-write', 'still isolated');
+assert.deepEqual(real.snapshot(), original, 'Late callbacks during leave are also isolated');
+assert.equal(session.getItem('turn-session-admin-v1'), null);
+const normal = boot(page.next, real, session);
+assert.equal(normal.__turnSessionAdmin, undefined);
+assert.equal(normal.localStorage, real, 'Leaving exposes the original storage');
+assert.deepEqual(normal.localStorage.snapshot(), original);
+page = boot('http://localhost/turn/?turn-admin=1', real, session);
+page.__turnSessionAdmin.configure({ tracks: true });
+page.__turnSessionAdmin.reset();
+page = boot(page.next, real, session);
+assert.equal(page.__turnSessionAdmin.options.tracks, false, 'Reset begins again from the untouched save');
+assert.deepEqual(real.snapshot(), original);
+for (const name of ['__turnSessionAdmin', '__turnAchievements', 'localStorage']) delete globalThis[name];
+
+const index = await fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8');
+assert.ok(index.indexOf('./testing/session-admin.js') < index.indexOf('turn-storage-probe'), 'Isolation precedes the very first player-data access');
+for (const name of ['admin-unlock-sequence', 'swoosh-listening-test', 'swoosh-sound-picker', 'route-test-hud']) {
+  assert.equal(index.includes(name), false);
+  await assert.rejects(fs.access(new URL(`../../turn/testing/${name}.js`, import.meta.url)));
+}
+for (const path of ['audio/swoosh-pace-notes.js', 'progression/unlock-introductions.js']) {
+  assert.doesNotMatch(await fs.readFile(new URL(`../../turn/${path}`, import.meta.url), 'utf8'), /turn-admin-unlock-v1/);
+}
+// The sole legacy-marker read prevents a destructive old migration; it grants no
+// privileges. This is why it cannot simply be removed with the unlock mechanism.
+const legacy = memory({
+  'turn-admin-unlock-v1': 'old marker',
+  [ACHIEVEMENT_STORAGE_KEY]: JSON.stringify({ version: 10, rewards: { unlocked: TROPHY_ROAD_REWARDS.map(({ id }) => id) } })
+});
+const beforeLegacy = legacy.snapshot();
+prepareTrophyRoadProfile(legacy);
+assert.deepEqual(legacy.snapshot(), beforeLegacy, 'Old rewards-only saves must not be erased on normal startup');
+assert.equal(boot('http://localhost/turn/', legacy).__turnSessionAdmin, undefined, 'A legacy marker never activates admin');
+console.log('TURN session admin: host gate, isolation, overlays, 1975 → 2000, reload/reset/leave and legacy removal passed.');
