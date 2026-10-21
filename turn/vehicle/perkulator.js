@@ -7,17 +7,23 @@
 // so a challenger in YOUR TURN races without the installed perks of a TURN player on
 // the same device.
 import { CAR_CATALOG } from './catalog.js';
-import { VEHICLE_PERKS, getVehiclePerk, originalVehiclePerk } from './perks.js';
+import { PERKS, getVehiclePerk, originalVehiclePerk } from './perks.js';
 import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked,
   isVehicleUnlocked
 } from '../progression/trophy-road.js';
 
+import { loadAchievementState } from '../achievements/store.js';
+
 export const PERKULATOR_FEATURE_ID = 'perkulator';
 export const PERKULATOR_STORAGE_KEY = 'turn-perkulator-v1';
 export const PERKULATOR_STORAGE_VERSION = 1;
 export const PERKULATOR_CHANGE_EVENT = 'turn:perkulator-change';
+const RARITY_ORDER = Object.freeze({ common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 });
+export function comparePerks(a, b) {
+  return RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity] || a.title.localeCompare(b.title, 'en');
+}
 const CAR_IDS = new Set(CAR_CATALOG.map(({ id }) => id));
 
 function storageFor(storage) {
@@ -95,14 +101,15 @@ export function isPerkAvailable(perkId, storage) {
   const perk = getVehiclePerk(perkId);
   return perk?.installable === true
     && isPerkulatorUnlocked(target)
-    && perk.vehicleIds.some((vehicleId) => isVehicleUnlocked(vehicleId, target)
-      && isVehiclePerkUnlocked(vehicleId, target));
+    && (perk.achievementId ? Boolean(loadAchievementState(target).state.unlocked[perk.achievementId])
+      : perk.vehicleIds.some((vehicleId) => isVehicleUnlocked(vehicleId, target)
+        && isVehiclePerkUnlocked(vehicleId, target)));
 }
 
 // The perks a car may install: every one PERKULATOR holds but its own.
 export function installablePerksFor(vehicleId, storage) {
   const target = storageFor(storage);
-  return VEHICLE_PERKS.filter((perk) => mayInstall(vehicleId, perk.id) && isPerkAvailable(perk.id, target));
+  return PERKS.filter((perk) => mayInstall(vehicleId, perk.id) && isPerkAvailable(perk.id, target)).sort(comparePerks);
 }
 
 // The perk a car runs beside its own, while PERKULATOR holds it. Without PERKULATOR, none.

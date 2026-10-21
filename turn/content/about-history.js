@@ -437,5 +437,9 @@ export const CHANGELOG = Object.freeze([
         "Completed collections fold under their master. Choose SHOW to inspect their achievements."
       ]
     ]
+  },
+  {
+    "date": "21 October 2026",
+    "entries": [["Achievement collection perks", "Six mastery collections unlock TURBO, ROAD RAGE, HUNTER, PRECISION, LOCKED IN and RESPONSE TIME. DRIFT and FLOW have separate masters. Earned perks wait for PERKULATOR, with rarity filters and shared Garage cards."]]
   }
 ]);

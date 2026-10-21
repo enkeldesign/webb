@@ -74,8 +74,8 @@ assert.equal(achievementTrophyAward('faster-than-the-dev', { awardedTrophies: 0 
   assert.equal(stored(storage).bonuses['support-thanks']?.trophies, 5, 'A bonus survives a stale window');
 
   // A reward is announced by the window that reaches it, and kept by a stale one.
-  a.unlock('an-army-of-me', { trackId: 'midnight-city' });
-  a.unlock('on-course-of-course', { trackId: 'harbor' });
+  a.unlock('trust-your-ears', { trackId: 'midnight-city' });
+  a.unlock('listen-closely', { trackId: 'harbor' });
   assert.deepEqual(a.syncRewards().map(({ id }) => id), ['compact'], 'Reaching 300 trophies announces the Compact');
   b.markAllSeen();
   assert.ok(stored(storage).rewards.unlocked.includes('compact'), 'A stale window keeps the reward');

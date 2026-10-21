@@ -4,6 +4,9 @@
 // PERKULATOR holds that this car may run (#1228). Nothing here shows without
 // PERKULATOR, and nothing for a locked preview. What may be installed is
 // vehicle/perkulator.js's to say; GARAGE re-renders on its change event.
+import { filterButtons } from '../ui/filter-buttons.js';
+import { perkSourceLabel } from '../vehicle/perk-presentation.js';
+import { isVehiclePerkUnlocked, rewardForVehiclePerk } from '../progression/trophy-road.js';
 import { cornerMarkMarkup } from '../ui/corner-mark.js';
 import { getCarDefinition } from '../vehicle/catalog.js';
 import { getVehiclePerk, originalVehiclePerk } from '../vehicle/perks.js';
@@ -43,6 +46,18 @@ export function rarityChip(perk) {
   return `<span class="turn-pr-chip is-${perk.rarity}"><span class="garage-visually-hidden">Rarity </span>${label}</span>`;
 }
 
+// The same content and surface primitive serves static Garage cards and choices.
+export function perkCardMarkup(perk, { original = false, current = false, interactive = false, status = '' } = {}) {
+  const tag = interactive ? 'button' : 'div';
+  const attributes = interactive ? ` type="button" data-perk-id="${escapeHtml(perk.id)}"${current ? ' aria-current="true"' : ''}` : '';
+  const source = original ? status : `From ${perkSourceLabel(perk)}`;
+  return `<${tag} class="garage-perk-card${original ? ' is-original' : ''}${interactive ? ' garage-install-perk-option' : ''}${current ? ' is-installed' : ''}"${attributes}>
+    <span class="garage-install-perk-name"><strong>${escapeHtml(titleCase(perk.title))}</strong> ${rarityChip(perk)}${current ? ' <span class="garage-install-perk-state">INSTALLED</span>' : ''}</span>
+    <span class="garage-install-perk-copy">${escapeHtml(perk.description)}</span>
+    ${source ? `<span class="garage-install-perk-origin">${escapeHtml(source)}</span>` : ''}
+  </${tag}>`;
+}
+
 function focusWithoutScroll(element) {
   try {
     element?.focus({ preventScroll: true });
@@ -59,7 +74,8 @@ export function createGaragePerkulator({
   announce = () => {},
   onSheetToggle = () => {}
 }) {
-  const meta = documentRef.createElement('p');
+  const meta = documentRef.createElement('section');
+  meta.setAttribute('aria-labelledby', 'garageOriginalPerkTitle');
   meta.className = 'garage-perk-meta';
   meta.hidden = true;
   copy.before(meta);
@@ -68,13 +84,11 @@ export function createGaragePerkulator({
   tools.className = 'garage-perkulator';
   tools.hidden = true;
   tools.innerHTML = `
-    <p class="garage-perk-note garage-perk-reach" hidden></p>
     <section class="garage-perk-installed" aria-labelledby="garageInstalledPerkTitle">
       <h4 class="garage-perk-installed-title" id="garageInstalledPerkTitle">INSTALLED PERK</h4>
       <div class="garage-perk-installed-body"></div>
     </section>`;
   copy.after(tools);
-  const reach = tools.querySelector('.garage-perk-reach');
   const installedBody = tools.querySelector('.garage-perk-installed-body');
 
   const sheet = documentRef.createElement('dialog');
@@ -92,6 +106,10 @@ export function createGaragePerkulator({
           ${cornerMarkMarkup('perkulator')}
           <p class="garage-install-perk-lead" id="garageInstallPerkLead"></p>
         </div>
+        <div class="turn-achievements-filters garage-perk-filters" role="group" aria-label="Perk rarity">
+          ${filterButtons([['all', 'ALL'], ['rare', 'RARE'], ['epic', 'EPIC'], ['mythic', 'MYTHIC']], 'data-perk-rarity')}
+        </div>
+        <p class="garage-perk-empty" hidden>No available perks of this rarity.</p>
         <ul class="garage-install-perk-list" role="list"></ul>
       </div>
     </div>`;
@@ -99,6 +117,7 @@ export function createGaragePerkulator({
   const sheetLead = sheet.querySelector('.garage-install-perk-lead');
   const sheetList = sheet.querySelector('.garage-install-perk-list');
 
+  let rarity = 'all';
   let carId = '';
   let sheetTrigger = null;
   // Where focus goes once an action has re-rendered the panel.
@@ -108,31 +127,16 @@ export function createGaragePerkulator({
     return titleCase(perk.title);
   }
 
-  function originCar(perk) {
-    return getCarDefinition(perk.vehicleIds[0]).name;
-  }
-
-  // Whether the car's own perk may run on other cars. A perk still locked on Trophy Road
-  // says nothing here: its lock note says when.
-  function syncReach(own) {
-    const note = own.installable !== true
-      ? 'LEGENDARY perks stay with their car.'
-      : isPerkAvailable(own.id) ? 'Any other car can install it.' : '';
-    reach.textContent = note;
-    reach.hidden = !note;
-  }
-
   function syncInstalled(own) {
     const car = getCarDefinition(carId);
     const installed = getVehiclePerk(installedPerkFor(carId));
     const choices = installablePerksFor(carId);
     if (installed) {
       installedBody.innerHTML = `
-        <p class="garage-perk-installed-name"><strong>${escapeHtml(perkName(installed))}</strong> ${rarityChip(installed)}</p>
-        <p class="garage-perk-copy">${escapeHtml(installed.description)}</p>
+        ${perkCardMarkup(installed, { current: true })}
         <div class="garage-perk-actions">
           <button class="turn-pr-button is-secondary is-compact garage-perk-replace" type="button" aria-haspopup="dialog" aria-label="Replace installed perk: ${escapeHtml(perkName(installed))}">REPLACE</button>
-          <button class="turn-pr-button is-secondary is-compact garage-perk-remove" type="button" aria-label="Remove installed perk: ${escapeHtml(perkName(installed))}">REMOVE</button>
+          <button class="turn-pr-button is-destructive is-compact garage-perk-remove" type="button" aria-label="Remove installed perk: ${escapeHtml(perkName(installed))}">REMOVE</button>
         </div>`;
       return installed;
     }
@@ -141,7 +145,7 @@ export function createGaragePerkulator({
         <p class="garage-perk-note garage-perk-none" tabindex="-1">None. Another perk can run beside ${escapeHtml(perkName(own))}.</p>
         <button class="turn-pr-button is-secondary is-compact garage-perk-install" type="button" aria-haspopup="dialog" aria-label="Install perk on ${escapeHtml(car.name)}">INSTALL PERK</button>`;
     } else {
-      installedBody.innerHTML = `<p class="garage-perk-note garage-perk-none" tabindex="-1">None. Unlock perks on Trophy Road to install one here.</p>`;
+      installedBody.innerHTML = `<p class="garage-perk-note garage-perk-none" tabindex="-1">None. Unlock perks on Trophy Road or complete achievement collections to install one here.</p>`;
     }
     return null;
   }
@@ -151,14 +155,18 @@ export function createGaragePerkulator({
     carId = car?.id || '';
     const own = originalVehiclePerk(carId);
     const active = Boolean(own) && playable && isPerkulatorUnlocked();
+    copy.hidden = active;
     meta.hidden = !active;
     tools.hidden = !active;
     if (!active) {
       if (sheet.open) sheet.close();
       return null;
     }
-    meta.innerHTML = `<span class="garage-perk-role">ORIGINAL PERK</span> ${rarityChip(own)}`;
-    syncReach(own);
+    const reward = rewardForVehiclePerk(carId);
+    const status = reward && !isVehiclePerkUnlocked(carId)
+      ? `Unlocks at ${reward.threshold} trophies on Trophy Road.`
+      : own.installable ? 'Any other car can install it.' : 'Stays with this car.';
+    meta.innerHTML = `<h4 class="garage-perk-role" id="garageOriginalPerkTitle">ORIGINAL PERK</h4>${perkCardMarkup(own, { original: true, status })}`;
     const installed = syncInstalled(own);
     if (focusAfterSync) {
       // The first of the listed controls that is there now.
@@ -174,23 +182,30 @@ export function createGaragePerkulator({
     const own = originalVehiclePerk(carId);
     const installedId = installedPerkFor(carId);
     sheetLead.textContent = `On ${car.name}, beside ${perkName(own)}. Each car runs its own perk and at most one installed perk.`;
-    sheetList.innerHTML = installablePerksFor(carId).map((perk) => {
-      const current = perk.id === installedId;
-      return `
-        <li>
-          <button class="garage-install-perk-option${current ? ' is-installed' : ''}" type="button" data-perk-id="${escapeHtml(perk.id)}"${current ? ' aria-current="true"' : ''}>
-            <span class="garage-install-perk-name"><strong>${escapeHtml(perkName(perk))}</strong> ${rarityChip(perk)}${current ? ' <span class="garage-install-perk-state">INSTALLED</span>' : ''}</span>
-            <span class="garage-install-perk-copy">${escapeHtml(perk.description)}</span>
-            <span class="garage-install-perk-origin">From ${escapeHtml(originCar(perk))}</span>
-          </button>
-        </li>`;
-    }).join('');
+    rarity = 'all';
+    renderChoices(installedId);
     sheetTrigger = trigger;
     sheet.showModal();
     onSheetToggle(true);
     // Like every TURN dialog, the sheet opens on its heading.
     focusWithoutScroll(sheet.querySelector('.turn-pr-sheet-title'));
   }
+
+  function renderChoices(installedId = installedPerkFor(carId)) {
+    const choices = installablePerksFor(carId).filter((perk) => rarity === 'all' || perk.rarity === rarity);
+    sheetList.innerHTML = choices.map((perk) => `<li>${perkCardMarkup(perk, { interactive: true, current: perk.id === installedId })}</li>`).join('');
+    sheet.querySelector('.garage-perk-empty').hidden = choices.length > 0;
+    for (const button of sheet.querySelectorAll('[data-perk-rarity]')) {
+      button.setAttribute('aria-pressed', String(button.dataset.perkRarity === rarity));
+    }
+  }
+
+  sheet.querySelector('.garage-perk-filters').addEventListener('click', (event) => {
+    const button = event.target.closest?.('[data-perk-rarity]');
+    if (!button) return;
+    rarity = button.dataset.perkRarity;
+    renderChoices();
+  });
 
   function closeSheet() {
     if (sheet.open) sheet.close();

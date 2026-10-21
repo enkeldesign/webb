@@ -80,6 +80,16 @@ export const SCORING_MASTER_ACHIEVEMENT = Object.freeze({
   calibrationPending: TRACK_SCORING_ACHIEVEMENTS.some((achievement) => achievement.calibrationPending)
 });
 
+export const SCORING_MASTER_ACHIEVEMENTS = Object.freeze(['drift', 'flow'].map((channel) => Object.freeze({
+  id: `${channel}-master`, category: CATEGORY.SCORING, trophies: 0,
+  title: `${channel.toUpperCase()} MASTER`,
+  description: `Clear every track’s calibrated ${channel.toUpperCase()} achievement.`,
+  icon: channel, scoreChannel: channel,
+  progressMax: TRACK_IDS.length,
+  reward: Object.freeze({ type: 'perk', perkId: channel === 'drift' ? 'precision' : 'locked-in' }),
+  calibrationPending: TRACK_SCORING_ACHIEVEMENTS.some((item) => item.scoreChannel === channel && item.calibrationPending)
+})));
+
 export function qualifyingScoringAchievement(channel, trackId, score) {
   const normalizedChannel = channel === 'flow' ? 'flow' : 'drift';
   const target = targetFor(normalizedChannel, trackId);
@@ -115,11 +125,12 @@ export function storedScoringAchievementUnlockEntries(storage, isUnlocked = () =
     }
   }
 
-  if (completedAllScoringAchievements(isUnlocked, [...pendingIds])) {
-    entries.push({
-      id: SCORING_MASTER_ACHIEVEMENT_ID,
-      context: { trackId: '', vehicleId: '', time: null }
-    });
+  for (const master of SCORING_MASTER_ACHIEVEMENTS) {
+    if (!master.calibrationPending && TRACK_SCORING_ACHIEVEMENTS
+      .filter((item) => item.scoreChannel === master.scoreChannel)
+      .every(({ id }) => isUnlocked(id) || pendingIds.has(id))) {
+      entries.push({ id: master.id, context: { trackId: '', vehicleId: '', time: null } });
+    }
   }
 
   return entries;

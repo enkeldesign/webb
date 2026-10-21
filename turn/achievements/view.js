@@ -1,5 +1,8 @@
+import { achievementRewardText } from './reward-presentation.js';
+import { filterButtons } from '../ui/filter-buttons.js';
 import {
   ACHIEVEMENTS,
+  ACHIEVEMENT_FAMILIES,
   CATEGORY,
   CATEGORY_LABELS,
   ICONS,
@@ -8,12 +11,6 @@ import {
   VEHICLE_NAMES,
   TRACK_IDS
 } from './catalog.js';
-import {
-  TIME_TRIAL_ACHIEVEMENT_IDS
-} from './time-trials.js?revision=r166-bella-records';
-import {
-  TRACK_SCORING_ACHIEVEMENT_IDS
-} from './scoring-achievements.js?revision=r3-trophy-balance';
 import {
   achievementGroups,
   completedAchievementFamily,
@@ -188,12 +185,8 @@ function progressFor(achievement, store, session) {
   if (achievement.id === 'new-ground') return Math.min(2, store.state.progress.tracks.length);
   if (achievement.id === 'around-the-turn') return Math.min(TRACK_IDS.length, store.state.progress.tracks.length);
   if (achievement.id === 'beyond-sight') return Math.min(TRACK_IDS.length, store.state.progress.blankTracks.length);
-  if (achievement.id === 'faster-than-the-dev') {
-    return TIME_TRIAL_ACHIEVEMENT_IDS.filter((id) => store.isUnlocked(id)).length;
-  }
-  if (achievement.id === 'drift-flow-master') {
-    return TRACK_SCORING_ACHIEVEMENT_IDS.filter((id) => store.isUnlocked(id)).length;
-  }
+  const family = ACHIEVEMENT_FAMILIES.find(({ masterId }) => masterId === achievement.id);
+  if (family) return family.childIds.filter((id) => store.isUnlocked(id)).length;
   if (achievement.id === DRIVE_BY_EAR_ACHIEVEMENT_ID) {
     return Math.min(DRIVE_BY_EAR_PART_IDS.length, store.state.progress.driveByEarParts.length);
   }
@@ -250,7 +243,7 @@ function achievementCard(achievement, store, session, disclosure = '') {
     <article class="${classes}" data-achievement-id="${achievement.id}" data-achievement-track="${achievement.trackId || ''}" data-achievement-category="${achievement.category}" data-achievement-status="${status.toLowerCase().replace(' ', '-')}">
       <div class="turn-achievement-icon" aria-hidden="true">${ICONS[achievement.icon]}</div>
       <div class="turn-achievement-copy">
-        <span>${CATEGORY_LABELS[achievement.category]} · ${achievement.trophies} trophies</span>
+        <span>${CATEGORY_LABELS[achievement.category]} · ${achievementRewardText(achievement, { revealed: store.isRewardUnlocked('perkulator'), earned: unlocked })}</span>
         <h4>${achievement.title}</h4>
         <p>${achievement.description}</p>
         ${achievement.recommendation && !unlocked ? `<small>${achievement.recommendation}</small>` : ''}
@@ -333,11 +326,7 @@ function createDialog() {
         </section>
         <p class="turn-achievements-storage-note" hidden>Achievement progress is available for this session but cannot be saved because local storage is unavailable.</p>
         <div class="turn-achievements-filters" aria-label="Achievement filters">
-          <button type="button" aria-pressed="true" data-achievement-filter="all">ALL</button>
-          <button type="button" aria-pressed="false" data-achievement-filter="onboarding">GETTING STARTED</button>
-          <button type="button" aria-pressed="false" data-achievement-filter="time-trials">TIME TRIALS</button>
-          <button type="button" aria-pressed="false" data-achievement-filter="scoring">SCORING</button>
-          <button type="button" aria-pressed="false" data-achievement-filter="unlocked">UNLOCKED</button>
+          ${filterButtons([['all', 'ALL'], ['onboarding', 'GETTING STARTED'], ['time-trials', 'TIME TRIALS'], ['scoring', 'SCORING'], ['unlocked', 'UNLOCKED']], 'data-achievement-filter')}
         </div>
         <div class="turn-achievements-list"></div>
       </div>
@@ -843,6 +832,13 @@ export function createAchievementView({ store, session, utilityGroup }) {
     const total = reward
       ? 0
       : batch.reduce((sum, achievement) => sum + achievement.trophies, 0);
+    const collectionRewards = batch.filter((item) => item.reward?.type === 'perk');
+    const collectionCopy = collectionRewards.map((item) => achievementRewardText(item, {
+      revealed: store.isRewardUnlocked('perkulator'), earned: true
+    })).join(' · ');
+    const revealedCollections = reward && batch.some((item) => item.id === 'perkulator')
+      ? ACHIEVEMENTS.filter((item) => item.reward?.type === 'perk' && store.isUnlocked(item.id)) : [];
+    const revealCopy = revealedCollections.map((item) => achievementRewardText(item, { revealed: true, earned: true })).join(' · ');
     const needsHowToPlay = reward && rewardBatchNeedsHowToPlay(batch);
     toastElement.querySelector('.turn-achievement-toast-icon').innerHTML = reward
       ? TROPHY_ROAD_REWARD_ICONS[first.icon]
@@ -854,13 +850,13 @@ export function createAchievementView({ store, session, utilityGroup }) {
       ? first.title
       : `${first.title} + ${batch.length - 1} MORE`;
     toastElement.querySelector('[data-achievement-toast-badge]').textContent = reward
-      ? 'UNLOCKED'
-      : `+${total} TROPHIES`;
+      ? (revealCopy || 'UNLOCKED')
+      : [total ? `+${total} TROPHIES` : '', collectionCopy].filter(Boolean).join(' · ');
     const guide = toastElement.querySelector('[data-trophy-reward-guide]');
     if (guide) guide.hidden = !needsHowToPlay;
     toastElement.setAttribute('aria-label', reward
-      ? `${batch.length === 1 ? 'Trophy Road reward unlocked' : `${batch.length} Trophy Road rewards unlocked`}. ${batch.map((item) => item.shortTitle).join(', ')}.${needsHowToPlay ? ' See How to Play for instructions.' : ''} Open Achievements.`
-      : `${batch.length === 1 ? 'Achievement unlocked' : `${batch.length} achievements unlocked`}. ${batch.map((achievement) => achievement.title).join(', ')}. ${total} trophies.`);
+      ? `${batch.length === 1 ? 'Trophy Road reward unlocked' : `${batch.length} Trophy Road rewards unlocked`}. ${batch.map((item) => item.shortTitle).join(', ')}.${revealCopy ? ` ${revealCopy}.` : ''}${needsHowToPlay ? ' See How to Play for instructions.' : ''} Open Achievements.`
+      : `${batch.length === 1 ? 'Achievement unlocked' : `${batch.length} achievements unlocked`}. ${batch.map((achievement) => achievement.title).join(', ')}. ${total ? `${total} trophies. ` : ''}${collectionCopy}`);
 
     const announceShown = () => {
       if (reward) window.dispatchEvent(new CustomEvent('turn:trophy-road-toast-shown', {

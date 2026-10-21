@@ -1,6 +1,7 @@
-import { deriveVehicleTuning } from './catalog.js?revision=r230-vehicle-perks';
+import { deriveVehicleTuning, getCarDefinition } from './catalog.js?revision=r230-vehicle-perks';
 import { getVehiclePerk, originalVehiclePerk } from './perks.js';
 import { createDriftAttackScorer } from '../scoring/drift-attack.js';
+import { resetBrakingTechnique, RESPONSE_ACCELERATION_MULTIPLIER } from '../input/braking-technique.js';
 import { SCORE_FEEDBACK_EVENT } from '../scoring/score-feedback.js';
 
 export const TRACTION_MIN_OFFROAD_PENALTY = 0.22;
@@ -40,6 +41,17 @@ const MAX_ATTRIBUTE_STATS = Object.freeze({
   boostDuration: 5
 });
 const MAX_ATTRIBUTE_TUNING = Object.freeze(deriveVehicleTuning(MAX_ATTRIBUTE_STATS));
+// Canonical tier spacing, reused for conditional effects. A tier above the visible
+// ceiling continues its last step, as existing beyond-ceiling perk tuning does.
+const TIER_TUNING = Object.freeze([1, 2, 3, 4, 5].map((level) => Object.freeze(deriveVehicleTuning({
+  speed: level, acceleration: level, control: level, drift: level, boostPower: level, boostDuration: level
+}))));
+const STAT_TUNING_KEYS = Object.freeze({
+  speed: ['topSpeedMultiplier'],
+  acceleration: ['accelerationMultiplier'],
+  control: ['controlMultiplier'],
+  drift: ['driftEngineMultiplier', 'driftDragAdd', 'driftSpeedMultiplier', 'driftStabilityMultiplier']
+});
 // CONTROL 1/5 … 5/5 as the handling multiplier every car's stats map to.
 const CONTROL_MULTIPLIER_BY_LEVEL = Object.freeze([1, 2, 3, 4, 5].map((control) => (
   deriveVehicleTuning({ ...MAX_ATTRIBUTE_STATS, control }).controlMultiplier
@@ -190,6 +202,7 @@ export function resolveControlMultiplierBonus(controlMultiplier, points = CLEAN_
 export function resetVehiclePerkRuntimeState(state) {
   if (!state) return null;
   cleanDriftTrackers.delete(state);
+  resetBrakingTechnique(state);
   const original = originalVehiclePerk(state.vehicleId);
   const unlocked = state.vehiclePerkUnlocked === true;
   const originalId = unlocked && original ? original.id : '';
@@ -389,6 +402,17 @@ function applyLivePerk(effective, baseTuning, installedTuning, perkId, progress)
   }
 }
 
+function applyStatBonus(effective, state, stat, points, capAtFive = false) {
+  const stats = state.vehicleStats || getCarDefinition(state.vehicleId)?.stats;
+  const base = Math.max(1, Math.min(5, Math.round(Number(stats?.[stat]) || 3)));
+  const level = capAtFive ? Math.min(5, base + points) : base + points;
+  for (const key of STAT_TUNING_KEYS[stat]) {
+    const value = level <= 5 ? TIER_TUNING[level - 1][key]
+      : TIER_TUNING[4][key] + (TIER_TUNING[4][key] - TIER_TUNING[3][key]) * (level - 5);
+    applyStronger(effective, key, value);
+  }
+}
+
 export function resolveVehiclePerkTuning({ state, tuning } = {}) {
   const baseTuning = tuning || state?.vehicleTuning || null;
   if (!state || !baseTuning) return baseTuning;
@@ -401,7 +425,10 @@ export function resolveVehiclePerkTuning({ state, tuning } = {}) {
   const installedTuning = installed ? getVehiclePerk(installed).tuning || null : null;
   const originalBuilds = originalProgress > 0 && LIVE_TUNING_PERKS.has(original);
   const installedBuilds = installedProgress > 0 && LIVE_TUNING_PERKS.has(installed);
-  if (!installedTuning && !originalBuilds && !installedBuilds) {
+  const hunter = installed === 'hunter' ? Math.max(0, Math.min(5, Math.floor(Number(state.racePosition) || 0))) : 0;
+  const response = installed === 'response-time' && state.responseTimeRemaining > 0;
+  const lockedIn = installed === 'locked-in' && Number(state.flowScoreMultiplier) > 2;
+  if (!installedTuning && !originalBuilds && !installedBuilds && !lockedIn && !hunter && !response) {
     state.vehicleEffectiveTuning = baseTuning;
     return baseTuning;
   }
@@ -416,6 +443,16 @@ export function resolveVehiclePerkTuning({ state, tuning } = {}) {
   }
   if (originalBuilds) applyLivePerk(effective, baseTuning, installedTuning, original, originalProgress);
   if (installedBuilds) applyLivePerk(effective, baseTuning, installedTuning, installed, installedProgress);
+  if (hunter) {
+    applyStatBonus(effective, state, 'acceleration', hunter, true);
+    applyStatBonus(effective, state, 'speed', hunter, true);
+  }
+  if (response) applyStronger(effective, 'accelerationMultiplier', baseTuning.accelerationMultiplier * RESPONSE_ACCELERATION_MULTIPLIER);
+  if (lockedIn) {
+    applyStatBonus(effective, state, 'control', 1);
+    applyStatBonus(effective, state, 'acceleration', 1);
+    applyStatBonus(effective, state, 'drift', 1);
+  }
   state.vehicleEffectiveTuning = effective;
   return effective;
 }

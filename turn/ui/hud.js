@@ -189,6 +189,7 @@ function updateRacePosition({
 }) {
   const total = state.competitorLaps.length + 1;
   if (!state.lapActive || !state.competitorLaps.length) {
+    state.racePosition = state.lapActive ? 1 : 0;
     setRacePosition?.(state.lapActive ? 1 : null, total);
     return;
   }
@@ -209,7 +210,8 @@ function updateRacePosition({
     if (completedGhostLaps + progress > playerDistance + 0.002) rivalsAhead += 1;
   }
 
-  setRacePosition?.(rivalsAhead + 1, total);
+  state.racePosition = rivalsAhead + 1;
+  setRacePosition?.(state.racePosition, total);
 }
 
 function getMapBounds(samples) {

@@ -276,7 +276,7 @@ assert.match(controlsSource,
   /vehicleEffectiveTuning\?\.boostDurationSeconds[\s\S]*__turnVehicleTuning\?\.boostDurationSeconds/,
   'Boost consumption must read FULL TANK’s effective capacity before the ordinary base capacity');
 assert.match(controlsSource,
-  /const perkRefill = [^\n]*vehiclePerkBoostRefill[\s\S]*perkState\.vehiclePerkBoostRefill = 0;[\s\S]*if \(boostCharge < 0\.999999\) \{\s*boostCharge = Math\.min\(1, boostCharge \+ dt \* rechargeMultiplier \/ BOOST_RECHARGE_SECONDS \+ perkRefill\)/,
+  /const perkRefill = [^\n]*vehiclePerkBoostRefill[\s\S]*perkState\.vehiclePerkBoostRefill = 0;[\s\S]*if \(boostCharge < 0\.999999\) \{\s*boostCharge = Math\.min\(1, boostCharge \+ rechargeDt \* rechargeMultiplier \/ BOOST_RECHARGE_SECONDS \+ perkRefill\)/,
   'FULL TANK fill is taken every frame and fills the charge only between boosts');
 assert.match(physicsSource, /advanceVehiclePerkRuntimeState\(/, 'The fill accrues in the physics step, which only runs while the race runs');
 assert.match(controlsSource, /globalThis\.__turnBoostCharge = boostCharge/,
@@ -546,6 +546,28 @@ assert.equal(truck.tuning.boostEffectMultiplier, undefined, 'Installing TURBO ne
 turboTruck.vehicleInstalledPerkId = '';
 assert.equal(resolveVehiclePerkTuning({ state: turboTruck, tuning: truck.tuning }).boostEffectMultiplier, undefined);
 
+const lockedStats = Object.freeze({ speed: 3, acceleration: 3, control: 3, drift: 3, boostPower: 3, boostDuration: 3 });
+const lockedBase = Object.freeze(deriveVehicleTuning(lockedStats));
+const lockedIn = perkState('sedan', false, lockedBase, 'locked-in');
+lockedIn.vehicleStats = lockedStats;
+lockedIn.flowScoreMultiplier = 2;
+assert.equal(resolveVehiclePerkTuning({ state: lockedIn, tuning: lockedBase }), lockedBase, 'FLOW exactly ×2 does not activate LOCKED IN');
+lockedIn.flowScoreMultiplier = 2.01;
+const raised = resolveVehiclePerkTuning({ state: lockedIn, tuning: lockedBase });
+const raisedExpected = deriveVehicleTuning({ ...lockedStats, acceleration: 4, control: 4, drift: 4 });
+assert.deepEqual(raised, raisedExpected, 'FLOW above ×2 raises exactly the three named effective tiers');
+assert.deepEqual(lockedIn.vehicleStats, lockedStats, 'Conditional tiers never modify the saved profile');
+lockedIn.vehicleStats = Object.freeze({ ...lockedStats, acceleration: 5, control: 5, drift: 5 });
+const ceilingBase = Object.freeze(deriveVehicleTuning(lockedIn.vehicleStats));
+lockedIn.vehicleTuning = ceilingBase;
+const beyond = resolveVehiclePerkTuning({ state: lockedIn, tuning: ceilingBase });
+assert.ok(beyond.controlMultiplier > ceilingBase.controlMultiplier && beyond.accelerationMultiplier > ceilingBase.accelerationMultiplier
+  && beyond.driftEngineMultiplier > ceilingBase.driftEngineMultiplier, 'The effect continues above the visible tier ceiling');
+lockedIn.flowScoreMultiplier = 1;
+assert.equal(resolveVehiclePerkTuning({ state: lockedIn, tuning: ceilingBase }), ceilingBase, 'A lost FLOW chain immediately restores the selected setup');
+assert.equal(getVehiclePerk('locked-in').rarity, 'epic');
+assert.equal(getVehiclePerk('precision').rarity, 'epic');
+
 // ROAD RAGE conserves fuel and capacity. Dirty driving/BOOST only stops conversion.
 const cleanConversion = { enabled: true, requested: false, offRoad: false, collided: false, speed: 40 };
 const seedTank = { charge: 1, overcharge: 0.5, converted: 0 };
@@ -690,3 +712,41 @@ assert.doesNotMatch(perkRuntimeSource, /activePerk\(state, '|vehicleId === '(tru
   'Perks are known by their ids, never by the car they come from');
 
 console.log('TURN seven gated 1200–2000 Trophy Road vehicle perk behaviors, the perk table and installed-perk composition passed.');
+
+const { advanceBrakingTechnique, resetBrakingTechnique } = await import('../../turn/input/braking-technique.js');
+const hunter = perkState('sedan', false, lockedBase, 'hunter');
+hunter.vehicleStats = lockedStats;
+for (const position of [1, 4, 2, 5, 0]) {
+  hunter.racePosition = position;
+  const actual = resolveVehiclePerkTuning({ state: hunter, tuning: lockedBase });
+  const expected = deriveVehicleTuning({ ...lockedStats, acceleration: Math.min(5, 3 + position), speed: Math.min(5, 3 + position) });
+  assert.equal(actual.accelerationMultiplier, expected.accelerationMultiplier);
+  assert.equal(actual.topSpeedMultiplier, expected.topSpeedMultiplier);
+}
+assert.deepEqual(hunter.vehicleStats, lockedStats);
+for (const hz of [30, 60, 120]) {
+  const response = perkState('police', false, lockedBase, 'response-time');
+  Object.assign(response, { speed: 25, brake: 1, reverse: 0, throttle: 0, steering: 0, lapActive: true });
+  for (let i = 0; i < hz / 5; i++) advanceBrakingTechnique(response, 1 / hz, 30 / hz, 30, false, true);
+  response.brake = 0; response.throttle = 1;
+  advanceBrakingTechnique(response, 1 / hz, 0, 25, false, true);
+  assert.equal(response.responseTimeRemaining, 0, 'The kick waits after input');
+  for (let i = 0; i < Math.ceil(hz * 0.2); i++) advanceBrakingTechnique(response, 1 / hz, 0, 25, false, true);
+  assert.ok(response.responseTimeRemaining > 0);
+  assert.ok(resolveVehiclePerkTuning({ state: response, tuning: lockedBase }).accelerationMultiplier > lockedBase.accelerationMultiplier);
+  for (let i = 0; i < hz * 2; i++) advanceBrakingTechnique(response, 1 / hz, 0, 25, true, true);
+  assert.equal(response.responseTimeRemaining, 0, 'One braking event cannot repeat');
+  resetBrakingTechnique(response);
+  response.brake = 1;
+  advanceBrakingTechnique(response, 1 / hz, 1, 30, false, true);
+  response.brake = 0;
+  for (let i = 0; i < hz; i++) advanceBrakingTechnique(response, 1 / hz, 0, 25, false, true);
+  assert.equal(response.responseTimeRemaining, 0, 'Brake taps do not prime');
+  response.brake = 1;
+  for (let i = 0; i < hz / 5; i++) advanceBrakingTechnique(response, 1 / hz, 30 / hz, 30, false, true);
+  resetBrakingTechnique(response);
+  response.brake = 0;
+  for (let i = 0; i < hz; i++) advanceBrakingTechnique(response, 1 / hz, 0, 25, true, true);
+  assert.equal(response.responseTimeRemaining, 0, 'A pause or interruption clears the primed response');
+}
+console.log('HUNTER current-position tiers and RESPONSE TIME deceleration/delay/anti-spam lifecycle pass at 30/60/120 Hz.');

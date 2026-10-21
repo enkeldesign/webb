@@ -116,8 +116,10 @@ export function createFlowRuntime({
   let lastDriftBankAt = -Infinity;
   let chainTimer = 0;
   let lastMilestoneTier = 1;
+  state.flowScoreMultiplier = 1;
 
   function publishState(snapshot, now) {
+    state.flowScoreMultiplier = enabled ? snapshot.multiplier : 1;
     if (!enabled || !hudVisible) return;
     scoreFeedback.updateState(SCORE_FEEDBACK_CHANNEL.FLOW, snapshot, now);
   }
@@ -497,6 +499,10 @@ export function createFlowRuntime({
     }
   }
 
+  eventTarget?.addEventListener?.('turn:braking-outcome', (event) => {
+    if (!enabled || state.lapActive !== true) return;
+    accept('braking', 'BRAKE', clamp(30 + finiteNumber(event.detail?.deceleration) * 4, 50, 90), nowFrom(event), { outcome: 'brake-before-curve' });
+  });
   eventTarget?.addEventListener?.('turn:shift-change', onShiftChange);
   eventTarget?.addEventListener?.('turn:shift-outcome', onShiftOutcome);
   eventTarget?.addEventListener?.('turn:drive-technique-state', onDriveTechniqueState);

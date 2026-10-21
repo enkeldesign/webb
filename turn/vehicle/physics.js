@@ -1,3 +1,4 @@
+import { advanceBrakingTechnique } from '../input/braking-technique.js';
 import { resolveWorldCollisionState } from '../race/world-collision.js?build=20260723-r53';
 import { recordLapCourseSafetyState } from '../race/course-safety.js?revision=r186-road-edge-latch';
 import { trackPitch, trackSurfaceY } from '../tracks/elevation.js?build=20260725-r67';
@@ -367,11 +368,14 @@ function updateVehiclePhysicsStateCore({
     Math.min(propulsionStep, availablePropulsion)
   );
 
+  let brakeDeceleration = 0;
+  const brakeEntrySpeed = Math.max(0, forwardSpeed);
   if (brakingOrReversing) {
     const brakeStep = 62 * brakeOrReverseInput * dt;
     forwardSpeed = state.velocity.dot(forward);
 
     if (forwardSpeed > 0.35) {
+      if (state.brake > 0 && state.reverse === 0) brakeDeceleration = Math.min(forwardSpeed, brakeStep);
       // BRAKE and REVERSE both stop forward motion before anything else.
       state.velocity.addScaledVector(
         forward,
@@ -544,6 +548,8 @@ function updateVehiclePhysicsStateCore({
   state.progress = nearestAfter.index / activeTrackSampleCount;
   state.nearestTrackIndex = nearestAfter.index;
   state.speed = state.velocity.length();
+
+  advanceBrakingTechnique(state, dt, brakeDeceleration, brakeEntrySpeed, driftHeld, perkIds.includes('response-time'));
 
   advanceVehiclePerkRuntimeState({
     state,

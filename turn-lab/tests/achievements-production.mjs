@@ -90,19 +90,19 @@ assert.equal(
   1825,
   'The base catalog must stay separate from production progression balancing'
 );
-assert.equal(ACHIEVEMENTS.length, 72,
-  'Production TURN must expose 55 core achievements plus 17 scoring achievements');
-assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 72,
+assert.equal(ACHIEVEMENTS.length, 74,
+  'Production TURN must expose separate scoring masters and the emergency master');
+assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 74,
   'Production achievement ids must remain unique');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10,
   'GOT STARTED must remain the master of the ten prerequisite Getting Started achievements, not recursively require itself; CATCH THE CHARGE and HEAD START need OVERCHARGE, which comes with DRIFT ATTACK (#1150)');
-assert.equal(totalAvailableTrophies(), 5350,
-  'Eight tracks expose the complete 5,350-trophy supply');
+assert.equal(totalAvailableTrophies(), 4450,
+  'Eight tracks expose the complete 4,450-trophy supply plus six mastery perks');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300,
   'Trophy Road uses the first 2300 trophies while the full catalog retains headroom');
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  5350
+  4450
 );
 assert.ok(ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.trophies)));
 assert.ok(ACHIEVEMENTS.every((achievement) => !Object.hasOwn(achievement, 'points')));
@@ -190,10 +190,12 @@ for (const trackId of TRACK_IDS) {
   }
 }
 
-assert.equal(byId('drift-flow-master')?.trophies, 300);
-assert.equal(byId('drift-flow-master')?.progressMax, TRACK_IDS.length * 2);
-assert.equal(byId('drift-flow-master')?.calibrationPending, false);
-assert.equal(byId('drift-flow-master')?.recommendation, 'Clear both scoring targets on every track.');
+assert.equal(byId('drift-flow-master'), undefined, 'The combined master is retired');
+for (const channel of ['drift', 'flow']) {
+  assert.equal(byId(`${channel}-master`).trophies, 0);
+  assert.equal(byId(`${channel}-master`).progressMax, TRACK_IDS.length);
+  assert.equal(byId(`${channel}-master`).calibrationPending, false);
+}
 
 const scoringUnlockMemory = new Map([[ACHIEVEMENT_STORAGE_KEY, JSON.stringify({
     version: TROPHY_ROAD_STORAGE_VERSION,
@@ -218,10 +220,10 @@ assert.equal(byId('midnight-city-safety')?.description, 'Finish Midnight City wi
 assert.equal(byId('mountain-safety')?.description, 'Finish Mountain without going off-road in under 70 seconds.');
 
 assert.equal(byId('an-army-of-me')?.title, 'AN ARMY OF ME');
-assert.equal(byId('an-army-of-me')?.trophies, 200);
+assert.equal(byId('an-army-of-me')?.trophies, 0);
 assert.match(byId('an-army-of-me')?.description || '', /four saved rivals on every track/i);
 assert.equal(byId('on-course-of-course')?.title, 'ON COURSE, OF COURSE');
-assert.equal(byId('on-course-of-course')?.trophies, 100);
+assert.equal(byId('on-course-of-course')?.trophies, 0);
 assert.match(byId('on-course-of-course')?.description || '', /without going off-road/i);
 assert.match(byId('on-course-of-course')?.recommendation || '', /Countryside < 15 seconds/);
 assert.match(byId('on-course-of-course')?.recommendation || '', /Airport < 20 seconds/);
@@ -255,8 +257,8 @@ assert.equal(TIME_TRIAL_ACHIEVEMENT_IDS.length, TRACK_IDS.length);
 assert.equal(TIME_TRIAL_MASTER_ID, 'faster-than-the-dev');
 assert.equal(byId('faster-than-the-dev')?.progressMax, TRACK_IDS.length,
   'FASTER THAN THE DEV must require every developer target');
-assert.equal(byId('faster-than-the-dev')?.trophies, 300,
-  'FASTER THAN THE DEV must retain the August progression rebalance');
+assert.equal(byId('faster-than-the-dev')?.trophies, 0,
+  'New master completions award a perk instead of additional trophies');
 assert.deepEqual(
   TIME_TRIALS.map(({ trackId, targetSeconds }) => [trackId, targetSeconds]),
   [
@@ -420,9 +422,11 @@ assert.equal(
   DRIVE_BY_EAR_PART_IDS.length,
   'Learning progress must persist even before its achievement unlock is recorded'
 );
-assert.equal(store.unlock('an-army-of-me', { trackId: 'midnight-city' })?.trophies, 200);
-assert.equal(store.unlock('on-course-of-course', { trackId: 'harbor' })?.trophies, 100);
+assert.equal(store.unlock('an-army-of-me', { trackId: 'midnight-city' })?.trophies, 0);
+assert.equal(store.unlock('on-course-of-course', { trackId: 'harbor' })?.trophies, 0);
 assert.equal(store.unlock('save-bella', { trackId: 'countryside', vehicleId: 'firetruck' })?.trophies, 25);
+store.unlock('trust-your-ears');
+store.unlock('listen-closely');
 assert.equal(store.trophyTotal(), 325);
 assert.deepEqual(store.syncRewards().map(({ id }) => id), ['compact'],
   'At 325 trophies only Trophy Road’s first reward, the Compact at 300, has arrived');

@@ -1,3 +1,5 @@
+import { ACHIEVEMENT_PERKS } from '../vehicle/perks.js';
+import { isPerkAvailable } from '../vehicle/perkulator.js';
 import { getTrophyRoadReward } from './trophy-road.js';
 import { cornerMarkMarkup } from '../ui/corner-mark.js';
 import { garageOpenedForCar, pointOutInGarage, suggestInGarage, viewCarWhenGarageOpens } from '../garage/garage-focus.js';
@@ -393,7 +395,10 @@ export function installUnlockIntroductions({
     if (!introduction) return false;
     showing = id;
     title.textContent = introduction.title;
-    copy.replaceChildren(...introduction.copy.map((text) => {
+    const earned = id === 'perkulator' ? ACHIEVEMENT_PERKS.filter((perk) => isPerkAvailable(perk.id)) : [];
+    const paragraphs = [...introduction.copy];
+    if (earned.length) paragraphs.push(`Your completed collections have already earned ${earned.map((perk) => perk.title).join(', ')}. They are ready to install in PERKULATOR.`);
+    copy.replaceChildren(...paragraphs.map((text) => {
       const paragraph = documentRef.createElement('p');
       paragraph.textContent = text;
       return paragraph;
