@@ -17,8 +17,8 @@
   <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
+        "three": "/turn/vendor/three-0.184.0/build/three.module.js",
+        "three/addons/": "/turn/vendor/three-0.184.0/examples/jsm/",
         "/turn/vehicle/catalog.js": "/turn/vehicle/catalog.js?revision=r253-supercar-release",
         "/turn/vehicle/catalog.js?revision=r250-supercar-finish": "/turn/vehicle/catalog.js?revision=r253-supercar-release",
         "/turn/vehicle/car-models.js": "/turn/vehicle/car-models.js?revision=r257-authored-wheel-spin",
@@ -30,13 +30,16 @@
 </head>
 <body>
   <script type="module">
-    import { unlockRewardsForTesting } from '/turn/testing/admin-unlock-sequence.js';
+    import { createAchievementStore } from '/turn/achievements/store.js';
     import { prepareGarage, showGarage } from '/turn/garage/garage.js';
 
     globalThis.__supercarLotVisualReady = false;
     globalThis.__supercarLotVisualFailure = null;
-    // The Supercar and Paintjob are Trophy Road rewards: unlock them for this page.
-    unlockRewardsForTesting();
+    // Only this fixture's live store exposes the two rewards the visual test needs.
+    // No admin mechanism, achievement completion or persistent profile rewrite.
+    const store = createAchievementStore(null);
+    store.state.rewards.unlocked = ['supercar', 'paintjob'];
+    globalThis.__turnAchievements = Object.freeze({ store });
     await prepareGarage();
     void showGarage({
       initialSelection: {

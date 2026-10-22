@@ -127,6 +127,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     }
   };
   const view = createAchievementView({ store, session, utilityGroup });
+  if (globalThis.__turnSessionAdmin) window.addEventListener('turn:admin-updated', () => view.render({ force: true }));
 
   function announceAchievementUpdate(unlocked) {
     if (!unlocked.length) return;

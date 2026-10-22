@@ -95,8 +95,8 @@ export function isPerkAvailable(perkId, storage) {
   const perk = getVehiclePerk(perkId);
   return perk?.installable === true
     && isPerkulatorUnlocked(target)
-    && perk.vehicleIds.some((vehicleId) => isVehicleUnlocked(vehicleId, target)
-      && isVehiclePerkUnlocked(vehicleId, target));
+    && (globalThis.__turnSessionAdmin?.options.rewards || perk.vehicleIds.some((vehicleId) => isVehicleUnlocked(vehicleId, target)
+      && isVehiclePerkUnlocked(vehicleId, target)));
 }
 
 // The perks a car may install: every one PERKULATOR holds but its own.

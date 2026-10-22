@@ -324,7 +324,6 @@ const REWARD_BY_VEHICLE_PERK = new Map(
     .map((reward) => [reward.vehicleId, reward])
 );
 const PREPARED_STORAGE = new WeakSet();
-const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 const LEGACY_VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
 const RIVAL_STORAGE_PREFIX = 'turn-personal-rivals-v1';
 const LEGACY_GHOST_STORAGE_PREFIX = 'turn-three-ghost-v4';
@@ -614,9 +613,13 @@ function hasLegacyProfileEvidence(storage) {
   return hasLegacyRaceProgress(storage) || hasLegacyVehicleChoice(storage);
 }
 
-function hasAdminRewardMarker(storage) {
+// Read-only migration evidence, never an admin activation/gate. Old releases wrote
+// rewards without achievements; without this guard the false-fresh-profile repair
+// would erase those existing saves on their next ordinary startup. Never write or
+// remove the legacy marker, and never derive session privileges from it.
+function hasLegacyAdminSave(storage) {
   try {
-    return storage?.getItem?.(ADMIN_UNLOCK_MARKER) != null;
+    return storage?.getItem?.('turn-admin-unlock-v1') != null;
   } catch (_) {
     return false;
   }
@@ -646,7 +649,7 @@ function cleanTrophyRoadState() {
 }
 
 function repairFalseFreshProfile(state, storage) {
-  if (!state || hasAchievementProgress(state) || hasAdminRewardMarker(storage) || hasLegacyProfileEvidence(storage)) {
+  if (!state || hasAchievementProgress(state) || hasLegacyAdminSave(storage) || hasLegacyProfileEvidence(storage)) {
     return state;
   }
 
@@ -720,6 +723,7 @@ export function readTrophyRoadSnapshot(storage = globalThis.localStorage) {
 
 export function isTrophyRoadRewardUnlocked(rewardId, storage = globalThis.localStorage) {
   if (!REWARD_BY_ID.has(rewardId)) return true;
+  if (globalThis.__turnSessionAdmin?.exposes(REWARD_BY_ID.get(rewardId).type)) return true;
   const liveStore = globalThis.__turnAchievements?.store;
   if (liveStore?.isRewardUnlocked?.(rewardId)) return true;
   return readTrophyRoadSnapshot(storage).unlockedRewardIds.includes(rewardId);
