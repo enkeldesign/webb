@@ -367,10 +367,8 @@ async function phoneFlow(browserType, name) {
   }
 }
 
-// The tester unlock sequence stays reachable with visible controls: where the overview
-// replaces the Track sheet button, its route takes the four records taps, then GIVE
-// FEEDBACK from the ☰ sheet.
-async function unlockWithVisibleControls(page, name) {
+// The retired click sequence is ordinary navigation and opens feedback.
+async function retiredSequenceWithVisibleControls(page, name) {
   for (const trackId of ['countryside', 'cliffside', 'countryside', 'cliffside']) {
     await page.locator(`.roadbook-card[data-track-id="${trackId}"]`).click();
   }
@@ -385,8 +383,10 @@ async function unlockWithVisibleControls(page, name) {
   }
   await page.locator('.turn-home-menu-button').click();
   await page.locator('.m8-home-menu .m8-feedback-button:not(.m8-achievements-button):not(.turn-dbe-training-home)').click();
-  await page.waitForFunction(() => localStorage.getItem('turn-admin-unlock-v1') !== null, null, { timeout: 10000 })
-    .catch(() => { throw new Error(`${name}: the tester unlock sequence cannot be completed with the visible controls`); });
+  assert.equal(await page.evaluate(() => localStorage.getItem('turn-admin-unlock-v1')), null,
+    `${name}: the retired sequence never writes an admin marker`);
+  assert.equal(await page.evaluate(() => Boolean(globalThis.__turnSessionAdmin)), false);
+
 }
 
 async function layoutAt(browserType, name, size, check) {
@@ -501,7 +501,7 @@ try {
     assert.ok(facts.dock.height <= 80, `short landscape: a one-line dock (${facts.dock.height})`);
   });
   await layoutAt(chromium, '820x1180 iPad portrait', { width: 820, height: 1180, isMobile: false }, async (facts, page) => {
-    await unlockWithVisibleControls(page, '820x1180 iPad portrait');
+    await retiredSequenceWithVisibleControls(page, '820x1180 iPad portrait');
     assert.equal(facts.columns, 2);
     assert.equal(facts.overview, true, 'iPad portrait: the overview follows the grid');
     assert.equal(facts.sheetButton, false, 'the overview replaces the Track sheet button');
@@ -547,7 +547,7 @@ try {
       'the overview hands focus to the Track sheet button when the screen shrinks out of it');
     await page.setViewportSize({ width: 1180, height: 820 });
     await page.waitForFunction(() => !document.querySelector('.roadbook-overview').hidden);
-    await unlockWithVisibleControls(page, '1180x820 iPad landscape');
+    await retiredSequenceWithVisibleControls(page, '1180x820 iPad landscape');
   });
   console.log('ROADBOOK lists every track, keeps one clear selection, gates locked tracks, shows each track\'s goals and fits 320px to iPad.');
 } finally {

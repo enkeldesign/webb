@@ -421,7 +421,7 @@ export const CHANGELOG = Object.freeze([
     "entries": [
       [
         "PERKULATOR",
-        "At 2000 trophies, install any perk you have unlocked on another car. SPECTATE and YOUR TURN name each lap’s perks. DRIFT DEMON is now standard on the Sports Car."
+        "At 2000 trophies, install unlocked perks on other cars. SPECTATE and YOUR TURN show each lap’s perks. DRIFT DEMON comes with the Sports Car."
       ],
       [
         "TURN WIKI",
@@ -430,16 +430,7 @@ export const CHANGELOG = Object.freeze([
     ]
   },
   {
-    "date": "18 October 2026",
-    "entries": [
-      [
-        "Completed achievement collections",
-        "Completed collections fold under their master. Choose SHOW to inspect their achievements."
-      ]
-    ]
-  },
-  {
-    "date": "21 October 2026",
-    "entries": [["Achievement collection perks", "Six mastery collections unlock TURBO, ROAD RAGE, HUNTER, PRECISION, LOCKED IN and RESPONSE TIME. DRIFT and FLOW have separate masters. Earned perks wait for PERKULATOR, with rarity filters and shared Garage cards."]]
+    "date": "22 October 2026",
+    "entries": [["Achievement collections", "Collections fold under masters and unlock TURBO, ROAD RAGE, HUNTER, PRECISION, LOCKED IN and RESPONSE TIME for PERKULATOR."]]
   }
 ]);

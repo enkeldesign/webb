@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
 import { createRaceSessionOrchestrator } from '../turn/race/session-orchestrator.js';
-import { announceSteeringCentred, centreTiltSteering, describeStartCentring, noteRecalibrate, startCentringLog } from '../turn/input/tilt-centring.js';
+import { announceSteeringCentred, centreTiltSteering } from '../turn/input/tilt-centring.js';
 
 function element(hidden = false) {
   return { hidden, textContent: '' };
@@ -223,15 +223,6 @@ assert.equal(motion.state.horizonRollReference, 0.1);
 assert.equal(motion.state.neutralPitch, -0.05);
 assert.ok(steadySamples >= 7 && steadySamples <= 9, `The hint stays up long enough to read (${steadySamples} samples)`);
 
-const [steadyStart] = startCentringLog(motion.environment);
-assert.equal(steadyStart.outcome, 'steady', 'The Admin card hears how the start was centred (#1174)');
-assert.ok(Math.abs(steadyStart.fromProvisional + 0.3) < 1e-9, 'And how far that is from the 0.22 s pose');
-// RECALIBRATE soon after says how far off the start left the steering.
-motion.state.targetRoll = 0.15;
-noteRecalibrate(motion.state, motion.environment);
-assert.ok(Math.abs(steadyStart.recalibrate - 0.05) < 1e-9);
-assert.match(describeStartCentring(steadyStart), /^STEADY at 0\.9 s · 17\.2° from the 0\.22 s pose · spread 0\.0° · RECALIBRATE moved it 2\.9°$/);
-
 // #1174: a hand's tremor still counts as steady, and pitch, which does not steer, is
 // not asked to keep still.
 const hand = createHarness();
@@ -243,7 +234,6 @@ const handSamples = runSamples(hand, (i) => {
   hand.state.targetRoll = 0.1 + (i % 2 ? 0.015 : -0.015);
   hand.state.targetPitch = -0.2 + (i % 2 ? 0.06 : -0.06);
 });
-assert.equal(startCentringLog(hand.environment)[0].outcome, 'steady', 'Normal hand tremor is steady');
 assert.ok(handSamples <= 9, `Centred once the hint has been read (${handSamples} samples)`);
 assert.ok(Math.abs(hand.state.neutralRoll - 0.1) < 1e-9, 'On the middle of the last 300 ms');
 
@@ -261,7 +251,6 @@ runSamples(driving, (i) => {
 });
 assert.ok(driving.order.includes(CENTRED), 'Driving off early still says the steering is centred');
 assert.equal(driving.state.neutralRoll, -0.3, 'Once the car moves, the neutral is the pose it was driven off in');
-assert.equal(startCentringLog(driving.environment)[0].outcome, 'car moved');
 
 const restless = createHarness();
 await restless.orchestrator.requestMotion();
@@ -273,7 +262,6 @@ assert.ok(restless.order.includes(CENTRED), 'A phone that never keeps still is c
 assert.ok(Math.abs(restless.state.neutralRoll) < 1e-9, 'Never steady: centred on the middle of the last 300 ms');
 assert.equal(restlessSamples, 22, 'The start gives up waiting after about two and a half seconds');
 assert.equal(restless.order.filter((entry) => entry === CENTRED).length, 1, 'Said once');
-assert.equal(startCentringLog(restless.environment)[0].outcome, 'gave up');
 
 // #1174: a pause during the start does not lose the centring. A race pauses only once
 // the car is moving (race-pause.js), so nothing runs while paused and RESUME finishes the
@@ -332,7 +320,6 @@ function pausableHarness() {
   assert.equal(early.order.filter((entry) => entry === HOLD).length, 1, 'Without asking for the grip again');
   assert.equal(early.order.filter((entry) => entry === CENTRED).length, 1, 'STEERING CENTRED, once');
   assert.equal(early.state.neutralRoll, 0.25, 'On the pose the player races on in');
-  assert.equal(startCentringLog(early.environment)[0].outcome, 'car moved');
   assert.equal(early.raceListeners.size, 0, 'Done, it stops listening');
 
   // Driven off and paused between two samples, before the start saw the car move.

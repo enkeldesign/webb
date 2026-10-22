@@ -30,7 +30,6 @@ for (const [label, source] of [['TURN', index]]) {
 const requiredProductionBootstraps = [
   './ui/about-history-bootstrap-r165.js',
   './ui/startup-screen-reader-handoff-r529.js',
-  './testing/admin-unlock-sequence.js',
   './ui/low-graphics-setting.js',
   './render/skid-continuity-r198.js',
   './tracks/cliffside-village.js',

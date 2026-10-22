@@ -1,5 +1,5 @@
 {
-  "release": "20261021-r486",
+  "release": "20261022-r487",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -374,10 +374,8 @@
     "/turn/surfaces.css",
     "/turn/sw.js",
     "/turn/telemetry/client.js",
-    "/turn/testing/admin-unlock-sequence.js",
-    "/turn/testing/route-test-hud.js",
-    "/turn/testing/swoosh-listening-test.js",
-    "/turn/testing/swoosh-sound-picker.js",
+    "/turn/testing/session-admin-panel.js",
+    "/turn/testing/session-admin.js",
     "/turn/three-runtime.js",
     "/turn/track-identity.js",
     "/turn/track-intro.css",
