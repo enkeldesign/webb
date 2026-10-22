@@ -177,10 +177,12 @@
 }
 
 .boost-hud.has-overcharge > div {
-  background:
-    var(--turn-boost-overcharge) left / calc((100% - var(--boost-base-width)) / 2) 100% no-repeat,
-    var(--turn-boost-overcharge) right / calc((100% - var(--boost-base-width)) / 2) 100% no-repeat,
-    color-mix(in srgb, var(--turn-surface-page) var(--turn-boost-bar-track-opacity), transparent);
+  background: var(--turn-boost-overcharge);
+}
+
+/* Converted fuel occupies the base tank. With no bonus, empty space stays empty. */
+.boost-hud.has-converted-overcharge:not(.has-bonus-overcharge) > div {
+  background: color-mix(in srgb, var(--turn-surface-page) var(--turn-boost-bar-track-opacity), transparent);
 }
 
 .boost-hud.has-overcharge i {
@@ -197,6 +199,7 @@
   inset: 0 auto 0 calc(var(--boost-base-charge, 100%) - var(--boost-converted, 0%));
   width: var(--boost-converted, 0%);
   background: var(--turn-boost-overcharge);
+  box-shadow: inset 2px 0 var(--turn-outline);
 }
 
 .boost-hud.has-converted-overcharge i {

@@ -424,3 +424,6 @@ assert.ok(Math.abs(boostStep('turbo', true, 200) - 80 * (1 + 0.32 * 2.5)) < 1e-9
 assert.equal(boostStep('turbo', false, 200), boostStep('', false, 200));
 
 console.log(`TURN ${release.id} connected DRIFT LOCK, 50% larger Boost tanks, 2.4x→3.6x recharge balance, reliable LOCK gradient, restart refill and separate reverse passed.`);
+
+assert.match(gameplayCss, /\.boost-hud\.has-overcharge > div \{\s*background: var\(--turn-boost-overcharge\);/,
+  'Restore the full r482 purple treatment, not edge slices over a pale track');

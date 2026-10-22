@@ -6,9 +6,13 @@ export const ROAD_RAGE_MIN_SPEED = 8;
 // The canonical tank keeps charge as its TOTAL base fill. converted is a purple
 // portion of that fill, never extra fuel. The existing 0.6-second OVERCHARGE bonus
 // remains separate. All quantities use the same BOOST drain path, OC first.
-export function convertBoostTank(tank, dt, { enabled, requested, offRoad, collided, speed }) {
-  if (!enabled || requested || offRoad || collided || speed < ROAD_RAGE_MIN_SPEED
-    || tank.charge < 0.999999 || !(tank.overcharge > 0 || tank.converted > 0)) return;
+export function canConvertBoostTank(tank, { enabled, requested, offRoad, collided, speed }) {
+  return Boolean(enabled && !requested && !offRoad && !collided && speed >= ROAD_RAGE_MIN_SPEED
+    && tank.charge >= 0.999999 && (tank.overcharge > 0 || tank.converted > 0));
+}
+
+export function convertBoostTank(tank, dt, conditions) {
+  if (!canConvertBoostTank(tank, conditions)) return;
   tank.converted = Math.min(tank.charge, tank.converted + Math.max(0, dt) / ROAD_RAGE_CONVERSION_SECONDS);
 }
 

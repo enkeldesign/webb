@@ -12,7 +12,7 @@ import {
   resolveVehicleOverchargedAccelerationMultiplier
 } from '../../turn/vehicle/physics.js';
 import { PERK_RARITY, VEHICLE_PERKS, getVehiclePerk, originalVehiclePerk } from '../../turn/vehicle/perks.js';
-import { consumeBoostTank, convertBoostTank, decayConvertedBoost, ROAD_RAGE_CONVERSION_SECONDS } from '../../turn/input/boost-tank.js';
+import { canConvertBoostTank, consumeBoostTank, convertBoostTank, decayConvertedBoost, ROAD_RAGE_CONVERSION_SECONDS } from '../../turn/input/boost-tank.js';
 import {
   CARRY_ON_LOCK_DRAG_ADD,
   CLEAN_EXIT_CONTROL_BONUS,
@@ -561,6 +561,34 @@ for (const blocked of [{ enabled: false }, { requested: true }, { offRoad: true 
 for (const tank of [{ charge: 0.9, overcharge: 0.5, converted: 0 }, { charge: 1, overcharge: 0, converted: 0 }]) {
   convertBoostTank(tank, 2, cleanConversion);
   assert.equal(tank.converted, 0, 'A partial tank or missing seed cannot convert');
+}
+// Sustained clean DRIFT must not alternate recharge/decay across the full cue.
+// Exercise the same hold decision used by gameplay-controls before either decay.
+for (const fps of [30, 60, 120]) {
+  const tank = { charge: 1, overcharge: 0.01, converted: 0 };
+  let previousCharge = tank.charge;
+  let fullCues = 0;
+  for (let step = 0; step < fps * 16; step += 1) {
+    const converting = canConvertBoostTank(tank, cleanConversion);
+    assert.equal(converting, true, 'A tiny seed survives sustained conversion');
+    decayConvertedBoost(tank, 1 / fps, converting);
+    const before = tank.converted;
+    convertBoostTank(tank, 1 / fps, cleanConversion);
+    assert.ok(tank.converted >= before, 'The converted segment never goes backwards');
+    if (previousCharge < 0.999 && tank.charge >= 0.999) fullCues += 1;
+    previousCharge = tank.charge;
+    assert.equal(tank.charge, 1);
+    assert.equal(tank.overcharge, 0.01);
+  }
+  assert.equal(tank.converted, 1);
+  assert.equal(fullCues, 0, 'Conversion never retriggers the full-tank cue');
+  for (const blocked of [{ requested: true }, { offRoad: true }, { collided: true }, { speed: 7.99 }]) {
+    assert.equal(canConvertBoostTank(tank, { ...cleanConversion, ...blocked }), false);
+  }
+  tank.charge = 0.999;
+  assert.equal(canConvertBoostTank(tank, cleanConversion), false, 'Below full cannot convert');
+  tank.charge = 1;
+  assert.equal(canConvertBoostTank(tank, cleanConversion), true, 'Clean full tank resumes conversion');
 }
 // Consume bonus OC, then converted base fuel, then ordinary fuel, without a lost step
 // at resource boundaries. TURBO accelerates every part of the same tank's burn.

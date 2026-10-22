@@ -7,7 +7,7 @@ import {
 } from '../input/drift-lock.js?revision=r218-boost-balance';
 import { raceNow } from '../race/race-clock.js';
 import { activeVehiclePerkIds } from '../vehicle/perk-runtime.js?revision=r233-graduated';
-import { consumeBoostTank, convertBoostTank, decayConvertedBoost } from '../input/boost-tank.js';
+import { canConvertBoostTank, consumeBoostTank, convertBoostTank, decayConvertedBoost } from '../input/boost-tank.js';
 import { REPLAY_CONTROL } from '../race/replay-inputs.js';
 import {
   BOOST_OVERCHARGE_PHASE,
@@ -725,7 +725,7 @@ function installGameplayUi() {
     boostHud.style.setProperty('--boost-base-width', '100%');
     boostHud.style.setProperty('--boost-converted', '0%');
     boostHud.style.setProperty('--boost-base-charge', '100%');
-    boostHud.classList.remove('has-converted-overcharge');
+    boostHud.classList.remove('has-converted-overcharge', 'has-bonus-overcharge');
     boostHud.setAttribute('aria-valuenow', '100');
     boostHud.setAttribute('aria-valuetext', '100 percent charged.');
     driveStack.classList.toggle('is-drift-ready', driveZone === 'drift');
@@ -1205,6 +1205,7 @@ function installGameplayUi() {
     boostTank.converted = boostConvertedCharge;
     boostTank.burningOvercharge = false;
 
+    let converting = false;
     if (active) {
       consumeBoostTank(boostTank, dt, getBoostDrainSeconds(), perkState?.vehicleEffectiveTuning?.boostConsumptionMultiplier);
       boostCharge = boostTank.charge;
@@ -1220,6 +1221,15 @@ function installGameplayUi() {
         boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS + perkRefill);
       }
 
+      boostTank.charge = boostCharge;
+      conversion.enabled = overchargeOn && perkState?.running === true && perkIds.includes('road-rage');
+      conversion.requested = boostRequested;
+      conversion.offRoad = perkState?.offRoad === true;
+      conversion.collided = perkState?.collided === true;
+      conversion.speed = Number(perkState?.speed) || 0;
+      // Decide from the canonical full tank before any loose-fuel decay. Conversion
+      // holds its seed and converted portion, like GAS, without creating fuel.
+      converting = canConvertBoostTank(boostTank, conversion);
       if (overchargeOn && (boostCharge >= 0.999999 || boostOvercharge > 0)) {
         const runtimeState = globalThis.__turnRuntime?.state;
         const slipAngle = resolveBoostSlipAngle({
@@ -1235,7 +1245,7 @@ function installGameplayUi() {
           amount: boostOvercharge,
           phase: boostOverchargePhase,
           dt,
-          zone: resourceZone,
+          zone: converting ? 'gas' : resourceZone,
           qualifyingDrift,
           rechargeMultiplier
         });
@@ -1245,12 +1255,7 @@ function installGameplayUi() {
       }
       boostTank.charge = boostCharge;
       boostTank.overcharge = boostOvercharge;
-      decayConvertedBoost(boostTank, dt, resourceZone === 'gas');
-      conversion.enabled = overchargeOn && perkState?.running === true && perkIds.includes('road-rage');
-      conversion.requested = boostRequested;
-      conversion.offRoad = perkState?.offRoad === true;
-      conversion.collided = perkState?.collided === true;
-      conversion.speed = Number(perkState?.speed) || 0;
+      decayConvertedBoost(boostTank, dt, converting || resourceZone === 'gas');
       convertBoostTank(boostTank, dt, conversion);
       boostCharge = boostTank.charge;
       boostConvertedCharge = boostTank.converted;
@@ -1262,7 +1267,7 @@ function installGameplayUi() {
 
     const boosting = boostRequested && !boostExhausted && (boostOvercharge > 0 || boostCharge > 0.001);
     const totalOvercharge = boostOvercharge + boostConvertedCharge;
-    const overchargeCaught = totalOvercharge > 0 && resourceZone === 'gas' && !boosting;
+    const overchargeCaught = totalOvercharge > 0 && (converting || resourceZone === 'gas') && !boosting;
     const overchargeVolatile = totalOvercharge > 0 && !overchargeCaught && !boosting;
     globalThis.__turnBoostActive = boosting;
     globalThis.__turnBoostCharge = boostCharge;
@@ -1297,7 +1302,7 @@ function installGameplayUi() {
       });
       boostOutcomeAttempt = null;
     }
-    if (overchargeCaught && !previousOverchargeCaughtForOutcome) {
+    if (overchargeCaught && resourceZone === 'gas' && !previousOverchargeCaughtForOutcome) {
       publishDrivingOutcome('turn:overcharge-catch', {
         amount: totalOvercharge,
         at: now
@@ -1322,7 +1327,9 @@ function installGameplayUi() {
     const ariaPercent = Math.round(boostCharge * 100);
     let ariaValueText;
     if (hasOvercharge) {
-      const overchargeStateLabel = overchargeCaught
+      const overchargeStateLabel = converting
+        ? 'ROAD RAGE converting BOOST to OVERCHARGE'
+        : overchargeCaught
         ? 'caught and held with GAS'
         : boosting
           ? 'being used'
@@ -1409,6 +1416,7 @@ function installGameplayUi() {
       boostHud.style.setProperty('--boost-converted', `${(boostConvertedCharge * 100).toFixed(1)}%`);
       boostHud.style.setProperty('--boost-base-charge', chargePercent);
       boostHud.classList.toggle('has-converted-overcharge', boostConvertedCharge > 0);
+      boostHud.classList.toggle('has-bonus-overcharge', boostOvercharge > 0);
       publishedChargePercent = chargePercent;
     }
     if (boostVisualDirty || meterValue !== publishedMeterValue) {
