@@ -1042,7 +1042,11 @@ try {
       return { armed: queue.hasHint('garage-all-cars'), pointedOut: queue.pointedOut('garage-all-cars') };
     });
     assert.deepEqual(await queueState(), { armed: false, pointedOut: false }, 'Not armed in automated runs by itself');
-    await page.evaluate(() => globalThis.__turnNextHome.unlockIntroductions.queue.armHint('garage-all-cars'));
+    await page.evaluate(() => {
+      globalThis.__turnNextHome.unlockIntroductions.queue.armHint('garage-all-cars');
+      // Resume the ordinary Home lifecycle after changing the test queue directly.
+      window.dispatchEvent(new CustomEvent('turn:home-shown'));
+    });
     assert.deepEqual(await queueState(), { armed: true, pointedOut: false });
     await page.evaluate(() => { void globalThis.__turnNextHome.continueToTrack(); });
     await page.waitForFunction(() => document.querySelector('.garage-all-cars-button')?.classList.contains('is-introduced'), null, { timeout: 60000 });
