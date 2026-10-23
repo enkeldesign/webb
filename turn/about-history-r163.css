@@ -78,12 +78,13 @@
   display: block;
 }
 
-.m8-about-history {
-  /* It opens a reader, as ALL CARS opens a sheet (#1268). */
-  background: var(--turn-action-sheet);
+/* Both open a reader and are neutral: the dialog's own button surface, in the app and
+   on the website alike. */
+.m8-about-actions > :is(.m8-about-history, .m8-about-accessibility) {
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
 }
 
-.m8-about-accessibility,
 .m8-about-design-system {
   background: var(--m8-blue);
 }
