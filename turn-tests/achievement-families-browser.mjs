@@ -45,9 +45,12 @@ try {
     return a.store.trophyTotal();
   });
   const master = page.locator('[data-achievement-family="faster-than-the-dev"]');
-  // The unread decoration keeps a perk master's reward line, never "0 trophies" (#1247).
-  const masterReward = (await page.locator('[data-achievement-id="faster-than-the-dev"] .turn-achievement-trophies').first().textContent()).trim();
-  assert.match(masterReward, /^(Collection reward earned · revealed with PERKULATOR|PERK: TURBO · Install in PERKULATOR)$/, masterReward);
+  // A perk master's reward has a row of its own, never "0 trophies" (#1247), and no
+  // trophy-style line on the meta row (#1274).
+  const masterCard = page.locator('[data-achievement-id="faster-than-the-dev"]').first();
+  assert.equal(await masterCard.locator(':scope > .turn-achievement-copy > .turn-achievement-meta .turn-achievement-trophies').count(), 0);
+  const masterReward = (await masterCard.locator(':scope > .turn-achievement-copy > .turn-achievement-reward').textContent()).replace(/\s+/g, ' ').trim();
+  assert.match(masterReward, /^REWARD: (Earned, revealed with PERKULATOR|Rarity MYTHIC TURBO perk Install in PERKULATOR)$/, masterReward);
   const toggle = master.locator('[data-achievement-disclosure]');
   const children = master.locator('.turn-achievement-children');
   assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
@@ -80,8 +83,33 @@ try {
   await page.locator('[data-achievement-id="airport-sprint"]').waitFor({ state: 'visible' });
   assert.equal(await page.locator('[data-achievement-id="airport-sprint"]').isVisible(), true, 'Track-scoped children remain reachable');
   assert.equal(await page.evaluate(() => globalThis.__turnAchievements.store.trophyTotal()), total, 'Visibility never changes trophies');
+
+  // #1274: once PERKULATOR reveals it, a master's PERK reads as a reward: REWARD:, the
+  // rarity in words on its chip, the perk's name and where it goes. At 320px portrait the
+  // row wraps and nothing scrolls sideways.
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.evaluate(async () => {
+    const achievements = globalThis.__turnAchievements;
+    await new Promise((resolve) => {
+      achievements.dialog.addEventListener('close', resolve, { once: true });
+      achievements.close();
+    });
+    achievements.store.grantBonus('perkulator-reveal-test', 2500);
+    achievements.store.syncRewards();
+    achievements.open();
+  });
+  const revealed = page.locator('[data-achievement-id="drift-master"] > .turn-achievement-copy > .turn-achievement-reward').first();
+  await revealed.waitFor({ state: 'visible' });
+  assert.equal((await revealed.textContent()).replace(/\s+/g, ' ').trim(), 'REWARD: Rarity EPIC PRECISION perk Install in PERKULATOR');
+  assert.equal(await revealed.locator('.turn-pr-chip.is-epic').count(), 1, 'The rarity chip is PERKULATOR’s');
+  const overflow = await page.evaluate(() => {
+    const dialog = globalThis.__turnAchievements.dialog;
+    const wide = [...dialog.querySelectorAll('.turn-achievement-reward')].filter((row) => row.scrollWidth > row.clientWidth + 1).length;
+    return { page: document.documentElement.scrollWidth - document.documentElement.clientWidth, dialog: dialog.scrollWidth - dialog.clientWidth, wide };
+  });
+  assert.deepEqual(overflow, { page: 0, dialog: 0, wide: 0 }, '320px: PERK rewards wrap without sideways scroll');
   assert.deepEqual(errors, []);
-  console.log('Achievement disclosure browser: keyboard, focus, ALL/category/UNLOCKED/track filters and totals pass.');
+  console.log('Achievement disclosure browser: keyboard, focus, ALL/category/UNLOCKED/track filters, totals and the 320px PERK reward row pass.');
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.close(resolve));

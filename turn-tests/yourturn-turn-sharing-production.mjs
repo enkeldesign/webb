@@ -105,7 +105,7 @@ assert.match(coveredRendering, /main\.js keeps the paused frame/,
 
 assert.doesNotMatch(shareCss, /\.turn-yourturn-track-(?:share|slot)/, 'The old track-card SHARE overlay is gone');
 assert.match(shareCss, /\.lap-result-yourturn-share/);
-assert.match(shareCss, /\.turn-yourturn-share-submit \{\s*background: var\(--turn-action-primary, #ff8caf\);/,
+assert.match(shareCss, /\.turn-yourturn-share-submit \{\s*background: var\(--turn-action-primary, #7dd\);/,
   'SHARE YOUR TURN is the share sheet\'s one primary action (#1243)');
 assert.match(shareCss, /\.turn-yourturn-share-back \{\s*background: var\(--turn-action-navigation, #ff7b54\);/,
   'Back is the navigation role (#1238)');

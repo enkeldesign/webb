@@ -57,8 +57,7 @@ export function vehiclePerkPresentation(vehicleId, perk) {
 // one installed beside it. "Torque + Driftage"; empty when it ran none.
 export function lapPerksLabel(perks) {
   return [perks?.original, perks?.installed]
-    .map((id) => getVehiclePerk(id)?.title)
+    .map((id) => getVehiclePerk(id)?.name)
     .filter(Boolean)
-    .map((title) => title.toLocaleLowerCase('en').replace(/(^|\s)\p{L}/gu, (letter) => letter.toLocaleUpperCase('en')))
     .join(' + ');
 }

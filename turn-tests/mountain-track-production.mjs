@@ -19,7 +19,6 @@ import { getTrackPaceNotes as getBaseTrackPaceNotes } from '../turn/tracks/pace-
 import { MOUNTAIN_LONG_CHECKPOINTS } from '../turn/race/lap-system-r86.js';
 import { TROPHY_ROAD_REWARDS, rewardForTrack } from '../turn/progression/trophy-road.js';
 import { TRACK_COLOR_CUES } from '../turn/accessibility/color-cues.js';
-import { TRACK_COLOR_RULES } from '../turn/achievements/chromatic-camouflage-r183.js';
 import { resolveWorldCollisionState } from '../turn/race/world-collision.js';
 import { resolveVehicleShoulderDragScale } from '../turn/vehicle/physics.js';
 import { TRACTION_MIN_OFFROAD_PENALTY } from '../turn/vehicle/perk-runtime.js';
@@ -286,7 +285,6 @@ assert.equal(TROPHY_ROAD_REWARDS.at(-1)?.id, 'supercar');
 assert.match(trophyGate, /rewardForTrack\(trackId\)/);
 assert.doesNotMatch(trophyGate, /trackId === ['"]mountain['"]/);
 assert.equal(TRACK_COLOR_CUES.mountain, 'blue');
-assert.deepEqual(TRACK_COLOR_RULES.mountain, { hueMin: 206, hueMax: 230, name: 'blue' });
 
 console.log(`TURN long MOUNTAIN production contract passed: ${closedLength(MOUNTAIN_CONTROL_POINTS).toFixed(0)} control units, 2160 samples, 24 checkpoints, fresh rival namespace.`);
 

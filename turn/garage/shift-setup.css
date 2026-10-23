@@ -212,7 +212,7 @@
 
 .garage-shift-cancel { background: var(--turn-action-navigation, #ff7b54); }
 .garage-shift-deactivate { margin-right: auto; background: var(--turn-action-utility, var(--turn-surface-page)); }
-.garage-shift-save { background: var(--turn-action-primary, #ff4fa3); }
+.garage-shift-save { background: var(--turn-action-primary, #7dd); }
 .garage-shift-save:disabled { opacity: .42; }
 
 @keyframes turn-shift-lever-constraint {

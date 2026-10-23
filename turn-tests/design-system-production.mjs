@@ -69,7 +69,8 @@ const primitivePalette = new Map([
   ['--turn-green-100', '#c8f5d0'],
   ['--turn-orange-500', '#ff7b54'],
   ['--turn-orange-200', '#ffb89f'],
-  ['--turn-orange-100', '#ffd0ae']
+  ['--turn-orange-100', '#ffd0ae'],
+  ['--turn-teal-200', '#7dd']
 ]);
 
 assert.equal(
@@ -87,7 +88,9 @@ for (const [token, value] of primitivePalette) {
 const semanticMappings = new Map([
   ['--turn-surface-page', '--turn-paper'],
   ['--turn-surface-raised', '--turn-white'],
-  ['--turn-action-primary', '--turn-pink-200'],
+  // #1268: teal is primary and the selected form control; pink opens a sheet.
+  ['--turn-action-primary', '--turn-teal-200'],
+  ['--turn-action-sheet', '--turn-pink-200'],
   ['--turn-action-utility', '--turn-surface-page'],
   ['--turn-action-information', '--turn-blue-500'],
   ['--turn-action-game', '--turn-blue-500'],
@@ -97,7 +100,7 @@ const semanticMappings = new Map([
   ['--turn-action-reset', '--turn-red-200'],
   ['--turn-action-navigation', '--turn-orange-500'],
   ['--turn-form-control-idle', '--turn-surface-page'],
-  ['--turn-form-control-selected', '--turn-pink-500'],
+  ['--turn-form-control-selected', '--turn-teal-200'],
   ['--turn-form-control-focus', '--turn-blue-500'],
   ['--turn-disclosure-trigger', '--turn-blue-300'],
   ['--turn-disclosure-panel', '--turn-surface-page'],
@@ -134,6 +137,9 @@ for (const [semanticToken, primitiveToken] of semanticMappings) {
 // keeps the casing of what it says.
 assert.match(tokens, /:where\(button, \[role="button"\], input:is\(\[type="button"\], \[type="submit"\], \[type="reset"\]\), a\.turn-pr-button\) \{\s*text-transform: uppercase;/);
 assert.match(tokens, /:where\(\s*\.turn-pr-card, \.garage-car-card, \.garage-perk-card[\s\S]*?\) \{\s*text-transform: none;/);
+// Close controls stay orange navigation; teal is never a close (CODEX on #1279).
+assert.match(await fs.readFile(new URL('../turn/spectate-v3.css', import.meta.url), 'utf8'),
+  /\.spectate-close \{[^}]*background: var\(--turn-action-navigation\) !important;/);
 // Only ever one primary action (#1243): SHARE takes the role of its place, so it has no
 // token of its own.
 assert.doesNotMatch(tokens, /--turn-action-share/, 'SHARE is primary or utility by its place');

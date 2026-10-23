@@ -219,8 +219,8 @@ html[data-theme="dark"] .garage-bar {
   padding: 0;
   border: var(--turn-pr-rule);
   border-radius: 50%;
-  /* Yellow, like ALL CARS: every way to another car shares one colour. */
-  background: var(--turn-yellow-600, #ffbd12);
+  /* Pink, like ALL CARS: every way to another car shares one colour (#1268). */
+  background: var(--turn-action-sheet, #ff8caf);
   box-shadow: none;
   color: var(--turn-ink);
   font-size: 1.75rem;
@@ -915,6 +915,20 @@ html[data-theme="dark"] .garage-bar {
   box-shadow: var(--turn-pr-shadow);
 }
 
+/* A locked choice (#1274): the same card on the page surface, not a control. LOCKED and
+   how it unlocks are in words; the dashed rule only supports them. */
+.garage-install-perk-option.is-locked {
+  border-style: dashed;
+  background: var(--turn-surface-page);
+  cursor: default;
+}
+
+.garage-install-perk-unlock {
+  font-size: var(--turn-pr-type-spec);
+  font-weight: 800;
+  line-height: 1.4;
+}
+
 .garage-install-perk-copy {
   font-size: var(--turn-pr-type-body);
   line-height: 1.4;
@@ -1430,6 +1444,7 @@ html[data-theme="dark"] .garage-bar {
 
 .garage-perk-filters { margin-block: 14px; }
 .garage-perk-filters button[aria-pressed="true"]::before { content: '✓ '; }
+.garage-perk-filters [data-perk-rarity="common"][aria-pressed="true"] { background: var(--turn-rarity-common); color: var(--turn-ink); }
 .garage-perk-filters [data-perk-rarity="rare"][aria-pressed="true"] { background: var(--turn-rarity-rare); color: var(--turn-ink); }
 .garage-perk-filters [data-perk-rarity="epic"][aria-pressed="true"] { background: var(--turn-rarity-epic); color: var(--turn-ink); }
 .garage-perk-filters [data-perk-rarity="mythic"][aria-pressed="true"] { background: var(--turn-rarity-mythic); color: var(--turn-ink); }

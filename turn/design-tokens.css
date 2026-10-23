@@ -38,6 +38,8 @@
 
   --turn-violet-200: #d0bfff;
 
+  --turn-teal-200: #7dd;
+
   /* Theme roles (#1067). Neutral surfaces and the ink on them change with the theme;
      anything on a semantic colour keeps --turn-ink. Hard shadows have their own colour,
      so they stay an elevation cue in both themes. */
@@ -58,7 +60,9 @@
   --turn-shadow-frame-inner: inset 0 0 0 1px var(--turn-frame-inner-edge-color);
 
   /* Semantic UI roles. */
-  --turn-action-primary: var(--turn-pink-200);
+  /* Teal is the primary action and the selected form control (#1268); pink opens a sheet. */
+  --turn-action-primary: var(--turn-teal-200);
+  --turn-action-sheet: var(--turn-pink-200);
   --turn-action-utility: var(--turn-surface-page);
   --turn-action-information: var(--turn-blue-500);
   --turn-accessibility-mark: #154F91;
@@ -74,7 +78,7 @@
 
   /* Native form and disclosure roles. */
   --turn-form-control-idle: var(--turn-surface-page);
-  --turn-form-control-selected: var(--turn-pink-500);
+  --turn-form-control-selected: var(--turn-teal-200);
   --turn-form-control-focus: var(--turn-blue-500);
   --turn-disclosure-trigger: var(--turn-blue-300);
   --turn-disclosure-panel: var(--turn-surface-page);
@@ -377,8 +381,8 @@
 
 /* Display P3 accents. Same OKLab lightness and hue as the sRGB values above, with
    chroma raised (up to 25%) inside the P3 gamut; contrast with ink changes by at most
-   0.2 and every pair stays above WCAG AA. Pink, the primary action, is the exact P3
-   equivalent of its sRGB value: raised, it was far louder than every other accent.
+   0.2 and every pair stays above WCAG AA. Pink is the exact P3 equivalent of its sRGB
+   value: raised, it was far louder than every other accent.
    Paper, ink and tints stay sRGB. Role tokens inherit the upgrade through var(). */
 /* Button labels are CAPS (#1269), as a presentation rule: source strings and accessible
    names keep their natural casing. Zero specificity, so a component's own casing wins.

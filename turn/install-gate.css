@@ -99,7 +99,7 @@ html.turn-standalone .install-gate,
 }
 
 .install-primary {
-  background: var(--pink);
+  background: var(--turn-action-primary);
 }
 
 .install-secondary {

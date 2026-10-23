@@ -13,7 +13,7 @@ const garageCarsSource = await fs.readFile(new URL('../turn/garage/garage-cars.j
 const physicsSource = await fs.readFile(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8');
 
 assert.match(catalogSource, /\['tractor', 'Tractor', 'car', \{ speed: 1, acceleration: 1, control: 5, drift: 1, boostPower: 5, boostDuration: 5 \}/);
-assert.match(perksSource, /id: 'smv',\s*title: 'SMV',\s*vehicleIds: \['tractor'\][\s\S]*blank screen and non-visual driving practice/);
+assert.match(perksSource, /id: 'smv',\s*title: 'SMV',\s*name: 'SMV',\s*vehicleIds: \['tractor'\][\s\S]*blank screen and non-visual driving practice/);
 assert.match(catalogSource, /tractor: Object\.freeze\(\{ fallback: '#4f7f36' \}\)/);
 assert.match(catalogSource, /tractor: Object\.freeze\(\{ fallback: '#666000' \}\)/);
 assert.match(garageCarsSource, /GARAGE_CAR_ORDER = Object\.freeze\(\[\s*'classic',\s*'tractor',/,

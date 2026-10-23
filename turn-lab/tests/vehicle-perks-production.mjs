@@ -7,6 +7,8 @@ import {
 } from '../../turn/vehicle/catalog.js';
 import { resolveVehiclePerkStatusFeedback } from '../../turn/vehicle/perk-presentation.js';
 import {
+  SMV_SPEED_LIMITS_KMH,
+  getSmvPropulsiveSpeedLimit,
   getVehicleSpeedLimit,
   resolveOverchargedControlMultiplier,
   resolveVehicleOverchargedAccelerationMultiplier
@@ -339,8 +341,8 @@ assert.equal(resolveVehiclePerkStatusFeedback({
   perkId: 'full-tank', previousProgress: 1, nextProgress: 1
 }), null, 'Status feedback must fire only on threshold crossings');
 assert.match(mainSource,
-  /resolveVehiclePerkStatusFeedback\([\s\S]*previousVehiclePerkProgress[\s\S]*state\.vehiclePerkProgress[\s\S]*showCompactRacePill\(perkStatusFeedback, \{\s*tone: 'blue'/,
-  'Dynamic perk milestones must use the shared compact blue race cue lane');
+  /resolveVehiclePerkStatusFeedback\([\s\S]*previousVehiclePerkProgress[\s\S]*state\.vehiclePerkProgress[\s\S]*showCompactRacePill\(originalPerkFeedback, \{ perkId: state\.vehiclePerkRuntimeOriginalId \}\)[\s\S]*showCompactRacePill\(installedPerkFeedback, \{ perkId: state\.vehiclePerkRuntimeInstalledId \}\)/,
+  'Dynamic perk milestones use the shared compact race cue lane, in the colour of the perk that raised them (#1273)');
 
 // GRADUATED builds one readable stage at a time from the current base and earns
 // genuinely endgame conditional ceilings without mutating Learner Car’s 18 points.
@@ -496,7 +498,8 @@ const PERK_TABLE = {
   traction: ['TRACTION', ['convertible'], 'rare', true],
   'drift-demon': ['DRIFT DEMON', ['sedan-sports'], 'rare', true],
   'carry-on': ['CARRY ON', ['van'], 'rare', true],
-  driftage: ['DRIFTAGE', ['vintage-racer'], 'epic', true],
+  // #1273: DRIFTAGE defines the Vintage Racer; SMV is slow practice for any car.
+  driftage: ['DRIFTAGE', ['vintage-racer'], 'legendary', false],
   'apex-grip': ['APEX GRIP', ['race'], 'epic', true],
   'full-tank': ['FULL TANK', ['suv'], 'epic', true],
   torque: ['TORQUE', ['truck'], 'epic', true],
@@ -506,7 +509,7 @@ const PERK_TABLE = {
   overdrive: ['OVERDRIVE', ['race-future'], 'legendary', false],
   'flow-shift': ['FLOW SHIFT', ['supercar'], 'legendary', false],
   sirens: ['SIRENS', ['firetruck', 'police', 'ambulance'], 'legendary', false],
-  smv: ['SMV', ['tractor'], 'legendary', false],
+  smv: ['SMV', ['tractor'], 'common', true],
   'twitchy-turny': ['TWITCHY TURNY', ['toy-racer'], 'legendary', false]
 };
 assert.deepEqual(VEHICLE_PERKS.map(({ id }) => id).sort(), Object.keys(PERK_TABLE).sort(), 'Sixteen perks, each id once');
@@ -519,7 +522,7 @@ for (const [id, [title, vehicleIds, rarity, installable]] of Object.entries(PERK
   assert.ok(Object.isFrozen(perk) && Object.isFrozen(perk.vehicleIds));
   for (const vehicleId of vehicleIds) assert.equal(originalVehiclePerk(vehicleId), perk, `${vehicleId} comes with ${title}`);
 }
-assert.equal(VEHICLE_PERKS.filter(({ installable }) => installable).length, 8, 'Eight perks may be installed on another car');
+assert.equal(VEHICLE_PERKS.filter(({ installable }) => installable).length, 8, 'Eight perks may be installed on another car: SMV in, DRIFTAGE out (#1273)');
 for (const car of CAR_CATALOG) {
   assert.equal(car.perk, originalVehiclePerk(car.id), `${car.name}'s perk is its entry in the perk table`);
   // A perk's fixed values are part of its car's tuning, under STANDARD and SHIFT alike.
@@ -727,13 +730,23 @@ assert.deepEqual([demonDriftage.driftDragAdd, demonDriftage.driftSpeedMultiplier
 const vintageDriftTwo = deriveVehicleTuning({ ...vintage.stats, drift: 2 });
 const shiftedVintage = resolveVehiclePerkTuning({ state: demonVintage, tuning: { ...vintageDriftTwo, ...vintage.perk.tuning } });
 assert.equal(shiftedVintage.driftEngineMultiplier, 0.94, 'DRIFT DEMON builds DRIFT from a SHIFTed base up to 5/5');
+// #1273: DRIFTAGE is LEGENDARY and stays with the Vintage Racer. A DRIFTAGE saved on
+// another car before the change runs nothing there.
 const driftageSports = perkState(sportsCar.id, true, sportsCar.tuning, 'driftage');
+assert.deepEqual(activeVehiclePerkIds(driftageSports), ['drift-demon'], 'A foreign DRIFTAGE never runs');
 const sportsDriftage = resolveVehiclePerkTuning({ state: driftageSports, tuning: sportsCar.tuning });
 assert.deepEqual([sportsDriftage.driftDragAdd, sportsDriftage.driftYawMultiplier, sportsDriftage.driftGripMultiplier],
-  [0.045, 1.28, 0.72], 'An installed DRIFTAGE sets its values on any car');
-driftageSports.vehiclePerkProgress = 1;
-const sportsBoth = resolveVehiclePerkTuning({ state: driftageSports, tuning: sportsCar.tuning });
-assert.deepEqual([sportsBoth.driftDragAdd, sportsBoth.driftSpeedMultiplier, sportsBoth.driftEngineMultiplier], [0.045, 0.95, 0.94]);
+  [sportsCar.tuning.driftDragAdd, sportsCar.tuning.driftYawMultiplier, sportsCar.tuning.driftGripMultiplier],
+  'The Sports Car keeps its own DRIFT values');
+
+// #1273: SMV is COMMON and installable. Installed, its ceilings run on the host car, and
+// the host keeps its own perk.
+const smvVan = perkState(van.id, true, van.tuning, 'smv');
+assert.deepEqual(activeVehiclePerkIds(smvVan), ['carry-on', 'smv'], 'An installed SMV runs beside the Van’s CARRY ON');
+assert.equal(getSmvPropulsiveSpeedLimit({ perkIds: activeVehiclePerkIds(smvVan), throttle: 1 }), SMV_SPEED_LIMITS_KMH.gas / 2.9,
+  'An installed SMV caps GAS on the Van as on the Tractor');
+assert.equal(getSmvPropulsiveSpeedLimit({ perkIds: activeVehiclePerkIds(perkState(van.id, true, van.tuning)), throttle: 1 }), Infinity,
+  'Without SMV the Van is not capped');
 
 // The other fixed and stateless perks follow the perk, not the car.
 const twitchyVan = perkState(van.id, true, van.tuning, 'twitchy-turny');

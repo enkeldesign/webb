@@ -1,4 +1,5 @@
-/* ABOUT keeps one prominent full-width History and Changelog action. */
+/* ABOUT keeps its two prominent actions, side by side where there is width, and all of
+   ABOUT, both actions included, fits without scrolling (#1119). */
 .m8-about-dialog {
   --turn-dialog-inline-size: min(495px, calc(100vw - 24px));
 }
@@ -6,6 +7,13 @@
 .m8-about-card {
   overscroll-behavior-y: contain;
   scrollbar-gutter: stable;
+}
+
+/* ABOUT fits its screen, so it reserves no scrollbar gutter that would narrow the
+   copy; on a screen too small to fit, a scrollbar still appears. */
+.m8-about-dialog .m8-about-card,
+.m8-about-dialog .m8-about-content {
+  scrollbar-gutter: auto;
 }
 
 .m8-about-content {
@@ -34,13 +42,16 @@
 
 .m8-about-actions {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 9px;
   align-items: stretch;
   margin-top: 12px;
+  /* Room for the hard shadow inside the scroll box, so it is never clipped. */
+  padding: 0 3.75px 3.75px 0;
 }
 
 .m8-about-history,
+.m8-about-accessibility,
 .m8-about-design-system {
   box-sizing: border-box;
   display: inline-flex;
@@ -62,24 +73,29 @@
 }
 
 .m8-about-history > span,
+.m8-about-accessibility > span,
 .m8-about-design-system > span {
   display: block;
 }
 
 .m8-about-history {
-  background: var(--m8-yellow);
+  /* It opens a reader, as ALL CARS opens a sheet (#1268). */
+  background: var(--turn-action-sheet);
 }
 
+.m8-about-accessibility,
 .m8-about-design-system {
   background: var(--m8-blue);
 }
 
 .m8-about-history:hover,
+.m8-about-accessibility:hover,
 .m8-about-design-system:hover {
   transform: translateY(-1.5px);
 }
 
 .m8-about-history:active,
+.m8-about-accessibility:active,
 .m8-about-design-system:active {
   transform: translate(3px, 3px);
   box-shadow: 0.75px 0.75px 0 var(--turn-shadow-color);
@@ -212,7 +228,7 @@
   height: 10.5px;
   border: 3px solid var(--turn-outline);
   border-radius: 50%;
-  background: var(--m8-pink);
+  background: var(--turn-pink-500);
 }
 
 .turn-history-entry > span,
@@ -283,7 +299,84 @@
   margin-bottom: 12px;
 }
 
+/* ACCESSIBILITY reads like TURN HISTORY: the same reader, one panel. */
+.turn-accessibility-statement,
+.turn-accessibility-feedback-heading,
+.turn-accessibility-feedback {
+  max-width: 74ch;
+}
+
+.turn-accessibility-statement p {
+  margin: 0;
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.66rem, 1.35vw, 0.75rem));
+  line-height: 1.48;
+}
+
+.turn-accessibility-statement p + p {
+  margin-top: 9px;
+}
+
+.turn-accessibility-feedback-heading {
+  margin: 18px 0 7.5px;
+  padding-top: 15px;
+  border-top: var(--turn-border-micro, 2px) solid var(--turn-outline);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.9rem, 2vw, 1.125rem));
+  line-height: 1.12;
+}
+
+.turn-accessibility-feedback {
+  margin-top: 0;
+}
+
 @media (max-height: 420px) and (orientation: landscape) {
+  /* A phone on its side: ABOUT takes the width, so its copy wraps less and both
+     actions stay in view. */
+  .m8-about-dialog {
+    --turn-dialog-inline-size: min(720px, calc(100vw - 24px));
+  }
+
+  .m8-about-dialog .m8-about-content {
+    max-width: none;
+  }
+
+  .m8-about-dialog .m8-dialog-head {
+    margin-bottom: 6px;
+  }
+
+  .m8-about-dialog .m8-about-content p + p {
+    margin-top: 4.5px;
+  }
+
+  /* ACKNOWLEDGEMENTS and PRIVACY share a row; one that is opened takes the width. */
+  .m8-about-dialog .turn-about-shared-copy {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 18px;
+  }
+
+  .m8-about-dialog .turn-about-shared-copy > * {
+    flex: 1 0 100%;
+  }
+
+  .m8-about-dialog .turn-about-shared-copy > details:not([open]) {
+    flex: 0 0 auto;
+  }
+
+  .m8-about-actions {
+    margin-top: 7.5px;
+  }
+
+  .m8-about-history,
+  .m8-about-accessibility {
+    min-height: var(--turn-target-min, 44px);
+    padding-block: 6px;
+  }
+
+  /* Side by side, the wide action holds HISTORY AND CHANGELOG on one line. */
+  .m8-about-history br {
+    display: none;
+  }
+
   .turn-history-dialog {
     --turn-dialog-inline-size: calc(100vw - 7.5px);
     --turn-dialog-block-size: calc(100vh - 7.5px);
@@ -309,6 +402,26 @@
   }
 }
 
+/* The shortest phones on their side (about 320px tall) get back a little of the frame. */
+@media (max-height: 340px) and (orientation: landscape) {
+  .m8-about-dialog {
+    --turn-dialog-padding: 9px 12px max(9px, env(safe-area-inset-bottom));
+  }
+
+  .m8-about-dialog .m8-dialog-head h2 {
+    font-size: max(var(--turn-text-floor, 11px), clamp(1.2rem, 4.2vw, 1.8rem));
+  }
+
+  .m8-about-dialog .m8-about-lead {
+    line-height: 1.26 !important;
+  }
+
+  .m8-about-dialog .m8-about-summary,
+  .m8-about-dialog .m8-about-credits {
+    line-height: 1.3 !important;
+  }
+}
+
 @media (max-width: 510px) and (orientation: portrait) {
   .m8-about-actions {
     grid-template-columns: 1fr;
@@ -323,6 +436,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .m8-about-history,
+  .m8-about-accessibility,
   .m8-about-design-system,
   .turn-history-tabs button {
     transition: none !important;

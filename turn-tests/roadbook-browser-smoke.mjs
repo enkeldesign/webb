@@ -4,7 +4,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, webkit } from 'playwright';
-import { TRACK_DEFINITIONS } from '../turn/tracks/definitions.js';
+import { TRACK_DEFINITIONS, TRACK_PRESENTATION_ORDER } from '../turn/tracks/definitions.js';
 import { TRACK_ICON_ASSETS } from '../turn/ui/track-icons.js';
 import { trackAchievements } from '../turn/achievements/catalog.js';
 
@@ -129,7 +129,9 @@ async function phoneFlow(browserType, name) {
       pressed: card.getAttribute('aria-pressed'),
       label: card.getAttribute('aria-label')
     })));
-    assert.deepEqual(cards.map((card) => card.id), trackIds, `${name}: ROADBOOK lists the catalog in order`);
+    // #1271: ROADBOOK lists the tracks in presentation order, round the colour wheel.
+    assert.deepEqual(cards.map((card) => card.id), [...TRACK_PRESENTATION_ORDER], `${name}: ROADBOOK lists the tracks in presentation order`);
+    assert.deepEqual(cards.slice(2, 4).map((card) => [card.id, card.ordinal]), [['beachfront', '03'], ['airport', '04']]);
     assert.deepEqual(cards.map((card) => card.ordinal), trackIds.map((_, index) => String(index + 1).padStart(2, '0')));
     assert.ok(cards.every((card) => card.pictogram && card.route && card.difficulty), `${name}: every card has its pictogram, route and difficulty`);
     assert.equal(cards.filter((card) => card.pressed === 'true').length, 1, `${name}: exactly one track is selected`);
