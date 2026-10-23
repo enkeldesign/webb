@@ -9,13 +9,14 @@
 // pauseAfter: seconds the doneText stays before the next lesson. needsOvercharge: the
 // lesson cannot go on once OVERCHARGE is gone. keyboardPrompt: for players driving by
 // keyboard, where it differs (LOCK has no key).
-// BUILD's headroom (#1212): the share of OVERCHARGE taken back as it starts (within the
-// 25–50% asked for), then the rise it asks for. OVERCHARGE is a share of its meter, 0–1
-// (input/boost-overcharge.js), which a qualifying slide fills in 1.8 s. The rise is the
-// 0.3 BUILD always asked for, now counted from the lowest point since BUILD began: about
-// half a second of sliding. From a full meter taken back to 0.6 it ends before the peak,
-// and after OVERCHARGE leaked away it is 0.3 from empty, as before.
-export const BUILD_OVERCHARGE_TRIM = 0.4;
+// BUILD's start (#1272): scoring and linking can leave BOOST full and OVERCHARGE already
+// built. So as BUILD begins, a short tutorial-only leak takes the meter down to 75%
+// (ui/gameplay-controls.js), and the player sees DRIFT fill BOOST, then build OVERCHARGE
+// past its end. The leak only ever takes BOOST away, and lands on the same level from
+// any start. The rise is the 0.3 of OVERCHARGE BUILD always asked for, counted from the
+// lowest point since BUILD began. OVERCHARGE is a share of its meter, 0–1
+// (input/boost-overcharge.js), so that is about half a second of qualifying slide.
+export const BUILD_BOOST_START = 0.75;
 export const BUILD_OVERCHARGE_RISE = 0.3;
 
 export const DRIFT_ATTACK_LESSONS = Object.freeze([
@@ -42,13 +43,13 @@ export const DRIFT_ATTACK_LESSONS = Object.freeze([
     done: (progress) => progress.links > 0
   }),
   Object.freeze({
-    // OVERCHARGE built while scoring and linking would finish BUILD at once, so it
-    // starts by taking back part of it, and asks for a real rise from there (#1212).
+    // OVERCHARGE built while scoring and linking would finish BUILD at once, so BOOST
+    // leaks down to 75% as it starts, and BUILD asks for a real rise from there (#1272).
     id: 'build',
     targets: ['.drive-drift-zone'],
     title: 'BUILD',
-    prompt: 'With BOOST full, keep holding DRIFT. OVERCHARGE builds past the end of the BOOST meter.',
-    trimOvercharge: BUILD_OVERCHARGE_TRIM,
+    prompt: 'Keep holding DRIFT. BOOST fills up, then OVERCHARGE builds past the end of the BOOST meter.',
+    leakBoostTo: BUILD_BOOST_START,
     done: (progress) => progress.overcharge >= progress.overchargeLow + BUILD_OVERCHARGE_RISE
   }),
   Object.freeze({
