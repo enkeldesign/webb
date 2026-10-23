@@ -400,12 +400,18 @@
 }
 
 .turn-achievement-toast > b {
+  min-width: 0;
+  max-width: 100%;
   padding: 3.75px 6px;
   border: var(--turn-border-compact, 3px) solid var(--turn-outline);
-  border-radius: var(--turn-radius-pill, 999px);
+  border-radius: var(--turn-radius-compact, 12px);
   background: var(--turn-action-warning, #ffd43b);
   font-size: max(var(--turn-text-floor, 11px), 0.54rem);
-  white-space: nowrap;
+  line-height: 1.25;
+  /* A collection's PERK reward is longer than a trophy count: it wraps in place rather
+     than running off a narrow screen (CODEX on #1278). */
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 540px) {

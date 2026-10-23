@@ -219,6 +219,10 @@ assert.equal(plain(achievementRewardMarkup(getAchievement('drift-master'), { rev
   'REWARD: Rarity EPIC PRECISION perk Install in PERKULATOR');
 assert.match(achievementRewardMarkup(getAchievement('drift-master'), { revealed: true }), /class="turn-pr-chip is-epic"/);
 assert.equal(achievementRewardMarkup(getAchievement('first-turn'), { revealed: true }), '', 'Trophy achievements keep their trophy count');
+// The achievement toast's badge carries the text form, which is longer for a PERK: it
+// wraps on a narrow screen instead of running off it (CODEX on #1278).
+const achievementsCss = await fs.readFile(new URL('../turn/achievements.css', import.meta.url), 'utf8');
+assert.match(achievementsCss, /\.turn-achievement-toast > b \{[^}]*white-space: normal;[^}]*overflow-wrap: anywhere;/);
 legacyStore.grantBonus('perkulator-test', 2000);
 legacyStore.syncRewards();
 assert.equal(isPerkAvailable('precision', legacyPlayer), true, 'PERKULATOR reveals the old entitlement without replay');
