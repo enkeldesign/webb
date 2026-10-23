@@ -79,6 +79,12 @@
   background: var(--m8-yellow);
 }
 
+/* Both sit on a semantic colour, so their text is Ink in both themes (CODEX on #1279). */
+.m8-feedback-email,
+.m8-feedback-copy {
+  color: var(--turn-ink);
+}
+
 .m8-feedback-email:hover,
 .m8-feedback-copy:hover {
   transform: translateY(-1.5px);
