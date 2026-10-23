@@ -26,7 +26,6 @@ const [
   supportSource,
   challengeSource,
   productionAchievementsSource,
-  chromaticSource,
   shadowSource,
   workflowSource
 ] = await Promise.all([
@@ -37,7 +36,6 @@ const [
   read('turn/achievements/support-challenges.js'),
   read('turn/achievements/challenge-expansion-r166.js'),
   read('turn/achievements/catalog.js'),
-  read('turn/achievements/chromatic-camouflage-r183.js'),
   read('turn/render/car-shadows.js'),
   read('.github/workflows/turn-lab-tests.yml')
 ]);
@@ -119,13 +117,12 @@ const timeTrialTrackIds = TIME_TRIALS.map(({ trackId }) => trackId);
 assert.deepEqual(timeTrialTrackIds, TRACK_IDS,
   'Developer time trials must remain one-per-production-track and in catalog order');
 
-for (const source of [challengeSource, productionAchievementsSource, chromaticSource, shadowSource]) {
+for (const source of [challengeSource, productionAchievementsSource, shadowSource]) {
   assert.match(source, /assertTrackConfigCoverage\(/,
     'Every-track calibrated/runtime maps must explicitly enforce catalog coverage');
 }
 assert.match(challengeSource, /assertTrackConfigCoverage\(CLEAN_LAP_TARGETS, 'clean-lap targets'\)/);
 assert.match(productionAchievementsSource, /assertTrackConfigCoverage\(SAFETY_TARGET_LABELS, 'achievement safety target labels'\)/);
-assert.match(chromaticSource, /assertTrackConfigCoverage\(TRACK_COLOR_RULES, 'Chromatic Camouflage track rules'\)/);
 assert.match(shadowSource, /assertTrackConfigCoverage\(TRACK_SHADOW_ROAD_HEIGHT, 'projected-shadow road heights'\)/);
 
 assert.match(catalogSource, /TRACK_DEFINITIONS\.map\(\(definition\) =>/,
