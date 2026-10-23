@@ -38,7 +38,6 @@ const requiredProductionBootstraps = [
   './ui/r411-race-controls.js',
   './ui/trophy-road-highlight-perk-polish-r258.js',
   './accessibility/color-accessibility-r163.js',
-  './achievements/chromatic-camouflage-r183.js',
   './social/your-turn-share-bootstrap.js',
   './tracks/countryside-bella-rescue-hotfix-r176.js'
 ];
