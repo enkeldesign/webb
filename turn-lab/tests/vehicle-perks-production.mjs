@@ -12,7 +12,7 @@ import {
   resolveVehicleOverchargedAccelerationMultiplier
 } from '../../turn/vehicle/physics.js';
 import { PERK_RARITY, VEHICLE_PERKS, getVehiclePerk, originalVehiclePerk } from '../../turn/vehicle/perks.js';
-import { consumeBoostTank, convertBoostTank, decayConvertedBoost, ROAD_RAGE_CONVERSION_SECONDS } from '../../turn/input/boost-tank.js';
+import { consumeBoostTank, convertBoostTank, ROAD_RAGE_CONVERSION_SECONDS } from '../../turn/input/boost-tank.js';
 import {
   CARRY_ON_LOCK_DRAG_ADD,
   CLEAN_EXIT_CONTROL_BONUS,
@@ -581,11 +581,51 @@ for (const fps of [25, 60, 120]) {
   for (let step = 0; step < fps; step += 1) consumeBoostTank(tank, 1 / fps, 2, 2);
   assert.ok(Math.abs(tank.charge - 0.15) < 1e-9, 'A mixed tank drains identically at different frame rates');
 }
-const heldTank = { charge: 1, overcharge: 0, converted: 0.5 };
-decayConvertedBoost(heldTank, 4, true);
-assert.equal(heldTank.converted, 0.5, 'GAS holds converted OC');
-decayConvertedBoost(heldTank, 2, false);
-assert.deepEqual(heldTank, { charge: 0.75, overcharge: 0, converted: 0.25 }, 'Loose converted OC leaks from total fuel');
+// #1265: sustained ROAD RAGE in the controller's own order (recharge, convert, full
+// cue), with jittered frames around 120 Hz and eligibility, GAS and DRIFT recharge
+// changing underneath. Converted fuel is stored: the tank never leaves full, so the
+// full cue never re-fires, and conversion only pauses and resumes.
+for (const fps of [30, 60, 120]) {
+  const tank = { charge: 1, overcharge: 0.05, converted: 0, burningOvercharge: false };
+  let previousCharge = tank.charge;
+  let fullCues = 0;
+  let convertingFrames = 0;
+  let pausedFrames = 0;
+  for (let frame = 0; frame < fps * 20; frame += 1) {
+    const dt = (1 / fps) * (frame % 3 === 0 ? 0.94 : frame % 3 === 1 ? 1.06 : 1);
+    const second = Math.floor(frame / fps);
+    const driftRecharge = second % 4 === 1 ? 2.4 : 0;
+    const clean = second % 5 !== 3;
+    if (tank.charge < 0.999999) tank.charge = Math.min(1, tank.charge + dt * driftRecharge / 4.2);
+    const before = tank.converted;
+    const converted = convertBoostTank(tank, dt, { ...cleanConversion, offRoad: !clean });
+    assert.equal(converted, clean, 'Conversion runs exactly while ROAD RAGE is eligible');
+    if (converted) convertingFrames += 1; else pausedFrames += 1;
+    assert.ok(tank.converted >= before, 'Converted OVERCHARGE never shrinks without BOOST');
+    assert.ok(tank.converted <= tank.charge, 'Converted fuel stays inside the tank');
+    assert.equal(tank.charge, 1, 'ROAD RAGE never takes the tank off full');
+    if (previousCharge < 0.999 && tank.charge >= 0.999) fullCues += 1;
+    previousCharge = tank.charge;
+  }
+  assert.equal(fullCues, 0, `Sustained conversion never re-fires the full cue at ${fps} fps`);
+  assert.ok(convertingFrames > 0 && pausedFrames > 0, 'Eligibility both paused and resumed conversion');
+  assert.equal(tank.converted, 1, 'Paused conversion resumes until the whole tank is OVERCHARGE');
+}
+const pausedTank = { charge: 1, overcharge: 0, converted: 0.4 };
+assert.equal(convertBoostTank(pausedTank, 1, { ...cleanConversion, requested: true }), false, 'BOOST stops conversion');
+assert.equal(convertBoostTank(pausedTank, 1, cleanConversion), true, 'Stored converted fuel seeds conversion again');
+const ordinaryBefore = pausedTank.charge - pausedTank.converted;
+consumeBoostTank(pausedTank, 0.5, 2);
+assert.ok(pausedTank.charge < 1 && Math.abs(pausedTank.charge - pausedTank.converted - ordinaryBefore) < 1e-9,
+  'BOOST spends converted fuel first, then ordinary fuel');
+assert.equal(convertBoostTank(pausedTank, 1, cleanConversion), false, 'Below full cannot convert');
+assert.doesNotMatch(controlsSource, /decayConvertedBoost/, 'Converted fuel is stored, not leaked from the tank');
+assert.match(controlsSource, /const overchargeCaught = boostOvercharge > 0 && resourceZone === 'gas' && !boosting;/,
+  'Only loose bonus OVERCHARGE can be caught');
+assert.match(controlsSource, /const overchargeVolatile = boostOvercharge > 0 && !overchargeCaught && !boosting;/,
+  'Stored converted fuel does not wiggle as volatile');
+assert.match(controlsSource, /const hasOvercharge = boostOvercharge > 0;/,
+  'The widened purple bar is the bonus OVERCHARGE alone');
 assert.deepEqual(activeVehiclePerkIds(perkState(truck.id, true, truck.tuning)), ['torque']);
 assert.deepEqual(activeVehiclePerkIds(truckWith('full-tank')), ['torque', 'full-tank']);
 assert.deepEqual(activeVehiclePerkIds(truckWith('torque')), ['torque'], 'A car never runs its own perk twice');
