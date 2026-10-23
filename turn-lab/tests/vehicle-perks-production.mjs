@@ -621,7 +621,8 @@ for (const fps of [30, 60, 120]) {
     if (tank.charge < 0.999999) tank.charge = Math.min(1, tank.charge + dt * driftRecharge / 4.2);
     const before = tank.converted;
     const converted = convertBoostTank(tank, dt, { ...cleanConversion, offRoad: !clean });
-    assert.equal(converted, clean, 'Conversion runs exactly while ROAD RAGE is eligible');
+    assert.equal(converted, clean && before < tank.charge,
+      'Conversion reports itself only while eligible and not yet complete');
     if (converted) convertingFrames += 1; else pausedFrames += 1;
     assert.ok(tank.converted >= before, 'Converted OVERCHARGE never shrinks without BOOST');
     assert.ok(tank.converted <= tank.charge, 'Converted fuel stays inside the tank');
@@ -632,6 +633,8 @@ for (const fps of [30, 60, 120]) {
   assert.equal(fullCues, 0, `Sustained conversion never re-fires the full cue at ${fps} fps`);
   assert.ok(convertingFrames > 0 && pausedFrames > 0, 'Eligibility both paused and resumed conversion');
   assert.equal(tank.converted, 1, 'Paused conversion resumes until the whole tank is OVERCHARGE');
+  assert.equal(convertBoostTank(tank, 1 / fps, cleanConversion), false,
+    'A fully converted tank no longer says ROAD RAGE is converting');
 }
 const pausedTank = { charge: 1, overcharge: 0, converted: 0.4 };
 assert.equal(convertBoostTank(pausedTank, 1, { ...cleanConversion, requested: true }), false, 'BOOST stops conversion');
