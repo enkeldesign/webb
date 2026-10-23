@@ -78,11 +78,11 @@
   display: block;
 }
 
-/* Both open a reader, as ALL CARS opens a sheet (#1268). Scoped to the actions row so
-   the dialog's own button surface (.m8-dialog button) does not paint over it. */
+/* Both open a reader and are neutral: the dialog's own button surface, in the app and
+   on the website alike. */
 .m8-about-actions > :is(.m8-about-history, .m8-about-accessibility) {
-  background: var(--turn-action-sheet);
-  color: var(--turn-ink);
+  background: var(--turn-surface-page);
+  color: var(--turn-text);
 }
 
 .m8-about-design-system {
