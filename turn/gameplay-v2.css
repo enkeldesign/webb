@@ -177,10 +177,7 @@
 }
 
 .boost-hud.has-overcharge > div {
-  background:
-    var(--turn-boost-overcharge) left / calc((100% - var(--boost-base-width)) / 2) 100% no-repeat,
-    var(--turn-boost-overcharge) right / calc((100% - var(--boost-base-width)) / 2) 100% no-repeat,
-    color-mix(in srgb, var(--turn-surface-page) var(--turn-boost-bar-track-opacity), transparent);
+  background: var(--turn-boost-overcharge);
 }
 
 .boost-hud.has-overcharge i {
@@ -190,17 +187,18 @@
   box-shadow: none;
 }
 
-/* ROAD RAGE colours a portion of the existing tank, not additional capacity. */
-.boost-hud.has-converted-overcharge i::after {
+/* ROAD RAGE (#1265): converted fuel is a share of the base fill, not extra capacity.
+   It ends where the fill ends, so it burns first, in the same strong purple. */
+.boost-hud.has-converted-overcharge > div::after {
   content: '';
   position: absolute;
-  inset: 0 auto 0 calc(var(--boost-base-charge, 100%) - var(--boost-converted, 0%));
-  width: var(--boost-converted, 0%);
-  background: var(--turn-boost-overcharge);
-}
-
-.boost-hud.has-converted-overcharge i {
-  clip-path: inset(0 calc(100% - var(--boost-base-charge, 100%)) 0 0);
+  inset: 0 auto 0 var(--boost-converted-left, 100%);
+  width: var(--boost-converted-width, 0%);
+  background: linear-gradient(90deg, var(--turn-control-overcharge-deep), var(--turn-control-overcharge));
+  box-shadow: inset 2px 0 0 var(--turn-outline);
+  transition:
+    left 70ms linear,
+    width 70ms linear;
 }
 
 .boost-hud.is-boosting {
