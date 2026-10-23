@@ -33,12 +33,6 @@ function escapeHtml(value) {
   })[character]);
 }
 
-function titleCase(name) {
-  return String(name || '')
-    .toLocaleLowerCase('en')
-    .replace(/(^|\s)\p{L}/gu, (character) => character.toLocaleUpperCase('en'));
-}
-
 // Rarity in words, on its colour: never the colour alone.
 export function rarityChip(perk) {
   const label = RARITY_LABELS[perk?.rarity];
@@ -52,7 +46,7 @@ export function perkCardMarkup(perk, { original = false, current = false, intera
   const attributes = interactive ? ` type="button" data-perk-id="${escapeHtml(perk.id)}"${current ? ' aria-current="true"' : ''}` : '';
   const source = original ? status : `From ${perkSourceLabel(perk)}`;
   return `<${tag} class="garage-perk-card${original ? ' is-original' : ''}${interactive ? ' garage-install-perk-option' : ''}${current ? ' is-installed' : ''}"${attributes}>
-    <span class="garage-install-perk-name"><strong>${escapeHtml(titleCase(perk.title))}</strong> ${rarityChip(perk)}${current ? ' <span class="garage-install-perk-state">INSTALLED</span>' : ''}</span>
+    <span class="garage-install-perk-name"><strong>${escapeHtml(perk.name)}</strong> ${rarityChip(perk)}${current ? ' <span class="garage-install-perk-state">INSTALLED</span>' : ''}</span>
     <span class="garage-install-perk-copy">${escapeHtml(perk.description)}</span>
     ${source ? `<span class="garage-install-perk-origin">${escapeHtml(source)}</span>` : ''}
   </${tag}>`;
@@ -107,7 +101,7 @@ export function createGaragePerkulator({
           <p class="garage-install-perk-lead" id="garageInstallPerkLead"></p>
         </div>
         <div class="turn-achievements-filters garage-perk-filters" role="group" aria-label="Perk rarity">
-          ${filterButtons([['all', 'ALL'], ['rare', 'RARE'], ['epic', 'EPIC'], ['mythic', 'MYTHIC']], 'data-perk-rarity')}
+          ${filterButtons([['all', 'ALL'], ['common', 'COMMON'], ['rare', 'RARE'], ['epic', 'EPIC'], ['mythic', 'MYTHIC']], 'data-perk-rarity')}
         </div>
         <p class="garage-perk-empty" hidden>No available perks of this rarity.</p>
         <ul class="garage-install-perk-list" role="list"></ul>
@@ -124,7 +118,7 @@ export function createGaragePerkulator({
   let focusAfterSync = '';
 
   function perkName(perk) {
-    return titleCase(perk.title);
+    return perk.name;
   }
 
   function syncInstalled(own) {

@@ -41,12 +41,12 @@ assert.equal(isPerkulatorUnlocked(memoryStorage()), false, 'A new player has no 
 const beforePerkulator = { ...rewardState(everyReward.filter((id) => id !== 'perkulator')) };
 const player = memoryStorage(beforePerkulator);
 assert.equal(isPerkulatorUnlocked(player), false, 'Every other reward, but no PERKULATOR without its own');
-assert.equal(isPerkAvailable('driftage', player), false, 'Without PERKULATOR it holds nothing');
+assert.equal(isPerkAvailable('carry-on', player), false, 'Without PERKULATOR it holds nothing');
 assert.deepEqual(installablePerksFor('truck', player), []);
-assert.equal(installPerk('truck', 'driftage', player), false);
+assert.equal(installPerk('truck', 'carry-on', player), false);
 assert.equal(installedPerkFor('suv', memoryStorage({
   ...beforePerkulator,
-  [PERKULATOR_STORAGE_KEY]: JSON.stringify({ installed: { suv: 'driftage' } })
+  [PERKULATOR_STORAGE_KEY]: JSON.stringify({ installed: { suv: 'carry-on' } })
 })), '', 'Without PERKULATOR, a stored installed perk does not run');
 
 const admin = memoryStorage({ ...rewardState(everyReward) });
@@ -54,16 +54,18 @@ assert.equal(isPerkulatorUnlocked(admin), true, 'Its reward unlocks PERKULATOR')
 
 // PERKULATOR holds the eight perks that may leave their car, each once unlocked, with
 // nothing to clone first. LEGENDARY perks, TWITCHY TURNY among them, never leave theirs.
+// #1273: SMV (COMMON) may now leave the Tractor; DRIFTAGE (LEGENDARY) stays on the Vintage Racer.
 const movable = VEHICLE_PERKS.filter((perk) => perk.installable).map(({ id }) => id).sort();
-assert.deepEqual(movable, ['apex-grip', 'carry-on', 'clean-exit', 'drift-demon', 'driftage', 'full-tank', 'torque', 'traction']);
+assert.deepEqual(movable, ['apex-grip', 'carry-on', 'clean-exit', 'drift-demon', 'full-tank', 'smv', 'torque', 'traction']);
 assert.deepEqual(VEHICLE_PERKS.filter(({ id }) => isPerkAvailable(id, admin)).map(({ id }) => id).sort(), movable,
   'With every reward, PERKULATOR holds every perk that may move');
-for (const perkId of ['graduated', 'twitchy-turny', 'overdrive', 'double-shift', 'flow-shift', 'oversized', 'smv', 'sirens']) {
+for (const perkId of ['graduated', 'twitchy-turny', 'overdrive', 'double-shift', 'flow-shift', 'oversized', 'driftage', 'sirens']) {
   assert.equal(isPerkAvailable(perkId, admin), false, `${perkId}: a LEGENDARY perk stays with its car`);
 }
 // Each once one of its cars and the perk itself are unlocked.
-const lockedCar = memoryStorage({ ...rewardState(everyReward.filter((id) => id !== 'vintage-racer')) });
-assert.equal(isPerkAvailable('driftage', lockedCar), false, 'Not while its car is locked on Trophy Road');
+const lockedCar = memoryStorage({ ...rewardState(everyReward.filter((id) => id !== 'compact')) });
+assert.equal(isPerkAvailable('clean-exit', lockedCar), false, 'Not while its car is locked on Trophy Road');
+assert.equal(isPerkAvailable('smv', lockedCar), true, 'SMV comes with the Tractor, a starting car');
 const lockedPerk = memoryStorage({ ...rewardState(everyReward.filter((id) => id !== 'suv-full-tank')) });
 assert.equal(isPerkAvailable('full-tank', lockedPerk), false, 'Not while the perk is locked on Trophy Road');
 assert.equal(isPerkAvailable('torque', lockedPerk), true, 'TORQUE comes with the Truck once DRIFT ATTACK is unlocked');
@@ -73,15 +75,15 @@ assert.equal(isPerkAvailable('torque', beforeDriftAttack), false,
 
 // Installing: on any car but the perk's own, one per car; replacing never touches the
 // car's own perk.
-assert.equal(installablePerksFor('vintage-racer', admin).some(({ id }) => id === 'driftage'), false,
+assert.equal(installablePerksFor('van', admin).some(({ id }) => id === 'carry-on'), false,
   'A car is never offered its own perk');
 assert.deepEqual(installablePerksFor('truck', admin).map(({ id }) => id).sort(), movable.filter((id) => id !== 'torque'),
   'The Truck may install every perk PERKULATOR holds but TORQUE');
 assert.equal(installPerk('truck', 'graduated', admin), false, 'Never a LEGENDARY perk');
-assert.equal(installPerk('truck', 'driftage', admin), true, 'Nothing to clone first');
-assert.equal(installPerk('truck', 'driftage', admin), false, 'Installing the installed perk changes nothing');
-assert.equal(installedPerkFor('truck', admin), 'driftage');
-assert.deepEqual(events.at(-1), [PERKULATOR_CHANGE_EVENT, { action: 'install', vehicleId: 'truck', perkId: 'driftage' }]);
+assert.equal(installPerk('truck', 'carry-on', admin), true, 'Nothing to clone first');
+assert.equal(installPerk('truck', 'carry-on', admin), false, 'Installing the installed perk changes nothing');
+assert.equal(installedPerkFor('truck', admin), 'carry-on');
+assert.deepEqual(events.at(-1), [PERKULATOR_CHANGE_EVENT, { action: 'install', vehicleId: 'truck', perkId: 'carry-on' }]);
 assert.equal(installPerk('truck', 'full-tank', admin), true, 'Installing replaces the installed perk');
 assert.equal(installPerk('no-such-car', 'full-tank', admin), false);
 assert.equal(installPerk('suv', 'full-tank', admin), false, 'Never the car\'s own perk');
@@ -102,13 +104,27 @@ assert.deepEqual(events.at(-1), [PERKULATOR_CHANGE_EVENT, { action: 'remove', ve
 // the perks they installed keep running.
 assert.deepEqual(normalizePerkulatorState(JSON.stringify({
   cloned: ['twitchy-turny', 'overdrive', 'full-tank', 'nope', 7],
-  installed: { suv: 'full-tank', 'race-future': 'full-tank', truck: 'driftage', 'no-car': 'full-tank', van: 'overdrive' }
-})), { version: 1, installed: { 'race-future': 'full-tank', truck: 'driftage' } });
+  installed: { suv: 'full-tank', 'race-future': 'full-tank', truck: 'carry-on', 'no-car': 'full-tank', van: 'overdrive' }
+})), { version: 1, installed: { 'race-future': 'full-tank', truck: 'carry-on' } });
 assert.deepEqual(normalizePerkulatorState('{broken'), { version: 1, installed: {} });
+
+// #1273: a DRIFTAGE installed on another car before it became LEGENDARY stops running,
+// and the clean state is written back. Every other installed perk stays, SMV included.
+const migrated = memoryStorage({
+  ...rewardState(everyReward),
+  [PERKULATOR_STORAGE_KEY]: JSON.stringify({ version: 1, installed: { suv: 'driftage', van: 'smv', truck: 'full-tank' } })
+});
+assert.equal(installedPerkFor('suv', migrated), '', 'A foreign DRIFTAGE no longer runs');
+assert.deepEqual(JSON.parse(migrated.getItem(PERKULATOR_STORAGE_KEY)),
+  { version: 1, installed: { van: 'smv', truck: 'full-tank' } }, 'and is cleaned from storage');
+assert.deepEqual([installedPerkFor('van', migrated), installedPerkFor('truck', migrated)], ['smv', 'full-tank']);
+assert.equal(installPerk('suv', 'driftage', migrated), false, 'DRIFTAGE cannot be installed again');
+assert.equal(installablePerksFor('suv', migrated).some(({ id }) => id === 'driftage'), false, 'PERKULATOR no longer offers DRIFTAGE');
+assert.equal(installPerk('suv', 'smv', migrated), true, 'SMV can be installed on another car');
 assert.equal(installedPerkFor('toy-racer', memoryStorage({
   ...rewardState(everyReward),
-  [PERKULATOR_STORAGE_KEY]: JSON.stringify({ version: 1, cloned: ['driftage'], installed: { 'toy-racer': 'driftage' } })
-})), 'driftage', 'A perk installed with a clone keeps running');
+  [PERKULATOR_STORAGE_KEY]: JSON.stringify({ version: 1, cloned: ['carry-on'], installed: { 'toy-racer': 'carry-on' } })
+})), 'carry-on', 'A perk installed with a clone keeps running');
 
 // The page's own storage: YOUR TURN isolates it, so a challenger races without a TURN
 // player's installed perks.
@@ -132,7 +148,7 @@ assert.match(mainSource, /state\.vehicleInstalledPerkId = installedPerkFor\(save
 assert.match(mainSource, /const installed = installedPerkFor\(state\.vehicleId\);[\s\S]*state\.vehicleInstalledPerkId = installed;\s*resetVehiclePerkRuntimeState\(state\);/);
 assert.match(mainSource, /window\.addEventListener\(PERKULATOR_CHANGE_EVENT, syncSelectedVehiclePerkEntitlement\)/);
 // Both slots say when they fill, by perk id.
-assert.match(mainSource, /perkId: state\.vehiclePerkRuntimeOriginalId,[\s\S]*\|\| resolveVehiclePerkStatusFeedback\(\{\s*perkId: state\.vehiclePerkRuntimeInstalledId/);
+assert.match(mainSource, /perkId: state\.vehiclePerkRuntimeOriginalId,[\s\S]*!originalPerkFeedback && resolveVehiclePerkStatusFeedback\(\{\s*perkId: state\.vehiclePerkRuntimeInstalledId/);
 assert.doesNotMatch(presentationSource, /resolveVehiclePerkStatusFeedback[\s\S]*vehicleId === '(suv|truck|sedan-sports)'/);
 
 // GARAGE: PERKULATOR lives in the PERK disclosure and follows every change.

@@ -24,8 +24,8 @@ assert.equal(isGreatFlow(2), false, 'FLOW ×2 must remain ordinary SHIFT');
 assert.equal(isGreatFlow(3), true, 'FLOW ×3 must activate FLOW SHIFT');
 assert.ok(flowShiftSource.includes("showCompactRacePill(nextGreatFlow ? 'FLOW SHIFT ACTIVE' : 'FLOW SHIFT LOST'"),
   'SUPERCAR must announce FLOW SHIFT threshold activation and loss through the compact race pill');
-assert.match(flowShiftSource, /tone: 'blue'/,
-  'FLOW SHIFT activation and loss pills must use the blue information treatment');
+assert.match(flowShiftSource, /perkId: 'flow-shift'/,
+  'FLOW SHIFT activation and loss pills wear FLOW SHIFT’s rarity, LEGENDARY yellow (#1273)');
 
 const STAT_KEYS = Object.freeze([
   'speed',

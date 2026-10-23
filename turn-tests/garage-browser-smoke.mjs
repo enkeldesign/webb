@@ -619,26 +619,26 @@ async function perkulatorFlow() {
   };
   const focused = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label') || document.activeElement?.className || '');
   try {
-    // The Vintage Racer's own perk: its rarity in words, and that other cars may install
-    // it. Nothing to clone first.
-    assert.deepEqual(await view('vintage-racer'), {
-      title: 'Driftage',
-      meta: 'ORIGINAL PERK Rarity EPIC',
+    // The Tractor's own perk: its rarity in words, and that other cars may install it.
+    // Nothing to clone first. #1273: SMV is COMMON and may leave the Tractor.
+    assert.deepEqual(await view('tractor'), {
+      title: 'SMV',
+      meta: 'ORIGINAL PERK Rarity COMMON',
       reach: 'Any other car can install it.',
-      installed: 'None. Another perk can run beside Driftage.',
-      actions: ['Install perk on Vintage Racer'],
+      installed: 'None. Another perk can run beside SMV.',
+      actions: ['Install perk on Tractor'],
       small: []
-    }, 'An EPIC perk PERKULATOR holds, with nothing to clone first');
+    }, 'A COMMON perk PERKULATOR holds, with nothing to clone first');
     assert.equal(await page.locator('.garage-perk-clone, .garage-perk-clone-button').count(), 0, 'No CLONE PERK (#1228)');
 
     // LEGENDARY perks stay with their car, TWITCHY TURNY among them.
-    for (const [carId, title] of [['classic', 'Graduated'], ['toy-racer', 'Twitchy Turny'], ['race-future', 'Overdrive']]) {
+    for (const [carId, title] of [['classic', 'Graduated'], ['toy-racer', 'Twitchy Turny'], ['race-future', 'Overdrive'], ['vintage-racer', 'Driftage']]) {
       const legendary = await view(carId);
       assert.deepEqual([legendary.title, legendary.meta, legendary.reach], [title, 'ORIGINAL PERK Rarity LEGENDARY', 'Stays with this car.'],
         `${title} is LEGENDARY: it stays with its car`);
     }
 
-    // The Truck installs DRIFTAGE beside TORQUE from a sheet of every perk PERKULATOR
+    // The Truck installs APEX GRIP beside TORQUE from a sheet of every perk PERKULATOR
     // holds, never its own.
     const truck = await view('truck');
     assert.deepEqual([truck.installed, truck.actions], ['None. Another perk can run beside Torque.', ['Install perk on Truck']]);
@@ -648,23 +648,23 @@ async function perkulatorFlow() {
       focus: document.activeElement?.id,
       title: document.querySelector('.garage-install-perk .turn-pr-sheet-title')?.textContent,
       options: [...document.querySelectorAll('.garage-install-perk-option')].map((option) => option.dataset.perkId),
-      origin: document.querySelector('.garage-install-perk-option[data-perk-id="driftage"] .garage-install-perk-origin')?.textContent
+      origin: document.querySelector('.garage-install-perk-option[data-perk-id="apex-grip"] .garage-install-perk-origin')?.textContent
     }));
     assert.deepEqual(sheet, {
       focus: 'garageInstallPerkTitle',
       title: 'INSTALL PERK',
-      options: ['clean-exit', 'carry-on', 'drift-demon', 'traction', 'apex-grip', 'driftage', 'full-tank'],
-      origin: 'From Vintage Racer'
+      options: ['clean-exit', 'smv', 'carry-on', 'drift-demon', 'traction', 'apex-grip', 'full-tank'],
+      origin: 'From Race Car'
     }, 'The sheet opens on its heading and offers every perk PERKULATOR holds but the car\'s own');
     assert.deepEqual(await cornerMarkFacts(page, '.garage-install-perk .garage-install-perk-intro'), CORNER_MARK,
       'INSTALL PERK: PERKULATOR\'s corner mark, its lead wrapping around it');
-    await page.locator('.garage-install-perk-option[data-perk-id="driftage"]').click();
+    await page.locator('.garage-install-perk-option[data-perk-id="apex-grip"]').click();
     await page.waitForFunction(() => !document.querySelector('.garage-install-perk').open);
     assert.deepEqual([await focused(), await page.locator('.garage-announcer').textContent()],
-      ['Replace installed perk: Driftage', 'Driftage installed on Truck.'], 'Installing returns focus to REPLACE');
+      ['Replace installed perk: Apex Grip', 'Apex Grip installed on Truck.'], 'Installing returns focus to REPLACE');
     const installed = await perkPanel();
     assert.deepEqual([installed.title, installed.installed, installed.actions, installed.small],
-      ['Torque + Driftage', 'Driftage Rarity EPIC INSTALLED', ['Replace installed perk: Driftage', 'Remove installed perk: Driftage'], []],
+      ['Torque + Apex Grip', 'Apex Grip Rarity EPIC INSTALLED', ['Replace installed perk: Apex Grip', 'Remove installed perk: Apex Grip'], []],
       'The closed perk names both perks; REPLACE and REMOVE name the installed one');
     // One perk per row: the installed perk sits under the car's own, with the chip, check
     // and chevron still beside them.
@@ -683,17 +683,17 @@ async function perkulatorFlow() {
     // REPLACE opens the sheet with the installed perk marked; Escape returns to REPLACE.
     await page.locator('.garage-perk-replace').click();
     await page.waitForSelector('.garage-install-perk[open]');
-    assert.equal(await page.locator('.garage-install-perk-option[aria-current="true"]').getAttribute('data-perk-id'), 'driftage');
+    assert.equal(await page.locator('.garage-install-perk-option[aria-current="true"]').getAttribute('data-perk-id'), 'apex-grip');
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => !document.querySelector('.garage-install-perk').open);
-    assert.equal(await focused(), 'Replace installed perk: Driftage', 'Closing the sheet returns focus to REPLACE');
+    assert.equal(await focused(), 'Replace installed perk: Apex Grip', 'Closing the sheet returns focus to REPLACE');
 
     // REMOVE takes only the installed perk; INSTALL takes focus.
     await page.locator('.garage-perk-remove').click();
     assert.deepEqual([await focused(), (await perkPanel()).title], ['Install perk on Truck', 'Torque'], 'REMOVE leaves the car its own perk');
     await page.locator('.garage-perk-install').click();
     await page.waitForSelector('.garage-install-perk[open]');
-    await page.locator('.garage-install-perk-option[data-perk-id="driftage"]').click();
+    await page.locator('.garage-install-perk-option[data-perk-id="apex-grip"]').click();
     await page.waitForFunction(() => !document.querySelector('.garage-install-perk').open);
 
     // 320px: the perk card and the sheet fit without sideways scroll.
@@ -717,14 +717,15 @@ async function perkulatorFlow() {
     assert.deepEqual([narrowPanel <= 0, narrowSheet], [true, { overflowX: 0, inside: true }], '320: PERKULATOR fits without sideways scroll');
     await page.setViewportSize({ width: 393, height: 793 });
 
-    // Each car keeps its own: the Vintage Racer is never offered DRIFTAGE.
-    await view('vintage-racer');
+    // Each car keeps its own: the Race Car is never offered APEX GRIP, and no car DRIFTAGE.
+    await view('race');
     await page.locator('.garage-perk-install').click();
     await page.waitForSelector('.garage-install-perk[open]');
     const vintageOptions = await page.evaluate(() => [...document.querySelectorAll('.garage-install-perk-option')].map((option) => option.dataset.perkId));
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => !document.querySelector('.garage-install-perk').open);
-    assert.equal(vintageOptions.includes('driftage'), false, 'A car is never offered its own perk');
+    assert.deepEqual([vintageOptions.includes('apex-grip'), vintageOptions.includes('driftage')], [false, false],
+      'A car is never offered its own perk, and DRIFTAGE stays with the Vintage Racer');
 
     await page.evaluate(async () => {
       const { ACHIEVEMENT_FAMILIES } = await import('/turn/achievements/catalog.js');
@@ -744,13 +745,15 @@ async function perkulatorFlow() {
       await page.locator('[data-perk-rarity="epic"]').focus();
       await page.keyboard.press('Space');
       assert.deepEqual(await page.locator('.garage-install-perk-option').evaluateAll((nodes) => nodes.map((n) => n.dataset.perkId)),
-        ['apex-grip', 'driftage', 'full-tank', 'locked-in', 'precision', 'response-time']);
+        ['apex-grip', 'full-tank', 'locked-in', 'precision', 'response-time']);
       assert.equal(await page.locator('[data-perk-rarity="all"]').getAttribute('aria-pressed'), 'false');
       await page.locator('[data-perk-rarity="mythic"]').click();
       assert.deepEqual(await page.locator('.garage-install-perk-option').evaluateAll((nodes) => nodes.map((n) => n.dataset.perkId)), ['road-rage', 'turbo']);
       assert.equal(await page.locator('[data-perk-rarity="epic"]').getAttribute('aria-pressed'), 'false');
       assert.ok((await page.locator('[data-perk-id="turbo"]').textContent()).includes('From FASTER THAN THE DEV'));
-      assert.equal(await page.locator('[data-perk-rarity="common"]').count(), 0);
+      await page.locator('[data-perk-rarity="common"]').click();
+      assert.deepEqual(await page.locator('.garage-install-perk-option').evaluateAll((nodes) => nodes.map((n) => n.dataset.perkId)), ['clean-exit', 'smv'],
+        'COMMON: CLEAN EXIT and SMV (#1273)');
       assert.ok(await page.locator('.garage-install-perk .turn-pr-sheet-body').evaluate((node) => node.scrollWidth <= node.clientWidth + 1));
       await page.keyboard.press('Escape');
     }
@@ -762,9 +765,9 @@ async function perkulatorFlow() {
     await page.locator('.garage-perk-remove').click();
     assert.equal(await page.locator('.garage-perk-installed-body .garage-perk-card').count(), 0, 'No empty installed card');
     await page.locator('.garage-perk-install').click();
-    await page.locator('[data-perk-id="driftage"]').click();
+    await page.locator('[data-perk-id="smv"]').click();
 
-    // RACE the Truck: the race runs TORQUE and the installed DRIFTAGE.
+    // RACE the Truck: the race runs TORQUE and the installed SMV.
     await page.evaluate(() => globalThis.__turnGarage.viewCar('truck'));
     await page.waitForTimeout(700);
     await page.locator('.garage-race').click();
@@ -773,7 +776,7 @@ async function perkulatorFlow() {
       installed: globalThis.__turnRuntime.state.vehicleInstalledPerkId,
       running: [...(globalThis.__turnRuntime.state.vehiclePerkIds || [])]
     }));
-    assert.deepEqual(race, { installed: 'driftage', running: ['torque', 'driftage'] }, 'The race runs the car\'s own perk and its installed perk');
+    assert.deepEqual(race, { installed: 'smv', running: ['torque', 'smv'] }, 'The race runs the car\'s own perk and its installed perk');
     assert.deepEqual(errors, [], 'PERKULATOR: no page errors');
   } finally {
     await browser.close();

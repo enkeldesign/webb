@@ -534,8 +534,8 @@ export function showGarage({
       perkCopy.innerHTML = `${escapeHtml(presented.description)}${unlocked ? '' : `<br><span class="garage-perk-lock">Unlocks${unlocksWith} at ${reward.threshold} trophies on Trophy Road.</span>`}`;
       // With an installed perk, the closed disclosure names both.
       const installed = perkulator.sync(car, { playable: !selection.state().preview });
-      perkTitle.innerHTML = `${escapeHtml(titleCase(presented.title))}${installed
-        ? ` <span class="garage-perk-plus">+ ${escapeHtml(titleCase(installed.title))}</span>`
+      perkTitle.innerHTML = `${escapeHtml(presented.name || titleCase(presented.title))}${installed
+        ? ` <span class="garage-perk-plus">+ ${escapeHtml(installed.name)}</span>`
         : ''}`;
     }
 
