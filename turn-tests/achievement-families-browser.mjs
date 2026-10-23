@@ -121,24 +121,27 @@ try {
     return { page: document.documentElement.scrollWidth - document.documentElement.clientWidth, dialog: dialog.scrollWidth - dialog.clientWidth, wide };
   });
   assert.deepEqual(overflow, { page: 0, dialog: 0, wide: 0 }, '320px: PERK rewards wrap without sideways scroll');
-  // #984 at 320px: every family line stays on one line with a 44px touch target.
+  // #984 at 320px: every family line keeps a 44px target inside its card. TURN's font
+  // stack is the platform's (Inter, SF, or a wider fallback), so a line may need two rows;
+  // if it does, it breaks between the count and the state, never inside either, and the
+  // chevron stays with its word.
   const lines = await page.evaluate(() => [...globalThis.__turnAchievements.dialog.querySelectorAll('[data-achievement-disclosure]')]
     .filter((node) => node.getClientRects().length)
     .map((node) => {
       const box = node.getBoundingClientRect();
       const hit = globalThis.getComputedStyle(node, '::before');
-      const lineHeight = parseFloat(globalThis.getComputedStyle(node.querySelector('.turn-achievement-disclosure-parts')).lineHeight) || 16;
+      const whole = (child) => child.getClientRects().length === 1;
       return {
         id: node.dataset.achievementDisclosure,
-        oneLine: box.height < lineHeight * 2,
+        whole: whole(node.querySelector('.turn-achievement-disclosure-parts')) && whole(node.querySelector('.turn-achievement-disclosure-state')),
         target: box.height - parseFloat(hit.top) - parseFloat(hit.bottom) >= 44,
         fits: box.right <= node.parentElement.getBoundingClientRect().right + 1
       };
     }));
   assert.equal(lines.length, 6, 'Every completed family has its line');
-  assert.deepEqual(lines.filter((line) => !line.oneLine || !line.target || !line.fits), [], '320px: disclosure lines stay on one line with a 44px target');
+  assert.deepEqual(lines.filter((line) => !line.whole || !line.target || !line.fits), [], '320px: disclosure lines keep whole phrases and a 44px target');
   assert.deepEqual(errors, []);
-  console.log('Achievement disclosure browser: keyboard, focus, ALL/category/UNLOCKED/track filters, totals, the quiet one-line family disclosure and the 320px PERK reward row pass.');
+  console.log('Achievement disclosure browser: keyboard, focus, ALL/category/UNLOCKED/track filters, totals, the quiet family disclosure line and the 320px PERK reward row pass.');
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.close(resolve));

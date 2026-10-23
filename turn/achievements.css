@@ -270,23 +270,34 @@
   inset: -10px -6px;
 }
 
+/* Each half stays whole. With a wide fallback font the state drops below the count as
+   one unit, never mid-phrase, and the chevron travels with its word. */
+.turn-achievement-disclosure-parts,
+.turn-achievement-disclosure-state {
+  white-space: nowrap;
+}
+
 .turn-achievement-disclosure-state {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
 }
 
-.turn-achievement-disclosure-chevron {
-  margin-inline-start: -2px;
+.turn-achievement-disclosure-state::after {
+  content: '';
+  display: inline-block;
+  margin-inline-start: 5px;
   width: .55em;
   height: .55em;
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
-  transform: translateY(-2px) rotate(45deg);
+  vertical-align: .15em;
+  transform: rotate(45deg);
 }
 
-.turn-achievement-disclosure[aria-expanded='true'] .turn-achievement-disclosure-chevron {
-  transform: translateY(2px) rotate(-135deg);
+.turn-achievement-disclosure[aria-expanded='true'] .turn-achievement-disclosure-state::after {
+  vertical-align: -.05em;
+  transform: rotate(-135deg);
 }
 
 .turn-achievement-copy > .turn-achievement-disclosure:is(:hover, :active) {

@@ -55,8 +55,7 @@ export function syncAchievementFamilies(list, { revealMatches = false } = {}) {
 export function achievementFamilyDisclosureMarkup({ masterId, title, label, count, expanded, controls }) {
   return `<button type="button" class="turn-achievement-disclosure" data-achievement-disclosure="${masterId}" data-family-count="${count}" data-family-label="${label}" data-family-title="${title}" aria-expanded="${expanded}" aria-controls="${controls}" aria-label="${disclosureName(title, count, expanded)}">`
     + `<span class="turn-achievement-disclosure-parts"><span aria-hidden="true">✓</span> ${count} ${label}</span>`
-    + `<span class="turn-achievement-disclosure-state">${expanded ? 'Hide' : 'Show'}</span>`
-    + '<span class="turn-achievement-disclosure-chevron" aria-hidden="true"></span></button>';
+    + `<span class="turn-achievement-disclosure-state">${expanded ? 'Hide' : 'Show'}</span></button>`;
 }
 
 function disclosureName(title, count, expanded) {
