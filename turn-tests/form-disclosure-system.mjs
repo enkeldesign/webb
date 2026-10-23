@@ -50,6 +50,10 @@ assert.match(components, /background: var\(--turn-surface-raised\)/);
 assert.match(components, /\.m8-setting-card > h3[\s\S]*margin: -23\.25px 0 10\.5px 1\.5px/);
 assert.match(components, /input\[type='radio'\],[\s\S]*input\[type='checkbox'\][\s\S]*appearance: none/);
 assert.match(components, /input\[type='radio'\]:checked[\s\S]*radial-gradient/);
+// The selected dot is ink on teal, like the checkbox tick, never the page surface: a light
+// dot on teal fails contrast in light mode.
+assert.match(components, /input\[type='radio'\]:checked \{\s*background:\s*radial-gradient\(circle, var\(--turn-ink\) 0 27%/,
+  'The selected radio dot is ink');
 assert.match(components, /input\[type='checkbox'\]:checked[\s\S]*background-color: var\(--turn-form-control-selected\)/);
 assert.match(components, /input\[type='radio'\]:focus-visible,[\s\S]*input\[type='checkbox'\]:focus-visible/);
 assert.match(components, /#m8AudioBalance[\s\S]*appearance: none/);
