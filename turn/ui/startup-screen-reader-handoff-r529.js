@@ -276,6 +276,9 @@
 
   function focusDialogHeading(dialog) {
     if (!dialog || dialog.hidden) return;
+    // A dialog being returned to (closing a reader re-opens ABOUT TURN) puts focus back
+    // on the control that left it; heading-first is for opening, not returning.
+    if (dialog.dataset?.turnReturningFocus === 'true') return;
     if (globalThis.HTMLDialogElement && dialog instanceof globalThis.HTMLDialogElement && !dialog.open) return;
     const heading = headingForDialog(dialog);
     if (!heading) return;

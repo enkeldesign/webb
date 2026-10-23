@@ -335,7 +335,7 @@ function setFlowMultiplier(multiplier) {
   syncFlowShiftPresentation(state);
   if (previousGreatFlow !== nextGreatFlow) {
     showCompactRacePill(nextGreatFlow ? 'FLOW SHIFT ACTIVE' : 'FLOW SHIFT LOST', {
-      tone: 'blue',
+      perkId: 'flow-shift',
       duration: 1800
     });
   }

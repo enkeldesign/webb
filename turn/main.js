@@ -969,16 +969,18 @@ function updatePhysics(dt, now) {
     vehicleTuning: state.vehicleTuning
   });
   // The car's own perk and its installed perk each fill their own slot (perk-runtime.js).
-  const perkStatusFeedback = resolveVehiclePerkStatusFeedback({
+  const originalPerkFeedback = resolveVehiclePerkStatusFeedback({
     perkId: state.vehiclePerkRuntimeOriginalId,
     previousProgress: previousVehiclePerkProgress,
     nextProgress: state.vehiclePerkProgress
-  }) || resolveVehiclePerkStatusFeedback({
+  });
+  const installedPerkFeedback = !originalPerkFeedback && resolveVehiclePerkStatusFeedback({
     perkId: state.vehiclePerkRuntimeInstalledId,
     previousProgress: previousInstalledPerkProgress,
     nextProgress: state.vehicleInstalledPerkProgress
   });
-  if (perkStatusFeedback) showCompactRacePill(perkStatusFeedback, { tone: 'blue' });
+  if (originalPerkFeedback) showCompactRacePill(originalPerkFeedback, { perkId: state.vehiclePerkRuntimeOriginalId });
+  else if (installedPerkFeedback) showCompactRacePill(installedPerkFeedback, { perkId: state.vehiclePerkRuntimeInstalledId });
 
   const graduatedFeedback = resolveGraduatedStageFeedback(
     previousVehiclePerkStage,

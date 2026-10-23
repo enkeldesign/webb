@@ -130,7 +130,7 @@ export function createFlowRuntime({
     // only in a live lap, so a reset or leaving the race says nothing.
     if (wasLockedIn !== lockedIn && state.running === true && state.lapActive === true
       && state.vehiclePerkIds?.includes?.('locked-in')) {
-      showPill(lockedIn ? 'LOCKED IN ACTIVE' : 'LOCKED IN LOST', { tone: 'blue', duration: 1800 });
+      showPill(lockedIn ? 'LOCKED IN ACTIVE' : 'LOCKED IN LOST', { perkId: 'locked-in', duration: 1800 });
     }
     if (!enabled || !hudVisible) return;
     scoreFeedback.updateState(SCORE_FEEDBACK_CHANNEL.FLOW, snapshot, now);

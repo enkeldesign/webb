@@ -295,6 +295,37 @@
   font-size: max(var(--turn-text-floor, 11px), 0.5625rem);
 }
 
+/* A collection master's PERK reward (#1274): a row of its own that wraps, never one
+   long unbreakable line. REWARD: and the rarity are words; the chip colour supports them. */
+.turn-achievement-copy .turn-achievement-reward {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4.5px 6px;
+  margin-top: 6px;
+  min-width: 0;
+}
+
+.turn-achievement-reward-label,
+.turn-achievement-reward-state {
+  font-size: max(var(--turn-text-floor, 11px), 0.51rem);
+  font-weight: 950;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.turn-achievement-reward-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 950;
+  letter-spacing: .04em;
+}
+
+.turn-achievement-reward-state {
+  flex-basis: 100%;
+  color: var(--turn-pr-muted, currentColor);
+}
+
 .turn-achievement-status {
   justify-self: end;
   padding: 3.75px 6px;
@@ -369,12 +400,18 @@
 }
 
 .turn-achievement-toast > b {
+  min-width: 0;
+  max-width: 100%;
   padding: 3.75px 6px;
   border: var(--turn-border-compact, 3px) solid var(--turn-outline);
-  border-radius: var(--turn-radius-pill, 999px);
+  border-radius: var(--turn-radius-compact, 12px);
   background: var(--turn-action-warning, #ffd43b);
   font-size: max(var(--turn-text-floor, 11px), 0.54rem);
-  white-space: nowrap;
+  line-height: 1.25;
+  /* A collection's PERK reward is longer than a trophy count: it wraps in place rather
+     than running off a narrow screen (CODEX on #1278). */
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 540px) {

@@ -1,4 +1,4 @@
-import { achievementRewardText } from './reward-presentation.js';
+import { achievementRewardMarkup, achievementRewardText } from './reward-presentation.js';
 import { filterButtons } from '../ui/filter-buttons.js';
 import {
   ACHIEVEMENTS,
@@ -238,14 +238,16 @@ function achievementCard(achievement, store, session, disclosure = '') {
       </div>`
     : '';
   const context = unlocked ? contextLine(record) : '';
+  const perkReward = achievementRewardMarkup(achievement, { revealed: store.isRewardUnlocked('perkulator'), earned: unlocked });
 
   return `
     <article class="${classes}" data-achievement-id="${achievement.id}" data-achievement-track="${achievement.trackId || ''}" data-achievement-category="${achievement.category}" data-achievement-status="${status.toLowerCase().replace(' ', '-')}">
       <div class="turn-achievement-icon" aria-hidden="true">${ICONS[achievement.icon]}</div>
       <div class="turn-achievement-copy">
-        <span>${CATEGORY_LABELS[achievement.category]} · ${achievementRewardText(achievement, { revealed: store.isRewardUnlocked('perkulator'), earned: unlocked })}</span>
+        <span>${CATEGORY_LABELS[achievement.category]}${perkReward ? '' : ` · ${achievementRewardText(achievement)}`}</span>
         <h4>${achievement.title}</h4>
         <p>${achievement.description}</p>
+        ${perkReward}
         ${achievement.recommendation && !unlocked ? `<small>${achievement.recommendation}</small>` : ''}
         ${progressMarkup}
         ${context ? `<small>Unlocked · ${context}</small>` : ''}

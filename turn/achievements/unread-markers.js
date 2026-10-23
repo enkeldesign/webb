@@ -145,8 +145,8 @@ function visibleAchievementTags(achievement, isNew) {
   return tags;
 }
 
-// The reward line says what the card's own markup says (view.js): trophies, or a
-// collection master's perk, concealed until PERKULATOR (#1247).
+// The meta line says what the card's own markup says (view.js): its tags and trophies. A
+// collection master's PERK has a row of its own instead (#1274).
 function decorateMeta(copy, achievement, isNew, rewardText = `${achievement?.trophies} trophies`) {
   if (!copy || !achievement) return;
   let meta = copy.querySelector(':scope > .turn-achievement-meta');
@@ -167,6 +167,10 @@ function decorateMeta(copy, achievement, isNew, rewardText = `${achievement?.tro
     label.textContent = TAG_LABELS[tag] || String(tag).toUpperCase();
     return label;
   });
+  if (!rewardText) {
+    meta.replaceChildren(...nodes);
+    return;
+  }
   const trophies = document.createElement('span');
   trophies.className = 'turn-achievement-trophies';
   trophies.textContent = rewardText;
@@ -228,10 +232,8 @@ export function installAchievementUnreadMarkers(
       let dot = icon?.querySelector('.turn-achievement-unread-dot');
       let text = copy?.querySelector('.turn-achievement-unread-text');
 
-      decorateMeta(copy, achievement, isNew, achievementRewardText(achievement, {
-        revealed: achievements.store.isRewardUnlocked?.('perkulator') === true,
-        earned: card.classList.contains('is-unlocked')
-      }));
+      // A PERK reward has its own row (view.js, #1274); the meta line keeps the tags.
+      decorateMeta(copy, achievement, isNew, achievement.reward?.type === 'perk' ? '' : achievementRewardText(achievement));
       removeTimeTrialRecommendation(copy, achievement);
 
       if (isNew) {

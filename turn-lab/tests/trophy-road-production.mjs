@@ -221,7 +221,7 @@ assert.equal(rewardForVehiclePerk('race'), null,
 assert.equal(getTrophyRoadReward('invented'), null);
 
 for (const [rewardId, title, trackIds, pattern] of [
-  ['medium-tracks', 'MEDIUM TRACKS', ['airport', 'beachfront'], /AIRPORT[\s\S]*BEACHFRONT/],
+  ['medium-tracks', 'MEDIUM TRACKS', ['beachfront', 'airport'], /BEACHFRONT[\s\S]*AIRPORT/],
   ['advanced-tracks', 'ADVANCED TRACKS', ['harbor', 'dead-canyon'], /HARBOR[\s\S]*DEAD CANYON/],
   ['expert-tracks', 'EXPERT TRACKS', ['midnight-city', 'mountain'], /MIDNIGHT CITY[\s\S]*≈4\.7 km[\s\S]*MOUNTAIN[\s\S]*≈3\.8 km/]
 ]) {

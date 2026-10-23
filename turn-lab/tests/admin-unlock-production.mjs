@@ -45,7 +45,7 @@ assert.equal(boot('http://localhost/turn/').__turnSessionAdmin, undefined, 'Loca
 
 const real = memory({
   [ACHIEVEMENT_STORAGE_KEY]: JSON.stringify({ version: 10, bonuses: { old: { trophies: 5000, grantedAt: 1 } }, rewards: { unlocked: ['perkulator'] } }),
-  'turn-theme-v1': 'dark', 'turn-perkulator-v1': '{"installed":{"truck":"driftage"}}',
+  'turn-theme-v1': 'dark', 'turn-perkulator-v1': '{"installed":{"truck":"carry-on"}}',
   'turn-tutorial-v1': '{"completed":true}', 'turn-personal-rivals-v1': 'original rivals',
   'turn-admin-unlock-v1': 'legacy marker is inert', 'unrelated-key': 'untouched'
 });
@@ -68,9 +68,9 @@ for (const reward of TROPHY_ROAD_REWARDS) {
   for (const id of reward.trackIds || []) assert.equal(isTrackUnlocked(id), true);
   for (const id of reward.vehicleIds || []) assert.equal(isVehicleUnlocked(id), true);
 }
-assert.equal(isPerkAvailable('driftage'), true);
-assert.equal(installPerk('truck', 'driftage'), false, 'Already installed in the copied save');
-assert.equal(installPerk('suv', 'driftage'), true, 'Perks install only in the session');
+assert.equal(isPerkAvailable('carry-on'), true);
+assert.equal(installPerk('truck', 'carry-on'), false, 'Already installed in the copied save');
+assert.equal(installPerk('suv', 'carry-on'), true, 'Perks install only in the session');
 assert.equal(JSON.stringify(store.state.unlocked), history, 'Exposure never completes achievements');
 page.__turnSessionAdmin.configure({});
 assert.equal(store.setTemporaryTrophyTotal(-1), false);

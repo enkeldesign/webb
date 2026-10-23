@@ -247,7 +247,7 @@ try {
   const pills = [];
   const runtime = createFlowRuntime({
     state,
-    showPill: (label, options) => pills.push({ label, multiplier: state.flowScoreMultiplier, tone: options.tone }),
+    showPill: (label, options) => pills.push({ label, multiplier: state.flowScoreMultiplier, perkId: options.perkId }),
     storage,
     eventTarget,
     scoreFeedback: feedback,
@@ -438,11 +438,11 @@ try {
   assert.ok(JSON.parse(storage.getItem(FLOW_RECORDS_STORAGE_KEY)).tracks.mountain);
   assert.ok(eventTarget.events.some((event) => event.type === 'turn:flow-lap-result'));
   // LOCKED IN says each crossing of ×2 once, as FLOW SHIFT says its own threshold.
-  assert.deepEqual(pills, [{ label: 'LOCKED IN ACTIVE', multiplier: 2.5, tone: 'blue' }],
-    'LOCKED IN says once when FLOW passes ×2, not on every FLOW update');
+  assert.deepEqual(pills, [{ label: 'LOCKED IN ACTIVE', multiplier: 2.5, perkId: 'locked-in' }],
+    'LOCKED IN says once when FLOW passes ×2, not on every FLOW update, in its own (EPIC) colour');
   runtime.reset(12000);
   assert.equal(state.flowScoreMultiplier, 1, 'Resetting FLOW immediately removes the conditional perk multiplier');
-  assert.deepEqual(pills.at(-1), { label: 'LOCKED IN LOST', multiplier: 1, tone: 'blue' }, 'Losing ×2 in a live lap says so');
+  assert.deepEqual(pills.at(-1), { label: 'LOCKED IN LOST', multiplier: 1, perkId: 'locked-in' }, 'Losing ×2 in a live lap says so');
 } finally {
   globalThis.CustomEvent = originalCustomEvent;
 }
