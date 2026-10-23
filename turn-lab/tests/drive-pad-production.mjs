@@ -412,23 +412,28 @@ assert.ok(
 
 // TURBO changes the canonical BOOST contribution, including its speed headroom,
 // without multiplying ordinary engine propulsion or the car's unboosted limit.
-function boostStep(installedPerkId, boostActive, initialSpeed = 20) {
+function boostStep(installedPerkId, boostActive, initialSpeed = 20, boostOvercharge = 0) {
   const boosted = {
     ...state, vehicleId: 'convertible', vehicleInstalledPerkId: installedPerkId,
     position: new Vec3(), velocity: new Vec3(0, 0, initialSpeed),
     touchGas: true, touchBrake: false, touchReverse: false,
     steering: 0, heading: 0, driftAmount: 0, speed: initialSpeed
   };
-  updateVehiclePhysicsState({ ...physicsArgs, state: boosted, dt: 0.00001, boostActive });
+  updateVehiclePhysicsState({ ...physicsArgs, state: boosted, dt: 0.00001, boostActive, boostOvercharge });
   return boosted.speed;
 }
 const coasting = boostStep('', false);
 const ordinaryBoost = boostStep('', true);
 const turboBoost = boostStep('turbo', true);
-assert.ok(Math.abs((turboBoost - coasting) / (ordinaryBoost - coasting) - 2.5) < 0.00001,
-  'TURBO adds 2.5 times ordinary BOOST propulsion through the real physics path');
+assert.ok(Math.abs((turboBoost - coasting) / (ordinaryBoost - coasting) - 2) < 0.00001,
+  'TURBO adds 2 times ordinary BOOST propulsion through the real physics path');
+// OVERCHARGE keeps its own +20%: an OVERCHARGED TURBO burn composes to 2.4×, never baked in.
+assert.ok(Math.abs((boostStep('turbo', true, 20, 1) - coasting) / (ordinaryBoost - coasting) - 2.4) < 0.00001,
+  'OVERCHARGED TURBO is 2 × 1.2 = 2.4 times ordinary BOOST');
+assert.ok(Math.abs((boostStep('', true, 20, 1) - coasting) / (ordinaryBoost - coasting) - 1.2) < 0.00001,
+  'OVERCHARGE alone stays 1.2 times ordinary BOOST');
 assert.equal(boostStep('turbo', false), coasting, 'TURBO does not change ordinary GAS');
-assert.ok(Math.abs(boostStep('turbo', true, 200) - 80 * (1 + 0.32 * 2.5)) < 1e-9,
+assert.ok(Math.abs(boostStep('turbo', true, 200) - 80 * (1 + 0.32 * 2)) < 1e-9,
   'Only the BOOST speed bonus is multiplied');
 assert.equal(boostStep('turbo', false, 200), boostStep('', false, 200));
 

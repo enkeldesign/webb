@@ -540,7 +540,7 @@ for (const id of ['turbo', 'road-rage']) {
 }
 const turboTruck = truckWith('turbo');
 const turboTuning = resolveVehiclePerkTuning({ state: turboTruck, tuning: truck.tuning });
-assert.equal(turboTuning.boostEffectMultiplier, 2.5);
+assert.equal(turboTuning.boostEffectMultiplier, 2, 'TURBO is energy-neutral: 2× burn, 2× effect (#1247, 22 Oct)');
 assert.equal(turboTuning.boostConsumptionMultiplier, 2);
 assert.equal(truck.tuning.boostEffectMultiplier, undefined, 'Installing TURBO never changes the original tuning');
 turboTruck.vehicleInstalledPerkId = '';

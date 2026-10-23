@@ -215,8 +215,8 @@ export const ACHIEVEMENT_PERKS = Object.freeze([
   definePerk({
     id: 'turbo', title: 'TURBO', rarity: PERK_RARITY.MYTHIC, installable: true,
     achievementId: 'faster-than-the-dev',
-    description: 'BOOST burns twice as fast and delivers 2.5 times the normal BOOST effect.',
-    tuning: { boostConsumptionMultiplier: 2, boostEffectMultiplier: 2.5 }
+    description: 'BOOST burns twice as fast and delivers twice the normal BOOST effect: the same tank, in half the time.',
+    tuning: { boostConsumptionMultiplier: 2, boostEffectMultiplier: 2 }
   }),
   definePerk({
     id: 'road-rage', title: 'ROAD RAGE', rarity: PERK_RARITY.MYTHIC, installable: true,
