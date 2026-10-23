@@ -184,6 +184,103 @@ async function responsiveInstall(browser, name) {
   }
 }
 
+// ABOUT TURN (#1119): everything, both actions included, is in view without scrolling,
+// in TURN and on the website. ACCESSIBILITY is a reader like HISTORY AND CHANGELOG:
+// ABOUT hands over to it and gets focus back, and a footer link opens it directly.
+async function aboutTurn(browser, name) {
+  const aboutSizes = [[393, 852], [852, 393], [568, 320], [667, 308], [320, 568], [1080, 810]];
+  for (const standalone of [false, true]) {
+    const context = await browser.newContext({ viewport: { width: 852, height: 393 }, hasTouch: true, reducedMotion: 'reduce' });
+    const page = await context.newPage();
+    page.setDefaultTimeout(30000);
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.addInitScript((isStandalone) => {
+      localStorage.setItem('turn-low-graphics-v1', '1');
+      localStorage.setItem('turn-audio-enabled-v1', 'off');
+      if (isStandalone) Object.defineProperty(globalThis.navigator, 'standalone', { configurable: true, value: true });
+    }, standalone);
+    const where = `${name} ${standalone ? 'TURN' : 'website'}`;
+    const api = standalone ? 'globalThis.__turnHomeFeedback.about' : 'globalThis.__turnWebsiteAbout';
+    const dialogs = standalone
+      ? { about: '.m8-about-dialog:not(.install-about-dialog)', reader: '#turnAccessibilityTitle', history: '#turnHistoryTitle', footer: '.m8-accessibility-trigger' }
+      : { about: '.install-about-dialog', reader: '#turnWebsiteAccessibilityTitle', history: '#turnWebsiteHistoryTitle', footer: '#installAccessibilityButton' };
+    // A dialog's close event is a queued task, so wait briefly for the state to settle.
+    const settled = async (check) => {
+      for (let attempt = 0; attempt < 40 && !(await check()); attempt += 1) await page.waitForTimeout(25);
+      return check();
+    };
+    const isOpen = (selector) => page.locator(selector).first().evaluate((node) => (node.closest('dialog') || node).open === true);
+    const expectOpen = async (selector, expected, message) => {
+      assert.equal(await settled(async () => (await isOpen(selector)) === expected), true, message);
+    };
+    const focused = (selector) => settled(() => page.locator(selector).first().evaluate((node) => document.activeElement === node));
+    try {
+      await page.goto(`${origin}/turn/`);
+      await page.waitForFunction(standalone
+        ? () => Boolean(globalThis.__turnAboutHistory)
+        : () => Boolean(globalThis.__turnWebsiteAbout));
+      await page.evaluate(() => document.fonts.ready);
+      for (const [width, height] of aboutSizes) {
+        await page.setViewportSize({ width, height });
+        await page.evaluate(`${api}.open()`);
+        await settle(page);
+        const fit = await page.locator(dialogs.about).evaluate((dialog) => {
+          const body = dialog.querySelector('.m8-about-content');
+          const card = dialog.querySelector('.m8-dialog-card');
+          return {
+            overflow: Math.max(body.scrollHeight - body.clientHeight, card.scrollHeight - card.clientHeight),
+            actions: [...dialog.querySelectorAll('.m8-about-actions button')].map((button) => {
+              const rect = button.getBoundingClientRect();
+              return { top: rect.top, bottom: rect.bottom, height: rect.height };
+            }),
+            bodyBottom: body.getBoundingClientRect().bottom
+          };
+        });
+        const label = `${where} ABOUT ${width}x${height}`;
+        assert.ok(fit.overflow <= 1, `${label}: nothing scrolls (${fit.overflow}px)`);
+        assert.equal(fit.actions.length, 2, `${label}: two actions`);
+        for (const action of fit.actions) {
+          assert.ok(action.height >= 44 && action.top >= 0 && action.bottom <= Math.min(height, fit.bodyBottom) + 1,
+            `${label}: action in view ${JSON.stringify(action)}`);
+        }
+        await page.evaluate(`${api}.close()`);
+      }
+
+      await page.setViewportSize({ width: 852, height: 393 });
+      await page.evaluate(`${api}.open()`);
+      await page.locator(`${dialogs.about} .m8-about-accessibility`).click();
+      await expectOpen(dialogs.about, false, `${where}: ABOUT hands over to ACCESSIBILITY`);
+      await expectOpen(dialogs.reader, true, `${where}: ACCESSIBILITY opens as its own reader`);
+      assert.equal(await focused(dialogs.reader), true, `${where}: the reader's heading takes focus`);
+      assert.equal(await page.locator(dialogs.reader).first().evaluate((node) => node.closest('dialog').querySelectorAll('.m8-feedback-email').length), 1,
+        `${where}: feedback is reachable from the statement`);
+      await page.keyboard.press('Escape');
+      await expectOpen(dialogs.about, true, `${where}: closing the reader returns to ABOUT`);
+      assert.equal(await focused(`${dialogs.about} .m8-about-accessibility`), true, `${where}: focus returns to ACCESSIBILITY`);
+
+      await page.locator(`${dialogs.about} .m8-about-history`).click();
+      await expectOpen(dialogs.history, true, `${where}: HISTORY AND CHANGELOG still opens its reader`);
+      await page.keyboard.press('Escape');
+      assert.equal(await focused(`${dialogs.about} .m8-about-history`), true, `${where}: focus returns to HISTORY AND CHANGELOG`);
+      await page.keyboard.press('Escape');
+      await expectOpen(dialogs.about, false, `${where}: Escape closes ABOUT`);
+
+      if (standalone) await page.evaluate(() => document.querySelector('.m8-home-menu-button, .turn-home-menu-button')?.click());
+      await page.locator(dialogs.footer).first().evaluate((node) => node.click());
+      await expectOpen(dialogs.reader, true, `${where}: the footer link opens ACCESSIBILITY directly`);
+      await expectOpen(dialogs.about, false, `${where}: ...without ABOUT behind it`);
+      await page.keyboard.press('Escape');
+      await expectOpen(dialogs.reader, false, `${where}: Escape closes ACCESSIBILITY`);
+      assert.equal(await focused(dialogs.footer), true, `${where}: focus returns to the footer link`);
+      assert.deepEqual(errors, [], `${where}: no ABOUT runtime errors`);
+    } finally {
+      await context.close();
+    }
+  }
+  console.log(`${name}: ABOUT TURN fits without scrolling at ${aboutSizes.length} sizes; ACCESSIBILITY reader hand-off and footer entry passed.`);
+}
+
 async function orientationTransitions(browser) {
   for (const portrait of [true, false]) {
     const context = await browser.newContext({ viewport: portrait ? { width: 393, height: 852 } : { width: 852, height: 393 } });
@@ -643,6 +740,7 @@ try {
       ...(name === 'chromium' ? { args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] } : {}) });
     try {
       await responsiveInstall(browser, name);
+      await aboutTurn(browser, name);
       await orientationTransitions(browser);
       await responsiveRace(browser, name);
     } finally {

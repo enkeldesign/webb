@@ -51,16 +51,6 @@ function focusDialogHeading(dialog) {
   }
 }
 
-function focusHeading(heading) {
-  if (!heading) return;
-  if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
-  try {
-    heading.focus();
-  } catch (_) {
-    heading.focus?.();
-  }
-}
-
 function openDialog(dialog, trigger) {
   dialog.__turnReturnFocus = trigger;
   const card = dialog.querySelector('.m8-dialog-card');
@@ -119,17 +109,43 @@ function changelogMarkup() {
     </details>`;
 }
 
-function accessibilityStatementMarkup(prefix) {
-  return `
-    <div class="turn-accessibility-statement">
-      <h3 id="${prefix}AccessibilityHeading">Accessibility in TURN</h3>
-      <p>TURN is designed so more people can play in more ways. Accessibility is part of the game design, not a separate mode, and TURN aims to meet WCAG 2.2 AA where those guidelines apply.</p>
-      <p>Current support includes non-visual racing with Drive By Ear, screen-reader support, device or on-screen steering, and controls designed for one-handed play and assistive technology.</p>
-      <p><strong>Still being validated:</strong> accessibility is an ongoing part of TURN. In particular, the complete end-to-end screen-reader experience has not yet been tested with experienced screen-reader players, so we do not claim that every path is complete.</p>
-    </div>
-    <div class="turn-accessibility-feedback-heading">
-      <h3>Tell us what gets in the way</h3>
-    </div>`;
+// ACCESSIBILITY is its own reader, opened from ABOUT TURN as HISTORY AND CHANGELOG is
+// and directly from the footers (#1119). The statement sits beside the shared
+// feedback content, so a barrier can be reported from where it is described.
+function createAccessibilityDialog(scope = 'game') {
+  const prefix = scope === 'website' ? 'turnWebsiteAccessibility' : 'turnAccessibility';
+  const dialog = document.createElement('dialog');
+  dialog.className = 'm8-dialog turn-dialog turn-dialog--reader turn-history-dialog turn-accessibility-dialog';
+  dialog.setAttribute('aria-labelledby', `${prefix}Title`);
+  dialog.innerHTML = `
+    <article class="m8-dialog-card turn-dialog__surface turn-history-card">
+      <header class="m8-dialog-head turn-dialog__header turn-history-head">
+        <div>
+          <span>PLAY YOUR WAY</span>
+          <h2 id="${prefix}Title">ACCESSIBILITY</h2>
+        </div>
+        <button type="button" data-dialog-close aria-label="Close Accessibility">×</button>
+      </header>
+
+      <div class="turn-history-shell">
+        <div class="turn-history-panels turn-dialog__body">
+          <section class="turn-history-panel turn-accessibility-panel" aria-labelledby="${prefix}Title" tabindex="0">
+            <div class="turn-accessibility-statement">
+              <p>TURN is designed so more people can play in more ways. Accessibility is part of the game design, not a separate mode, and TURN aims to meet WCAG 2.2 AA where those guidelines apply.</p>
+              <p>Current support includes non-visual racing with Drive By Ear, screen-reader support, device or on-screen steering, and controls designed for one-handed play and assistive technology.</p>
+              <p><strong>Still being validated:</strong> accessibility is an ongoing part of TURN. In particular, the complete end-to-end screen-reader experience has not yet been tested with experienced screen-reader players, so we do not claim that every path is complete.</p>
+            </div>
+            <h3 class="turn-accessibility-feedback-heading">Tell us what gets in the way</h3>
+          </section>
+        </div>
+      </div>
+    </article>`;
+  const feedback = createFeedbackContent({ className: 'turn-accessibility-feedback' });
+  dialog.querySelector('.turn-accessibility-panel').append(feedback.element);
+  dialog.addEventListener('close', () => feedback.clearStatus());
+  dialog.addEventListener('turn-dialog-fallback-close', () => feedback.clearStatus());
+  document.body.appendChild(dialog);
+  return dialog;
 }
 
 function createHistoryDialog(scope = 'game') {
@@ -243,7 +259,56 @@ function installTabs(dialog) {
   });
 }
 
-function compactAboutDialog(aboutDialog, historyDialog, tabs) {
+// ABOUT TURN hands over to a reader: it closes, the reader opens, and closing the reader
+// brings ABOUT back with focus on the action that opened it. Opened directly from a
+// footer, the reader returns focus to that footer control instead.
+function linkReader(aboutDialog, readerDialog, aboutButton, prepare = () => {}) {
+  let reopenAbout = false;
+
+  function open(sourceTrigger = aboutButton) {
+    prepare();
+    reopenAbout = aboutDialog.open || aboutDialog.hasAttribute('open');
+    if (reopenAbout) {
+      aboutDialog.__turnReturnFocus = null;
+      if (typeof aboutDialog.close === 'function' && aboutDialog.open) aboutDialog.close();
+      else aboutDialog.removeAttribute('open');
+    }
+    openDialog(readerDialog, reopenAbout ? aboutButton : sourceTrigger);
+  }
+
+  function restore() {
+    if (!reopenAbout) {
+      readerDialog.__turnReturnFocus?.focus?.();
+      return;
+    }
+    reopenAbout = false;
+    // Returning, not opening: focus goes back to the action that opened the reader, so
+    // the heading-first focus every opening dialog gets is skipped this once
+    // (startup-screen-reader-handoff). Cleared once those microtasks have run.
+    aboutDialog.dataset.turnReturningFocus = 'true';
+    if (typeof aboutDialog.showModal === 'function') aboutDialog.showModal();
+    else aboutDialog.setAttribute('open', '');
+    try {
+      aboutButton.focus({ preventScroll: true });
+    } catch (_) {
+      aboutButton.focus();
+    }
+    globalThis.setTimeout(() => {
+      delete aboutDialog.dataset.turnReturningFocus;
+    }, 0);
+  }
+
+  aboutButton.addEventListener('click', () => open(aboutButton));
+  readerDialog.querySelector('[data-dialog-close]')?.addEventListener('click', () => closeDialog(readerDialog));
+  readerDialog.addEventListener('click', (event) => {
+    if (event.target === readerDialog) closeDialog(readerDialog);
+  });
+  readerDialog.addEventListener('close', restore);
+  readerDialog.addEventListener('turn-dialog-fallback-close', restore);
+  return open;
+}
+
+function compactAboutDialog(aboutDialog, historyDialog, accessibilityDialog, tabs) {
   aboutDialog.classList.add('turn-dialog', 'turn-dialog--compact');
   aboutDialog.querySelector('.m8-about-card')?.classList.add('turn-dialog__surface');
   aboutDialog.querySelector('.m8-dialog-head')?.classList.add('turn-dialog__header');
@@ -251,97 +316,30 @@ function compactAboutDialog(aboutDialog, historyDialog, tabs) {
   const content = aboutDialog.querySelector('.m8-about-content');
   if (!content) throw new Error('TURN history could not find the About content.');
 
-  const accessibilityPrefix = aboutDialog.getAttribute('aria-labelledby') === 'turnWebsiteAboutTitle'
-    ? 'turnWebsiteAbout'
-    : 'm8About';
-
   content.classList.add('turn-dialog__body');
   content.innerHTML = `
     ${aboutTurnHtml()}
     <div class="m8-about-actions turn-dialog__actions">
       <button class="m8-about-history" type="button" aria-haspopup="dialog"><span>HISTORY AND<br>CHANGELOG</span></button>
-      <button
-        class="m8-about-accessibility"
-        type="button"
-        aria-expanded="false"
-        aria-controls="${accessibilityPrefix}AccessibilityPanel"
-      ><span>ACCESSIBILITY</span></button>
-    </div>
-    <section
-      id="${accessibilityPrefix}AccessibilityPanel"
-      class="turn-about-accessibility"
-      aria-labelledby="${accessibilityPrefix}AccessibilityHeading"
-      hidden
-    >
-      ${accessibilityStatementMarkup(accessibilityPrefix)}
-    </section>`;
+      <button class="m8-about-accessibility" type="button" aria-haspopup="dialog"><span>ACCESSIBILITY</span></button>
+    </div>`;
 
   const historyButton = content.querySelector('.m8-about-history');
   const accessibilityButton = content.querySelector('.m8-about-accessibility');
-  const accessibilityPanel = content.querySelector('.turn-about-accessibility');
-  const accessibilityHeading = accessibilityPanel.querySelector(`#${accessibilityPrefix}AccessibilityHeading`);
-  const feedback = createFeedbackContent({ className: 'turn-accessibility-feedback' });
-  accessibilityPanel.append(feedback.element);
-  let reopenAbout = false;
-
-  function setAccessibilityExpanded(expanded, { focus = false } = {}) {
-    accessibilityButton.setAttribute('aria-expanded', String(expanded));
-    accessibilityPanel.hidden = !expanded;
-    if (!expanded) {
-      feedback.clearStatus();
-      return;
-    }
-    if (focus) focusHeading(accessibilityHeading);
-  }
-
-  function openAccessibility(sourceTrigger = accessibilityButton) {
-    setAccessibilityExpanded(true);
-    const alreadyOpen = aboutDialog.open || aboutDialog.hasAttribute('open');
-    if (!alreadyOpen) openDialog(aboutDialog, sourceTrigger);
-    setAccessibilityExpanded(true, { focus: true });
-  }
-
-  function showHistory(section = 'development', sourceTrigger = historyButton) {
-    tabs.select(section);
-    reopenAbout = aboutDialog.open || aboutDialog.hasAttribute('open');
-    if (reopenAbout) {
-      aboutDialog.__turnReturnFocus = null;
-      if (typeof aboutDialog.close === 'function' && aboutDialog.open) aboutDialog.close();
-      else aboutDialog.removeAttribute('open');
-    }
-    openDialog(historyDialog, sourceTrigger);
-  }
-
-  function restoreAbout() {
-    if (!reopenAbout) {
-      historyDialog.__turnReturnFocus?.focus?.();
-      return;
-    }
-    reopenAbout = false;
-    if (typeof aboutDialog.showModal === 'function') aboutDialog.showModal();
-    else aboutDialog.setAttribute('open', '');
-    try {
-      historyButton.focus({ preventScroll: true });
-    } catch (_) {
-      historyButton.focus();
-    }
-  }
-
-  historyButton.addEventListener('click', () => showHistory('development', historyButton));
-  accessibilityButton.addEventListener('click', () => openAccessibility(accessibilityButton));
-  aboutDialog.addEventListener('close', () => setAccessibilityExpanded(false));
-  aboutDialog.addEventListener('turn-dialog-fallback-close', () => setAccessibilityExpanded(false));
-  historyDialog.querySelector('[data-dialog-close]')?.addEventListener('click', () => closeDialog(historyDialog));
-  historyDialog.addEventListener('click', (event) => {
-    if (event.target === historyDialog) closeDialog(historyDialog);
+  let historySection = 'development';
+  const openHistoryReader = linkReader(aboutDialog, historyDialog, historyButton, () => {
+    tabs.select(historySection);
+    historySection = 'development';
   });
-  historyDialog.addEventListener('close', restoreAbout);
-  historyDialog.addEventListener('turn-dialog-fallback-close', restoreAbout);
+  const openAccessibility = linkReader(aboutDialog, accessibilityDialog, accessibilityButton);
 
   return Object.freeze({
     button: historyButton,
     accessibilityButton,
-    open: showHistory,
+    open(section = 'development', sourceTrigger = historyButton) {
+      historySection = section;
+      openHistoryReader(sourceTrigger);
+    },
     openAccessibility
   });
 }
@@ -491,8 +489,9 @@ function installWebsiteAbout() {
   const accessibilityTrigger = createInstallAccessibilityTrigger(gate, kicker);
   const aboutDialog = createWebsiteAboutDialog();
   const historyDialog = createHistoryDialog('website');
+  const accessibilityDialog = createAccessibilityDialog('website');
   const tabs = installTabs(historyDialog);
-  const aboutContent = compactAboutDialog(aboutDialog, historyDialog, tabs);
+  const aboutContent = compactAboutDialog(aboutDialog, historyDialog, accessibilityDialog, tabs);
 
   const closeAbout = () => closeDialog(aboutDialog);
   aboutDialog.querySelector('[data-dialog-close]')?.addEventListener('click', closeAbout);
@@ -517,6 +516,7 @@ function installWebsiteAbout() {
   globalThis.__turnWebsiteAbout = Object.freeze({
     version: REVISION,
     dialog: aboutDialog,
+    accessibilityDialog,
     trigger,
     accessibilityTrigger,
     open: () => openDialog(aboutDialog, trigger),
@@ -563,8 +563,9 @@ export async function installAboutHistory() {
 
   const about = await waitForAbout();
   const historyDialog = createHistoryDialog('game');
+  const accessibilityDialog = createAccessibilityDialog('game');
   const tabs = installTabs(historyDialog);
-  const aboutContent = compactAboutDialog(about.dialog, historyDialog, tabs);
+  const aboutContent = compactAboutDialog(about.dialog, historyDialog, accessibilityDialog, tabs);
   about.accessibilityTrigger.addEventListener('click', () => {
     aboutContent.openAccessibility(about.accessibilityTrigger);
   });
@@ -573,6 +574,7 @@ export async function installAboutHistory() {
   globalThis.__turnAboutHistory = Object.freeze({
     version: REVISION,
     dialog: historyDialog,
+    accessibilityDialog,
     trigger: aboutContent.button,
     accessibilityTrigger: about.accessibilityTrigger,
     open(section = 'development') {

@@ -1,4 +1,5 @@
-/* ABOUT keeps its two prominent actions stacked in the compact dialog. */
+/* ABOUT keeps its two prominent actions, side by side where there is width, and all of
+   ABOUT, both actions included, fits without scrolling (#1119). */
 .m8-about-dialog {
   --turn-dialog-inline-size: min(495px, calc(100vw - 24px));
 }
@@ -6,6 +7,13 @@
 .m8-about-card {
   overscroll-behavior-y: contain;
   scrollbar-gutter: stable;
+}
+
+/* ABOUT fits its screen, so it reserves no scrollbar gutter that would narrow the
+   copy; on a screen too small to fit, a scrollbar still appears. */
+.m8-about-dialog .m8-about-card,
+.m8-about-dialog .m8-about-content {
+  scrollbar-gutter: auto;
 }
 
 .m8-about-content {
@@ -34,10 +42,12 @@
 
 .m8-about-actions {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 9px;
   align-items: stretch;
   margin-top: 12px;
+  /* Room for the hard shadow inside the scroll box, so it is never clipped. */
+  padding: 0 3.75px 3.75px 0;
 }
 
 .m8-about-history,
@@ -288,27 +298,11 @@
   margin-bottom: 12px;
 }
 
-.turn-about-accessibility {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: var(--turn-border-micro, 2px) solid var(--turn-outline);
-}
-
-.turn-about-accessibility[hidden] {
-  display: none;
-}
-
+/* ACCESSIBILITY reads like TURN HISTORY: the same reader, one panel. */
 .turn-accessibility-statement,
 .turn-accessibility-feedback-heading,
 .turn-accessibility-feedback {
   max-width: 74ch;
-}
-
-.turn-accessibility-statement h3,
-.turn-accessibility-feedback-heading h3 {
-  margin: 0 0 7.5px;
-  font-size: max(var(--turn-text-floor, 11px), clamp(0.9rem, 2vw, 1.125rem));
-  line-height: 1.12;
 }
 
 .turn-accessibility-statement p {
@@ -322,9 +316,11 @@
 }
 
 .turn-accessibility-feedback-heading {
-  margin-top: 18px;
+  margin: 18px 0 7.5px;
   padding-top: 15px;
   border-top: var(--turn-border-micro, 2px) solid var(--turn-outline);
+  font-size: max(var(--turn-text-floor, 11px), clamp(0.9rem, 2vw, 1.125rem));
+  line-height: 1.12;
 }
 
 .turn-accessibility-feedback {
@@ -332,6 +328,39 @@
 }
 
 @media (max-height: 420px) and (orientation: landscape) {
+  /* A phone on its side: ABOUT takes the width, so its copy wraps less and both
+     actions stay in view. */
+  .m8-about-dialog {
+    --turn-dialog-inline-size: min(720px, calc(100vw - 24px));
+  }
+
+  .m8-about-dialog .m8-about-content {
+    max-width: none;
+  }
+
+  .m8-about-dialog .m8-dialog-head {
+    margin-bottom: 6px;
+  }
+
+  .m8-about-dialog .m8-about-content p + p {
+    margin-top: 4.5px;
+  }
+
+  .m8-about-actions {
+    margin-top: 7.5px;
+  }
+
+  .m8-about-history,
+  .m8-about-accessibility {
+    min-height: var(--turn-target-min, 44px);
+    padding-block: 6px;
+  }
+
+  /* Side by side, the wide action holds HISTORY AND CHANGELOG on one line. */
+  .m8-about-history br {
+    display: none;
+  }
+
   .turn-history-dialog {
     --turn-dialog-inline-size: calc(100vw - 7.5px);
     --turn-dialog-block-size: calc(100vh - 7.5px);
