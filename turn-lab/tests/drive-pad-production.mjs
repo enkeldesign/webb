@@ -17,9 +17,11 @@ import {
   boostOverchargeVisualWidth,
   qualifiesForBoostOvercharge,
   resolveBoostSlipAngle,
+  BOOST_OVERCHARGE_MAX_SECONDS,
   transferBoostAcrossShift
 } from '../../turn/input/boost-overcharge.js';
 import { updateVehiclePhysicsState } from '../../turn/vehicle/physics.js';
+import { PRECISION_OVERCHARGE_SPEND_SCALE, consumeBoostTank } from '../../turn/input/boost-tank.js';
 import { spokenRivalCount } from '../../turn/ui/race-announcements.js';
 import { lapAnnouncementPriorityMs } from '../../turn/ui/race-speech.js';
 
@@ -144,33 +146,52 @@ const consumedOvercharge = advanceBoostOvercharge({
   consuming: true
 });
 assert.equal(consumedOvercharge.amount, 0);
-const precisionLoose = advanceBoostOvercharge({ amount: 1, phase: BOOST_OVERCHARGE_PHASE.DECAYING, dt: 8, decayMultiplier: 3 });
-assert.ok(Math.abs(precisionLoose.amount - 2 / 3) < 1e-12, 'PRECISION makes loose OC last 24 seconds instead of eight');
-assert.equal(advanceBoostOvercharge({ ...precisionLoose, dt: 16, decayMultiplier: 3 }).amount, 0);
-assert.equal(advanceBoostOvercharge({ amount: 1, dt: 24, zone: 'gas', decayMultiplier: 3 }).amount, 1,
-  'PRECISION never changes caught/held OC');
-// #1262 device report: SHIFT-made OVERCHARGE under PRECISION. VAN's full 4/5 tank
-// shifting to 3/5 with more BOOST POWER, then the same 120 Hz frames for both cars:
-// held on GAS, loose in a DRIFT, then loose with nothing held. The handoff from
-// SHIFT must reach the same 3× loose decay as drift-built OVERCHARGE.
-function shiftOvercharge(decayMultiplier) {
+// #1282: PRECISION makes OVERCHARGE last three times as long when SPENT. It never
+// stretches the leak before that: loose OVERCHARGE leaks in the ordinary eight seconds
+// with or without it, SHIFT-made OVERCHARGE included.
+const looseLeak = advanceBoostOvercharge({ amount: 1, phase: BOOST_OVERCHARGE_PHASE.DECAYING, dt: 8 });
+assert.equal(looseLeak.amount, 0, 'Loose OVERCHARGE leaks in eight seconds, PRECISION or not');
+assert.equal(advanceBoostOvercharge({ amount: 1, dt: 24, zone: 'gas' }).amount, 1, 'Caught OVERCHARGE holds on GAS');
+function shiftOvercharge() {
   const shifted = transferBoostAcrossShift({ charge: 1, fromSeconds: 2.92 * 1.5, toSeconds: 2.3 * 1.5,
     fromPower: 1, toPower: 2, overchargeOn: true });
   let state = { amount: shifted.overcharge, phase: BOOST_OVERCHARGE_PHASE.DECAYING };
   let seconds = 0;
   for (const [zone, frames] of [['gas', 240], ['drift', 360], ['', Infinity]]) {
     for (let frame = 0; frame < frames && state.amount > 0; frame += 1) {
-      state = advanceBoostOvercharge({ ...state, dt: 1 / 120, zone, qualifyingDrift: zone === 'drift', decayMultiplier });
+      state = advanceBoostOvercharge({ ...state, dt: 1 / 120, zone, qualifyingDrift: zone === 'drift' });
       if (zone !== 'gas') seconds += 1 / 120;
     }
   }
   return { start: shifted.overcharge, seconds };
 }
-const ordinaryShift = shiftOvercharge(1);
-const precisionShift = shiftOvercharge(3);
-assert.equal(ordinaryShift.start, 1, 'VAN 4/5 → 3/5 with more BOOST POWER makes a full OVERCHARGE');
-assert.ok(Math.abs(ordinaryShift.seconds - 8) < 0.02 && Math.abs(precisionShift.seconds - 24) < 0.02,
-  `SHIFT-made loose OVERCHARGE lasts 8 s, or 24 s with PRECISION (${ordinaryShift.seconds.toFixed(2)}, ${precisionShift.seconds.toFixed(2)})`);
+const shiftLeak = shiftOvercharge();
+assert.equal(shiftLeak.start, 1, 'VAN 4/5 → 3/5 with more BOOST POWER makes a full OVERCHARGE');
+assert.ok(Math.abs(shiftLeak.seconds - 8) < 0.02, `SHIFT-made loose OVERCHARGE leaks in 8 s (${shiftLeak.seconds.toFixed(2)})`);
+// SPENT: a full OVERCHARGE lasts 0.6 s of BOOST, or 1.8 s with PRECISION, whether it was
+// caught or still loose when BOOST began. The base tank drains as before after it.
+assert.equal(PRECISION_OVERCHARGE_SPEND_SCALE, 3);
+function spend(spendScale, phase) {
+  const tank = { charge: 1, overcharge: 1, converted: 0, burningOvercharge: false, overchargePhase: phase };
+  let overchargeSeconds = 0;
+  while (tank.overcharge > 0 && overchargeSeconds < 5) {
+    consumeBoostTank(tank, 1 / 120, 4, 1, spendScale);
+    overchargeSeconds += 1 / 120;
+  }
+  return { overchargeSeconds, charge: tank.charge };
+}
+for (const phase of [BOOST_OVERCHARGE_PHASE.BUILDING, BOOST_OVERCHARGE_PHASE.DECAYING]) {
+  const ordinary = spend(1, phase);
+  const precise = spend(PRECISION_OVERCHARGE_SPEND_SCALE, phase);
+  assert.ok(Math.abs(ordinary.overchargeSeconds - BOOST_OVERCHARGE_MAX_SECONDS) < 0.01, `Ordinary SPEND: ${ordinary.overchargeSeconds.toFixed(2)} s`);
+  assert.ok(Math.abs(precise.overchargeSeconds - 3 * BOOST_OVERCHARGE_MAX_SECONDS) < 0.01, `PRECISION SPEND (${phase}): ${precise.overchargeSeconds.toFixed(2)} s`);
+  assert.ok(precise.charge > 0.999, 'The base tank is untouched while OVERCHARGE is SPENT');
+}
+const plainSpendTank = { charge: 1, overcharge: 0, converted: 0 };
+const preciseSpendTank = { charge: 1, overcharge: 0, converted: 0 };
+consumeBoostTank(plainSpendTank, 1, 4, 1, 1);
+consumeBoostTank(preciseSpendTank, 1, 4, 1, PRECISION_OVERCHARGE_SPEND_SCALE);
+assert.deepEqual(preciseSpendTank, plainSpendTank, 'Ordinary BOOST SPEND is unchanged by PRECISION');
 assert.equal(advanceBoostOvercharge({ dt: 1, buildDt: 0, zone: 'drift', qualifyingDrift: true }).amount, 0,
   'A frame between canonical scoring samples cannot invent recharge time');
 assert.equal(advanceBoostOvercharge({ dt: 0.01, buildDt: 0.9, zone: 'drift', qualifyingDrift: true }).amount, 0.5,
@@ -460,10 +481,13 @@ assert.ok(Math.abs(boostStep('turbo', true, 200) - 80 * (1 + 0.32 * 2)) < 1e-9,
   'Only the BOOST speed bonus is multiplied');
 assert.equal(boostStep('turbo', false, 200), boostStep('', false, 200));
 
-// The controller's only OVERCHARGE step carries PRECISION's multiplier, and SHIFT hands
-// its OVERCHARGE to that same step as loose (DECAYING) pressure.
+// The controller's only OVERCHARGE step leaks at the ordinary rate, and PRECISION's
+// scale rides the BOOST SPEND instead (#1282). SHIFT hands its OVERCHARGE to that same
+// step as loose (DECAYING) pressure.
 assert.equal(controls.match(/advanceBoostOvercharge\(\{/g)?.length, 1);
-assert.match(controls, /advanceBoostOvercharge\(\{[\s\S]{0,260}decayMultiplier\n\s*\}\)/);
+assert.doesNotMatch(controls, /decayMultiplier/);
+assert.match(controls, /const overchargeSpendScale = precision \? PRECISION_OVERCHARGE_SPEND_SCALE : 1;/);
+assert.match(controls, /consumeBoostTank\(boostTank, dt, getBoostDrainSeconds\(\), [^;]*, overchargeSpendScale\);/);
 assert.match(controls, /boostOvercharge = transfer\.overcharge;\n\s*boostOverchargePhase = BOOST_OVERCHARGE_PHASE\.DECAYING;/);
 
 console.log(`TURN ${release.id} connected DRIFT LOCK, 50% larger Boost tanks, 2.4x→3.6x recharge balance, reliable LOCK gradient, restart refill and separate reverse passed.`);

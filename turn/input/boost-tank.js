@@ -33,11 +33,18 @@ export function convertBoostTank(tank, dt, { enabled, requested, offRoad, collid
 }
 
 // Mutate the caller's reused step record: no per-frame resource object allocation.
-export function consumeBoostTank(tank, dt, duration, multiplier = 1) {
+// PRECISION (#1282): OVERCHARGE lasts three times as long when SPENT. Only the SPEND
+// stretches; loose OVERCHARGE still leaks at the ordinary rate before it is SPENT.
+export const PRECISION_OVERCHARGE_SPEND_SCALE = 3;
+
+// spendScale stretches the OVERCHARGE being SPENT, whether it was caught or still loose
+// when BOOST began; ordinary BOOST spends as before.
+export function consumeBoostTank(tank, dt, duration, multiplier = 1, spendScale = 1) {
   let seconds = Math.max(0, dt) * Math.max(1, multiplier);
   tank.burningOvercharge = seconds > 0 && (tank.overcharge > 0 || tank.converted > 0);
-  const bonusSeconds = Math.min(seconds, tank.overcharge * BOOST_OVERCHARGE_MAX_SECONDS);
-  tank.overcharge = Math.max(0, tank.overcharge - bonusSeconds / BOOST_OVERCHARGE_MAX_SECONDS);
+  const overchargeSeconds = BOOST_OVERCHARGE_MAX_SECONDS * Math.max(1, Number(spendScale) || 1);
+  const bonusSeconds = Math.min(seconds, tank.overcharge * overchargeSeconds);
+  tank.overcharge = Math.max(0, tank.overcharge - bonusSeconds / overchargeSeconds);
   seconds -= bonusSeconds;
   const used = Math.min(tank.charge, seconds / Math.max(0.001, duration));
   tank.converted = Math.max(0, tank.converted - used);
