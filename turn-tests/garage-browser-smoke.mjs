@@ -648,14 +648,26 @@ async function perkulatorFlow() {
       focus: document.activeElement?.id,
       title: document.querySelector('.garage-install-perk .turn-pr-sheet-title')?.textContent,
       options: [...document.querySelectorAll('.garage-install-perk-option')].map((option) => option.dataset.perkId),
-      origin: document.querySelector('.garage-install-perk-option[data-perk-id="apex-grip"] .garage-install-perk-origin')?.textContent
+      buttons: [...document.querySelectorAll('button.garage-install-perk-option')].map((option) => option.dataset.perkId),
+      origin: document.querySelector('.garage-install-perk-option[data-perk-id="apex-grip"] .garage-install-perk-origin')?.textContent,
+      locked: (() => {
+        const card = document.querySelector('.garage-install-perk-option.is-locked[data-perk-id="precision"]');
+        return card && { tag: card.tagName, state: card.querySelector('.garage-install-perk-state')?.textContent.trim(),
+          unlock: card.querySelector('.garage-install-perk-unlock')?.textContent, controls: card.querySelectorAll('button, [tabindex]').length };
+      })()
     }));
+    // #1274: the collection rewards not yet earned are shown LOCKED, in rarity and name
+    // order with the rest, saying how they unlock. They are cards, not buttons.
     assert.deepEqual(sheet, {
       focus: 'garageInstallPerkTitle',
       title: 'INSTALL PERK',
-      options: ['clean-exit', 'smv', 'carry-on', 'drift-demon', 'traction', 'apex-grip', 'full-tank'],
-      origin: 'From Race Car'
-    }, 'The sheet opens on its heading and offers every perk PERKULATOR holds but the car\'s own');
+      options: ['clean-exit', 'smv', 'carry-on', 'drift-demon', 'hunter', 'traction', 'apex-grip', 'full-tank', 'locked-in', 'precision', 'response-time', 'road-rage', 'turbo'],
+      buttons: ['clean-exit', 'smv', 'carry-on', 'drift-demon', 'traction', 'apex-grip', 'full-tank'],
+      origin: 'From Race Car',
+      locked: { tag: 'DIV', state: 'LOCKED', unlock: 'Complete DRIFT MASTER to unlock.', controls: 0 }
+    }, 'The sheet opens on its heading: every perk the car may install but its own, the locked ones saying how they unlock');
+    await page.locator('.garage-install-perk-option.is-locked[data-perk-id="precision"]').click();
+    assert.equal(await page.locator('.garage-install-perk').evaluate((node) => node.open), true, 'A locked card installs nothing');
     assert.deepEqual(await cornerMarkFacts(page, '.garage-install-perk .garage-install-perk-intro'), CORNER_MARK,
       'INSTALL PERK: PERKULATOR\'s corner mark, its lead wrapping around it');
     await page.locator('.garage-install-perk-option[data-perk-id="apex-grip"]').click();

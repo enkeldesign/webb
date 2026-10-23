@@ -915,6 +915,20 @@ html[data-theme="dark"] .garage-bar {
   box-shadow: var(--turn-pr-shadow);
 }
 
+/* A locked choice (#1274): the same card on the page surface, not a control. LOCKED and
+   how it unlocks are in words; the dashed rule only supports them. */
+.garage-install-perk-option.is-locked {
+  border-style: dashed;
+  background: var(--turn-surface-page);
+  cursor: default;
+}
+
+.garage-install-perk-unlock {
+  font-size: var(--turn-pr-type-spec);
+  font-weight: 800;
+  line-height: 1.4;
+}
+
 .garage-install-perk-copy {
   font-size: var(--turn-pr-type-body);
   line-height: 1.4;

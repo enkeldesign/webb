@@ -11,9 +11,12 @@ import { PERKS, getVehiclePerk, originalVehiclePerk } from './perks.js';
 import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked,
-  isVehicleUnlocked
+  isVehicleUnlocked,
+  rewardForVehicle,
+  rewardForVehiclePerk
 } from '../progression/trophy-road.js';
 
+import { getAchievement } from '../achievements/catalog.js';
 import { loadAchievementState } from '../achievements/store.js';
 
 export const PERKULATOR_FEATURE_ID = 'perkulator';
@@ -127,6 +130,27 @@ export function installedPerkFor(vehicleId, storage) {
   const target = storageFor(storage);
   const perkId = readPerkulatorState(target).installed[vehicleId] || '';
   return perkId && isPerkAvailable(perkId, target) ? perkId : '';
+}
+
+// What PERKULATOR shows a car (#1274): every perk it could ever install, available or
+// still locked, in rarity and name order. This is presentation only. installPerk()
+// keeps its own check, so a locked choice can never be installed.
+export function perkulatorChoicesFor(vehicleId, storage) {
+  const target = storageFor(storage);
+  return PERKS.filter((perk) => mayInstall(vehicleId, perk.id)).sort(comparePerks)
+    .map((perk) => Object.freeze({ perk, available: isPerkAvailable(perk.id, target) }));
+}
+
+// How a locked perk unlocks: its collection, or the Trophy Road reward for its car or
+// for the perk itself.
+export function perkUnlockRequirement(perk, storage) {
+  const target = storageFor(storage);
+  if (perk?.achievementId) return `Complete ${getAchievement(perk.achievementId)?.title || 'its collection'} to unlock.`;
+  const vehicleId = perk?.vehicleIds?.[0];
+  if (!vehicleId) return '';
+  const reward = !isVehicleUnlocked(vehicleId, target) ? rewardForVehicle(vehicleId)
+    : !isVehiclePerkUnlocked(vehicleId, target) ? rewardForVehiclePerk(vehicleId) : null;
+  return reward ? `Unlocks with ${reward.title} at ${reward.threshold} trophies on Trophy Road.` : '';
 }
 
 // Installing replaces the car's installed perk, never its own.
