@@ -430,7 +430,7 @@ export const CHANGELOG = Object.freeze([
     ]
   },
   {
-    "date": "22 October 2026",
+    "date": "23 October 2026",
     "entries": [["Achievement collections", "Collections fold under masters and unlock TURBO, ROAD RAGE, HUNTER, PRECISION, LOCKED IN and RESPONSE TIME for PERKULATOR."]]
   }
 ]);
