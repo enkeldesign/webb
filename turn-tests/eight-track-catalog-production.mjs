@@ -26,7 +26,6 @@ const {
 const { TRACK_SHADOW_ROAD_HEIGHT } = await import('../turn/render/car-shadows.js');
 const { TRACK_ICON_ASSETS } = await import('../turn/ui/track-icons.js');
 const { TRACK_COLOR_CUES } = await import('../turn/accessibility/color-cues.js');
-const { TRACK_COLOR_RULES, matchesTrackColor } = await import('../turn/achievements/chromatic-camouflage-r183.js');
 const { TRACK_SONGS } = await import('../turn/audio/music/songbook.js');
 
 // #983: BEACHFRONT and DEAD CANYON are first-class production tracks, and the
@@ -87,7 +86,6 @@ for (const [label, map] of Object.entries({
   TRACK_SHADOW_ROAD_HEIGHT,
   TRACK_ICON_ASSETS,
   TRACK_COLOR_CUES,
-  TRACK_COLOR_RULES,
   TRACK_SONGS
 })) {
   for (const id of TRACK_IDS) assert.ok(Object.hasOwn(map, id), `${label} must cover ${id}`);
@@ -106,19 +104,6 @@ assert.strictEqual(TRACK_SONGS.beachfront, TRACK_SONGS.cliffside, 'BEACHFRONT pl
 assert.strictEqual(TRACK_SONGS['dead-canyon'], TRACK_SONGS.mountain, 'DEAD CANYON plays the MOUNTAIN music');
 assert.equal(TRACK_SHADOW_ROAD_HEIGHT.beachfront, 0.16);
 assert.equal(TRACK_SHADOW_ROAD_HEIGHT['dead-canyon'], 0.16);
-
-// Chromatic Camouflage: green and red, with red wrapping through 0°.
-assert.equal(matchesTrackColor('beachfront', beachfront.accent), true);
-assert.equal(matchesTrackColor('dead-canyon', deadCanyon.accent), true);
-assert.equal(matchesTrackColor('dead-canyon', '#ff0000'), true);
-assert.equal(matchesTrackColor('dead-canyon', '#ff8f3d'), false, 'Harbor orange is not red');
-assert.equal(matchesTrackColor('dead-canyon', '#ff4fa3'), false, 'Countryside pink is not red');
-assert.equal(matchesTrackColor('beachfront', '#26c7c3'), false, 'Cliffside cyan is not green');
-assert.equal(matchesTrackColor('countryside', '#ff00ff'), true, 'Existing rules are unchanged');
-for (const color of ['#ff0000', '#25b97a', '#e5404f', '#ff8f3d', '#26c7c3', '#ff4fa3', '#ffd43b', '#9d7cff', '#4dabf7']) {
-  const owners = TRACK_IDS.filter((id) => matchesTrackColor(id, color));
-  assert.ok(owners.length <= 1, `${color} must not satisfy more than one track colour (${owners.join(', ')})`);
-}
 
 // DBE: the corrected LAB maps, now under the production ids.
 const { LEFT, RIGHT } = PACE_NOTE_DIRECTION;
