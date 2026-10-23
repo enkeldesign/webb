@@ -87,6 +87,9 @@ assert.match(index, new RegExp(`rival-onboarding\\.js\\?build=${escapedCacheKey}
 // #1270: CHROMATIC CAMOUFLAGE is retired, so no lap-result evaluator rides the finish line.
 assert.doesNotMatch(index, /chromatic-camouflage/,
   'Production must not load the retired CHROMATIC CAMOUFLAGE evaluator');
+// LAB's <base href="/turn/"> would request the deleted production module (CODEX on #1275).
+assert.doesNotMatch(await fs.readFile(new URL('../../turn-lab/index.html', import.meta.url), 'utf8'), /chromatic-camouflage/,
+  'TURN LAB must not load the retired CHROMATIC CAMOUFLAGE evaluator either');
 assert.match(index, /your-turn-share-bootstrap\.js\?revision=r4-runtime-share-state/,
   'Production must publish the runtime-authoritative sharing fix under a fresh bootstrap identity');
 assert.match(shareBootstrap, /your-turn-share\.js\?revision=r4-runtime-share-state/,
