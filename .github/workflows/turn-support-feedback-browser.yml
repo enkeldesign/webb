@@ -145,6 +145,10 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.55.0-noble
       options: --user 1001
+    # Steps in a container default to sh; the server wait loop uses bash brace expansion.
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
