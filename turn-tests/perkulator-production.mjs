@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import { TROPHY_ROAD_REWARDS, TROPHY_ROAD_STORAGE_KEY, rewardForFeature } from '../turn/progression/trophy-road.js';
-import { VEHICLE_PERKS } from '../turn/vehicle/perks.js';
+import { TROPHY_ROAD_REWARDS, TROPHY_ROAD_STORAGE_KEY, rewardForFeature, rewardForVehicle, rewardForVehiclePerk } from '../turn/progression/trophy-road.js';
+import { VEHICLE_PERKS, getVehiclePerk } from '../turn/vehicle/perks.js';
 import {
   PERKULATOR_CHANGE_EVENT,
   PERKULATOR_FEATURE_ID,
@@ -12,6 +12,8 @@ import {
   isPerkAvailable,
   isPerkulatorUnlocked,
   normalizePerkulatorState,
+  perkUnlockRequirement,
+  perkulatorChoicesFor,
   readPerkulatorState,
   removeInstalledPerk
 } from '../turn/vehicle/perkulator.js';
@@ -69,6 +71,29 @@ assert.equal(isPerkAvailable('smv', lockedCar), true, 'SMV comes with the Tracto
 const lockedPerk = memoryStorage({ ...rewardState(everyReward.filter((id) => id !== 'suv-full-tank')) });
 assert.equal(isPerkAvailable('full-tank', lockedPerk), false, 'Not while the perk is locked on Trophy Road');
 assert.equal(isPerkAvailable('torque', lockedPerk), true, 'TORQUE comes with the Truck once DRIFT ATTACK is unlocked');
+// #1274: PERKULATOR shows a car every perk it may ever install, available or locked,
+// in rarity and name order. Never its own, never one that stays with its car. A locked
+// choice says how it unlocks and still cannot be installed.
+const choiceIds = (choices) => choices.map(({ perk }) => perk.id);
+const lockedChoices = perkulatorChoicesFor('truck', lockedCar);
+assert.deepEqual(choiceIds(lockedChoices), choiceIds(perkulatorChoicesFor('truck', admin)), 'Locked or not, the same perks in the same order');
+assert.deepEqual(choiceIds(lockedChoices),
+  ['clean-exit', 'smv', 'carry-on', 'drift-demon', 'hunter', 'traction', 'apex-grip', 'full-tank', 'locked-in', 'precision', 'response-time', 'road-rage', 'turbo']);
+assert.equal(choiceIds(lockedChoices).includes('torque'), false, 'Never the car’s own perk');
+assert.equal(choiceIds(lockedChoices).includes('driftage'), false, 'Never a perk that stays with its car');
+assert.deepEqual(lockedChoices.filter(({ available }) => !available).map(({ perk }) => perk.id),
+  ['clean-exit', 'hunter', 'locked-in', 'precision', 'response-time', 'road-rage', 'turbo'],
+  'The COMPACT is locked, and no collection is complete');
+const compactReward = rewardForVehicle('compact');
+assert.equal(perkUnlockRequirement(lockedChoices[0].perk, lockedCar),
+  `Unlocks with ${compactReward.title} at ${compactReward.threshold} trophies on Trophy Road.`, 'A locked car says its Trophy Road reward');
+const fullTankReward = rewardForVehiclePerk('suv');
+assert.equal(perkUnlockRequirement(getVehiclePerk('full-tank'), lockedPerk),
+  `Unlocks with ${fullTankReward.title} at ${fullTankReward.threshold} trophies on Trophy Road.`, 'A locked perk says its own reward');
+assert.equal(perkUnlockRequirement(getVehiclePerk('precision'), lockedCar), 'Complete DRIFT MASTER to unlock.', 'A collection reward says its master');
+assert.equal(installPerk('truck', 'clean-exit', lockedCar), false, 'A locked choice cannot be installed');
+assert.equal(installPerk('truck', 'precision', lockedCar), false);
+
 const beforeDriftAttack = memoryStorage({ ...rewardState(everyReward.filter((id) => id !== 'drift-attack')) });
 assert.equal(isPerkAvailable('torque', beforeDriftAttack), false,
   'TORQUE works through OVERCHARGE, so it waits for DRIFT ATTACK (#1232)');
@@ -167,7 +192,7 @@ console.log('PERKULATOR unlocks at 2000 trophies, holds the eight perks that may
 const { ACHIEVEMENT_FAMILIES, getAchievement } = await import('../turn/achievements/catalog.js');
 const { createAchievementStore, ACHIEVEMENT_STORAGE_KEY } = await import('../turn/achievements/store.js');
 const { ACHIEVEMENT_PERKS } = await import('../turn/vehicle/perks.js');
-const { achievementRewardText } = await import('../turn/achievements/reward-presentation.js');
+const { achievementRewardMarkup, achievementRewardText } = await import('../turn/achievements/reward-presentation.js');
 const { perkSourceLabel } = await import('../turn/vehicle/perk-presentation.js');
 const legacyPlayer = memoryStorage({ [ACHIEVEMENT_STORAGE_KEY]: JSON.stringify({
   version: 10, unlocked: {
@@ -185,6 +210,15 @@ assert.equal(legacyStore.state.unlocked['drift-flow-master'].trackId, 'airport')
 assert.equal(isPerkAvailable('precision', legacyPlayer), false, 'Earned before PERKULATOR, unavailable to install');
 assert.equal(installPerk('truck', 'precision', legacyPlayer), false);
 assert.doesNotMatch(achievementRewardText(getAchievement('drift-master'), { earned: true }), /PRECISION/);
+// #1274: a PERK reward gets a row of its own: REWARD:, the rarity in words on its chip,
+// the name, and where it goes once earned. Concealed until PERKULATOR, as before.
+const plain = (html) => html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+assert.doesNotMatch(achievementRewardMarkup(getAchievement('drift-master'), { earned: true }), /PRECISION|EPIC/);
+assert.equal(plain(achievementRewardMarkup(getAchievement('drift-master'), { earned: true })), 'REWARD: Earned, revealed with PERKULATOR');
+assert.equal(plain(achievementRewardMarkup(getAchievement('drift-master'), { revealed: true, earned: true })),
+  'REWARD: Rarity EPIC PRECISION perk Install in PERKULATOR');
+assert.match(achievementRewardMarkup(getAchievement('drift-master'), { revealed: true }), /class="turn-pr-chip is-epic"/);
+assert.equal(achievementRewardMarkup(getAchievement('first-turn'), { revealed: true }), '', 'Trophy achievements keep their trophy count');
 legacyStore.grantBonus('perkulator-test', 2000);
 legacyStore.syncRewards();
 assert.equal(isPerkAvailable('precision', legacyPlayer), true, 'PERKULATOR reveals the old entitlement without replay');

@@ -295,6 +295,37 @@
   font-size: max(var(--turn-text-floor, 11px), 0.5625rem);
 }
 
+/* A collection master's PERK reward (#1274): a row of its own that wraps, never one
+   long unbreakable line. REWARD: and the rarity are words; the chip colour supports them. */
+.turn-achievement-copy .turn-achievement-reward {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4.5px 6px;
+  margin-top: 6px;
+  min-width: 0;
+}
+
+.turn-achievement-reward-label,
+.turn-achievement-reward-state {
+  font-size: max(var(--turn-text-floor, 11px), 0.51rem);
+  font-weight: 950;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.turn-achievement-reward-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 950;
+  letter-spacing: .04em;
+}
+
+.turn-achievement-reward-state {
+  flex-basis: 100%;
+  color: var(--turn-pr-muted, currentColor);
+}
+
 .turn-achievement-status {
   justify-self: end;
   padding: 3.75px 6px;
