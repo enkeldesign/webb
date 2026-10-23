@@ -133,6 +133,9 @@ for (const [semanticToken, primitiveToken] of semanticMappings) {
   assert.ok(design.includes(`<code>${semanticToken}</code>`), `Missing visible semantic variable ${semanticToken}`);
   assert.ok(design.includes(`<code>var(${primitiveToken})</code>`), `Missing visible semantic mapping ${semanticToken}`);
 }
+// Close controls stay orange navigation; teal is never a close (CODEX on #1279).
+assert.match(await fs.readFile(new URL('../turn/spectate-v3.css', import.meta.url), 'utf8'),
+  /\.spectate-close \{[^}]*background: var\(--turn-action-navigation\) !important;/);
 // Only ever one primary action (#1243): SHARE takes the role of its place, so it has no
 // token of its own.
 assert.doesNotMatch(tokens, /--turn-action-share/, 'SHARE is primary or utility by its place');
