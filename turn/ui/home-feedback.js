@@ -1,5 +1,5 @@
-const FEEDBACK_EMAIL = 'erik@enkel.design';
-const FEEDBACK_SUBJECT = 'TURN feedback';
+import { createFeedbackContent, FEEDBACK_EMAIL } from './feedback-content.js';
+
 const FEEDBACK_VERSION = 'r148-achievement-font-match';
 
 let installed = false;
@@ -22,48 +22,6 @@ function closeDialog(dialog) {
   dialog.__turnReturnFocus?.focus?.();
 }
 
-function copyWithFallback(text) {
-  const field = document.createElement('textarea');
-  field.value = text;
-  field.setAttribute('readonly', '');
-  field.setAttribute('aria-hidden', 'true');
-  field.style.position = 'fixed';
-  field.style.inset = '0 auto auto -9999px';
-  field.style.opacity = '0';
-  document.body.appendChild(field);
-  field.select();
-  field.setSelectionRange(0, field.value.length);
-  const copied = document.execCommand?.('copy') === true;
-  field.remove();
-  return copied;
-}
-
-async function copyEmailAddress(button, status) {
-  let copied = false;
-  try {
-    if (globalThis.navigator?.clipboard?.writeText) {
-      await globalThis.navigator.clipboard.writeText(FEEDBACK_EMAIL);
-      copied = true;
-    } else {
-      copied = copyWithFallback(FEEDBACK_EMAIL);
-    }
-  } catch (_) {
-    copied = copyWithFallback(FEEDBACK_EMAIL);
-  }
-
-  status.textContent = copied
-    ? `Email address copied: ${FEEDBACK_EMAIL}`
-    : `Could not copy automatically. The email address is ${FEEDBACK_EMAIL}.`;
-
-  if (copied) {
-    const originalLabel = button.textContent;
-    button.textContent = 'COPIED';
-    globalThis.setTimeout?.(() => {
-      button.textContent = originalLabel;
-    }, 1800);
-  }
-}
-
 function attributionMarkup() {
   return `
     <p>TURN is shaped by inclusive and universal design so everyone can play, regardless of ability or how they interact with the game.</p>
@@ -81,20 +39,12 @@ function createFeedbackDialog() {
         <div><span>HELP MAKE TURN BETTER</span><h2 id="m8FeedbackTitle">GIVE FEEDBACK</h2></div>
         <button type="button" data-dialog-close aria-label="Close Give Feedback">×</button>
       </header>
-
-      <div class="m8-feedback-content">
-        <p class="m8-feedback-lead">Found a bug, an accessibility barrier or something that made TURN harder to use? Tell us what happened and what you expected.</p>
-        <p>Feature ideas and improvement suggestions are welcome too. Feedback from every kind of player helps make TURN better for everyone. Mention your device, browser or assistive technology when it is relevant.</p>
-
-        <div class="m8-feedback-actions">
-          <a class="m8-feedback-email" href="mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(FEEDBACK_SUBJECT)}">EMAIL FEEDBACK</a>
-          <button class="m8-feedback-copy" type="button">COPY EMAIL ADDRESS</button>
-        </div>
-        <p class="m8-feedback-status" role="status" aria-live="polite"></p>
-      </div>
     </article>`;
+
+  const feedback = createFeedbackContent();
+  dialog.querySelector('.m8-feedback-card').append(feedback.element);
   document.body.appendChild(dialog);
-  return dialog;
+  return Object.freeze({ dialog, feedback });
 }
 
 function createAboutDialog() {
@@ -149,14 +99,21 @@ function createAboutTrigger() {
   trigger.setAttribute('aria-haspopup', 'dialog');
   meta.appendChild(trigger);
 
-  // TURN WIKI sits beside ABOUT TURN, worded as HOW TO PLAY offers it (#1246).
+  const accessibilityTrigger = document.createElement('button');
+  accessibilityTrigger.type = 'button';
+  accessibilityTrigger.className = 'm8-wiki-trigger m8-accessibility-trigger';
+  accessibilityTrigger.textContent = 'ACCESSIBILITY';
+  accessibilityTrigger.setAttribute('aria-haspopup', 'dialog');
+  meta.appendChild(accessibilityTrigger);
+
+  // TURN WIKI sits beside ABOUT TURN and ACCESSIBILITY, worded as HOW TO PLAY offers it (#1246).
   const wiki = document.createElement('a');
   wiki.className = 'm8-wiki-trigger';
   wiki.href = '/turn/wiki/';
   wiki.innerHTML = 'TURN WIKI <span aria-hidden="true">↗</span>';
   meta.appendChild(wiki);
 
-  return { meta, trigger, buildLabel };
+  return { meta, trigger, accessibilityTrigger, buildLabel };
 }
 
 function alignAchievementsTrigger(menu, feedbackTrigger) {
@@ -193,17 +150,17 @@ export function installHomeFeedback() {
   menu.insertBefore(feedbackTrigger, status);
   const achievementsTrigger = alignAchievementsTrigger(menu, feedbackTrigger);
 
-  const { meta, trigger: aboutTrigger, buildLabel } = createAboutTrigger();
-  const feedbackDialog = createFeedbackDialog();
+  const {
+    meta,
+    trigger: aboutTrigger,
+    accessibilityTrigger,
+    buildLabel
+  } = createAboutTrigger();
+  const { dialog: feedbackDialog, feedback } = createFeedbackDialog();
   const aboutDialog = createAboutDialog();
-  const copyButton = feedbackDialog.querySelector('.m8-feedback-copy');
-  const feedbackStatus = feedbackDialog.querySelector('.m8-feedback-status');
 
-  installDialogBehavior(feedbackDialog, feedbackTrigger, () => {
-    feedbackStatus.textContent = '';
-  });
+  installDialogBehavior(feedbackDialog, feedbackTrigger, () => feedback.clearStatus());
   installDialogBehavior(aboutDialog, aboutTrigger);
-  copyButton.addEventListener('click', () => copyEmailAddress(copyButton, feedbackStatus));
 
   installed = true;
   globalThis.__turnHomeFeedback = Object.freeze({
@@ -217,6 +174,7 @@ export function installHomeFeedback() {
     about: Object.freeze({
       meta,
       trigger: aboutTrigger,
+      accessibilityTrigger,
       buildLabel,
       dialog: aboutDialog,
       open: () => openDialog(aboutDialog, aboutTrigger),

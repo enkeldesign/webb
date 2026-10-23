@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [app, feedback, css, homeCss, achievementsCss, achievementsView, aboutHistory, appBarCss] = await Promise.all([
+const [app, feedback, feedbackContent, css, homeCss, achievementsCss, achievementsView, aboutHistory, appBarCss] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/home-feedback.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/feedback-content.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/home-feedback-r135.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements.css', import.meta.url), 'utf8'),
@@ -23,7 +24,9 @@ assert.ok(
 );
 
 assert.match(feedback, /FEEDBACK_VERSION = 'r148-achievement-font-match'/);
-assert.match(feedback, /FEEDBACK_EMAIL = 'erik@enkel\.design'/);
+assert.match(feedback, /import \{ createFeedbackContent, FEEDBACK_EMAIL \} from '\.\/feedback-content\.js'/,
+  'Home feedback must consume the reusable feedback-content component');
+assert.match(feedbackContent, /export const FEEDBACK_EMAIL = 'erik@enkel\.design'/);
 assert.match(feedback, /feedbackTrigger\.textContent = 'GIVE FEEDBACK'/);
 assert.match(feedback, /feedbackTrigger\.setAttribute\('aria-haspopup', 'dialog'\)/);
 assert.match(feedback, /menu\.insertBefore\(feedbackTrigger, status\)/, 'GIVE FEEDBACK must sit with the other Home menu actions, before status and RACE');
@@ -43,17 +46,19 @@ assert.match(feedback, /feedbackTrigger\.after\(achievementsTrigger\)/,
 assert.match(feedback, /dialog\.className = 'm8-dialog m8-feedback-dialog'/);
 assert.match(feedback, /aria-labelledby', 'm8FeedbackTitle'/);
 assert.match(feedback, /<h2 id="m8FeedbackTitle">GIVE FEEDBACK<\/h2>/);
-assert.match(feedback, /Found a bug, an accessibility barrier or something that made TURN harder to use/);
-assert.match(feedback, /Feature ideas and improvement suggestions are welcome too/);
-assert.match(feedback, /Feedback from every kind of player helps make TURN better for everyone/);
-assert.match(feedback, /Mention your device, browser or assistive technology when it is relevant/);
-assert.match(feedback, /mailto:\$\{FEEDBACK_EMAIL\}\?subject=\$\{encodeURIComponent\(FEEDBACK_SUBJECT\)\}/);
-assert.match(feedback, />EMAIL FEEDBACK<\/a>/);
-assert.match(feedback, />COPY EMAIL ADDRESS<\/button>/);
-assert.match(feedback, /navigator\?\.clipboard\?\.writeText/);
-assert.match(feedback, /document\.execCommand\?\.\('copy'\)/, 'Copy email needs a fallback for browsers without the Clipboard API');
-assert.match(feedback, /role="status" aria-live="polite"/);
-assert.match(feedback, /Email address copied: \$\{FEEDBACK_EMAIL\}/);
+assert.match(feedback, /const feedback = createFeedbackContent\(\)/,
+  'The modal must render the same reusable feedback content as Accessibility');
+assert.match(feedbackContent, /Found a bug, an accessibility barrier or something that made TURN harder to use/);
+assert.match(feedbackContent, /Feature ideas and improvement suggestions are welcome too/);
+assert.match(feedbackContent, /Feedback from every kind of player helps make TURN better for everyone/);
+assert.match(feedbackContent, /Mention your device, browser or assistive technology when it is relevant/);
+assert.match(feedbackContent, /mailto:\$\{FEEDBACK_EMAIL\}\?subject=\$\{encodeURIComponent\(FEEDBACK_SUBJECT\)\}/);
+assert.match(feedbackContent, />EMAIL FEEDBACK<\/a>/);
+assert.match(feedbackContent, />COPY EMAIL ADDRESS<\/button>/);
+assert.match(feedbackContent, /navigator\?\.clipboard\?\.writeText/);
+assert.match(feedbackContent, /document\.execCommand\?\.\('copy'\)/, 'Copy email needs a fallback for browsers without the Clipboard API');
+assert.match(feedbackContent, /role="status" aria-live="polite"/);
+assert.match(feedbackContent, /Email address copied: \$\{FEEDBACK_EMAIL\}/);
 assert.match(feedback, /if \(card\) card\.scrollTop = 0/, 'Dialogs should always open at their top edge');
 
 const feedbackDialogSource = feedback.slice(
@@ -77,7 +82,13 @@ assert.match(feedback, /meta\.className = 'm8-home-meta'/);
 assert.match(feedback, /buildLabel\.replaceWith\(meta\)/);
 assert.match(feedback, /meta\.appendChild\(buildLabel\)/);
 assert.match(feedback, /trigger\.className = 'm8-about-trigger'/);
-// TURN WIKI sits beside ABOUT TURN in the sheet footer, worded as HOW TO PLAY offers it (#1246).
+assert.match(feedback, /accessibilityTrigger\.className = 'm8-wiki-trigger m8-accessibility-trigger'/,
+  'ACCESSIBILITY must reuse the established quiet footer-link styling');
+assert.match(feedback, /accessibilityTrigger\.textContent = 'ACCESSIBILITY'/);
+assert.match(feedback, /accessibilityTrigger\.setAttribute\('aria-haspopup', 'dialog'\)/);
+assert.match(feedback, /meta\.appendChild\(accessibilityTrigger\)/,
+  'ACCESSIBILITY must sit between About TURN and TURN WIKI');
+// TURN WIKI sits beside ABOUT TURN and ACCESSIBILITY in the sheet footer, worded as HOW TO PLAY offers it (#1246).
 assert.match(feedback, /wiki\.className = 'm8-wiki-trigger';\s*wiki\.href = '\/turn\/wiki\/';\s*wiki\.innerHTML = 'TURN WIKI <span aria-hidden="true">↗<\/span>';\s*meta\.appendChild\(wiki\);/);
 assert.match(feedback, /trigger\.textContent = 'ABOUT TURN'/);
 assert.match(feedback, /trigger\.setAttribute\('aria-haspopup', 'dialog'\)/);
@@ -97,7 +108,16 @@ assert.match(feedback, /RAD – Racing Auditory Display/);
 assert.match(feedback, /dialog\.__turnReturnFocus\?\.focus\?\.\(\)/, 'Closing either modal must return focus to its trigger');
 assert.match(feedback, /if \(event\.target === dialog\) closeDialog\(dialog\)/, 'Pressing a dialog backdrop should close it without hijacking content clicks');
 
-// GIVE FEEDBACK and ABOUT TURN live in the Home ☰ sheet (home-app-bar.css).
+assert.match(aboutHistory, /createFeedbackContent\(\{ className: 'turn-accessibility-feedback' \}\)/,
+  'Accessibility must embed the same reusable feedback component as Give Feedback');
+assert.match(aboutHistory, /class="m8-about-accessibility"/,
+  'ABOUT TURN must expose the Accessibility action beside History and Changelog');
+assert.match(aboutHistory, /about\.accessibilityTrigger\.addEventListener\('click'/,
+  'The Home ACCESSIBILITY link must open ABOUT TURN directly');
+assert.match(aboutHistory, /aboutContent\.openAccessibility\(about\.accessibilityTrigger\)/,
+  'The Home ACCESSIBILITY link must expand the Accessibility section in ABOUT TURN');
+
+// GIVE FEEDBACK and the three quiet information links live in the Home ☰ sheet (home-app-bar.css).
 assert.match(appBarCss, /\.turn-home-sheet \.m8-home-menu > button \{[^}]*min-height: 48px;/);
 assert.match(appBarCss, /\.turn-home-sheet \.turn-home-sheet-footer \.m8-home-meta \{[^}]*display: flex !important;/);
 assert.match(appBarCss, /\.turn-home-sheet \.turn-home-sheet-footer :is\(\.m8-about-trigger, \.m8-wiki-trigger\) \{[^}]*min-height: 44px;/);
@@ -123,9 +143,11 @@ assert.match(achievementsCss, /\.turn-achievements-head\s*\{[\s\S]*border-bottom
 assert.match(achievementsView, /achievements\.css\?build=\$\{buildKey\}-r224-modal-headings/);
 assert.match(aboutHistory, /m8-home\.css\?revision=r224-modal-headings/,
   'Install-gate About and History must load the corrected shared heading geometry');
+assert.match(aboutHistory, /home-feedback-r135\.css\?revision=r224-modal-headings/,
+  'Install-gate Accessibility must load the shared feedback presentation without duplicating it');
 assert.match(appBarCss, /@media \(orientation: landscape\) and \(max-height: 500px\)[\s\S]*\.m8-home-menu \{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/,
   'Short landscape keeps every Home menu action in view in two columns');
 assert.doesNotMatch(css, /m8-home-fixed-layout/, 'The retired Home sidebar styles stay retired');
-assert.doesNotMatch(`${feedback}\n${css}`, /setInterval|@keyframes|animation:/, 'Feedback and About must add no loop or decorative animation');
+assert.doesNotMatch(`${feedback}\n${feedbackContent}\n${css}`, /setInterval|@keyframes|animation:/, 'Feedback and About must add no loop or decorative animation');
 
-console.log('TURN compact Home feedback and About-only attribution regression passed.');
+console.log('TURN shared Home feedback and Accessibility regression passed.');

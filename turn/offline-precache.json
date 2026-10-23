@@ -1,5 +1,5 @@
 {
-  "release": "20261023-r488",
+  "release": "20261023-r489",
   "files": [
     "/turn/LILYA.PNG",
     "/turn/TURNicon.PNG",
@@ -463,6 +463,7 @@
     "/turn/ui/drift-attack-setting.js",
     "/turn/ui/drift-camera-setting.js",
     "/turn/ui/drive-by-ear-setting.js",
+    "/turn/ui/feedback-content.js",
     "/turn/ui/filter-buttons.js",
     "/turn/ui/flow-pulses.js",
     "/turn/ui/gameplay-controls.js",
