@@ -7,7 +7,7 @@ import {
 } from '../input/drift-lock.js?revision=r218-boost-balance';
 import { raceNow } from '../race/race-clock.js';
 import { activeVehiclePerkIds } from '../vehicle/perk-runtime.js?revision=r233-graduated';
-import { consumeBoostTank, convertBoostTank, rechargeScoringBoost } from '../input/boost-tank.js';
+import { PRECISION_OVERCHARGE_SPEND_SCALE, consumeBoostTank, convertBoostTank, rechargeScoringBoost } from '../input/boost-tank.js';
 import { REPLAY_CONTROL } from '../race/replay-inputs.js';
 import {
   BOOST_OVERCHARGE_PHASE,
@@ -1229,7 +1229,7 @@ function installGameplayUi() {
     const precision = perkIds.includes('precision');
     const scoringCharge = Math.max(0, Number(perkState?.driftScoringCharge) || 0);
     const rechargeDt = precision ? 0 : dt;
-    const decayMultiplier = precision ? 3 : 1;
+    const overchargeSpendScale = precision ? PRECISION_OVERCHARGE_SPEND_SCALE : 1;
     // PRECISION replaces passive charging (including FULL TANK's clean-driving
     // fill) with recharge already earned by the scorer in its original input context.
     const perkRefill = precision ? 0 : Math.max(0, Number(perkState?.vehiclePerkBoostRefill) || 0);
@@ -1256,7 +1256,7 @@ function installGameplayUi() {
 
     if (active) {
       lessonLeak = null;
-      consumeBoostTank(boostTank, dt, getBoostDrainSeconds(), perkState?.vehicleEffectiveTuning?.boostConsumptionMultiplier);
+      consumeBoostTank(boostTank, dt, getBoostDrainSeconds(), perkState?.vehicleEffectiveTuning?.boostConsumptionMultiplier, overchargeSpendScale);
       boostCharge = boostTank.charge;
       boostOvercharge = boostTank.overcharge;
       boostConvertedCharge = boostTank.converted;
@@ -1300,8 +1300,7 @@ function installGameplayUi() {
           zone: resourceZone,
           qualifyingDrift,
           rechargeMultiplier,
-          buildDt: rechargeDt,
-          decayMultiplier
+          buildDt: rechargeDt
         });
         boostOvercharge = overchargeState.amount;
         boostOverchargePhase = overchargeState.phase;
