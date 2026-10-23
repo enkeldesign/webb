@@ -30,7 +30,7 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   race: authoredRewardIcon('race-car'),
   future: authoredRewardIcon('future-racer'),
   paint: AUTHORED_PAINT_ICON,
-  emergency: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M18 35V21a14 14 0 0 1 28 0v14"></path><path d="M12 35h40v9H12Z"></path><path d="M32 2v7M9 9l6 6M55 9l-6 6M3 25h8M53 25h8"></path><path d="M24 34V22a8 8 0 0 1 16 0v12"></path></svg>',
+  emergency: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><g stroke-width="4"><path d="M18 35V21a14 14 0 0 1 28 0v14"></path><path d="M12 35h40v9H12Z"></path><path d="M32 2v7M9 9l6 6M55 9l-6 6M3 25h8M53 25h8"></path><path d="M24 34V22a8 8 0 0 1 16 0v12"></path></g></svg>',
   monster: authoredRewardIcon('monster-truck'),
   compact: authoredRewardIcon('compact'),
   vintage: authoredRewardIcon('vintage-racer'),
@@ -38,7 +38,7 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   supercar: authoredRewardIcon('supercar'),
   shift: authoredRewardIcon('shift'),
   drift: AUTHORED_DRIFT_ICON,
-  flow: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 24c8-16 18-16 28 0s20 16 28 0"></path><path d="M4 34c8-16 18-16 28 0s20 16 28 0"></path></svg>',
+  flow: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><g stroke-width="4"><path d="M4 24c8-16 18-16 28 0s20 16 28 0"></path><path d="M4 34c8-16 18-16 28 0s20 16 28 0"></path></g></svg>',
   perkulator: authoredRewardIcon('perkulator'),
   perk: AUTHORED_PERK_ICON
 });

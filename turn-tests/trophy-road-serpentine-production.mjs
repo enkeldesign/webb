@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
   TROPHY_ROAD_REWARDS,
+  TROPHY_ROAD_REWARD_ICONS,
   getTrophyRoadReward
 } from '../turn/progression/trophy-road.js';
 import {
@@ -216,5 +217,21 @@ assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*backgrou
   'The earned watermark must let each reward category colour show through');
 assert.match(semanticStyles, /\.turn-trophy-road-marker-state\.is-badge-only \{[\s\S]*visibility:\s*hidden/,
   'Ordinary earned cards must not duplicate the check badge with an EARNED text label');
+
+// #1267: reward icons read as one family. Each tile centres its icon, and a reward
+// drawn in lines keeps a line weight of at least 6% of its height wherever it is drawn
+// (road, highlights, detail, corner marks), not a hairline beside the filled silhouettes.
+assert.match(roadStyles, /\.turn-trophy-road-marker-icon \{[^}]*justify-self:\s*center/, 'Reward icons sit centred over the threshold');
+const lineWeights = [];
+const strokeRatio = (markup, name) => {
+  const [, , , , height] = markup.match(/viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/).map(Number);
+  for (const [, width] of markup.matchAll(/stroke-width="([\d.]+)"/g)) lineWeights.push([name, Number(width) / height]);
+};
+for (const name of ['perkulator', 'shift', 'compact']) {
+  strokeRatio(await fs.readFile(new URL(`../turn/assets/trophy-road/${name}.svg`, import.meta.url), 'utf8'), name);
+}
+for (const name of ['perk', 'emergency', 'flow']) strokeRatio(TROPHY_ROAD_REWARD_ICONS[name], name);
+assert.ok(lineWeights.length >= 9, 'Every line-drawn reward icon declares its weight');
+assert.deepEqual(lineWeights.filter(([, ratio]) => ratio < 0.06).map(([name]) => name), [], 'No line-drawn reward icon is a hairline');
 
 console.log('TURN Trophy Road responsive serpentine layout, accessibility and immutable progression regression passed.');
