@@ -77,7 +77,7 @@
 }
 
 .m8-guide-card-disclosure > summary:focus-visible {
-  outline: 5px solid var(--m8-pink);
+  outline: 5px solid var(--turn-pink-500);
   outline-offset: 3px;
 }
 
@@ -262,7 +262,7 @@
 
 .m8-dbe-guide > summary:focus-visible,
 .m8-guide-disclosure > summary:focus-visible {
-  outline: 5px solid var(--m8-pink);
+  outline: 5px solid var(--turn-pink-500);
   outline-offset: 3px;
 }
 

@@ -144,7 +144,7 @@ input:focus-visible {
 
 .key-row button {
   padding: 8px 16px;
-  background: var(--turn-pink-500, #ff4fa3);
+  background: var(--turn-action-primary, #7dd);
   box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
 }
 
@@ -182,7 +182,7 @@ input:focus-visible {
 }
 
 .range-tabs button[aria-pressed="true"] {
-  background: var(--turn-pink-500, #ff4fa3);
+  background: var(--turn-form-control-selected, #7dd);
 }
 
 .audience-tabs button[aria-pressed="true"] {

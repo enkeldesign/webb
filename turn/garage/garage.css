@@ -219,8 +219,8 @@ html[data-theme="dark"] .garage-bar {
   padding: 0;
   border: var(--turn-pr-rule);
   border-radius: 50%;
-  /* Yellow, like ALL CARS: every way to another car shares one colour. */
-  background: var(--turn-yellow-600, #ffbd12);
+  /* Pink, like ALL CARS: every way to another car shares one colour (#1268). */
+  background: var(--turn-action-sheet, #ff8caf);
   box-shadow: none;
   color: var(--turn-ink);
   font-size: 1.75rem;

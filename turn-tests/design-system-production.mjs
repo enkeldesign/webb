@@ -69,7 +69,8 @@ const primitivePalette = new Map([
   ['--turn-green-100', '#c8f5d0'],
   ['--turn-orange-500', '#ff7b54'],
   ['--turn-orange-200', '#ffb89f'],
-  ['--turn-orange-100', '#ffd0ae']
+  ['--turn-orange-100', '#ffd0ae'],
+  ['--turn-teal-200', '#7dd']
 ]);
 
 assert.equal(
@@ -87,7 +88,9 @@ for (const [token, value] of primitivePalette) {
 const semanticMappings = new Map([
   ['--turn-surface-page', '--turn-paper'],
   ['--turn-surface-raised', '--turn-white'],
-  ['--turn-action-primary', '--turn-pink-200'],
+  // #1268: teal is primary and the selected form control; pink opens a sheet.
+  ['--turn-action-primary', '--turn-teal-200'],
+  ['--turn-action-sheet', '--turn-pink-200'],
   ['--turn-action-utility', '--turn-surface-page'],
   ['--turn-action-information', '--turn-blue-500'],
   ['--turn-action-game', '--turn-blue-500'],
@@ -97,7 +100,7 @@ const semanticMappings = new Map([
   ['--turn-action-reset', '--turn-red-200'],
   ['--turn-action-navigation', '--turn-orange-500'],
   ['--turn-form-control-idle', '--turn-surface-page'],
-  ['--turn-form-control-selected', '--turn-pink-500'],
+  ['--turn-form-control-selected', '--turn-teal-200'],
   ['--turn-form-control-focus', '--turn-blue-500'],
   ['--turn-disclosure-trigger', '--turn-blue-300'],
   ['--turn-disclosure-panel', '--turn-surface-page'],

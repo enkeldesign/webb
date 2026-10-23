@@ -50,7 +50,7 @@
   width: 18px;
   height: 18px;
   margin: 0.75px 0 0;
-  accent-color: var(--pink);
+  accent-color: var(--turn-form-control-selected);
   cursor: pointer;
 }
 

@@ -108,7 +108,7 @@ assert.match(css, /\.m8-feedback-actions[\s\S]*margin-top: clamp\(12px, 2\.5vh, 
 assert.match(css, /\.m8-feedback-status[\s\S]*min-height: 0[\s\S]*margin-top: 0 !important/);
 assert.match(css, /\.m8-feedback-status:not\(:empty\)[\s\S]*min-height: 1\.5em/, 'The live region should consume space only when it has a message');
 assert.doesNotMatch(css, /\.m8-feedback-attribution/, 'Removed feedback attribution must leave no stale layout rules');
-assert.match(css, /\.m8-feedback-email[\s\S]*background: var\(--m8-pink\)/);
+assert.match(css, /\.m8-feedback-email[\s\S]*background: var\(--turn-action-primary\)/, 'Email is the primary action, in teal (#1268)');
 assert.match(css, /\.m8-feedback-copy[\s\S]*background: var\(--m8-yellow\)/);
 assert.doesNotMatch(css, /\.m8-dialog-head > div > span/,
   'The shared modal heading fix belongs in the base Home dialog stylesheet');
