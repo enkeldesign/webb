@@ -50,6 +50,12 @@ jobs:
   visual-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # Chromium, WebKit and their system packages come baked into Playwright's own image
+    # (pinned to the same version as the npm package), so the job never waits on apt or a
+    # browser download.
+    container:
+      image: mcr.microsoft.com/playwright:v1.55.0-noble
+      options: --user 1001
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -67,15 +73,9 @@ jobs:
         timeout-minutes: 7
         run: node turn-tests/low-graphics-production.mjs
 
-      - name: Install Playwright Chromium and WebKit
-        timeout-minutes: 12
-        run: |
-          npm install --no-save playwright@1.55.0 pngjs@7.0.0
-          # System packages install once (apt holds a lock, so it is never cut off and retried);
-          # only the browser download, which can stall, is retried.
-          npx playwright install-deps chromium webkit
-          timeout 180 npx playwright install chromium webkit \
-            || timeout 180 npx playwright install chromium webkit
+      - name: Install test packages
+        timeout-minutes: 5
+        run: npm install --no-save playwright@1.55.0 pngjs@7.0.0
 
       - name: Start static TURN server
         run: |
