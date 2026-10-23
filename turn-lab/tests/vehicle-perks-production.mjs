@@ -808,6 +808,6 @@ for (const hz of [30, 60, 120]) {
 globalThis.dispatchEvent = realDispatch;
 globalThis.CustomEvent = RealCustomEvent;
 assert.equal(responseCues.length, 3, 'Exactly one cue per qualifying braking event at each frame rate');
-assert.match(controlsSource, /reason === 'race-paused' \|\| reason === 'race-reset' \|\| reason === 'home-open'\) clearResponsePulse\(\);/,
-  'The RESPONSE TIME pulse stops on pause, reset and leaving');
+assert.match(controlsSource, /\['race-paused', 'race-reset', 'lot-open', 'home-open', 'spectate-started'\]\.includes\(reason\)\) clearResponsePulse\(\);/,
+  'The RESPONSE TIME pulse stops on pause, reset, GARAGE, leaving and SPECTATE, as the braking tracker does');
 console.log('HUNTER current-position tiers and RESPONSE TIME deceleration/delay/anti-spam lifecycle pass at 30/60/120 Hz.');

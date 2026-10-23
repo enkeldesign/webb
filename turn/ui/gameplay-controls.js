@@ -1094,7 +1094,7 @@ function installGameplayUi() {
     // A lesson's hold keeps the drive pad's finger, so sliding it onto the lesson's control
     // continues (tutorial-prompt.js, #1236); the frozen race applies nothing meanwhile.
     // A SHIFT outcome still being measured waits, on race time, until RESUME.
-    if (reason === 'race-paused' || reason === 'race-reset' || reason === 'home-open') clearResponsePulse();
+    if (['race-paused', 'race-reset', 'lot-open', 'home-open', 'spectate-started'].includes(reason)) clearResponsePulse();
     if (reason === 'race-paused') {
       if (event.detail?.pauseReason !== 'lesson') releaseDrive();
       centerManualSteerVisual();
