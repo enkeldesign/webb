@@ -346,6 +346,21 @@
     margin-top: 4.5px;
   }
 
+  /* ACKNOWLEDGEMENTS and PRIVACY share a row; one that is opened takes the width. */
+  .m8-about-dialog .turn-about-shared-copy {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 18px;
+  }
+
+  .m8-about-dialog .turn-about-shared-copy > * {
+    flex: 1 0 100%;
+  }
+
+  .m8-about-dialog .turn-about-shared-copy > details:not([open]) {
+    flex: 0 0 auto;
+  }
+
   .m8-about-actions {
     margin-top: 7.5px;
   }
@@ -383,6 +398,26 @@
 
   .turn-history-panel {
     padding: 10.5px 13.5px;
+  }
+}
+
+/* The shortest phones on their side (about 320px tall) get back a little of the frame. */
+@media (max-height: 340px) and (orientation: landscape) {
+  .m8-about-dialog {
+    --turn-dialog-padding: 9px 12px max(9px, env(safe-area-inset-bottom));
+  }
+
+  .m8-about-dialog .m8-dialog-head h2 {
+    font-size: max(var(--turn-text-floor, 11px), clamp(1.2rem, 4.2vw, 1.8rem));
+  }
+
+  .m8-about-dialog .m8-about-lead {
+    line-height: 1.26 !important;
+  }
+
+  .m8-about-dialog .m8-about-summary,
+  .m8-about-dialog .m8-about-credits {
+    line-height: 1.3 !important;
   }
 }
 

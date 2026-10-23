@@ -152,7 +152,7 @@ assert.match(bootstrap, /aboutDialog\.showModal\(\)/,
   'Closing the reader should restore the source About dialog');
 assert.match(bootstrap, /aboutButton\.focus\(\{ preventScroll: true \}\)/,
   'Focus should return to the action inside the restored About dialog that opened the reader');
-assert.match(bootstrap, /<span>HISTORY AND<br>CHANGELOG<\/span>/,
+assert.match(bootstrap, /<span>HISTORY AND <br>CHANGELOG<\/span>/,
   'The About history action must use the intended two-line label');
 assert.match(bootstrap, /<span>ACCESSIBILITY<\/span>/,
   'ABOUT TURN must provide the new Accessibility action');

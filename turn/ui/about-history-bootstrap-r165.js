@@ -326,7 +326,7 @@ function compactAboutDialog(aboutDialog, historyDialog, accessibilityDialog, tab
   content.innerHTML = `
     ${aboutTurnHtml()}
     <div class="m8-about-actions turn-dialog__actions">
-      <button class="m8-about-history" type="button" aria-haspopup="dialog"><span>HISTORY AND<br>CHANGELOG</span></button>
+      <button class="m8-about-history" type="button" aria-haspopup="dialog"><span>HISTORY AND <br>CHANGELOG</span></button>
       <button class="m8-about-accessibility" type="button" aria-haspopup="dialog"><span>ACCESSIBILITY</span></button>
     </div>`;
 
