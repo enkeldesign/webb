@@ -11,8 +11,8 @@ register(`data:text/javascript,${encodeURIComponent(`
   }`)}`);
 
 const THREE = await import('three');
-const { TRACK_DEFINITIONS, TRACK_IDS } = await import('../turn/tracks/definitions.js');
-const { createTrackRuntime } = await import('../turn/tracks/catalog.js');
+const { TRACK_DEFINITIONS, TRACK_IDS, TRACK_PRESENTATION_ORDER, trackNumber } = await import('../turn/tracks/definitions.js');
+const { TRACK_PRESENTATION_CATALOG, createTrackRuntime } = await import('../turn/tracks/catalog.js');
 const { TRACK_RUNTIME_REGISTRY } = await import('../turn/tracks/registry.js');
 const { getTrackPaceNotes, PACE_NOTE_DIRECTION, PACE_NOTE_LENGTH } = await import('../turn/tracks/pace-notes.js');
 const {
@@ -42,7 +42,16 @@ const EXPECTED = [
 ];
 assert.deepEqual(TRACK_DEFINITIONS.map((track) => [track.id, track.difficulty]), EXPECTED);
 assert.deepEqual(TRACK_IDS, EXPECTED.map(([id]) => id));
-assert.deepEqual(TRACK_DEFINITIONS.map((track) => track.eyebrow), EXPECTED.map((_, index) => `TRACK ${index + 1}`));
+// #1271: players meet the tracks round the colour wheel, so BEACHFRONT is TRACK 3 and
+// AIRPORT TRACK 4. That is presentation only: TRACK_IDS above stays the data order.
+const PRESENTED = ['countryside', 'cliffside', 'beachfront', 'airport', 'harbor', 'dead-canyon', 'midnight-city', 'mountain'];
+assert.deepEqual(TRACK_PRESENTATION_ORDER, PRESENTED);
+assert.deepEqual(TRACK_PRESENTATION_CATALOG.map((track) => track.id), PRESENTED, 'ROADBOOK lists the tracks in presentation order');
+assert.deepEqual(PRESENTED.map((id) => TRACK_COLOR_CUES[id]),
+  ['pink', 'cyan', 'green', 'yellow', 'orange', 'red', 'violet', 'blue'], 'The visible sequence runs round the colour wheel');
+for (const track of TRACK_DEFINITIONS) {
+  assert.equal(track.eyebrow, `TRACK ${trackNumber(track.id)}`, `${track.id}'s intro number agrees with ROADBOOK`);
+}
 assert.equal(TRACK_RUNTIME_REGISTRY.length, 8);
 
 const storageRevisions = TRACK_DEFINITIONS.map((track) => track.storageRevision);

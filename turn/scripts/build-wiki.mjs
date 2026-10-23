@@ -46,7 +46,9 @@ export async function renderWiki() {
   for (const [, name] of (await fs.readFile(new URL('../ui/how-to-play-demos.js', import.meta.url), 'utf8')).matchAll(/var\((--turn-drive-[a-z-]+)\)/g)) {
     assert(drivePadValues.includes(`${name}:`), `The wiki's drive pad needs ${name} from drive-pad.css`);
   }
-  const { CAR_CATALOG: cars, TRACK_DEFINITIONS: tracks, PERKS: perks, TROPHY_ROAD_REWARDS: rewards, ACHIEVEMENTS: achievements, VEHICLE_STAT_LEGEND: stats } = game;
+  const { CAR_CATALOG: cars, PERKS: perks, TROPHY_ROAD_REWARDS: rewards, ACHIEVEMENTS: achievements, VEHICLE_STAT_LEGEND: stats } = game;
+  // Tracks appear in the order players meet them, as ROADBOOK numbers them (#1271).
+  const tracks = game.inTrackPresentationOrder(game.TRACK_DEFINITIONS);
   for (const [items, advice, label] of [[cars, CAR_ADVICE, 'car'], [tracks, TRACK_ADVICE, 'track'], [perks, PERK_ADVICE, 'perk']]) {
     assert.deepEqual(Object.keys(advice).sort(), items.map(({ id }) => id).sort(), `Wiki ${label} advice must cover the current catalog exactly`);
   }
