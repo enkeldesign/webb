@@ -139,6 +139,16 @@ jobs:
     name: browser (${{ matrix.shard }})
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # Chromium, WebKit and their system packages come baked into Playwright's own image
+    # (pinned to the same version as the npm package), so no job waits on apt or a browser
+    # download.
+    container:
+      image: mcr.microsoft.com/playwright:v1.55.0-noble
+      options: --user 1001
+    # Steps in a container default to sh; the server wait loop uses bash brace expansion.
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -175,15 +185,9 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Install Playwright browsers
-        timeout-minutes: 12
-        run: |
-          npm install --no-save --package-lock=false playwright@1.55.0 three@0.184.0
-          # System packages install once (apt holds a lock, so it is never cut off and retried);
-          # only the browser download, which can stall, is retried.
-          npx playwright install-deps chromium webkit
-          timeout 180 npx playwright install chromium webkit \
-            || timeout 180 npx playwright install chromium webkit
+      - name: Install test packages
+        timeout-minutes: 5
+        run: npm install --no-save --package-lock=false playwright@1.55.0 three@0.184.0
 
       - name: Start static TURN server
         run: |
