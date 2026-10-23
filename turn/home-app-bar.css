@@ -498,7 +498,7 @@ html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting input {
 }
 
 html body .turn-home-sheet .turn-home-sheet-footer .turn-theme-setting label:has(input:checked) {
-  background: var(--turn-form-control-selected, #ea5da1);
+  background: var(--turn-form-control-selected, #7dd);
   color: var(--turn-ink);
 }
 

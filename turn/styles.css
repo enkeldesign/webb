@@ -162,7 +162,7 @@ h1 {
 .actions button {
   min-height: 43.5px;
   padding: 9px 13.5px;
-  background: var(--pink);
+  background: var(--turn-action-primary);
 }
 
 .actions .secondary { background: var(--cyan); }

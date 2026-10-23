@@ -477,7 +477,7 @@ html body .turn-pr-app-logo {
   justify-content: space-between;
   gap: 10px;
   padding: 0 16px;
-  background: var(--turn-action-primary, #ff4fa3);
+  background: var(--turn-action-primary, #7dd);
   box-shadow: var(--turn-pr-shadow-action);
   font-weight: 900;
   letter-spacing: 0.03em;
@@ -537,10 +537,10 @@ html body .turn-pr-app-logo {
   }
 }
 
-/* Yellow opens a sheet with the yellow masthead (Track sheet, ALL CARS). In GARAGE the
-   previous/next circles share it: yellow is the way to another car. */
+/* Pink opens a sheet (Track sheet, ALL CARS; #1268). In GARAGE the previous/next
+   circles share it: pink is the way to another car. */
 .turn-pr-button.is-sheet {
-  background: var(--turn-yellow-600, #ffbd12);
+  background: var(--turn-action-sheet, #ff8caf);
 }
 
 /* Orange closes and goes back, everywhere. Icon-only controls are circles; one with a

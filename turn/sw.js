@@ -2,7 +2,7 @@
    same release; a failed update never publishes a partial store. Keep the previous
    complete release for bounded startup recovery, plus releases used by open pages. */
 
-const RELEASE = '20261023-r493';
+const RELEASE = '20261023-r494';
 const SCOPE = new URL(self.registration.scope).pathname;
 const NAME = SCOPE.replace(/\//g, '') || 'turn';
 const PRECACHE = `${NAME}-precache-${RELEASE}`;
@@ -279,7 +279,7 @@ const OFFLINE_PAGE = `<!doctype html>
   h1 { margin: 0 0 8px; font-size: 1.75rem; font-weight: 900; text-transform: uppercase; }
   p { margin: 0 0 20px; }
   a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border: 3px solid #08090a; border-radius: 12px;
-    background: #ea5da1; box-shadow: 4px 4px 0 #08090a; color: #08090a; font-weight: 900; letter-spacing: 0.04em; text-decoration: none; }
+    background: #7dd; box-shadow: 4px 4px 0 #08090a; color: #08090a; font-weight: 900; letter-spacing: 0.04em; text-decoration: none; }
 </style>
 </head>
 <body>

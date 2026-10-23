@@ -183,7 +183,7 @@
 }
 
 .turn-dbe-training-actions button[data-training-primary] {
-  background: var(--turn-action-primary, #ff4fa3);
+  background: var(--turn-action-primary, #7dd);
 }
 
 .turn-dbe-training-how button:focus-visible,

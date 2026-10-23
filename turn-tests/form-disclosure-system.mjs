@@ -37,7 +37,7 @@ assert.match(app, /how-to-play-guide\.js\?revision=r241-learning-achievements/);
 
 for (const mapping of [
   '--turn-form-control-idle: var(--turn-surface-page)',
-  '--turn-form-control-selected: var(--turn-pink-500)',
+  '--turn-form-control-selected: var(--turn-teal-200)',
   '--turn-form-control-focus: var(--turn-blue-500)',
   '--turn-disclosure-trigger: var(--turn-blue-300)',
   '--turn-disclosure-panel: var(--turn-surface-page)'

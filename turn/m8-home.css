@@ -77,7 +77,7 @@
   min-width: min(232.5px, 100%);
   padding: 9.75px 18px;
   border-radius: 15px;
-  background: var(--m8-pink);
+  background: var(--turn-action-primary);
   font-size: max(var(--turn-text-floor, 11px), clamp(0.75rem, 2vw, 1.2rem));
   letter-spacing: 0.025em;
 }
@@ -225,7 +225,7 @@ html[data-theme="dark"] .m8-home-build {
   height: 39px;
   padding: 0;
   border-radius: 50%;
-  background: var(--m8-pink);
+  background: var(--turn-action-primary);
   font-size: max(var(--turn-text-floor, 11px), 1.5rem);
   line-height: 1;
 }
@@ -333,7 +333,7 @@ html[data-theme="dark"] .m8-home-build {
 .m8-toggle-row input {
   width: 21px;
   height: 21px;
-  accent-color: var(--m8-pink);
+  accent-color: var(--turn-form-control-selected);
 }
 
 .m8-steering-setting strong,
@@ -366,7 +366,7 @@ html[data-theme="dark"] .m8-home-build {
 #m8AudioBalance {
   width: 100%;
   margin: 10.5px 0 2.25px;
-  accent-color: var(--m8-pink);
+  accent-color: var(--turn-form-control-selected);
 }
 
 .m8-balance-labels {
@@ -407,7 +407,7 @@ html[data-theme="dark"] .m8-home-build {
 
 .m8-reset-confirm-button {
   margin-left: 6px;
-  background: var(--m8-pink) !important;
+  background: var(--turn-action-primary) !important;
 }
 
 .m8-settings-status {
