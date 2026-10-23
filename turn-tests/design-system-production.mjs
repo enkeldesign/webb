@@ -133,6 +133,10 @@ for (const [semanticToken, primitiveToken] of semanticMappings) {
   assert.ok(design.includes(`<code>${semanticToken}</code>`), `Missing visible semantic variable ${semanticToken}`);
   assert.ok(design.includes(`<code>var(${primitiveToken})</code>`), `Missing visible semantic mapping ${semanticToken}`);
 }
+// #1269: button labels are CAPS by one zero-specificity rule, and a button that is a card
+// keeps the casing of what it says.
+assert.match(tokens, /:where\(button, \[role="button"\], input:is\(\[type="button"\], \[type="submit"\], \[type="reset"\]\), a\.turn-pr-button\) \{\s*text-transform: uppercase;/);
+assert.match(tokens, /:where\(\s*\.turn-pr-card, \.garage-car-card, \.garage-perk-card[\s\S]*?\) \{\s*text-transform: none;/);
 // Close controls stay orange navigation; teal is never a close (CODEX on #1279).
 assert.match(await fs.readFile(new URL('../turn/spectate-v3.css', import.meta.url), 'utf8'),
   /\.spectate-close \{[^}]*background: var\(--turn-action-navigation\) !important;/);
