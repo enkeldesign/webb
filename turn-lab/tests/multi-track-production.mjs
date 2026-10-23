@@ -244,8 +244,8 @@ assert.match(mountainPolish, /Mountain river waterfall spillway r3/);
 for (const source of [mountainWorld, mountainLongWorld, mountainExtension, mountainTerrain, mountainScenery, mountainPolish]) {
   assert.doesNotMatch(source, /setAnimationLoop|requestAnimationFrame|setInterval/);
 }
-// ROADBOOK renders every catalog track, then any placeholders, from the catalog.
-assert.match(home, /const tracks = TRACK_CATALOG;/);
+// ROADBOOK renders every catalog track, in presentation order (#1271), then any placeholders.
+assert.match(home, /const tracks = TRACK_PRESENTATION_CATALOG;/);
 assert.match(home, /tracks\.map\(renderCard\)/);
 assert.match(home, /placeholders\.map\(/);
 

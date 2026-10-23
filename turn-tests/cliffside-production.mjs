@@ -116,8 +116,8 @@ assert.match(worldSource, /sample\.point\.y \+ ROAD_HEIGHT/);
 assert.match(worldSource, /trackPitch\(sample\)/);
 assert.match(worldSource, /new THREE\.InstancedMesh/);
 assert.doesNotMatch(worldSource, /setAnimationLoop|requestAnimationFrame|setInterval/);
-// ROADBOOK renders every catalog track, then any placeholders, from the catalog.
-assert.match(selectorSource, /const tracks = TRACK_CATALOG;/);
+// ROADBOOK renders every catalog track, in presentation order (#1271), then any placeholders.
+assert.match(selectorSource, /const tracks = TRACK_PRESENTATION_CATALOG;/);
 assert.match(selectorSource, /tracks\.map\(renderCard\)/);
 assert.match(selectorSource, /placeholders\.map\(/);
 

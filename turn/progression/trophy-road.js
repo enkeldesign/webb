@@ -24,7 +24,7 @@ function trackPairIcon(firstTrackId, secondTrackId) {
 }
 
 export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
-  'medium-tracks': trackPairIcon('airport', 'beachfront'),
+  'medium-tracks': trackPairIcon('beachfront', 'airport'),
   'advanced-tracks': trackPairIcon('harbor', 'dead-canyon'),
   'expert-tracks': trackPairIcon('midnight-city', 'mountain'),
   race: authoredRewardIcon('race-car'),
@@ -71,9 +71,9 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     title: 'MEDIUM TRACKS',
     shortTitle: 'Medium Tracks',
     type: 'track',
-    trackIds: Object.freeze(['airport', 'beachfront']),
+    trackIds: Object.freeze(['beachfront', 'airport']),
     icon: 'medium-tracks',
-    description: 'Unlock the MEDIUM tracks: AIRPORT’s runway speed and apron precision, and BEACHFRONT’s ≈1.9 km of seaside sweepers around a tropical resort island.'
+    description: 'Unlock the MEDIUM tracks: BEACHFRONT’s ≈1.9 km of seaside sweepers around a tropical resort island, and AIRPORT’s runway speed and apron precision.'
   }),
   Object.freeze({
     id: 'advanced-tracks',

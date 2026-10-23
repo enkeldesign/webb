@@ -1,10 +1,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [storage, sharing, chromatic, rivalOnboarding, index, shareBootstrap, releaseSource] = await Promise.all([
+const [storage, sharing, rivalOnboarding, index, shareBootstrap, releaseSource] = await Promise.all([
   fs.readFile(new URL('../../turn/race/rival-storage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/social/your-turn-share.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/achievements/chromatic-camouflage-r183.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/rival-onboarding.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/social/your-turn-share-bootstrap.js', import.meta.url), 'utf8'),
@@ -70,11 +69,6 @@ assert.match(sharing, /if \(shareButtonsDirty\) syncTrackShareButtons\(\)/,
 assert.match(sharing, /reason === 'rivals-loaded'[\s\S]*updateActiveTrackShareStateFromRuntime/,
   'Track loading must refresh the active session share state from runtime rather than persistence');
 
-assert.match(chromatic, /requestIdleCallback\(runScheduledEvaluation, \{ timeout: 1200 \}\)/,
-  'Chromatic Camouflage must defer its six-track evaluation until browser idle time');
-assert.match(chromatic, /addEventListener\?\.\('turn:lap-result', scheduleEvaluation\)/,
-  'Lap completion should schedule rather than execute the Chromatic evaluation synchronously');
-
 assert.match(rivalOnboarding, /scheduleRaceRivalWarmup\(\)/,
   'Loaded stored rivals must schedule a pre-race GPU warm-up');
 assert.match(rivalOnboarding, /scheduleRaceRivalWarmup\(\{ racing: true \}\)/,
@@ -90,8 +84,12 @@ assert.match(index, new RegExp(`rival-storage\\.js\\?build=${escapedCacheKey}&re
   'Production must publish the summary-only rival-storage path under a fresh cache identity');
 assert.match(index, new RegExp(`rival-onboarding\\.js\\?build=${escapedCacheKey}&revision=r277-main-rival-gpu-warmup`),
   'Production must publish the main-renderer rival warm-up under a fresh cache identity');
-assert.match(index, /chromatic-camouflage-r183\.js\?revision=r184-idle-summary-check/,
-  'Production must publish the deferred Chromatic evaluator under a fresh cache identity');
+// #1270: CHROMATIC CAMOUFLAGE is retired, so no lap-result evaluator rides the finish line.
+assert.doesNotMatch(index, /chromatic-camouflage/,
+  'Production must not load the retired CHROMATIC CAMOUFLAGE evaluator');
+// LAB's <base href="/turn/"> would request the deleted production module (CODEX on #1275).
+assert.doesNotMatch(await fs.readFile(new URL('../../turn-lab/index.html', import.meta.url), 'utf8'), /chromatic-camouflage/,
+  'TURN LAB must not load the retired CHROMATIC CAMOUFLAGE evaluator either');
 assert.match(index, /your-turn-share-bootstrap\.js\?revision=r4-runtime-share-state/,
   'Production must publish the runtime-authoritative sharing fix under a fresh bootstrap identity');
 assert.match(shareBootstrap, /your-turn-share\.js\?revision=r4-runtime-share-state/,

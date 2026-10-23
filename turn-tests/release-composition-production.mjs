@@ -545,7 +545,6 @@ for (const [workflowPath, source] of Object.entries(workflows)) {
 for (const workflowPath of [
   '.github/workflows/turn-admin-unlock-test.yml',
   '.github/workflows/turn-challenge-tests.yml',
-  '.github/workflows/turn-chromatic-camouflage.yml',
   '.github/workflows/turn-color-accessibility.yml'
 ]) {
   assert.doesNotMatch(workflows[workflowPath], /- 'turn\/index\.html'/,
@@ -563,7 +562,6 @@ const pullRequest782Files = [
 for (const workflowPath of [
   '.github/workflows/turn-admin-unlock-test.yml',
   '.github/workflows/turn-challenge-tests.yml',
-  '.github/workflows/turn-chromatic-camouflage.yml',
   '.github/workflows/turn-color-accessibility.yml',
   '.github/workflows/turn-mountain-visual-smoke.yml'
 ]) {
