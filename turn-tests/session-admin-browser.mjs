@@ -57,6 +57,21 @@ try {
     const { isTrackUnlocked, isVehicleUnlocked, isFeatureUnlocked } = await import('/turn/progression/trophy-road.js');
     return isTrackUnlocked('mountain') && isVehicleUnlocked('monster') && isFeatureUnlocked('perkulator');
   }), true);
+  const perkExposure = await page.evaluate(async () => {
+    const { ACHIEVEMENT_PERKS } = await import('/turn/vehicle/perks.js');
+    const { isPerkAvailable, installPerk, installedPerkFor } = await import('/turn/vehicle/perkulator.js');
+    return ACHIEVEMENT_PERKS.map(({ id, achievementId }) => ({
+      id, available: isPerkAvailable(id), installed: installPerk('compact', id),
+      active: installedPerkFor('compact') === id,
+      completed: globalThis.__turnAchievements.store.isUnlocked(achievementId)
+    }));
+  });
+  assert.equal(perkExposure.length, 6);
+  for (const perk of perkExposure) {
+    assert.equal(perk.available && perk.installed && perk.active, true, `${perk.id} can be installed in admin`);
+    assert.equal(perk.completed, false, 'Exposure never completes the master achievement');
+  }
+  assert.deepEqual(await persisted(), original, 'Installing all six achievement perks leaves the real save untouched');
   for (const name of ['Expose all tracks', 'Expose all cars', 'Expose perks and rewards']) await page.getByLabel(name, { exact: true }).uncheck();
   await page.getByLabel('Temporary trophy total').fill('1975');
   await page.getByRole('button', { name: 'SET TROPHY TOTAL' }).click();

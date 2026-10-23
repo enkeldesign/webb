@@ -1,4 +1,5 @@
 import { revealAchievementFamily } from './families.js';
+import { achievementRewardText } from './reward-presentation.js';
 
 const STYLE_ID = 'turn-achievement-unread-marker-styles';
 const NEW_FILTER = 'new';
@@ -144,7 +145,9 @@ function visibleAchievementTags(achievement, isNew) {
   return tags;
 }
 
-function decorateMeta(copy, achievement, isNew) {
+// The reward line says what the card's own markup says (view.js): trophies, or a
+// collection master's perk, concealed until PERKULATOR (#1247).
+function decorateMeta(copy, achievement, isNew, rewardText = `${achievement?.trophies} trophies`) {
   if (!copy || !achievement) return;
   let meta = copy.querySelector(':scope > .turn-achievement-meta');
   if (!meta) {
@@ -166,7 +169,7 @@ function decorateMeta(copy, achievement, isNew) {
   });
   const trophies = document.createElement('span');
   trophies.className = 'turn-achievement-trophies';
-  trophies.textContent = `${achievement.trophies} trophies`;
+  trophies.textContent = rewardText;
   meta.replaceChildren(...nodes, trophies);
 }
 
@@ -225,7 +228,10 @@ export function installAchievementUnreadMarkers(
       let dot = icon?.querySelector('.turn-achievement-unread-dot');
       let text = copy?.querySelector('.turn-achievement-unread-text');
 
-      decorateMeta(copy, achievement, isNew);
+      decorateMeta(copy, achievement, isNew, achievementRewardText(achievement, {
+        revealed: achievements.store.isRewardUnlocked?.('perkulator') === true,
+        earned: card.classList.contains('is-unlocked')
+      }));
       removeTimeTrialRecommendation(copy, achievement);
 
       if (isNew) {

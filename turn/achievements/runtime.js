@@ -24,8 +24,6 @@ import {
   qualifyingTimeTrial
 } from './time-trials.js?revision=r166-bella-records';
 import {
-  SCORING_MASTER_ACHIEVEMENT_ID,
-  completedAllScoringAchievements,
   qualifyingScoringAchievement,
   storedScoringAchievementUnlockEntries
 } from './scoring-achievements.js?revision=r3-trophy-balance';
@@ -220,6 +218,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       unlocked = ids
         .map((id) => store.unlock(id, context))
         .filter(Boolean);
+      unlocked.push(...store.syncCollectionMasters());
       if (unlocked.length) rewards = store.syncRewards();
     });
     if (!unlocked.length) return [];
@@ -243,6 +242,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       unlocked = entries
         .map(({ id, context }) => store.unlock(id, context))
         .filter(Boolean);
+      unlocked.push(...store.syncCollectionMasters());
       if (unlocked.length) rewards = store.syncRewards();
     });
     if (!unlocked.length) return [];
@@ -503,12 +503,6 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       ))
       .filter(Boolean);
     candidates.push(...scoringAchievements.map((achievement) => achievement.id));
-    if (completedAllScoringAchievements(
-      (id) => store.isUnlocked(id),
-      scoringAchievements.map((achievement) => achievement.id)
-    )) {
-      candidates.push(SCORING_MASTER_ACHIEVEMENT_ID);
-    }
 
     unlock(candidates, context, { delay: LAP_TOAST_DELAY_MS });
     session.currentLap = null;

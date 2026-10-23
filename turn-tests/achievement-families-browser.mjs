@@ -45,6 +45,9 @@ try {
     return a.store.trophyTotal();
   });
   const master = page.locator('[data-achievement-family="faster-than-the-dev"]');
+  // The unread decoration keeps a perk master's reward line, never "0 trophies" (#1247).
+  const masterReward = (await page.locator('[data-achievement-id="faster-than-the-dev"] .turn-achievement-trophies').first().textContent()).trim();
+  assert.match(masterReward, /^(Collection reward earned · revealed with PERKULATOR|PERK: TURBO · Install in PERKULATOR)$/, masterReward);
   const toggle = master.locator('[data-achievement-disclosure]');
   const children = master.locator('.turn-achievement-children');
   assert.equal(await toggle.getAttribute('aria-expanded'), 'false');

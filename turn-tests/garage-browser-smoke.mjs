@@ -605,9 +605,9 @@ async function perkulatorFlow() {
     const text = (selector) => document.querySelector(selector)?.textContent.replace(/\s+/g, ' ').trim() || null;
     return {
       title: text('.garage-perk-title'),
-      meta: text('.garage-perk-meta'),
-      reach: text('.garage-perk-reach:not([hidden])'),
-      installed: text('.garage-perk-installed-body .garage-perk-installed-name') || text('.garage-perk-none'),
+      meta: `${text('.garage-perk-role')} ${text('.garage-perk-meta .turn-pr-chip')}`,
+      reach: text('.garage-perk-card.is-original .garage-install-perk-origin'),
+      installed: text('.garage-perk-installed-body .garage-install-perk-name') || text('.garage-perk-none'),
       actions: [...document.querySelectorAll('.garage-perk-installed-body button')].map((button) => button.getAttribute('aria-label')),
       small: [...document.querySelectorAll('.garage-perk button')]
         .filter((button) => button.getBoundingClientRect().height < 44).map((button) => button.textContent.trim())
@@ -634,7 +634,7 @@ async function perkulatorFlow() {
     // LEGENDARY perks stay with their car, TWITCHY TURNY among them.
     for (const [carId, title] of [['classic', 'Graduated'], ['toy-racer', 'Twitchy Turny'], ['race-future', 'Overdrive']]) {
       const legendary = await view(carId);
-      assert.deepEqual([legendary.title, legendary.meta, legendary.reach], [title, 'ORIGINAL PERK Rarity LEGENDARY', 'LEGENDARY perks stay with their car.'],
+      assert.deepEqual([legendary.title, legendary.meta, legendary.reach], [title, 'ORIGINAL PERK Rarity LEGENDARY', 'Stays with this car.'],
         `${title} is LEGENDARY: it stays with its car`);
     }
 
@@ -653,7 +653,7 @@ async function perkulatorFlow() {
     assert.deepEqual(sheet, {
       focus: 'garageInstallPerkTitle',
       title: 'INSTALL PERK',
-      options: ['clean-exit', 'traction', 'drift-demon', 'carry-on', 'driftage', 'apex-grip', 'full-tank'],
+      options: ['clean-exit', 'carry-on', 'drift-demon', 'traction', 'apex-grip', 'driftage', 'full-tank'],
       origin: 'From Vintage Racer'
     }, 'The sheet opens on its heading and offers every perk PERKULATOR holds but the car\'s own');
     assert.deepEqual(await cornerMarkFacts(page, '.garage-install-perk .garage-install-perk-intro'), CORNER_MARK,
@@ -664,7 +664,7 @@ async function perkulatorFlow() {
       ['Replace installed perk: Driftage', 'Driftage installed on Truck.'], 'Installing returns focus to REPLACE');
     const installed = await perkPanel();
     assert.deepEqual([installed.title, installed.installed, installed.actions, installed.small],
-      ['Torque + Driftage', 'Driftage Rarity EPIC', ['Replace installed perk: Driftage', 'Remove installed perk: Driftage'], []],
+      ['Torque + Driftage', 'Driftage Rarity EPIC INSTALLED', ['Replace installed perk: Driftage', 'Remove installed perk: Driftage'], []],
       'The closed perk names both perks; REPLACE and REMOVE name the installed one');
     // One perk per row: the installed perk sits under the car's own, with the chip, check
     // and chevron still beside them.
@@ -725,6 +725,44 @@ async function perkulatorFlow() {
     await page.keyboard.press('Escape');
     await page.waitForFunction(() => !document.querySelector('.garage-install-perk').open);
     assert.equal(vintageOptions.includes('driftage'), false, 'A car is never offered its own perk');
+
+    await page.evaluate(async () => {
+      const { ACHIEVEMENT_FAMILIES } = await import('/turn/achievements/catalog.js');
+      const store = globalThis.__turnAchievements.store;
+      store.batch(() => {
+        for (const family of ACHIEVEMENT_FAMILIES) for (const id of family.childIds) store.unlock(id);
+        store.syncCollectionMasters();
+      });
+    });
+    await view('truck');
+    for (const [width, height, theme] of [[320, 700, 'light'], [844, 390, 'dark']]) {
+      await page.setViewportSize({ width, height });
+      await page.evaluate((value) => { document.documentElement.dataset.theme = value; }, theme);
+      await perkPanel();
+      await page.locator('.garage-perk-replace').click();
+      assert.equal(await page.locator('[data-perk-rarity="all"]').getAttribute('aria-pressed'), 'true');
+      await page.locator('[data-perk-rarity="epic"]').focus();
+      await page.keyboard.press('Space');
+      assert.deepEqual(await page.locator('.garage-install-perk-option').evaluateAll((nodes) => nodes.map((n) => n.dataset.perkId)),
+        ['apex-grip', 'driftage', 'full-tank', 'locked-in', 'precision', 'response-time']);
+      assert.equal(await page.locator('[data-perk-rarity="all"]').getAttribute('aria-pressed'), 'false');
+      await page.locator('[data-perk-rarity="mythic"]').click();
+      assert.deepEqual(await page.locator('.garage-install-perk-option').evaluateAll((nodes) => nodes.map((n) => n.dataset.perkId)), ['road-rage', 'turbo']);
+      assert.equal(await page.locator('[data-perk-rarity="epic"]').getAttribute('aria-pressed'), 'false');
+      assert.ok((await page.locator('[data-perk-id="turbo"]').textContent()).includes('From FASTER THAN THE DEV'));
+      assert.equal(await page.locator('[data-perk-rarity="common"]').count(), 0);
+      assert.ok(await page.locator('.garage-install-perk .turn-pr-sheet-body').evaluate((node) => node.scrollWidth <= node.clientWidth + 1));
+      await page.keyboard.press('Escape');
+    }
+    await page.locator('.garage-perk-replace').click();
+    await page.locator('[data-perk-id="precision"]').click();
+    assert.ok((await page.locator('.garage-perk-installed-body').textContent()).includes('From DRIFT MASTER'));
+    assert.equal(await page.locator('.garage-perk-card.is-original [data-perk-id]').count(), 0, 'Static cards inherit no install button semantics');
+    assert.equal(await page.locator('.garage-perk-remove').evaluate((button) => button.classList.contains('is-destructive')), true);
+    await page.locator('.garage-perk-remove').click();
+    assert.equal(await page.locator('.garage-perk-installed-body .garage-perk-card').count(), 0, 'No empty installed card');
+    await page.locator('.garage-perk-install').click();
+    await page.locator('[data-perk-id="driftage"]').click();
 
     // RACE the Truck: the race runs TORQUE and the installed DRIFTAGE.
     await page.evaluate(() => globalThis.__turnGarage.viewCar('truck'));

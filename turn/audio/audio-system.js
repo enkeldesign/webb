@@ -730,6 +730,12 @@ function playCueNow(name, options = {}) {
       playNoiseBurst(now + 0.025, 0.15, 0.035, 1300, 340, 0.91, 0, dynamicsBus);
       playTone(105, 62, 0.09, 0.04, 'triangle', now + 0.045, 0, dynamicsBus);
       break;
+    // RESPONSE TIME's kick (#1247): a short, rising double step, apart from BOOST's sweep.
+    case 'response-kick':
+      playTone(300, 520, 0.07, 0.03, 'triangle', now, 0, dynamicsBus);
+      playTone(520, 880, 0.09, 0.026, 'triangle', now + 0.06, 0, dynamicsBus);
+      playNoiseBurst(now + 0.02, 0.08, 0.014, 700, 2400, 0.86, 0, dynamicsBus);
+      break;
     case 'boost-full':
       playTone(470, 760, 0.08, 0.028, 'triangle', now, 0, dynamicsBus);
       playTone(760, 1120, 0.1, 0.021, 'sine', now + 0.07, 0, dynamicsBus);

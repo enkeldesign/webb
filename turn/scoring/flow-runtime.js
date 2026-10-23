@@ -11,10 +11,13 @@ import {
   saveBestFlowRecord
 } from './flow-records.js?revision=r219-record-paint';
 import { raceNow } from '../race/race-clock.js';
+import { showCompactRacePill } from '../achievements/support-challenge-feedback.js';
 
 export const FLOW_FEATURE_ID = 'flow';
 export const FLOW_HUD_STORAGE_KEY = 'turn-flow-hud-v1';
 export const FLOW_SHIFT_WINDOW_MS = 1800;
+// LOCKED IN (#1247) runs while FLOW is above this; perk-runtime.js applies the tiers.
+export const LOCKED_IN_MIN_FLOW_MULTIPLIER = 2;
 
 const POSITIVE_ACCEL_STATS = new Set(['speed', 'acceleration']);
 const POSITIVE_BOOST_STATS = new Set(['boostPower', 'boostDuration']);
@@ -97,7 +100,8 @@ export function createFlowRuntime({
   isUnlocked = () => true,
   wallClock = () => Date.now(),
   setTimer = (callback, delay) => globalThis.setTimeout?.(callback, delay) || 0,
-  clearTimer = (timer) => globalThis.clearTimeout?.(timer)
+  clearTimer = (timer) => globalThis.clearTimeout?.(timer),
+  showPill = showCompactRacePill
 } = {}) {
   if (!state || typeof state !== 'object') throw new TypeError('TURN FLOW requires race state.');
   if (!scoreFeedback || typeof scoreFeedback.updateState !== 'function') {
@@ -116,8 +120,18 @@ export function createFlowRuntime({
   let lastDriftBankAt = -Infinity;
   let chainTimer = 0;
   let lastMilestoneTier = 1;
+  state.flowScoreMultiplier = 1;
 
   function publishState(snapshot, now) {
+    const wasLockedIn = Number(state.flowScoreMultiplier) > LOCKED_IN_MIN_FLOW_MULTIPLIER;
+    state.flowScoreMultiplier = enabled ? snapshot.multiplier : 1;
+    const lockedIn = state.flowScoreMultiplier > LOCKED_IN_MIN_FLOW_MULTIPLIER;
+    // As FLOW SHIFT says its own threshold: one pill as the bonus turns on or off,
+    // only in a live lap, so a reset or leaving the race says nothing.
+    if (wasLockedIn !== lockedIn && state.running === true && state.lapActive === true
+      && state.vehiclePerkIds?.includes?.('locked-in')) {
+      showPill(lockedIn ? 'LOCKED IN ACTIVE' : 'LOCKED IN LOST', { tone: 'blue', duration: 1800 });
+    }
     if (!enabled || !hudVisible) return;
     scoreFeedback.updateState(SCORE_FEEDBACK_CHANNEL.FLOW, snapshot, now);
   }
@@ -497,6 +511,10 @@ export function createFlowRuntime({
     }
   }
 
+  eventTarget?.addEventListener?.('turn:braking-outcome', (event) => {
+    if (!enabled || state.lapActive !== true) return;
+    accept('braking', 'BRAKE', clamp(30 + finiteNumber(event.detail?.deceleration) * 4, 50, 90), nowFrom(event), { outcome: 'brake-before-curve' });
+  });
   eventTarget?.addEventListener?.('turn:shift-change', onShiftChange);
   eventTarget?.addEventListener?.('turn:shift-outcome', onShiftOutcome);
   eventTarget?.addEventListener?.('turn:drive-technique-state', onDriveTechniqueState);

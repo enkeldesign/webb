@@ -1,3 +1,4 @@
+import { resetBrakingTechnique } from './input/braking-technique.js';
 // Generated from turn/main.js for TURN 2026.07.29-r118. Do not edit by hand.
 // TURN game core.
 
@@ -726,6 +727,7 @@ function surfaceYNear(x, z) {
 // A new race, a restart, GARAGE, Home or a spectated replay: no smoke, wake or camera
 // kick carries over.
 window.addEventListener('turn:ui-state-change', (event) => {
+  if (['race-paused', 'race-started', 'race-reset', 'lot-open', 'home-open', 'spectate-started'].includes(event.detail?.reason)) resetBrakingTechnique(state);
   if (['race-started', 'race-reset', 'lot-open', 'home-open', 'spectate-started'].includes(event.detail?.reason)) {
     driveEffects.clear(state);
   }

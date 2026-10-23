@@ -38,7 +38,7 @@ const catchTheCharge = getAchievement('catch-the-charge');
 const headStart = getAchievement('head-start');
 const gotStarted = getAchievement('got-started');
 
-assert.equal(ACHIEVEMENTS.length, 72,
+assert.equal(ACHIEVEMENTS.length, 74,
   'Production TURN should expose the complete achievement and scoring catalog');
 assert.equal(GOT_STARTED_ACHIEVEMENT, gotStarted);
 assert.equal(gotStarted?.title, 'GOT STARTED');
@@ -114,7 +114,8 @@ for (const achievementId of [
   assert.equal(getAchievement(achievementId)?.trophies, 100,
     `${achievementId} should award 100 trophies`);
 }
-assert.equal(getAchievement('faster-than-the-dev')?.trophies, 300);
+assert.equal(getAchievement('faster-than-the-dev')?.trophies, 0);
+assert.deepEqual(getAchievement('faster-than-the-dev')?.reward, { type: 'perk', perkId: 'turbo' });
 
 const achievementState = {
   unlocked: Object.fromEntries(ONBOARDING_ACHIEVEMENT_IDS.map((id) => [id, { unlockedAt: 1 }]))
@@ -169,8 +170,8 @@ challengeApi.disconnect();
 
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
-  5350,
-  'The learning and balance pass must expose the complete trophy supply'
+  4450,
+  'The perk-reward catalog must expose the complete trophy supply'
 );
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300);
 assert.deepEqual(

@@ -239,13 +239,15 @@ try {
   assert.deepEqual(carryRuntime.scorer.inspect().tokens.slice(-3), ['LOCK', 'DRIFT', 'EXIT'],
     'Post-line LOCK/DRIFT context must continue from the carried active drift');
 
-  const state = { lapActive: true, trackId: 'mountain', vehicleId: 'sedan' };
+  const state = { lapActive: true, running: true, trackId: 'mountain', vehicleId: 'sedan', vehiclePerkIds: ['torque', 'locked-in'] };
   const storage = new MemoryStorage();
   const eventTarget = new EventTargetStub();
   const feedback = makeFeedback();
   const timers = [];
+  const pills = [];
   const runtime = createFlowRuntime({
     state,
+    showPill: (label, options) => pills.push({ label, multiplier: state.flowScoreMultiplier, tone: options.tone }),
     storage,
     eventTarget,
     scoreFeedback: feedback,
@@ -407,7 +409,13 @@ try {
   });
   assert.equal(feedback.states.length, hiddenCommitCount,
     'Hidden FLOW presentation does not stop semantic scoring or perform HUD commits');
+  assert.equal(state.flowScoreMultiplier, runtime.scorer.inspect().multiplier,
+    'LOCKED IN reads the canonical multiplier even when the FLOW HUD is hidden');
 
+  const beforeBraking = runtime.scorer.inspect().lapScore;
+  eventTarget.emit('turn:braking-outcome', { deceleration: 6, at: 11400 });
+  assert.ok(runtime.scorer.inspect().lapScore > beforeBraking, 'Decisive braking before a curve joins the canonical FLOW chain');
+  assert.equal(feedback.states.length, hiddenCommitCount, 'BRAKE scoring does not depend on the visible HUD');
   const beforeLapCompletion = runtime.scorer.inspect();
   const result = runtime.completeLap({ now: 11900, time: 52, valid: true, ranked: true });
   assert.ok(result.score > 0);
@@ -417,6 +425,8 @@ try {
   assert.equal(runtime.scorer.inspect().lapScore, 0);
   assert.equal(runtime.scorer.inspect().multiplier, beforeLapCompletion.multiplier,
     'Runtime lap completion must preserve the active FLOW multiplier');
+  assert.equal(state.flowScoreMultiplier, beforeLapCompletion.multiplier,
+    'The perk multiplier follows the chain across a lap boundary');
   assert.equal(runtime.scorer.inspect().chainLength, beforeLapCompletion.chainLength,
     'Runtime lap completion must preserve the active FLOW chain');
   assert.equal(getBestFlowRecord('mountain', storage).score, result.score);
@@ -427,6 +437,12 @@ try {
   assert.equal(flushScheduledScoreRecords(), true);
   assert.ok(JSON.parse(storage.getItem(FLOW_RECORDS_STORAGE_KEY)).tracks.mountain);
   assert.ok(eventTarget.events.some((event) => event.type === 'turn:flow-lap-result'));
+  // LOCKED IN says each crossing of ×2 once, as FLOW SHIFT says its own threshold.
+  assert.deepEqual(pills, [{ label: 'LOCKED IN ACTIVE', multiplier: 2.5, tone: 'blue' }],
+    'LOCKED IN says once when FLOW passes ×2, not on every FLOW update');
+  runtime.reset(12000);
+  assert.equal(state.flowScoreMultiplier, 1, 'Resetting FLOW immediately removes the conditional perk multiplier');
+  assert.deepEqual(pills.at(-1), { label: 'LOCKED IN LOST', multiplier: 1, tone: 'blue' }, 'Losing ×2 in a live lap says so');
 } finally {
   globalThis.CustomEvent = originalCustomEvent;
 }

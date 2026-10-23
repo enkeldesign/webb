@@ -145,3 +145,62 @@ assert.match(garagePerkulatorSource, /<span class="garage-visually-hidden">Rarit
 assert.doesNotMatch(`${perkulatorSource}\n${garagePerkulatorSource}`, /clonePerk|cloneable|CLONE PERK|CLONED/, 'No clone step (#1228)');
 
 console.log('PERKULATOR unlocks at 2000 trophies, holds the eight perks that may move once unlocked, installs one per car beside its own and never reaches YOUR TURN.');
+
+// Collection entitlements survive skipped releases, the old combined master and
+// earning before PERKULATOR. Installing still has exactly one slot per car.
+const { ACHIEVEMENT_FAMILIES, getAchievement } = await import('../turn/achievements/catalog.js');
+const { createAchievementStore, ACHIEVEMENT_STORAGE_KEY } = await import('../turn/achievements/store.js');
+const { ACHIEVEMENT_PERKS } = await import('../turn/vehicle/perks.js');
+const { achievementRewardText } = await import('../turn/achievements/reward-presentation.js');
+const { perkSourceLabel } = await import('../turn/vehicle/perk-presentation.js');
+const legacyPlayer = memoryStorage({ [ACHIEVEMENT_STORAGE_KEY]: JSON.stringify({
+  version: 10, unlocked: {
+    'drift-flow-master': { unlockedAt: 42, trackId: 'airport' },
+    'faster-than-the-dev': { unlockedAt: 43 }, 'on-course-of-course': { unlockedAt: 44 },
+    'an-army-of-me': { unlockedAt: 45 }
+  }
+}) });
+const legacyStore = createAchievementStore(legacyPlayer);
+assert.equal(legacyStore.trophyTotal(), 900, 'All historical master trophies survive, including the retired master');
+assert.equal(legacyStore.isUnlocked('drift-master'), true);
+assert.equal(legacyStore.isUnlocked('flow-master'), true);
+assert.equal(legacyStore.state.unlocked['drift-master'].awardedTrophies, 0);
+assert.equal(legacyStore.state.unlocked['drift-flow-master'].trackId, 'airport');
+assert.equal(isPerkAvailable('precision', legacyPlayer), false, 'Earned before PERKULATOR, unavailable to install');
+assert.equal(installPerk('truck', 'precision', legacyPlayer), false);
+assert.doesNotMatch(achievementRewardText(getAchievement('drift-master'), { earned: true }), /PRECISION/);
+legacyStore.grantBonus('perkulator-test', 2000);
+legacyStore.syncRewards();
+assert.equal(isPerkAvailable('precision', legacyPlayer), true, 'PERKULATOR reveals the old entitlement without replay');
+assert.equal(isPerkAvailable('locked-in', legacyPlayer), true);
+assert.equal(installPerk('truck', 'precision', legacyPlayer), true);
+assert.equal(installPerk('truck', 'turbo', legacyPlayer), true);
+assert.deepEqual(readPerkulatorState(legacyPlayer).installed, { truck: 'turbo' });
+assert.equal(createAchievementStore(legacyPlayer).trophyTotal(), 2900, 'Migration is idempotent');
+for (const family of ACHIEVEMENT_FAMILIES) {
+  const storage = memoryStorage();
+  const store = createAchievementStore(storage);
+  store.batch(() => { for (const id of family.childIds) store.unlock(id); });
+  const childTotal = family.childIds.reduce((sum, id) => sum + getAchievement(id).trophies, 0);
+  const completed = store.syncCollectionMasters();
+  assert.equal(completed.some(({ id }) => id === family.masterId), true);
+  assert.equal(store.trophyTotal(), childTotal, 'New mastery grants no additional trophies');
+  assert.equal(store.state.unlocked[family.masterId].awardedTrophies, 0);
+  assert.deepEqual(store.syncCollectionMasters(), [], 'No repeated master grant');
+  const perk = ACHIEVEMENT_PERKS.find(({ achievementId }) => achievementId === family.masterId);
+  assert.equal(getAchievement(family.masterId).reward.perkId, perk.id);
+  assert.equal(perkSourceLabel(perk), getAchievement(family.masterId).title);
+  if (family.masterId === 'drift-master') assert.equal(store.isUnlocked('flow-master'), false, 'DRIFT completes independently');
+  if (family.masterId === 'flow-master') assert.equal(store.isUnlocked('drift-master'), false, 'FLOW completes independently');
+  store.grantBonus('reveal', 2000); store.syncRewards();
+  assert.equal(isPerkAvailable(perk.id, storage), true);
+  assert.equal(installPerk('truck', perk.id, storage), true);
+  assert.equal(installedPerkFor('truck', storage), perk.id);
+}
+const allCollections = createAchievementStore(admin);
+allCollections.batch(() => { for (const family of ACHIEVEMENT_FAMILIES) for (const id of family.childIds) allCollections.unlock(id); });
+allCollections.syncCollectionMasters();
+const sortedChoices = installablePerksFor('truck', admin);
+const rarityOrder = { common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 };
+assert.deepEqual(sortedChoices, [...sortedChoices].sort((a, b) => rarityOrder[a.rarity] - rarityOrder[b.rarity] || a.title.localeCompare(b.title, 'en')));
+console.log('Collection reward migration, independent masters, delayed reveal, installation, source labels and rarity ordering pass.');

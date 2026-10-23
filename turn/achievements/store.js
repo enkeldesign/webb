@@ -1,5 +1,6 @@
 import {
   ACHIEVEMENTS,
+  ACHIEVEMENT_FAMILIES,
   TRACK_IDS,
   getAchievement
 } from './catalog.js';
@@ -19,7 +20,7 @@ import {
   rewardIdsForTrophies
 } from '../progression/trophy-road.js';
 import { activeSessionPolicy } from '../race/session-policy.js';
-import { achievementTrophyAward } from './awards.js';
+import { achievementTrophyAward, LEGACY_MASTER_TROPHIES } from './awards.js';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;
@@ -27,6 +28,7 @@ const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;
 function defaultStoredState() {
   return {
     version: STORAGE_VERSION,
+    collectionRewardVersion: 1,
     generation: 0,
     unlocked: {},
     bonuses: {},
@@ -85,7 +87,8 @@ function totalTrophiesFromUnlocked(unlocked) {
   return Object.keys(unlocked).reduce((total, id) => {
     const achievement = getAchievement(id);
     if (achievement?.calibrationPending === true) return total;
-    const trophies = achievement ? Number(unlocked[id].awardedTrophies ?? achievement.trophies) : 0;
+    const trophies = achievement || Object.hasOwn(LEGACY_MASTER_TROPHIES, id)
+      ? Number(unlocked[id].awardedTrophies ?? achievement?.trophies) : 0;
     return total + (Number.isFinite(trophies) ? trophies : 0);
   }, 0);
 }
@@ -119,6 +122,18 @@ export function normalizeAchievementState(value) {
     // stay invisible, but survive temporary catalog regressions and can become
     // active again if a later production catalog restores the achievement.
     unlocked[id] = normalized;
+  }
+
+  // Versioned, idempotent reward migration. The retired combined master remains
+  // in storage (including its historical trophy amount and unlock context).
+  for (const family of ACHIEVEMENT_FAMILIES) {
+    const legacy = ['drift-master', 'flow-master'].includes(family.masterId) ? unlocked['drift-flow-master'] : null;
+    const completed = family.childIds.length && family.childIds.every((id) => unlocked[id] && !getAchievement(id)?.calibrationPending);
+    if (!unlocked[family.masterId] && (legacy || completed)) {
+      const latest = legacy || family.childIds.map((id) => unlocked[id])
+        .reduce((last, record) => record.unlockedAt > last.unlockedAt ? record : last);
+      unlocked[family.masterId] = { ...latest, awardedTrophies: 0 };
+    }
   }
 
   const bonuses = {};
@@ -180,6 +195,7 @@ export function normalizeAchievementState(value) {
 
   return {
     version: STORAGE_VERSION,
+    collectionRewardVersion: 1,
     generation: Number.isInteger(generation) && generation > 0 ? generation : 0,
     unlocked,
     bonuses,
@@ -365,6 +381,11 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     return achievement;
   }
 
+  function syncCollectionMasters(context = {}) {
+    return ACHIEVEMENT_FAMILIES.filter((family) => family.childIds.length
+      && family.childIds.every(isUnlocked)).map((family) => unlock(family.masterId, context)).filter(Boolean);
+  }
+
   function grantBonus(id, trophies, context = {}) {
     const normalizedId = typeof id === 'string' ? id.trim() : '';
     const normalizedTrophies = Math.round(Number(trophies));
@@ -483,6 +504,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     isRewardUnlocked,
     hasLegacyTrack,
     syncRewards,
+    syncCollectionMasters,
     addTrack,
     addBlankTrack,
     addDriveByEarPart,
