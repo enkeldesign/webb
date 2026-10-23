@@ -14,7 +14,7 @@ import {
 
 const OFFROAD_CAPABLE_VEHICLE_IDS = new Set(['monster-truck']);
 const OVERDRIVE_VEHICLE_ID = 'race-future';
-const SMV_VEHICLE_ID = 'tractor';
+const SMV_PERK_ID = 'smv';
 // These are the user-facing HUD ceilings. TURN's production HUD intentionally
 // uses 2.9 displayed km/h per simulation speed unit, so SMV converts from that
 // scale rather than physical 3.6 km/h per m/s.
@@ -82,15 +82,18 @@ export function vehicleHasOverdrive(vehicleId) {
   return String(vehicleId || '') === OVERDRIVE_VEHICLE_ID;
 }
 
+// SMV's ceilings follow the perk, so they run on the Tractor and on any car it is
+// installed on (#1273).
 export function getSmvPropulsiveSpeedLimit({
   vehicleId = '',
   perkUnlocked = false,
+  perkIds = vehiclePerkIdsFor(vehicleId, perkUnlocked),
   boostActive = false,
   driftHeld = false,
   throttle = 0,
   shiftActive = false
 } = {}) {
-  if (String(vehicleId || '') !== SMV_VEHICLE_ID || perkUnlocked !== true) return Infinity;
+  if (!perkIds.includes(SMV_PERK_ID)) return Infinity;
   const limits = shiftActive === true ? SMV_SHIFT_SPEED_LIMITS_KMH : SMV_SPEED_LIMITS_KMH;
   if (boostActive) return limits.boost / TURN_HUD_SPEED_SCALE;
   if (driftHeld) return limits.drift / TURN_HUD_SPEED_SCALE;
@@ -153,7 +156,7 @@ export function updateVehicleOverdriveState({
   if (offRoad || collided) {
     state.overdriveCleanSeconds = 0;
     if (state.overdriveMilestoneSeen === true) {
-      showCompactRacePill('OVERDRIVE LOST', { tone: 'blue' });
+      showCompactRacePill('OVERDRIVE LOST', { perkId: 'overdrive' });
     }
     state.overdriveMilestoneSeen = false;
     return 1;
@@ -166,7 +169,7 @@ export function updateVehicleOverdriveState({
     const previousMilestonePercent = Math.floor((previousBonusPercent + 1e-6) / 10) * 10;
     const nextMilestonePercent = Math.floor((nextBonusPercent + 1e-6) / 10) * 10;
     if (nextMilestonePercent >= 10 && nextMilestonePercent > previousMilestonePercent) {
-      showCompactRacePill(`OVERDRIVE ${nextMilestonePercent}%`, { tone: 'blue' });
+      showCompactRacePill(`OVERDRIVE ${nextMilestonePercent}%`, { perkId: 'overdrive' });
       state.overdriveMilestoneSeen = true;
     }
   }
@@ -353,8 +356,7 @@ function updateVehiclePhysicsStateCore({
     : 0;
   const propulsionStep = (driveThrottle * enginePower + boostPower) * dt;
   const smvPropulsiveLimit = getSmvPropulsiveSpeedLimit({
-    vehicleId: state.vehicleId,
-    perkUnlocked: state.vehiclePerkUnlocked,
+    perkIds,
     boostActive: effectiveBoostActive,
     driftHeld,
     throttle: driveThrottle,

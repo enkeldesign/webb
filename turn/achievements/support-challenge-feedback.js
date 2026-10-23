@@ -1,5 +1,6 @@
 import { getRewardPreviewChallenge } from '../race/reward-preview.js';
 import { viewCarWhenGarageOpens } from '../garage/garage-focus.js';
+import { PERK_RARITY, getVehiclePerk } from '../vehicle/perks.js';
 
 const SUPPORT_FEEDBACK_STORAGE_KEY = 'turn-support-feedback-v1';
 const RACE_SUPPORT_BONUS_PATTERN = /^support:(?:patrol|excursion|winner|safety|drift):/;
@@ -118,6 +119,11 @@ function installStyles() {
     .turn-support-bonus-toast.turn-compact-race-pill--blue {
       background: var(--turn-action-information, #38d9ff) !important;
     }
+    /* A perk's own status pill wears its rarity (#1273); its words still name it. */
+${Object.values(PERK_RARITY).map((rarity) => `    .turn-support-bonus-toast.turn-compact-race-pill--${rarity} {
+      background: var(--turn-rarity-${rarity}) !important;
+      color: var(--turn-ink) !important;
+    }`).join('\n')}
     #message.turn-graduated-pill {
       width: max-content !important;
       min-width: 0 !important;
@@ -125,7 +131,8 @@ function installStyles() {
       padding: 6px 12px !important;
       border: 4px solid var(--turn-outline) !important;
       border-radius: 749.25px !important;
-      background: var(--turn-action-warning, #ffd43b) !important;
+      background: var(--turn-rarity-${getVehiclePerk('graduated').rarity}) !important;
+      color: var(--turn-ink) !important;
       box-shadow: 3.75px 3.75px 0 var(--turn-shadow-color) !important;
       font-size: max(var(--turn-text-floor, 11px), clamp(0.495rem, 1.6vw, 0.645rem)) !important;
       font-weight: 950 !important;
@@ -223,14 +230,16 @@ function clearCompactRacePill() {
   activeCompactRacePill = null;
 }
 
-export function showCompactRacePill(label, { tone = 'blue', duration = 1800 } = {}) {
+// A pill a perk raises names the perk (perkId) and wears that perk's rarity colour.
+export function showCompactRacePill(label, { tone = 'blue', perkId = '', duration = 1800 } = {}) {
   const copy = String(label || '').trim();
   if (!copy || typeof document === 'undefined' || !document.body) return false;
   installStyles();
   clearCompactRacePill();
 
   const toast = document.createElement('div');
-  const normalizedTone = tone === 'blue' ? 'blue' : 'yellow';
+  const rarity = getVehiclePerk(perkId)?.rarity;
+  const normalizedTone = rarity || (tone === 'blue' ? 'blue' : 'yellow');
   toast.className = `turn-support-bonus-toast turn-compact-race-pill turn-compact-race-pill--${normalizedTone}`;
   toast.hidden = false;
   toast.setAttribute('role', 'status');

@@ -13,9 +13,15 @@ export const PERK_RARITY = Object.freeze({
   MYTHIC: 'mythic'
 });
 
+// A perk's name in running text: its title in title case, unless it is an initialism.
+function titleCased(title) {
+  return title.toLocaleLowerCase('en').replace(/(^|\s)\p{L}/gu, (letter) => letter.toLocaleUpperCase('en'));
+}
+
 function definePerk({
   id,
   title,
+  name = titleCased(title),
   vehicleIds = [],
   rarity,
   installable,
@@ -28,6 +34,7 @@ function definePerk({
   return Object.freeze({
     id,
     title,
+    name,
     description,
     rarity,
     installable,
@@ -81,8 +88,9 @@ export const VEHICLE_PERKS = Object.freeze([
     id: 'driftage',
     title: 'DRIFTAGE',
     vehicleIds: ['vintage-racer'],
-    rarity: PERK_RARITY.EPIC,
-    installable: true,
+    // #1273: the Vintage Racer's defining perk, so it stays with its car.
+    rarity: PERK_RARITY.LEGENDARY,
+    installable: false,
     description: 'DRIFT drains less speed, steering becomes more aggressive and the car can hold larger slip angles.',
     tuning: {
       driftDragAdd: 0.045,
@@ -192,9 +200,11 @@ export const VEHICLE_PERKS = Object.freeze([
   definePerk({
     id: 'smv',
     title: 'SMV',
+    name: 'SMV',
     vehicleIds: ['tractor'],
-    rarity: PERK_RARITY.LEGENDARY,
-    installable: false,
+    // #1273: slow-moving practice for any car, through PERKULATOR.
+    rarity: PERK_RARITY.COMMON,
+    installable: true,
     description: 'A Slow-Moving Vehicle that’s not much to look at. Which makes it ideal for blank screen and non-visual driving practice.'
   })
 ]);

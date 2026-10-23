@@ -67,9 +67,18 @@ export function normalizePerkulatorState(value) {
   });
 }
 
+// A saved installation that may no longer run (DRIFTAGE, which stays with its car since
+// #1273) is dropped on read, and the clean state is written back so it cannot return.
 export function readPerkulatorState(storage) {
   try {
-    return normalizePerkulatorState(storageFor(storage)?.getItem?.(PERKULATOR_STORAGE_KEY));
+    const target = storageFor(storage);
+    const raw = target?.getItem?.(PERKULATOR_STORAGE_KEY);
+    const state = normalizePerkulatorState(raw);
+    const saved = parse(raw)?.installed;
+    if (saved && typeof saved === 'object' && Object.keys(saved).length !== Object.keys(state.installed).length) {
+      try { target.setItem(PERKULATOR_STORAGE_KEY, JSON.stringify(state)); } catch (_) { /* read stays clean */ }
+    }
+    return state;
   } catch (_) {
     return normalizePerkulatorState(null);
   }

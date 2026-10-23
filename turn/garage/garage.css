@@ -1430,6 +1430,7 @@ html[data-theme="dark"] .garage-bar {
 
 .garage-perk-filters { margin-block: 14px; }
 .garage-perk-filters button[aria-pressed="true"]::before { content: '✓ '; }
+.garage-perk-filters [data-perk-rarity="common"][aria-pressed="true"] { background: var(--turn-rarity-common); color: var(--turn-ink); }
 .garage-perk-filters [data-perk-rarity="rare"][aria-pressed="true"] { background: var(--turn-rarity-rare); color: var(--turn-ink); }
 .garage-perk-filters [data-perk-rarity="epic"][aria-pressed="true"] { background: var(--turn-rarity-epic); color: var(--turn-ink); }
 .garage-perk-filters [data-perk-rarity="mythic"][aria-pressed="true"] { background: var(--turn-rarity-mythic); color: var(--turn-ink); }
