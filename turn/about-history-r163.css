@@ -78,12 +78,13 @@
   display: block;
 }
 
-.m8-about-history {
-  /* It opens a reader, as ALL CARS opens a sheet (#1268). */
+/* Both open a reader, as ALL CARS opens a sheet (#1268). Scoped to the actions row so
+   the dialog's own button surface (.m8-dialog button) does not paint over it. */
+.m8-about-actions > :is(.m8-about-history, .m8-about-accessibility) {
   background: var(--turn-action-sheet);
+  color: var(--turn-ink);
 }
 
-.m8-about-accessibility,
 .m8-about-design-system {
   background: var(--m8-blue);
 }
