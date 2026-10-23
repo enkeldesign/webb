@@ -427,6 +427,7 @@ export function resolveVehiclePerkTuning({ state, tuning } = {}) {
   const installedBuilds = installedProgress > 0 && LIVE_TUNING_PERKS.has(installed);
   const hunter = installed === 'hunter' ? Math.max(0, Math.min(5, Math.floor(Number(state.racePosition) || 0))) : 0;
   const response = installed === 'response-time' && state.responseTimeRemaining > 0;
+  // FLOW above ×2 (LOCKED_IN_MIN_FLOW_MULTIPLIER, scoring/flow-runtime.js).
   const lockedIn = installed === 'locked-in' && Number(state.flowScoreMultiplier) > 2;
   if (!installedTuning && !originalBuilds && !installedBuilds && !lockedIn && !hunter && !response) {
     state.vehicleEffectiveTuning = baseTuning;

@@ -239,13 +239,15 @@ try {
   assert.deepEqual(carryRuntime.scorer.inspect().tokens.slice(-3), ['LOCK', 'DRIFT', 'EXIT'],
     'Post-line LOCK/DRIFT context must continue from the carried active drift');
 
-  const state = { lapActive: true, trackId: 'mountain', vehicleId: 'sedan' };
+  const state = { lapActive: true, running: true, trackId: 'mountain', vehicleId: 'sedan', vehiclePerkIds: ['torque', 'locked-in'] };
   const storage = new MemoryStorage();
   const eventTarget = new EventTargetStub();
   const feedback = makeFeedback();
   const timers = [];
+  const pills = [];
   const runtime = createFlowRuntime({
     state,
+    showPill: (label, options) => pills.push({ label, multiplier: state.flowScoreMultiplier, tone: options.tone }),
     storage,
     eventTarget,
     scoreFeedback: feedback,
@@ -435,8 +437,12 @@ try {
   assert.equal(flushScheduledScoreRecords(), true);
   assert.ok(JSON.parse(storage.getItem(FLOW_RECORDS_STORAGE_KEY)).tracks.mountain);
   assert.ok(eventTarget.events.some((event) => event.type === 'turn:flow-lap-result'));
+  // LOCKED IN says each crossing of ×2 once, as FLOW SHIFT says its own threshold.
+  assert.deepEqual(pills, [{ label: 'LOCKED IN ACTIVE', multiplier: 2.5, tone: 'blue' }],
+    'LOCKED IN says once when FLOW passes ×2, not on every FLOW update');
   runtime.reset(12000);
   assert.equal(state.flowScoreMultiplier, 1, 'Resetting FLOW immediately removes the conditional perk multiplier');
+  assert.deepEqual(pills.at(-1), { label: 'LOCKED IN LOST', multiplier: 1, tone: 'blue' }, 'Losing ×2 in a live lap says so');
 } finally {
   globalThis.CustomEvent = originalCustomEvent;
 }
