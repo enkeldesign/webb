@@ -1,3 +1,5 @@
+import { ACHIEVEMENT_PERKS } from '../vehicle/perks.js';
+import { isPerkAvailable } from '../vehicle/perkulator.js';
 import { getTrophyRoadReward } from './trophy-road.js';
 import { cornerMarkMarkup } from '../ui/corner-mark.js';
 import { garageOpenedForCar, pointOutInGarage, suggestInGarage, viewCarWhenGarageOpens } from '../garage/garage-focus.js';
@@ -12,7 +14,6 @@ import { garageOpenedForCar, pointOutInGarage, suggestInGarage, viewCarWhenGarag
 // who already have these keep their HOW TO PLAY guide. PERKULATOR is the exception
 // (INTRODUCED_WHEN_HELD).
 export const UNLOCK_INTRODUCTIONS_KEY = 'turn-unlock-introductions-v1';
-const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 // As with TURN TUTORIAL's launch card (tutorial-entry.js), introductions open by
 // themselves for players, not in automated or local runs, where test suites earn rewards
 // all the time. A test of the introductions opts in with this key; admin replays always show.
@@ -296,9 +297,7 @@ function installStyles(documentRef) {
     .m8-unlock-copy p + p { margin-top: var(--turn-space-2); }
     .m8-unlock-note { margin: 0; font-size: var(--turn-type-small); line-height: var(--turn-leading-body); }
     .m8-unlock-actions { display: grid; gap: var(--turn-space-3); }
-    .m8-unlock-actions button,
-    .roadbook-admin button,
-    .m8-admin-unlocks button {
+    .m8-unlock-actions button {
       min-height: var(--turn-target-min);
       padding: var(--turn-space-3) var(--turn-space-4);
       border: var(--turn-border-control) solid var(--turn-outline);
@@ -311,11 +310,6 @@ function installStyles(documentRef) {
       cursor: pointer;
     }
     .m8-unlock-actions [data-unlock-action] { background: var(--turn-action-primary); color: var(--turn-ink); }
-    .roadbook-admin { display: grid; gap: var(--turn-space-2); margin-top: var(--turn-space-4); }
-    .roadbook-admin h2 { margin: 0; font-size: var(--turn-type-small); letter-spacing: 0.16em; }
-    .roadbook-admin div,
-    .m8-admin-unlocks { display: flex; flex-wrap: wrap; gap: var(--turn-space-2); }
-    .m8-admin-unlocks[hidden] { display: none; }
   `;
   documentRef.head.appendChild(style);
 }
@@ -359,14 +353,6 @@ export function introducesOnUnlock(windowRef = globalThis, storage = globalThis.
   }
 }
 
-function isAdminProfile(storage) {
-  try {
-    return Boolean(storage?.getItem?.(ADMIN_UNLOCK_MARKER));
-  } catch (_) {
-    return false;
-  }
-}
-
 export function installUnlockIntroductions({
   startTutorial,
   openGarage,
@@ -393,7 +379,10 @@ export function installUnlockIntroductions({
     if (!introduction) return false;
     showing = id;
     title.textContent = introduction.title;
-    copy.replaceChildren(...introduction.copy.map((text) => {
+    const earned = id === 'perkulator' ? ACHIEVEMENT_PERKS.filter((perk) => isPerkAvailable(perk.id)) : [];
+    const paragraphs = [...introduction.copy];
+    if (earned.length) paragraphs.push(`Your completed collections have already earned ${earned.map((perk) => perk.title).join(', ')}. They are ready to install in PERKULATOR.`);
+    copy.replaceChildren(...paragraphs.map((text) => {
       const paragraph = documentRef.createElement('p');
       paragraph.textContent = text;
       return paragraph;
@@ -545,78 +534,6 @@ export function installUnlockIntroductions({
   watchHints();
   schedule();
 
-  // UNLOCK DRIFT ATTACK, SHIFT, FLOW and PERKULATOR (their sheets), then PAINTJOB (a
-  // GARAGE hint), and ALL CARS's hint again: an admin profile has usually used ALL CARS
-  // long ago (#1168).
-  const adminButtons = () => [...Object.keys(UNLOCK_INTRODUCTIONS), ...Object.keys(UNLOCK_HINTS)]
-    .map((id) => `<button type="button" data-admin-unlock="${id}">UNLOCK ${(UNLOCK_INTRODUCTIONS[id] || UNLOCK_HINTS[id]).title}</button>`)
-    .concat(`<button type="button" data-admin-hint="${ALL_CARS_HINT}">SHOW ALL CARS HINT</button>`)
-    .join('');
-  const adminButton = (event) => event.target.closest?.('[data-admin-unlock], [data-admin-hint]');
-  function replayAdmin(button) {
-    // Pointed out again on the next GARAGE the player opens, then its calm pulse until used.
-    if (button.dataset.adminHint) {
-      queue.armHint(button.dataset.adminHint);
-      watchHints();
-    } else replay(button.dataset.adminUnlock);
-  }
-
-  // Admin profiles have every reward already: these replay an unlock to test it.
-  function installAdminRow() {
-    if (!isAdminProfile(storage)) return null;
-    const list = documentRef.querySelector('.roadbook-tracks .roadbook-list');
-    if (!list) return null;
-    const row = documentRef.createElement('section');
-    row.className = 'roadbook-admin';
-    row.setAttribute('aria-labelledby', 'roadbookAdminTitle');
-    row.innerHTML = `<h2 id="roadbookAdminTitle">ADMIN</h2><div>${adminButtons()}</div>`;
-    list.after(row);
-    row.addEventListener('click', (event) => {
-      const button = adminButton(event);
-      if (button) replayAdmin(button);
-    });
-    return row;
-  }
-
-  // The same buttons in SETTINGS, on the Admin card with the other admin tools
-  // (testing/route-test-hud.js builds it). SETTINGS closes so the unlock plays on Home;
-  // SETTINGS opened from a race's start screen does not show them.
-  function installAdminSettings() {
-    if (!isAdminProfile(storage)) return;
-    const add = () => {
-      const card = documentRef.querySelector('[data-turn-route-test-hud-setting]');
-      if (!card) return false;
-      if (card.querySelector('.m8-admin-unlocks')) return true;
-      const group = documentRef.createElement('div');
-      group.className = 'm8-admin-unlocks';
-      group.setAttribute('role', 'group');
-      group.setAttribute('aria-label', 'Replay an unlock or hint');
-      group.innerHTML = adminButtons();
-      group.addEventListener('click', (event) => {
-        const button = adminButton(event);
-        if (!button) return;
-        group.closest('dialog')?.close?.();
-        replayAdmin(button);
-      });
-      card.append(group);
-      const settings = card.closest('dialog');
-      const sync = () => {
-        group.hidden = !(documentRef.body.classList.contains('turn-home-open')
-          && documentRef.querySelector('.m8-home:not([hidden])'));
-      };
-      sync();
-      if (settings && typeof MutationObserver === 'function') {
-        new MutationObserver(sync).observe(settings, { attributes: true, attributeFilter: ['open'] });
-      }
-      return true;
-    };
-    if (add() || typeof MutationObserver !== 'function') return;
-    const observer = new MutationObserver(() => {
-      if (add()) observer.disconnect();
-    });
-    observer.observe(documentRef.body, { childList: true, subtree: true });
-  }
-
   function replay(id) {
     const reward = getTrophyRoadReward(id);
     if (reward) globalThis.__turnAchievements?.showRewardToastBatch?.([reward]);
@@ -629,7 +546,5 @@ export function installUnlockIntroductions({
     schedule(250);
   }
 
-  const adminRow = installAdminRow();
-  installAdminSettings();
-  return Object.freeze({ dialog, queue, adminRow, replay, schedule });
+  return Object.freeze({ dialog, queue, replay, schedule });
 }

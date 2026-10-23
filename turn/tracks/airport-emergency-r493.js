@@ -762,7 +762,7 @@ function updateResponderLights(rig) {
     record.material.opacity = active ? (on ? 1 : 0.08) : 0;
     record.haloMaterial.opacity = active && on ? (rig.reducedMotion ? 0.42 : 0.68) : 0;
     record.wideHaloMaterial.opacity = active && on ? 0.26 : 0;
-    record.pointLight.intensity = active && on ? (rig.reducedMotion ? 70 : 110) : 0;
+    if (record.pointLight) record.pointLight.intensity = active && on ? (rig.reducedMotion ? 70 : 110) : 0;
   }
 }
 

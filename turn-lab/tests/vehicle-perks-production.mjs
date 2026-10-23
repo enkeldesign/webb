@@ -12,7 +12,7 @@ import {
   resolveVehicleOverchargedAccelerationMultiplier
 } from '../../turn/vehicle/physics.js';
 import { PERK_RARITY, VEHICLE_PERKS, getVehiclePerk, originalVehiclePerk } from '../../turn/vehicle/perks.js';
-import { consumeBoostTank, convertBoostTank, decayConvertedBoost, ROAD_RAGE_CONVERSION_SECONDS } from '../../turn/input/boost-tank.js';
+import { consumeBoostTank, convertBoostTank, ROAD_RAGE_CONVERSION_SECONDS } from '../../turn/input/boost-tank.js';
 import {
   CARRY_ON_LOCK_DRAG_ADD,
   CLEAN_EXIT_CONTROL_BONUS,
@@ -276,7 +276,7 @@ assert.match(controlsSource,
   /vehicleEffectiveTuning\?\.boostDurationSeconds[\s\S]*__turnVehicleTuning\?\.boostDurationSeconds/,
   'Boost consumption must read FULL TANK’s effective capacity before the ordinary base capacity');
 assert.match(controlsSource,
-  /const perkRefill = [^\n]*vehiclePerkBoostRefill[\s\S]*perkState\.vehiclePerkBoostRefill = 0;[\s\S]*if \(boostCharge < 0\.999999\) \{\s*boostCharge = Math\.min\(1, boostCharge \+ dt \* rechargeMultiplier \/ BOOST_RECHARGE_SECONDS \+ perkRefill\)/,
+  /const perkRefill = [^\n]*vehiclePerkBoostRefill[\s\S]*perkState\.vehiclePerkBoostRefill = 0;[\s\S]*if \(boostCharge < 0\.999999\) \{\s*boostCharge = Math\.min\(1, boostCharge \+ rechargeDt \* rechargeMultiplier \/ BOOST_RECHARGE_SECONDS \+ perkRefill\)/,
   'FULL TANK fill is taken every frame and fills the charge only between boosts');
 assert.match(physicsSource, /advanceVehiclePerkRuntimeState\(/, 'The fill accrues in the physics step, which only runs while the race runs');
 assert.match(controlsSource, /globalThis\.__turnBoostCharge = boostCharge/,
@@ -540,11 +540,33 @@ for (const id of ['turbo', 'road-rage']) {
 }
 const turboTruck = truckWith('turbo');
 const turboTuning = resolveVehiclePerkTuning({ state: turboTruck, tuning: truck.tuning });
-assert.equal(turboTuning.boostEffectMultiplier, 2.5);
+assert.equal(turboTuning.boostEffectMultiplier, 2, 'TURBO is energy-neutral: 2× burn, 2× effect (#1247, 22 Oct)');
 assert.equal(turboTuning.boostConsumptionMultiplier, 2);
 assert.equal(truck.tuning.boostEffectMultiplier, undefined, 'Installing TURBO never changes the original tuning');
 turboTruck.vehicleInstalledPerkId = '';
 assert.equal(resolveVehiclePerkTuning({ state: turboTruck, tuning: truck.tuning }).boostEffectMultiplier, undefined);
+
+const lockedStats = Object.freeze({ speed: 3, acceleration: 3, control: 3, drift: 3, boostPower: 3, boostDuration: 3 });
+const lockedBase = Object.freeze(deriveVehicleTuning(lockedStats));
+const lockedIn = perkState('sedan', false, lockedBase, 'locked-in');
+lockedIn.vehicleStats = lockedStats;
+lockedIn.flowScoreMultiplier = 2;
+assert.equal(resolveVehiclePerkTuning({ state: lockedIn, tuning: lockedBase }), lockedBase, 'FLOW exactly ×2 does not activate LOCKED IN');
+lockedIn.flowScoreMultiplier = 2.01;
+const raised = resolveVehiclePerkTuning({ state: lockedIn, tuning: lockedBase });
+const raisedExpected = deriveVehicleTuning({ ...lockedStats, acceleration: 4, control: 4, drift: 4 });
+assert.deepEqual(raised, raisedExpected, 'FLOW above ×2 raises exactly the three named effective tiers');
+assert.deepEqual(lockedIn.vehicleStats, lockedStats, 'Conditional tiers never modify the saved profile');
+lockedIn.vehicleStats = Object.freeze({ ...lockedStats, acceleration: 5, control: 5, drift: 5 });
+const ceilingBase = Object.freeze(deriveVehicleTuning(lockedIn.vehicleStats));
+lockedIn.vehicleTuning = ceilingBase;
+const beyond = resolveVehiclePerkTuning({ state: lockedIn, tuning: ceilingBase });
+assert.ok(beyond.controlMultiplier > ceilingBase.controlMultiplier && beyond.accelerationMultiplier > ceilingBase.accelerationMultiplier
+  && beyond.driftEngineMultiplier > ceilingBase.driftEngineMultiplier, 'The effect continues above the visible tier ceiling');
+lockedIn.flowScoreMultiplier = 1;
+assert.equal(resolveVehiclePerkTuning({ state: lockedIn, tuning: ceilingBase }), ceilingBase, 'A lost FLOW chain immediately restores the selected setup');
+assert.equal(getVehiclePerk('locked-in').rarity, 'epic');
+assert.equal(getVehiclePerk('precision').rarity, 'epic');
 
 // ROAD RAGE conserves fuel and capacity. Dirty driving/BOOST only stops conversion.
 const cleanConversion = { enabled: true, requested: false, offRoad: false, collided: false, speed: 40 };
@@ -581,11 +603,54 @@ for (const fps of [25, 60, 120]) {
   for (let step = 0; step < fps; step += 1) consumeBoostTank(tank, 1 / fps, 2, 2);
   assert.ok(Math.abs(tank.charge - 0.15) < 1e-9, 'A mixed tank drains identically at different frame rates');
 }
-const heldTank = { charge: 1, overcharge: 0, converted: 0.5 };
-decayConvertedBoost(heldTank, 4, true);
-assert.equal(heldTank.converted, 0.5, 'GAS holds converted OC');
-decayConvertedBoost(heldTank, 2, false);
-assert.deepEqual(heldTank, { charge: 0.75, overcharge: 0, converted: 0.25 }, 'Loose converted OC leaks from total fuel');
+// #1265: sustained ROAD RAGE in the controller's own order (recharge, convert, full
+// cue), with jittered frames around 120 Hz and eligibility, GAS and DRIFT recharge
+// changing underneath. Converted fuel is stored: the tank never leaves full, so the
+// full cue never re-fires, and conversion only pauses and resumes.
+for (const fps of [30, 60, 120]) {
+  const tank = { charge: 1, overcharge: 0.05, converted: 0, burningOvercharge: false };
+  let previousCharge = tank.charge;
+  let fullCues = 0;
+  let convertingFrames = 0;
+  let pausedFrames = 0;
+  for (let frame = 0; frame < fps * 20; frame += 1) {
+    const dt = (1 / fps) * (frame % 3 === 0 ? 0.94 : frame % 3 === 1 ? 1.06 : 1);
+    const second = Math.floor(frame / fps);
+    const driftRecharge = second % 4 === 1 ? 2.4 : 0;
+    const clean = second % 5 !== 3;
+    if (tank.charge < 0.999999) tank.charge = Math.min(1, tank.charge + dt * driftRecharge / 4.2);
+    const before = tank.converted;
+    const converted = convertBoostTank(tank, dt, { ...cleanConversion, offRoad: !clean });
+    assert.equal(converted, clean && before < tank.charge,
+      'Conversion reports itself only while eligible and not yet complete');
+    if (converted) convertingFrames += 1; else pausedFrames += 1;
+    assert.ok(tank.converted >= before, 'Converted OVERCHARGE never shrinks without BOOST');
+    assert.ok(tank.converted <= tank.charge, 'Converted fuel stays inside the tank');
+    assert.equal(tank.charge, 1, 'ROAD RAGE never takes the tank off full');
+    if (previousCharge < 0.999 && tank.charge >= 0.999) fullCues += 1;
+    previousCharge = tank.charge;
+  }
+  assert.equal(fullCues, 0, `Sustained conversion never re-fires the full cue at ${fps} fps`);
+  assert.ok(convertingFrames > 0 && pausedFrames > 0, 'Eligibility both paused and resumed conversion');
+  assert.equal(tank.converted, 1, 'Paused conversion resumes until the whole tank is OVERCHARGE');
+  assert.equal(convertBoostTank(tank, 1 / fps, cleanConversion), false,
+    'A fully converted tank no longer says ROAD RAGE is converting');
+}
+const pausedTank = { charge: 1, overcharge: 0, converted: 0.4 };
+assert.equal(convertBoostTank(pausedTank, 1, { ...cleanConversion, requested: true }), false, 'BOOST stops conversion');
+assert.equal(convertBoostTank(pausedTank, 1, cleanConversion), true, 'Stored converted fuel seeds conversion again');
+const ordinaryBefore = pausedTank.charge - pausedTank.converted;
+consumeBoostTank(pausedTank, 0.5, 2);
+assert.ok(pausedTank.charge < 1 && Math.abs(pausedTank.charge - pausedTank.converted - ordinaryBefore) < 1e-9,
+  'BOOST spends converted fuel first, then ordinary fuel');
+assert.equal(convertBoostTank(pausedTank, 1, cleanConversion), false, 'Below full cannot convert');
+assert.doesNotMatch(controlsSource, /decayConvertedBoost/, 'Converted fuel is stored, not leaked from the tank');
+assert.match(controlsSource, /const overchargeCaught = boostOvercharge > 0 && resourceZone === 'gas' && !boosting;/,
+  'Only loose bonus OVERCHARGE can be caught');
+assert.match(controlsSource, /const overchargeVolatile = boostOvercharge > 0 && !overchargeCaught && !boosting;/,
+  'Stored converted fuel does not wiggle as volatile');
+assert.match(controlsSource, /const hasOvercharge = boostOvercharge > 0;/,
+  'The widened purple bar is the bonus OVERCHARGE alone');
 assert.deepEqual(activeVehiclePerkIds(perkState(truck.id, true, truck.tuning)), ['torque']);
 assert.deepEqual(activeVehiclePerkIds(truckWith('full-tank')), ['torque', 'full-tank']);
 assert.deepEqual(activeVehiclePerkIds(truckWith('torque')), ['torque'], 'A car never runs its own perk twice');
@@ -690,3 +755,59 @@ assert.doesNotMatch(perkRuntimeSource, /activePerk\(state, '|vehicleId === '(tru
   'Perks are known by their ids, never by the car they come from');
 
 console.log('TURN seven gated 1200–2000 Trophy Road vehicle perk behaviors, the perk table and installed-perk composition passed.');
+
+const {
+  advanceBrakingTechnique, resetBrakingTechnique, RESPONSE_ACCELERATION_MULTIPLIER, RESPONSE_KICK_SECONDS
+} = await import('../../turn/input/braking-technique.js');
+// 22 Oct device test: 1.5× for 0.65 s was not perceptible. The kick is materially stronger.
+assert.ok(RESPONSE_ACCELERATION_MULTIPLIER >= 2 && RESPONSE_KICK_SECONDS >= 0.9);
+const responseCues = [];
+const realDispatch = globalThis.dispatchEvent;
+const RealCustomEvent = globalThis.CustomEvent;
+globalThis.CustomEvent ??= class { constructor(type, options = {}) { this.type = type; this.detail = options.detail; } };
+globalThis.dispatchEvent = (event) => { if (event.type === 'turn:response-time') responseCues.push(event.detail); return true; };
+const hunter = perkState('sedan', false, lockedBase, 'hunter');
+hunter.vehicleStats = lockedStats;
+for (const position of [1, 4, 2, 5, 0]) {
+  hunter.racePosition = position;
+  const actual = resolveVehiclePerkTuning({ state: hunter, tuning: lockedBase });
+  const expected = deriveVehicleTuning({ ...lockedStats, acceleration: Math.min(5, 3 + position), speed: Math.min(5, 3 + position) });
+  assert.equal(actual.accelerationMultiplier, expected.accelerationMultiplier);
+  assert.equal(actual.topSpeedMultiplier, expected.topSpeedMultiplier);
+}
+assert.deepEqual(hunter.vehicleStats, lockedStats);
+for (const hz of [30, 60, 120]) {
+  const response = perkState('police', false, lockedBase, 'response-time');
+  Object.assign(response, { speed: 25, brake: 1, reverse: 0, throttle: 0, steering: 0, lapActive: true });
+  for (let i = 0; i < hz / 5; i++) advanceBrakingTechnique(response, 1 / hz, 30 / hz, 30, false, true);
+  response.brake = 0; response.throttle = 1;
+  advanceBrakingTechnique(response, 1 / hz, 0, 25, false, true);
+  assert.equal(response.responseTimeRemaining, 0, 'The kick waits after input');
+  for (let i = 0; i < Math.ceil(hz * 0.2); i++) advanceBrakingTechnique(response, 1 / hz, 0, 25, false, true);
+  assert.ok(response.responseTimeRemaining > 0);
+  assert.equal(resolveVehiclePerkTuning({ state: response, tuning: lockedBase }).accelerationMultiplier,
+    lockedBase.accelerationMultiplier * RESPONSE_ACCELERATION_MULTIPLIER);
+  assert.deepEqual(responseCues.at(-1), { control: 'gas', seconds: RESPONSE_KICK_SECONDS }, 'The kick is announced once, on GAS');
+  const cuesAfterKick = responseCues.length;
+  for (let i = 0; i < hz * 2; i++) advanceBrakingTechnique(response, 1 / hz, 0, 25, true, true);
+  assert.equal(response.responseTimeRemaining, 0, 'One braking event cannot repeat');
+  assert.equal(responseCues.length, cuesAfterKick, 'One braking event cannot cue twice');
+  resetBrakingTechnique(response);
+  response.brake = 1;
+  advanceBrakingTechnique(response, 1 / hz, 1, 30, false, true);
+  response.brake = 0;
+  for (let i = 0; i < hz; i++) advanceBrakingTechnique(response, 1 / hz, 0, 25, false, true);
+  assert.equal(response.responseTimeRemaining, 0, 'Brake taps do not prime');
+  response.brake = 1;
+  for (let i = 0; i < hz / 5; i++) advanceBrakingTechnique(response, 1 / hz, 30 / hz, 30, false, true);
+  resetBrakingTechnique(response);
+  response.brake = 0;
+  for (let i = 0; i < hz; i++) advanceBrakingTechnique(response, 1 / hz, 0, 25, true, true);
+  assert.equal(response.responseTimeRemaining, 0, 'A pause or interruption clears the primed response');
+}
+globalThis.dispatchEvent = realDispatch;
+globalThis.CustomEvent = RealCustomEvent;
+assert.equal(responseCues.length, 3, 'Exactly one cue per qualifying braking event at each frame rate');
+assert.match(controlsSource, /\['race-paused', 'race-reset', 'lot-open', 'home-open', 'spectate-started'\]\.includes\(reason\)\) clearResponsePulse\(\);/,
+  'The RESPONSE TIME pulse stops on pause, reset, GARAGE, leaving and SPECTATE, as the braking tracker does');
+console.log('HUNTER current-position tiers and RESPONSE TIME deceleration/delay/anti-spam lifecycle pass at 30/60/120 Hz.');

@@ -1,11 +1,12 @@
-name: TURN admin unlock regression
+name: TURN session admin regression
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'turn/testing/admin-unlock-sequence.js'
+      - 'turn/testing/session-admin*.js'
+      - 'turn/ui/home-app-bar.js'
       - 'turn/achievements/**'
       - 'turn/progression/**'
       - 'turn-lab/tests/admin-unlock-production.mjs'
@@ -14,7 +15,8 @@ on:
     branches:
       - main
     paths:
-      - 'turn/testing/admin-unlock-sequence.js'
+      - 'turn/testing/session-admin*.js'
+      - 'turn/ui/home-app-bar.js'
       - 'turn/achievements/**'
       - 'turn/progression/**'
       - 'turn-lab/tests/admin-unlock-production.mjs'
@@ -39,5 +41,5 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Run hidden admin unlock regression
+      - name: Run session admin regression
         run: node turn-lab/tests/admin-unlock-production.mjs

@@ -1,5 +1,5 @@
-@import url('./design-tokens.css?build=20261020-r485');
-@import url('./controls.css?build=20261020-r485');
+@import url('./design-tokens.css?build=20261023-r489');
+@import url('./controls.css?build=20261023-r489');
 
 /*
   Normative production roles.
@@ -37,8 +37,10 @@
   background: var(--turn-action-primary) !important;
 }
 
+.turn-pr-button.is-destructive,
 .yourturn-actions button.is-destructive {
   background: var(--turn-action-danger) !important;
+  color: var(--turn-ink);
 }
 
 /* Close, leave and back always communicate navigation or context change. */

@@ -185,6 +185,35 @@ assert.match(airportEmergency, /function isInsideMedicalBay\(position\)[\s\S]*pl
 assert.match(airportEmergency, /renderScene\.onBeforeRender = function airportEmergencyFrame/,
   'MAYDAY logic must keep running after the wreck leaves the camera frustum');
 
+const responderLightStart = airportEmergency.indexOf('function updateResponderLights(rig)');
+const responderLightEnd = airportEmergency.indexOf('\n\nfunction primitiveGroup', responderLightStart);
+assert.ok(responderLightStart >= 0 && responderLightEnd > responderLightStart,
+  'The MAYDAY responder-light updater must remain available for the LOW GRAPHICS regression');
+const responderLightSource = airportEmergency.slice(responderLightStart, responderLightEnd);
+const updateResponderLights = Function(
+  'performance',
+  'session',
+  `"use strict"; return (${responderLightSource});`
+)({ now: () => 100 }, { crashActive: true, resolved: false });
+const lowGraphicsRecord = {
+  index: 0,
+  lamp: { visible: false },
+  halo: { visible: false },
+  wideHalo: { visible: false },
+  material: { opacity: 0 },
+  haloMaterial: { opacity: 0 },
+  wideHaloMaterial: { opacity: 0 },
+  pointLight: null
+};
+assert.doesNotThrow(() => updateResponderLights({
+  lastFrameAt: -Infinity,
+  periodMs: 840,
+  reducedMotion: false,
+  lamps: [lowGraphicsRecord]
+}), 'MAYDAY responder rendering must tolerate LOW GRAPHICS omitting PointLights');
+assert.equal(lowGraphicsRecord.lamp.visible, true,
+  'The visible LOW GRAPHICS responder lamp still updates without a real PointLight');
+
 assert.match(airportEmergency, /PATIENT ON BOARD · MEDICAL BAY · 30 SECONDS/);
 assert.doesNotMatch(airportEmergency, /FOLLOW THE SIRENS/);
 assert.match(airportEmergency, /\.turn-mayday-info-plate[\s\S]*top: max\(12px, calc\(env\(safe-area-inset-top\) \+ 7\.5px\)\)[\s\S]*border: 2\.25px solid var\(--turn-outline\)[\s\S]*box-shadow: 3\.75px 3\.75px 0 var\(--turn-shadow-color\)/,

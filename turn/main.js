@@ -1,3 +1,4 @@
+import { resetBrakingTechnique } from './input/braking-technique.js';
 // Generated from turn/main.js for TURN 2026.07.29-r118. Do not edit by hand.
 // TURN game core.
 
@@ -9,7 +10,7 @@ import { installKenneyWorld } from '/turn/world-assets.js';
 import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19&revision=r270-camera-hotpath';
 import { updateHudState } from '/turn/ui/hud.js?build=20261002-r363';
 import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from '/turn/input/motion.js';
-import { announceSteeringCentred, centreTiltSteering, noteRecalibrate } from '/turn/input/tilt-centring.js';
+import { announceSteeringCentred, centreTiltSteering } from '/turn/input/tilt-centring.js';
 import { createKeyboardDrivingController } from '/turn/input/keyboard-driving-controls.js';
 import { updateVehiclePhysicsState } from '/turn/vehicle/physics.js?build=20260720-r19';
 import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from '/turn/race/game-state.js';
@@ -726,6 +727,7 @@ function surfaceYNear(x, z) {
 // A new race, a restart, GARAGE, Home or a spectated replay: no smoke, wake or camera
 // kick carries over.
 window.addEventListener('turn:ui-state-change', (event) => {
+  if (['race-paused', 'race-started', 'race-reset', 'lot-open', 'home-open', 'spectate-started'].includes(event.detail?.reason)) resetBrakingTechnique(state);
   if (['race-started', 'race-reset', 'lot-open', 'home-open', 'spectate-started'].includes(event.detail?.reason)) {
     driveEffects.clear(state);
   }
@@ -846,7 +848,6 @@ globalThis.__turnNextRaceSession = raceSession;
 
 function calibrate() {
   if (state.sensorMode) {
-    noteRecalibrate(state);
     centreTiltSteering(state);
     state.tiltDrive = 0;
     announceSteeringCentred({ showMessage });

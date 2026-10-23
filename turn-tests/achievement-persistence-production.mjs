@@ -2,10 +2,9 @@ import assert from 'node:assert/strict';
 import { ACHIEVEMENT_STORAGE_KEY, createAchievementStore, normalizeAchievementState } from '../turn/achievements/store.js';
 import { getAchievement } from '../turn/achievements/catalog.js';
 import { achievementTrophyAward } from '../turn/achievements/awards.js';
-import { createAdminRewardState } from '../turn/testing/admin-unlock-sequence.js';
 
 // Two TURN windows share one storage, each with its own store (#1045 A1). Neither may
-// erase what the other saved; a deliberate rewrite (the admin profile) wins.
+// erase what the other saved; a deliberate rewrite (a profile reset) wins.
 function sharedStorage() {
   const disk = new Map();
   return {
@@ -74,8 +73,8 @@ assert.equal(achievementTrophyAward('faster-than-the-dev', { awardedTrophies: 0 
   assert.equal(stored(storage).bonuses['support-thanks']?.trophies, 5, 'A bonus survives a stale window');
 
   // A reward is announced by the window that reaches it, and kept by a stale one.
-  a.unlock('an-army-of-me', { trackId: 'midnight-city' });
-  a.unlock('on-course-of-course', { trackId: 'harbor' });
+  a.unlock('trust-your-ears', { trackId: 'midnight-city' });
+  a.unlock('listen-closely', { trackId: 'harbor' });
   assert.deepEqual(a.syncRewards().map(({ id }) => id), ['compact'], 'Reaching 300 trophies announces the Compact');
   b.markAllSeen();
   assert.ok(stored(storage).rewards.unlocked.includes('compact'), 'A stale window keeps the reward');
@@ -86,10 +85,11 @@ assert.equal(achievementTrophyAward('faster-than-the-dev', { awardedTrophies: 0 
   const storage = sharedStorage();
   const a = createAchievementStore(storage);
   a.unlock('first-turn');
-  const { snapshot } = createAdminRewardState(stored(storage));
+  const snapshot = normalizeAchievementState(stored(storage));
+  snapshot.generation += 1;
   storage.setItem(ACHIEVEMENT_STORAGE_KEY, JSON.stringify(snapshot));
   const rewrittenGeneration = stored(storage).generation;
-  assert.ok(rewrittenGeneration > 0, 'The admin rewrite raises the generation');
+  assert.ok(rewrittenGeneration > 0, 'A profile reset raises the generation');
   a.unlock('new-wheels');
   assert.equal(stored(storage).generation, rewrittenGeneration, 'A stale window adopts the rewrite');
   assert.equal(a.isUnlocked('first-turn'), Boolean(snapshot.unlocked['first-turn']));

@@ -203,15 +203,35 @@ export const VEHICLE_PERKS = Object.freeze([
 // collection mechanics and migration/reveal paths are ready (#1247).
 export const ACHIEVEMENT_PERKS = Object.freeze([
   definePerk({
+    id: 'hunter', title: 'HUNTER', rarity: PERK_RARITY.RARE, installable: true,
+    achievementId: 'an-army-of-me',
+    description: 'Your current race position adds that many tiers to ACCELERATION and TOP SPEED, up to 5/5.'
+  }),
+  definePerk({
+    id: 'response-time', title: 'RESPONSE TIME', rarity: PERK_RARITY.EPIC, installable: true,
+    achievementId: 'emergency-master',
+    description: 'Brake decisively at speed, then return quickly to GAS or DRIFT: after a short delay, a strong acceleration kick. The control flashes as it lands.'
+  }),
+  definePerk({
     id: 'turbo', title: 'TURBO', rarity: PERK_RARITY.MYTHIC, installable: true,
     achievementId: 'faster-than-the-dev',
-    description: 'BOOST burns twice as fast and delivers 2.5 times the normal BOOST effect.',
-    tuning: { boostConsumptionMultiplier: 2, boostEffectMultiplier: 2.5 }
+    description: 'BOOST burns twice as fast and delivers twice the normal BOOST effect: the same tank, in half the time.',
+    tuning: { boostConsumptionMultiplier: 2, boostEffectMultiplier: 2 }
   }),
   definePerk({
     id: 'road-rage', title: 'ROAD RAGE', rarity: PERK_RARITY.MYTHIC, installable: true,
     achievementId: 'on-course-of-course',
     description: 'With a full tank and some OVERCHARGE, clean driving gradually converts ordinary BOOST into OVERCHARGE. Using BOOST stops conversion.'
+  }),
+  definePerk({
+    id: 'precision', title: 'PRECISION', rarity: PERK_RARITY.EPIC, installable: true,
+    achievementId: 'drift-master',
+    description: 'Only DRIFT that earns DRIFT ATTACK points recharges BOOST. Loose OVERCHARGE lasts three times as long.'
+  }),
+  definePerk({
+    id: 'locked-in', title: 'LOCKED IN', rarity: PERK_RARITY.EPIC, installable: true,
+    achievementId: 'flow-master',
+    description: 'While FLOW is above ×2, gain one effective tier of CONTROL, ACCELERATION and DRIFT.'
   })
 ]);
 

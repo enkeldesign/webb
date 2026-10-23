@@ -4,7 +4,7 @@
 import * as base from './catalog-base.js?revision=r241-trophy-balance';
 import { assertTrackConfigCoverage } from '../tracks/definitions.js';
 import {
-  SCORING_MASTER_ACHIEVEMENT,
+  SCORING_MASTER_ACHIEVEMENTS,
   TRACK_SCORING_ACHIEVEMENTS
 } from './scoring-achievements.js?revision=r3-trophy-balance';
 import {
@@ -274,6 +274,14 @@ const insertionIndex = firstTimeTrialIndex >= 0
   ? firstTimeTrialIndex
   : expandedBaseAchievements.length;
 
+export const EMERGENCY_ACHIEVEMENT_IDS = Object.freeze(['night-shift-sheriff', 'golden-hour', 'save-bella']);
+export const EMERGENCY_MASTER_ACHIEVEMENT = Object.freeze({
+  id: 'emergency-master', category: base.CATEGORY.RACING, trophies: 0,
+  title: 'FIRST RESPONDER', description: 'Complete NIGHT SHIFT SHERIFF, MAYDAY! and SAVE BELLA!',
+  icon: 'siren', progressMax: EMERGENCY_ACHIEVEMENT_IDS.length,
+  reward: Object.freeze({ type: 'perk', perkId: 'response-time' })
+});
+
 const PRODUCTION_ACHIEVEMENTS = Object.freeze([
   ...expandedBaseAchievements.slice(0, insertionIndex),
   MAYDAY,
@@ -281,7 +289,8 @@ const PRODUCTION_ACHIEVEMENTS = Object.freeze([
   PRODUCTION_CATCH_THE_CHARGE_ACHIEVEMENT,
   HEAD_START_ACHIEVEMENT,
   ...TRACK_SCORING_ACHIEVEMENTS,
-  SCORING_MASTER_ACHIEVEMENT,
+  ...SCORING_MASTER_ACHIEVEMENTS,
+  EMERGENCY_MASTER_ACHIEVEMENT,
   ...expandedBaseAchievements.slice(insertionIndex)
 ]);
 
@@ -357,8 +366,14 @@ function withTrack(achievement) {
   return trackId ? Object.freeze({ ...achievement, trackId }) : achievement;
 }
 
+const MASTER_PERKS = Object.freeze({
+  'faster-than-the-dev': 'turbo', 'on-course-of-course': 'road-rage', 'an-army-of-me': 'hunter'
+});
 export const ACHIEVEMENTS = Object.freeze(
-  PRODUCTION_ACHIEVEMENTS.map(withPresentationIcon).map(withTrack)
+  PRODUCTION_ACHIEVEMENTS.map(withPresentationIcon).map(withTrack).map((achievement) => MASTER_PERKS[achievement.id]
+    ? Object.freeze({ ...achievement, trophies: 0, progressMax: base.TRACK_IDS.length,
+        reward: Object.freeze({ type: 'perk', perkId: MASTER_PERKS[achievement.id] }) })
+    : achievement)
 );
 
 // Explicit collections, derived from the canonical catalogs. Presentation never
@@ -367,7 +382,9 @@ export const ACHIEVEMENT_FAMILIES = Object.freeze([
   { masterId: 'faster-than-the-dev', label: 'SPRINT', childIds: TIME_TRIALS.map(({ id }) => id) },
   { masterId: 'on-course-of-course', label: 'SAFETY', childIds: TRACK_SAFETY_ACHIEVEMENTS.map(({ id }) => id) },
   { masterId: 'an-army-of-me', label: 'WINNER', childIds: TRACK_WINNER_ACHIEVEMENTS.map(({ id }) => id) },
-  { masterId: 'drift-flow-master', label: 'DRIFT & FLOW', childIds: TRACK_SCORING_ACHIEVEMENTS.map(({ id }) => id) }
+  ...SCORING_MASTER_ACHIEVEMENTS.map((master) => ({ masterId: master.id, label: master.scoreChannel.toUpperCase(),
+    childIds: TRACK_SCORING_ACHIEVEMENTS.filter((item) => item.scoreChannel === master.scoreChannel).map(({ id }) => id) })),
+  { masterId: 'emergency-master', label: 'EMERGENCY', childIds: EMERGENCY_ACHIEVEMENT_IDS }
 ].map((family) => Object.freeze({ ...family, childIds: Object.freeze(family.childIds) })));
 
 // A track's goals are its achievements, in catalog order: the Track sheet lists them

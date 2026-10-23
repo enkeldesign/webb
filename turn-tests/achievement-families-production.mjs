@@ -12,7 +12,7 @@ for (const family of ACHIEVEMENT_FAMILIES) {
   assert.equal(completedAchievementFamily(family, (id) => earned.has(id)), true, 'A complete earned collection collapses');
   earned.delete(family.childIds[0]);
   assert.equal(completedAchievementFamily(family, (id) => earned.has(id)), false, 'A new/missing child keeps the collection visible');
-  assert.equal(family.childIds.length % TRACK_IDS.length, 0, 'Production families follow current track count');
+  if (family.masterId !== 'emergency-master') assert.equal(family.childIds.length % TRACK_IDS.length, 0, 'Production families follow current track count');
 }
 const syntheticChildren = Array.from({ length: 13 }, (_, index) => ({ id: `track-${index}` }));
 const family = { masterId: 'master', label: 'SPRINT', childIds: syntheticChildren.map(({ id }) => id) };

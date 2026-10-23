@@ -46,7 +46,7 @@ export async function renderWiki() {
   for (const [, name] of (await fs.readFile(new URL('../ui/how-to-play-demos.js', import.meta.url), 'utf8')).matchAll(/var\((--turn-drive-[a-z-]+)\)/g)) {
     assert(drivePadValues.includes(`${name}:`), `The wiki's drive pad needs ${name} from drive-pad.css`);
   }
-  const { CAR_CATALOG: cars, TRACK_DEFINITIONS: tracks, VEHICLE_PERKS: perks, TROPHY_ROAD_REWARDS: rewards, ACHIEVEMENTS: achievements, VEHICLE_STAT_LEGEND: stats } = game;
+  const { CAR_CATALOG: cars, TRACK_DEFINITIONS: tracks, PERKS: perks, TROPHY_ROAD_REWARDS: rewards, ACHIEVEMENTS: achievements, VEHICLE_STAT_LEGEND: stats } = game;
   for (const [items, advice, label] of [[cars, CAR_ADVICE, 'car'], [tracks, TRACK_ADVICE, 'track'], [perks, PERK_ADVICE, 'perk']]) {
     assert.deepEqual(Object.keys(advice).sort(), items.map(({ id }) => id).sort(), `Wiki ${label} advice must cover the current catalog exactly`);
   }
@@ -101,10 +101,11 @@ export async function renderWiki() {
     const perk = game.originalVehiclePerk(car.id);
     return `<li><a class="card car-card" href="${url(p.path)}">${carImage(car.id)}<span class="car-card-head"><strong>${escapeHtml(car.name)}</strong><span>${escapeHtml(perk.title)} ${chip(perk.rarity, perk.rarity)}</span></span>${meters(car)}<span class="wiki-card-line">${unlockLine(game.rewardForVehicle(car.id))}</span></a></li>`;
   };
+  const perkSource = (perk) => perk.achievementId ? achievements.find((a) => a.id === perk.achievementId).title : perk.vehicleIds.map((id) => cars.find((c) => c.id === id).name).join(' · ');
   // PERKULATOR's perk row: name and rarity, the effect, the car it comes from.
   const perkCard = (p) => {
     const perk = perks.find((k) => k.id === p.perkId);
-    return `<li><a class="card perk-card" href="${url(p.path)}"><span class="card-copy"><strong>${escapeHtml(perk.title)}</strong>${chip(perk.rarity, perk.rarity)}<span>${escapeHtml(perk.description)}</span><span class="wiki-card-line">From ${escapeHtml(perk.vehicleIds.map((id) => cars.find((c) => c.id === id).name).join(' · '))}</span></span></a></li>`;
+    return `<li><a class="card perk-card" href="${url(p.path)}"><span class="card-copy"><strong>${escapeHtml(perk.title)}</strong>${chip(perk.rarity, perk.rarity)}<span>${escapeHtml(perk.description)}</span><span class="wiki-card-line">From ${escapeHtml(perkSource(perk))}</span></span></a></li>`;
   };
   const cards = (paths) => {
     const items = paths.map((path) => {
@@ -175,11 +176,11 @@ export async function renderWiki() {
     add(`perks/${perk.id}`, { title: perk.title, group: 'Perks', perkId: perk.id, mark: 'perk', intro: perk.description, badges: chip(perk.rarity, perk.rarity),
       aliases: `${perk.id} ${perk.vehicleIds.map((id) => cars.find((c) => c.id === id).name).join(' ')} ${perk.rarity}`,
       body: () => `<div class="perk-banner">${chip(perk.rarity, perk.rarity)}<strong>${perk.installable ? 'INSTALLABLE' : 'STAYS WITH ITS CAR'}</strong></div>`
-        + facts([['Original car', perk.vehicleIds.map((id) => link(carPath(id), cars.find((c) => c.id === id).name)).join(' · ')], ['Unlock', trophyLink(game.rewardForVehiclePerk(perk.vehicleIds[0]) || game.rewardForVehicle(perk.vehicleIds[0]))]])
+        + facts(perk.achievementId ? [['Source', escapeHtml(perkSource(perk))], ['Unlock', 'Complete its achievement collection, then install through PERKULATOR. Earlier completions are remembered.']] : [['Original car', perk.vehicleIds.map((id) => link(carPath(id), cars.find((c) => c.id === id).name)).join(' · ')], ['Unlock', trophyLink(game.rewardForVehiclePerk(perk.vehicleIds[0]) || game.rewardForVehicle(perk.vehicleIds[0]))]])
         + section('Use it', paragraph(copy(use))) + section('Make it work together', paragraph(copy(interaction)))
         + section('Try it on', `<div class="mini-car">${carImage(carId)}<div>${link(carPath(carId), cars.find((c) => c.id === carId).name)}${paragraph(perk.installable ? 'An illustrative pairing once the car, perk and PERKULATOR are unlocked. Compare it with the same car’s original setup.' : 'This is a vehicle-defining perk. Add an eligible INSTALLED perk beside it through PERKULATOR.')}</div></div>`)
-        + section('Installing', paragraph(perk.installable ? 'Unlock its source car and the perk, then choose it in PERKULATOR. No cloning or collecting copies is needed. It uses the one INSTALLED slot and cannot duplicate the destination car’s own perk.' : 'This LEGENDARY perk cannot be cloned or installed on another car. Its original car can still equip one eligible INSTALLED perk.')),
-      related: [...new Set([carPath(perk.vehicleIds[0]), `skills/${technique}`, 'perks/perkulator', 'perks/build-ideas', 'progress/trophy-road'])] });
+        + section('Installing', paragraph(perk.achievementId ? 'Earn the collection reward, then install it once PERKULATOR is available. It uses the same one INSTALLED slot. No replay or cloning is needed.' : perk.installable ? 'Unlock its source car and the perk, then choose it in PERKULATOR. No cloning or collecting copies is needed. It uses the one INSTALLED slot and cannot duplicate the destination car’s own perk.' : 'This LEGENDARY perk cannot be cloned or installed on another car. Its original car can still equip one eligible INSTALLED perk.')),
+      related: [...new Set([perk.achievementId ? 'progress/achievements' : carPath(perk.vehicleIds[0]), `skills/${technique}`, 'perks/perkulator', 'perks/build-ideas', 'progress/trophy-road'])] });
   }
   for (const track of tracks) {
     const advice = TRACK_ADVICE[track.id], map = trackMap(track, advice.map);
@@ -231,7 +232,7 @@ export async function renderWiki() {
     body: () => paragraph('The starting cars and EASY tracks are available immediately. Older profiles may retain earlier unlocks; this is the current reward order.')
       + `<ol class="reward-road">${rewards.map((reward) => `<li id="${reward.id}"><span class="reward-threshold"><span class="reward-icon" aria-hidden="true">${authored(game.TROPHY_ROAD_REWARD_ICONS[reward.icon] || '')}</span>${reward.threshold.toLocaleString('en-US')}<small>trophies</small></span><div><h2>${escapeHtml(reward.title)}</h2><p>${rewardLinks(reward)}</p><p>${escapeHtml(reward.description.replace(/<[^>]+>/g, ' '))}</p>${reward.id === 'drift-attack' ? paragraph(`Also unlocks the Truck’s ${link('perks/torque', 'TORQUE')}.`) : ''}</div></li>`).join('')}</ol>`,
     related: ['progress/achievements', 'progress/challenges', 'cars', 'tracks', 'perks/builds'] });
-  const achievementEntry = (a) => `<li id="${a.id}" class="achievement"><div class="achievement-symbol">${icon(a.icon)}</div><div><h3>${escapeHtml(a.title)}</h3><p>${escapeHtml(a.description)}</p>${a.recommendation ? `<p class="muted">${escapeHtml(a.recommendation)}</p>` : ''}${a.trackId ? paragraph(link(`tracks/${a.trackId}`, trackName(a.trackId))) : ''}</div><strong class="trophies">${a.trophies}<span>trophies</span></strong></li>`;
+  const achievementEntry = (a) => `<li id="${a.id}" class="achievement"><div class="achievement-symbol">${icon(a.icon)}</div><div><h3>${escapeHtml(a.title)}</h3><p>${escapeHtml(a.description)}</p>${a.recommendation ? `<p class="muted">${escapeHtml(a.recommendation)}</p>` : ''}${a.trackId ? paragraph(link(`tracks/${a.trackId}`, trackName(a.trackId))) : ''}</div><strong class="trophies">${a.reward?.type === 'perk' ? `${escapeHtml(perks.find((p) => p.id === a.reward.perkId).title)}<span>PERK</span>` : `${a.trophies}<span>trophies</span>`}</strong></li>`;
   add('progress/achievements', { title: 'Achievements', group: 'Progress', icon: 'trophy', intro: 'Every current goal, its exact requirement and its trophy reward. Hidden discoveries stay folded until you choose to reveal them.', aliases: achievements.filter((a) => !a.hidden && !a.calibrationPending).map((a) => a.title).join(' '),
     body: () => `<nav class="jump-links" aria-label="Achievement categories">${Object.entries(game.CATEGORY_LABELS).map(([id, title]) => link(`progress/achievements#${id}`, title)).join('')}${link('progress/achievements#secrets', 'Hidden discoveries')}</nav>`
       + Object.entries(game.CATEGORY_LABELS).map(([id, title]) => section(title, `<ul class="achievement-list">${achievements.filter((a) => a.category === id && !a.hidden && !a.calibrationPending).map(achievementEntry).join('')}</ul>`, id)).join('')

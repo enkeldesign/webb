@@ -10,6 +10,8 @@ export const FLOW_PULSE_TARGETS = Object.freeze({
   lock: '.drive-lock-bubble',
   boost: '.drive-boost-zone',
   shift: '.drive-shift-bubble',
+  // Decisive BRAKE into a curve (#1247).
+  braking: '.drive-brake-zone',
   // A clean EXIT and a caught OVERCHARGE are both GAS.
   'clean-exit': '.drive-gas-zone',
   'overcharge-catch': '.drive-gas-zone'

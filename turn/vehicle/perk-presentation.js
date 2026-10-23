@@ -1,4 +1,11 @@
 import { getVehiclePerk } from './perks.js';
+import { getCarDefinition } from './catalog.js';
+import { getAchievement } from '../achievements/catalog.js';
+
+export function perkSourceLabel(perk) {
+  return perk.achievementId ? getAchievement(perk.achievementId)?.title || ''
+    : perk.vehicleIds.map((id) => getCarDefinition(id).name).join(' · ');
+}
 
 // OVERDRIVE deliberately has no top-end ceiling; player-facing copy describes the fast, clean-driving requirement without exposing tuning numbers.
 export const FUTURE_RACER_REWARD_PERK_DESCRIPTION =

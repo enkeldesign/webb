@@ -796,6 +796,8 @@ html[data-theme="dark"] .garage-bar {
 }
 
 .garage-perk-meta {
+  display: grid;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
@@ -845,6 +847,7 @@ html[data-theme="dark"] .garage-bar {
 }
 
 .garage-perk-installed-body {
+  width: 100%;
   display: grid;
   gap: 8px;
   justify-items: start;
@@ -873,8 +876,10 @@ html[data-theme="dark"] .garage-bar {
   list-style: none;
 }
 
-.garage-install-perk-option {
+.garage-perk-card {
   display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
   gap: 6px;
   width: 100%;
   min-height: var(--turn-pr-target);
@@ -888,8 +893,15 @@ html[data-theme="dark"] .garage-bar {
   color: var(--turn-text);
   font: inherit;
   text-align: left;
-  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+.garage-perk-card.is-original {
+  background: var(--turn-surface-page);
+}
+
+.garage-install-perk-option {
+  cursor: pointer;
   touch-action: manipulation;
 }
 
@@ -1415,3 +1427,9 @@ html[data-theme="dark"] .garage-bar {
     transition: none;
   }
 }
+
+.garage-perk-filters { margin-block: 14px; }
+.garage-perk-filters button[aria-pressed="true"]::before { content: '✓ '; }
+.garage-perk-filters [data-perk-rarity="rare"][aria-pressed="true"] { background: var(--turn-rarity-rare); color: var(--turn-ink); }
+.garage-perk-filters [data-perk-rarity="epic"][aria-pressed="true"] { background: var(--turn-rarity-epic); color: var(--turn-ink); }
+.garage-perk-filters [data-perk-rarity="mythic"][aria-pressed="true"] { background: var(--turn-rarity-mythic); color: var(--turn-ink); }

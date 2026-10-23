@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
 import { register } from 'node:module';
 
 // SWOOSH route geometry (#909, #928): bends from the centreline, equal-angle segments of
@@ -165,21 +164,6 @@ for (const definition of TRACK_DEFINITIONS) {
       cursor += 1;
     }
   }
-}
-
-// The admin route HUD: admin profiles only, above blank screen, silent to screen readers,
-// and loaded by the production page.
-{
-  const hud = await fs.readFile(new URL('../../turn/testing/route-test-hud.js', import.meta.url), 'utf8');
-  const blank = await fs.readFile(new URL('../../turn/ui/screen-blanking.js', import.meta.url), 'utf8');
-  const page = await fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8');
-  assert.match(hud, /if \(!isAdminProfile\(\) \|\| !document\.body\) return;/, 'the HUD installs nothing for players');
-  assert.match(hud, /'turn-admin-unlock-v1'/);
-  assert.match(hud, /setAttribute\('aria-hidden', 'true'\)/, 'the HUD is silent to screen readers');
-  const hudLayer = Number(hud.match(/z-index: (\d+);/)[1]);
-  const blankLayers = [...blank.matchAll(/z-index: (\d+);/g)].map((match) => Number(match[1]));
-  assert.ok(hudLayer > Math.max(...blankLayers), 'the HUD stays visible above blank screen');
-  assert.match(page, /<script type="module" src="\.\/testing\/route-test-hud\.js\?build=/);
 }
 
 console.log('TURN route geometry: equal-angle swooshes ≤120°, gentle bends under 15° silent, per-segment perspective, mirrored/rotated/seam cases and all production tracks passed.');

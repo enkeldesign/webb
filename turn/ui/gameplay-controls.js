@@ -7,7 +7,7 @@ import {
 } from '../input/drift-lock.js?revision=r218-boost-balance';
 import { raceNow } from '../race/race-clock.js';
 import { activeVehiclePerkIds } from '../vehicle/perk-runtime.js?revision=r233-graduated';
-import { consumeBoostTank, convertBoostTank, decayConvertedBoost } from '../input/boost-tank.js';
+import { consumeBoostTank, convertBoostTank, rechargeScoringBoost } from '../input/boost-tank.js';
 import { REPLAY_CONTROL } from '../race/replay-inputs.js';
 import {
   BOOST_OVERCHARGE_PHASE,
@@ -291,6 +291,8 @@ function installGameplayUi() {
   let publishedOverchargeCaught = null;
   let publishedOverchargeVolatile = null;
   let publishedChargePercent = null;
+  let publishedMeterGeometry = null;
+  let publishedConverted = null;
   let publishedMeterValue = null;
   let publishedAriaValueText = null;
 
@@ -669,6 +671,28 @@ function installGameplayUi() {
     }, 420);
   }
 
+  // RESPONSE TIME (#1247): the kick says itself on the control the player came back
+  // to, with a sound and a buzz; nothing to read while racing. One per braking event.
+  const RESPONSE_PULSE_MS = 900;
+  let responsePulseTimer = 0;
+  function clearResponsePulse() {
+    window.clearTimeout(responsePulseTimer);
+    responsePulseTimer = 0;
+    gasButton.classList.remove('is-response-kick');
+    driftZone.classList.remove('is-response-kick');
+  }
+  window.addEventListener('turn:response-time', (event) => {
+    const runtime = globalThis.__turnRuntime;
+    if (!runtime?.state?.running || runtime.state.mode === runtime.GAME_MODE?.SPECTATING) return;
+    clearResponsePulse();
+    const control = event.detail?.control === 'drift' ? driftZone : gasButton;
+    void control.offsetWidth;
+    control.classList.add('is-response-kick');
+    globalThis.__turnAudio?.cue('response-kick');
+    safeVibrate([10, 24, 34]);
+    responsePulseTimer = window.setTimeout(clearResponsePulse, RESPONSE_PULSE_MS);
+  });
+
   function getBoostDrainSeconds() {
     const duration = Number(
       globalThis.__turnRuntime?.state?.vehicleEffectiveTuning?.boostDurationSeconds
@@ -707,6 +731,8 @@ function installGameplayUi() {
     boostVisualDirty = true;
     lastBoostVisualAt = -Infinity;
     publishedChargePercent = null;
+    publishedMeterGeometry = null;
+    publishedConverted = null;
     publishedMeterValue = null;
     publishedAriaValueText = null;
     publishedLocked = null;
@@ -723,8 +749,8 @@ function installGameplayUi() {
     boostHud.style.setProperty('--boost-charge', '100%');
     boostHud.style.setProperty('--boost-overcharge-width', '0%');
     boostHud.style.setProperty('--boost-base-width', '100%');
-    boostHud.style.setProperty('--boost-converted', '0%');
-    boostHud.style.setProperty('--boost-base-charge', '100%');
+    boostHud.style.setProperty('--boost-converted-left', '100%');
+    boostHud.style.setProperty('--boost-converted-width', '0%');
     boostHud.classList.remove('has-converted-overcharge');
     boostHud.setAttribute('aria-valuenow', '100');
     boostHud.setAttribute('aria-valuetext', '100 percent charged.');
@@ -1068,6 +1094,7 @@ function installGameplayUi() {
     // A lesson's hold keeps the drive pad's finger, so sliding it onto the lesson's control
     // continues (tutorial-prompt.js, #1236); the frozen race applies nothing meanwhile.
     // A SHIFT outcome still being measured waits, on race time, until RESUME.
+    if (['race-paused', 'race-reset', 'lot-open', 'home-open', 'spectate-started'].includes(reason)) clearResponsePulse();
     if (reason === 'race-paused') {
       if (event.detail?.pauseReason !== 'lesson') releaseDrive();
       centerManualSteerVisual();
@@ -1192,18 +1219,38 @@ function installGameplayUi() {
       lockedMultiplier: getDriftRechargeMultiplier(),
       lockCeilingMultiplier: DRIFT_LOCK_RECHARGE_MULTIPLIER
     });
-    const active = boostRequested && !boostExhausted && (boostOvercharge > 0 || boostCharge > 0.001);
     // FULL TANK (SUV perk): the fill clean driving has earned since the last frame, in
     // race time. Taken every frame; it only fills the tank between boosts.
     const perkState = globalThis.__turnRuntime?.state;
     const perkIds = activeVehiclePerkIds(perkState);
     const resourceZone = resolveBoostInputZone(driveZone, perkState);
-    const perkRefill = Math.max(0, Number(perkState?.vehiclePerkBoostRefill) || 0);
-    if (perkState) perkState.vehiclePerkBoostRefill = 0;
+    const precision = perkIds.includes('precision');
+    const scoringCharge = Math.max(0, Number(perkState?.driftScoringCharge) || 0);
+    const rechargeDt = precision ? 0 : dt;
+    const decayMultiplier = precision ? 3 : 1;
+    // PRECISION replaces passive charging (including FULL TANK's clean-driving
+    // fill) with recharge already earned by the scorer in its original input context.
+    const perkRefill = precision ? 0 : Math.max(0, Number(perkState?.vehiclePerkBoostRefill) || 0);
+    if (perkState) {
+      perkState.vehiclePerkBoostRefill = 0;
+      perkState.driftScoringCharge = 0;
+    }
     boostTank.charge = boostCharge;
     boostTank.overcharge = boostOvercharge;
     boostTank.converted = boostConvertedCharge;
     boostTank.burningOvercharge = false;
+    boostTank.overchargePhase = boostOverchargePhase;
+    if (precision && scoringCharge > 0) {
+      if (rechargeScoringBoost(boostTank, scoringCharge, BOOST_RECHARGE_SECONDS, overchargeOn)) flashOverchargePeak();
+      boostCharge = boostTank.charge;
+      boostOvercharge = boostTank.overcharge;
+      boostOverchargePhase = boostTank.overchargePhase;
+    }
+    const active = boostRequested && !boostExhausted && (boostOvercharge > 0 || boostCharge > 0.001);
+    // The scorer runs later in this same frame. Capture the exact held DRIFT/LOCK
+    // rate here; BOOST consumption cannot simultaneously earn recharge credit.
+    if (perkState) perkState.driftRechargeMultiplier = active ? 0 : rechargeMultiplier;
+    let converting = false;
 
     if (active) {
       consumeBoostTank(boostTank, dt, getBoostDrainSeconds(), perkState?.vehicleEffectiveTuning?.boostConsumptionMultiplier);
@@ -1217,16 +1264,16 @@ function installGameplayUi() {
       }
     } else {
       if (boostCharge < 0.999999) {
-        boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS + perkRefill);
+        boostCharge = Math.min(1, boostCharge + rechargeDt * rechargeMultiplier / BOOST_RECHARGE_SECONDS + perkRefill);
       }
 
       if (overchargeOn && (boostCharge >= 0.999999 || boostOvercharge > 0)) {
         const runtimeState = globalThis.__turnRuntime?.state;
-        const slipAngle = resolveBoostSlipAngle({
+        const slipAngle = precision ? 0 : resolveBoostSlipAngle({
           heading: runtimeState?.heading,
           velocity: runtimeState?.velocity
         });
-        const qualifyingDrift = qualifiesForBoostOvercharge({
+        const qualifyingDrift = precision ? perkState?.driftScoring === true : qualifiesForBoostOvercharge({
           driftHeld: globalThis.__turnDriftHeld === true,
           speed: runtimeState?.speed,
           slipAngle
@@ -1237,7 +1284,9 @@ function installGameplayUi() {
           dt,
           zone: resourceZone,
           qualifyingDrift,
-          rechargeMultiplier
+          rechargeMultiplier,
+          buildDt: rechargeDt,
+          decayMultiplier
         });
         boostOvercharge = overchargeState.amount;
         boostOverchargePhase = overchargeState.phase;
@@ -1245,13 +1294,12 @@ function installGameplayUi() {
       }
       boostTank.charge = boostCharge;
       boostTank.overcharge = boostOvercharge;
-      decayConvertedBoost(boostTank, dt, resourceZone === 'gas');
       conversion.enabled = overchargeOn && perkState?.running === true && perkIds.includes('road-rage');
       conversion.requested = boostRequested;
       conversion.offRoad = perkState?.offRoad === true;
       conversion.collided = perkState?.collided === true;
       conversion.speed = Number(perkState?.speed) || 0;
-      convertBoostTank(boostTank, dt, conversion);
+      converting = convertBoostTank(boostTank, dt, conversion);
       boostCharge = boostTank.charge;
       boostConvertedCharge = boostTank.converted;
     }
@@ -1262,8 +1310,9 @@ function installGameplayUi() {
 
     const boosting = boostRequested && !boostExhausted && (boostOvercharge > 0 || boostCharge > 0.001);
     const totalOvercharge = boostOvercharge + boostConvertedCharge;
-    const overchargeCaught = totalOvercharge > 0 && resourceZone === 'gas' && !boosting;
-    const overchargeVolatile = totalOvercharge > 0 && !overchargeCaught && !boosting;
+    // Only the bonus OVERCHARGE is loose: catching and the volatile wiggle are about it.
+    const overchargeCaught = boostOvercharge > 0 && resourceZone === 'gas' && !boosting;
+    const overchargeVolatile = boostOvercharge > 0 && !overchargeCaught && !boosting;
     globalThis.__turnBoostActive = boosting;
     globalThis.__turnBoostCharge = boostCharge;
     globalThis.__turnBoostOvercharge = totalOvercharge;
@@ -1312,26 +1361,36 @@ function installGameplayUi() {
     const locked = boostRequested && boostExhausted;
     const driftCharging = globalThis.__turnDriftHeld && !boosting;
     const driftLocking = driftCharging && (driftLockRequested || driftLockAmount > 0.001);
-    const hasOvercharge = totalOvercharge > 0;
+    // The widened purple bar is the bonus OVERCHARGE alone, as before #1253. ROAD
+    // RAGE's converted fuel is a purple share at the end of the base fill (#1265).
+    const hasOvercharge = boostOvercharge > 0;
+    const hasConverted = boostConvertedCharge > 0;
     const chargePercent = (boostCharge * 100).toFixed(1) + '%';
     const overchargePercent = Math.round(boostOvercharge * 100);
     const overchargeWidth = boostOverchargeVisualWidth(boostOvercharge);
     const overchargeWidthPercent = (overchargeWidth * 100).toFixed(1) + '%';
-    const baseWidthPercent = (100 / (1 + overchargeWidth)).toFixed(2) + '%';
+    const baseShare = 1 / (1 + overchargeWidth);
+    const baseWidthPercent = (baseShare * 100).toFixed(2) + '%';
+    const convertedLeftPercent = (((1 - baseShare) / 2 + baseShare * (boostCharge - boostConvertedCharge)) * 100).toFixed(1) + '%';
+    const convertedWidthPercent = (baseShare * boostConvertedCharge * 100).toFixed(1) + '%';
+    const meterGeometry = `${chargePercent} ${overchargeWidthPercent} ${convertedLeftPercent} ${convertedWidthPercent}`;
     const meterValue = Math.round(boostCharge * 100 + overchargeWidth * 100);
     const ariaPercent = Math.round(boostCharge * 100);
     let ariaValueText;
-    if (hasOvercharge) {
+    if (hasOvercharge || hasConverted) {
       const overchargeStateLabel = overchargeCaught
         ? 'caught and held with GAS'
         : boosting
           ? 'being used'
-          : boostOverchargePhase === BOOST_OVERCHARGE_PHASE.DECAYING || boostConvertedCharge > 0
+          : boostOverchargePhase === BOOST_OVERCHARGE_PHASE.DECAYING
             ? 'leaking'
             : 'building';
-      ariaValueText = boostConvertedCharge > 0
-        ? `${ariaPercent} percent charged, including ${Math.round(boostConvertedCharge * 100)} percent converted OVERCHARGE. Bonus OVERCHARGE ${overchargePercent} percent, ${overchargeStateLabel}.`
-        : `Full. Overcharge ${overchargePercent} percent ${overchargeStateLabel}.`;
+      const baseText = hasConverted
+        ? `${ariaPercent} percent charged, ${Math.round(boostConvertedCharge * 100)} percent of it OVERCHARGE${converting ? ', ROAD RAGE converting' : ''}.`
+        : 'Full.';
+      ariaValueText = hasOvercharge
+        ? `${baseText} Overcharge ${overchargePercent} percent ${overchargeStateLabel}.`
+        : baseText;
     } else {
       ariaValueText = driftLocking
         ? `Drift lock active. ${ariaPercent} percent charged.`
@@ -1344,6 +1403,7 @@ function installGameplayUi() {
       driftCharging !== publishedDriftCharging ||
       driftLocking !== publishedDriftLocking ||
       hasOvercharge !== publishedOvercharge ||
+      hasConverted !== publishedConverted ||
       overchargeCaught !== publishedOverchargeCaught ||
       overchargeVolatile !== publishedOverchargeVolatile;
     const visualDue = now - lastBoostVisualAt >= BOOST_VISUAL_INTERVAL_MS;
@@ -1401,15 +1461,21 @@ function installGameplayUi() {
       boostHud.classList.toggle('is-overcharge-volatile', overchargeVolatile);
       publishedOverchargeVolatile = overchargeVolatile;
     }
-    if (boostVisualDirty || chargePercent !== publishedChargePercent || hasOvercharge) {
+    if (boostVisualDirty || hasConverted !== publishedConverted) {
+      boostHud.classList.toggle('has-converted-overcharge', hasConverted);
+      publishedConverted = hasConverted;
+    }
+    if (boostVisualDirty || chargePercent !== publishedChargePercent) {
       drivePad.style.setProperty('--boost-charge', chargePercent);
+      publishedChargePercent = chargePercent;
+    }
+    if (boostVisualDirty || meterGeometry !== publishedMeterGeometry) {
       boostHud.style.setProperty('--boost-charge', chargePercent);
       boostHud.style.setProperty('--boost-overcharge-width', overchargeWidthPercent);
       boostHud.style.setProperty('--boost-base-width', baseWidthPercent);
-      boostHud.style.setProperty('--boost-converted', `${(boostConvertedCharge * 100).toFixed(1)}%`);
-      boostHud.style.setProperty('--boost-base-charge', chargePercent);
-      boostHud.classList.toggle('has-converted-overcharge', boostConvertedCharge > 0);
-      publishedChargePercent = chargePercent;
+      boostHud.style.setProperty('--boost-converted-left', convertedLeftPercent);
+      boostHud.style.setProperty('--boost-converted-width', convertedWidthPercent);
+      publishedMeterGeometry = meterGeometry;
     }
     if (boostVisualDirty || meterValue !== publishedMeterValue) {
       boostHud.setAttribute('aria-valuenow', String(meterValue));

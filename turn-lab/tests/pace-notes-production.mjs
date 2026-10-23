@@ -30,14 +30,13 @@ const { TRAINING_STAGES } = await import('../../turn/training/stages.js');
 const { buildTrainingCourse } = await import('../../turn/training/course.js');
 
 const read = (path) => fs.readFile(new URL(`../../${path}`, import.meta.url), 'utf8');
-const [releaseSource, app, loader, audio, scheduler, music, hud, training, stagesSource, menu, guide, pause] = await Promise.all([
+const [releaseSource, app, loader, audio, scheduler, music, training, stagesSource, menu, guide, pause] = await Promise.all([
   read('turn/release.json'),
   read('turn/app.js'),
   read('turn/audio/drive-by-ear-runtime.js'),
   read('turn/audio/audio-system.js'),
   read('turn/audio/swoosh-pace-notes.js'),
   read('turn/audio/racing-music-v5.js'),
-  read('turn/testing/route-test-hud.js'),
   read('turn/training/drive-by-ear-training.js'),
   read('turn/training/stages.js'),
   read('turn/ui/in-game-menu.js'),
@@ -334,20 +333,9 @@ for (const definition of TRACK_DEFINITIONS) {
   assert.equal(TRAINING_STAGES.some((stage) => 'notes' in stage), false, 'training has no hand-placed notes');
 }
 
-// Admin sound picker: fifteen polished voices beside the race sound, chosen only by admin
-// profiles; every player keeps choice 00.
+// The synthesized race voices retain their acoustic contracts.
 {
-  const { SWOOSH_SOUND_CHOICES, SWOOSH_SOUND_STORAGE_KEY, swooshSoundIndex } = await import('../../turn/audio/swoosh-pace-notes.js');
   const { VOICE_VARIANTS, VOICE_PITCH_HZ, SWOOSH_VOICES, startSwoosh, swooshLengths } = await import('../../turn/audio/swoosh-sound.js');
-  const { swooshCaption, currentCaptionEntry } = await import('../../turn/testing/swoosh-sound-picker.js');
-  assert.equal(VOICE_VARIANTS.length, 15, 'fifteen polished voices');
-  assert.equal(SWOOSH_SOUND_CHOICES.length, 16);
-  assert.deepEqual(SWOOSH_SOUND_CHOICES.slice(1, 11).map((choice) => choice.name), ['GLIDE', 'BREATH', 'SILK', 'CHIME', 'FLUTE', 'SWELL', 'HALO', 'WIND', 'PEBBLE', 'WOOD'], 'choices 01–10 keep their numbers');
-  assert.equal(SWOOSH_SOUND_CHOICES[0].variant, SWOOSH_PACE_TUNING.variant, 'choice 00 is the race sound');
-  const store = (entries) => ({ getItem: (key) => entries[key] ?? null });
-  assert.equal(swooshSoundIndex(store({ [SWOOSH_SOUND_STORAGE_KEY]: '4' })), 0, 'a player without admin unlock always hears the race sound');
-  assert.equal(swooshSoundIndex(store({ 'turn-admin-unlock-v1': '1', [SWOOSH_SOUND_STORAGE_KEY]: '4' })), 4);
-  assert.equal(swooshSoundIndex(store({ 'turn-admin-unlock-v1': '1', [SWOOSH_SOUND_STORAGE_KEY]: '99' })), 0, 'an unknown choice falls back to the race sound');
   for (const variant of VOICE_VARIANTS) {
     const voice = SWOOSH_VOICES[variant];
     const pitches = [];
@@ -418,37 +406,6 @@ for (const definition of TRACK_DEFINITIONS) {
     assert.ok(Math.abs(planned.end - planned.start - longer.long) < 1e-9, 'the plan makes room for the longer chime');
   }
   assert.ok(Math.abs(VOICE_PITCH_HZ.medium / VOICE_PITCH_HZ.gentle - 1.5) < 0.01 && Math.abs(VOICE_PITCH_HZ.tight / VOICE_PITCH_HZ.medium - 1.5) < 0.01, 'tightness pitches a fifth apart');
-  // A picker preview is heard as in the race: the mix and the music duck under it.
-  {
-    const routeAudio = createRouteAudio();
-    const before = ducks.length;
-    globalThis.__turnRouteAudio = routeAudio;
-    try {
-      const { installSwooshPaceNotes } = await import('../../turn/audio/swoosh-pace-notes.js');
-      globalThis.__turnAudio = { unlock() {}, update() {}, cue() {}, silence() {} };
-      installSwooshPaceNotes();
-      assert.equal(globalThis.__turnSwooshPaceNotes.preview({ side: 1 }), true);
-      assert.ok(routeAudio.held > 0, 'a preview holds the car sounds back');
-      assert.equal(ducks.length, before + 1, 'a preview ducks the music');
-    } finally {
-      delete globalThis.__turnRouteAudio;
-    }
-  }
-  assert.equal(swooshCaption({ tightness: 'gentle', length: 'long', side: 'left' }), 'GENTLE LONG LEFT');
-  assert.equal(swooshCaption({ tightness: 'medium', length: 'medium', side: 'left' }), 'MEDIUM MID LEFT');
-  assert.equal(swooshCaption({ tightness: 'tight', length: 'short', side: 'right' }), 'TIGHT SHORT RIGHT');
-  const history = [
-    { status: 'fired', at: 10, endsAt: 10.2, tightness: 'gentle', long: true, side: 'left' },
-    { status: 'cancelled', at: 11, endsAt: 11.2 },
-    { status: 'fired', at: 12, endsAt: 12.2, tightness: 'tight', long: false, side: 'right' }
-  ];
-  assert.equal(currentCaptionEntry(history, 11.5)?.tightness, 'gentle', 'the latest swoosh already heard, not one still to come');
-  assert.equal(currentCaptionEntry(history, 12.1)?.tightness, 'tight');
-  assert.equal(currentCaptionEntry(history, 20), null, 'the caption clears after its hold');
-  const [picker, turnPage, labPage] = await Promise.all([read('turn/testing/swoosh-sound-picker.js'), read('turn/index.html'), read('turn-lab/index.html')]);
-  assert.match(picker, /if \(!isAdminProfile\(\) \|\| !document\.body\) return;/, 'the picker installs nothing for players');
-  assert.match(picker, /aria-label="Previous sound"[\s\S]*aria-label="Next sound"/);
-  for (const page of [turnPage, labPage]) assert.match(page, /<script type="module" src="\.\/testing\/swoosh-sound-picker\.js\?build=/);
 }
 
 // Contracts: one supported route channel, no graph interception for pace notes, no
@@ -476,9 +433,6 @@ assert.match(music, /function duck\(inSeconds = 0, seconds = 0\)/);
   assert.ok(Math.abs(window.from - 20.1) < 1e-9, 'a cue after the duck has ended starts a new one');
 }
 assert.match(music, /masterGain\.connect\(duckGain\);\s*duckGain\.connect\(compressor\);/, 'music ducks on its own gain, never the player volume');
-assert.match(hud, /tight <r\$\{TIGHT_RADIUS\}/);
-assert.match(hud, new RegExp(`const TIGHT_RADIUS = ${SWOOSH_PACE_TUNING.tightRadius};`));
-assert.match(hud, new RegExp(`const MEDIUM_RADIUS = ${SWOOSH_PACE_TUNING.mediumRadius};`));
 assert.doesNotMatch(training, /turn:pace-note-priority|fireScheduledNotes/);
 for (const [label, source] of [['stages', stagesSource], ['menu', menu], ['guide', guide]]) {
   assert.doesNotMatch(source, /\bBIP|\bBEEP|beeps?\b/i, `${label}: no BIP/BEEP language remains`);

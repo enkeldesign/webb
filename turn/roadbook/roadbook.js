@@ -1,3 +1,4 @@
+import { achievementRewardText } from '../achievements/reward-presentation.js';
 // ROADBOOK: choose your track. One owner for the track list, its selection and lock
 // state, the pre-race dock (chosen track, Track sheet, CHOOSE CAR), the Track sheet
 // dialog and, where the screen is large enough, the inline track overview.
@@ -310,7 +311,7 @@ function goalMarkup({ achievement, state, progress, gate, secret, next }) {
         </span>
         <span class="roadbook-goal-meta">
           <span class="roadbook-goal-tag${achievement.hidden === true ? ' is-hidden' : ''}">${tag}</span>
-          <span class="roadbook-goal-reward">+${achievement.trophies}<span class="turn-pr-lock-icon" aria-hidden="true">${TROPHY_ICON}</span><span class="turn-sr-only"> trophies</span></span>
+          <span class="roadbook-goal-reward">${achievementRewardText(achievement, { revealed: isFeatureUnlocked('perkulator'), earned: state === 'earned' })}</span>
         </span>
         <span class="roadbook-goal-status">${next ? '<span class="roadbook-goal-next">NEXT UP</span>' : ''}${status}</span>
       </button>

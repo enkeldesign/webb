@@ -16,7 +16,8 @@ import {
   advanceBoostOvercharge,
   boostOverchargeVisualWidth,
   qualifiesForBoostOvercharge,
-  resolveBoostSlipAngle
+  resolveBoostSlipAngle,
+  transferBoostAcrossShift
 } from '../../turn/input/boost-overcharge.js';
 import { updateVehiclePhysicsState } from '../../turn/vehicle/physics.js';
 import { spokenRivalCount } from '../../turn/ui/race-announcements.js';
@@ -143,6 +144,37 @@ const consumedOvercharge = advanceBoostOvercharge({
   consuming: true
 });
 assert.equal(consumedOvercharge.amount, 0);
+const precisionLoose = advanceBoostOvercharge({ amount: 1, phase: BOOST_OVERCHARGE_PHASE.DECAYING, dt: 8, decayMultiplier: 3 });
+assert.ok(Math.abs(precisionLoose.amount - 2 / 3) < 1e-12, 'PRECISION makes loose OC last 24 seconds instead of eight');
+assert.equal(advanceBoostOvercharge({ ...precisionLoose, dt: 16, decayMultiplier: 3 }).amount, 0);
+assert.equal(advanceBoostOvercharge({ amount: 1, dt: 24, zone: 'gas', decayMultiplier: 3 }).amount, 1,
+  'PRECISION never changes caught/held OC');
+// #1262 device report: SHIFT-made OVERCHARGE under PRECISION. VAN's full 4/5 tank
+// shifting to 3/5 with more BOOST POWER, then the same 120 Hz frames for both cars:
+// held on GAS, loose in a DRIFT, then loose with nothing held. The handoff from
+// SHIFT must reach the same 3× loose decay as drift-built OVERCHARGE.
+function shiftOvercharge(decayMultiplier) {
+  const shifted = transferBoostAcrossShift({ charge: 1, fromSeconds: 2.92 * 1.5, toSeconds: 2.3 * 1.5,
+    fromPower: 1, toPower: 2, overchargeOn: true });
+  let state = { amount: shifted.overcharge, phase: BOOST_OVERCHARGE_PHASE.DECAYING };
+  let seconds = 0;
+  for (const [zone, frames] of [['gas', 240], ['drift', 360], ['', Infinity]]) {
+    for (let frame = 0; frame < frames && state.amount > 0; frame += 1) {
+      state = advanceBoostOvercharge({ ...state, dt: 1 / 120, zone, qualifyingDrift: zone === 'drift', decayMultiplier });
+      if (zone !== 'gas') seconds += 1 / 120;
+    }
+  }
+  return { start: shifted.overcharge, seconds };
+}
+const ordinaryShift = shiftOvercharge(1);
+const precisionShift = shiftOvercharge(3);
+assert.equal(ordinaryShift.start, 1, 'VAN 4/5 → 3/5 with more BOOST POWER makes a full OVERCHARGE');
+assert.ok(Math.abs(ordinaryShift.seconds - 8) < 0.02 && Math.abs(precisionShift.seconds - 24) < 0.02,
+  `SHIFT-made loose OVERCHARGE lasts 8 s, or 24 s with PRECISION (${ordinaryShift.seconds.toFixed(2)}, ${precisionShift.seconds.toFixed(2)})`);
+assert.equal(advanceBoostOvercharge({ dt: 1, buildDt: 0, zone: 'drift', qualifyingDrift: true }).amount, 0,
+  'A frame between canonical scoring samples cannot invent recharge time');
+assert.equal(advanceBoostOvercharge({ dt: 0.01, buildDt: 0.9, zone: 'drift', qualifyingDrift: true }).amount, 0.5,
+  'The actual scoring time, not render-frame duration, determines recharge');
 assert.equal(consumedOvercharge.phase, BOOST_OVERCHARGE_PHASE.READY);
 assert.equal(boostOverchargeVisualWidth(1), BOOST_OVERCHARGE_MAX_WIDTH);
 
@@ -403,24 +435,35 @@ assert.ok(
 
 // TURBO changes the canonical BOOST contribution, including its speed headroom,
 // without multiplying ordinary engine propulsion or the car's unboosted limit.
-function boostStep(installedPerkId, boostActive, initialSpeed = 20) {
+function boostStep(installedPerkId, boostActive, initialSpeed = 20, boostOvercharge = 0) {
   const boosted = {
     ...state, vehicleId: 'convertible', vehicleInstalledPerkId: installedPerkId,
     position: new Vec3(), velocity: new Vec3(0, 0, initialSpeed),
     touchGas: true, touchBrake: false, touchReverse: false,
     steering: 0, heading: 0, driftAmount: 0, speed: initialSpeed
   };
-  updateVehiclePhysicsState({ ...physicsArgs, state: boosted, dt: 0.00001, boostActive });
+  updateVehiclePhysicsState({ ...physicsArgs, state: boosted, dt: 0.00001, boostActive, boostOvercharge });
   return boosted.speed;
 }
 const coasting = boostStep('', false);
 const ordinaryBoost = boostStep('', true);
 const turboBoost = boostStep('turbo', true);
-assert.ok(Math.abs((turboBoost - coasting) / (ordinaryBoost - coasting) - 2.5) < 0.00001,
-  'TURBO adds 2.5 times ordinary BOOST propulsion through the real physics path');
+assert.ok(Math.abs((turboBoost - coasting) / (ordinaryBoost - coasting) - 2) < 0.00001,
+  'TURBO adds 2 times ordinary BOOST propulsion through the real physics path');
+// OVERCHARGE keeps its own +20%: an OVERCHARGED TURBO burn composes to 2.4×, never baked in.
+assert.ok(Math.abs((boostStep('turbo', true, 20, 1) - coasting) / (ordinaryBoost - coasting) - 2.4) < 0.00001,
+  'OVERCHARGED TURBO is 2 × 1.2 = 2.4 times ordinary BOOST');
+assert.ok(Math.abs((boostStep('', true, 20, 1) - coasting) / (ordinaryBoost - coasting) - 1.2) < 0.00001,
+  'OVERCHARGE alone stays 1.2 times ordinary BOOST');
 assert.equal(boostStep('turbo', false), coasting, 'TURBO does not change ordinary GAS');
-assert.ok(Math.abs(boostStep('turbo', true, 200) - 80 * (1 + 0.32 * 2.5)) < 1e-9,
+assert.ok(Math.abs(boostStep('turbo', true, 200) - 80 * (1 + 0.32 * 2)) < 1e-9,
   'Only the BOOST speed bonus is multiplied');
 assert.equal(boostStep('turbo', false, 200), boostStep('', false, 200));
+
+// The controller's only OVERCHARGE step carries PRECISION's multiplier, and SHIFT hands
+// its OVERCHARGE to that same step as loose (DECAYING) pressure.
+assert.equal(controls.match(/advanceBoostOvercharge\(\{/g)?.length, 1);
+assert.match(controls, /advanceBoostOvercharge\(\{[\s\S]{0,260}decayMultiplier\n\s*\}\)/);
+assert.match(controls, /boostOvercharge = transfer\.overcharge;\n\s*boostOverchargePhase = BOOST_OVERCHARGE_PHASE\.DECAYING;/);
 
 console.log(`TURN ${release.id} connected DRIFT LOCK, 50% larger Boost tanks, 2.4x→3.6x recharge balance, reliable LOCK gradient, restart refill and separate reverse passed.`);

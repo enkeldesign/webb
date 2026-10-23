@@ -16,6 +16,8 @@ on:
       - 'turn-tests/support-feedback-browser-smoke.mjs'
       - 'turn-tests/patrol-browser-smoke.mjs'
       - 'turn-tests/tutorial-browser-smoke.mjs'
+      - 'turn-tests/session-admin-browser.mjs'
+      - 'turn/testing/session-admin*.js'
       - 'turn/tutorial/**'
       - 'turn/race/reward-preview.js'
       - 'turn-tests/responsive-browser-smoke.mjs'
@@ -76,6 +78,8 @@ on:
       - 'turn-tests/support-feedback-browser-smoke.mjs'
       - 'turn-tests/patrol-browser-smoke.mjs'
       - 'turn-tests/tutorial-browser-smoke.mjs'
+      - 'turn-tests/session-admin-browser.mjs'
+      - 'turn/testing/session-admin*.js'
       - 'turn/tutorial/**'
       - 'turn/race/reward-preview.js'
       - 'turn-tests/responsive-browser-smoke.mjs'
@@ -143,6 +147,7 @@ jobs:
             tests: >-
               turn-tests/roadbook-browser-smoke.mjs
               turn-tests/achievement-families-browser.mjs
+              turn-tests/session-admin-browser.mjs
               turn-tests/race-menu-browser-smoke.mjs
               turn-tests/support-feedback-browser-smoke.mjs
               turn-tests/patrol-browser-smoke.mjs
