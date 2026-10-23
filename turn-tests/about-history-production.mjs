@@ -97,28 +97,65 @@ assert.match(bootstrap, /<h2 id="turnWebsiteAboutTitle">ABOUT TURN<\/h2>/);
 assert.match(bootstrap, /actions\.append\(installButton, note, browserButton\)/,
   'The browser-only status node stays between the two actions in DOM order');
 assert.match(bootstrap, /trigger\.addEventListener\('click', \(\) => openDialog\(aboutDialog, trigger\)\)/);
-assert.match(bootstrap, /aboutDialog\.addEventListener\('close', restoreTrigger\)/,
-  'Closing website About must return focus to the version-strip trigger');
+assert.match(bootstrap, /const restoreTrigger = \(\) => aboutDialog\.__turnReturnFocus\?\.focus\?\.\(\)/,
+  'Closing website About must return focus to whichever footer link opened it');
 assert.doesNotMatch(bootstrap, /__turnStartBrowserGame|turn-browser-play|releaseBrowserLaunch/,
   'Opening or closing website About must never release the browser game launch gate');
 
 assert.match(bootstrap, /className = 'm8-dialog turn-dialog turn-dialog--reader turn-history-dialog'/);
 assert.match(bootstrap, /scope === 'website' \? 'turnWebsiteHistory' : 'turnHistory'/);
+assert.match(bootstrap, /<h2 id="\$\{prefix\}Title">TURN HISTORY<\/h2>/,
+  'The dedicated history reader must retain the TURN HISTORY title');
+assert.match(bootstrap, /data-dialog-close aria-label="Close TURN history"/,
+  'The history reader close control must retain its history context');
 assert.match(bootstrap, /role="tablist" aria-label="TURN history sections"/);
+assert.doesNotMatch(bootstrap, /data-history-tab="accessibility"/,
+  'Accessibility must not be presented as a TURN HISTORY tab');
 assert.match(bootstrap, /role="tab"[\s\S]*aria-selected="true"/);
 assert.match(bootstrap, /role="tabpanel"/);
 assert.match(bootstrap, /event\.key === 'ArrowRight'/);
 assert.match(bootstrap, /event\.key === 'ArrowLeft'/);
 assert.match(bootstrap, /event\.key === 'Home'/);
 assert.match(bootstrap, /event\.key === 'End'/);
+
+// ACCESSIBILITY is its own reader, as HISTORY AND CHANGELOG is (#1119): ABOUT hands
+// over to it, and a footer link opens it directly.
+assert.match(bootstrap, /className = 'm8-dialog turn-dialog turn-dialog--reader turn-history-dialog turn-accessibility-dialog'/,
+  'Accessibility must be a reader dialog styled like TURN HISTORY');
+assert.match(bootstrap, /scope === 'website' \? 'turnWebsiteAccessibility' : 'turnAccessibility'/);
+assert.match(bootstrap, /<h2 id="\$\{prefix\}Title">ACCESSIBILITY<\/h2>/,
+  'The Accessibility reader must be named ACCESSIBILITY');
+assert.match(bootstrap, /data-dialog-close aria-label="Close Accessibility"/);
+assert.match(bootstrap, /class="m8-about-accessibility" type="button" aria-haspopup="dialog"/,
+  'ABOUT TURN must open Accessibility as a dialog beside History and Changelog');
+assert.doesNotMatch(bootstrap, /turn-about-accessibility|aria-expanded/,
+  'Accessibility must no longer expand inside ABOUT TURN');
+assert.match(bootstrap, /TURN is designed so more people can play in more ways\./,
+  'The Accessibility reader must contain its statement');
+assert.match(bootstrap, /not yet been tested with experienced screen-reader players/,
+  'The placeholder statement must be candid about current screen-reader validation');
+assert.match(bootstrap, /createFeedbackContent\(\{ className: 'turn-accessibility-feedback' \}\)/,
+  'Accessibility must embed the shared feedback component');
+assert.match(bootstrap, /const openAccessibility = linkReader\(aboutDialog, accessibilityDialog, accessibilityButton\)/,
+  'Accessibility must use the same ABOUT hand-off as History and Changelog');
+assert.match(bootstrap, /const openHistoryReader = linkReader\(aboutDialog, historyDialog, historyButton,/);
+assert.match(bootstrap, /id = 'installAccessibilityButton'/,
+  'The browser install footer must add an Accessibility entry');
+assert.match(bootstrap, /aboutContent\.openAccessibility\(accessibilityTrigger\)/,
+  'The install Accessibility entry must open the Accessibility reader directly');
+assert.match(bootstrap, /aboutDialog\.dataset\.turnReturningFocus = 'true'/,
+  'Returning from a reader must put focus back on its ABOUT action, not ABOUT\'s heading');
+
 assert.match(bootstrap, /aboutDialog\.close\(\)/,
   'The source About dialog must close before the history dialog opens; modal dialogs must not stack');
 assert.match(bootstrap, /aboutDialog\.showModal\(\)/,
   'Closing the reader should restore the source About dialog');
-assert.match(bootstrap, /historyButton\.focus\(\{ preventScroll: true \}\)/,
-  'Focus should return to the History and Changelog action inside the restored About dialog');
-assert.match(bootstrap, /<span>HISTORY AND<br>CHANGELOG<\/span>/,
+assert.match(bootstrap, /aboutButton\.focus\(\{ preventScroll: true \}\)/,
+  'Focus should return to the action inside the restored About dialog that opened the reader');
+assert.match(bootstrap, /<span>HISTORY AND <br>CHANGELOG<\/span>/,
   'The About history action must use the intended two-line label');
+assert.match(bootstrap, /<span>ACCESSIBILITY<\/span>/,
+  'ABOUT TURN must provide the new Accessibility action');
 assert.doesNotMatch(bootstrap, /m8-about-design-system|href="\/turn\/design\.html"|<span>DESIGN<br>SYSTEM<\/span>/,
   'The About dialog must not expose a Design System action');
 assert.match(bootstrap, /installStylesheet\('\.\.\/m8-home\.css/);
@@ -228,7 +265,15 @@ assert.match(historyCss, /\.turn-history-panel[\s\S]*overflow-y: auto/);
 assert.match(historyCss, /\.m8-about-summary[\s\S]*font-size: max\(var\(--turn-text-floor, 11px\), 0\.6rem\) !important/,
   'About supporting copy must be compact enough for short landscape viewports');
 assert.match(historyCss, /\.m8-about-actions[\s\S]*grid-template-columns: 1fr/,
-  'The sole About action must span the full available width');
+  'The About actions must stay stacked in the compact dialog');
+assert.match(historyCss, /\.m8-about-accessibility[\s\S]*background: var\(--m8-blue\)/,
+  'The Accessibility action must reuse the established secondary About treatment');
+assert.match(historyCss, /\.m8-about-actions \{[\s\S]*grid-template-columns: 1fr 1fr/,
+  'ABOUT TURN keeps its two actions side by side where there is width');
+assert.match(historyCss, /@media \(max-height: 420px\) and \(orientation: landscape\) \{[\s\S]*\.m8-about-dialog \{[\s\S]*--turn-dialog-inline-size: min\(720px/,
+  'On a phone on its side ABOUT TURN takes the width so everything fits without scrolling');
+assert.match(historyCss, /\.m8-about-dialog \.m8-about-content \{[\s\S]*scrollbar-gutter: auto/,
+  'ABOUT TURN reserves no scrollbar gutter that would narrow its copy');
 
 assert.match(designReference, /TURN dialogs/i);
 assert.match(designReference, /Standardize the shell, not the content/);

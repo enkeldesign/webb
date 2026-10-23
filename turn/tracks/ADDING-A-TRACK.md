@@ -31,7 +31,6 @@ Systems whose promise literally means "every track" must either cover the new tr
 - clean-lap targets;
 - DRIFT/FLOW scoring targets;
 - developer time trial;
-- Chromatic Camouflage;
 - support-challenge eligibility.
 
 Support-challenge preference order is only a preference: any new catalog tracks are appended automatically. A track without a suitable calibrated support challenge is skipped rather than hidden from the production catalog.

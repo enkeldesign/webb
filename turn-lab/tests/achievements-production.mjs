@@ -26,6 +26,7 @@ import {
 import { ICONS, TRACK_IDS } from '../../turn/achievements/catalog.js';
 import { ACHIEVEMENTS as BASE_ACHIEVEMENTS } from '../../turn/achievements/catalog-base.js';
 import { createAchievementStore } from '../../turn/achievements/store.js';
+import { RETIRED_ACHIEVEMENT_TROPHIES } from '../../turn/achievements/awards.js';
 import { TROPHY_ROAD_STORAGE_VERSION } from '../../turn/progression/trophy-road.js';
 import {
   completedNightShiftSheriff,
@@ -90,19 +91,19 @@ assert.equal(
   1825,
   'The base catalog must stay separate from production progression balancing'
 );
-assert.equal(ACHIEVEMENTS.length, 74,
+assert.equal(ACHIEVEMENTS.length, 73,
   'Production TURN must expose separate scoring masters and the emergency master');
-assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 74,
+assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 73,
   'Production achievement ids must remain unique');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10,
   'GOT STARTED must remain the master of the ten prerequisite Getting Started achievements, not recursively require itself; CATCH THE CHARGE and HEAD START need OVERCHARGE, which comes with DRIFT ATTACK (#1150)');
-assert.equal(totalAvailableTrophies(), 4450,
-  'Eight tracks expose the complete 4,450-trophy supply plus six mastery perks');
+assert.equal(totalAvailableTrophies(), 4400,
+  'Eight tracks expose the complete 4,400-trophy supply plus six mastery perks');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2300,
   'Trophy Road uses the first 2300 trophies while the full catalog retains headroom');
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  4450
+  4400
 );
 assert.ok(ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.trophies)));
 assert.ok(ACHIEVEMENTS.every((achievement) => !Object.hasOwn(achievement, 'points')));
@@ -155,9 +156,10 @@ assert.equal(
 );
 assert.match(byId('golden-hour')?.description || '', /Ambulance/);
 assert.match(byId('golden-hour')?.description || '', /30 seconds/);
-assert.equal(byId('chromatic-camouflage')?.title, 'CHROMATIC CAMOUFLAGE');
-assert.equal(byId('chromatic-camouflage')?.trophies, 50);
-assert.equal(byId('chromatic-camouflage')?.hidden, true);
+// #1270: CHROMATIC CAMOUFLAGE is retired. It is neither listed nor earnable, but a
+// profile that already earned it keeps those 50 trophies.
+assert.equal(byId('chromatic-camouflage'), undefined, 'CHROMATIC CAMOUFLAGE is retired');
+assert.equal(RETIRED_ACHIEVEMENT_TROPHIES['chromatic-camouflage'], 50);
 
 const scoringTargets = Object.freeze({
   countryside: Object.freeze({ drift: 8000, flow: 7000 }),

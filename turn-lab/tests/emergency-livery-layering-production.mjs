@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import { matchesTrackColor } from '../../turn/achievements/chromatic-camouflage-r183.js';
 
 const [
   bridge,
@@ -45,28 +44,6 @@ for (const [id, [primary, secondary]] of expectedFactoryColors) {
   assert.equal(car.defaultSecondaryColor, secondary, `${car.name} factory secondary color`);
 }
 assert.equal(catalog.getCarDefinition('classic').name, 'Learner Car');
-
-const chromaticFactoryRoute = Object.freeze({
-  airport: 'classic',
-  harbor: 'van',
-  cliffside: 'sedan',
-  'midnight-city': 'sedan-sports',
-  mountain: 'suv'
-});
-
-for (const [trackId, carId] of Object.entries(chromaticFactoryRoute)) {
-  const car = catalog.getCarDefinition(carId);
-  assert.equal(
-    matchesTrackColor(trackId, car.defaultColor),
-    true,
-    `Existing factory color coverage must remain valid: ${car.name} factory ${car.defaultColor} should match ${trackId}`
-  );
-}
-assert.equal(
-  matchesTrackColor('countryside', catalog.getCarDefinition('convertible').defaultColor),
-  false,
-  'The new brown AWD factory paint intentionally no longer doubles as the Countryside pink for CHROMATIC CAMOUFLAGE'
-);
 
 for (const id of ['police', 'ambulance', 'firetruck']) {
   const car = catalog.getCarDefinition(id);

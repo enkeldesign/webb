@@ -106,6 +106,22 @@ export function completeTrackOrder(preferredIds = [], trackIds = TRACK_IDS) {
   return Object.freeze(ordered);
 }
 
+// #1271: the order players meet the tracks in (ROADBOOK, TRACK n, the wiki). It runs
+// round the colour wheel: pink, cyan, green, yellow, orange, red, violet, blue.
+// TRACK_IDS stays the canonical data order; everything else is keyed by track id.
+export const TRACK_PRESENTATION_ORDER = completeTrackOrder([
+  'countryside', 'cliffside', 'beachfront', 'airport', 'harbor', 'dead-canyon', 'midnight-city', 'mountain'
+]);
+
+export function trackNumber(trackId) {
+  const index = TRACK_PRESENTATION_ORDER.indexOf(trackId);
+  return index < 0 ? null : index + 1;
+}
+
+export function inTrackPresentationOrder(tracks) {
+  return [...tracks].sort((a, b) => TRACK_PRESENTATION_ORDER.indexOf(a.id) - TRACK_PRESENTATION_ORDER.indexOf(b.id));
+}
+
 export function missingTrackConfigIds(config, trackIds = TRACK_IDS) {
   const source = config && typeof config === 'object' ? config : {};
   return Object.freeze(trackIds.filter((trackId) =>

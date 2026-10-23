@@ -12,14 +12,17 @@ import {
   TRACK_SAMPLE_COUNT,
   TRACK_SELECTION_KEY,
   getTrackDefinitionData,
+  inTrackPresentationOrder,
   normalizeTrackId as normalizeConfiguredTrackId
 } from './definitions.js';
 
 export {
   DEFAULT_TRACK_ID,
   TRACK_PLACEHOLDERS,
+  TRACK_PRESENTATION_ORDER,
   TRACK_SAMPLE_COUNT,
-  TRACK_SELECTION_KEY
+  TRACK_SELECTION_KEY,
+  trackNumber
 } from './definitions.js';
 
 const CONTROL_POINT_FACTORIES = Object.freeze({
@@ -92,6 +95,9 @@ export const TRACK_CATALOG = Object.freeze(TRACK_DEFINITIONS.map((definition) =>
   }
   return Object.freeze({ ...definition, createControlPoints });
 }));
+
+// The catalog in the order players see it (#1271).
+export const TRACK_PRESENTATION_CATALOG = Object.freeze(inTrackPresentationOrder(TRACK_CATALOG));
 
 export const TRACK_SELECTION_CATALOG = Object.freeze([
   ...TRACK_CATALOG,
