@@ -39,7 +39,7 @@
 
 .turn-update-toast-restart {
   padding: 0 14px;
-  background: var(--turn-action-primary, var(--turn-pink-500, #ea5da1));
+  background: var(--turn-action-primary, #7dd);
   box-shadow: var(--turn-shadow-control, 3px 3px 0 var(--turn-shadow-color));
   letter-spacing: 0.04em;
 }

@@ -20,7 +20,7 @@ import {
   rewardIdsForTrophies
 } from '../progression/trophy-road.js';
 import { activeSessionPolicy } from '../race/session-policy.js';
-import { achievementTrophyAward, LEGACY_MASTER_TROPHIES } from './awards.js';
+import { achievementTrophyAward, hasHistoricalTrophyAward } from './awards.js';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;
@@ -87,7 +87,7 @@ function totalTrophiesFromUnlocked(unlocked) {
   return Object.keys(unlocked).reduce((total, id) => {
     const achievement = getAchievement(id);
     if (achievement?.calibrationPending === true) return total;
-    const trophies = achievement || Object.hasOwn(LEGACY_MASTER_TROPHIES, id)
+    const trophies = achievement || hasHistoricalTrophyAward(id)
       ? Number(unlocked[id].awardedTrophies ?? achievement?.trophies) : 0;
     return total + (Number.isFinite(trophies) ? trophies : 0);
   }, 0);

@@ -41,6 +41,28 @@ assert.equal(achievementTrophyAward('faster-than-the-dev', { awardedTrophies: 0 
   assert.equal(createAchievementStore(storage).trophyTotal(), store.trophyTotal(), 'Reload preserves awarded amounts');
 }
 
+// #1270: a profile that earned the retired CHROMATIC CAMOUFLAGE loads safely, keeps its
+// 50 trophies and never sees the achievement again.
+{
+  const storage = sharedStorage();
+  storage.setItem(ACHIEVEMENT_STORAGE_KEY, JSON.stringify({
+    version: 10,
+    unlocked: {
+      'chromatic-camouflage': { unlockedAt: 200, trackId: 'mountain' },
+      'first-turn': { unlockedAt: 201, awardedTrophies: 99 }
+    }
+  }));
+  const store = createAchievementStore(storage);
+  assert.equal(getAchievement('chromatic-camouflage'), null, 'CHROMATIC CAMOUFLAGE is no longer in the catalog');
+  assert.equal(store.trophyTotal(), 149, 'Its earned trophies stay in the total');
+  assert.equal(store.unlock('chromatic-camouflage'), null, 'It can never be earned again');
+  assert.equal(store.isUnlocked('chromatic-camouflage'), false, 'It is not listed as unlocked');
+  store.unlock('new-wheels');
+  assert.equal(stored(storage).unlocked['chromatic-camouflage'].awardedTrophies, 50, 'Saving records its award');
+  assert.equal(createAchievementStore(storage).trophyTotal(), 149 + getAchievement('new-wheels').trophies,
+    'Reload keeps the retired award and the new one');
+}
+
 {
   const storage = sharedStorage();
   const a = createAchievementStore(storage);

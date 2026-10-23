@@ -472,9 +472,9 @@ assert.equal(futureRacer.perk?.title, 'OVERDRIVE');
 assert.equal(OVERDRIVE_BUILD_SECONDS, 5, 'OVERDRIVE must retain five qualifying seconds as its gain interval');
 assert.equal(OVERDRIVE_MIN_SPEED_KMH, 200, 'OVERDRIVE build time must require at least 200 km/h');
 assert.equal(OVERDRIVE_SPEED_GAIN_PER_BUILD, 0.05, 'Each qualifying OVERDRIVE interval must add five percent to the speed ceiling');
-assert.match(physicsSource, /showCompactRacePill\(`OVERDRIVE \$\{nextMilestonePercent\}%`, \{ tone: 'blue' \}\)/,
-  'OVERDRIVE must announce each 10 percent speed-cap milestone through the thin blue pill');
-assert.match(physicsSource, /if \(state\.overdriveMilestoneSeen === true\) \{[\s\S]*showCompactRacePill\('OVERDRIVE LOST', \{ tone: 'blue' \}\)/,
+assert.match(physicsSource, /showCompactRacePill\(`OVERDRIVE \$\{nextMilestonePercent\}%`, \{ perkId: 'overdrive' \}\)/,
+  'OVERDRIVE must announce each 10 percent speed-cap milestone through the thin pill, in its rarity colour (#1273)');
+assert.match(physicsSource, /if \(state\.overdriveMilestoneSeen === true\) \{[\s\S]*showCompactRacePill\('OVERDRIVE LOST', \{ perkId: 'overdrive' \}\)/,
   'OVERDRIVE LOST must only appear after the player has seen an OVERDRIVE milestone pill');
 assert.equal(vehicleHasOverdrive(futureRacer.id), true, 'Future Racer must own OVERDRIVE');
 for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race-future')) {

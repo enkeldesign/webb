@@ -404,8 +404,8 @@ assert.match(lotStyles, /\.garage-shift-cancel \{ background: var\(--turn-action
   'Cancel must use navigation orange');
 assert.match(lotStyles, /\.garage-shift-deactivate \{ margin-right: auto; background: var\(--turn-action-utility, var\(--turn-surface-page\)\); \}/,
   'Deactivate must use the secondary paper action');
-assert.match(lotStyles, /\.garage-shift-save \{ background: var\(--turn-action-primary, #ff4fa3\); \}/,
-  'Save must use primary pink');
+assert.match(lotStyles, /\.garage-shift-save \{ background: var\(--turn-action-primary, #7dd\); \}/,
+  'Save must use the primary action colour (teal, #1268)');
 assert.match(lotStyles, /\.garage-shift-dialog::backdrop/);
 assert.match(lotStyles, /grid-template-columns: repeat\(6/,
   'The landscape gearbox must keep all six levers in one row');

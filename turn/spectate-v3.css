@@ -33,7 +33,7 @@
 .spectate-close {
   width: 39px;
   padding: 0 !important;
-  background: var(--pink) !important;
+  background: var(--turn-action-navigation) !important;
   font-size: max(var(--turn-text-floor, 11px), 1.0875rem) !important;
   line-height: 1;
 }

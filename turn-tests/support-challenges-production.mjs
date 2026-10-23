@@ -96,10 +96,13 @@ assert.match(feedbackSource, /border-radius:\s*749\.25px/,
   'Challenge success feedback must use the compact pill presentation');
 assert.match(feedbackSource, /turn-graduated-pill/,
   'LEARNER CAR GRADUATED feedback must reuse the thin compact pill geometry');
-assert.match(feedbackSource, /turn-action-warning, #ffd43b/,
-  'LEARNER CAR GRADUATED feedback must remain yellow');
+assert.match(feedbackSource, /var\(--turn-rarity-\$\{getVehiclePerk\('graduated'\)\.rarity\}\)/,
+  'LEARNER CAR GRADUATED feedback wears GRADUATED’s rarity, LEGENDARY yellow (#1273)');
 assert.match(feedbackSource, /turn-compact-race-pill--blue/,
-  'FLOW SHIFT feedback must reuse the compact pill with a blue information treatment');
+  'Information pills keep the compact pill with a blue treatment');
+// #1273: a pill a perk raises wears that perk's rarity, from the shared rarity tokens.
+assert.match(feedbackSource, /const rarity = getVehiclePerk\(perkId\)\?\.rarity;\s*const normalizedTone = rarity \|\|/);
+assert.match(feedbackSource, /\.turn-compact-race-pill--\$\{rarity\} \{\s*background: var\(--turn-rarity-\$\{rarity\}\) !important;\s*color: var\(--turn-ink\) !important;/);
 assert.match(feedbackSource, /typeof globalThis\.MutationObserver !== 'function'/,
   'The shared pill lane must stay import-safe in partial DOM environments without MutationObserver');
 assert.match(feedbackSource, /typeof globalThis\.requestAnimationFrame === 'function'/,

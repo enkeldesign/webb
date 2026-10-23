@@ -57,7 +57,7 @@
   padding: 9px 13.5px;
   border: 3px solid var(--turn-outline);
   border-radius: 11.25px;
-  background: var(--turn-action-primary, #ea5da1);
+  background: var(--turn-action-primary, #7dd);
   color: var(--turn-ink);
   box-shadow: 3px 3px 0 var(--turn-shadow-color);
   font: inherit;

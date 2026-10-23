@@ -89,16 +89,6 @@ const DRIVE_BY_EAR_FAMILY_ACHIEVEMENT_IDS = Object.freeze([
   'beyond-sight'
 ]);
 
-const CHROMATIC_CAMOUFLAGE = Object.freeze({
-  id: 'chromatic-camouflage',
-  category: base.CATEGORY.EXPLORATION,
-  trophies: 50,
-  hidden: true,
-  title: 'CHROMATIC CAMOUFLAGE',
-  description: 'Set your personal best on every track in a car painted to match that track.',
-  icon: 'secret'
-});
-
 const MAYDAY = Object.freeze({
   id: 'golden-hour',
   category: base.CATEGORY.RACING,
@@ -285,7 +275,6 @@ export const EMERGENCY_MASTER_ACHIEVEMENT = Object.freeze({
 const PRODUCTION_ACHIEVEMENTS = Object.freeze([
   ...expandedBaseAchievements.slice(0, insertionIndex),
   MAYDAY,
-  CHROMATIC_CAMOUFLAGE,
   PRODUCTION_CATCH_THE_CHARGE_ACHIEVEMENT,
   HEAD_START_ACHIEVEMENT,
   ...TRACK_SCORING_ACHIEVEMENTS,

@@ -37,12 +37,11 @@ const [
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8')
 ]);
 
-// CHROMATIC CAMOUFLAGE matches the primary/body paint only. GARAGE names each paint
-// swatch by its own colour, so the Body swatch describes exactly that signal and the
-// trim swatch never blends into it.
+// GARAGE names each paint swatch by its own colour, so the Body swatch describes the
+// primary car colour and the trim swatch never blends into it.
 assert.match(paintReward, /colorName\.textContent = titleCase\(describeColorCue\(input\.value\)\)/);
 assert.match(paintReward, /swatches\.append\(colorControl\('Body', choice\.color, false\)\)/,
-  'The Body swatch describes the primary car colour used by CHROMATIC CAMOUFLAGE');
+  'The Body swatch describes the primary car colour');
 
 // Achievement state changes happen while racing. Updating counters may invalidate the dialog,
 // but rebuilding every card and Trophy Road marker while the dialog is closed is forbidden.
