@@ -203,8 +203,8 @@ async function aboutTurn(browser, name) {
     const where = `${name} ${standalone ? 'TURN' : 'website'}`;
     const api = standalone ? 'globalThis.__turnHomeFeedback.about' : 'globalThis.__turnWebsiteAbout';
     const dialogs = standalone
-      ? { about: '.m8-about-dialog:not(.install-about-dialog)', reader: '#turnAccessibilityTitle', history: '#turnHistoryTitle', footer: '.m8-accessibility-trigger' }
-      : { about: '.install-about-dialog', reader: '#turnWebsiteAccessibilityTitle', history: '#turnWebsiteHistoryTitle', footer: '#installAccessibilityButton' };
+      ? { about: '.m8-about-dialog:not(.install-about-dialog)', reader: '#turnAccessibilityTitle', history: '#turnHistoryTitle', footer: '.m8-accessibility-trigger', aboutTrigger: '.m8-about-trigger' }
+      : { about: '.install-about-dialog', reader: '#turnWebsiteAccessibilityTitle', history: '#turnWebsiteHistoryTitle', footer: '#installAccessibilityButton', aboutTrigger: '#installAboutButton' };
     // A dialog's close event is a queued task, so wait briefly for the state to settle.
     const settled = async (check) => {
       for (let attempt = 0; attempt < 40 && !(await check()); attempt += 1) await page.waitForTimeout(25);
@@ -248,7 +248,12 @@ async function aboutTurn(browser, name) {
       }
 
       await page.setViewportSize({ width: 852, height: 393 });
-      await page.evaluate(`${api}.open()`);
+      // Open ABOUT as a player does, so its own trigger is there to return to.
+      if (standalone) await page.locator('.turn-home-menu-button').click();
+      await page.locator(dialogs.aboutTrigger).click();
+      await expectOpen(dialogs.about, true, `${where}: the ABOUT link opens ABOUT`);
+      // Park the pointer: left on an action's edge, its hover lift never settles.
+      await page.mouse.move(1, 1);
       await page.locator(`${dialogs.about} .m8-about-accessibility`).click();
       await expectOpen(dialogs.about, false, `${where}: ABOUT hands over to ACCESSIBILITY`);
       await expectOpen(dialogs.reader, true, `${where}: ACCESSIBILITY opens as its own reader`);
@@ -265,9 +270,9 @@ async function aboutTurn(browser, name) {
       assert.equal(await focused(`${dialogs.about} .m8-about-history`), true, `${where}: focus returns to HISTORY AND CHANGELOG`);
       await page.keyboard.press('Escape');
       await expectOpen(dialogs.about, false, `${where}: Escape closes ABOUT`);
+      assert.equal(await focused(dialogs.aboutTrigger), true, `${where}: after a reader, closing ABOUT still returns focus to what opened it`);
 
-      if (standalone) await page.evaluate(() => document.querySelector('.m8-home-menu-button, .turn-home-menu-button')?.click());
-      await page.locator(dialogs.footer).first().evaluate((node) => node.click());
+      await page.locator(dialogs.footer).first().click();
       await expectOpen(dialogs.reader, true, `${where}: the footer link opens ACCESSIBILITY directly`);
       await expectOpen(dialogs.about, false, `${where}: ...without ABOUT behind it`);
       await page.keyboard.press('Escape');

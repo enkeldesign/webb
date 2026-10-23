@@ -264,11 +264,15 @@ function installTabs(dialog) {
 // footer, the reader returns focus to that footer control instead.
 function linkReader(aboutDialog, readerDialog, aboutButton, prepare = () => {}) {
   let reopenAbout = false;
+  // The control that opened ABOUT itself, kept while ABOUT is away so closing ABOUT
+  // after a reader still returns there.
+  let aboutReturnFocus = null;
 
   function open(sourceTrigger = aboutButton) {
     prepare();
     reopenAbout = aboutDialog.open || aboutDialog.hasAttribute('open');
     if (reopenAbout) {
+      aboutReturnFocus = aboutDialog.__turnReturnFocus;
       aboutDialog.__turnReturnFocus = null;
       if (typeof aboutDialog.close === 'function' && aboutDialog.open) aboutDialog.close();
       else aboutDialog.removeAttribute('open');
@@ -282,6 +286,8 @@ function linkReader(aboutDialog, readerDialog, aboutButton, prepare = () => {}) 
       return;
     }
     reopenAbout = false;
+    aboutDialog.__turnReturnFocus = aboutReturnFocus;
+    aboutReturnFocus = null;
     // Returning, not opening: focus goes back to the action that opened the reader, so
     // the heading-first focus every opening dialog gets is skipped this once
     // (startup-screen-reader-handoff). Cleared once those microtasks have run.
