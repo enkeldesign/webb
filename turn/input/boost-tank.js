@@ -11,8 +11,10 @@ export const ROAD_RAGE_MIN_SPEED = 8;
 export function convertBoostTank(tank, dt, { enabled, requested, offRoad, collided, speed }) {
   if (!enabled || requested || offRoad || collided || speed < ROAD_RAGE_MIN_SPEED
     || tank.charge < 0.999999 || !(tank.overcharge > 0 || tank.converted > 0)) return false;
+  const before = tank.converted;
   tank.converted = Math.min(tank.charge, tank.converted + Math.max(0, dt) / ROAD_RAGE_CONVERSION_SECONDS);
-  return true;
+  // A fully converted tank is still eligible but no longer converting.
+  return tank.converted > before;
 }
 
 // Mutate the caller's reused step record: no per-frame resource object allocation.
