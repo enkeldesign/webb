@@ -16,7 +16,6 @@ import {
   qualifiesForBoostOvercharge,
   resolveBoostInputZone,
   resolveBoostSlipAngle,
-  takeBackBoostOvercharge,
   transferBoostAcrossShift
 } from '../input/boost-overcharge.js?revision=r219-overcharge-state';
 import {
@@ -262,6 +261,8 @@ function installGameplayUi() {
   const boostTank = { charge: 1, overcharge: 0, converted: 0, burningOvercharge: false };
   const conversion = { enabled: false, requested: false, offRoad: false, collided: false, speed: 0 };
   let boostOverchargePhase = BOOST_OVERCHARGE_PHASE.READY;
+  // The DRIFT ATTACK TUTORIAL's leak while it runs (#1272), else null.
+  let lessonLeak = null;
   // OVERCHARGE comes with DRIFT ATTACK (progression/overcharge-unlock.js).
   let overchargeOn = true;
   let previousBoostCharge = boostCharge;
@@ -272,6 +273,8 @@ function installGameplayUi() {
   let shiftOverchargeGain = 0;
   let shiftDetailsAnnouncedThisRace = false;
   let previousTime = raceNow();
+  // The DRIFT ATTACK TUTORIAL's leak takes this long, from any start (#1272).
+  const LESSON_LEAK_SECONDS = 0.6;
   const TOP_ZONE_SHARE = 0.32;
   const BRAKE_ZONE_START = REVERSE_BRAKE_ZONE_START;
   const DEFAULT_BOOST_DRAIN_SECONDS = 2.0;
@@ -721,6 +724,7 @@ function installGameplayUi() {
     boostCharge = 1;
     previousBoostCharge = 1;
     boostExhausted = false;
+    lessonLeak = null;
     boostOvercharge = 0;
     boostConvertedCharge = 0;
     globalThis.__turnBoostBurningOvercharge = false;
@@ -771,21 +775,19 @@ function installGameplayUi() {
 
   globalThis.__turnRefillBoost = refillBoost;
 
-  // DRIFT ATTACK TUTORIAL's BUILD (#1212): take back part of the OVERCHARGE already
-  // built, so BUILD is a real stretch of drifting before CATCH, and let what is left
-  // build again. Only that lesson calls it (tutorial/drift-attack-coach.js); ordinary
-  // racing never does.
-  function trimBoostOvercharge(share = 0) {
-    const taken = takeBackBoostOvercharge({ amount: boostOvercharge, phase: boostOverchargePhase, share });
-    if (!taken.removed) return 0;
-    boostOvercharge = taken.amount;
-    boostOverchargePhase = taken.phase;
-    globalThis.__turnBoostOvercharge = boostOvercharge + boostConvertedCharge;
-    boostVisualDirty = true;
-    lastBoostVisualAt = -Infinity;
-    return taken.removed;
+  // DRIFT ATTACK TUTORIAL's BUILD (#1272): a short leak of the whole meter, BOOST and
+  // OVERCHARGE, down to where the lesson starts, so the player sees DRIFT fill BOOST
+  // and then build OVERCHARGE. It only takes away, lands on the level exactly, and
+  // nothing charges while it runs. Only that lesson calls it
+  // (tutorial/drift-attack-coach.js); ordinary racing never does.
+  function leakBoostTo(level = 1) {
+    const target = Math.max(0, Math.min(1, Number(level) || 0));
+    const from = boostCharge + boostOvercharge;
+    if (!(from > target + 0.001)) return 0;
+    lessonLeak = { from, target, elapsed: 0 };
+    return from - target;
   }
-  globalThis.__turnTrimBoostOvercharge = trimBoostOvercharge;
+  globalThis.__turnLeakBoostTo = leakBoostTo;
 
   function zoneFromPointer(event, rect = drivePad.getBoundingClientRect()) {
     const margin = 24;
@@ -1253,6 +1255,7 @@ function installGameplayUi() {
     let converting = false;
 
     if (active) {
+      lessonLeak = null;
       consumeBoostTank(boostTank, dt, getBoostDrainSeconds(), perkState?.vehicleEffectiveTuning?.boostConsumptionMultiplier);
       boostCharge = boostTank.charge;
       boostOvercharge = boostTank.overcharge;
@@ -1262,6 +1265,18 @@ function installGameplayUi() {
         boostExhausted = true;
         safeVibrate([28, 36, 62]);
       }
+    } else if (lessonLeak) {
+      lessonLeak.elapsed = Math.min(LESSON_LEAK_SECONDS, lessonLeak.elapsed + dt);
+      const level = lessonLeak.from + (lessonLeak.target - lessonLeak.from) * (lessonLeak.elapsed / LESSON_LEAK_SECONDS);
+      boostCharge = Math.min(1, level);
+      boostOvercharge = Math.max(0, level - 1);
+      boostConvertedCharge = Math.min(boostConvertedCharge, boostCharge);
+      boostOverchargePhase = boostOvercharge > 0 ? BOOST_OVERCHARGE_PHASE.DECAYING : BOOST_OVERCHARGE_PHASE.READY;
+      boostTank.charge = boostCharge;
+      boostTank.overcharge = boostOvercharge;
+      boostTank.converted = boostConvertedCharge;
+      boostTank.overchargePhase = boostOverchargePhase;
+      if (lessonLeak.elapsed >= LESSON_LEAK_SECONDS) lessonLeak = null;
     } else {
       if (boostCharge < 0.999999) {
         boostCharge = Math.min(1, boostCharge + rechargeDt * rechargeMultiplier / BOOST_RECHARGE_SECONDS + perkRefill);
