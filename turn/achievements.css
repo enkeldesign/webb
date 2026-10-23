@@ -234,23 +234,75 @@
   display: none;
 }
 
-.turn-achievement-disclosure {
-  margin-top: 9px;
-  padding: 6px 9px;
-  min-height: 44px;
-  border: 2px solid var(--turn-outline);
-  border-radius: var(--turn-radius-compact);
-  background: var(--turn-surface-page);
+/* A completed collection's parts (#984): a quiet line at the foot of the master card,
+   not a second card competing with it. The words say what is there and whether it
+   shows; the chevron only supports them. The visible line is small, the target is not.
+   Scoped to the card copy so the dialog's chunky button style (.m8-dialog button) does
+   not turn it back into a second card. */
+.turn-achievement-copy > .turn-achievement-disclosure {
+  position: relative;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 8px;
+  max-width: 100%;
+  margin: 7.5px 0 0;
+  padding: 3px 0;
+  min-height: 24px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
   color: var(--turn-text);
   font: inherit;
-  font-weight: 900;
+  font-size: max(var(--turn-text-floor, 11px), 0.5625rem);
+  font-weight: 950;
+  letter-spacing: .06em;
+  line-height: 1.2;
   text-align: start;
   cursor: pointer;
+}
+
+/* 44px of target around the line, without taking that room from the card. */
+.turn-achievement-disclosure::before {
+  content: '';
+  position: absolute;
+  inset: -10px -6px;
+}
+
+.turn-achievement-disclosure-state {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.turn-achievement-disclosure-chevron {
+  width: .55em;
+  height: .55em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.turn-achievement-disclosure[aria-expanded='true'] .turn-achievement-disclosure-chevron {
+  transform: translateY(2px) rotate(-135deg);
+}
+
+.turn-achievement-copy > .turn-achievement-disclosure:is(:hover, :active) {
+  transform: none;
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  .turn-achievement-disclosure:hover .turn-achievement-disclosure-state {
+    text-decoration-thickness: 3px;
+  }
 }
 
 .turn-achievement-disclosure:focus-visible {
   outline: 3px solid var(--turn-action-information);
   outline-offset: 3px;
+  border-radius: var(--turn-radius-micro, 4px);
 }
 
 .turn-achievement-card.is-unlocked {

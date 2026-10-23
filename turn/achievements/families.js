@@ -49,10 +49,25 @@ export function syncAchievementFamilies(list, { revealMatches = false } = {}) {
   }
 }
 
+// A completed collection's parts (#984): a quiet line at the foot of the master card,
+// not a second card. "✓ 8 SPRINT  SHOW ⌄": what is there, then whether it shows.
+// The underlined word carries the state; the chevron only supports it.
+export function achievementFamilyDisclosureMarkup({ masterId, title, label, count, expanded, controls }) {
+  return `<button type="button" class="turn-achievement-disclosure" data-achievement-disclosure="${masterId}" data-family-count="${count}" data-family-label="${label}" data-family-title="${title}" aria-expanded="${expanded}" aria-controls="${controls}" aria-label="${disclosureName(title, count, expanded)}">`
+    + `<span class="turn-achievement-disclosure-parts"><span aria-hidden="true">✓</span> ${count} ${label}</span>`
+    + `<span class="turn-achievement-disclosure-state">${expanded ? 'Hide' : 'Show'}</span>`
+    + '<span class="turn-achievement-disclosure-chevron" aria-hidden="true"></span></button>';
+}
+
+function disclosureName(title, count, expanded) {
+  return `${title}: ${expanded ? 'Hide' : 'Show'} ${count} completed achievements`;
+}
+
 export function setAchievementFamilyExpanded(button, expanded) {
   button.setAttribute('aria-expanded', String(expanded));
-  button.textContent = `${button.dataset.familyCount} ${button.dataset.familyLabel} achievements · ${expanded ? 'HIDE' : 'SHOW'}`;
-  button.setAttribute('aria-label', `${button.dataset.familyTitle}: ${expanded ? 'Hide' : 'Show'} ${button.dataset.familyCount} completed achievements`);
+  const state = button.querySelector('.turn-achievement-disclosure-state');
+  if (state) state.textContent = expanded ? 'Hide' : 'Show';
+  button.setAttribute('aria-label', disclosureName(button.dataset.familyTitle, button.dataset.familyCount, expanded));
 }
 
 export function revealAchievementFamily(card) {

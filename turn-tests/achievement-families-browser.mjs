@@ -55,10 +55,23 @@ try {
   const children = master.locator('.turn-achievement-children');
   assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
   assert.equal(await children.isVisible(), false, 'Complete children collapse on first render');
+  // #984: a quiet text line on the master card, not a second card. The visible line says
+  // what is there and whether it shows; the name keeps the family and the full count.
+  const disclosureText = () => toggle.evaluate((node) => node.innerText.replace(/\s+/g, ' ').trim());
+  assert.equal(await disclosureText(), '✓ 8 SPRINT SHOW');
+  assert.equal(await toggle.getAttribute('aria-label'), 'FASTER THAN THE DEV: Show 8 completed achievements');
+  assert.equal(await toggle.getAttribute('aria-controls'), await children.getAttribute('id'));
+  const quiet = await toggle.evaluate((node) => {
+    const style = globalThis.getComputedStyle(node);
+    return { border: style.borderTopWidth, shadow: style.boxShadow, background: style.backgroundColor };
+  });
+  assert.deepEqual(quiet, { border: '0px', shadow: 'none', background: 'rgba(0, 0, 0, 0)' }, 'The disclosure is not a boxed card');
   await toggle.focus();
   await page.keyboard.press('Enter');
   assert.equal(await children.isVisible(), true);
   assert.equal(await toggle.evaluate((node) => document.activeElement === node), true, 'Expansion keeps focus');
+  assert.equal(await disclosureText(), '✓ 8 SPRINT HIDE');
+  assert.equal(await toggle.getAttribute('aria-label'), 'FASTER THAN THE DEV: Hide 8 completed achievements');
   await page.keyboard.press('Space');
   assert.equal(await children.isVisible(), false);
   await page.locator('[data-achievement-filter="new"]').click();
@@ -108,8 +121,24 @@ try {
     return { page: document.documentElement.scrollWidth - document.documentElement.clientWidth, dialog: dialog.scrollWidth - dialog.clientWidth, wide };
   });
   assert.deepEqual(overflow, { page: 0, dialog: 0, wide: 0 }, '320px: PERK rewards wrap without sideways scroll');
+  // #984 at 320px: every family line stays on one line with a 44px touch target.
+  const lines = await page.evaluate(() => [...globalThis.__turnAchievements.dialog.querySelectorAll('[data-achievement-disclosure]')]
+    .filter((node) => node.getClientRects().length)
+    .map((node) => {
+      const box = node.getBoundingClientRect();
+      const hit = globalThis.getComputedStyle(node, '::before');
+      const lineHeight = parseFloat(globalThis.getComputedStyle(node.querySelector('.turn-achievement-disclosure-parts')).lineHeight) || 16;
+      return {
+        id: node.dataset.achievementDisclosure,
+        oneLine: box.height < lineHeight * 2,
+        target: box.height - parseFloat(hit.top) - parseFloat(hit.bottom) >= 44,
+        fits: box.right <= node.parentElement.getBoundingClientRect().right + 1
+      };
+    }));
+  assert.equal(lines.length, 6, 'Every completed family has its line');
+  assert.deepEqual(lines.filter((line) => !line.oneLine || !line.target || !line.fits), [], '320px: disclosure lines stay on one line with a 44px target');
   assert.deepEqual(errors, []);
-  console.log('Achievement disclosure browser: keyboard, focus, ALL/category/UNLOCKED/track filters, totals and the 320px PERK reward row pass.');
+  console.log('Achievement disclosure browser: keyboard, focus, ALL/category/UNLOCKED/track filters, totals, the quiet one-line family disclosure and the 320px PERK reward row pass.');
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.close(resolve));
