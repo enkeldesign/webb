@@ -210,7 +210,7 @@ export const ACHIEVEMENT_PERKS = Object.freeze([
   definePerk({
     id: 'response-time', title: 'RESPONSE TIME', rarity: PERK_RARITY.EPIC, installable: true,
     achievementId: 'emergency-master',
-    description: 'Brake decisively at speed, then return quickly to GAS or DRIFT for a brief acceleration kick after a short delay.'
+    description: 'Brake decisively at speed, then return quickly to GAS or DRIFT: after a short delay, a strong acceleration kick. The control flashes as it lands.'
   }),
   definePerk({
     id: 'turbo', title: 'TURBO', rarity: PERK_RARITY.MYTHIC, installable: true,

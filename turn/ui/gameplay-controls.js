@@ -671,6 +671,28 @@ function installGameplayUi() {
     }, 420);
   }
 
+  // RESPONSE TIME (#1247): the kick says itself on the control the player came back
+  // to, with a sound and a buzz; nothing to read while racing. One per braking event.
+  const RESPONSE_PULSE_MS = 900;
+  let responsePulseTimer = 0;
+  function clearResponsePulse() {
+    window.clearTimeout(responsePulseTimer);
+    responsePulseTimer = 0;
+    gasButton.classList.remove('is-response-kick');
+    driftZone.classList.remove('is-response-kick');
+  }
+  window.addEventListener('turn:response-time', (event) => {
+    const runtime = globalThis.__turnRuntime;
+    if (!runtime?.state?.running || runtime.state.mode === runtime.GAME_MODE?.SPECTATING) return;
+    clearResponsePulse();
+    const control = event.detail?.control === 'drift' ? driftZone : gasButton;
+    void control.offsetWidth;
+    control.classList.add('is-response-kick');
+    globalThis.__turnAudio?.cue('response-kick');
+    safeVibrate([10, 24, 34]);
+    responsePulseTimer = window.setTimeout(clearResponsePulse, RESPONSE_PULSE_MS);
+  });
+
   function getBoostDrainSeconds() {
     const duration = Number(
       globalThis.__turnRuntime?.state?.vehicleEffectiveTuning?.boostDurationSeconds
@@ -1072,6 +1094,7 @@ function installGameplayUi() {
     // A lesson's hold keeps the drive pad's finger, so sliding it onto the lesson's control
     // continues (tutorial-prompt.js, #1236); the frozen race applies nothing meanwhile.
     // A SHIFT outcome still being measured waits, on race time, until RESUME.
+    if (reason === 'race-paused' || reason === 'race-reset' || reason === 'home-open') clearResponsePulse();
     if (reason === 'race-paused') {
       if (event.detail?.pauseReason !== 'lesson') releaseDrive();
       centerManualSteerVisual();

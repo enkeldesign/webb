@@ -753,7 +753,16 @@ assert.doesNotMatch(perkRuntimeSource, /activePerk\(state, '|vehicleId === '(tru
 
 console.log('TURN seven gated 1200–2000 Trophy Road vehicle perk behaviors, the perk table and installed-perk composition passed.');
 
-const { advanceBrakingTechnique, resetBrakingTechnique } = await import('../../turn/input/braking-technique.js');
+const {
+  advanceBrakingTechnique, resetBrakingTechnique, RESPONSE_ACCELERATION_MULTIPLIER, RESPONSE_KICK_SECONDS
+} = await import('../../turn/input/braking-technique.js');
+// 22 Oct device test: 1.5× for 0.65 s was not perceptible. The kick is materially stronger.
+assert.ok(RESPONSE_ACCELERATION_MULTIPLIER >= 2 && RESPONSE_KICK_SECONDS >= 0.9);
+const responseCues = [];
+const realDispatch = globalThis.dispatchEvent;
+const RealCustomEvent = globalThis.CustomEvent;
+globalThis.CustomEvent ??= class { constructor(type, options = {}) { this.type = type; this.detail = options.detail; } };
+globalThis.dispatchEvent = (event) => { if (event.type === 'turn:response-time') responseCues.push(event.detail); return true; };
 const hunter = perkState('sedan', false, lockedBase, 'hunter');
 hunter.vehicleStats = lockedStats;
 for (const position of [1, 4, 2, 5, 0]) {
@@ -773,9 +782,13 @@ for (const hz of [30, 60, 120]) {
   assert.equal(response.responseTimeRemaining, 0, 'The kick waits after input');
   for (let i = 0; i < Math.ceil(hz * 0.2); i++) advanceBrakingTechnique(response, 1 / hz, 0, 25, false, true);
   assert.ok(response.responseTimeRemaining > 0);
-  assert.ok(resolveVehiclePerkTuning({ state: response, tuning: lockedBase }).accelerationMultiplier > lockedBase.accelerationMultiplier);
+  assert.equal(resolveVehiclePerkTuning({ state: response, tuning: lockedBase }).accelerationMultiplier,
+    lockedBase.accelerationMultiplier * RESPONSE_ACCELERATION_MULTIPLIER);
+  assert.deepEqual(responseCues.at(-1), { control: 'gas', seconds: RESPONSE_KICK_SECONDS }, 'The kick is announced once, on GAS');
+  const cuesAfterKick = responseCues.length;
   for (let i = 0; i < hz * 2; i++) advanceBrakingTechnique(response, 1 / hz, 0, 25, true, true);
   assert.equal(response.responseTimeRemaining, 0, 'One braking event cannot repeat');
+  assert.equal(responseCues.length, cuesAfterKick, 'One braking event cannot cue twice');
   resetBrakingTechnique(response);
   response.brake = 1;
   advanceBrakingTechnique(response, 1 / hz, 1, 30, false, true);
@@ -789,4 +802,9 @@ for (const hz of [30, 60, 120]) {
   for (let i = 0; i < hz; i++) advanceBrakingTechnique(response, 1 / hz, 0, 25, true, true);
   assert.equal(response.responseTimeRemaining, 0, 'A pause or interruption clears the primed response');
 }
+globalThis.dispatchEvent = realDispatch;
+globalThis.CustomEvent = RealCustomEvent;
+assert.equal(responseCues.length, 3, 'Exactly one cue per qualifying braking event at each frame rate');
+assert.match(controlsSource, /reason === 'race-paused' \|\| reason === 'race-reset' \|\| reason === 'home-open'\) clearResponsePulse\(\);/,
+  'The RESPONSE TIME pulse stops on pause, reset and leaving');
 console.log('HUNTER current-position tiers and RESPONSE TIME deceleration/delay/anti-spam lifecycle pass at 30/60/120 Hz.');

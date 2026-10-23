@@ -4,8 +4,9 @@ export const BRAKING_MIN_SPEED = 15;
 export const BRAKING_MIN_DECELERATION = 5;
 export const RESPONSE_WINDOW_SECONDS = 0.7;
 export const RESPONSE_DELAY_SECONDS = 0.18;
-export const RESPONSE_KICK_SECONDS = 0.65;
-export const RESPONSE_ACCELERATION_MULTIPLIER = 1.5;
+// Device test, 22 Oct: 1.5× for 0.65 s was not perceptible. Tuned on device.
+export const RESPONSE_KICK_SECONDS = 1;
+export const RESPONSE_ACCELERATION_MULTIPLIER = 2.25;
 const trackers = new WeakMap();
 
 export function resetBrakingTechnique(state) {
@@ -58,6 +59,10 @@ export function advanceBrakingTechnique(state, dt, deceleration, entrySpeed, dri
       tracker.delay = Math.max(0, tracker.delay - elapsed);
       if (tracker.delay === 0 && responseEnabled && (state.throttle > 0 || driftHeld)) {
         state.responseTimeRemaining = RESPONSE_KICK_SECONDS;
+        // One cue per braking event: the controls, sound and haptics say it worked.
+        if (typeof globalThis.CustomEvent === 'function') globalThis.dispatchEvent?.(new CustomEvent('turn:response-time', {
+          detail: { control: driftHeld ? 'drift' : 'gas', seconds: RESPONSE_KICK_SECONDS }
+        }));
       }
     } else if (tracker.window > 0 && (state.throttle > 0 || driftHeld)) {
       tracker.window = 0;

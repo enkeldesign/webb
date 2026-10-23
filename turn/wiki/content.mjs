@@ -53,7 +53,7 @@ export const PERK_ADVICE = {
   hunter: ['Use your current race position to accelerate back into contention.', 'Each position adds its literal number to ACCELERATION and TOP SPEED, capped at 5/5. The effect changes with the race order.', 'sedan', 'racing-lines'],
   precision: ['Control a slide that actually earns DRIFT ATTACK points.', 'Only scoring DRIFT recharges BOOST, including with the HUD hidden. Loose OVERCHARGE lasts three times as long; passive FULL TANK charging is suppressed.', 'truck', 'drift-attack'],
   'locked-in': ['Build a varied FLOW chain above ×2.', 'CONTROL, ACCELERATION and DRIFT each gain one effective tier while the chain stays above ×2. Your saved setups stay unchanged.', 'sedan', 'flow'],
-  'response-time': ['Brake decisively at speed, then return quickly to GAS or DRIFT.', 'A short delay keeps the acceleration kick from arriving immediately on turn-in. Taps, reverse, collisions and interrupted braking cannot farm kicks.', 'police', 'racing-lines'],
+  'response-time': ['Brake decisively at speed, then return quickly to GAS or DRIFT.', 'A short delay keeps the kick from arriving immediately on turn-in; GAS or DRIFT flashes, with a sound and a buzz, as it lands. Taps, reverse, leaving the road, collisions and interrupted braking cannot farm kicks.', 'police', 'racing-lines'],
   smv: ['Start DRIVE BY EAR practice slowly enough to separate guidance, pace notes and car sounds.', 'BOOST is still powerful. Learn the route on GAS before adding bursts; use sound balance to bring guidance forward.', 'tractor', 'steering']
 };
 
