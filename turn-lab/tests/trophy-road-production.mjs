@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { createAchievementStore, normalizeAchievementState } from '../../turn/achievements/store.js';
 import { ACHIEVEMENTS } from '../../turn/achievements/catalog.js';
+import { achievementTrophyAward } from '../../turn/achievements/awards.js';
 import { getCarDefinition } from '../../turn/vehicle/catalog.js';
 import {
   TROPHY_ROAD_MAX_THRESHOLD,
@@ -362,9 +363,11 @@ const preSwapAchievementIds = [
   'flow-state',
   'faster-than-the-dev'
 ];
+// Collection masters now award perks (#1247); a player who earned one before keeps its
+// historical trophies, so count what the store awards, not today's catalog value.
 assert.equal(
   preSwapAchievementIds.reduce((total, id) => (
-    total + Number(ACHIEVEMENTS.find((achievement) => achievement.id === id)?.trophies || 0)
+    total + Number(achievementTrophyAward(id, null, ACHIEVEMENTS.find((achievement) => achievement.id === id)) || 0)
   ), 0),
   1325,
   'The migration fixture must represent a player just beyond the old 1300-trophy reward'
@@ -649,14 +652,19 @@ assert.equal(isTrackUnlocked('midnight-city', progressionStorage), false,
   'MIDNIGHT CITY is EXPERT and waits for 1300 trophies');
 assert.equal(store.unlock('night-shift-sheriff', { trackId: 'midnight-city', vehicleId: 'police' })?.trophies, 100);
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['paintjob']);
-assert.equal(store.unlock('on-course-of-course', { trackId: 'harbor' })?.trophies, 100);
+// Collection masters award their perk now, not trophies (#1247): ROAD RAGE here.
+assert.equal(store.unlock('on-course-of-course', { trackId: 'harbor' })?.trophies, 0);
+assert.deepEqual(store.syncRewards(), []);
+assert.equal(store.unlock('harbor-sprint', { trackId: 'harbor' })?.trophies, 100);
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['vintage-racer']);
 assert.equal(store.unlock('ahead-of-yourself', { trackId: 'harbor' })?.trophies, 50);
 assert.deepEqual(store.syncRewards(), []);
 assert.equal(store.unlock('flow-state', { trackId: 'countryside' })?.trophies, 50);
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['shift']);
-assert.equal(store.unlock('faster-than-the-dev', { trackId: 'midnight-city' })?.trophies, 300,
-  'FASTER THAN THE DEV must retain its rebalanced 300-trophy value');
+assert.equal(store.unlock('faster-than-the-dev', { trackId: 'midnight-city' })?.trophies, 0,
+  'FASTER THAN THE DEV awards TURBO, not trophies (#1247)');
+assert.deepEqual(store.syncRewards(), []);
+assert.ok(store.grantBonus('test-three-hundred', 300));
 assert.deepEqual(
   store.syncRewards().map((reward) => reward.id),
   ['race-car', 'emergency-pack', 'expert-tracks'],
