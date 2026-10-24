@@ -238,6 +238,13 @@ const [[, compactWeight]] = strokeRatios(await authoredIcon('compact'), 'compact
 assert.ok(compactWeight >= 0.035 && compactWeight <= 0.055, `COMPACT line weight sits with the car silhouettes (${compactWeight.toFixed(3)})`);
 const [[, supercarOutline] = []] = strokeRatios(await authoredIcon('supercar'), 'supercar');
 assert.ok(supercarOutline >= 0.012, 'SUPERCAR outlines its traced lines so they are not hairlines');
+// The traced car silhouettes are scaled down hardest in the tiles, so each one carries a
+// round-joined outline that lifts its on-screen line to the PERK and DRIFT weight.
+for (const name of ['vintage-racer', 'race-car', 'future-racer', 'monster-truck', 'rally-racer']) {
+  const markup = await authoredIcon(name);
+  const [[, outline] = []] = strokeRatios(markup, name);
+  assert.ok(outline >= 0.012 && /stroke-linejoin="round"/.test(markup), `${name} outlines its traced lines to the car family weight`);
+}
 
 // A difficulty tier's two tracks get twice the icon width in the highlight cards, so each
 // pictogram is as large as a single reward icon; stacked cards share that column.
