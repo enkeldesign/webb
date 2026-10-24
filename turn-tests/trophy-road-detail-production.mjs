@@ -98,6 +98,9 @@ assert.equal(ICONS.route, undefined, 'The retired route icon has no remaining us
 assert.match(AUTHORED_PAINT_ICON, /<g fill="currentColor" stroke="currentColor" stroke-width="\d+" stroke-linejoin="round">/,
   'PAINTJOB softens its traced corners with a round-joined outline');
 assert.doesNotMatch(ICONS.restart, /M4 9V4l4 3/, 'TAKE IT FROM THE TOP no longer uses the detached arrow');
+assert.match(ICONS.level, /rotate\(-16 12 12\)[\s\S]*M2\.2 11\.3h19\.2/,
+  'LEVEL HEAD shows a tilted phone whose horizon stays level');
+assert.equal(getAchievement('level-head')?.icon, 'level');
 assert.equal(getAchievement('around-the-turn')?.icon, 'safety');
 assert.equal(getAchievement('on-course-of-course')?.icon, 'safety',
   'ON COURSE, OF COURSE belongs to the SAFETY artwork family');
