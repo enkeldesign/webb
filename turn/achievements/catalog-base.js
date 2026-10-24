@@ -64,7 +64,7 @@ export const ICONS = Object.freeze({
   drift: '<svg viewBox="0 0 24 24"><path d="M4 5c8 1 11 5 10 14"></path><path d="M10 4c8 2 11 7 9 15"></path><path d="M3 9h3M8 12h3M12 16h3M16 20h3"></path></svg>',
   spectate: '<svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6S2.5 12 2.5 12Z"></path><circle cx="12" cy="12" r="2.5"></circle><path d="m17 17 4 4"></path></svg>',
   rival: '<svg viewBox="0 0 24 24"><path d="M3 15h8l2-5h5l3 5v4h-2"></path><path d="M5 19H3v-4"></path><circle cx="7" cy="19" r="2"></circle><circle cx="17" cy="19" r="2"></circle><path d="M4 10h6l1-3h4"></path></svg>',
-  level: '<svg viewBox="0 0 24 24"><path d="M3 8h18v8H3Z"></path><circle cx="12" cy="12" r="2"></circle><path d="M6 12h2M16 12h2"></path></svg>',
+  level: '<svg viewBox="0 0 24 24"><rect x="2.75" y="5.75" width="18.5" height="12.5" rx="2.5" transform="rotate(-16 12 12)"></rect><path d="M2.2 11.3h19.2"></path><path d="M10.6 11.3h4l2.7 5.68-8.9 2.55ZM12.35 12.7h.6v.7h-.6ZM12.3 14.1h.8v.9h-.8ZM12.25 15.7h1v1.2h-1Z" fill="currentColor" fill-rule="evenodd" stroke="none"></path></svg>',
   wheel: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 3v6M4.2 8.2l5.2 3M19.8 8.2l-5.2 3M7 19l3-5.2M17 19l-3-5.2"></path></svg>',
   map: '<svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"></path><path d="M9 3v15M15 6v15"></path></svg>',
   blind: '<svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6S2.5 12 2.5 12Z"></path><circle cx="12" cy="12" r="2.5"></circle><path d="M4 4l16 16"></path></svg>',
