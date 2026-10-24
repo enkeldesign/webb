@@ -15,7 +15,9 @@ import {
 } from './learning-progress.js?revision=r1-learning-achievements';
 import {
   AUTHORED_DRIFT_ICON,
-  AUTHORED_SAFETY_ICON
+  AUTHORED_SAFETY_ICON,
+  FLOW_ICON,
+  SIREN_ICON
 } from '../ui/authored-icons.js?revision=r245-shared-drift-safety-icons';
 import { TRACK_ICON_MARKUP } from '../ui/track-icons.js?revision=r1-track-reward-icons';
 import { TIME_TRIALS } from './time-trials.js?revision=r166-bella-records';
@@ -79,6 +81,8 @@ const PRODUCTION_ICONS = Object.freeze({
   ...base.ICONS,
   drift: AUTHORED_DRIFT_ICON,
   safety: AUTHORED_SAFETY_ICON,
+  siren: SIREN_ICON,
+  flow: FLOW_ICON,
   headStart: HEAD_START_ICON
 });
 
@@ -139,7 +143,7 @@ export const TURN_TUTORIAL_ACHIEVEMENT = Object.freeze({
   trophies: 25,
   title: 'TURN TUTORIAL',
   description: 'Finish TURN TUTORIAL: one lap of COUNTRYSIDE in the LEARNER CAR.',
-  icon: 'route'
+  icon: 'flag'
 });
 
 export const LEARN_TO_PLAY_ACHIEVEMENT = Object.freeze({
