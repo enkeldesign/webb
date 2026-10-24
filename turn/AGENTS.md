@@ -36,6 +36,17 @@
 - **Mockups are not required for implementation.** When Erik provides no mockup or leaves presentation details open, OPUS should make a common-sense implementation using established TURN patterns, the design system, existing form and colour language, the surrounding code and UI as precedent, and recognised best practices across architecture, frontend, backend, performance, security, accessibility and interaction/visual design. Do not stall merely because a visual specification is absent.
 - When a mockup is provided, treat it as design direction rather than permission to ignore system consistency, responsive behaviour, accessibility, sound engineering practice or established interaction patterns.
 
+## Judgement and coherence
+
+These rules come from a working retro: TURN's product model should live in principles, issues and `main`, not in one person's head or one chat.
+
+- When trade-offs conflict, decide in this order even if the issue does not restate it: 1. accessibility, 2. performance, 3. architecture and correctness, 4. product and UI coherence, 5. regression risk.
+- When an established TURN rule or pattern already settles a question, apply it and report it. Bring Erik only genuine product decisions, not implementation or detail choices.
+- When a spec phrase touches a mechanic with more than one state or timer (e.g. OVERCHARGE while leaking vs when spent), the issue or PR states which one it means, checked against TURN's existing terms, before implementation.
+- A distinct problem found mid-work gets its own focused issue rather than reopening a large one.
+- After a substantial batch of work, review current `main` as one product, focusing on interactions between recently changed systems. Record findings and decisions in an issue or PR note, not only in chat.
+- Accessibility sweeps cover non-text contrast for control states and focus indicators (WCAG 1.4.11), not only text contrast.
+
 ## Releases
 
 - Every merge that changes TURN production must increment the TURN build in that same merge. `turn/release.json` remains the release source of truth (`version`, `id` `YYYY.MM.DD-rNNN`, `cacheKey` `YYYYMMDD-rNNN`); run `node turn/scripts/release.mjs --write` and `--check`. The script updates `CURRENT_RELEASE` and every module route, including `yourturn/index.html`.
