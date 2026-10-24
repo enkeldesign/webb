@@ -26,7 +26,9 @@ import {
 import {
   AUTHORED_DRIFT_ICON,
   AUTHORED_PAINT_ICON,
-  AUTHORED_SAFETY_ICON
+  AUTHORED_SAFETY_ICON,
+  FLOW_ICON,
+  SIREN_ICON
 } from '../turn/ui/authored-icons.js';
 
 const [
@@ -86,6 +88,16 @@ assert.equal(ICONS.drift, AUTHORED_DRIFT_ICON,
   'Achievement DRIFT artwork must come from the shared authored SVG source');
 assert.equal(ICONS.safety, AUTHORED_SAFETY_ICON,
   'Achievement SAFETY artwork must come from the shared authored SVG source');
+// #1267: EMERGENCY and FLOW have one form each, shared by Achievements and Trophy Road.
+assert.equal(ICONS.siren, SIREN_ICON, 'Achievement EMERGENCY artwork must come from the shared source');
+assert.equal(TROPHY_ROAD_REWARD_ICONS.emergency, SIREN_ICON, 'Trophy Road EMERGENCY must use the same form as the achievement');
+assert.equal(ICONS.flow, FLOW_ICON, 'Achievement FLOW artwork must come from the shared source');
+assert.equal(TROPHY_ROAD_REWARD_ICONS.flow, FLOW_ICON, 'Trophy Road FLOW must use the same form as the achievement');
+assert.equal(getAchievement('turn-tutorial')?.icon, 'flag', 'TURN TUTORIAL uses the FLAG icon');
+assert.equal(ICONS.route, undefined, 'The retired route icon has no remaining users');
+assert.match(AUTHORED_PAINT_ICON, /<g fill="currentColor" stroke="currentColor" stroke-width="\d+" stroke-linejoin="round">/,
+  'PAINTJOB softens its traced corners with a round-joined outline');
+assert.doesNotMatch(ICONS.restart, /M4 9V4l4 3/, 'TAKE IT FROM THE TOP no longer uses the detached arrow');
 assert.equal(getAchievement('around-the-turn')?.icon, 'safety');
 assert.equal(getAchievement('on-course-of-course')?.icon, 'safety',
   'ON COURSE, OF COURSE belongs to the SAFETY artwork family');

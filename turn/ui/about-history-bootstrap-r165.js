@@ -2,7 +2,7 @@ import {
   CHANGELOG,
   CURRENT_RELEASE,
   DEVELOPMENT_HISTORY
-} from '../content/about-history-current.js?build=20261024-r503';
+} from '../content/about-history-current.js?build=20261024-r504';
 import { aboutTurnHtml } from '../content/about-turn.js?revision=r1';
 import { createFeedbackContent } from './feedback-content.js';
 
