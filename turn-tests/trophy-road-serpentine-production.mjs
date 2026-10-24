@@ -234,4 +234,12 @@ for (const name of ['perk', 'emergency', 'flow']) strokeRatio(TROPHY_ROAD_REWARD
 assert.ok(lineWeights.length >= 9, 'Every line-drawn reward icon declares its weight');
 assert.deepEqual(lineWeights.filter(([, ratio]) => ratio < 0.06).map(([name]) => name), [], 'No line-drawn reward icon is a hairline');
 
+// A difficulty tier's two tracks get twice the icon width in the highlight cards, so each
+// pictogram is as large as a single reward icon; stacked cards share that column.
+for (const tier of ['medium-tracks', 'advanced-tracks', 'expert-tracks']) {
+  assert.match(TROPHY_ROAD_REWARD_ICONS[tier], /^<span class="turn-track-pair"/, `${tier} is marked as a track pair`);
+}
+assert.match(roadStyles, /\.turn-trophy-road-highlight-icon:has\(> \.turn-track-pair\) \{\s*width: 75px;/, 'A track pair gets a double-width highlight icon');
+assert.match(roadStyles, /\.turn-trophy-road-highlights > article:has\(\.turn-track-pair\) \{\s*grid-template-columns: 75px minmax\(0, 1fr\);/, 'Its card widens the icon column to match');
+
 console.log('TURN Trophy Road responsive serpentine layout, accessibility and immutable progression regression passed.');
