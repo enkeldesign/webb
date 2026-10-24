@@ -218,21 +218,26 @@ assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*backgrou
 assert.match(semanticStyles, /\.turn-trophy-road-marker-state\.is-badge-only \{[\s\S]*visibility:\s*hidden/,
   'Ordinary earned cards must not duplicate the check badge with an EARNED text label');
 
-// #1267: reward icons read as one family. Each tile centres its icon, and a reward
+// #1267: reward icons read as one family. Each tile centres its icon, and a symbol
 // drawn in lines keeps a line weight of at least 6% of its height wherever it is drawn
 // (road, highlights, detail, corner marks), not a hairline beside the filled silhouettes.
+// Cars match the traced car silhouettes instead: the line-drawn COMPACT stays in their
+// weight band rather than reading bold, and the hairline SUPERCAR trace gets an outline.
 assert.match(roadStyles, /\.turn-trophy-road-marker-icon \{[^}]*justify-self:\s*center/, 'Reward icons sit centred over the threshold');
-const lineWeights = [];
-const strokeRatio = (markup, name) => {
+const strokeRatios = (markup, name) => {
   const [, , , , height] = markup.match(/viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/).map(Number);
-  for (const [, width] of markup.matchAll(/stroke-width="([\d.]+)"/g)) lineWeights.push([name, Number(width) / height]);
+  return [...markup.matchAll(/stroke-width="([\d.]+)"/g)].map(([, width]) => [name, Number(width) / height]);
 };
-for (const name of ['perkulator', 'shift', 'compact']) {
-  strokeRatio(await fs.readFile(new URL(`../turn/assets/trophy-road/${name}.svg`, import.meta.url), 'utf8'), name);
-}
-for (const name of ['perk', 'emergency', 'flow']) strokeRatio(TROPHY_ROAD_REWARD_ICONS[name], name);
-assert.ok(lineWeights.length >= 9, 'Every line-drawn reward icon declares its weight');
-assert.deepEqual(lineWeights.filter(([, ratio]) => ratio < 0.06).map(([name]) => name), [], 'No line-drawn reward icon is a hairline');
+const authoredIcon = (name) => fs.readFile(new URL(`../turn/assets/trophy-road/${name}.svg`, import.meta.url), 'utf8');
+const symbolWeights = [];
+for (const name of ['perkulator', 'shift']) symbolWeights.push(...strokeRatios(await authoredIcon(name), name));
+for (const name of ['perk', 'emergency', 'flow']) symbolWeights.push(...strokeRatios(TROPHY_ROAD_REWARD_ICONS[name], name));
+assert.ok(symbolWeights.length >= 8, 'Every line-drawn reward symbol declares its weight');
+assert.deepEqual(symbolWeights.filter(([, ratio]) => ratio < 0.06).map(([name]) => name), [], 'No line-drawn reward symbol is a hairline');
+const [[, compactWeight]] = strokeRatios(await authoredIcon('compact'), 'compact');
+assert.ok(compactWeight >= 0.035 && compactWeight <= 0.055, `COMPACT line weight sits with the car silhouettes (${compactWeight.toFixed(3)})`);
+const [[, supercarOutline] = []] = strokeRatios(await authoredIcon('supercar'), 'supercar');
+assert.ok(supercarOutline >= 0.012, 'SUPERCAR outlines its traced lines so they are not hairlines');
 
 // A difficulty tier's two tracks get twice the icon width in the highlight cards, so each
 // pictogram is as large as a single reward icon; stacked cards share that column.
