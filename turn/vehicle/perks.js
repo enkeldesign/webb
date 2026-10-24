@@ -236,7 +236,7 @@ export const ACHIEVEMENT_PERKS = Object.freeze([
   definePerk({
     id: 'precision', title: 'PRECISION', rarity: PERK_RARITY.EPIC, installable: true,
     achievementId: 'drift-master',
-    description: 'Only DRIFT that earns DRIFT ATTACK points recharges BOOST. Loose OVERCHARGE lasts three times as long.'
+    description: 'Only DRIFT that earns DRIFT ATTACK points recharges BOOST. OVERCHARGE lasts three times as long when SPENT.'
   }),
   definePerk({
     id: 'locked-in', title: 'LOCKED IN', rarity: PERK_RARITY.EPIC, installable: true,

@@ -1,4 +1,4 @@
-@import url('./design-semantic.css?build=20261023-r499');
+@import url('./design-semantic.css?build=20261024-r502');
 
 /*
   Native form controls and disclosures keep their real semantics while sharing
@@ -60,7 +60,7 @@
 
 .m8-setting-card input[type='radio']:checked {
   background:
-    radial-gradient(circle, var(--turn-form-control-idle) 0 27%, transparent 30%),
+    radial-gradient(circle, var(--turn-ink) 0 27%, transparent 30%),
     var(--turn-form-control-selected);
 }
 

@@ -266,8 +266,8 @@ assert.match(historyCss, /\.m8-about-summary[\s\S]*font-size: max\(var\(--turn-t
   'About supporting copy must be compact enough for short landscape viewports');
 assert.match(historyCss, /\.m8-about-actions[\s\S]*grid-template-columns: 1fr/,
   'The About actions must stay stacked in the compact dialog');
-assert.match(historyCss, /\.m8-about-accessibility[\s\S]*background: var\(--m8-blue\)/,
-  'The Accessibility action must reuse the established secondary About treatment');
+assert.match(historyCss, /\.m8-about-actions > :is\(\.m8-about-history, \.m8-about-accessibility\) \{[^}]*background: var\(--turn-surface-page\)/,
+  'ACCESSIBILITY and HISTORY AND CHANGELOG are both neutral buttons');
 assert.match(historyCss, /\.m8-about-actions \{[\s\S]*grid-template-columns: 1fr 1fr/,
   'ABOUT TURN keeps its two actions side by side where there is width');
 assert.match(historyCss, /@media \(max-height: 420px\) and \(orientation: landscape\) \{[\s\S]*\.m8-about-dialog \{[\s\S]*--turn-dialog-inline-size: min\(720px/,

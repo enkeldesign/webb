@@ -59,14 +59,13 @@ export function advanceBoostOvercharge({
   qualifyingDrift = false,
   rechargeMultiplier = BOOST_OVERCHARGE_REGULAR_RECHARGE_MULTIPLIER,
   buildDt = dt,
-  decayMultiplier = 1,
   consuming = false
 } = {}) {
   let nextAmount = clamp(finiteNumber(amount), 0, 1);
   let nextPhase = validPhase(phase);
   const elapsed = Math.max(0, finiteNumber(dt));
   const buildElapsed = Math.max(0, finiteNumber(buildDt));
-  const decaySeconds = BOOST_OVERCHARGE_DECAY_SECONDS * Math.max(1, finiteNumber(decayMultiplier, 1));
+  const decaySeconds = BOOST_OVERCHARGE_DECAY_SECONDS;
   let peaked = false;
 
   if (consuming && nextAmount > 0) {

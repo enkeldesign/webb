@@ -324,7 +324,7 @@ td code { font-size: .78rem; font-weight: 850; }
 .form-card input[type="radio"],
 .form-card input[type="checkbox"] { appearance: none; width: 30px; height: 30px; margin: 0; border: 4px solid var(--turn-ink); background: var(--turn-form-control-idle); cursor: pointer; }
 .form-card input[type="radio"] { border-radius: 50%; }
-.form-card input[type="radio"]:checked { background: radial-gradient(circle, var(--turn-form-control-idle) 0 27%, transparent 30%), var(--turn-form-control-selected); }
+.form-card input[type="radio"]:checked { background: radial-gradient(circle, var(--turn-ink) 0 27%, transparent 30%), var(--turn-form-control-selected); }
 .form-card input[type="checkbox"] { border-radius: var(--turn-radius-micro); }
 .form-card input[type="checkbox"]:checked { background: var(--turn-form-control-selected); box-shadow: inset 0 0 0 7px var(--turn-form-control-selected); }
 .disclosure-sample { overflow: hidden; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-default); background: var(--turn-disclosure-panel); box-shadow: var(--turn-shadow-default); }

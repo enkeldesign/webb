@@ -64,7 +64,7 @@ export function installHomeAppBar({ documentRef = document } = {}) {
   const themeSetting = themeApi ? documentRef.createElement('fieldset') : null;
   if (themeSetting) {
     themeSetting.className = 'turn-theme-setting';
-    themeSetting.innerHTML = '<legend>COLOR THEME</legend><div class="turn-theme-options">' + [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]
+    themeSetting.innerHTML = '<legend>COLOR THEME</legend><div class="turn-theme-options">' + [['system', 'SYSTEM'], ['light', 'LIGHT'], ['dark', 'DARK']]
       .map(([value, label]) => `<label><input type="radio" name="turn-theme" value="${value}"><span>${label}</span></label>`).join('') + '</div>';
     const sync = () => {
       for (const input of themeSetting.querySelectorAll('input')) input.checked = input.value === themeApi.choice;

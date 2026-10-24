@@ -14,6 +14,7 @@ import {
 import {
   achievementGroups,
   completedAchievementFamily,
+  achievementFamilyDisclosureMarkup,
   setAchievementFamilyExpanded,
   syncAchievementFamilies
 } from './families.js';
@@ -688,7 +689,9 @@ export function createAchievementView({ store, session, utilityGroup }) {
       const expanded = expandedFamilies.has(master.id);
       const childGroupId = `turn-achievement-family-${master.id}`;
       const disclosure = collapsible
-        ? `<button type="button" class="turn-achievement-disclosure" data-achievement-disclosure="${master.id}" data-family-count="${children.length}" data-family-label="${family.label}" data-family-title="${master.title}" aria-expanded="${expanded}" aria-controls="${childGroupId}" aria-label="${master.title}: ${expanded ? 'Hide' : 'Show'} ${children.length} completed achievements">${children.length} ${family.label} achievements · ${expanded ? 'HIDE' : 'SHOW'}</button>`
+        ? achievementFamilyDisclosureMarkup({
+          masterId: master.id, title: master.title, label: family.label, count: children.length, expanded, controls: childGroupId
+        })
         : '';
       return `<div class="turn-achievement-family" data-achievement-family="${master.id}">
         ${achievementCard(master, store, session, disclosure)}
