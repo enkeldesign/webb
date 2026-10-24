@@ -121,10 +121,7 @@ export const ARTICLES = [
     ['Replace or remove', 'Each car has one INSTALLED slot. Installing another perk replaces that slot; removing it leaves the ORIGINAL perk intact. A car cannot install its own perk twice.'],
     ['Check the combination', 'Look for a useful interaction, not just a rarity. A stat-building perk has less to add when that attribute is already at its ordinary limit.']
   ], aliases: 'cloning clone install installed slot rarity', related: ['perks', 'perks/build-ideas', 'perks/builds', 'progress/trophy-road'] },
-  { path: 'perks/build-ideas', title: 'Build ideas', group: 'Perks', icon: 'perk', intro: 'Seven perk combinations that work, and two more to experiment with.', visual: 'ideas', sections: [
-    ['Race Car + TORQUE', 'APEX GRIP improves control and acceleration during OVERCHARGE; TORQUE builds the tank and strengthens KICK. Catch charge before a useful AIRPORT exit.'],
-    ['Rally Racer + CLEAN EXIT', 'TWITCHY TURNY refills quickly; CLEAN EXIT helps steering after a clean slide. Try short refill-and-burst cycles on CLIFFSIDE.']
-  ], related: ['cars/supercar', 'cars/future-racer', 'cars/rally-racer', 'cars/race-car', 'cars/vintage-racer', 'cars/sports-car', 'cars/suv', 'perks/perkulator', 'skills/shift'] },
+  { path: 'perks/build-ideas', title: 'Build ideas', group: 'Perks', icon: 'perk', intro: 'Seven perk combinations that work, and why.', visual: 'ideas', sections: [], related: ['cars/supercar', 'cars/future-racer', 'cars/rally-racer', 'cars/race-car', 'cars/vintage-racer', 'cars/sports-car', 'cars/suv', 'perks/perkulator', 'skills/shift'] },
   { path: 'start/rivals', title: 'Rivals & ghosts', group: 'Start', icon: 'rival', intro: 'Your past laps become the opposition.', sections: [
     ['Race your recordings', 'Ordinary TURN rivals are saved recordings of your own fastest laps. POSITION compares you with them; BEST is your record. Better laps replace older rivals.'],
     ['Read the track sheet', 'Open a track in ROADBOOK to inspect its records and rivals before racing. Different tracks keep their own history.'],
