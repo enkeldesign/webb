@@ -218,12 +218,17 @@ export async function renderWiki() {
     controls: controlsVisual,
     sound: () => driveSequence([['GUIDANCE', 'Where to steer', 'gas'], ['PACE NOTES', 'What comes next', 'drift'], ['CAR SOUNDS', 'What is happening now', 'boost']]),
     build: () => `<div class="build-picture">${carImage('race', true)}<div>${chip('ORIGINAL · APEX GRIP', 'epic')}<span class="build-plus" aria-hidden="true">+</span>${chip('INSTALLED · TORQUE', 'epic')}<p>Example: Race Car with TORQUE</p></div></div>`,
-    ideas: () => `<div class="car-lineup" aria-hidden="true">${['vintage-racer', 'race', 'toy-racer', 'race-future'].map((id) => carImage(id)).join('')}</div>`
-      + section('Perk combos', paragraph('Each car keeps its ORIGINAL perk and adds one INSTALLED perk through PERKULATOR.')
-        + `<ul>${PERK_COMBOS.map((combo) => {
-          const perkLink = (id) => link(`perks/${id}`, perks.find((perk) => perk.id === id).title);
-          return `<li><strong>${link(carPath(combo.car), cars.find((car) => car.id === combo.car).name)}</strong>: ${perkLink(combo.original)} + ${perkLink(combo.installed)}. ${escapeHtml(combo.why)}</li>`;
-        }).join('')}</ul>`),
+    ideas: () => PERK_COMBOS.map((combo) => {
+      const car = cars.find((c) => c.id === combo.car);
+      // The perk as PERKULATOR shows it: its slot, name, rarity and effect.
+      const perkCard = (slot, id) => {
+        const perk = perks.find((k) => k.id === id);
+        return `<a class="card perk-card" href="${url(`perks/${id}`)}"><span class="card-copy"><small>${slot}</small><strong>${escapeHtml(perk.title)}</strong>${chip(perk.rarity, perk.rarity)}<span>${escapeHtml(perk.description)}</span></span></a>`;
+      };
+      return section(`${car.name}: ${combo.title}`, `<div class="combo"><figure class="combo-car">${carImage(car.id)}<figcaption>${link(carPath(car.id), car.name)}</figcaption></figure>`
+        + `<div class="combo-perks">${perkCard('ORIGINAL', combo.original)}<span class="build-plus" aria-hidden="true">+</span>${perkCard('INSTALLED', combo.installed)}</div></div>`
+        + paragraph(escapeHtml(combo.copy)), `combo-${combo.car}`);
+    }).join(''),
     tutorials: () => `<div class="car-lineup" aria-hidden="true">${['classic', 'tractor'].map((id) => carImage(id)).join('')}</div>`
   };
   for (const article of ARTICLES) add(article.path, { ...article, mark: article.icon === 'perkulator' ? 'perkulator' : undefined,
