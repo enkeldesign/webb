@@ -23,7 +23,7 @@
 - Do not add CI, coverage, dependencies, refactors, or documentation unless requested.
 - Run the smallest relevant existing validation command.
 - Stop after the requested behavior is implemented and verified.
-- Use common sense about scope/tool usage cost. Keep each PR focused and small enough to implement, review and validate without risking exhausting available usage in one pass; split the work or ask Erik before proceeding when a PR or command set is becoming disproportionately large or expensive.
+- Use common sense about scope and tool/usage cost. Keep each PR focused and small enough to implement, review and validate without risking exhausting available usage in one pass; split the work or ask Erik before proceeding when a PR or command set is becoming disproportionately large or expensive.
 - Maximum two attempts for a failing check.
 - Report changed files, exact checks run, and unresolved issues concisely.
 
