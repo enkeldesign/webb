@@ -20,7 +20,7 @@ function authoredRewardIcon(name) {
 // A difficulty tier unlocks two tracks, so its reward shows both pictograms.
 function trackPairIcon(firstTrackId, secondTrackId) {
   const half = (trackId) => `<span style="display:block;flex:1 1 0;min-width:0;height:100%">${TRACK_ICON_MARKUP[trackId]}</span>`;
-  return `<span aria-hidden="true" style="display:flex;align-items:center;gap:6%;width:100%;height:100%">${half(firstTrackId)}${half(secondTrackId)}</span>`;
+  return `<span class="turn-track-pair" aria-hidden="true" style="display:flex;align-items:center;gap:6%;width:100%;height:100%">${half(firstTrackId)}${half(secondTrackId)}</span>`;
 }
 
 export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({

@@ -1,4 +1,4 @@
-@import url('../design-semantic.css?build=20261024-r502');
+@import url('../design-semantic.css?build=20261024-r503');
 
 /* Give the road the complete summary width. Totals stay in their own header row. */
 .turn-achievements-dialog .turn-achievements-summary {
@@ -119,6 +119,16 @@
   height: 34.5px;
   padding: 3px;
   place-items: center;
+}
+
+/* A difficulty tier's two tracks (#1267): the pair gets twice the width at the same
+   height, so each pictogram is as large as a single reward icon. */
+.turn-trophy-road-highlights > article:has(.turn-track-pair) {
+  grid-template-columns: 75px minmax(0, 1fr);
+}
+
+.turn-trophy-road-highlight-icon:has(> .turn-track-pair) {
+  width: 75px;
 }
 
 .turn-trophy-road-highlights span,
@@ -877,7 +887,13 @@
   }
 
   .turn-trophy-road-highlights > article {
+    grid-template-columns: 75px minmax(0, 1fr);
     min-height: 48px;
+  }
+
+  /* Stacked, the cards share the track pair's icon column so their text lines up. */
+  .turn-trophy-road-highlight-icon {
+    justify-self: center;
   }
 
   .turn-trophy-road-map-heading {
@@ -995,6 +1011,14 @@
     width: 28.5px;
     height: 24.75px;
     padding: 1.5px;
+  }
+
+  .turn-trophy-road-highlights > article:has(.turn-track-pair) {
+    grid-template-columns: 51px minmax(0, 1fr);
+  }
+
+  .turn-trophy-road-highlight-icon:has(> .turn-track-pair) {
+    width: 51px;
   }
 
   .turn-trophy-road-highlights small {
