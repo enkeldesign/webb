@@ -555,16 +555,18 @@
     observer.observe(copy, { childList: true, characterData: true, subtree: true });
   }
 
-  function trainingMessage(trackId) {
+  // drivePad: where the drive pad is, from the training (ui/drive-pad-guidance.js).
+  function trainingMessage(trackId, drivePad = '') {
     const base = TRAINING_START_MESSAGES[trackId];
     if (!base) return '';
-    if (trackId !== 'dbe-training-1') return base;
+    const pad = drivePad ? ` ${drivePad}` : '';
+    if (trackId !== 'dbe-training-1') return `${base}${pad}`;
 
     const steeringMode = globalThis.__turnHome?.getSteeringMode?.();
     const steering = steeringMode === 'manual'
       ? 'Use the on-screen steering control to steer.'
       : 'Turn the device like a steering wheel to steer.';
-    return `${base} ${steering} Hold Gas to move. Brake is separate; Drift and Boost are in the drive area.`;
+    return `${base} ${steering}${pad || ' Hold Gas to move. Brake is separate; Drift and Boost are in the drive area.'}`;
   }
 
   function externalLiveRegionReadable(live) {
@@ -677,7 +679,7 @@
     const trackId = String(event.detail?.stageId || '');
     if (!TRAINING_START_MESSAGES[trackId]) return;
     clearSpeechChannel(TRAINING_SPEECH_CHANNEL);
-    const instructions = trainingMessage(trackId);
+    const instructions = trainingMessage(trackId, String(event.detail?.drivePad || ''));
     speak(`${instructions} Go!`, {
       priority: 'assertive',
       channel: TRAINING_SPEECH_CHANNEL

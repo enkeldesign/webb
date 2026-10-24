@@ -1552,6 +1552,49 @@ test('tutorial guidance waits for the race to finish speaking: one voice at a ti
   }
 });
 
+test('a race start says where the drive pad is, measured from where it is (#1301)', async () => {
+  const { drivePadGuidance, screenRegion } = await import('../turn/ui/drive-pad-guidance.js');
+  // Measured in Chromium: landscape and portrait, right-handed, and mirrored.
+  assert.equal(screenRegion({ left: 641, right: 836, top: 179, bottom: 382 }, 844, 390), 'bottom right');
+  assert.equal(screenRegion({ left: 211, right: 378, top: 574, bottom: 776 }, 390, 844), 'bottom right');
+  assert.equal(screenRegion({ left: 8, right: 203, top: 179, bottom: 382 }, 844, 390), 'bottom left');
+  assert.equal(screenRegion({ left: 300, right: 540, top: 150, bottom: 240 }, 844, 390), 'centre');
+  assert.equal(screenRegion({ left: 8, right: 100, top: 150, bottom: 240 }, 844, 390), 'middle left');
+  assert.equal(screenRegion(null, 844, 390), '');
+  const element = (rect, hidden = false) => ({ hidden, closest: () => null, getBoundingClientRect: () => rect });
+  const page = (pad, steering = null) => ({
+    documentElement: { clientWidth: 844, clientHeight: 390 },
+    querySelector: (selector) => (selector === '#manualSteer' ? steering : selector === '#controls .drive-pad' ? pad : null)
+  });
+  const pad = element({ left: 641, right: 836, top: 179, bottom: 382, width: 195, height: 203 });
+  const steering = element({ left: 17, right: 186, top: 254, bottom: 347, width: 169, height: 93 });
+  assert.equal(drivePadGuidance({ documentRef: page(pad) }), 'Drive pad, bottom right.', 'Ordinary races: only where it is');
+  assert.equal(drivePadGuidance({ full: true, documentRef: page(pad) }),
+    'Drive pad: bottom right. DRIFT and BOOST at its top, GAS in the middle, BRAKE at the bottom. Touch GAS, then double tap and hold, and slide to change control.');
+  assert.match(drivePadGuidance({ full: true, documentRef: page(pad, steering) }), / Steering: bottom left\.$/, 'Manual steering says where it is too');
+  assert.doesNotMatch(drivePadGuidance({ full: true, documentRef: page(pad, element(steering.getBoundingClientRect(), true)) }), /Steering/,
+    'Tilt steering has no on-screen control to find');
+  assert.equal(drivePadGuidance({ full: true, documentRef: page(null) }), '', 'No pad, nothing to say');
+  assert.equal(drivePadGuidance({ documentRef: {} }), '');
+
+  const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
+  // Tutorials say the whole pad before their first guidance; a RESTART LAP run only where it is.
+  const prompt = await read('../turn/tutorial/tutorial-prompt.js');
+  assert.match(prompt, /const drivePad = drivePadGuidance\(\{ full: !restarted \}\);\n      if \(drivePad\) message = `\$\{drivePad\} \$\{message\}`;/);
+  for (const path of ['../turn/tutorial/tutorial-prompt.js', '../turn/tutorial/drift-attack-coach.js', '../turn/tutorial/flow-tutorial.js']) {
+    assert.match(await read(path), /const prompt = createTutorialPrompt\(document\.body, \{ restarted \}\);/, path);
+  }
+  assert.match(await read('../turn/m8-home.js'), /tutorialCoach = tutorial\.coach\(\{ runtime, restarted: true \}\);/);
+  // DRIVE BY EAR parts: the first part of a visit says the whole pad, later parts where it is.
+  assert.match(await read('../turn/training/drive-by-ear-training.js'), /drivePad: drivePadGuidance\(\{ full: first && !restarted \}\)/);
+  assert.match(await read('../turn/ui/startup-screen-reader-handoff-r529.js'), /trainingMessage\(trackId, String\(event\.detail\?\.drivePad \|\| ''\)\)/);
+  // Ordinary races: race speech, after what is being said, until the car drives off.
+  const speech = await read('../turn/ui/race-speech.js');
+  assert.match(speech, /const teaching = activeSessionPolicy\(\)\.id === 'tutorial-lap'\n\s+\|\| globalThis\.__turnDriveByEarTraining\?\.getState\?\.\(\)\.active === true;/);
+  assert.match(speech, /if \(reason === 'lap-started'\) \{\n      cancelDrivePad\(\);/);
+  assert.match(speech, /holdSpeechFloor\(estimatedSpeechMs\(message\), FLOOR_OWNER\);\n    setLiveAnnouncement\(contextAnnouncer, message\);/);
+});
+
 test('a lesson is one small card, there at once with the control that continues it (#1236)', async () => {
   const read = (path) => import('node:fs').then((fs) => fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
   const prompt = await read('../turn/tutorial/tutorial-prompt.js');

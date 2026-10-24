@@ -10,6 +10,7 @@ import {
   getVehicleDefaultSecondaryColor
 } from '/turn/vehicle/catalog.js?build=20260720-r19';
 import { buildTrainingCourse, disposeTrainingWorld } from './course.js';
+import { drivePadGuidance } from '../ui/drive-pad-guidance.js';
 import {
   FINISH_PROGRESS,
   RAIL_ASSIST_START,
@@ -255,7 +256,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       session.previousPosition = snapshotPosition(runtime.state.position);
       session.lastFrameAt = globalThis.performance?.now?.() || 0;
       if (!session.frame) session.frame = requestAnimationFrame(trainingFrame);
-      signalStageStarted();
+      signalStageStarted({ first });
       return true;
     } finally {
       session.switching = false;
@@ -322,13 +323,16 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     session.previousPosition = snapshotPosition(runtime.state.position);
   }
 
-  function signalStageStarted({ restarted = false } = {}) {
+  // The first part of a visit says the whole drive pad; later parts and restarts only
+  // where it is (#1301).
+  function signalStageStarted({ restarted = false, first = false } = {}) {
     if (!session.active || !session.stage) return;
     window.dispatchEvent(new CustomEvent('turn:dbe-training-stage-started', {
       detail: Object.freeze({
         stageId: session.stage.id,
         stageIndex: session.stageIndex,
-        restarted
+        restarted,
+        drivePad: drivePadGuidance({ full: first && !restarted })
       })
     }));
   }
