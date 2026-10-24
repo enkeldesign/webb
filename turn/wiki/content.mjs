@@ -71,6 +71,18 @@ export const TECHNIQUES = [
   { id: 'advanced', title: 'Advanced techniques', icon: 'flow', intro: 'Choose an objective, then make the techniques serve it.', what: 'Fast laps, DRIFT scores and FLOW scores reward different decisions. Use a lap to practise one of them deliberately.', how: 'For time: settle early and BOOST out. For DRIFT: sustain a bankable slide. For FLOW: link different useful actions.', why: 'A clear aim makes a change to your line or build easier to judge.', timing: 'For a flying start, build OVERCHARGE before the line, catch on GAS, cross the line and BOOST into the next lap.', advanced: 'Try LOCK → DRIFT → EXIT → CATCH → BOOST, or SHIFT → DRIFT → EXIT → SHIFT → BOOST. If a chain becomes untidy, simplify it and rebuild.', practice: 'cliffside', related: ['skills/overcharge', 'skills/flow', 'skills/drift-attack', 'perks/build-ideas', 'start/spectate'] }
 ];
 
+// Erik's tested combinations for Build ideas: each car's ORIGINAL perk with one INSTALLED
+// perk, and why the pair works.
+export const PERK_COMBOS = [
+  { car: 'supercar', original: 'flow-shift', installed: 'locked-in', why: 'High skill equals speed.' },
+  { car: 'race-future', original: 'overdrive', installed: 'full-tank', why: 'High skill equals speed.' },
+  { car: 'toy-racer', original: 'twitchy-turny', installed: 'turbo', why: 'Fun and satisfying.' },
+  { car: 'race', original: 'apex-grip', installed: 'response-time', why: 'Control and acceleration over DRIFT and BOOST.' },
+  { car: 'vintage-racer', original: 'driftage', installed: 'carry-on', why: 'Fun and satisfying.' },
+  { car: 'sedan-sports', original: 'drift-demon', installed: 'precision', why: 'High skill equals speed.' },
+  { car: 'suv', original: 'full-tank', installed: 'road-rage', why: 'Maximise OVERCHARGE for the long straights.' }
+];
+
 export const ARTICLES = [
   { path: 'start/getting-started', title: 'Getting started', group: 'Start', icon: 'flag', intro: 'One clean lap is a good first goal.', visual: 'start', sections: [
     ['Your first lap', 'Open TURN, start TURN TUTORIAL and drive COUNTRYSIDE in the LEARNER CAR. Each lesson pauses to explain one action; hold its highlighted control to continue. Optional tutorial steering help lets you concentrate on the drive pad.'],
@@ -102,12 +114,12 @@ export const ARTICLES = [
     ['Replace or remove', 'Each car has one INSTALLED slot. Installing another perk replaces that slot; removing it leaves the ORIGINAL perk intact. A car cannot install its own perk twice.'],
     ['Check the combination', 'Look for a useful interaction, not just a rarity. A stat-building perk has less to add when that attribute is already at its ordinary limit.']
   ], aliases: 'cloning clone install installed slot rarity', related: ['perks', 'perks/build-ideas', 'perks/builds', 'progress/trophy-road'] },
-  { path: 'perks/build-ideas', title: 'Build ideas', group: 'Perks', icon: 'perk', intro: 'Four experiments, each with a reason to try it.', visual: 'ideas', sections: [
+  { path: 'perks/build-ideas', title: 'Build ideas', group: 'Perks', icon: 'perk', intro: 'Seven combinations that work, then four experiments explained.', visual: 'ideas', sections: [
     ['Vintage Racer + CARRY ON', 'DRIFTAGE holds speed and angle in DRIFT; CARRY ON reduces LOCK drag. Try linked slides on HARBOR. The challenge is banking the slide before the next wall.'],
     ['Race Car + TORQUE', 'APEX GRIP improves control and acceleration during OVERCHARGE; TORQUE builds the tank and strengthens KICK. Catch charge before a useful AIRPORT exit.'],
     ['Rally Racer + CLEAN EXIT', 'TWITCHY TURNY refills quickly; CLEAN EXIT helps steering after a clean slide. Try short refill-and-burst cycles on CLIFFSIDE.'],
     ['Future Racer + FULL TANK', 'OVERDRIVE rewards fast, clean driving; FULL TANK grows and fills the short base tank. Keep the line tidy on fast sections. A collision undermines the clean-driving plan.']
-  ], related: ['cars/vintage-racer', 'cars/race-car', 'cars/rally-racer', 'cars/future-racer', 'perks/perkulator', 'skills/shift'] },
+  ], related: ['cars/supercar', 'cars/future-racer', 'cars/rally-racer', 'cars/race-car', 'cars/vintage-racer', 'cars/sports-car', 'cars/suv', 'perks/perkulator', 'skills/shift'] },
   { path: 'start/rivals', title: 'Rivals & ghosts', group: 'Start', icon: 'rival', intro: 'Your past laps become the opposition.', sections: [
     ['Race your recordings', 'Ordinary TURN rivals are saved recordings of your own fastest laps. POSITION compares you with them; BEST is your record. Better laps replace older rivals.'],
     ['Read the track sheet', 'Open a track in ROADBOOK to inspect its records and rivals before racing. Different tracks keep their own history.'],
