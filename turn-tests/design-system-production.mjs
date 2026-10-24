@@ -291,6 +291,9 @@ assert.match(design, /id="rendered-scale"[\s\S]*--turn-text-floor|id="rendered-s
   const bar = await fs.readFile(new URL('../turn/ui/home-app-bar.js', import.meta.url), 'utf8');
   assert.match(bar, /<legend>COLOR THEME<\/legend>/);
   assert.match(bar, /type="radio" name="turn-theme"/, 'THEME is one radio group');
+  // Its choices read in CAPS, like TURN MUSIC's OFF / ON beside it.
+  assert.match(bar, /\[\['system', 'SYSTEM'\], \['light', 'LIGHT'\], \['dark', 'DARK'\]\]/, 'COLOR THEME choices are CAPS');
+  assert.match(bar, /\[\['off', 'OFF'\], \['on', 'ON'\]\]/, 'TURN MUSIC choices are CAPS');
   // The dark theme is declared, never patched at runtime: no contrast guard script.
   assert.doesNotMatch(index, /theme-contrast/, 'the dark theme is CSS only: no runtime contrast guard');
   assert.doesNotMatch(tokens, /data-turn-(on|edge|pill)/);
