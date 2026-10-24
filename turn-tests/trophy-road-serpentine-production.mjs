@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
   TROPHY_ROAD_REWARDS,
+  TROPHY_ROAD_REWARD_ICONS,
   getTrophyRoadReward
 } from '../turn/progression/trophy-road.js';
 import {
@@ -216,5 +217,26 @@ assert.match(semanticStyles, /\.turn-trophy-road-marker-earned \{[\s\S]*backgrou
   'The earned watermark must let each reward category colour show through');
 assert.match(semanticStyles, /\.turn-trophy-road-marker-state\.is-badge-only \{[\s\S]*visibility:\s*hidden/,
   'Ordinary earned cards must not duplicate the check badge with an EARNED text label');
+
+// #1267: reward icons read as one family. Each tile centres its icon, and a symbol
+// drawn in lines keeps a line weight of at least 6% of its height wherever it is drawn
+// (road, highlights, detail, corner marks), not a hairline beside the filled silhouettes.
+// Cars match the traced car silhouettes instead: the line-drawn COMPACT stays in their
+// weight band rather than reading bold, and the hairline SUPERCAR trace gets an outline.
+assert.match(roadStyles, /\.turn-trophy-road-marker-icon \{[^}]*justify-self:\s*center/, 'Reward icons sit centred over the threshold');
+const strokeRatios = (markup, name) => {
+  const [, , , , height] = markup.match(/viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"/).map(Number);
+  return [...markup.matchAll(/stroke-width="([\d.]+)"/g)].map(([, width]) => [name, Number(width) / height]);
+};
+const authoredIcon = (name) => fs.readFile(new URL(`../turn/assets/trophy-road/${name}.svg`, import.meta.url), 'utf8');
+const symbolWeights = [];
+for (const name of ['perkulator', 'shift']) symbolWeights.push(...strokeRatios(await authoredIcon(name), name));
+for (const name of ['perk', 'emergency', 'flow']) symbolWeights.push(...strokeRatios(TROPHY_ROAD_REWARD_ICONS[name], name));
+assert.ok(symbolWeights.length >= 8, 'Every line-drawn reward symbol declares its weight');
+assert.deepEqual(symbolWeights.filter(([, ratio]) => ratio < 0.06).map(([name]) => name), [], 'No line-drawn reward symbol is a hairline');
+const [[, compactWeight]] = strokeRatios(await authoredIcon('compact'), 'compact');
+assert.ok(compactWeight >= 0.035 && compactWeight <= 0.055, `COMPACT line weight sits with the car silhouettes (${compactWeight.toFixed(3)})`);
+const [[, supercarOutline] = []] = strokeRatios(await authoredIcon('supercar'), 'supercar');
+assert.ok(supercarOutline >= 0.012, 'SUPERCAR outlines its traced lines so they are not hairlines');
 
 console.log('TURN Trophy Road responsive serpentine layout, accessibility and immutable progression regression passed.');

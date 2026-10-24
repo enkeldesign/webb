@@ -3,11 +3,11 @@
 
 export const AUTHORED_PERK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1048 1075" aria-hidden="true" focusable="false">
   <g fill="none" stroke="currentColor" stroke-linecap="butt" stroke-linejoin="round">
-    <rect x="188.5" y="209.5" width="676" height="683" rx="56" stroke-width="40"/>
-    <path d="M736.5 79 V523 H624" stroke-width="36"/>
-    <path d="M49 359 H562" stroke-width="36"/>
-    <path d="M49 475 H464 V675 H680" stroke-width="36"/>
-    <path d="M341 630 V767 H565 V1009" stroke-width="36"/>
+    <rect x="188.5" y="209.5" width="676" height="683" rx="56" stroke-width="76"/>
+    <path d="M736.5 79 V523 H624" stroke-width="68"/>
+    <path d="M49 359 H562" stroke-width="68"/>
+    <path d="M49 475 H464 V675 H680" stroke-width="68"/>
+    <path d="M341 630 V767 H565 V1009" stroke-width="68"/>
   </g>
 
   <path fill="currentColor" fill-rule="evenodd"

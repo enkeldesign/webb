@@ -1,4 +1,4 @@
-@import url('../design-semantic.css?build=20261024-r501');
+@import url('../design-semantic.css?build=20261024-r502');
 
 /* Give the road the complete summary width. Totals stay in their own header row. */
 .turn-achievements-dialog .turn-achievements-summary {
@@ -357,8 +357,9 @@
 
 .turn-trophy-road-marker-icon {
   display: grid;
-  width: 21px;
-  height: 15.75px;
+  justify-self: center;
+  width: min(100%, 36px);
+  height: 21px;
   place-items: center;
 }
 
@@ -496,8 +497,8 @@
   }
 
   .turn-trophy-road-marker-icon {
-    width: 30px;
-    height: 21.75px;
+    width: min(100%, 52px);
+    height: 27px;
   }
 }
 
@@ -520,8 +521,8 @@
   }
 
   .turn-trophy-road-marker-icon {
-    width: 34.5px;
-    height: 24.75px;
+    width: min(100%, 60px);
+    height: 31.5px;
   }
 }
 
@@ -896,8 +897,8 @@
   }
 
   .turn-trophy-road-marker-icon {
-    width: 21px;
-    height: 15.75px;
+    width: min(100%, 36px);
+    height: 21px;
   }
 }
 
@@ -1025,8 +1026,8 @@
   }
 
   .turn-trophy-road-marker-icon {
-    width: 18.75px;
-    height: 14.25px;
+    width: min(100%, 36px);
+    height: 21px;
   }
 
   .turn-trophy-road-marker-lock {
