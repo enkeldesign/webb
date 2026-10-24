@@ -63,7 +63,9 @@
 }
 
 /* iOS Safari zooms the page into a focused text field set below 16px. Text entry
-   renders at 16px or larger (checkboxes, radios, ranges and buttons are not text). */
-:where(input:not([type="button"], [type="checkbox"], [type="color"], [type="file"], [type="hidden"], [type="image"], [type="radio"], [type="range"], [type="reset"], [type="submit"]), select, textarea) {
+   renders at 16px or larger (checkboxes, radios, ranges and buttons are not text).
+   Colour inputs count: iOS's colour picker types into its Sliders values with the
+   keyboard, and then sizes the zoom from the focused colour input. */
+:where(input:not([type="button"], [type="checkbox"], [type="file"], [type="hidden"], [type="image"], [type="radio"], [type="range"], [type="reset"], [type="submit"]), select, textarea) {
   font-size: max(16px, 1em) !important;
 }

@@ -190,6 +190,12 @@ assert.doesNotMatch(clippedInput, /inset:\s*0|width:\s*100%|height:\s*100%/,
   'Standalone WebKit must never receive a full-size transparent native control over the visible face');
 assert.match(css, /\.garage-swatch:focus-within \.garage-swatch-face[\s\S]*outline:/,
   'Keyboard and screen-reader focus still shows on the face');
+// iOS's colour picker can raise the keyboard (its Sliders values); the focused colour
+// input must then be 16px or larger, or Safari zooms the page and leaves it zoomed.
+const scaleCss = await fs.readFile(new URL('../../turn/design-scale.css', import.meta.url), 'utf8');
+const noZoomRule = scaleCss.match(/:where\(input:not\(([^)]*)\)[^{]*\{\s*font-size: max\(16px, 1em\) !important;/);
+assert.ok(noZoomRule, 'Text entry renders at 16px or larger');
+assert.doesNotMatch(noZoomRule[1], /type="color"/, 'Colour inputs are covered by the 16px no-zoom rule');
 assert.match(lot, /if \(car\.secondaryPaint\) swatches\.append\(colorControl\(car\.secondaryPaint\.label, choice\.secondaryColor, true\)\)/,
   'Each car offers its own semantic secondary paint, labelled by the catalog');
 assert.match(carModels, /turnSecondaryPaintMaterials/);
