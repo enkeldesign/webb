@@ -15,7 +15,7 @@
 - OPUS may merge a CODEX-reviewed, green, noncontroversial PR when the relevant release rules are satisfied. Erik approval is required for unresolved review findings, product/design decisions that materially change the brief, or intentional scope expansion.
 - Do not silently broaden scope. If implementation exposes a product/design decision not covered by the brief or established TURN patterns, surface it to Erik rather than inventing a new product rule.
 - Device-facing work that requires physical-device verification is not considered finished until Erik or the relevant reporter confirms it on device.
-- Branch/PR review URLs for Cloudflare TURN previews must include `turn-admin=1` so the session-scoped review/admin tools are available. Append `?turn-admin=1` when there is no existing query string, or `&turn-admin=1` when the URL already has query parameters.
+- Branch/PR review URLs for Cloudflare TURN previews must point at the TURN app and include `turn-admin=1` so the session-scoped review/admin tools are available: `https://<branch>.turntest.pages.dev/turn/?turn-admin=1`. Keep the `/turn/` path, since the preview root is not TURN. Take `<branch>` from the Branch Preview URL in Cloudflare's PR comment: Cloudflare shortens long branch names, so a host built from the full branch name may not exist. When the URL already has query parameters, append `&turn-admin=1` instead.
 
 - Prefer minimal, local changes.
 - Read only files relevant to the task.
