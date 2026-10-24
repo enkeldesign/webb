@@ -203,6 +203,15 @@ async function phoneFlow(browserType, name) {
     });
     assert.deepEqual(selected, { id: 'cliffside', pressed: 'true', state: '✓Selected', dock: 'Cliffside EASY' });
 
+    // The dock always gives the difficulty its own line, and the pictogram spans both.
+    const dockLines = await page.evaluate(() => {
+      const box = (selector) => document.querySelector(`.roadbook-dock ${selector}`).getBoundingClientRect();
+      const icon = box('.turn-pr-icon'), title = box('.turn-pr-dock-name'), detail = box('.turn-pr-dock-detail');
+      return { stacked: detail.top >= title.bottom - 1, besideIcon: icon.right <= title.left, spansBoth: icon.height >= detail.bottom - title.top - 2 };
+    });
+    assert.deepEqual(dockLines, { stacked: true, besideIcon: true, spansBoth: true },
+      `${name}: the dock stacks name over difficulty beside a two-line pictogram`);
+
     // Track sheet: the chosen track's route, description and personal bests.
     await page.locator('.roadbook-sheet-button').click();
     await page.waitForSelector('#turnTrackSheet[open]');

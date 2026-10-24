@@ -17,6 +17,26 @@
   color: var(--turn-text);
 }
 
+/* The dock names the track on one line and its difficulty on the next, every time, so
+   its pictogram spans both lines instead of sitting small beside a name that wraps
+   only for the longer tracks. */
+.roadbook-dock .turn-pr-dock-context {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 10px;
+}
+
+.roadbook-dock .turn-pr-dock-context .turn-pr-icon {
+  grid-row: span 2;
+  width: calc(2.4em + 2px);
+  height: calc(2.4em + 2px);
+}
+
+.roadbook-dock .turn-pr-dock-detail::before {
+  content: none;
+}
+
 /* ROADBOOK measures its dock and keeps this current; the value here covers the first
    frame. */
 .m8-home:has(.roadbook) {
