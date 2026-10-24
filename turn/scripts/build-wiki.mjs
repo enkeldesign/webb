@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { register } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { ARTICLES, CAR_ADVICE, PERK_ADVICE, TECHNIQUES, TRACK_ADVICE } from '../wiki/content.mjs';
+import { ARTICLES, CAR_ADVICE, PERK_ADVICE, PERK_COMBOS, TECHNIQUES, TRACK_ADVICE } from '../wiki/content.mjs';
 
 const ROOT = new URL('../../', import.meta.url);
 const WIKI = new URL('../wiki/', import.meta.url);
@@ -51,6 +51,11 @@ export async function renderWiki() {
   const tracks = game.inTrackPresentationOrder(game.TRACK_DEFINITIONS);
   for (const [items, advice, label] of [[cars, CAR_ADVICE, 'car'], [tracks, TRACK_ADVICE, 'track'], [perks, PERK_ADVICE, 'perk']]) {
     assert.deepEqual(Object.keys(advice).sort(), items.map(({ id }) => id).sort(), `Wiki ${label} advice must cover the current catalog exactly`);
+  }
+  for (const combo of PERK_COMBOS) {
+    assert.equal(game.originalVehiclePerk(combo.car)?.id, combo.original, `Build ideas: ${combo.original} is ${combo.car}'s ORIGINAL perk`);
+    const installed = perks.find((perk) => perk.id === combo.installed);
+    assert.ok(installed?.installable && !installed.vehicleIds.includes(combo.car), `Build ideas: ${combo.installed} can be INSTALLED on ${combo.car}`);
   }
   const pages = new Map();
   const carPath = (id) => `cars/${slug(cars.find((car) => car.id === id).name)}`;
@@ -213,7 +218,17 @@ export async function renderWiki() {
     controls: controlsVisual,
     sound: () => driveSequence([['GUIDANCE', 'Where to steer', 'gas'], ['PACE NOTES', 'What comes next', 'drift'], ['CAR SOUNDS', 'What is happening now', 'boost']]),
     build: () => `<div class="build-picture">${carImage('race', true)}<div>${chip('ORIGINAL · APEX GRIP', 'epic')}<span class="build-plus" aria-hidden="true">+</span>${chip('INSTALLED · TORQUE', 'epic')}<p>Example: Race Car with TORQUE</p></div></div>`,
-    ideas: () => `<div class="car-lineup" aria-hidden="true">${['vintage-racer', 'race', 'toy-racer', 'race-future'].map((id) => carImage(id)).join('')}</div>`,
+    ideas: () => PERK_COMBOS.map((combo) => {
+      const car = cars.find((c) => c.id === combo.car);
+      // The perk as PERKULATOR shows it: its slot, name, rarity and effect.
+      const perkCard = (slot, id) => {
+        const perk = perks.find((k) => k.id === id);
+        return `<a class="card perk-card" href="${url(`perks/${id}`)}"><span class="card-copy"><small>${slot}</small><strong>${escapeHtml(perk.title)}</strong>${chip(perk.rarity, perk.rarity)}<span>${escapeHtml(perk.description)}</span></span></a>`;
+      };
+      return section(`${car.name}: ${combo.title}`, `<div class="combo"><figure class="combo-car">${carImage(car.id)}<figcaption>${link(carPath(car.id), car.name)}</figcaption></figure>`
+        + `<div class="combo-perks">${perkCard('ORIGINAL', combo.original)}<span class="build-plus" aria-hidden="true">+</span>${perkCard('INSTALLED', combo.installed)}</div></div>`
+        + paragraph(escapeHtml(combo.copy)), `combo-${combo.car}`);
+    }).join(''),
     tutorials: () => `<div class="car-lineup" aria-hidden="true">${['classic', 'tractor'].map((id) => carImage(id)).join('')}</div>`
   };
   for (const article of ARTICLES) add(article.path, { ...article, mark: article.icon === 'perkulator' ? 'perkulator' : undefined,

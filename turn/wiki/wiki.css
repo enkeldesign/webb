@@ -185,6 +185,13 @@ figcaption { margin-top: .8rem; line-height: 1.5; }
 .build-picture > img { width: 40%; }
 .build-plus { display: block; margin: .5rem; font-size: 1.5rem; }
 .build-picture p { font-size: .875rem; margin-top: .75rem; }
+/* Build ideas: a car beside the two perks it runs, ORIGINAL + INSTALLED. */
+.combo { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: center; gap: 1rem 1.5rem; margin-top: 1rem; }
+.combo-car { margin: 0; text-align: center; }
+.combo-perks { display: grid; justify-items: stretch; }
+.combo-perks .build-plus { justify-self: center; margin: .25rem; }
+.combo + p { margin-top: 1.25rem; }
+.combo-perks .card-copy small { font-size: .75rem; font-weight: var(--turn-weight-label); letter-spacing: .06em; color: var(--turn-text-muted); }
 .car-lineup { display: flex; }
 .car-lineup img { flex: 1; width: 0; }
 .related, .jump-links { padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; }
@@ -249,6 +256,8 @@ td { text-align: center; }
   .start-picture > img { width: 65%; max-width: 300px; margin-inline: auto; }
   .mini-car { grid-template-columns: 100px minmax(0, 1fr); }
   .build-picture { flex-wrap: wrap; }
+  .combo { grid-template-columns: minmax(0, 1fr); }
+  .combo-car .car-image { width: min(100%, 220px); }
   .build-picture > img { width: min(100%, 270px); }
   .reward-road > li { grid-template-columns: 4.5rem minmax(0, 1fr); gap: .6rem; }
   .achievement { gap: .7rem; grid-template-columns: minmax(0, 1fr) 3rem; }
