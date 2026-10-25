@@ -1,4 +1,10 @@
-export const TRAINING_BALANCE = 1;
+// The sound balance while training (#1301): the ribbon front and centre, the car still
+// heard. 100% would silence the engine, the skid and BOOST.
+export const TRAINING_BALANCE = 0.95;
+// Afterwards, for a player who finished a part and never set a balance of their own:
+// Drive By Ear stays in front of the mix, where the car is still clearly heard.
+export const DRIVE_BY_EAR_FRONT_BALANCE = 0.85;
+export const DRIVE_BY_EAR_FRONT_MESSAGE = 'Drive By Ear stays in front of the sound mix. Change it in SETTINGS, Sound balance.';
 export const BALANCE_SUGGESTION_THRESHOLD = 75;
 export const TRAINING_VEHICLE_ID = 'tractor';
 export const SAMPLE_COUNT = 720;

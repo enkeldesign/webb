@@ -255,6 +255,40 @@ try {
     assert.equal(await showLaunchCard(page), false);
   });
 
+  // #1301: more Drive By Ear is not more accessible. Training keeps the car heard, and a
+  // finished part leaves Drive By Ear in front for a player who never set a balance.
+  await run('DRIVE BY EAR TUTORIAL keeps Drive By Ear in front of the mix', { launch: true }, async (page) => {
+    await page.waitForFunction(() => Boolean(document.querySelector('.m8-tutorial-dialog[open]')));
+    await page.evaluate(() => globalThis.__turnAudioPreferences.setAudioEnabled(true));
+    assert.equal(await page.evaluate(() => localStorage.getItem('turn-audio-balance-v1')), null, 'No balance of the player\'s own');
+    await page.waitForFunction(() => Boolean(globalThis.__turnDriveByEarTraining));
+    await page.locator('[data-tutorial-dbe]').click();
+    await page.locator('dialog[open] [data-training-primary][data-training-stage="0"]').click();
+    await page.waitForFunction(() => globalThis.__turnDriveByEarTraining.getState().active && globalThis.__turnRuntime.state.running);
+    assert.equal(await page.evaluate(() => globalThis.__turnAudioPreferences.getSettings().balance), 0.95,
+      'Training: the ribbon front and centre, the car still heard');
+    await page.evaluate(() => {
+      const { state, samples } = globalThis.__turnRuntime;
+      const finish = samples[Math.floor(samples.length * 0.94)];
+      state.position.copy(finish.point).addScaledVector(finish.tangent, -3);
+      state.heading = Math.atan2(finish.tangent.x, finish.tangent.z);
+      state.velocity.copy(finish.tangent).multiplyScalar(12);
+      state.speed = 12;
+    });
+    await page.waitForSelector('.turn-dbe-training-part-dialog[open]');
+    await page.locator('.turn-dbe-training-part-dialog[open] .turn-dbe-training-actions [data-training-leave]').click();
+    await page.waitForFunction(() => Boolean(document.querySelector('.m8-tutorial-dialog[open]')));
+    assert.deepEqual(await page.evaluate(() => ({
+      balance: globalThis.__turnAudioPreferences.getSettings().balance,
+      stored: localStorage.getItem('turn-audio-balance-v1'),
+      notice: document.querySelector('#turnTutorialCopy > p:first-child:not([hidden])')?.textContent
+    })), {
+      balance: 0.85,
+      stored: '0.850',
+      notice: 'Drive By Ear stays in front of the sound mix. Change it in SETTINGS, Sound balance.'
+    }, 'Kept at 85%, and the card says so first, with where to change it');
+  });
+
   await run('teaching lap, graduation and the self-ghost', {}, async (page) => {
     await showLaunchCard(page);
     await page.locator('[data-tutorial-start]').click();

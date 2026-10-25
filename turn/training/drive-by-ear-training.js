@@ -11,6 +11,8 @@ import {
 } from '/turn/vehicle/catalog.js?build=20260720-r19';
 import { buildTrainingCourse, disposeTrainingWorld } from './course.js';
 import {
+  DRIVE_BY_EAR_FRONT_BALANCE,
+  DRIVE_BY_EAR_FRONT_MESSAGE,
   FINISH_PROGRESS,
   RAIL_ASSIST_START,
   ROAD_HALF_WIDTH,
@@ -67,7 +69,9 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     // Called once when this visit to the tutorial ends (intro closed or tutorial left).
     onClose: null,
     snapshot: null,
-    preparedAccess: null
+    preparedAccess: null,
+    // A part finished during this visit, so the sound balance may stay (#1301).
+    partCompleted: false
   };
   let entryPoints = null;
 
@@ -154,10 +158,13 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
   }
 
   // TURN TUTORIAL offers this tutorial first and comes back once it ends (#1133).
-  function closed() {
+  // notice: what the visit left changed (#1301). It goes where the player lands: whoever
+  // reopens over Home says it, otherwise ROADBOOK's status does, once Home has focus.
+  function closed(notice = '') {
     const onClose = session.onClose;
     session.onClose = null;
-    onClose?.();
+    if (onClose) onClose({ notice });
+    else if (notice) requestAnimationFrame(() => requestAnimationFrame(() => home.announce?.(notice)));
   }
 
   async function openTraining(trigger, { onClose } = {}) {
@@ -170,7 +177,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       session.returnFocus = entryPoints?.homeButton || trigger;
     }
     view.introDialog.querySelector('[data-training-intro-copy]').textContent =
-      "Learn TURN's spatial guidance one layer at a time. Choose any part below. Training temporarily uses the slow-moving vehicle and puts Drive By Ear at 100% of the sound mix. Your car and audio choices return when you leave.";
+      "Learn TURN's spatial guidance one layer at a time. Choose any part below. Training temporarily uses the slow-moving vehicle and puts Drive By Ear at 95% of the sound mix. Your car and audio choices return when you leave.";
     showTrainingDialog(view.introDialog, '[data-training-stage="0"]');
   }
 
@@ -437,6 +444,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
   }
 
   async function completePart() {
+    session.partCompleted = true;
     raceSession.leaveRace();
     silencePaceNotes();
     view.raceNavigation.hidden = true;
@@ -460,12 +468,12 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     hideTrainingDialog(view.introDialog);
     hideTrainingDialog(view.partDialog);
     hideTrainingDialog(view.completeDialog);
-    await restoreSession();
+    const notice = await restoreSession();
     session.returnFocus?.focus?.();
     globalThis.dispatchEvent(new CustomEvent(LEARNING_FEEDBACK_READY_EVENT, {
       detail: Object.freeze({ source: 'drive-by-ear-training' })
     }));
-    closed();
+    closed(notice);
     return true;
   }
 
@@ -475,6 +483,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     raceSession.leaveRace();
     clearTrainingWorld();
     const snapshot = session.snapshot;
+    let notice = '';
     if (snapshot) {
       globalThis.__turnGetTrackId = snapshot.globals.getTrackId;
       globalThis.__turnGetCollisionProfile = snapshot.globals.collisionProfile;
@@ -483,6 +492,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       await activateTrack(snapshot.trackId, runtime);
       await raceSession.selectVehicle(snapshot.vehicle);
       restorePreferenceStorage(snapshot);
+      if (keepDriveByEarInFront(snapshot)) notice = DRIVE_BY_EAR_FRONT_MESSAGE;
       runtime.openGarage = snapshot.openGarage;
       resetButton.textContent = snapshot.resetLabel;
       leaveButton.textContent = snapshot.leaveLabel;
@@ -503,9 +513,11 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       previousPosition: null,
       snapshot: null,
       preparedAccess: null,
+      partCompleted: false,
       lastFrameAt: 0
     });
     home.showHome({ focus: true });
+    return notice;
   }
 
   function captureSnapshot() {
@@ -570,6 +582,19 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
   function restorePreferencesForPageExit() {
     if (!session.active || !session.snapshot) return;
     restoreAudio(session.snapshot);
+    keepDriveByEarInFront(session.snapshot);
+  }
+
+  // After a finished part, a player who never set a sound balance keeps Drive By Ear in
+  // front of the mix (#1301), with sound and Drive By Ear on as they had them. A balance
+  // the player set themselves comes back as it was. More Drive By Ear is not more
+  // accessible: the car must stay heard, so never 100%.
+  function keepDriveByEarInFront(snapshot) {
+    const stored = snapshot?.storage?.balance;
+    if (!session.partCompleted || !snapshot.audio.audioEnabled || !snapshot.audio.dbeEnabled) return false;
+    if (!stored?.available || stored.value !== null) return false;
+    globalThis.__turnAudioPreferences?.setBalance?.(DRIVE_BY_EAR_FRONT_BALANCE);
+    return true;
   }
 
   function restorePreferenceStorage(snapshot) {
