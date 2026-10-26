@@ -989,9 +989,12 @@ function installStartupCover() {
   // The former 4 s message misdiagnosed every slow launch as an install. Use the
   // existing second checkpoint (10 s); measured warm starts finish well before it.
   statusTimers.push(setTimeout(() => { if (state === 'normal') setState('slow'); }, 10000));
+  // A start that stops without reaching Home: after an error, that error is the cause.
+  let deadlineAt = 0;
   const arm = (ms = 45000) => {
     clearTimeout(deadline);
-    deadline = setTimeout(() => recover('slow'), ms);
+    deadlineAt = Date.now() + ms;
+    deadline = setTimeout(() => recover(errorDetail ? 'bootstrap' : 'slow'), ms);
   };
   let reloadButton;
   function failed(reason) {
@@ -1122,7 +1125,17 @@ function installStartupCover() {
       failed(error.code || reason);
     }
   }
-  const startFailed = (event) => recover(navigator.onLine === false ? 'offline' : 'bootstrap', event);
+  // A startup script that failed to load affects the player: recover now. Any other
+  // error is logged and only counts if Home then does not appear (#1307): one broken
+  // label must not keep a player out of the game.
+  const STALL_AFTER_ERROR_MS = 15000;
+  const startFailed = (event) => {
+    if (navigator.onLine === false) return recover('offline', event);
+    if (!event || event.target?.tagName === 'SCRIPT') return recover('bootstrap', event);
+    noteError(event);
+    console.warn(`TURN kept starting after an error: ${describe(event)}`);
+    if (!finished && !recovering && state !== 'failed' && deadlineAt - Date.now() > STALL_AFTER_ERROR_MS) arm(STALL_AFTER_ERROR_MS);
+  };
   globalThis.addEventListener('error', startFailed);
   globalThis.addEventListener('unhandledrejection', startFailed);
   globalThis.__turnStartFailed = startFailed;
