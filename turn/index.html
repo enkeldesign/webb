@@ -531,7 +531,6 @@
         "/turn/ui/filter-buttons.js": "/turn/ui/filter-buttons.js?build=20261026-r512",
         "/turn/testing/session-admin-panel.js": "/turn/testing/session-admin-panel.js?build=20261026-r512",
         "/turn/ui/feedback-content.js": "/turn/ui/feedback-content.js?build=20261026-r512",
-        "/turn/ui/drive-pad-guidance.js": "/turn/ui/drive-pad-guidance.js?build=20261026-r512",
         "/turn/ui/motion-permission-cancel-recovery.js?revision=r134-dialog-event&build=20261026-r512": "/turn/ui/motion-permission-cancel-recovery.js?build=20261026-r512",
         "/turn/ui/motion-permission-denied-dialog.js?revision=r134-denied-dialog&build=20261026-r512": "/turn/ui/motion-permission-denied-dialog.js?build=20261026-r512",
         "/turn/performance-profile.js?revision=r187-legacy-tablet-mountain-shadows&build=20261026-r512": "/turn/performance-profile.js?build=20261026-r512",
@@ -553,6 +552,7 @@
         "/turn/ui/home-feedback.js?revision=r137-feedback-above-fold&build=20261026-r512": "/turn/ui/home-feedback.js?build=20261026-r512",
         "/turn/audio/organic-ribbon.js?revision=r164-long-session-robustness&build=20261026-r512": "/turn/audio/organic-ribbon.js?build=20261026-r512",
         "/turn/audio/recovery-guidance.js?revision=r164-long-session-robustness&build=20261026-r512": "/turn/audio/recovery-guidance.js?build=20261026-r512",
+        "/turn/ui/drive-pad-guidance.js": "/turn/ui/drive-pad-guidance.js?build=20261026-r512",
         "/turn/world-beauty.js?revision=r532-countryside-nature-polish&build=20261026-r512": "/turn/world-beauty.js?build=20261026-r512",
         "/turn/world-art-pass.js?revision=r514-road-contour&build=20261026-r512": "/turn/world-art-pass.js?build=20261026-r512",
         "/turn/track-identity.js?revision=r532-countryside-nature-polish&build=20261026-r512": "/turn/track-identity.js?build=20261026-r512",
@@ -888,7 +888,10 @@ function installStartupCover() {
     const source = sourceOf(event.filename || event.target?.src);
     return `${name}${message}${source ? ` (${source}${event.lineno ? `:${event.lineno}` : ''})` : ''}`.slice(0, 300);
   };
-  const noteError = (event) => { if (!errorDetail) errorDetail = describe(event); };
+  // With the build it happened in: recovery may end on an earlier kept release.
+  const noteError = (event) => {
+    if (!errorDetail) errorDetail = `${describe(event)} · ${globalThis.__TURN_BUILD__?.cacheKey || 'unknown build'}`;
+  };
   guide?.setAttribute('hidden', '');
   if (title) title.textContent = 'LOADING';
   if (copy) {
@@ -1062,7 +1065,7 @@ function installStartupCover() {
     if (errorDetail) {
       const detail = document.createElement('p');
       detail.className = 'turn-startup-error-detail';
-      detail.textContent = `Details: ${errorDetail} · ${build}`;
+      detail.textContent = `Details: ${errorDetail}`;
       actions.append(detail);
     }
     card.append(actions);

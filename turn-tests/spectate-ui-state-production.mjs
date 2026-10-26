@@ -97,4 +97,28 @@ assert.equal(lapPerksLabel({ original: '', installed: 'full-tank' }), 'Full Tank
 assert.equal(lapPerksLabel({ original: 'warp-drive' }), '');
 assert.equal(lapPerksLabel(null), '');
 
+// A lap from before this week (#1305): its label compares it with the other laps' dates.
+// That comparison read its own variable before it existed, so a rival from an earlier
+// week stopped TURN starting (ReferenceError: otherHitAt), from the first Monday after.
+const labelSource = ['sameDate', 'spectateDateLabel'].map((name) => {
+  const match = spectateSource.match(new RegExp(`function ${name}\\([^)]*\\) \\{[\\s\\S]*?\\n\\}`));
+  assert.ok(match, `${name} is found`);
+  return match[0];
+}).join('\n');
+const labelContext = { Intl, Date, Number, globalThis: {} };
+vm.createContext(labelContext);
+vm.runInContext(`${labelSource}\nglobalThis.label = spectateDateLabel;`, labelContext);
+const label = labelContext.globalThis.label;
+const earlier = new Date();
+earlier.setDate(earlier.getDate() - 14);
+earlier.setHours(9, 5, 0, 0);
+const sameDay = new Date(earlier);
+sameDay.setHours(17, 40);
+const older = { time: 70, hitAt: earlier.getTime() };
+assert.doesNotThrow(() => label(older, [older]), 'A lap from an earlier week has a label');
+assert.doesNotMatch(label(older, [older]), /,\s\d+\.\d\d$/, 'One lap that day: the date alone');
+assert.match(label(older, [older, { time: 72, hitAt: sameDay.getTime() }, { time: 75, hitAt: null }]), / 9\.05$/,
+  'Two laps that day: the time tells them apart');
+assert.equal(label({ time: 70, hitAt: null }, []), 'Previous record');
+
 console.log('Spectate UI-state snapshot and replay controls regression passed.');
