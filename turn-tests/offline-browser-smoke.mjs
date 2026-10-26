@@ -379,7 +379,7 @@ try {
     // player's device can be traced: here, the file the server refused.
     const detail = await freshPage.locator('.turn-startup-error-detail').textContent();
     console.log(`Startup failure detail: ${detail}`);
-    assert.match(detail, /^Details: .+ · \d{8}-r\d+$/, 'The failure says what stopped startup, and which build');
+    assert.match(detail, /^Details: .+ · \d{8}-r\d+$/, 'The failure says what stopped startup, and in which build');
     assert.match(decodeURIComponent(await freshPage.getByRole('link', { name: 'EMAIL FEEDBACK' }).getAttribute('href')),
       /body=Build: \d{8}-r\d+\nDetails: (?!none recorded).+\nDevice: /, 'The feedback email carries it');
     await assertStartupBackground(freshPage);
