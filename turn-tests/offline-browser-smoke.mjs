@@ -375,6 +375,13 @@ try {
     await freshPage.waitForFunction(() => Boolean(document.querySelector('.turn-startup-reload')), null, { timeout: 30000 });
     assert.match(await freshPage.locator('.install-copy').textContent(), /could not start/, 'A failed start says so after automatic recovery');
     assert.equal(await freshPage.locator('#installTitle').textContent(), 'COULD NOT START');
+    // What stopped startup is shown and goes in the feedback email, so a failure on a
+    // player's device can be traced: here, the file the server refused.
+    const detail = await freshPage.locator('.turn-startup-error-detail').textContent();
+    console.log(`Startup failure detail: ${detail}`);
+    assert.match(detail, /^Details: .+ · \d{8}-r\d+$/, 'The failure says what stopped startup, and which build');
+    assert.match(decodeURIComponent(await freshPage.getByRole('link', { name: 'EMAIL FEEDBACK' }).getAttribute('href')),
+      /body=Build: \d{8}-r\d+\nDetails: (?!none recorded).+\nDevice: /, 'The feedback email carries it');
     await assertStartupBackground(freshPage);
     assert.equal(await freshPage.locator('.turn-startup-indicator').getAttribute('data-state'), 'error');
     assert.equal(await freshPage.locator('.turn-startup-error-mark').isVisible(), true);
