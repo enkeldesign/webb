@@ -372,7 +372,8 @@ try {
     // A file loaded before the race world starts, so no 3D competes with the check.
     failingPath = '/turn/ui/lap-result-toast.js';
     await freshPage.goto(`${origin}/turn/`);
-    await freshPage.waitForFunction(() => Boolean(document.querySelector('.turn-startup-reload')), null, { timeout: 30000 });
+    // A rejected import is not fatal by itself (#1307): each start waits for Home first.
+    await freshPage.waitForFunction(() => Boolean(document.querySelector('.turn-startup-reload')), null, { timeout: 120000 });
     assert.match(await freshPage.locator('.install-copy').textContent(), /could not start/, 'A failed start says so after automatic recovery');
     assert.equal(await freshPage.locator('#installTitle').textContent(), 'COULD NOT START');
     // What stopped startup is shown and goes in the feedback email, so a failure on a
@@ -462,6 +463,25 @@ try {
     failingPath = null;
     await Promise.all([freshPage.waitForEvent('load'), freshPage.locator('.turn-startup-reload').click()]);
     await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
+    await fresh.close();
+  }
+  {
+    // #1307: an error that does not keep TURN from Home is logged, never a safe restart.
+    const { fresh, freshPage } = await startup();
+    const warnings = [];
+    freshPage.on('console', (message) => { if (message.type() === 'warning') warnings.push(message.text()); });
+    await fresh.addInitScript(() => {
+      globalThis.addEventListener('turn:runtime-ready', () => {
+        Promise.reject(new Error('Harmless rejection'));
+        throw new Error('Harmless label failed');
+      });
+    });
+    await freshPage.goto(`${origin}/turn/`);
+    await freshPage.waitForFunction(() => document.documentElement.classList.contains('turn-home-ready'), null, { timeout: 60000 });
+    assert.equal(new URL(freshPage.url()).searchParams.get('turn-recovery'), null, 'No safe restart for an error that does not stop the game');
+    assert.equal(await freshPage.locator('.turn-startup-reload').count(), 0);
+    assert.ok(warnings.some((text) => /^TURN kept starting after an error: .*Harmless label failed/.test(text)), 'The error is logged');
+    assert.ok(warnings.some((text) => /Harmless rejection/.test(text)), 'So is the rejection');
     await fresh.close();
   }
   {

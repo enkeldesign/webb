@@ -4,8 +4,9 @@ import { installOffline } from '../turn/ui/offline.js';
 // #1256 / historical r398 regression guard:
 // service-worker update failures may surface as global error/rejection events while a
 // complete stored release is still playable. Those events belong to offline preparation,
-// not game bootstrap recovery. Unrelated failures must still prevent prepare()
-// from releasing the game graph, with normal listeners restored on every exit.
+// not game bootstrap recovery. A startup script that failed to load must still prevent
+// prepare() from releasing the game graph; other errors go to the startup cover (#1307).
+// Normal listeners are restored on every exit.
 
 const release = '20261018-r483';
 const listeners = new Map();
@@ -113,17 +114,38 @@ emit('error');
 assert.equal(bootstrapFailures, 1,
   'real game bootstrap failures must be observed again after preparation');
 
+// A startup script that failed to load affects the player: preparation rejects, with that
+// failure as its cause, before the game graph is released.
+{
+  const detail = { target: { tagName: 'SCRIPT', src: 'https://turn.example/turn/ui/about-history-bootstrap-r165.js' } };
+  duringUpdate = () => emit('error', detail);
+  let graphReleased = false;
+  const rejection = await freshOffline().prepare().then(() => { graphReleased = true; }, (error) => error);
+  assert.equal(rejection?.code, 'bootstrap');
+  assert.equal(rejection.cause?.target, detail.target, 'The failure screen can say which script');
+  assert.equal(graphReleased, false, 'a failed startup script must block game graph release');
+  assert.equal(bootstrapFailures, 1, 'preparation must reject before bootstrap recovery runs');
+  assert.equal(listeners.get('error')?.has(startFailed), true);
+  assert.equal(listeners.get('unhandledrejection')?.has(startFailed), true);
+  assert.equal(listeners.get('error:capture')?.size, 0, 'temporary capture listener must be removed');
+}
+
+// #1307: any other error does not stop the game by itself. Preparation releases the graph
+// and hands the error to the startup cover, which logs it and only fails a start that
+// then stalls.
 for (const [type, detail] of [
-  ['error', { target: { tagName: 'SCRIPT', src: 'https://turn.example/turn/ui/about-history-bootstrap-r165.js' } }],
   ['error', { filename: 'https://turn.example/turn/ui/about-history-bootstrap-r165.js', error: new Error('About execution failed') }],
   ['error', {}],
   ['unhandledrejection', { reason: new Error('unrelated startup rejection') }]
 ]) {
-  duringUpdate = () => emit(type, detail);
+  let emitted = 0;
+  duringUpdate = () => { emitted += 1; emit(type, detail); };
+  const before = bootstrapFailures;
   let graphReleased = false;
-  await assert.rejects(freshOffline().prepare().then(() => { graphReleased = true; }), { code: 'bootstrap' });
-  assert.equal(graphReleased, false, 'unrelated startup failures must block game graph release');
-  assert.equal(bootstrapFailures, 1, 'preparation must reject before bootstrap recovery runs');
+  await freshOffline().prepare().then(() => { graphReleased = true; });
+  assert.equal(graphReleased, true, `${type}: an error that may not affect the player releases the game graph`);
+  assert.ok(emitted > 0);
+  assert.equal(bootstrapFailures, before + emitted, `${type}: each reaches the startup cover, to be logged and watched`);
   assert.equal(listeners.get('error')?.has(startFailed), true);
   assert.equal(listeners.get('unhandledrejection')?.has(startFailed), true);
   assert.equal(listeners.get('error:capture')?.size, 0, 'temporary capture listener must be removed');
@@ -136,4 +158,4 @@ assert.equal(listeners.get('error')?.has(startFailed), true);
 assert.equal(listeners.get('unhandledrejection')?.has(startFailed), true);
 assert.equal(listeners.get('error:capture')?.size, 0);
 
-console.log('TURN startup recovery isolates worker failures, retains unrelated failures and restores listeners.');
+console.log('TURN startup recovery isolates worker failures, fails failed scripts, hands other errors to the cover and restores listeners.');
