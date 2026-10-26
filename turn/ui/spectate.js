@@ -304,7 +304,7 @@ function spectateDateLabel(lap, allLaps) {
   }
 
   const duplicateDate = allLaps.filter((other) => {
-    const otherHitAt = other?.hitAt == null ? NaN : Number(otherHitAt);
+    const otherHitAt = other?.hitAt == null ? NaN : Number(other.hitAt);
     return Number.isFinite(otherHitAt) && sameDate(new Date(otherHitAt), date);
   }).length > 1;
 
