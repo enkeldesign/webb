@@ -205,15 +205,19 @@ export function installOffline({ windowRef = globalThis, startup } = {}) {
       nav.storage?.persist?.().catch?.(() => {});
     } finally {
       resumeStartupFailures();
-      // Only failures attributable to preparation may be ignored. Reject before
-      // __turnStartupReady releases the game graph for every other startup failure.
-      // The failure itself goes with it, so the failure screen can say what it was.
-      const cause = preparing ? null : startupFailures.find((event) => {
+      // Failures attributable to preparation are its own. A startup script that failed to
+      // load affects the player: reject before __turnStartupReady releases the game graph,
+      // with the failure itself, so the failure screen can say what it was. Any other
+      // error goes to the startup cover, which logs it and only fails a start that then
+      // stalls (#1307).
+      const unrelated = preparing ? [] : startupFailures.filter((event) => {
         const error = event.reason ?? event.error;
         return !(error !== undefined && preparationErrors.has(error)) &&
           event.filename?.split('?')[0] !== workerScript;
       });
+      const cause = unrelated.find((event) => event.target?.tagName === 'SCRIPT');
       if (cause) throw Object.assign(failure('bootstrap'), { cause });
+      for (const event of unrelated) startupFailure?.(event);
     }
   }
 
