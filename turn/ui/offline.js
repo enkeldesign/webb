@@ -207,11 +207,13 @@ export function installOffline({ windowRef = globalThis, startup } = {}) {
       resumeStartupFailures();
       // Only failures attributable to preparation may be ignored. Reject before
       // __turnStartupReady releases the game graph for every other startup failure.
-      if (!preparing && startupFailures.some((event) => {
+      // The failure itself goes with it, so the failure screen can say what it was.
+      const cause = preparing ? null : startupFailures.find((event) => {
         const error = event.reason ?? event.error;
         return !(error !== undefined && preparationErrors.has(error)) &&
           event.filename?.split('?')[0] !== workerScript;
-      })) throw failure('bootstrap');
+      });
+      if (cause) throw Object.assign(failure('bootstrap'), { cause });
     }
   }
 
