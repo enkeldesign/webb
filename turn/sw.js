@@ -2,7 +2,7 @@
    same release; a failed update never publishes a partial store. Keep the previous
    complete release for bounded startup recovery, plus releases used by open pages. */
 
-const RELEASE = '20261025-r510';
+const RELEASE = '20261026-r511';
 const SCOPE = new URL(self.registration.scope).pathname;
 const NAME = SCOPE.replace(/\//g, '') || 'turn';
 const PRECACHE = `${NAME}-precache-${RELEASE}`;
