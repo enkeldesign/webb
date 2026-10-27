@@ -61,6 +61,7 @@ function installStyles() {
     }
     .m8-tutorial-copy p { margin: 0; }
     .m8-tutorial-copy p + p { margin-top: var(--turn-space-2); }
+    .m8-tutorial-copy p[hidden] + p { margin-top: 0; }
     .m8-tutorial-entry .m8-tutorial-goal { font-size: var(--turn-type-body); }
     .m8-tutorial-entry,
     .m8-drift-attack-entry,
@@ -123,6 +124,7 @@ function createLaunchCard() {
         <div><span>WELCOME TO TURN</span><h2 id="turnTutorialTitle">TURN TUTORIAL</h2></div>
       </header>
       <div class="m8-tutorial-copy" id="turnTutorialCopy">
+        <p data-tutorial-notice hidden></p>
         <p>${TURN_GOAL_TEXT}</p>
         <p>Start with one lap of COUNTRYSIDE in the LEARNER CAR.</p>
         <p data-tutorial-dbe-note>New to Drive By Ear’s sounds? You can learn them first.</p>
@@ -183,7 +185,12 @@ export function installTutorialEntry({
     if (!training?.open) return;
     close();
     silenceMenuMusic();
-    void training.open(driveByEarButton, { onClose: () => showLaunchCard() });
+    // What the tutorial left changed (#1301) comes back with the card, or goes to Home.
+    void training.open(driveByEarButton, {
+      onClose: ({ notice = '' } = {}) => {
+        if (!showLaunchCard({ notice }) && notice) announce(notice);
+      }
+    });
   });
   card.querySelector('[data-tutorial-skip]').addEventListener('click', () => {
     progress.stop(module.id);
@@ -192,8 +199,12 @@ export function installTutorialEntry({
   });
 
   // The first-launch card, shown while the tutorial still starts on launch.
-  const showLaunchCard = () => {
+  // notice: said first after the heading, e.g. a sound balance DRIVE BY EAR TUTORIAL kept.
+  const showLaunchCard = ({ notice = '' } = {}) => {
     if (!progress.startsOnLaunch(module.id) || card.open) return false;
+    const noticeLine = card.querySelector('[data-tutorial-notice]');
+    noticeLine.textContent = notice;
+    noticeLine.hidden = !notice;
     // Said before the buttons, with the copy (#1170), and only when it can be done.
     driveByEarButton.hidden = !driveByEar()?.open;
     card.querySelector('[data-tutorial-dbe-note]').hidden = driveByEarButton.hidden;

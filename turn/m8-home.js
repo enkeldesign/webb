@@ -825,6 +825,10 @@ export async function installM8HomeNavigation() {
     }),
     unlockIntroductions,
     leaveRaceForHome,
+    // A line in ROADBOOK's status, said by screen readers too.
+    announce(message) {
+      homeStatus.textContent = message;
+    },
     getSelectedTrackId: () => selectedTrackId,
     getSteeringMode: loadSteeringMode
   });

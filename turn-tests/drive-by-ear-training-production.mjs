@@ -2,10 +2,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
 import {
+  DRIVE_BY_EAR_FRONT_BALANCE,
+  DRIVE_BY_EAR_FRONT_MESSAGE,
   FINISH_PROGRESS,
   RAIL_ASSIST_START,
   RECOVERY_LIMIT,
   ROAD_HALF_WIDTH,
+  TRAINING_BALANCE,
   TRAINING_STAGES,
   TRAINING_VEHICLE_ID
 } from '../turn/training/stages.js';
@@ -174,6 +177,21 @@ assert.doesNotMatch(training, /DEFAULT_VEHICLE_COLOR|DEFAULT_VEHICLE_SECONDARY_C
   'DBE 101 must use the slow-moving vehicle factory paint rather than Learner Car defaults');
 assert.match(training, /setDriveByEarEnabled\?\.\(true\)/);
 assert.match(training, /setBalance\?\.\(TRAINING_BALANCE\)/);
+// More Drive By Ear is not more accessible (#1301): training keeps the car heard, and so
+// does the mix a finished part leaves for a player who never set a balance.
+assert.equal(TRAINING_BALANCE, 0.95, 'The ribbon front and centre, the car still heard');
+assert.equal(DRIVE_BY_EAR_FRONT_BALANCE, 0.85);
+assert.equal(DRIVE_BY_EAR_FRONT_MESSAGE, 'Drive By Ear stays in front of the sound mix. Change it in SETTINGS, Sound balance.');
+assert.match(training, /puts Drive By Ear at 95% of the sound mix/);
+assert.match(view, /puts Drive By Ear at 95% of the sound mix/);
+assert.doesNotMatch(training + view, /100% of the sound mix/);
+assert.match(training, /async function completePart\(\) \{\n    session\.partCompleted = true;/);
+assert.match(training, /if \(!session\.partCompleted \|\| !snapshot\.audio\.audioEnabled \|\| !snapshot\.audio\.dbeEnabled\) return false;\n    if \(!stored\?\.available \|\| stored\.value !== null\) return false;\n    globalThis\.__turnAudioPreferences\?\.setBalance\?\.\(DRIVE_BY_EAR_FRONT_BALANCE\);/,
+  'Only a finished part, with sound and Drive By Ear on, and no balance of the player\'s own');
+assert.match(training, /restorePreferenceStorage\(snapshot\);\n      if \(keepDriveByEarInFront\(snapshot\)\) notice = DRIVE_BY_EAR_FRONT_MESSAGE;/,
+  'Set after the stored balance is restored, so the restore cannot undo it');
+assert.match(training, /restoreAudio\(session\.snapshot\);\n    keepDriveByEarInFront\(session\.snapshot\);/, 'Leaving the page keeps it too');
+assert.match(training, /if \(onClose\) onClose\(\{ notice \}\);\n    else if \(notice\) requestAnimationFrame\(\(\) => requestAnimationFrame\(\(\) => home\.announce\?\.\(notice\)\)\);/);
 assert.match(training, /restorePreferenceStorage\(session\.snapshot\)/);
 assert.match(training, /await activateTrack\(snapshot\.trackId, runtime\)/);
 assert.match(training, /await raceSession\.selectVehicle\(snapshot\.vehicle\)/);
