@@ -2,6 +2,7 @@ import { LEARNING_FEEDBACK_READY_EVENT } from '../achievements/learning-progress
 import { KEYBOARD_DRIVE_BINDINGS, keyboardDriveActionForEvent } from '../input/keyboard-driving-controls.js';
 import { QE_DRIVE_BINDINGS, qeDriveZoneForEvent } from '../input/qe-drive-controls.js';
 import { beginTutorialRivalLead } from '../race/replay-system.js';
+import { drivePadGuidance } from '../ui/drive-pad-guidance.js';
 import { setLiveAnnouncement } from '../ui/race-announcements.js';
 import { estimatedSpeechMs, holdSpeechFloor, releaseSpeechFloor, speechFloorWait } from '../ui/speech-floor.js';
 import { applyCourseRescue } from './course-rescue.js';
@@ -156,7 +157,8 @@ function installStyles() {
   document.head.appendChild(style);
 }
 
-export function createTutorialPrompt(parent = document.body) {
+// restarted: a RESTART LAP run, which says only where the drive pad is (#1301).
+export function createTutorialPrompt(parent = document.body, { restarted = false } = {}) {
   installStyles();
   const element = document.createElement('div');
   element.className = 'turn-tutorial-prompt';
@@ -250,6 +252,8 @@ export function createTutorialPrompt(parent = document.body) {
 
   // The newest unsaid guidance waits with one timer, never through an outer pause.
   let unsaid = '';
+  // Where the drive pad is goes before the first guidance, measured as it is said (#1301).
+  let drivePadUnsaid = true;
   let saidUntil = 0;
   let sayTimer = 0;
   let finishTimer = 0;
@@ -303,8 +307,13 @@ export function createTutorialPrompt(parent = document.body) {
       announced.add(pendingCard);
       unsaid = `${title.textContent}. ${text.textContent} ${resumeText.textContent ? `${resumeText.textContent}.` : ''}`.trim();
     }
-    const message = unsaid;
+    let message = unsaid;
     unsaid = '';
+    if (drivePadUnsaid) {
+      drivePadUnsaid = false;
+      const drivePad = drivePadGuidance({ full: !restarted });
+      if (drivePad) message = `${drivePad} ${message}`;
+    }
     const ms = estimatedSpeechMs(message);
     holdSpeechFloor(ms, 'tutorial');
     saidUntil = performance.now() + ms;
@@ -573,9 +582,9 @@ export function createTutorialPrompt(parent = document.body) {
 }
 
 // Runs the coach once per frame for one tutorial run. Paused races do not advance it.
-export function startTurnTutorialCoach({ runtime, events = globalThis }) {
+export function startTurnTutorialCoach({ runtime, events = globalThis, restarted = false }) {
   const { state } = runtime;
-  const prompt = createTutorialPrompt();
+  const prompt = createTutorialPrompt(document.body, { restarted });
   // Tutorial steering help (steering-help.js), switched in SETTINGS, also mid-lap.
   let steeringHelp = loadSteeringHelp();
   let helped = false;

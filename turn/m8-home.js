@@ -707,7 +707,7 @@ export async function installM8HomeNavigation() {
     const tutorial = [...TUTORIALS.values()].find(({ session }) => session.active && !session.graduated);
     if (!tutorial) return;
     stopTutorialCoach();
-    tutorialCoach = tutorial.coach({ runtime });
+    tutorialCoach = tutorial.coach({ runtime, restarted: true });
   });
 
   async function startTutorial(moduleId = TURN_TUTORIAL.id) {

@@ -117,9 +117,9 @@ export function createFlowCoach({ lessons = FLOW_LESSONS, present = () => {}, is
 }
 
 // One run of the FLOW TUTORIAL coach. Paused races do not advance it.
-export function startFlowCoach({ runtime, events = globalThis }) {
+export function startFlowCoach({ runtime, events = globalThis, restarted = false }) {
   const { state } = runtime;
-  const prompt = createTutorialPrompt();
+  const prompt = createTutorialPrompt(document.body, { restarted });
   const coach = createFlowCoach({ present: prompt.present, isHeld: () => prompt.holding });
   coach.update(0);
   const onFlow = (event) => {

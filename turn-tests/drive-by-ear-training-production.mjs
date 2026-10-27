@@ -121,11 +121,11 @@ assert.match(
   /raceSession\.startGame\(fullscreenPromise \|\| Promise\.resolve\(false\), \{ announceStart: false \}\)/,
   'DBE 101 must start its parts without the race-start announcement so its instructions come first'
 );
-assert.match(training, /function signalStageStarted\(\{ restarted = false \} = \{\}\)/);
+assert.match(training, /function signalStageStarted\(\{ restarted = false, first = false \} = \{\}\)/);
 assert.match(training, /new CustomEvent\('turn:dbe-training-stage-started'/);
 assert.match(training, /stageId: session\.stage\.id/);
 assert.match(training, /stageIndex: session\.stageIndex/);
-assert.match(training, /signalStageStarted\(\);\s*return true;/,
+assert.match(training, /signalStageStarted\(\{ first \}\);\s*return true;/,
   'A part-start event must be emitted only after that exact stage has finished starting');
 assert.match(training, /signalStageStarted\(\{ restarted: true \}\)/,
   'Restart must emit the same exact-stage start event rather than relying on click timing');
