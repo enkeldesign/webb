@@ -153,9 +153,9 @@ export function createDriftAttackCoach({
 }
 
 // One run of the DRIFT ATTACK TUTORIAL coach. Paused races do not advance it.
-export function startDriftAttackCoach({ runtime, events = globalThis }) {
+export function startDriftAttackCoach({ runtime, events = globalThis, restarted = false }) {
   const { state } = runtime;
-  const prompt = createTutorialPrompt();
+  const prompt = createTutorialPrompt(document.body, { restarted });
   const counters = { banks: 0, links: 0 };
   const onScore = (event) => {
     if (event.detail?.type === 'bank') counters.banks += 1;

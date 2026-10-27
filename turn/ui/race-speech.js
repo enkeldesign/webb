@@ -6,7 +6,9 @@ import {
   spokenPosition,
   spokenRivalCount
 } from './race-announcements.js';
-import { estimatedSpeechMs, holdSpeechFloor, releaseSpeechFloor } from './speech-floor.js';
+import { activeSessionPolicy } from '../race/session-policy.js';
+import { drivePadGuidance } from './drive-pad-guidance.js';
+import { estimatedSpeechMs, holdSpeechFloor, releaseSpeechFloor, speechFloorWait } from './speech-floor.js';
 
 const FLOOR_OWNER = 'race-speech';
 
@@ -42,9 +44,32 @@ export function installRaceSpeech() {
 
   let lastPosition = null;
   let contextTimer = 0;
+  let drivePadTimer = 0;
   let lapPriorityTimer = 0;
   let lapPriorityUntil = -Infinity;
   let pendingPositionAnnouncement = null;
+
+  // An ordinary race start says where the drive pad is (#1301), once what is being said
+  // has been, and only until the car drives off. Tutorials and DRIVE BY EAR parts say it
+  // themselves, with the whole pad.
+  function cancelDrivePad() {
+    window.clearTimeout(drivePadTimer);
+    drivePadTimer = 0;
+  }
+
+  function sayDrivePad() {
+    drivePadTimer = 0;
+    if (!globalThis.__turnRuntime?.state?.running || globalThis.__turnRacePause?.paused) return;
+    const wait = speechFloorWait();
+    if (wait > 0) {
+      drivePadTimer = window.setTimeout(sayDrivePad, wait + START_CONTEXT_DELAY_MS);
+      return;
+    }
+    const message = drivePadGuidance();
+    if (!message) return;
+    holdSpeechFloor(estimatedSpeechMs(message), FLOOR_OWNER);
+    setLiveAnnouncement(contextAnnouncer, message);
+  }
 
   function lapPriorityActive() {
     return performance.now() < lapPriorityUntil;
@@ -124,7 +149,15 @@ export function installRaceSpeech() {
   window.addEventListener('turn:ui-state-change', (event) => {
     const reason = event.detail?.reason;
 
+    if (reason === 'race-started') {
+      cancelDrivePad();
+      const teaching = activeSessionPolicy().id === 'tutorial-lap'
+        || globalThis.__turnDriveByEarTraining?.getState?.().active === true;
+      if (!teaching) drivePadTimer = window.setTimeout(sayDrivePad, START_CONTEXT_DELAY_MS);
+    }
+
     if (reason === 'lap-started') {
+      cancelDrivePad();
       window.clearTimeout(contextTimer);
       contextTimer = 0;
       if (!lapPriorityActive()) {
@@ -143,6 +176,7 @@ export function installRaceSpeech() {
     if (!event.detail?.running || reason === 'race-reset' || reason === 'race-paused') {
       window.clearTimeout(contextTimer);
       contextTimer = 0;
+      cancelDrivePad();
       resetLapPriority();
       setLiveAnnouncement(positionAnnouncer, '');
       setLiveAnnouncement(contextAnnouncer, '');
