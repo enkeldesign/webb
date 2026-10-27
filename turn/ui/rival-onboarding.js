@@ -253,10 +253,9 @@ export function installRivalOnboarding() {
 
   function makeRaceRivalWarmScene(visuals) {
     const scene = new THREE.Scene();
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x5b6770, 3));
-    const key = new THREE.DirectionalLight(0xfff2c9, 4);
-    key.position.set(-6, 10, 7);
-    scene.add(key);
+    // compileAsync(scene, camera, targetScene) combines BOTH scenes' lights.
+    // The race already supplies them: extra preview lights compile a different
+    // program and leave the first visible rival to compile the real one (#1309).
 
     const stage = new THREE.Group();
     scene.add(stage);
@@ -387,7 +386,9 @@ export function installRivalOnboarding() {
     }
 
     if (!event.detail?.running || reason === 'race-reset') {
-      if (reason !== 'rivals-loaded') cancelRaceRivalWarmup();
+      // Track activation publishes these together while the race is stopped.
+      // Its second notification must not cancel the preparation it just queued.
+      if (reason !== 'rivals-loaded' && reason !== 'track-changed') cancelRaceRivalWarmup();
       hide({ immediate: true });
     }
   });
