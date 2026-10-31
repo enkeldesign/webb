@@ -1474,7 +1474,7 @@ function installGameplayUi() {
       publishedDriftLocking = driftLocking;
     }
     if (boostVisualDirty || precisionSpend !== publishedPrecisionSpend) {
-      boostLabel.textContent = precisionSpend ? `OVERCHARGE ×${PRECISION_OVERCHARGE_SPEND_SCALE}` : 'BOOST';
+      boostLabel.textContent = precisionSpend ? `×${PRECISION_OVERCHARGE_SPEND_SCALE}` : 'BOOST';
       boostHud.classList.toggle('is-precision-spending', precisionSpend);
       publishedPrecisionSpend = precisionSpend;
     }
