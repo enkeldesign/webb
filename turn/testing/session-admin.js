@@ -88,8 +88,11 @@
     }
   });
   persist();
-  if (requested === '1') {
-    url.searchParams.delete('turn-admin');
+  // The address keeps the parameter for as long as the session lasts, so reopening
+  // it or handing it to another browser still starts in admin. Only the tab's
+  // session copy carries the settings; elsewhere a fresh session begins.
+  if (requested !== '1') {
+    url.searchParams.set('turn-admin', '1');
     history.replaceState(history.state, '', url.href);
   }
   document.documentElement.dataset.turnAdmin = 'session';
