@@ -248,11 +248,15 @@
 }
 
 /* Portrait docks the bar above the drive pad at the screen edge, so the badge
-   takes the inner side, toward the road, and mirrors with the controls. */
+   takes the inner side, toward the road, and mirrors with the controls. There the bar
+   widens toward the road only (responsive.css), a whole OVERCHARGE width. */
 @media (orientation: portrait) {
   :root:not(.turn-left-handed-controls) .boost-hud.is-racing.is-precision-spending > span {
-    right: calc(100% + var(--boost-overcharge-width) / 2 + 4px);
+    right: calc(100% + var(--boost-overcharge-width) + 4px);
     left: auto;
+  }
+  :root.turn-left-handed-controls .boost-hud.is-racing.is-precision-spending > span {
+    left: calc(100% + var(--boost-overcharge-width) + 4px);
   }
 }
 

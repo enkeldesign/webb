@@ -85,6 +85,14 @@
     width: var(--turn-race-pad-width);
   }
   :root.turn-left-handed-controls body .boost-hud { left: calc(var(--turn-edge) + (var(--turn-race-pad-width) / 2)); }
+  /* Docked at the screen edge, OVERCHARGE widens the bar toward the road only, so its
+     end stays on screen (#1313). The bar keeps translateX(-50%) for its keyframes; its
+     centre moves by half the extra width instead. */
+  :root body .boost-hud > div {
+    left: calc(50% - var(--boost-overcharge-width) / 2);
+    transition: left 80ms linear, width 80ms linear, background 120ms ease, box-shadow 120ms ease;
+  }
+  :root.turn-left-handed-controls body .boost-hud > div { left: calc(50% + var(--boost-overcharge-width) / 2); }
   :root body #scoreFeedback {
     top: auto; bottom: calc(var(--turn-race-bottom) + var(--turn-race-pad-height) + 54px);
     left: var(--turn-edge); right: var(--turn-edge); width: auto; height: var(--turn-score-panel-height);
