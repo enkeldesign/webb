@@ -35,7 +35,7 @@ async function prepareRelease() {
         if (await cache.match(file)) return;
         try {
           const response = await fetch(file, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
-          if (response.ok) await cache.put(file, response);
+          if (response.ok) await cache.put(file, await plain(response));
           else failed += 1;
         } catch (error) {
           storageFailed ||= error.name === 'QuotaExceededError' || error.name === 'SecurityError';
@@ -168,7 +168,16 @@ function race(promise, ms) {
 function keep(cacheName, key, response) {
   if (!response.ok || response.status !== 200 || response.type !== 'basic') return;
   const copy = response.clone();
-  caches.open(cacheName).then((cache) => cache.put(key, copy)).catch(() => {});
+  caches.open(cacheName).then(async (cache) => cache.put(key, await plain(copy))).catch(() => {});
+}
+
+// Cloudflare Pages (the previews) answers /turn/index.html with a redirect to /turn/,
+// and browsers refuse a redirected response as a page: every visit after the first
+// failed to open. Copies are stored without the redirect, and entries stored before
+// this are cleaned as they are served.
+async function plain(response) {
+  if (!response.redirected) return response;
+  return new Response(await response.blob(), { status: response.status, statusText: response.statusText, headers: response.headers });
 }
 
 async function fromCaches(request, url) {
@@ -233,7 +242,7 @@ async function navigate(request) {
     const cache = await caches.open(name);
     const marker = await cache.match(STATUS_KEY);
     const entry = await cache.match(`${SCOPE}index.html`);
-    if (marker && entry) return entry;
+    if (marker && entry) return plain(entry);
   }
   // No complete offline entry survived: try the network, but never promote its
   // document into another release's cache. The inline startup coordinator repairs it.
@@ -257,11 +266,11 @@ async function otherPage(request) {
     return response;
   }
   const cached = await caches.match(request, { ignoreSearch: true });
-  if (cached) return cached;
+  if (cached) return plain(cached);
   // The release stores folder pages as their index.html (the wiki's /turn/wiki/cars/).
   const { pathname } = new URL(request.url);
   const folder = pathname.endsWith('/') ? await caches.match(`${pathname}index.html`, { ignoreSearch: true }) : null;
-  if (folder) return folder;
+  if (folder) return plain(folder);
   return response || new Response(OFFLINE_PAGE, { status: 503, headers: { 'content-type': 'text/html; charset=utf-8' } });
 }
 

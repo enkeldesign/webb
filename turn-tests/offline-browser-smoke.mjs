@@ -50,6 +50,12 @@ const server = http.createServer(async (request, response) => {
       response.end();
       return;
     }
+    // Like Cloudflare Pages (the previews): an index.html address redirects to its folder.
+    if (pathname.endsWith('/index.html')) {
+      response.writeHead(308, { location: `${pathname.slice(0, -'index.html'.length)}${new URL(request.url, 'http://localhost').search}` });
+      response.end();
+      return;
+    }
     if (pathname.endsWith('/')) pathname += 'index.html';
     const filename = path.resolve(root, `.${pathname}`);
     if (!filename.startsWith(root)) throw new Error('Outside fixture root');
