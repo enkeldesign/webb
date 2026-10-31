@@ -215,12 +215,13 @@
   display: none;
 }
 
-/* PRECISION sits beyond the widened bar, never above it over the car. */
+/* PRECISION sits just beyond the widened bar, never above it over the car. Its
+   outline matches the bar's. */
 .boost-hud.is-racing.is-precision-spending > span {
   display: block;
   position: absolute;
   top: 50%;
-  left: calc(100% + var(--boost-overcharge-width) / 2 + 8px);
+  left: calc(100% + var(--boost-overcharge-width) / 2 + 4px);
   width: max-content;
   margin: 0;
   padding: 0;
@@ -234,13 +235,25 @@
   line-height: 1;
   letter-spacing: -0.04em;
   white-space: nowrap;
-  text-shadow:
-    2px 2px 0 var(--turn-ink),
-    0 0 6px var(--turn-control-precision);
-  -webkit-text-stroke: 0.5px var(--turn-ink);
+  /* Painted under the fill, half the stroke shows: an outline as thick as the bar's.
+     A text-shadow would shade the stroke's inner half and muddy it, so the drop
+     shadow and glow are filters of the finished outline. */
+  -webkit-text-stroke: calc(var(--turn-boost-bar-outline) * 2) var(--turn-outline);
   paint-order: stroke fill;
+  filter:
+    drop-shadow(var(--turn-boost-bar-shadow-offset) var(--turn-boost-bar-shadow-offset) 0 var(--turn-shadow-color))
+    drop-shadow(0 0 4px var(--turn-control-precision));
   transform: translateY(-50%) rotate(-6deg);
   pointer-events: none;
+}
+
+/* Portrait docks the bar above the drive pad at the screen edge, so the badge
+   takes the inner side, toward the road, and mirrors with the controls. */
+@media (orientation: portrait) {
+  :root:not(.turn-left-handed-controls) .boost-hud.is-racing.is-precision-spending > span {
+    right: calc(100% + var(--boost-overcharge-width) / 2 + 4px);
+    left: auto;
+  }
 }
 
 @media (max-height: 322.5px) {
