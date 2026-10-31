@@ -238,10 +238,10 @@
   /* Painted under the fill, half the stroke shows: an outline as thick as the bar's.
      A text-shadow would shade the stroke's inner half and muddy it, so the drop
      shadow and glow are filters of the finished outline. */
-  -webkit-text-stroke: calc(var(--turn-boost-bar-outline) * 2) var(--turn-ink);
+  -webkit-text-stroke: calc(var(--turn-boost-bar-outline) * 2) var(--turn-outline);
   paint-order: stroke fill;
   filter:
-    drop-shadow(var(--turn-boost-bar-shadow-offset) var(--turn-boost-bar-shadow-offset) 0 var(--turn-ink))
+    drop-shadow(var(--turn-boost-bar-shadow-offset) var(--turn-boost-bar-shadow-offset) 0 var(--turn-shadow-color))
     drop-shadow(0 0 4px var(--turn-control-precision));
   transform: translateY(-50%) rotate(-6deg);
   pointer-events: none;
