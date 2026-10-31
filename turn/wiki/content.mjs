@@ -51,7 +51,7 @@ export const PERK_ADVICE = {
   turbo: ['Plan a short, powerful burst on a clear exit.', 'TURBO spends BOOST twice as fast for twice the effect: the same push, sooner. OVERCHARGE still burns first, stays purple and adds its own +20%.', 'race', 'boost'],
   'road-rage': ['Catch some OVERCHARGE, then drive cleanly with a full tank.', 'Ordinary fuel converts into purple fuel without adding capacity, and stays until BOOST spends it, purple first. BOOST or a less-than-full tank pauses conversion.', 'suv', 'overcharge'],
   hunter: ['Use your current race position to accelerate back into contention.', 'Each position adds its literal number to ACCELERATION and TOP SPEED, capped at 5/5. The effect changes with the race order.', 'sedan', 'racing-lines'],
-  precision: ['Control a slide that actually earns DRIFT ATTACK points.', 'Only scoring DRIFT recharges BOOST, including with the HUD hidden. OVERCHARGE lasts three times as long when SPENT, a longer KICK from the same amount; passive FULL TANK charging is suppressed.', 'truck', 'drift-attack'],
+  precision: ['Control a slide that actually earns DRIFT ATTACK points.', 'Only scoring DRIFT recharges BOOST, including with the HUD hidden. OVERCHARGE lasts five times as long when SPENT, a longer KICK from the same amount; passive FULL TANK charging is suppressed.', 'truck', 'drift-attack'],
   'locked-in': ['Build a varied FLOW chain above ×2.', 'CONTROL, ACCELERATION and DRIFT each gain one effective tier while the chain stays above ×2. Your saved setups stay unchanged.', 'sedan', 'flow'],
   'response-time': ['Brake decisively at speed, then return quickly to GAS or DRIFT.', 'A short delay keeps the kick from arriving immediately on turn-in; GAS or DRIFT flashes, with a sound and a buzz, as it lands. Taps, reverse, leaving the road, collisions and interrupted braking cannot farm kicks.', 'police', 'racing-lines'],
   smv: ['Start DRIVE BY EAR practice slowly enough to separate guidance, pace notes and car sounds.', 'SMV caps GAS at 60, DRIFT at 40 and BOOST at 80 km/h on whichever car runs it, so any car can practise at the Tractor’s pace. Learn the route on GAS before adding bursts.', 'classic', 'steering']
@@ -85,7 +85,7 @@ export const PERK_COMBOS = [
   { car: 'vintage-racer', original: 'driftage', installed: 'carry-on', title: 'Never stop sliding',
     copy: 'DRIFTAGE holds speed and angle in DRIFT; CARRY ON does the same for LOCK. Link slide into slide through HARBOR’s switchbacks without the usual speed penalty. The challenge is banking each slide before the next wall.' },
   { car: 'sedan-sports', original: 'drift-demon', installed: 'precision', title: 'Earn every drop',
-    copy: 'DRIFT DEMON builds DRIFT through a sustained slide. PRECISION only recharges BOOST from DRIFT that scores DRIFT ATTACK points, and makes spent OVERCHARGE last three times as long. Score the slide and the tank pays you back.' },
+    copy: 'DRIFT DEMON builds DRIFT through a sustained slide. PRECISION only recharges BOOST from DRIFT that scores DRIFT ATTACK points, and makes spent OVERCHARGE last five times as long. Score the slide and the tank pays you back.' },
   { car: 'suv', original: 'full-tank', installed: 'road-rage', title: 'Built for the straights',
     copy: 'FULL TANK grows the tank to 5/5 and keeps it full; ROAD RAGE turns a full tank of BOOST into OVERCHARGE while you drive cleanly. Hold off BOOST through the twisty parts, then spend a huge OVERCHARGE on the long straights.' }
 ];

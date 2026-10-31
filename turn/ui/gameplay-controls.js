@@ -166,6 +166,7 @@ function installGameplayUi() {
   boostHud.appendChild(shiftFeedback);
   hud.appendChild(boostHud);
   const boostFill = boostHud.querySelector('i');
+  const boostLabel = boostHud.querySelector('span');
 
   const driveStack = document.createElement('div');
   driveStack.className = 'drive-stack';
@@ -291,6 +292,7 @@ function installGameplayUi() {
   let publishedDriftCharging = null;
   let publishedDriftLocking = null;
   let publishedOvercharge = null;
+  let publishedPrecisionSpend = null;
   let publishedOverchargeCaught = null;
   let publishedOverchargeVolatile = null;
   let publishedChargePercent = null;
@@ -742,6 +744,9 @@ function installGameplayUi() {
     publishedLocked = null;
     publishedDriftLocking = null;
     publishedOvercharge = null;
+    publishedPrecisionSpend = null;
+    boostLabel.textContent = 'BOOST';
+    boostHud.classList.remove('is-precision-spending');
     publishedOverchargeCaught = null;
     publishedOverchargeVolatile = null;
     resetScoringOutcomeTracking();
@@ -959,6 +964,9 @@ function installGameplayUi() {
     if (drivePad.hasPointerCapture?.(releasedPointerId)) drivePad.releasePointerCapture(releasedPointerId);
     setDriveZone(null, false, { announce: false });
     boostRequested = false;
+    boostLabel.textContent = 'BOOST';
+    boostHud.classList.remove('is-precision-spending');
+    publishedPrecisionSpend = false;
     boostExhausted = false;
     shiftPointerInside = false;
     publishDriveControls();
@@ -1379,6 +1387,7 @@ function installGameplayUi() {
     // RAGE's converted fuel is a purple share at the end of the base fill (#1265).
     const hasOvercharge = boostOvercharge > 0;
     const hasConverted = boostConvertedCharge > 0;
+    const precisionSpend = precision && boosting && hasOvercharge;
     const chargePercent = (boostCharge * 100).toFixed(1) + '%';
     const overchargePercent = Math.round(boostOvercharge * 100);
     const overchargeWidth = boostOverchargeVisualWidth(boostOvercharge);
@@ -1395,7 +1404,7 @@ function installGameplayUi() {
       const overchargeStateLabel = overchargeCaught
         ? 'caught and held with GAS'
         : boosting
-          ? 'being used'
+          ? precisionSpend ? `being used, lasting ${PRECISION_OVERCHARGE_SPEND_SCALE} times as long with PRECISION` : 'being used'
           : boostOverchargePhase === BOOST_OVERCHARGE_PHASE.DECAYING
             ? 'leaking'
             : 'building';
@@ -1417,6 +1426,7 @@ function installGameplayUi() {
       driftCharging !== publishedDriftCharging ||
       driftLocking !== publishedDriftLocking ||
       hasOvercharge !== publishedOvercharge ||
+      precisionSpend !== publishedPrecisionSpend ||
       hasConverted !== publishedConverted ||
       overchargeCaught !== publishedOverchargeCaught ||
       overchargeVolatile !== publishedOverchargeVolatile;
@@ -1462,6 +1472,11 @@ function installGameplayUi() {
         }
       }
       publishedDriftLocking = driftLocking;
+    }
+    if (boostVisualDirty || precisionSpend !== publishedPrecisionSpend) {
+      boostLabel.textContent = precisionSpend ? `OVERCHARGE ×${PRECISION_OVERCHARGE_SPEND_SCALE}` : 'BOOST';
+      boostHud.classList.toggle('is-precision-spending', precisionSpend);
+      publishedPrecisionSpend = precisionSpend;
     }
     if (boostVisualDirty || hasOvercharge !== publishedOvercharge) {
       boostHud.classList.toggle('has-overcharge', hasOvercharge);

@@ -215,6 +215,16 @@
   display: none;
 }
 
+/* Keep the bar stationary when PRECISION identifies its slower spend. */
+.boost-hud.is-racing.is-precision-spending > span {
+  display: inline-block;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: max-content;
+  transform: translateX(-50%);
+}
+
 @media (max-height: 322.5px) {
   .audio-settings-dialog {
     width: min(615px, calc(100vw - 13.5px));

@@ -146,7 +146,7 @@ const consumedOvercharge = advanceBoostOvercharge({
   consuming: true
 });
 assert.equal(consumedOvercharge.amount, 0);
-// #1282: PRECISION makes OVERCHARGE last three times as long when SPENT. It never
+// #1282: PRECISION makes OVERCHARGE last five times as long when SPENT. It never
 // stretches the leak before that: loose OVERCHARGE leaks in the ordinary eight seconds
 // with or without it, SHIFT-made OVERCHARGE included.
 const looseLeak = advanceBoostOvercharge({ amount: 1, phase: BOOST_OVERCHARGE_PHASE.DECAYING, dt: 8 });
@@ -168,13 +168,13 @@ function shiftOvercharge() {
 const shiftLeak = shiftOvercharge();
 assert.equal(shiftLeak.start, 1, 'VAN 4/5 → 3/5 with more BOOST POWER makes a full OVERCHARGE');
 assert.ok(Math.abs(shiftLeak.seconds - 8) < 0.02, `SHIFT-made loose OVERCHARGE leaks in 8 s (${shiftLeak.seconds.toFixed(2)})`);
-// SPENT: a full OVERCHARGE lasts 0.6 s of BOOST, or 1.8 s with PRECISION, whether it was
+// SPENT: a full OVERCHARGE lasts 0.6 s of BOOST, or 3 s with PRECISION, whether it was
 // caught or still loose when BOOST began. The base tank drains as before after it.
-assert.equal(PRECISION_OVERCHARGE_SPEND_SCALE, 3);
+assert.equal(PRECISION_OVERCHARGE_SPEND_SCALE, 5);
 function spend(spendScale, phase) {
   const tank = { charge: 1, overcharge: 1, converted: 0, burningOvercharge: false, overchargePhase: phase };
   let overchargeSeconds = 0;
-  while (tank.overcharge > 0 && overchargeSeconds < 5) {
+  while (tank.overcharge > 1e-9 && overchargeSeconds < 5) {
     consumeBoostTank(tank, 1 / 120, 4, 1, spendScale);
     overchargeSeconds += 1 / 120;
   }
@@ -184,7 +184,7 @@ for (const phase of [BOOST_OVERCHARGE_PHASE.BUILDING, BOOST_OVERCHARGE_PHASE.DEC
   const ordinary = spend(1, phase);
   const precise = spend(PRECISION_OVERCHARGE_SPEND_SCALE, phase);
   assert.ok(Math.abs(ordinary.overchargeSeconds - BOOST_OVERCHARGE_MAX_SECONDS) < 0.01, `Ordinary SPEND: ${ordinary.overchargeSeconds.toFixed(2)} s`);
-  assert.ok(Math.abs(precise.overchargeSeconds - 3 * BOOST_OVERCHARGE_MAX_SECONDS) < 0.01, `PRECISION SPEND (${phase}): ${precise.overchargeSeconds.toFixed(2)} s`);
+  assert.ok(Math.abs(precise.overchargeSeconds - 5 * BOOST_OVERCHARGE_MAX_SECONDS) < 0.01, `PRECISION SPEND (${phase}): ${precise.overchargeSeconds.toFixed(2)} s`);
   assert.ok(precise.charge > 0.999, 'The base tank is untouched while OVERCHARGE is SPENT');
 }
 const plainSpendTank = { charge: 1, overcharge: 0, converted: 0 };

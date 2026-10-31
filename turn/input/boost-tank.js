@@ -33,9 +33,9 @@ export function convertBoostTank(tank, dt, { enabled, requested, offRoad, collid
 }
 
 // Mutate the caller's reused step record: no per-frame resource object allocation.
-// PRECISION (#1282): OVERCHARGE lasts three times as long when SPENT. Only the SPEND
+// PRECISION (#1282): OVERCHARGE lasts five times as long when SPENT. Only the SPEND
 // stretches; loose OVERCHARGE still leaks at the ordinary rate before it is SPENT.
-export const PRECISION_OVERCHARGE_SPEND_SCALE = 3;
+export const PRECISION_OVERCHARGE_SPEND_SCALE = 5;
 
 // spendScale stretches the OVERCHARGE being SPENT, whether it was caught or still loose
 // when BOOST began; ordinary BOOST spends as before.
