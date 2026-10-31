@@ -114,6 +114,48 @@ try {
   await startLap(page);
   now = await race(page);
   assert.equal(now.button, true, 'During a lap Ⅱ shows');
+  // #1317: sizing the canvas clears it. Viewport events without a size change (a browser
+  // re-tinting its bars) leave the drawn picture alone; a real change is drawn at once,
+  // before the frame is shown.
+  await page.evaluate(() => {
+    const { renderer } = globalThis.__turnRuntime;
+    const log = { calls: [], setSize: renderer.setSize, render: renderer.render };
+    let blank = false;
+    renderer.setSize = (...args) => {
+      log.calls.push('size');
+      blank = true;
+      Promise.resolve().then(() => { if (blank) log.calls.push('blank'); });
+      return log.setSize.apply(renderer, args);
+    };
+    renderer.render = (...args) => {
+      if (blank) log.calls.push('drawn');
+      blank = false;
+      return log.render.apply(renderer, args);
+    };
+    globalThis.__sizingLog = log;
+  });
+  const sizing = () => page.evaluate(() => [...globalThis.__sizingLog.calls]);
+  for (let index = 0; index < 5; index += 1) {
+    await page.evaluate(() => {
+      globalThis.dispatchEvent(new globalThis.Event('resize'));
+      globalThis.visualViewport?.dispatchEvent(new globalThis.Event('scroll'));
+    });
+    await page.waitForTimeout(50);
+  }
+  assert.deepEqual(await sizing(), [], 'Viewport events without a size change never clear the race picture');
+  await page.setViewportSize({ width: 900, height: 393 });
+  await page.waitForTimeout(300);
+  const changed = await sizing();
+  assert.ok(changed.includes('size') && changed.at(-1) === 'drawn' && !changed.includes('blank'),
+    `A real size change is drawn before the frame is shown (${changed.join(', ')})`);
+  await page.setViewportSize({ width: 852, height: 393 });
+  await page.waitForTimeout(300);
+  await page.evaluate(() => {
+    const { renderer } = globalThis.__turnRuntime;
+    renderer.setSize = globalThis.__sizingLog.setSize;
+    renderer.render = globalThis.__sizingLog.render;
+    delete globalThis.__sizingLog;
+  });
   const geometry = await page.evaluate(() => {
     const rect = (node) => node.getBoundingClientRect().toJSON();
     return {
