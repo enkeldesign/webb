@@ -43,7 +43,7 @@ try {
   const original = await persisted();
   await page.goto(`${origin}/turn/?turn-admin=1&keep=1#here`);
   await ready();
-  assert.equal(page.url(), `${origin}/turn/?keep=1#here`);
+  assert.equal(page.url(), `${origin}/turn/?turn-admin=1&keep=1#here`, 'The address keeps admin for reopening or another browser');
   const openAdmin = async () => {
     await page.locator('.turn-home-menu-button').click();
     await page.getByRole('button', { name: 'ADMIN', exact: true }).focus();

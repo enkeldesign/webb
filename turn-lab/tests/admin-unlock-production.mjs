@@ -32,7 +32,7 @@ function boot(href, localStorage = memory(), sessionStorage = memory()) {
 for (const host of ['branch.turntest.pages.dev', 'a.b.turntest.pages.dev', 'localhost', '127.0.0.1', '[::1]', 'dev.localhost']) {
   const page = boot(`http://${host}/turn/?other=keep&turn-admin=1#here`);
   assert.ok(page.__turnSessionAdmin, `${host}: allowed`);
-  assert.equal(page.visible, `http://${host}/turn/?other=keep#here`);
+  assert.equal(page.visible, undefined, 'The address keeps the parameter, so a hand-off to another browser stays in admin');
   assert.equal(page.next, undefined, 'Activation never reloads');
 }
 for (const host of ['enkel.design', 'www.enkel.design', 'turntest.pages.dev', 'evilturntest.pages.dev', 'branch.turntest.pages.dev.evil.example', 'production.example']) {
@@ -83,11 +83,13 @@ page.localStorage.removeItem('turn-personal-rivals-v1');
 page.sessionStorage.setItem('ordinary-session-key', 'changed');
 assert.deepEqual(real.snapshot(), original);
 assert.equal(session.getItem('ordinary-session-key'), 'keep');
-// Reload uses only the session copy after the URL parameter has been removed.
-page = boot(page.visible, real, session);
+// Reloading the same address resumes the session copy rather than starting afresh.
+page = boot('http://localhost/turn/?turn-admin=1', real, session);
 store = activateGlobals();
 assert.equal(store.trophyTotal(), 1975);
 assert.equal(store.isRewardUnlocked('perkulator'), false);
+// An address that lost the parameter (an in-game link) gets it back while the session lasts.
+assert.equal(boot('http://localhost/turn/#here', real, session).visible, 'http://localhost/turn/?turn-admin=1#here');
 assert.ok(store.unlock('first-turn', { trackId: 'countryside', vehicleId: 'classic' }));
 assert.equal(store.trophyTotal(), 1975 + store.state.unlocked['first-turn'].awardedTrophies);
 if (store.trophyTotal() < 2000) store.grantBonus('race-bonus', 2000 - store.trophyTotal());
