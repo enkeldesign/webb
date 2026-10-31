@@ -1274,6 +1274,7 @@ function showMessage(text, duration = 1600) {
 }
 
 let resizeFrame = 0;
+let appliedViewport = '';
 // Paused, the loop draws nothing. A viewport change (a rotation) clears the canvas and
 // the viewport modules keep resizing it for a couple of seconds, so for a while after
 // one the paused frame is drawn again.
@@ -1283,6 +1284,14 @@ function resize() {
   cancelAnimationFrame(resizeFrame);
   resizeFrame = requestAnimationFrame(() => {
     const { width, height } = getViewportSize();
+    const pixelRatio = Math.min(devicePixelRatio, 2);
+    // Sizing the canvas clears it, and this runs after the frame was drawn. A browser
+    // can send a stream of these events without a size change (the Claude in-app
+    // browser re-tinting its bars, #1317): each cleared the picture, a flicker. Only a
+    // real change resizes, and it is drawn again at once.
+    const viewport = `${width}x${height}@${pixelRatio}`;
+    if (viewport === appliedViewport) return;
+    appliedViewport = viewport;
     document.documentElement.style.setProperty('--app-width', `${width}px`);
     document.documentElement.style.setProperty('--app-height', `${height}px`);
     camera.aspect = width / height;
@@ -1290,8 +1299,9 @@ function resize() {
     if (height > width) camera.setViewOffset(width, height, 0, height * .16, width, height);
     else camera.clearViewOffset();
     camera.updateProjectionMatrix();
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setPixelRatio(pixelRatio);
     renderer.setSize(width, height);
+    renderer.render(scene, camera);
   });
   pausedRedrawUntil = performance.now() + PAUSED_REDRAW_MS;
 }
