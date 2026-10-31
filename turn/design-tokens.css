@@ -112,6 +112,8 @@
   --turn-control-lock: #748ffc;
   --turn-control-shift-on: #51cf66;
   --turn-control-overcharge: #8b5cf6;
+  /* PRECISION multiplier beside the OVERCHARGE meter, with a matching glow. */
+  --turn-control-precision: #a477ff;
   /* OVERCHARGE's deep and light ends, where it widens the BOOST bar past full. */
   --turn-control-overcharge-deep: #5f3dc4;
   --turn-control-overcharge-light: #d0bfff;
@@ -413,6 +415,7 @@
       --turn-orange-500: color(display-p3 0.995 0.456 0.275);
       --turn-red-500: color(display-p3 0.994 0.385 0.384);
       --turn-violet-200: color(display-p3 0.816 0.749 1);
+      --turn-control-precision: color(display-p3 0.64 0.38 1);
     }
   }
 }

@@ -215,6 +215,34 @@
   display: none;
 }
 
+/* PRECISION sits beyond the widened bar, never above it over the car. */
+.boost-hud.is-racing.is-precision-spending > span {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: calc(100% + var(--boost-overcharge-width) / 2 + 8px);
+  width: max-content;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--turn-control-precision);
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  text-shadow:
+    2px 2px 0 var(--turn-ink),
+    0 0 6px var(--turn-control-precision);
+  -webkit-text-stroke: 0.5px var(--turn-ink);
+  paint-order: stroke fill;
+  transform: translateY(-50%) rotate(-6deg);
+  pointer-events: none;
+}
+
 @media (max-height: 322.5px) {
   .audio-settings-dialog {
     width: min(615px, calc(100vw - 13.5px));

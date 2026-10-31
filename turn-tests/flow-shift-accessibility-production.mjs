@@ -166,7 +166,7 @@ class FakeElement extends ListenerTarget {
   querySelector(selector) {
     const existing = this.ownerDocument.findDescendant(this, selector);
     if (existing) return existing;
-    if (!['strong', 'i', '.nuke-cancel', '.nuke-confirm'].includes(selector)) return null;
+    if (!['strong', 'i', 'span', '.nuke-cancel', '.nuke-confirm'].includes(selector)) return null;
     if (this.queryCache.has(selector)) return this.queryCache.get(selector);
     const node = this.ownerDocument.createElement(selector.startsWith('.') ? 'button' : selector);
     if (selector.startsWith('.')) node.className = selector.slice(1);
